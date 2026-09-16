@@ -1,9 +1,13 @@
 {
   "title": "Fem Plugin End To End",
   "emoji": "🏗️",
-  "status": "open",
+  "status": "closed",
   "description": "Get the 🏗️fem plugin (apps fem2d, fem3d of ✏️s/🔌️plugins/🏗️fem on the ✏️s/🔨️modules/🏗️fem engine) working end to end: the crate builds natively and for wasm32-wasip2, every mutation of both artifacts has an exhaustive real-world fixture test (Rust + third-party FEM solver oracles), the descriptor is regenerated, and `bun run dev:fem:2d|3d` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
   "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
-  "sessions": ["⚪b3308b14-66ae-4d36-b96a-4a1e815aaa45"],
-  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-06)."
+  "sessions": [
+    "⚪b3308b14-66ae-4d36-b96a-4a1e815aaa45",
+    "⚪a002a5ee-c7d4-4e15-9af0-d47021e04248"
+  ],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP failed to connect on 2026-09-06 and again on 2026-09-16 (connection closed).",
+  "summary": "fem2d and fem3d work end to end on the React dev lane (6086/6087): wasm component, native tests (900/900, 772/772), descriptor, activation, boot, example switch, addNode/setCamera/setResultDisplay dispatch. Fixed 18 faults across the fem engine (dropped job payloads, O(n²) previews, the blunt 40-DOF eigen cap, 109 stale diff fixtures, add-load inverse), the fem editors (missing store initializer, missing fem3d action bridge, one-unit census/µs deadlines/one-unit job bridges, lease-only windows unrenderable on React, unpaged scene surfaces, work_items footprints) and the framework/host (childless archive-load race, spawned-job progress never refreshing the UI, wide scene integers refused). Debt: fem3d mounted live-visual lane refuses the demo (4 KiB owner pages), stale toolJobFem* verify contracts, cocircular mesher robustness."
 }

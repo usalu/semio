@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::Process3dArtifact>>,
+    pub artifact: Option<Box<Process3dArtifact>>,
     #[state(artifact)]
     pub workshop: Option<Workshop>,
     #[state(artifact)]

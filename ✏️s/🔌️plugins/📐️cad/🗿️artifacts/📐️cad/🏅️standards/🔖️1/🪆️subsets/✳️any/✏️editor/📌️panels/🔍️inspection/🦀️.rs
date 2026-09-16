@@ -1,22 +1,16 @@
 //! 🔍️ CAD play app panel — the inspection panel: the field groups for whatever is selected
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
-#[cfg(test)]
-use crate::editor::cad::terminology::typology_label;
-use crate::editor::cad::terminology::CadLabels;
-#[cfg(test)]
-use crate::editor::cad::TYPOLOGY_CATALOG;
-use crate::editor::cad::{CadPlayView, CAD_PLAY_APP_ID};
-#[cfg(test)]
+use crate::editor::cad::terminology::{typology_label, CadLabels};
+use crate::editor::cad::modes::edit;
+use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
-use crate::{CadNode, CadReference};
-use protocol::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
+use crate::{CadNode, CadPaneId};
 use semio_framework_plugin::{
-    tree_item, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiFieldNode, UiGroupNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    tree_item, tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-#[cfg(test)]
-use semio_framework_plugin::{ui_inspector_mixed_text, ui_inspector_mixed_toggle, UiSelectItem, UiSelectNode};
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
@@ -35,248 +29,140 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args }
+
+const ROOT: &str = "cad-play-inspector";
+
+fn push(fields: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<()> {
+    fields.try_push(node?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "cad inspector field admission failed"))
 }
 
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the object/primitive inspector
-/// branches below used to scan `CadSnapshot`'s inline object list (`cad_all_objects`), which no
-/// longer exists — object data lives inside composed `s.stdio.semio.model` CHILD documents,
-/// unresolved at this render boundary (see `🔖️Composition` in `🏪️store/🦀️.rs`).
-/// Documented reduced-fidelity gap: those two branches fall through to the reference/node/summary
-/// panel until a resolved-child-content render path exists.
-pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let rows = crate::editor::cad::ui_node_list([
-        tree_item("cad-play-inspector.schema", crate::editor::cad::ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
-        tree_item("cad-play-inspector.utility", crate::editor::cad::ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?),
-        tree_item("cad-play-inspector.objects", crate::editor::cad::ui_label(format!("{}: 0", labels.objects.as_str()))?),
-    ])?;
-    PanelTreeBuilder::new("cad-play-inspector")?.section("cad-play-inspector.summary", Some(crate::editor::cad::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
+/// 🧾️ One read-only `label` / `value` row.
+fn read_only(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<()> {
+    push(fields, tree_item_desc(format!("{ROOT}.{id}"), ui_label(label)?, Some(value.to_string())))
 }
 
-/// @emoji 🌀️ Builds an editable 4-component quaternion group (`X`/`Y`/`Z`/`W` steppers) — orientation
-/// fields have no shared helper (quaternions aren't `ui_inspector_vec3_group`'s 3-wide shape), so
-/// this mirrors that helper's structure one component wider. The patch handler renormalizes after
-/// any component edit so the result stays a valid unit quaternion.
-pub fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
-    // 🔤️ Axis symbols (X/Y/Z/W) are mathematical notation, not translatable UI chrome.
-    let component = |index: usize, name: &str, label: &'static str| {
-        let values: Vec<f64> = values.iter().map(|q| q[index]).collect();
-        ui_inspector_stepper_field(format!("{id}.{name}"), Label::data(label), &values, step, axis_action(name))
+fn vec3(value: [f64; 3]) -> String {
+    format!("{}, {}, {}", value[0], value[1], value[2])
+}
+
+fn vec4(value: [f64; 4]) -> String {
+    format!("{}, {}, {}, {}", value[0], value[1], value[2], value[3])
+}
+
+/// 🔎️ Every selected object across the four panes, with the pane it lives in — the `"cad"` domain's
+/// object ids are unique across panes, so the first pane owning an id is its home.
+pub(crate) fn selected_objects(envelope: &CadPlayView) -> Vec<(CadPaneId, CadObject)> {
+    let mut selected = Vec::new();
+    for pane in CadPaneId::all() {
+        let Some(scene) = edit::cad_pane_working_scene(&envelope.document, pane) else { continue };
+        let (objects, _) = edit::cad_pane_working_objects(&scene, pane);
+        for id in &envelope.interaction.ids {
+            if let Some(object) = objects.iter().find(|object| &object.id == id) {
+                selected.push((pane, object.clone()));
+            }
+        }
+    }
+    selected
+}
+
+/// 🔍️ The selected object's field group (the first selected object carries the fields, the ids row
+/// lists every selected id), or `None` when the `"cad"` selection resolves to no object in this
+/// document.
+fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+    let selected = selected_objects(envelope);
+    let (pane, object) = selected.first()?;
+    let build = || -> UiAssemblyResult<BuiltNode> {
+        let mut fields = UiFixedList::default();
+        for (index, (_, selected)) in selected.iter().enumerate() {
+            read_only(&mut fields, &format!("ids.{index}"), labels.id.as_str(), &selected.id)?;
+        }
+        read_only(&mut fields, "object.label", labels.label.as_str(), &object.label)?;
+        read_only(&mut fields, "object.typology", labels.typology.as_str(), typology_label(&object.typology, labels))?;
+        read_only(&mut fields, "object.pane", labels.slot.as_str(), cad_pane_suffix(*pane))?;
+        read_only(&mut fields, "object.origin", labels.position.as_str(), vec3(object.origin))?;
+        read_only(&mut fields, "object.orientation", labels.rotation.as_str(), vec4(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
+        read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
+        read_only(&mut fields, "object.primitives", labels.primitive.as_str(), object.primitives.iter().map(|primitive| format!("{} ({})", primitive.slot, primitive.kind)).collect::<Vec<_>>().join(", "))?;
+        read_only(&mut fields, "object.hidden", labels.hidden.as_str(), !object.visible)?;
+        read_only(&mut fields, "object.locked", labels.locked.as_str(), object.locked)?;
+        let title = if selected.len() == 1 { labels.object.as_str().to_string() } else { format!("{} {}", selected.len(), labels.objects.as_str()) };
+        PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.object"), Some(ui_label(&title)?), true, fields)?.build()
     };
-    UiNode::Group(UiGroupNode {
-        id: id.into(),
-        label: label.into(),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        children: vec![component(0, "x", "X"), component(1, "y", "Y"), component(2, "z", "Z"), component(3, "w", "W")],
-        menu: None,
-    })
+    Some(build())
 }
 
-#[cfg(test)]
-fn patch_selection_args(object_ids: &[String], field: String) -> DslValue {
-    DslValue::object([("objectIds".to_string(), DslValue::Array(object_ids.iter().map(|id| DslValue::String(id.clone())).collect())), ("field".to_string(), DslValue::String(field))])
-}
-
-#[cfg(test)]
-pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
-    let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
-    let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
-    let typologies: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
-    let hidden: Vec<bool> = objects.iter().map(|object| !object.visible).collect();
-    let locked: Vec<bool> = objects.iter().map(|object| object.locked).collect();
-    let origins: Vec<[f64; 3]> = objects.iter().map(|object| object.origin).collect();
-    let scales: Vec<[f64; 3]> = objects.iter().map(|object| object.scale.unwrap_or([1.0, 1.0, 1.0])).collect();
-    let orientations: Vec<[f64; 4]> = objects.iter().map(|object| object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])).collect();
-    let label_mixed = ui_inspector_mixed_text(&labels);
-    let typology_mixed = ui_inspector_mixed_text(&typologies);
-    let hidden_mixed = ui_inspector_mixed_toggle(&hidden);
-    let locked_mixed = ui_inspector_mixed_toggle(&locked);
-    UiInspectorFieldGroup {
-        id: "cad-play-inspector.object".into(),
-        label: if objects.len() == 1 { term_labels.object.into() } else { Label::data(format!("{} {}", objects.len(), term_labels.objects.as_str())) },
-        default_open: None,
-        presence: UiPresence::default(),
-        fields: vec![
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.object.label".into(),
-                label: term_labels.label.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    id: "cad-play-inspector.object.label.input".into(),
-                    input_kind: "text".into(),
-                    value: label_mixed.value.clone(),
-                    placeholder: label_mixed.placeholder.map(Label::data),
-                    commit: None,
-                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "label".to_string()))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    presence: UiPresence::default(),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.object.typology".into(),
-                label: term_labels.typology.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {
-                    id: "cad-play-inspector.object.typology.select".into(),
-                    value: typology_mixed.value.clone(),
-                    items: TYPOLOGY_CATALOG.iter().map(|entry| UiSelectItem { value: entry.typology.into(), label: Label::data(typology_label(entry.typology, term_labels)) }).collect(),
-                    placeholder: typology_mixed.placeholder.map(Label::data),
-                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "typology".to_string()))),
-                    presence: UiPresence::default(),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.object.hidden".into(),
-                label: term_labels.hidden.into(),
-                child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
-                    id: "cad-play-inspector.object.hidden.toggle".into(),
-                    icon_id: "eye-off".into(),
-                    text: None,
-                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "hidden".to_string()))),
-                    presence: UiPresence::selected(hidden_mixed.pressed),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.object.locked".into(),
-                label: term_labels.locked.into(),
-                child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
-                    id: "cad-play-inspector.object.locked.toggle".into(),
-                    icon_id: "lock".into(),
-                    text: None,
-                    on_change: cad_action("patchSelection", Some(patch_selection_args(&object_ids, "locked".to_string()))),
-                    presence: UiPresence::selected(locked_mixed.pressed),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-            {
-                let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("origin.{axis}")))))
-            },
-            {
-                let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("scale.{axis}")))))
-            },
-            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| cad_action("patchSelection", Some(patch_selection_args(&object_ids, format!("orientation.{axis}"))))),
-        ],
+/// 🔍️ The selected object's fields when the `"cad"` domain selects one, else the document summary
+/// (schema, active utility, object count across the four panes).
+/// 🩹️ One `patchCadPlayReference` row — a bounded edit (a boolean `value` or a numeric `delta`) on
+/// one field of the selected reference, dispatched through the real `ChangeReference*`/
+/// `MoveReference` mutation path.
+fn reference_patch_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, model_definition_id: &str, reference_id: &str, field: &str, value: Option<bool>, delta: Option<f64>) -> UiAssemblyResult<()> {
+    // 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only.
+    let mut entries: Vec<(&'static str, UiValue)> = Vec::new();
+    if let Some(delta) = delta {
+        entries.push(("delta", UiValue::Number(delta)));
     }
+    entries.push(("field", ui_value_text(field)?));
+    entries.push(("modelDefinitionId", ui_value_text(model_definition_id)?));
+    entries.push(("referenceId", ui_value_text(reference_id)?));
+    if let Some(value) = value {
+        entries.push(("value", ui_value_text(if value { "true" } else { "false" })?));
+    }
+    let action = crate::editor::cad::cad_action("patchCadPlayReference", Some(ui_value_map(entries)?))?;
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, None, action))
 }
 
-#[cfg(test)]
-pub(crate) fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
-    let slot = object.primitives.iter().find(|primitive| primitive.primitive_id == primitive_id).map_or("primitive", |primitive| primitive.slot.as_str());
-    UiInspectorFieldGroup {
-        id: "cad-play-inspector.primitive".into(),
-        label: labels.primitive.into(),
-        default_open: None,
-        presence: UiPresence::default(),
-        fields: vec![
-            ui_inspector_readonly_field("cad-play-inspector.primitive.object", labels.object, &object.label),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.slot", labels.slot, slot),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.kind", labels.kind, kind),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.id", labels.id, primitive_id),
-        ],
-    }
+/// 🖼️ The app-owned reference-overlay selection (`CadPlayRuntime::selected_reference_*`): the
+/// reference's fields plus bounded edit rows.
+fn selected_reference_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+    let model_definition_id = envelope.runtime.selected_reference_model_definition_id.as_deref()?;
+    let reference_id = envelope.runtime.selected_reference_id.as_deref()?;
+    let reference = envelope.document.references_by_model_definition_id.get(model_definition_id)?.iter().find(|reference| reference.id == reference_id)?;
+    let build = || -> UiAssemblyResult<BuiltNode> {
+        let mut fields = UiFixedList::default();
+        read_only(&mut fields, "reference.id", labels.id.as_str(), &reference.id)?;
+        read_only(&mut fields, "reference.source", labels.source.as_str(), &reference.source_url)?;
+        read_only(&mut fields, "reference.pane", labels.slot.as_str(), model_definition_id)?;
+        read_only(&mut fields, "reference.width", labels.width_world.as_str(), reference.width_world)?;
+        read_only(&mut fields, "reference.origin", labels.position.as_str(), vec3(reference.origin))?;
+        reference_patch_row(&mut fields, "reference.hidden", if reference.hidden { labels.show.as_str() } else { labels.hide.as_str() }, model_definition_id, reference_id, "hidden", Some(!reference.hidden), None)?;
+        reference_patch_row(&mut fields, "reference.locked", if reference.locked { labels.unlock.as_str() } else { labels.lock.as_str() }, model_definition_id, reference_id, "locked", Some(!reference.locked), None)?;
+        reference_patch_row(&mut fields, "reference.width.grow", &format!("{} +1", labels.width_world.as_str()), model_definition_id, reference_id, "widthWorld", None, Some(1.0))?;
+        reference_patch_row(&mut fields, "reference.width.shrink", &format!("{} −1", labels.width_world.as_str()), model_definition_id, reference_id, "widthWorld", None, Some(-1.0))?;
+        for (axis, sign, delta) in [("x", "+", 1.0), ("x", "−", -1.0), ("y", "+", 1.0), ("y", "−", -1.0)] {
+            reference_patch_row(&mut fields, &format!("reference.origin.{axis}.{}", if delta > 0.0 { "plus" } else { "minus" }), &format!("{} {} {sign}1", labels.position.as_str(), axis.to_ascii_uppercase()), model_definition_id, reference_id, &format!("origin.{axis}"), None, Some(delta))?;
+        }
+        PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.reference"), Some(ui_label(labels.reference.as_str())?), true, fields)?.build()
+    };
+    Some(build())
 }
 
-pub fn reference_inspector_group(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiInspectorFieldGroup {
-    UiInspectorFieldGroup {
-        id: "cad-play-inspector.reference".into(),
-        label: labels.reference.into(),
-        default_open: None,
-        presence: UiPresence::default(),
-        fields: vec![
-            ui_inspector_readonly_field("cad-play-inspector.reference.id", labels.id, &reference.id),
-            ui_inspector_readonly_field("cad-play-inspector.reference.source", labels.source, &reference.source_url),
-            {
-                let patch_cmd = |field: &str| {
-                    cad_action(
-                        "patchCadPlayReference",
-                        Some(DslValue::object([
-                            ("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())),
-                            ("referenceId".to_string(), DslValue::String(reference.id.clone())),
-                            ("field".to_string(), DslValue::String(field.to_string())),
-                        ])),
-                    )
-                };
-                ui_inspector_stepper_field("cad-play-inspector.reference.widthWorld", labels.width_world, &[reference.width_world], 0.1, patch_cmd("widthWorld"))
-            },
-            {
-                let patch_cmd = move |axis: &str| {
-                    cad_action(
-                        "patchCadPlayReference",
-                        Some(DslValue::object([
-                            ("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())),
-                            ("referenceId".to_string(), DslValue::String(reference.id.clone())),
-                            ("field".to_string(), DslValue::String(format!("origin.{axis}"))),
-                        ])),
-                    )
-                };
-                ui_inspector_vec3_group("cad-play-inspector.reference.origin", labels.position, &[reference.origin], 0.1, patch_cmd)
-            },
-        ],
-    }
+/// 🌿️ The document-tree node selection (`CadPlayRuntime::selected_node_ids`): read-only rows.
+fn selected_node_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+    let first = envelope.runtime.selected_node_ids.first()?;
+    let node: &CadNode = envelope.document.nodes.iter().find(|node| &node.id == first)?;
+    let build = || -> UiAssemblyResult<BuiltNode> {
+        let mut fields = UiFixedList::default();
+        read_only(&mut fields, "node.id", labels.id.as_str(), &node.id)?;
+        read_only(&mut fields, "node.label", labels.label.as_str(), &node.label)?;
+        PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.node"), Some(ui_label(labels.node.as_str())?), true, fields)?.build()
+    };
+    Some(build())
 }
 
-pub fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldGroup {
-    UiInspectorFieldGroup {
-        id: "cad-play-inspector.node".into(),
-        label: labels.node.into(),
-        default_open: None,
-        presence: UiPresence::default(),
-        fields: vec![
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.node.label".into(),
-                label: labels.label.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    id: "cad-play-inspector.node.label.input".into(),
-                    input_kind: "text".into(),
-                    value: node.label.clone(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: cad_action("renameNode", Some(DslValue::object([("nodeId".to_string(), DslValue::String(node.id.clone()))]))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    presence: UiPresence::default(),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-            ui_inspector_readonly_field("cad-play-inspector.node.kind", labels.kind, &node.kind),
-        ],
+pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+    if let Some(section) = selected_object_section(envelope, labels).or_else(|| selected_reference_section(envelope, labels)).or_else(|| selected_node_section(envelope, labels)) {
+        return section;
     }
+    let objects = CadPaneId::all().into_iter().filter_map(|pane| edit::cad_pane_working_scene(&envelope.document, pane).map(|scene| edit::cad_pane_working_objects(&scene, pane).0.len())).sum::<usize>();
+    let rows = crate::editor::cad::ui_node_list([
+        tree_item("cad-play-inspector.schema", ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
+        tree_item("cad-play-inspector.utility", ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?),
+        tree_item("cad-play-inspector.objects", ui_label(format!("{}: {objects}", labels.objects.as_str()))?),
+    ])?;
+    PanelTreeBuilder::new("cad-play-inspector")?.section("cad-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
+
 //#endregion 🔖️Render
 
 //#region 🧪️Tests

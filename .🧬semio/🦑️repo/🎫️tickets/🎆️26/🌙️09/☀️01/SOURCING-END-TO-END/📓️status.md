@@ -1,12 +1,16 @@
 # 📓️ Sourcing End to End — Status
 
+**2026-09-16:** example switch (Demo ↔ No example) and saved-archive reload work — the composed kit catalogue
+child is derived at boot and on every whole-document load, non-flow `s.stdio.semio` members open through a
+pack decoder, and a host poll drives the load (317 ms instead of 97 s) — see [📓️day5-run.md](📓️day5-run.md).
 **2026-09-15:** boot, curation, drag, filters, sort, undo and the 3D grid and Preview selection verified live — see
-[📓️day4-run.md](📓️day4-run.md). Open: composed-document example switch/reload.
+[📓️day4-run.md](📓️day4-run.md).
 
 - [🔍️diagnosis.md](🔍️diagnosis.md) — why `dev:sourcing` failed
 - [🧪️test-triage.md](🧪️test-triage.md) — the test suite, failure by failure
 - [📓️batch-only-migration.md](📓️batch-only-migration.md) — the eight unreachable commands
 - [🧪️runtime-verification.md](🧪️runtime-verification.md) — what the browser actually shows
+- [📓️day5-run.md](📓️day5-run.md) — derivable-child genesis, pack member open, poll-driven archive load
 
 ## The headline
 `bun run dev:sourcing` failed because **`semio-s-plugin-sourcing` had stopped compiling** — 109

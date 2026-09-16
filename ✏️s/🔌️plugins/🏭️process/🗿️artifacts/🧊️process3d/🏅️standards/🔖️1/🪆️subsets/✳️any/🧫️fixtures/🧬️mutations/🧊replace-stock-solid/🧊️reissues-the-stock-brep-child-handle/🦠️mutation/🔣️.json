@@ -3,7 +3,7 @@
   "newSolid": {
     "childId": "brep-stock-02",
     "target": {
-      "artifactId": "stock-1-solid-planed",
+      "artifactId": "brep-stock-02",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

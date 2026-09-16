@@ -2212,6 +2212,14 @@ function scenePackNumber(value: bigint): number {
   return number;
 }
 
+/** 🔢️ A scene integer FIELD keeps its exact value: safe integers decode as `number`, anything wider (a
+ * u64 revision hash on a snapshot lease, for instance) stays a `bigint` instead of refusing the whole
+ * doc. Lengths and code points still go through {@link scenePackNumber}, where a wide value is a fault. */
+function scenePackInteger(value: bigint): number | bigint {
+  const number = Number(value);
+  return Number.isSafeInteger(number) ? number : value;
+}
+
 function readScenePackLength(bytes: Uint8Array, position: { value: number }): number {
   const length = scenePackNumber(readScenePackVarint(bytes, position));
   if (length > bytes.length - position.value) throw new Error("decodeScenePackValue: declared length exceeds remaining bytes");
@@ -2225,10 +2233,10 @@ function decodeScenePackItem(bytes: Uint8Array, position: { value: number }): un
   if (tag === SCENE_PACK_TAG_UNIT) return SCENE_PACK_UNIT;
   if (tag === SCENE_PACK_TAG_FALSE) return false;
   if (tag === SCENE_PACK_TAG_TRUE) return true;
-  if (tag === SCENE_PACK_TAG_U64) return scenePackNumber(readScenePackVarint(bytes, position));
+  if (tag === SCENE_PACK_TAG_U64) return scenePackInteger(readScenePackVarint(bytes, position));
   if (tag === SCENE_PACK_TAG_I64) {
     const raw = readScenePackVarint(bytes, position);
-    return scenePackNumber((raw >> 1n) ^ -(raw & 1n));
+    return scenePackInteger((raw >> 1n) ^ -(raw & 1n));
   }
   if (tag === SCENE_PACK_TAG_F64) {
     if (bytes.length - position.value < 8) throw new Error("decodeScenePackValue: truncated f64");

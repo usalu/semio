@@ -36,12 +36,12 @@ fn applied() -> CadSnapshot {
 async fn replaces_the_building_handle_in_place() {
     let after = applied();
     let handle = after.building_model.as_ref().expect("create-building-model leaves the slot occupied");
-    assert_eq!(handle.child_id, "building-model-2", "create-building-model must install the payload's child id");
+    assert_eq!(handle.child_id, "cad-building-2", "create-building-model must install the payload's child id");
     assert_eq!(handle.target.to_uri(), "cad-building-2!s.stdio.semio@v1/model", "create-building-model must parse the payload target URI back into a real ArtifactRef");
     assert!(
-        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("shape-model-1")
-            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1")
-            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"),
+        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-shape-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-energy-1")
+            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-structure-1"),
         "create-building-model must leave the other three fixed model slots untouched"
     );
     assert_eq!(after.drawings.len(), 1, "create-building-model must not touch the drawings child collection");
@@ -56,7 +56,7 @@ async fn inverse_reinstalls_the_displaced_building_handle() {
     assert_eq!(inverse.len(), 1, "create-building-model inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateBuildingModel(step) => {
-            assert_eq!(step.child_id, "building-model-1", "the inverse must reinstall the handle create-building-model displaced");
+            assert_eq!(step.child_id, "cad-building-1", "the inverse must reinstall the handle create-building-model displaced");
             assert_eq!(step.target, "cad-building-1!s.stdio.semio@v1/model", "the inverse must carry the displaced handle's target URI");
         }
         other => panic!("create-building-model over an OCCUPIED slot must invert to create-building-model, got {other:?}"),
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "create-building-model/rehandles-the-occupied-building-slot: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let slot = produced.diff().building_model.as_ref().expect("create-building-model fills the `building_model` slot diff");
     let handle = slot.as_ref().expect("create-building-model's diff sets the slot to the occupied arm");
-    assert_eq!(handle.child_id, "building-model-2", "the slot diff carries the payload child id");
+    assert_eq!(handle.child_id, "cad-building-2", "the slot diff carries the payload child id");
     assert!(produced.diff().drawings.is_none() && produced.diff().nodes.is_none(), "create-building-model emits nothing but its own slot field");
 }
 

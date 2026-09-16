@@ -1,10 +1,10 @@
 pub(crate) mod context {
     
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry as new_app_with_registry_impl};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry_impl};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>>;
+    pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ Framework test context gap (contract §2.5, w0-f Gap 3 handoff): `new_app_with_registry` and
     /// `assert_declared_actions_bridge_to_commands` still take the pre-migration `fn() -> App` shape,
@@ -20,7 +20,7 @@ pub(crate) mod context {
     /// so an empty `AppActionRegistry` rejects every row with `interactive-job.catalog-authority`.
     /// Same reason trinity's `🔌️jack`/`♻️rewriting` editors are registry-backed.
     pub async fn new_app() -> SourcingTestApp {
-        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>>(sourcing_manifest_for_tests).await;
+        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests).await;
         // 🪪️ `dispatch_typed_command_inner` refuses any command whose `ActionMeta.instance_id` is not the
         // app's bound live runtime instance, and a freshly constructed app has none — so bind the id
         // `artifact_app_laws::meta` stamps. A test that wants another instance rebinds (see
@@ -161,7 +161,6 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
 /// the document archive door with an empty member roster; the load must settle `Ready` and publish the
 /// authored stock rather than trap the instance.
 #[semio_framework_async_macros::async_test]
-#[ignore = "closure validation rejects the load as Incomplete: CurationSnapshot composes a `catalog` kit child that the editor (NoMembers) never creates, and Effect::LoadDocument carries no members — ticket 26/09/01/SOURCING-END-TO-END 📓️day4-run.md"]
 async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
     let mut app = new_app().await;
@@ -202,6 +201,40 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     assert_eq!(crate::stock_of(&app.snapshot().expect("loaded snapshot")), oracle);
 }
 
+/// 💾️ What the shell persists is `document_archive()`; a curation's archive must carry its derived
+/// catalog member from the first frame (boot genesis) so a reload reopens it through the roster rather
+/// than re-deriving it — and the reloaded document keeps the edits made on top of the example.
+#[semio_framework_async_macros::async_test]
+async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_its_edits() {
+    let mut app = new_app().await;
+    let snapshot = app.snapshot().expect("boot snapshot");
+    let catalog_id = snapshot.catalog.child_id.clone();
+    assert_eq!(catalog_id, crate::catalog_child_handle(&crate::stock_of(&snapshot)).child_id, "the boot document declares the handle its own stock derives");
+    let object_id = crate::stock_of(&snapshot)[0].id.clone();
+    dispatch(&mut app, SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.clone() })).await;
+    let archive = PluginApp::document_archive(&*app).await.expect("document archive");
+    assert_eq!(archive.members.len(), 1, "boot genesis opened exactly the catalog member");
+    assert_eq!((archive.members[0].owner.slot.as_str(), archive.members[0].reference.artifact_id.as_str(), archive.members[0].reference.subset.as_str()), (crate::CATALOG_CHILD_SLOT, catalog_id.as_str(), "kit"));
+    PluginApp::begin_document_archive_load(&mut *app, 92, archive).expect("archive admission");
+    let mut status = None;
+    for _ in 0..1_000_000 {
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 92).await.expect("archive status");
+        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+            status = Some(polled);
+            break;
+        }
+        std::thread::yield_now();
+    }
+    let status = status.expect("archive reload reaches a terminal state");
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    PluginApp::acknowledge_document_archive_load(&mut *app, 92).expect("archive acknowledgement");
+    let reloaded = app.snapshot().expect("reloaded snapshot");
+    assert_eq!(reloaded.catalog.child_id, catalog_id);
+    assert_eq!(reloaded.curated.iter().map(|item| (item.object_id.as_str(), item.count)).collect::<Vec<_>>(), vec![(object_id.as_str(), 1)]);
+    assert!(app.child_store(crate::CATALOG_CHILD_SLOT, &catalog_id).await.is_some(), "the reopened catalog member is live after the reload");
+    eprintln!("[DEBUG] saved curation archive reloaded with {} member(s)", status.total.saturating_sub(1));
+}
+
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
     let base = SourcingCurationConfig::default();
@@ -217,7 +250,7 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
 }
 //#endregion 🧪️RetainedConfigOracle
-use crate::editor::sourcing::unit_tests::context::{new_app, sourcing_manifest_for_tests};
+use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{EditorApp, PluginApp};
 

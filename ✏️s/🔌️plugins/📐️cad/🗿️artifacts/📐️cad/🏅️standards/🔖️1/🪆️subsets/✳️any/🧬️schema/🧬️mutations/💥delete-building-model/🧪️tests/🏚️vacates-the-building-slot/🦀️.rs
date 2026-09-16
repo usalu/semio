@@ -37,9 +37,9 @@ async fn clears_the_building_slot_only() {
     let after = applied();
     assert!(after.building_model.is_none(), "delete-building-model must empty the fixed slot");
     assert!(
-        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("shape-model-1")
-            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1")
-            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"),
+        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-shape-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-energy-1")
+            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-structure-1"),
         "delete-building-model must leave the other three fixed model slots occupied"
     );
     assert_eq!(after.drawings.len(), 1, "delete-building-model must not touch the drawings child collection");
@@ -55,7 +55,7 @@ async fn inverse_reinstalls_the_escrowed_building_handle() {
     assert_eq!(inverse.len(), 1, "delete-building-model on an occupied slot inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateBuildingModel(step) => {
-            assert_eq!(step.child_id, "building-model-1", "the inverse must reinstall the escrowed child id");
+            assert_eq!(step.child_id, "cad-building-1", "the inverse must reinstall the escrowed child id");
             assert_eq!(step.target, "cad-building-1!s.stdio.semio@v1/model", "the inverse must carry the escrowed handle's target URI");
         }
         other => panic!("delete-building-model must invert to create-building-model, got {other:?}"),

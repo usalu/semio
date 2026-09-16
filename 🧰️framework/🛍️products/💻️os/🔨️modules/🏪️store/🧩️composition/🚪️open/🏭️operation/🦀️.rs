@@ -81,6 +81,155 @@ impl<P> Drop for UnsupportedMemberSnapshotOpen<P> {
     }
 }
 
+/// 📦️ Retained member snapshot open over a member's own `ArtifactPack` codec — the framed snapshot
+/// bytes are copied in bounded chunks into an exactly reserved buffer and decoded once through
+/// `P::decode_pack`, the same whole-pack decode the parent's `RetainedPersistedDocumentHydration`
+/// performs. The composition sibling of `UnsupportedMemberSnapshotOpen`: every member whose pack
+/// codec is its generic value encoding (every `s.stdio.semio` subset but `flow`, which streams its own
+/// binary protocol) opens through this instead of rejecting `Decode`.
+pub struct PackMemberSnapshotOpen<P> {
+    request: ManuallyDrop<Option<MemberOpenRequest>>,
+    snapshot: ManuallyDrop<Option<P>>,
+    active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    input: Vec<u8>,
+    expected_bytes: Option<usize>,
+    diagnostic: Option<MemberOpenDiagnostic>,
+    terminal: bool,
+}
+
+const PACK_MEMBER_SNAPSHOT_CHUNK_BYTES: usize = 4_096;
+
+impl<P> PackMemberSnapshotOpen<P> {
+    fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> MemberSnapshotOpenStep {
+        self.diagnostic.get_or_insert(diagnostic);
+        MemberSnapshotOpenStep::Rejected(self.diagnostic.unwrap_or(diagnostic))
+    }
+}
+
+impl<P: ArtifactPack + crate::os_store::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
+    type Snapshot = P;
+
+    fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
+        if let Err(diagnostic) = request.admitted_expected() {
+            return Err(MemberOpenAdmissionError { diagnostic, request });
+        }
+        Ok(Self { request: ManuallyDrop::new(Some(request)), snapshot: ManuallyDrop::new(None), active: ManuallyDrop::new(None), input: Vec::new(), expected_bytes: None, diagnostic: None, terminal: false })
+    }
+
+    fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+        if let Some(diagnostic) = self.diagnostic {
+            return MemberSnapshotOpenStep::Rejected(diagnostic);
+        }
+        if self.terminal {
+            return MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Stale);
+        }
+        let frame = match self.request.as_mut().expect("pack member decoder retains its request").step_input(cx) {
+            crate::os_store::MemberOpenInputStep::Framed(frame) => frame,
+            crate::os_store::MemberOpenInputStep::Pending(progress) => return MemberSnapshotOpenStep::Pending(progress),
+            crate::os_store::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
+        };
+        let expected_bytes = frame.snapshot_range().1;
+        if self.expected_bytes.is_none() {
+            if self.input.try_reserve_exact(expected_bytes).is_err() {
+                return self.reject(MemberOpenDiagnostic::Capacity);
+            }
+            self.expected_bytes = Some(expected_bytes);
+        }
+        cx.set_stage("member-open.pack-snapshot");
+        if self.input.len() < expected_bytes {
+            let mut chunk = [0u8; PACK_MEMBER_SNAPSHOT_CHUNK_BYTES];
+            let maximum = chunk.len().min(expected_bytes - self.input.len());
+            let copied = match self.request.as_ref().expect("pack member decoder retains its request").copy_snapshot_chunk(self.input.len(), &mut chunk[..maximum], cx) {
+                Ok(copied) => copied,
+                Err(diagnostic) => return self.reject(diagnostic),
+            };
+            self.input.extend_from_slice(&chunk[..copied]);
+            return MemberSnapshotOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: self.input.len() as u64, total: expected_bytes as u64 });
+        }
+        if let Err(diagnostic) = self.request.as_ref().expect("pack member decoder retains its request").check_step_authority(cx) {
+            return self.reject(diagnostic);
+        }
+        if self.snapshot.is_none() {
+            match P::decode_pack(&self.input) {
+                Ok(snapshot) => *self.snapshot = Some(snapshot),
+                Err(_) => return self.reject(MemberOpenDiagnostic::Decode),
+            }
+        }
+        MemberSnapshotOpenStep::Ready
+    }
+
+    fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Option<(P, MemberOpenRequest)> {
+        if self.terminal || self.diagnostic.is_some() || self.request.as_ref()?.check_step_authority(cx).is_err() || self.input.len() != self.expected_bytes? {
+            return None;
+        }
+        let snapshot = self.snapshot.take()?;
+        let request = self.request.take()?;
+        drop(std::mem::take(&mut self.input));
+        self.expected_bytes = None;
+        self.terminal = true;
+        Some((snapshot, request))
+    }
+}
+
+impl<P: crate::os_store::retirement::RetireOwned> ErasedSnapshotRetirement for PackMemberSnapshotOpen<P> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if self.terminal {
+            return Ok(SnapshotRetirementStep::Complete);
+        }
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
+        if let Some(active) = self.active.as_mut() {
+            return match active.close_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
+                    drop(self.active.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err("pack member decoder snapshot retirement returned false terminal".into()),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("pack member decoder snapshot retirement exceeded its exact grant".into()),
+                step => Ok(step),
+            };
+        }
+        if let Some(snapshot) = self.snapshot.take() {
+            *self.active = Some(crate::os_store::retirement::owned_retirement(snapshot));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(request) = self.request.as_mut() {
+            return match request.close_step(1, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if request.terminal_is_empty() => {
+                    drop(self.request.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err("pack member decoder input returned false terminal".into()),
+                step => Ok(step),
+            };
+        }
+        if !self.input.is_empty() {
+            let released_bytes = maximum_bytes.min(self.input.len());
+            self.input.truncate(self.input.len() - released_bytes);
+            if self.input.is_empty() {
+                drop(std::mem::take(&mut self.input));
+                self.expected_bytes = None;
+            }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
+        }
+        self.expected_bytes = None;
+        self.terminal = true;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none() && self.input.is_empty() && self.expected_bytes.is_none()
+    }
+}
+
+impl<P> Drop for PackMemberSnapshotOpen<P> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || (self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none()), "pack member decoder dropped before exact handoff or bounded retirement");
+    }
+}
+
 pub struct UnsupportedMemberFactoryOpen<M: Send> {
     snapshot: UnsupportedMemberSnapshotOpen<M>,
 }

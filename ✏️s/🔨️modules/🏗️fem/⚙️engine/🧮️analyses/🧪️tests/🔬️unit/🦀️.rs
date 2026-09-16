@@ -1,6 +1,6 @@
 use super::*;
 use crate::elements2d::{Bar2, BeamEb2};
-use crate::engine_test_vectors::payload_bytes;
+use crate::engine_test_vectors::{close_outcome, payload_bytes};
 use crate::model::{solve_linear_static, AxialSpring, Model};
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
@@ -486,6 +486,7 @@ fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
             merged_free: PagedList::default(),
             checkpoint_due: false,
             preview_due: false,
+            preview_cursor: 0,
             resume_target: 0,
             merge_scan_partition: 0,
             merge_candidate: None,
@@ -616,8 +617,15 @@ fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operatio
         max_step_micros = max_step_micros.max(started.elapsed().as_micros());
         match outcome {
             StepOutcome::PreviewReady(bytes) => previews.push(decode_value(&payload_bytes(bytes)).expect("assembly preview decodes")),
-            StepOutcome::Complete(_) => break,
-            StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
+            StepOutcome::Complete(candidate) => {
+                payload_bytes(candidate.state);
+                payload_bytes(candidate.output);
+                break;
+            }
+            StepOutcome::CheckpointReady(checkpoint) => {
+                payload_bytes(checkpoint.state);
+            }
+            StepOutcome::Yield => {}
             StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("assembly fixture must complete"),
         }
     }
@@ -633,8 +641,9 @@ fn assembly_job_is_exact_across_partition_counts() {
     let (fleet, fleet_previews, _) = finish_assembly_job(AssemblyJob::new(&model, operation, 7).expect("fleet partitions prepare"), operation, 3);
     assert_eq!(single.k_full_coo.to_dense().data, fleet.k_full_coo.to_dense().data);
     assert_eq!(single.k_ff_coo.to_dense().data, fleet.k_ff_coo.to_dense().data);
-    assert_eq!(single_previews.last().expect("single publishes marks").assembled_element_ids.len(), model.elements.len());
-    assert_eq!(fleet_previews.last().expect("fleet publishes marks").assembled_element_ids.len(), model.elements.len());
+    assert_eq!(single_previews.iter().map(|preview| preview.assembled_element_ids.len()).sum::<usize>(), model.elements.len());
+    assert_eq!(fleet_previews.iter().map(|preview| preview.assembled_element_ids.len()).sum::<usize>(), model.elements.len());
+    assert!(single_previews.iter().all(|preview| preview.assembled_element_ids.len() <= 1), "every preview carries only the ids assembled since the previous one");
 }
 
 /// 💾️ A serialized element-boundary checkpoint resumes to the exact same merged matrices.
@@ -646,8 +655,9 @@ fn assembly_job_checkpoint_resume_is_byte_stable() {
     let mut sequence = 0;
     let checkpoint = loop {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break payload_bytes(checkpoint.state);
+        match job.step(&mut context) {
+            StepOutcome::CheckpointReady(checkpoint) => break payload_bytes(checkpoint.state),
+            outcome => assert!(!matches!(close_outcome(outcome), StepOutcome::Complete(_)), "assembly must checkpoint before completing"),
         }
     };
     let resumed = AssemblyJob::from_checkpoint(&model, operation, &checkpoint).expect("assembly checkpoint restores");
@@ -715,7 +725,7 @@ fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws(
             }
             let started = std::time::Instant::now();
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            assert!(matches!(job.step(&mut context), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
+            assert!(matches!(close_outcome(job.step(&mut context)), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());
             if job.state.pending.is_some() {
                 break;
@@ -816,7 +826,7 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
             }
             let started = std::time::Instant::now();
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
+            if matches!(close_outcome(job.step(&mut context)), StepOutcome::Complete(_)) {
                 maximum_micros = maximum_micros.max(started.elapsed().as_micros());
                 let system = job.finish().expect("owned assembly completes");
                 return (system.k_full_coo.to_dense().data, system.k_ff_coo.to_dense().data, maximum_micros);
@@ -1273,8 +1283,9 @@ fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
     let mut sequence = 0;
     let checkpoint = loop {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = graph.step(&mut context) {
-            break payload_bytes(checkpoint.state);
+        match graph.step(&mut context) {
+            StepOutcome::CheckpointReady(checkpoint) => break payload_bytes(checkpoint.state),
+            outcome => assert!(!matches!(close_outcome(outcome), StepOutcome::Complete(_)), "graph must checkpoint before completing"),
         }
     };
     let mut resumed = FemJobGraph::from_checkpoint(operation, &checkpoint).expect("graph checkpoint restores");
@@ -1287,7 +1298,7 @@ fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
             }
         }
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
+        if matches!(close_outcome(resumed.step(&mut context)), StepOutcome::Complete(_)) {
             break;
         }
     }

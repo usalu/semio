@@ -1405,6 +1405,34 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
+    /// 🧹️ Every owned store lane the close ladder drives needs its bounded disposer, the absent ones
+    /// (`NoDraft`, `NoTransient`) included — `drive_artifact_owned_disposer` faults
+    /// `interactive-job.close-owned-disposer-missing` on the first `None` and the app never reaches
+    /// its terminal-empty shell (mirrors `📐️cad`/`🧩️puzzle`).
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::process3d::presence::Process3dPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::process3d::presence::Process3dPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::editor::process3d::presence::process3d_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }

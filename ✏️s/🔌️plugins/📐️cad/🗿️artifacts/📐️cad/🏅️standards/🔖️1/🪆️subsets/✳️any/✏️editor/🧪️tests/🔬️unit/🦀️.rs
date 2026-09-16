@@ -129,7 +129,39 @@ pub(crate) mod context {
     }
     
     pub fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
-        CadPlayView { document: scene, runtime }
+        CadPlayView { document: scene, runtime, interaction: CadInteractionSnapshot::default() }
+    }
+
+    pub fn view_with_interaction(scene: CadSnapshot, runtime: CadPlayRuntime, interaction: CadInteractionSnapshot) -> CadPlayView {
+        CadPlayView { document: scene, runtime, interaction }
+    }
+
+    /// 🌲️ The forest document as an interaction-less render view.
+    pub fn forest_view() -> CadPlayView {
+        view(forest_play_scene(), CadPlayRuntime::default())
+    }
+
+    pub fn selecting(ids: &[&str]) -> CadInteractionSnapshot {
+        CadInteractionSnapshot { granularity: edit::CAD_WORLD_PICK_GRANULARITY.into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: ids.first().map(|id| id.to_string()), hovered_ids: Vec::new() }
+    }
+
+    /// 🚚️ Depth-first concatenation of one paged text carrier — the inverse of `paged_text_carrier`.
+    fn packed_text(node: &semio_framework_plugin::BuiltNode, payload: &mut String) {
+        if let semio_framework_plugin::plugin_app_close_prelude::Component::Text(props) = &node.component {
+            payload.push_str(&props.packed_payload());
+        }
+        for child in node.children.iter() {
+            packed_text(child, payload);
+        }
+    }
+
+    /// 🚚️ The world-3d `lane` payload a rendered scene surface publishes beside its spine.
+    pub fn scene_lane(node: &semio_framework_plugin::BuiltNode, lane: &str) -> String {
+        let suffix = format!(".{lane}");
+        let carrier = node.children.iter().find(|child| child.key.as_str().ends_with(&suffix)).unwrap_or_else(|| panic!("scene surface must publish the {lane} lane"));
+        let mut payload = String::new();
+        packed_text(carrier, &mut payload);
+        payload
     }
 }
 
@@ -137,8 +169,8 @@ use context::*;
 use super::*;
 use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
 use crate::standards::v1::subsets::any::schema::inferences::{
-    align_mesh_to_host_snapshot_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
-    CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
+    align_mesh_to_host_snapshot_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_CONCRETE_FOREST_REFERENCE_URL, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX,
+    CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
 };
 use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -312,13 +344,39 @@ fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     next.selected_node_ids.push("node-retained".into());
     let mutation = CadConfigMutation::Snapshot { config: Box::new(next.clone()) };
     let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
-    assert_eq!(footprint.work_items, 1);
     let (post, inverse, forward) = prepare_cad_config(&base, mutation.clone()).expect("exact CAD config preparation");
     assert_eq!(post, next);
     assert_eq!(forward, mutation);
     assert_eq!(inverse, vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]);
+    // 🧺️ `work_items` counts staged ROWS: the forward plus every inverse row — declaring fewer fail-closes
+    // the gesture in `ArtifactStore::fold_batch_item` (`batched item candidate failed its exact fixed fold contract`).
+    assert_eq!(footprint.work_items, 1 + inverse.len(), "config footprint must cover forward + inverse rows");
+    assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_one_invertible_item(footprint.retained_bytes));
     let oversized = CadConfigMutation::SetContributions { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) };
     assert!(admit_cad_config_mutation(&oversized).is_err());
+}
+
+/// 🧺️ The one-invertible-item declaration (`admit_cad_artifact_mutation`) is only exact while every
+/// `CadMutation` inverts to at most one row against the forest document.
+#[test]
+fn every_cad_mutation_inverse_fits_the_one_invertible_item_footprint() {
+    let base = forest_play_scene();
+    let history = empty_history();
+    let doc = ArtifactView::new(&base, &history);
+    let config = CadConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let operation = CadPreviewOperationIdentity { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) };
+    // 🚪️ The I/O commands mint envelopes/effects the bare dispatch harness cannot retire; the
+    // document-mutating vocabulary this law guards lives in the node/reference/transform commands.
+    let io_commands = ["importCadFile", "saveSelected", "saveInPlay", "saveCurrent", "loadRawRequest", "setActiveExample"];
+    for command in every_command().into_iter().filter(|command| !io_commands.contains(&command.command_id())) {
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(operation.clone()), view_state: None };
+        let Ok(emit) = command.dispatch(&doc, &cfg, &mut ctx) else { continue };
+        for mutation in &emit.artifact_mutations {
+            let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(mutation, &base);
+            assert!(inverse.len() <= 1, "{} inverts to {} rows; the artifact lane declares one invertible item", command.command_id(), inverse.len());
+        }
+    }
 }
 
 #[test]
@@ -327,10 +385,11 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
     let node = CadNode { id: "node-retained".into(), label: "Retained".into(), kind: "group".into() };
     let mutation = CadMutation::CreateNode(crate::mutations::create_node::CreateNode { node: node.clone() });
     let footprint = admit_cad_artifact_mutation(&mutation).expect("bounded CAD Artifact mutation");
-    assert_eq!(footprint.work_items, 1);
     let (post, inverse, forward) = prepare_cad_artifact(&base, mutation.clone()).expect("exact CAD Artifact preparation");
     assert_eq!(post.nodes, vec![node]);
     assert_eq!(forward, mutation);
+    assert_eq!(footprint.work_items, 1 + inverse.len(), "artifact footprint must cover forward + inverse rows");
+    assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_one_invertible_item(footprint.retained_bytes));
     let mut restored = post;
     for operation in inverse {
         let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&operation, &restored);
@@ -436,17 +495,51 @@ fn optional_field_rows_keep_their_pre_migration_bytes() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn forest_example_uses_kind_referenced_meshes_not_inline_tessellation() {
+async fn forest_example_uses_per_object_brep_meshes() {
     let scene = forest_working_scene();
-    let runtime = CadPlayRuntime::default();
-    let json = edit::world_instances_json(&scene.building_objects, &runtime);
+    let view = forest_view();
+    let json = edit::world_instances_json(&scene.building_objects, &view);
     assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
-    let meshes = edit::world_meshes_json(&scene.building_objects, scene.building_geometry.as_ref());
-    assert!(meshes.contains("\"kind\""), "viewport meshes must reference built-in kinds, not inline tessellation buffers");
-    assert!(!meshes.contains("\"data\""), "inline mesh buffers exceed fixed UI surface capacity");
-    assert!(!meshes.contains("🧊️hexagonal-cut-concrete-forest-left.glb"));
+    let meshes: Vec<serde_json::Value> = serde_json::from_str(&edit::world_meshes_json(&scene.building_objects, scene.building_geometry.as_ref())).expect("meshes json");
     assert!(scene.building_objects.len() > 5);
+    assert_eq!(meshes.len(), scene.building_objects.iter().filter(|object| object.visible).count(), "one inline tessellation per visible object");
+    for (object, mesh) in scene.building_objects.iter().filter(|object| object.visible).zip(&meshes) {
+        assert_eq!(mesh["id"].as_str(), Some(object.id.as_str()), "the instance's meshId must resolve to its own solid, never a shared placeholder kind");
+        assert!(mesh.get("kind").is_none(), "a CAD solid is authored geometry, not a renderer-derivable kind");
+        assert!(mesh["data"]["positions"].as_array().is_some_and(|positions| positions.len() >= 9), "inline tessellation must carry real triangles");
+    }
+    assert!(!json.contains("🧊️hexagonal-cut-concrete-forest-left.glb"));
     assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn url_backed_objects_share_one_mesh_reference_beside_inline_solids() {
+    let scene = forest_working_scene();
+    let mut objects = scene.building_objects.clone();
+    objects[0].mesh_url = Some("/🧊️assets/column.glb".into());
+    objects[1].mesh_url = Some("/🧊️assets/column.glb".into());
+    let meshes: Vec<serde_json::Value> = serde_json::from_str(&edit::world_meshes_json(&objects, scene.building_geometry.as_ref())).expect("meshes json");
+    let url_entries: Vec<&serde_json::Value> = meshes.iter().filter(|mesh| mesh.get("url").is_some()).collect();
+    assert_eq!(url_entries.len(), 1, "one shared reference per asset url");
+    assert_eq!(url_entries[0]["id"].as_str(), Some("mesh:column"));
+    assert_eq!(meshes.len(), 1 + objects.iter().filter(|object| object.visible).count() - 2, "url-backed objects add no inline tessellation");
+    let instances: Vec<serde_json::Value> = serde_json::from_str(&edit::world_instances_json(&objects, &forest_view())).expect("instances json");
+    assert_eq!(instances[0]["meshId"].as_str(), Some("mesh:column"));
+    assert_eq!(instances[2]["meshId"].as_str(), Some(objects[2].id.as_str()));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn world_fit_revision_follows_the_document_not_object_poses() {
+    let document = forest_play_scene();
+    let scene = forest_working_scene();
+    let base = edit::world_fit_revision(&document, CadPaneId::Building, &scene.building_objects);
+    let mut moved = scene.building_objects.clone();
+    moved[0].origin = [12.0, -3.0, 0.5];
+    assert_eq!(edit::world_fit_revision(&document, CadPaneId::Building, &moved), base, "a transform edit must not re-arm the auto-fit");
+    assert_ne!(edit::world_fit_revision(&document, CadPaneId::Energy, &scene.energy_objects), base, "each pane frames its own content");
+    let mut other = document.clone();
+    other.id = "another-document".into();
+    assert_ne!(edit::world_fit_revision(&other, CadPaneId::Building, &scene.building_objects), base, "opening another document frames again");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -498,6 +591,21 @@ async fn forest_references_use_xy_ground_plane_and_z_up() {
     assert_eq!(CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, 0.2);
     assert!(reference.locked, "example references default locked like puzzle 3d");
     assert_eq!(reference.width_world, 28.6);
+}
+
+/// 🖼️ The `/cad-assets` route is the static-dir row in `📦️packages/🦀️rust/Cargo.toml` rooted at
+/// `📚️examples/🖼️assets`; a url that misses a file there is answered by the dev server's SPA
+/// fallback (`index.html`, 200) and the reference plane silently never paints.
+#[semio_framework_async_macros::async_test]
+async fn forest_reference_url_names_a_file_under_the_served_assets_root() {
+    let relative = CAD_CONCRETE_FOREST_REFERENCE_URL.strip_prefix("/cad-assets/").expect("reference url rides the /cad-assets static-dir route");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets").join(relative);
+    assert!(path.is_file(), "reference asset {} must exist under the served assets root", path.display());
+    let scene = forest_play_scene();
+    let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference");
+    assert_eq!(reference.source_url, CAD_CONCRETE_FOREST_REFERENCE_URL);
+    let published = edit::world_references_json(&scene, CadPaneId::Energy).expect("references lane");
+    assert!(published.contains(CAD_CONCRETE_FOREST_REFERENCE_URL), "the world-3d references lane must carry the served url");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -564,9 +672,25 @@ async fn renders_world_scene_for_each_pane() {
     let view_state = ViewModel::default();
     for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
         let node = render_direct(&app, body_key, &doc, &CadConfig::default(), &view_state).expect("CAD UI assembly");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
+        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("body {body_key} should render a surface") };
+        assert_eq!(props.doc_schema.as_str(), "world-3d@1", "body {body_key} should render a world-3d scene");
+        let lanes: Vec<&str> = node.children.iter().map(|child| child.key.as_str()).collect();
+        for lane in ["meshes", "instances", "selection", "references", "environment", "fit"] {
+            assert!(lanes.iter().any(|key| key.ends_with(&format!(".{lane}"))), "body {body_key} must publish the {lane} lane beside the spine, got {lanes:?}");
+        }
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn world_scene_binds_the_cad_interaction_domain_at_object_granularity() {
+    let scene = forest_play_scene();
+    let view = CadPlayView { document: scene, runtime: CadPlayRuntime::default(), interaction: CadInteractionSnapshot::default() };
+    let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default()).expect("scene surface");
+    assert_eq!(node.key.as_str(), shape::SURFACE_ID);
+    let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("world-3d surface node") };
+    let world: semio_framework_plugin::World3dScene = semio_framework_ui_scene::decode(props).expect("world-3d spine");
+    assert_eq!(world.domain_id.as_deref(), Some(CAD_INTERACTION_DOMAIN));
+    assert_eq!(world.domain_granularity_id.as_deref(), Some(edit::CAD_WORLD_PICK_GRANULARITY));
 }
 
 /// 🛡️ Anti-regression guard for the "four empty windows" defect: `forest_play_document` must
@@ -585,11 +709,11 @@ async fn forest_example_world_scene_has_non_empty_instances_for_every_pane() {
         let working_scene = edit::cad_pane_working_scene(&document, pane).unwrap_or_else(|| panic!("pane {pane:?} must resolve a local-owner working scene"));
         let (objects, _geometry) = edit::cad_pane_working_objects(&working_scene, pane);
         assert!(!objects.is_empty(), "pane {pane:?} must have real objects, not the empty-defect slice");
-        let instances_json = edit::world_instances_json(objects, &CadPlayRuntime::default());
+        let instances_json = edit::world_instances_json(objects, &view(document.clone(), CadPlayRuntime::default()));
         assert_ne!(instances_json, "[]", "pane {pane:?} instances_json must not be empty");
         let meshes_json = edit::world_meshes_json(objects, _geometry);
-        assert!(meshes_json.contains("\"kind\""), "pane {pane:?} must publish kind-referenced meshes that fit the fixed UI surface");
-        assert!(!meshes_json.contains("\"data\""), "pane {pane:?} must not inline tessellation into meshesJson");
+        assert!(meshes_json.contains("\"data\""), "pane {pane:?} must inline its solids' tessellation into meshesJson");
+        assert!(!meshes_json.contains("\"kind\""), "pane {pane:?} must not degrade authored solids to placeholder kinds");
     }
 }
 
@@ -643,6 +767,34 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
         assert!(layout_json.contains(window_kind_id), "default quad layout must place {window_kind_id}: {layout_json}");
     }
     assert_eq!(definition.artifact_kinds.iter().map(|kind| kind.id.as_str()).collect::<Vec<_>>(), vec!["3d.cad"]);
+}
+
+/// 🖼️ A reference pick is app-owned runtime state, and it clears the framework `"cad"` object
+/// selection through the sanctioned `InteractionWrite` lane so the inspection panel can show it.
+#[semio_framework_async_macros::async_test]
+async fn reference_pick_selects_the_reference_and_clears_the_cad_domain() {
+    let scene = forest_play_scene();
+    let selected = forest_working_scene().building_objects[0].id.clone();
+    let history = empty_history();
+    let doc = ArtifactView::new(&scene, &history);
+    let config = CadConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let command = command_from_action("setReferenceSelection", Some(&json!({ "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": "ref-concrete-forest" })));
+    let mut ctx = CadDispatchCtx { interaction: selecting(&[selected.as_str()]), preview_operation: None, view_state: None };
+    let emit = command.dispatch(&doc, &cfg, &mut ctx).expect("reference pick");
+    assert!(emit.artifact_mutations.is_empty(), "a reference pick is never a document edit");
+    let runtime = runtime_after(&emit, &config);
+    assert_eq!(runtime.selected_reference_model_definition_id.as_deref(), Some(CAD_MODEL_DEFINITION_ENERGY));
+    assert_eq!(runtime.selected_reference_id.as_deref(), Some("ref-concrete-forest"));
+    assert_eq!(emit.interaction_writes.len(), 1);
+    assert_eq!(emit.interaction_writes[0].domain, CAD_INTERACTION_DOMAIN);
+    assert_eq!(emit.interaction_writes[0].merge, protocol::MergeMode::Subtractive, "an empty replace is a no-op; the live ids are subtracted");
+    assert_eq!(emit.interaction_writes[0].targets.iter().map(|target| target.id.as_str()).collect::<Vec<_>>(), vec![selected.as_str()]);
+    let mut idle = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: None, view_state: None };
+    assert!(command.dispatch(&doc, &cfg, &mut idle).expect("reference pick").interaction_writes.is_empty(), "nothing selected, nothing to subtract");
+    let view = view(scene, runtime);
+    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: inspection::build_properties_panel(&view, cad_labels(&ViewModel::default()), None).expect("panel") }).expect("projection");
+    assert!(panel.contains("cad-play-inspector.reference.width.grow"), "{panel}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -711,18 +863,39 @@ async fn typology_extent_derives_from_authored_geometry() {
 //#region 🔖️ViewModel
 #[semio_framework_async_macros::async_test]
 async fn gumball_config_fields_present_regardless_of_dislocate_activation() {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
-    // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
-    // `gumball_active`'s own doc comment) — the gumball can never see a live selection at this
-    // render boundary, so `gumballActive` stays `false` even with Dislocate active; the
-    // transform-mode config fields still render regardless (client-side, harmless while inactive).
-    let selection = edit::world_selection_json(&default_document(), &CadPlayRuntime::default(), Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
+    let selection = edit::world_selection_json(&view(default_document(), CadPlayRuntime::default()), CadPaneId::Shape, &[], Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
     assert!(selection.contains("\"transformMode\":\"transform\""));
     assert!(selection.contains("\"moveAxes\":true"));
     assert!(selection.contains("\"rotate\":true"));
     assert!(selection.contains("\"scaleAxes\":false"));
-    assert!(selection.contains("\"gumballActive\":false"));
+    assert!(selection.contains("\"gumballActive\":false"), "no selection, no gumball");
     assert!(!selection.contains("\"gumballTarget\""));
+}
+
+/// 🕹️ The live `"cad"` domain reaches the world scene: selected/hovered ids ride the selection lane
+/// and every instance carries its own flags, and the Dislocate gumball shows for a live selection.
+#[semio_framework_async_macros::async_test]
+async fn live_cad_selection_reaches_the_world_scene_and_arms_the_gumball() {
+    let scene = forest_working_scene();
+    let first = scene.building_objects[0].id.clone();
+    let second = scene.building_objects[1].id.clone();
+    let mut interaction = selecting(&[first.as_str()]);
+    interaction.hovered_ids = vec![second.clone()];
+    let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
+    let selection = edit::world_selection_json(&view, CadPaneId::Building, &scene.building_objects, Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
+    assert!(selection.contains(&format!("\"ids\":[\"{first}\"]")), "selection lane carries the domain's ids: {selection}");
+    assert!(selection.contains(&format!("\"hoveredId\":\"{second}\"")), "selection lane carries the domain's hover: {selection}");
+    assert!(selection.contains("\"gumballActive\":true"), "dislocate + selection arms the gumball: {selection}");
+    let other_pane = edit::world_selection_json(&view, CadPaneId::Energy, &scene.energy_objects, Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
+    assert!(other_pane.contains("\"ids\":[]"), "a building selection never leaks into the energy pane's lane: {other_pane}");
+    assert!(other_pane.contains("\"hoveredId\":null"), "a building hover never leaks into the energy pane's lane: {other_pane}");
+    let instances: Vec<serde_json::Value> = serde_json::from_str(&edit::world_instances_json(&scene.building_objects, &view)).expect("instances json");
+    assert_eq!(instances[0]["selected"], serde_json::Value::Bool(true));
+    assert_eq!(instances[0]["hovered"], serde_json::Value::Bool(false));
+    assert_eq!(instances[1]["selected"], serde_json::Value::Bool(false));
+    assert_eq!(instances[1]["hovered"], serde_json::Value::Bool(true));
+    let idle = edit::world_selection_json(&view, CadPaneId::Building, &scene.building_objects, None, CadDislocateOptions::default());
+    assert!(idle.contains("\"gumballActive\":false"), "no dislocate utility, no gumball even with a selection");
 }
 
 /// 🎥️ Camera edits target the host-authenticated exact window and never app or document state.
@@ -738,9 +911,21 @@ async fn set_camera_writes_config_not_mutations() {
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), building::WINDOW_KIND_ID);
 }
 
+/// 🖼️ The four panes' reference overlays share one reference id; only the pane whose model
+/// definition the app-owned reference selection names paints it selected.
+#[semio_framework_async_macros::async_test]
+async fn reference_selection_paints_only_its_own_pane() {
+    let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_ENERGY.into()), selected_reference_id: Some("ref-concrete-forest".into()), ..CadPlayRuntime::default() };
+    let view = view(forest_play_scene(), runtime);
+    let energy = edit::world_selection_json(&view, CadPaneId::Energy, &[], None, CadDislocateOptions::default());
+    assert!(energy.contains("\"referenceSelectedId\":\"ref-concrete-forest\""), "{energy}");
+    let building = edit::world_selection_json(&view, CadPaneId::Building, &[], None, CadDislocateOptions::default());
+    assert!(!building.contains("referenceSelectedId"), "{building}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn gumball_inactive_without_selection() {
-    let selection = edit::world_selection_json(&default_document(), &CadPlayRuntime::default(), Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
+    let selection = edit::world_selection_json(&view(default_document(), CadPlayRuntime::default()), CadPaneId::Shape, &[], Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
     assert!(selection.contains("\"gumballActive\":false"));
     assert!(!selection.contains("\"gumballTarget\""));
 }
@@ -754,17 +939,12 @@ async fn active_utility_flows_from_the_host_view_into_scene() {
     let config = CadConfig::default();
     let view_state = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::default() };
     let node = render_direct(&app, shape::BODY_KEY, &doc, &config, &view_state).expect("CAD UI assembly");
-    let json = serde_json::to_string(&node).unwrap();
-    // The world selection blob is embedded as an escaped JSON string inside the scene node.
-    assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from ViewModel.active_utility_id");
+    let selection = scene_lane(&node, "selection");
+    assert!(selection.contains(r#""transformMode":"transform""#), "render sources Dislocate from ViewModel.active_utility_id: {selection}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dislocate_utility_is_scoped_by_each_window_view_context() {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
-    // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
-    // `edit::gumball_active`'s own doc comment) — the gumball can never be live-active at this
-    // render boundary, in any pane; the transform-mode config fields still render regardless.
     let app = CadPlayApp::default();
     let scene = default_document();
     let config = CadConfig::default();
@@ -772,14 +952,12 @@ async fn dislocate_utility_is_scoped_by_each_window_view_context() {
     let doc = ArtifactView::new(&scene, &history);
     let shape_view = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::default() };
     let building_view = ViewModel { active_utility_id: None, ..ViewModel::default() };
-    let shape = render_direct(&app, shape::BODY_KEY, &doc, &config, &shape_view).expect("CAD UI assembly");
-    let building = render_direct(&app, building::BODY_KEY, &doc, &config, &building_view).expect("CAD UI assembly");
-    let shape_json = serde_json::to_string(&shape).unwrap();
-    let building_json = serde_json::to_string(&building).unwrap();
-    assert!(shape_json.contains(r#"gumballActive\":false"#));
-    assert!(shape_json.contains(r#"transformMode\":\"transform"#));
-    assert!(building_json.contains(r#"gumballActive\":false"#));
-    assert!(!building_json.contains(r#"transformMode\":\"transform"#));
+    let shape = scene_lane(&render_direct(&app, shape::BODY_KEY, &doc, &config, &shape_view).expect("CAD UI assembly"), "selection");
+    let building = scene_lane(&render_direct(&app, building::BODY_KEY, &doc, &config, &building_view).expect("CAD UI assembly"), "selection");
+    assert!(shape.contains(r#""gumballActive":false"#), "the interaction-less render path has no selection to arm: {shape}");
+    assert!(shape.contains(r#""transformMode":"transform""#));
+    assert!(building.contains(r#""gumballActive":false"#));
+    assert!(!building.contains(r#""transformMode":"transform""#));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1263,7 +1441,7 @@ async fn preview_generation_cross_surface_domain_round_trips_max_and_rejects_plu
     let generation_schema = &json_schema["properties"]["engagementPreviewGeneration"];
     assert_eq!(generation_schema["minimum"], json!(0));
     assert_eq!(generation_schema["maximum"], json!(CAD_PREVIEW_GENERATION_MAX));
-    assert!(include_str!("../../🎚️config/🧬️schema/🛰️.proto").contains("int32 engagement_preview_generation = 32;"));
+    assert!(include_str!("../../🎚️config/🧬️schema/🛰️.proto").contains("int32 engagement_preview_generation = 11;"));
     assert!(include_str!("../../🎚️config/🧬️schema/🔗️.graphql").contains("engagementPreviewGeneration: Int!"));
     assert!(include_str!("../../🎚️config/🧬️schema/🟦️.ts").contains("engagementPreviewGeneration: number;"));
     assert!(include_str!("../../🎚️config/🧬️schema/🦀️.rs").contains("engagement_preview_generation: i32"));
@@ -1503,3 +1681,4 @@ async fn ingest_operations_is_idempotent_for_cad() {
     assert_eq!(receiver.snapshot().expect("snapshot").nodes.len(), nodes_before + 1, "feeding the same operation twice must not double-apply");
 }
 //#endregion 🔖️Convergence
+

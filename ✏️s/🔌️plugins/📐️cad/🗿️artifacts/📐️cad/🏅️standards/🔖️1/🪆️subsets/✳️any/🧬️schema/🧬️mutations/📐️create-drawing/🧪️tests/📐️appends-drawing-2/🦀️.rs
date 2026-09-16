@@ -35,7 +35,7 @@ fn applied() -> CadSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn appends_a_second_drawing_handle() {
     let after = applied();
-    assert_eq!(after.drawings.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["drawing-1", "drawing-2"], "create-drawing appends the new handle after the existing ones");
+    assert_eq!(after.drawings.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["cad-drawing-1", "cad-drawing-2"], "create-drawing appends the new handle after the existing ones");
     assert_eq!(after.drawings[1].target.to_uri(), "cad-drawing-2!s.stdio.semio@v1/drawing", "create-drawing must parse the payload target URI into a real drawing-subset ArtifactRef");
     assert!(after.shape_model.is_some(), "create-drawing must not touch the fixed model slots");
     assert_eq!(after, expected_after(), "create-drawing/appends-drawing-2: applied state differs from the committed after-snapshot");
@@ -48,7 +48,7 @@ async fn inverse_deletes_the_drawing_it_created() {
     let inverse = mutation().inverse(&base);
     assert_eq!(inverse.len(), 1, "create-drawing inverts to exactly one step");
     match &inverse[0] {
-        CadMutation::DeleteDrawing(step) => assert_eq!(step.child_id, "drawing-2", "the inverse must delete the drawing id create-drawing minted"),
+        CadMutation::DeleteDrawing(step) => assert_eq!(step.child_id, "cad-drawing-2", "the inverse must delete the drawing id create-drawing minted"),
         other => panic!("create-drawing must invert to delete-drawing, got {other:?}"),
     }
     let mut snapshot = applied();
@@ -81,7 +81,7 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "create-drawing/appends-drawing-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let list = produced.diff().drawings.as_ref().expect("create-drawing fills the drawings child list");
-    assert_eq!(list.values.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["drawing-1", "drawing-2"], "create-drawing emits the WHOLE post-state list, not an added/removed delta");
+    assert_eq!(list.values.iter().map(|handle| handle.child_id.as_str()).collect::<Vec<_>>(), vec!["cad-drawing-1", "cad-drawing-2"], "create-drawing emits the WHOLE post-state list, not an added/removed delta");
     assert!(produced.diff().nodes.is_none(), "create-drawing must not emit a nodes delta");
 }
 

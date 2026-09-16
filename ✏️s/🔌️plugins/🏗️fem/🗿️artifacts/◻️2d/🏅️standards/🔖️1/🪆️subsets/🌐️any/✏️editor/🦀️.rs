@@ -246,7 +246,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation>
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("fem2d-artifact-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -540,6 +540,18 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
+    /// (`reset_document_effect`: example switch, `artifact:in` import) drives through the host's
+    /// persisted-envelope replacement — the trait default refuses the envelope, which makes every
+    /// fem2d document swap fault at the archive-load boundary.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::FEM_2D_SCHEMA, operation, generation))
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {

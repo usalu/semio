@@ -169,3 +169,74 @@ impl protocol::OpBinary for Process3dPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region 🧹️Retirement
+/// 📏️ The one heap owner a `Process3dPresence` root can hold: `engagement_input`'s UTF-8 buffer.
+/// Every other field is a plain `f64` array, so a root whose engagement input is empty owns nothing
+/// beyond its own inline bytes — the terminal-empty predicate the close lane fences on.
+pub fn process3d_presence_is_terminal_empty(presence: &Process3dPresence) -> bool {
+    presence.engagement_input.is_empty()
+}
+
+/// 👥️ Exact local and peer root ownership for process3d presence: one bounded turn returns the
+/// variable-length engagement input, a second returns the inline root. Without it (and the disposer
+/// below) every close of a registry-backed app faulted `interactive-job.close-owned-disposer-missing`
+/// and the whole unit-test binary aborted in the fixture's `Drop` (ticket 26/09/15/DEV-PROCESS-REACT-E2E).
+pub struct Process3dPresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRetirementFactory {
+    fn retire(&self, root: std::sync::Arc<Process3dPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(Process3dPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)), engagement_input: std::mem::ManuallyDrop::new(None) })
+    }
+}
+
+struct Process3dPresenceRetirement {
+    root: std::mem::ManuallyDrop<Option<std::sync::Arc<Process3dPresence>>>,
+    engagement_input: std::mem::ManuallyDrop<Option<String>>,
+}
+
+impl store::ErasedSnapshotRetirement for Process3dPresenceRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if let Some(root) = self.root.take() {
+            let released = std::sync::Arc::into_inner(root).map(|value| value.engagement_input).filter(|input| !input.is_empty());
+            let released_bytes = released.as_ref().map_or(0, String::len);
+            if released_bytes > maximum_bytes {
+                self.engagement_input = std::mem::ManuallyDrop::new(released);
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            drop(released);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+        }
+        if let Some(input) = self.engagement_input.take() {
+            let released_bytes = input.len();
+            if released_bytes > maximum_bytes {
+                self.engagement_input = std::mem::ManuallyDrop::new(Some(input));
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            drop(input);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none() && self.engagement_input.is_none()
+    }
+}
+
+impl Drop for Process3dPresenceRetirement {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            assert!(self.root.is_none() && self.engagement_input.is_none(), "process3d presence retirement requires its exact terminal-empty witness");
+        }
+    }
+}
+
+/// 🧹️ The close-lane disposer paired with [`Process3dPresenceRetirementFactory`].
+pub fn process3d_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Process3dPresence, Process3dPresenceMutation>>> {
+    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Process3dPresence::default()), process3d_presence_is_terminal_empty).expect("the default process3d presence root holds no engagement input"))
+}
+//#endregion 🧹️Retirement

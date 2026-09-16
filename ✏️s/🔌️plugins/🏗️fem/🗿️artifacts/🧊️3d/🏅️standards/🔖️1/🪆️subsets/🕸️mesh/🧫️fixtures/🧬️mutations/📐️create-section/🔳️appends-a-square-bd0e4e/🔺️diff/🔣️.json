@@ -9,9 +9,9 @@
         "id": "shs120",
         "name": "SHS 120x120x6",
         "area": 0.00266,
-        "iy": 0.0000556,
-        "iz": 0.0000556,
-        "j": 0.0000889
+        "iy": 5.56e-05,
+        "iz": 5.56e-05,
+        "j": 8.89e-05
       }
     ],
     "removed": [],
@@ -22,11 +22,5 @@
   "supports": null,
   "loadCases": null,
   "combinations": null,
-  "analysis": null,
-  "resultSourceId": null,
-  "resultMode": null,
-  "resultModeIndex": null,
-  "camera": null,
-  "solverResultsJson": null,
-  "meshPreviewJson": null
+  "analysis": null
 }

@@ -42,7 +42,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex, split_face_by_chain, split_face_by_interior_curve, split_face_by_seam_crossing, ParametricEdge};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex, split_face_by_chain, split_face_by_interior_chain, split_face_by_interior_curve, split_face_by_seam_crossing, ParametricEdge};
 use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::standards::v1::subsets::brep::schema::diff::transform::{copy_solid, transform_solid};
@@ -55,7 +55,7 @@ use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tesse
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::BodyValidationJob;
 #[cfg(test)]
 use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError, ValidationIssue};
@@ -271,14 +271,35 @@ fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb
         return match op {
             BooleanOp::Unite => Ok(Some(copy_solid(body, a, rec)?)),
             BooleanOp::Intersect => Ok(Some(copy_solid(body, b, rec)?)),
-            BooleanOp::Cut => {
+            // 🕳️ A tool that only TOUCHES the target's boundary (a pocket flush with the top and both
+            // sides — process3d's lap joint) is not a void: its coplanar faces must be imprinted and
+            // merged by the general engine. Answering a void shell here read the notch as an enclosed
+            // cavity whose faces were wound outward, and the "cut" ADDED the tool's volume.
+            BooleanOp::Cut if solid_strictly_inside(body, b, a, tol)? => {
                 let outer = detached_copy_of_outer_faces(body, a, rec)?;
                 let inner = detached_copy_of_outer_faces(body, b, rec)?;
                 Ok(Some(solid_from_outer_faces(body, outer, vec![inner], rec)?))
             }
+            BooleanOp::Cut => Ok(None),
         };
     }
     Ok(None)
+}
+
+/// 🔀 `true` when every boundary vertex of `inner` classifies strictly `Inside` `outer` — no vertex on
+/// its boundary — so `inner` can only ever be a genuine cavity of `outer`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_strictly_inside(body: &Body, inner: SolidId, outer: SolidId, tol: f64) -> Result<bool, KernelError> {
+    let points = solid_vertex_positions(body, inner);
+    if points.is_empty() {
+        return Ok(false);
+    }
+    for p in points {
+        if !matches!(local_point_in_solid(body, outer, p, tol)?, PointClassification::Inside) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 /// 🔀 `true` when every boundary vertex of `inner` classifies as `Inside` or `OnBoundary` against
@@ -484,8 +505,21 @@ fn imprint_face_pair(
             // the shared edge, and that operand queues no imprint of its own — the
             // boundary it needs is already there.
             let along_a = if full_period { None } else { coincident_boundary_edge(body, fa, ic, (t0, t1), tol) };
-            let along_b = if full_period || along_a.is_some() { None } else { coincident_boundary_edge(body, fb, ic, (t0, t1), tol) };
+            let along_b = if full_period { None } else { coincident_boundary_edge(body, fb, ic, (t0, t1), tol) };
             let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
+            // 🧱 A segment running along BOTH operands' boundaries (two boxes flush on a face: the
+            // stock's side face meets the tool's top face exactly along the stock's own top edge) is
+            // already topology on each side; neither face needs an imprint, only the two boundary
+            // subedges must become ONE edge so the pieces stitch by shared-edge adjacency. Queueing
+            // it as B's imprint used to fail with "midpoint not found inside any active piece".
+            if let (Some(_), Some(_)) = (along_a, along_b) {
+                let ea = boundary_subedge(body, fa, endpoints, (tol, weld), rec)?;
+                let eb = boundary_subedge(body, fb, endpoints, (tol, weld), rec)?;
+                if ea != eb {
+                    unify_boundary_edges(body, eb, ea)?;
+                }
+                continue;
+            }
             let edge_id = match (along_a, along_b) {
                 (Some(_), _) => boundary_subedge(body, fa, endpoints, (tol, weld), rec)?,
                 (None, Some(_)) => boundary_subedge(body, fb, endpoints, (tol, weld), rec)?,
@@ -612,6 +646,10 @@ pub struct BooleanJob {
     protected_edges: HashSet<EdgeId>,
     protected_vertices: HashSet<VertexId>,
     coincident_a: HashSet<FaceId>,
+    /// 🧱 Pieces of B found coincident with a piece of A AFTER imprinting (a tool face lying within a
+    /// stock face — the flush notch), dropped in `ClassifyB` the way a whole coincident B face is
+    /// dropped up front; their A twins join `coincident_a`.
+    coincident_b: HashSet<FaceId>,
     faces_a: Vec<FaceId>,
     faces_b: Vec<FaceId>,
     /// 🔗 Per-face-of-A support cache: the surface and AABB the whole `fb` row is tested against,
@@ -686,6 +724,7 @@ impl BooleanJob {
             protected_edges,
             protected_vertices,
             coincident_a,
+            coincident_b: HashSet::new(),
             faces_a,
             faces_b,
             row: None,
@@ -844,6 +883,17 @@ impl BooleanJob {
                     self.apply_b += 1;
                 }
                 BooleanPhase::ClassifyA => {
+                    if self.classify_a == 0 {
+                        // 🧱 Imprinting can carve a piece of A that coincides exactly with a piece of B
+                        // (the stock's top face over a flush notch, its side faces beside it). Such a
+                        // pair is one boundary, not two: A's piece follows the whole-face coincident
+                        // rule below and B's piece is dropped, or both survived as duplicate topology
+                        // (edges used by three coedges) and the stitch failed validation.
+                        for (fa, fb) in find_coincident_face_pairs(body, &self.pieces_a, &self.pieces_b, self.tol) {
+                            self.coincident_a.insert(fa);
+                            self.coincident_b.insert(fb);
+                        }
+                    }
                     if self.classify_a >= self.pieces_a.len() {
                         self.phase = BooleanPhase::ClassifyB;
                         continue;
@@ -867,6 +917,10 @@ impl BooleanJob {
                         continue;
                     }
                     let f = self.pieces_b[self.classify_b];
+                    if self.coincident_b.contains(&f) {
+                        self.classify_b += 1;
+                        continue;
+                    }
                     let class = classify_face_against_solid(body, f, self.a, self.tol)?;
                     if keep_face(self.op, false, class) {
                         if matches!(self.op, BooleanOp::Cut) {
@@ -1100,30 +1154,51 @@ fn refine_boundary(valid: &impl Fn(f64) -> bool, mut outside: f64, mut inside: f
 }
 
 /// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line`] (e.g. plane/plane,
-/// coincident-cylinder-axis lines); windows it around the two faces' combined AABB so sampling
-/// stays finite and relevant.
+/// coincident-cylinder-axis lines); windows it to the parameter run where the line passes through
+/// the two faces' AABB INTERSECTION (a slab clip per axis, each slab widened by a small margin), so
+/// [`clip_intcurve_to_faces`]'s fixed 64-cell sampling spends its cells where an imprint can exist
+/// at all — a line's own `domain` (finite or not) is intersected with that window too. 🐛 The window
+/// used to be a radius of 4× the LARGER face's diagonal around the pair's centroid: for a box slab cutting through a beam (process3d's crosscut, 0.02 m of a 3 m
+/// stock) the valid run was a fraction of one sampling cell, every pair clipped to nothing, no
+/// imprint was queued, and the stitch answered a non-manifold body (ticket
+/// 26/09/15/DEV-PROCESS-REACT-E2E). A line that never enters the intersection AABB answers an
+/// empty (`hi < lo`) bracket; a non-line unbounded curve keeps the old radius window.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: FaceId) -> (f64, f64) {
     let (lo, hi) = (ic.domain.min, ic.domain.max);
-    if lo.is_finite() && hi.is_finite() {
+    let is_line = matches!(ic.curve3, crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { .. });
+    if lo.is_finite() && hi.is_finite() && !is_line {
         return (lo, hi);
     }
-    let mut radius = 100.0;
-    let mut center = 0.0;
-    if let (Ok(ba), Ok(bb)) = (face_aabb(body, face_a), face_aabb(body, face_b)) {
-        let dx = (ba.max[0] - ba.min[0]).max(bb.max[0] - bb.min[0]);
-        let dy = (ba.max[1] - ba.min[1]).max(bb.max[1] - bb.min[1]);
-        let dz = (ba.max[2] - ba.min[2]).max(bb.max[2] - bb.min[2]);
-        radius = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0) * 4.0;
-        let centroid = Pnt3::new((ba.min[0] + ba.max[0] + bb.min[0] + bb.max[0]) * 0.25, (ba.min[1] + ba.max[1] + bb.min[1] + bb.max[1]) * 0.25, (ba.min[2] + ba.max[2] + bb.min[2] + bb.max[2]) * 0.25);
-        if let crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin, dir } = &ic.curve3 {
-            let n2 = dir.norm_sq();
-            if n2 > 1e-30 {
-                center = dir.dot(centroid - *origin) / n2;
+    let Ok((ba, bb)) = face_aabb(body, face_a).and_then(|ba| face_aabb(body, face_b).map(|bb| (ba, bb))) else {
+        return (if lo.is_finite() { lo } else { -100.0 }, if hi.is_finite() { hi } else { 100.0 });
+    };
+    if let crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin, dir } = &ic.curve3 {
+        let extent = (0..3).map(|axis| (ba.max[axis] - ba.min[axis]).max(bb.max[axis] - bb.min[axis])).fold(0.0f64, f64::max).max(1e-9);
+        let margin = extent * 1e-3;
+        let (mut t_lo, mut t_hi) = (f64::NEG_INFINITY, f64::INFINITY);
+        for axis in 0..3 {
+            let (min, max) = (ba.min[axis].max(bb.min[axis]) - margin, ba.max[axis].min(bb.max[axis]) + margin);
+            let (o, d) = ([origin.x, origin.y, origin.z][axis], [dir.x, dir.y, dir.z][axis]);
+            if d.abs() <= 1e-12 {
+                if o < min || o > max {
+                    return (1.0, 0.0);
+                }
+                continue;
             }
+            let (a, b) = ((min - o) / d, (max - o) / d);
+            t_lo = t_lo.max(a.min(b));
+            t_hi = t_hi.min(a.max(b));
+        }
+        if t_lo.is_finite() && t_hi.is_finite() {
+            return (if lo.is_finite() { lo.max(t_lo) } else { t_lo }, if hi.is_finite() { hi.min(t_hi) } else { t_hi });
         }
     }
-    (if lo.is_finite() { lo } else { center - radius }, if hi.is_finite() { hi } else { center + radius })
+    let dx = (ba.max[0] - ba.min[0]).max(bb.max[0] - bb.min[0]);
+    let dy = (ba.max[1] - ba.min[1]).max(bb.max[1] - bb.min[1]);
+    let dz = (ba.max[2] - ba.min[2]).max(bb.max[2] - bb.min[2]);
+    let radius = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0) * 4.0;
+    (if lo.is_finite() { lo } else { -radius }, if hi.is_finite() { hi } else { radius })
 }
 
 /// 🔀 Diameter (max pairwise distance) of 16 samples of `curve` across `domain` — a cheap,
@@ -1254,11 +1329,25 @@ fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(crate::standards::v1
 /// not a sampled estimate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn nearest_boundary_curve(curves: &[(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, (f64, f64))], point: Pnt3, tol: f64) -> Option<(usize, f64)> {
+    nearest_transversal_boundary_curve(curves, point, None, tol)
+}
+
+/// 🔀 [`nearest_boundary_curve`] restricted to curves the intersection curve actually CROSSES at
+/// `point`: a boundary the curve runs ALONG (tangents parallel — a segment lying on an operand's own
+/// edge, the flush-box case) is at distance 0 everywhere and would pin the endpoint where it already
+/// is, while the crossing that really ends the run is the perpendicular boundary a few `tol` away.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn nearest_transversal_boundary_curve(curves: &[(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, (f64, f64))], point: Pnt3, along: Option<Vec3>, tol: f64) -> Option<(usize, f64)> {
     let mut best: Option<(usize, f64)> = None;
     for (index, (curve, range)) in curves.iter().enumerate() {
-        let d = closest_parameter(curve, *range, point, tol).distance;
-        if best.is_none_or(|(_, bd)| d < bd) {
-            best = Some((index, d));
+        let closest = closest_parameter(curve, *range, point, tol);
+        if let (Some(direction), Some(tangent)) = (along, curve.tangent(closest.t)) {
+            if direction.cross(tangent).norm() <= 1e-6 * direction.norm().max(1e-12) * tangent.norm().max(1e-12) {
+                continue;
+            }
+        }
+        if best.is_none_or(|(_, bd)| closest.distance < bd) {
+            best = Some((index, closest.distance));
         }
     }
     best
@@ -1288,7 +1377,7 @@ fn snap_clip_endpoint(body: &Body, ic: &IntCurve, (face_a, face_b): (FaceId, Fac
         return t_guess;
     }
     let mut point = ic.curve3.eval(t_guess);
-    let Some((index, distance)) = nearest_boundary_curve(&curves, point, linear) else { return t_guess };
+    let Some((index, distance)) = nearest_transversal_boundary_curve(&curves, point, ic.curve3.tangent(t_guess), linear) else { return t_guess };
     if distance > space_reach {
         return t_guess;
     }
@@ -1512,15 +1601,25 @@ fn locate_active_piece(body: &Body, active: &[FaceId], pcurve_id: Curve2Id, pran
     None
 }
 
-/// 🔀 Assembles the `Open` pendings of one face into maximal END-TO-END chains. Imprint vertices
-/// are welded across segments ([`welded_imprint_vertex`]), so two arcs that meet physically share
-/// one vertex id and this is a plain path walk over that adjacency. Each chain is emitted as
-/// [`crate::standards::v1::subsets::brep::schema::diff::euler::split_face_by_chain`]'s member list,
-/// oriented from one free end to the other. A component in which every vertex has degree 2 is a
-/// CYCLE of open segments — a closed imprint expressed piecewise, which belongs to the interior /
-/// seam-crossing splitters and is reported rather than silently mis-split.
+/// 🔀 The open pendings of one face, assembled: `chains` run from one free end to the other and are
+/// [`split_face_by_chain`]'s member lists; `cycles` are components in which every vertex has degree 2 —
+/// a closed imprint expressed piecewise, walked once around and handed to
+/// [`crate::standards::v1::subsets::brep::schema::diff::euler::split_face_by_interior_chain`].
+struct OpenImprints {
+    chains: Vec<Vec<ParametricEdge>>,
+    cycles: Vec<Vec<ParametricEdge>>,
+}
+
+/// 🔀 Assembles the `Open` pendings of one face into maximal END-TO-END chains and closed cycles.
+/// Imprint vertices are welded across segments ([`welded_imprint_vertex`]), so two arcs that meet
+/// physically share one vertex id and this is a plain path walk over that adjacency. A component
+/// with free ends is a chain (walked free end to free end); a component in which every vertex has
+/// degree 2 is a CYCLE of open segments — the box-through-box case, where a tool side face receives
+/// the stock's whole cross-section as four line segments — walked once around from its lowest
+/// vertex. Used to be reported as unsupported; a segment left over after both walks (a degree > 2
+/// junction) still is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn chain_open_pendings(body: &Body, pendings: &[Pending]) -> Result<Vec<Vec<ParametricEdge>>, KernelError> {
+fn chain_open_pendings(body: &Body, pendings: &[Pending]) -> Result<OpenImprints, KernelError> {
     let mut ends: HashMap<VertexId, Vec<usize>> = HashMap::new();
     for (index, p) in pendings.iter().enumerate() {
         let edge = body.edges.get(p.edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {}", p.edge_id)))?;
@@ -1550,10 +1649,32 @@ fn chain_open_pendings(body: &Body, pendings: &[Pending]) -> Result<Vec<Vec<Para
         }
         chains.push(chain);
     }
-    if used.iter().any(|&u| !u) {
-        return Err(KernelError::Boolean(BooleanError::ImprintFailed("open imprint segments form a cycle with no free end — a piecewise-closed imprint is not supported".into())));
+    let mut cycles = Vec::new();
+    let mut cycle_starts: Vec<VertexId> = ends.iter().filter(|(_, uses)| uses.len() == 2).map(|(&v, _)| v).collect();
+    cycle_starts.sort_by_key(|v| v.raw_index());
+    for start in cycle_starts {
+        let Some(&seed) = ends.get(&start).and_then(|uses| uses.iter().find(|&&index| !used[index])) else { continue };
+        let mut cycle = Vec::new();
+        let mut cursor = start;
+        let mut next = Some(seed);
+        while let Some(index) = next {
+            used[index] = true;
+            let p = &pendings[index];
+            let edge = body.edges.get(p.edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {}", p.edge_id)))?;
+            let forward = edge.v0 == cursor;
+            cycle.push((p.edge_id, forward, Some(p.pcurve_id), p.prange));
+            cursor = if forward { edge.v1 } else { edge.v0 };
+            next = ends.get(&cursor).into_iter().flatten().copied().find(|&candidate| !used[candidate]);
+        }
+        if cursor != start {
+            return Err(KernelError::Boolean(BooleanError::ImprintFailed("open imprint segments form a component that neither ends freely nor closes on itself".into())));
+        }
+        cycles.push(cycle);
     }
-    Ok(chains)
+    if used.iter().any(|&u| !u) {
+        return Err(KernelError::Boolean(BooleanError::ImprintFailed("open imprint segments left over after chain and cycle assembly — a junction of more than two segments is not supported".into())));
+    }
+    Ok(OpenImprints { chains, cycles })
 }
 
 /// 🔀 The pre-existing boundary edge of `face` that the clipped segment `ic[t0, t1]` runs ALONG
@@ -1618,6 +1739,32 @@ fn boundary_subedge(body: &mut Body, face: FaceId, (p0, p1): (Pnt3, Pnt3), (tol,
     Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("coincident imprint on face {face} did not resolve to one boundary edge between its endpoints"))))
 }
 
+/// 🔀 Re-points every coedge of `from` at `to` — the same physical segment, already bounded by the
+/// same welded vertices on both operands — flipping the coedge's sense when the two edges run in
+/// opposite vertex order. A coedge's p-curve is parameterised along its own edge's curve, so one
+/// carried over from `from` is dropped (a planar ring needs none; a periodic one is rebuilt by the
+/// splitters from the shared edge). `from` is left without coedges for the job's orphan sweep.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unify_boundary_edges(body: &mut Body, from: EdgeId, to: EdgeId) -> Result<(), KernelError> {
+    let (from_v0, from_v1) = body.edges.get(from).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {from}")))?;
+    let (to_v0, to_v1) = body.edges.get(to).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {to}")))?;
+    let same_order = from_v0 == to_v0 && from_v1 == to_v1;
+    if !same_order && !(from_v0 == to_v1 && from_v1 == to_v0) {
+        return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("boundary edges {from} and {to} do not span the same welded vertices"))));
+    }
+    let coedges: Vec<CoedgeId> = body.coedges.iter().filter(|(_, co)| co.edge == from).map(|(id, _)| id).collect();
+    for cid in coedges {
+        if let Some(co) = body.coedges.get_mut(cid) {
+            co.edge = to;
+            if !same_order {
+                co.forward = !co.forward;
+            }
+            co.pcurve = None;
+        }
+    }
+    Ok(())
+}
+
 /// 🔀 Orders the shared edge's p-curve range to match the edge's own `v0 → v1` direction, so the
 /// linear `prange → edge.range` map the same-parameter check applies stays consistent whether the
 /// edge was freshly built (already in that order) or reused from an operand's own boundary
@@ -1656,7 +1803,21 @@ fn apply_pending_imprints(body: &mut Body, original: FaceId, pending: Vec<Pendin
         active[idx] = fa;
         active.push(fb);
     }
-    for chain in chain_open_pendings(body, &open)? {
+    let assembled = chain_open_pendings(body, &open)?;
+    for cycle in assembled.cycles {
+        let probe = cycle[cycle.len() / 2];
+        let Some(pcurve_id) = probe.2 else {
+            return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("imprint cycle member on face {original} carries no p-curve"))));
+        };
+        let Some(idx) = locate_active_piece(body, &active, pcurve_id, probe.3, tol) else {
+            return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("imprint cycle midpoint not found inside any active piece of face {original}"))));
+        };
+        let target = active[idx];
+        let (fa, fb) = split_face_by_interior_chain(body, target, &cycle, rec)?;
+        active[idx] = fa;
+        active.push(fb);
+    }
+    for chain in assembled.chains {
         let probe = chain[chain.len() / 2];
         let Some(pcurve_id) = probe.2 else {
             return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("imprint chain member on face {original} carries no p-curve"))));
@@ -1872,7 +2033,12 @@ fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> R
                         }
                     }
                 }
-                if point_in_face_uv(body, face, wrap_uv_for_surface(body, face, Pnt2::new(h.u, h.v)), tol).unwrap_or(false) {
+                // 🌀 The trim test must try the hit's UV at every period shift: a split piece of a
+                // periodic face keeps its own boundary polygon on whatever `2π` branch its imprint
+                // settled on (the piece ABOVE a seam-crossing circle on a cylinder), and a single
+                // canonically-wrapped probe missed it — every ray through a blind bore's upper
+                // lateral piece counted zero crossings and the bore's floor disc classified Outside.
+                if point_in_face_uv_periodic(body, face, Pnt2::new(h.u, h.v), tol) {
                     hits.push(h.t);
                 }
             }

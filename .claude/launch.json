@@ -164,6 +164,13 @@
       "port": 6140
     },
     {
+      "name": "verify-gis2d-envelope-gates",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/GIS-2D-END-TO-END-BUILD/📜️verify-gis2d-envelope-gates.sh"
+      ]
+    },
+    {
       "name": "puzzle2d-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -246,6 +253,68 @@
       "name": "procedural3d-react-attach",
       "url": "http://localhost:6018",
       "port": 6018
+    },
+    {
+      "name": "process3d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-process3d-react-dev"
+      ],
+      "port": 6022,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6022"
+      }
+    },
+    {
+      "name": "process3d-react-attach",
+      "url": "http://localhost:6022",
+      "port": 6022
+    },
+    {
+      "name": "process3d-react-lane-attach",
+      "url": "http://localhost:6222",
+      "port": 6222
+    },
+    {
+      "name": "fem2d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-fem2d-react-dev"
+      ],
+      "port": 6086,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6086"
+      }
+    },
+    {
+      "name": "fem2d-react-attach",
+      "url": "http://localhost:6086",
+      "port": 6086
+    },
+    {
+      "name": "fem3d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-fem3d-react-dev"
+      ],
+      "port": 6087,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6087"
+      }
+    },
+    {
+      "name": "fem3d-react-attach",
+      "url": "http://localhost:6087",
+      "port": 6087
     }
   ]
 }

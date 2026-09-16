@@ -38,3 +38,14 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), fixture["diff"]);
     eprintln!("[DEBUG] Map JSON/text/Pack and replacement retain drawing/image/value identities; dynamic feature payloads use the shared value schema");
 }
+
+#[test]
+fn default_document_boot_child_projection_and_genesis_packs_are_valid() {
+    use crate::schema::default_document;
+    let snapshot = default_document();
+    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("reuse-map default document child refs");
+    assert_eq!(projection.len(), 2, "drawing and value; image is absent on the default map");
+    assert!(crate::genesis_gis_map_child_pack(&snapshot, "drawing", &snapshot.drawing.child_id).is_some());
+    assert!(crate::genesis_gis_map_child_pack(&snapshot, "value", &snapshot.value.child_id).is_some());
+    assert!(crate::genesis_gis_map_child_pack(&snapshot, "drawing", "wrong-id").is_none());
+}

@@ -582,7 +582,6 @@ mod scene_compute {
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
-    use std::collections::HashSet;
     use std::sync::{Arc, OnceLock};
 
     pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
@@ -608,7 +607,10 @@ mod scene_compute {
 
     pub const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure.classic";
 
-    const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-assets/🖼️concrete-forest-reference.png";
+    /// 🖼️ Served by the `/cad-assets` static-dir row in this plugin's `Cargo.toml` (root
+    /// `📚️examples/🖼️assets`); the file is the kind-only basename `🖼️.png` under its own
+    /// `🌲️concrete-forest-reference` folder.
+    pub const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-assets/🌲️concrete-forest-reference/🖼️.png";
 
     pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 28.6;
 
@@ -959,16 +961,6 @@ mod scene_compute {
         }
         let centroid = geometry.and_then(|geometry| centroid_from_host_snapshot_primitives(geometry, &object.primitives));
         typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
-    }
-
-    pub(crate) fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
-        let mut urls = HashSet::new();
-        for object in objects {
-            if let Some(url) = resolve_object_mesh_url(object) {
-                urls.insert(url);
-            }
-        }
-        urls.into_iter().collect()
     }
 
     pub(crate) fn object_scale_json(object: &CadObject) -> [f64; 3] {

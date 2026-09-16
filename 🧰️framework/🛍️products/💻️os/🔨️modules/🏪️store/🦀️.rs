@@ -39,7 +39,7 @@ pub use owned_document_closure::{OwnedDocumentClosure, OwnedDocumentClosureDiagn
 pub mod member_open;
 pub use member_open::{
     InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep,
-    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen, MEMBER_OPEN_IDENTITY_BYTES,
+    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen, MEMBER_OPEN_IDENTITY_BYTES,
 };
 
 #[path = "🧾️document/📜️history/💧️hydration/🦀️.rs"]
@@ -7663,6 +7663,40 @@ impl<P, Mutation> Drop for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
     }
 }
 
+impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>
+where
+    P: Send,
+    Mutation: Send,
+{
+    /// @emoji ↩️ Detaches and bounded-closes one exact returned decoder on the caller thread so a
+    /// worker [`release_step`] can pass its `ticket_reclaimed` gate without waiting for the app's
+    /// next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`).
+    pub fn reclaim_returned_ticket_now(
+        &self,
+        ticket: ArtifactEnvelopeFieldDecoderTicket,
+        maximum_items: usize,
+        maximum_bytes: usize,
+    ) -> Result<(), ArtifactEnvelopeFieldDecoderRegistryFault> {
+        if self.ticket_reclaimed(ticket) {
+            return Ok(());
+        }
+        let mut retired = self.take_returned_ticket(ticket)?;
+        for _ in 0..4096 {
+            if retired.terminal_is_empty() {
+                drop(retired);
+                return Ok(());
+            }
+            match ErasedSnapshotRetirement::close_step(&mut retired, maximum_items.min(1), maximum_bytes) {
+                Ok(SnapshotRetirementStep::Complete) => {}
+                Ok(SnapshotRetirementStep::Pending { .. }) => {}
+                Ok(SnapshotRetirementStep::Blocked) => return Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended),
+                Err(_) => return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal),
+            }
+        }
+        Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaStringStep {
@@ -8427,10 +8461,16 @@ where
             }
             drop(self.fields.take());
             self.field_returned = true;
+            let _ = self.field_registry.reclaim_returned_ticket_now(self.field_ticket, 1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
             return Some(semio_framework_job::StepOutcome::Yield);
         }
         if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
-            return Some(semio_framework_job::StepOutcome::Yield);
+            if self.field_returned {
+                let _ = self.field_registry.reclaim_returned_ticket_now(self.field_ticket, 1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+            }
+            if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
+                return Some(semio_framework_job::StepOutcome::Yield);
+            }
         }
         if let Some(record) = self.record.as_mut() {
             match record.close_step(1) {
@@ -8684,7 +8724,12 @@ where
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            if self.field_returned {
+                let _ = self.field_registry.reclaim_returned_ticket_now(self.field_ticket, maximum_items.min(1), maximum_bytes);
+            }
+            if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
         }
         if let Some(record) = self.record.as_mut() {
             if maximum_items == 0 || maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
@@ -11716,6 +11761,20 @@ pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str,
     });
     let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+}
+
+/// @emoji 🌱️ A brand-new owned member's full envelope pack — `initial_pack` plus an edit-free `.spr`
+/// stamped with the child's id, `schema`, `dialect` and `owner` through the same
+/// `stamp_document_spr_identity` path a parent's own whole-document load takes — in exactly the
+/// `encode_document_pack_bytes` framing `MemberFactory::open` and archive member admission accept.
+/// Minted from bytes alone, never through a live `ArtifactStore`, so a caller completing a closure
+/// (`VcsArtifactApp`'s derivable-child genesis) owes no bounded close protocol for it.
+pub async fn genesis_member_envelope_pack(schema: &str, dialect: &crate::os_io::ArtifactDialect, owner: &OwnerRef, initial_pack: &[u8]) -> Result<Vec<u8>, VcsError> {
+    if initial_pack.is_empty() {
+        return Err(VcsError::Deserialize(format!("child genesis for {} carries an empty initial pack", owner.child_id)));
+    }
+    let spr = stamp_document_spr_identity(&empty_document_spr(&owner.child_id, schema).await, &owner.child_id, schema, dialect, Some(owner)).await?;
+    Ok(encode_document_pack_bytes(initial_pack, &spr).await)
 }
 
 /// @emoji ➕️ Appends `edits` to an already-encoded `.spr` byte log — decode, extend, re-encode.

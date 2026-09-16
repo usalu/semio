@@ -118,6 +118,23 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
     document.value = gis_map_value_child_handle();
     document
 }
+
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the map's derived `drawing` and `value` members — pure
+/// functions of the parent snapshot, so a fresh boot or whole-document load materializes the same
+/// composed children inference would derive later.
+pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    if slot == "drawing" && child_id == document.drawing.child_id {
+        let drawing = crate::schema::gis_map_snapshot_to_drawing(document);
+        return Some(<SemioDrawingSnapshot as ArtifactPack>::encode_pack(&drawing));
+    }
+    if slot == "value" && child_id == document.value.child_id {
+        let descriptor = crate::schema::gis_map_descriptor_json(document);
+        let value = gis_map_value_from_descriptor_json(&descriptor);
+        return Some(<SemioValueSnapshot as ArtifactPack>::encode_pack(&value));
+    }
+    None
+}
 //#endregion 🔖️Composition
 
 //#region 🔹ArtifactKind
@@ -148,8 +165,6 @@ pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceS
             owner: "gis",
             artifact_kind: "s.gis.gismap",
             artifact_schema: "s.gis.gismap",
-            artifact_schema_version: 1,
-            artifact_schema: GIS_MAP_SCHEMA,
             artifact_schema_version: 1,
             inference_schema: "s.gis.gismap.inference",
             inference_schema_version: 1,

@@ -37,7 +37,7 @@ any command not classified `Migrated`, which was all eight of them.
 - [ ] Drag pool → curated (`dropOnCurated`) and curated → pool (`dropOnPool`).
 - [ ] Filter by module (`setFilterModule`), by query (`setFilterQuery`), by typology, by minimum
       availability; sort the table (`sortTable`).
-- [ ] Switch example (`setActiveExample`) between Demo and Empty.
+- [x] Switch example (`setActiveExample`) between Demo and Empty — 2026-09-16, 262 ms / 225 ms settles, UI follows within 0.5 s (day 5).
 - [ ] Undo/redo a curation edit — proves the document lane's `inverse` reached history.
 
 ## 5. Windows

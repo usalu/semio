@@ -5,7 +5,7 @@ pub(crate) mod history;
 #[path = "🏭️operation/🦀️.rs"]
 mod operation;
 pub use history::factory::MemberOpenDeclaration;
-pub use operation::{InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+pub use operation::{InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
 
 use super::{ErasedSnapshotRetirement, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, SnapshotRetirementStep, SpaceMember};
 use crate::os_io::ArtifactRef;

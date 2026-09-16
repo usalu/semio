@@ -14,10 +14,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️FaceDrag
 /// 🖱️➡️ Builds a push/pull step from a face-drag gesture: dragging into the solid (negative `distance`
 /// along the face's outward `normal`) removes material (Cut); dragging outward (positive) adds material
-/// (Attach). The tool box's local origin corner lands at `point + normal * distance.min(0.0)` so it spans
-/// exactly the dragged region, flush with the picked face — `box_prim_sync` places a primitive's corner
-/// (not its center) at the local origin, confirmed by `box_primitive_spans_from_local_origin_corner` in
-/// the artifact's `⚙️engine`.
+/// (Attach). A `Pose.position` is the tool's CENTRE (`inferences::solid_for_spec` centres every kernel
+/// primitive before posing it), so the box is centred half a drag along the normal from the picked
+/// point — it then spans exactly the dragged region, flush with the picked face, in both directions.
 fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
     if distance.abs() < 1e-6 {
         return None;
@@ -25,7 +24,7 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
     let (width, depth) = face_extent.map_or((0.2, 0.2), |[w, d]| (w.max(0.02), d.max(0.02)));
     let height = distance.abs();
     let (axis, angle) = axis_angle_from_up_to(normal);
-    let offset = distance.min(0.0);
+    let offset = distance / 2.0;
     let position = [point[0] + normal[0] * offset, point[1] + normal[1] * offset, point[2] + normal[2] * offset];
     let pose = Pose { position, axis, angle };
     let (measure, label, machine_id, capability_id) = if distance < 0.0 {

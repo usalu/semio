@@ -37,9 +37,9 @@ async fn clears_the_structure_classic_slot_only() {
     let after = applied();
     assert!(after.structure_classic_model.is_none(), "delete-structure-classic-model must empty the fixed slot");
     assert!(
-        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("shape-model-1")
-            && after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("building-model-1")
-            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1"),
+        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-shape-1")
+            && after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-building-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-energy-1"),
         "delete-structure-classic-model must leave the other three fixed model slots occupied"
     );
     assert_eq!(after.drawings.len(), 1, "delete-structure-classic-model must not touch the drawings child collection");
@@ -55,7 +55,7 @@ async fn inverse_reinstalls_the_escrowed_structure_classic_handle() {
     assert_eq!(inverse.len(), 1, "delete-structure-classic-model on an occupied slot inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateStructureClassicModel(step) => {
-            assert_eq!(step.child_id, "structure-classic-model-1", "the inverse must reinstall the escrowed child id");
+            assert_eq!(step.child_id, "cad-structure-1", "the inverse must reinstall the escrowed child id");
             assert_eq!(step.target, "cad-structure-1!s.stdio.semio@v1/model", "the inverse must carry the escrowed handle's target URI");
         }
         other => panic!("delete-structure-classic-model must invert to create-structure-classic-model, got {other:?}"),

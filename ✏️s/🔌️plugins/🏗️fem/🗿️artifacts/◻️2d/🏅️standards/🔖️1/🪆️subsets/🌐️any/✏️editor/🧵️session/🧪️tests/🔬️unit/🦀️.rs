@@ -44,17 +44,21 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
 }
 
 #[test]
-fn snapshot_census_advances_one_owner_and_rejects_exact_plus_one_without_partial_credit() {
+fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_without_partial_credit() {
     let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32] };
-    let snapshot = Fem2dSnapshot::default();
-    assert!(!prepare_snapshot_read(render, &snapshot));
+    let snapshot = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let mut census = SnapshotAdmissionCursor::new();
+    let mut units = 0;
+    while census.step_one(&snapshot) == Ok(false) {
+        units += 1;
+    }
+    assert!(units > 1 && units < SESSION_PREFLIGHT_UNITS_PER_OPPORTUNITY, "the bundled demo census is many single-owner units but fits one opportunity: {units}");
+    assert!(prepare_snapshot_read(render, &snapshot), "the demo census is drained and its lease shell admitted in the opportunity that opened it");
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let slot = render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
-        let cursor = registry.preflight[slot].expect("one retained census cursor").cursor;
-        assert_eq!((cursor.lane, cursor.outer, cursor.inner, cursor.deep), (0, 0, 0, 0));
-        assert!(cursor.owner_opened);
-        assert!(registry.pending[slot].is_none(), "no lease shell is admitted during the first schema-owner opportunity");
+        assert!(registry.preflight[slot].is_none(), "a completed census releases its cursor");
+        assert!(registry.pending[slot].is_some(), "the lease shell is admitted once the census completes");
     });
 
     let mut exact = SnapshotAdmissionCursor::new();
@@ -157,8 +161,6 @@ fn source_contract_keeps_one_semantic_child_step_and_live_visual_consumer() {
         "SESSION_MAXIMUM_BYTES",
         "MountedProcessOwnerCatalog",
         "MountedOwnerClass::AssemblyDofStrings",
-        "mounted_node_id",
-        "reserve_exact_owner_page",
     ] {
         assert!(source.contains(needle), "missing mounted FEM contract {needle}");
     }

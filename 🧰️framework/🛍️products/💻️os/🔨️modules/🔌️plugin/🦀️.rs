@@ -323,7 +323,7 @@ pub mod app {
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
         InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
-        ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
+        ToolDefinition, ToolRef, ToolRunTraceCursor, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
         RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
         START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
@@ -6718,6 +6718,12 @@ pub mod app {
         /// 🧬️ A registry-backed wrapper carrying `manifest`'s real `AppActionRegistry` — needed whenever a
         /// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
         pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App) -> VcsArtifactApp<A> {
+            new_app_with_registry_and_members::<A, super::NoMembers>(manifest).await
+        }
+
+        /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
+        /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
+        pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: super::SpaceMember + super::MemberFactory + 'static>(manifest: fn() -> App) -> VcsArtifactApp<A, M> {
             let definition = manifest().definition;
             let registry = AppActionRegistry::from_definition(&definition);
             drop(definition);
@@ -7225,6 +7231,9 @@ pub mod app {
 
             fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, super::Fault> {
                 V::child_restore_projection(snapshot)
+            }
+            fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+                V::genesis_child_pack(snapshot, slot, child_id)
             }
 
             fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<super::PluginCloseStep, super::Fault> {
@@ -11117,6 +11126,14 @@ pub mod app {
         fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             Err(plugin_sdk_fault("app did not declare a loaded-parent child projection"))
         }
+        /// 🌱️ Initial pack for one composed child the parent snapshot declares (`slot`/`child_id`) but no
+        /// archive member carries — the content-addressed half a parent derives from its own state, such as
+        /// sourcing's kit catalogue. `None` keeps the closure strict: a missing member the app cannot derive
+        /// still rejects the load as `Incomplete`. Read at boot for the initial snapshot and by every
+        /// document archive load before its member roster is reserved.
+        fn genesis_child_pack(_snapshot: &Self::Snapshot, _slot: &str, _child_id: &str) -> Option<Vec<u8>> {
+            None
+        }
         /// @emoji 🪪 Stable app id — prefer this over `app_id(&self)` on the path to receiverless ZSTs.
         /// For a hand-written direct `ArtifactApp` impl this IS the real canonical id. `EditorApp<E>`/
         /// `ViewerApp<V>` cannot follow suit — `surface_app_id` is only knowable at runtime from
@@ -11863,7 +11880,7 @@ pub mod app {
         }
         /// 📼️ Base64url `ToolRunTraceDelta` after the renderer-echoed cursor, for the scene lane
         /// `toolRunTrace` (contract §3.2, §4.1 layer 2); `None` when idle.
-        fn tool_run_trace_delta(&self, _cursor: Option<semio_framework_tool_run::ToolRunTraceCursor>) -> Option<String> {
+        fn tool_run_trace_delta(&self, _cursor: Option<ToolRunTraceCursor>) -> Option<String> {
             None
         }
         /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
@@ -17635,7 +17652,7 @@ pub mod app {
                     semio_framework_job::WorkerJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                 });
             }
-            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+            match session.pump_one_for_interactive_turn(pool, semio_framework_async::Lane::Interactive) {
                 Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
                     let terminal = session.checked_out_outcome().is_some_and(semio_framework_job::StepOutcome::is_terminal);
                     let Some(outcome) = session.take_checked_out_outcome() else {
@@ -18930,8 +18947,31 @@ pub mod app {
                 }
                 return Ok(PluginCloseStep::Blocked { reason: "cancelled envelope output awaits the completed-record close pump" });
             }
-            if matches!(self.state, ActiveArtifactEnvelopeDecodeState::Ready | ActiveArtifactEnvelopeDecodeState::Complete) {
-                return Ok(if self.state == ActiveArtifactEnvelopeDecodeState::Complete { PluginCloseStep::Complete } else { PluginCloseStep::Blocked { reason: "decoded envelope awaits exact consumer publication" } });
+            if self.state == ActiveArtifactEnvelopeDecodeState::Complete {
+                if self.session.as_ref().is_some_and(|session| session.terminal_is_empty()) {
+                    drop(self.session.take());
+                    self.terminal_state = None;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                if self.decode_worker_owners_are_terminal() {
+                    return Ok(PluginCloseStep::Complete);
+                }
+            }
+            if self.state == ActiveArtifactEnvelopeDecodeState::Ready
+                && self.terminal_state.is_none()
+                && self.retained_outcome.is_none()
+                && self.session.is_none()
+            {
+                return Ok(PluginCloseStep::Blocked { reason: "decoded envelope awaits exact consumer publication" });
+            }
+            if self.state == ActiveArtifactEnvelopeDecodeState::Ready {
+                if let Some(session) = self.session.as_mut() {
+                    if session.terminal_is_empty() {
+                        drop(self.session.take());
+                        self.terminal_state = None;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                }
             }
             if let Some(outcome) = self.retained_outcome.as_mut() {
                 return match outcome.close_step(maximum_items.min(1), maximum_bytes) {
@@ -18959,7 +18999,9 @@ pub mod app {
                     semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
                         drop(self.session.take());
                         self.terminal_state = None;
-                        self.state = target;
+                        if self.state != ActiveArtifactEnvelopeDecodeState::Ready {
+                            self.state = target;
+                        }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                     semio_framework_job::WorkerJobCloseStep::Complete => {
@@ -18968,11 +19010,14 @@ pub mod app {
                 };
             }
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
-            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+            match session.pump_one_for_interactive_turn(pool, semio_framework_async::Lane::Interactive) {
                 Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
                     let outcome = session.take_checked_out_outcome().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-missing"), "envelope worker checkout lost its exact outcome"))?;
                     self.terminal_state = match &outcome {
-                        semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => Some(ActiveArtifactEnvelopeDecodeState::Ready),
+                        semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => {
+                            self.state = ActiveArtifactEnvelopeDecodeState::Ready;
+                            Some(ActiveArtifactEnvelopeDecodeState::Ready)
+                        }
                         semio_framework_job::StepOutcome::Cancelled => Some(ActiveArtifactEnvelopeDecodeState::ClosingCancelled),
                         semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Complete(_) => Some(ActiveArtifactEnvelopeDecodeState::ClosingFault),
                         _ => None,
@@ -18986,9 +19031,86 @@ pub mod app {
             }
         }
 
-        /// 🏃️ Whether one more `drive` can advance this decode. `Ready` is the sole parked state —
-        /// it awaits the exact consumer publication, never another worker step.
+        fn decode_worker_owners_are_terminal(&self) -> bool {
+            self.session.is_none() && self.retained_outcome.is_none() && self.session_rejected.is_none() && self.rejected.is_none() && self.terminal_state.is_none()
+        }
+
+        /// 🧹️ Closes the parked worker session/outcome ladder after [`Self::state`] reached
+        /// [`ActiveArtifactEnvelopeDecodeState::Ready`] so store replacement can retire the decode owner.
+        fn force_worker_session_terminal(&mut self, maximum_items: usize, maximum_bytes: usize, budget: usize) -> bool {
+            for _ in 0..budget {
+                if let Some(target) = self.terminal_state {
+                    let Some(session) = self.session.as_mut() else {
+                        return false;
+                    };
+                    session.begin_close();
+                    match session.close_step(maximum_items.min(1), maximum_bytes) {
+                        semio_framework_job::WorkerJobCloseStep::Pending { .. } => continue,
+                        semio_framework_job::WorkerJobCloseStep::Blocked => continue,
+                        semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                            drop(self.session.take());
+                            self.terminal_state = None;
+                            if self.state != ActiveArtifactEnvelopeDecodeState::Ready {
+                                self.state = target;
+                            }
+                        }
+                        semio_framework_job::WorkerJobCloseStep::Complete => continue,
+                    }
+                    continue;
+                }
+                if let Some(outcome) = self.retained_outcome.as_mut() {
+                    match outcome.close_step(maximum_items.min(1), maximum_bytes) {
+                        semio_framework_job::JobPayloadCloseStep::Pending { .. } => continue,
+                        semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
+                            drop(self.retained_outcome.take());
+                            if self.terminal_state.is_none() {
+                                if let Some(session) = self.session.as_mut() {
+                                    let _ = session.resume();
+                                }
+                            }
+                        }
+                        semio_framework_job::JobPayloadCloseStep::Complete => return false,
+                    }
+                    continue;
+                }
+                if let Some(session) = self.session.as_mut() {
+                    if session.terminal_is_empty() {
+                        drop(self.session.take());
+                        self.terminal_state = None;
+                        continue;
+                    }
+                    let poll = session.poll();
+                    if session.checked_out_outcome().is_some() || poll == semio_framework_job::WorkerJobPoll::CheckedOut {
+                        session.begin_close();
+                    } else if !matches!(poll, semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                        session.begin_close();
+                    }
+                    match session.close_step(maximum_items.min(1), maximum_bytes) {
+                        semio_framework_job::WorkerJobCloseStep::Pending { .. } => continue,
+                        semio_framework_job::WorkerJobCloseStep::Blocked => continue,
+                        semio_framework_job::WorkerJobCloseStep::Complete => {
+                            if session.terminal_is_empty() {
+                                drop(self.session.take());
+                                self.terminal_state = None;
+                            }
+                        }
+                    }
+                    continue;
+                }
+                return self.decode_worker_owners_are_terminal();
+            }
+            self.decode_worker_owners_are_terminal()
+        }
+
+        /// 🏃️ Whether one more `drive` can advance this decode. A `Ready` decode still runs until its
+        /// worker session, retained outcome, and terminal close target are empty — only then does it
+        /// park awaiting exact consumer publication.
         fn has_runnable_work(&self) -> bool {
+            if self.state == ActiveArtifactEnvelopeDecodeState::Ready {
+                return self.terminal_state.is_some()
+                    || self.retained_outcome.is_some()
+                    || self.session.as_ref().is_some_and(|session| !session.terminal_is_empty());
+            }
             self.state != ActiveArtifactEnvelopeDecodeState::Ready
         }
 
@@ -19449,6 +19571,12 @@ pub mod app {
             }
         }
 
+        /// 🌱️ The hydrated candidate parent while its member roster is still open — the only window in
+        /// which a derivable child may still be minted onto the roster (`complete_document_archive_genesis`).
+        fn candidate_awaiting_members(&self) -> Option<&ArtifactStore<P, Mutation>> {
+            (self.state == ActiveArtifactStoreReplacementState::AwaitingMembers).then(|| self.retained_store.as_deref()).flatten()
+        }
+
         fn drive_closure(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 || maximum_bytes < store::MEMBER_OPEN_IDENTITY_BYTES {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -19789,7 +19917,7 @@ pub mod app {
                 };
             }
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
-            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+            match session.pump_one_for_interactive_turn(pool, semio_framework_async::Lane::Interactive) {
                 Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
                     let terminal_kind = session
                         .checked_out_outcome()
@@ -19905,7 +20033,10 @@ pub mod app {
     }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory> store::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation> for ArtifactStoreReplacementAdmissionTarget<'_, A, M> {
-        fn try_adopt_completed(&mut self, envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> Result<(), ArtifactEnvelope<A::Snapshot, A::Mutation>> {
+        fn try_adopt_completed(&mut self, mut envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> Result<(), ArtifactEnvelope<A::Snapshot, A::Mutation>> {
+            if envelope.dialect.is_none() {
+                envelope.dialect = Some(A::DIALECT.into());
+            }
             if envelope.schema != A::DOCUMENT_SCHEMA || envelope.dialect != Some(A::DIALECT.into()) || !self.jobs.can_insert(self.operation.0) {
                 return Err(envelope);
             }
@@ -20183,6 +20314,7 @@ pub mod app {
         hydration: Option<store::RetainedPersistedDocumentHydration<P, Mutation>>,
         hydration_sequence: u64,
         replacement: Option<ArtifactEnvelopeDecodeOperationHandle>,
+        genesis_complete: bool,
         phase: ActiveDocumentArchiveLoadPhase,
         terminal_target: Option<ActiveDocumentArchiveLoadState>,
         close_identity_field: u8,
@@ -20210,6 +20342,7 @@ pub mod app {
                 hydration: None,
                 hydration_sequence: 0,
                 replacement: None,
+                genesis_complete: false,
                 phase: ActiveDocumentArchiveLoadPhase::DecodeParent,
                 terminal_target: None,
                 close_identity_field: 0,
@@ -20690,6 +20823,24 @@ pub mod app {
             lane1 = (lane1 ^ (*byte as u64).rotate_left(7)).wrapping_mul(PRIME);
         }
         ArtifactHandle(((lane0 as u128) << 64) | lane1 as u128)
+    }
+
+    /// ⏱️ Wall budget one `PollDocumentArchiveLoad` may spend driving the maintenance rotation before it
+    /// reports — the background lane's slice, so a load polled back-to-back completes in seconds while a
+    /// single poll never holds the actor longer than the pump's own worst step.
+    const DOCUMENT_ARCHIVE_POLL_WALL_US: u64 = semio_framework_job::BACKGROUND_LANE_WALL_US;
+    /// 📏️ Byte grant per maintenance step driven by a poll — the same slice the runtime's live cleanup job hands the pump.
+    const DOCUMENT_ARCHIVE_POLL_STEP_BYTES: usize = 32 * 1_024;
+
+    /// 🪪️ The persisted schema a derivable child of `dialect` is minted under — read from the member
+    /// roster's own open declarations, so an app deriving a child of a dialect its `M` never declares
+    /// is a fault rather than a member nothing could ever open.
+    fn genesis_member_schema<M: MemberFactory>(dialect: &ArtifactDialect) -> Result<&'static str, Fault> {
+        M::OPEN_DECLARATIONS
+            .iter()
+            .find(|declaration| declaration.kind == dialect.artifact_kind && declaration.standard == dialect.standard && declaration.subset == dialect.subset)
+            .map(|declaration| declaration.schema)
+            .ok_or_else(|| plugin_sdk_fault(format!("derived child dialect '{}' is not declared by this app's member roster", dialect.to_coordinate())))
     }
 
     const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
@@ -21341,7 +21492,7 @@ pub mod app {
             if let Some(factory) = A::build_presence_peer_retirement_factory() {
                 presence_store.install_peer_retirement_factory(factory).expect("presence peer retirement factory installs exactly once during app construction");
             }
-            Self {
+            let mut this = Self {
                 app,
                 store,
                 config_store,
@@ -21507,7 +21658,36 @@ pub mod app {
                 pending_presence: Vec::new(),
                 presence_marked_keys: std::collections::BTreeMap::new(),
                 tool_runs: ToolRunLedger::default(),
+            };
+            this.seed_genesis_children().await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
+            this
+        }
+
+        /// 🌱️ Opens every composed child the initial snapshot declares and the app derives
+        /// (`ArtifactApp::genesis_child_pack`) through the ordinary restore path, so `children`, the
+        /// composition graph and the child content root are complete from the first frame — a saved
+        /// archive of a never-edited document then carries its derivable members instead of relying on
+        /// the loading side to re-derive them.
+        async fn seed_genesis_children(&mut self) -> Result<(), Fault> {
+            let mut genesis = Vec::new();
+            {
+                let snapshot = self.store.snapshot_ref();
+                let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
+                for index in 0..projection.len() {
+                    let Some((slot, fields)) = projection.get(index) else { break };
+                    let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id) else { continue };
+                    let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
+                    genesis.push((slot.to_string(), fields.child_id.to_string(), dialect, initial_pack));
+                }
             }
+            let parent = ArtifactRef { artifact_id: self.store.envelope().id.clone(), dialect: A::DIALECT.into() };
+            for (slot, child_id, dialect, initial_pack) in genesis {
+                let schema = genesis_member_schema::<M>(&dialect)?;
+                let owner = store::OwnerRef { parent: parent.clone(), slot: slot.clone(), child_id: child_id.clone() };
+                let envelope_pack = store::genesis_member_envelope_pack(schema, &dialect, &owner, &initial_pack).await.map_err(|error| plugin_sdk_fault(format!("genesis child {slot}/{child_id} envelope: {error}")))?;
+                self.open_child(slot, child_id, dialect, &envelope_pack).await?;
+            }
+            Ok(())
         }
 
         pub fn artifact_generation_now(&self) -> semio_framework_job::Generation {
@@ -21770,6 +21950,9 @@ pub mod app {
                 if decode != ArtifactEnvelopeDecodeOperationPoll::Ready {
                     return Ok(decode);
                 }
+                if !self.drain_ready_envelope_decode_worker_owners(handle)? {
+                    return Ok(ArtifactEnvelopeDecodeOperationPoll::Progress);
+                }
                 if !self.try_begin_artifact_store_replacement(handle)? {
                     return Ok(ArtifactEnvelopeDecodeOperationPoll::Progress);
                 }
@@ -21837,6 +22020,35 @@ pub mod app {
 
         pub fn poll_artifact_envelope_decode(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
             self.envelope_decode_jobs.get(handle.operation.0).filter(|active| active.operation == handle.operation && active.generation == handle.generation).map_or(ArtifactEnvelopeDecodeOperationPoll::Fault, ActiveArtifactEnvelopeDecode::poll)
+        }
+
+        /// 🧹️ Whether the decode worker session/outcome ladder is fully retired for one live handle.
+        pub fn artifact_envelope_decode_worker_owners_are_terminal(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> bool {
+            self.envelope_decode_jobs
+                .get(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .is_none_or(ActiveArtifactEnvelopeDecode::decode_worker_owners_are_terminal)
+        }
+
+        pub(crate) fn drain_ready_envelope_decode_worker_owners(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<bool, Fault> {
+            for _ in 0..4096 {
+                if self.envelope_decode_jobs.get(handle.operation.0).is_none() {
+                    return Ok(true);
+                }
+                if self.artifact_envelope_decode_worker_owners_are_terminal(handle) {
+                    return Ok(true);
+                }
+                let _ = self
+                    .envelope_decode_jobs
+                    .get_mut(handle.operation.0)
+                    .map(|active| active.force_worker_session_terminal(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, 256));
+                for _ in 0..8 {
+                    self.drive_artifact_envelope_decode_worker()?;
+                    let _ = self.drive_envelope_decode_jobs(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                }
+                let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            Ok(self.artifact_envelope_decode_worker_owners_are_terminal(handle))
         }
 
         /// 📤️ Applies the sole non-suspending completed-record publication after exact live
@@ -21908,14 +22120,18 @@ pub mod app {
             match self.envelope_completed_records.try_publish_to(ticket, &mut target) {
                 Ok(false) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(false),
                 Ok(true) => {
+                    if !self.drain_ready_envelope_decode_worker_owners(handle)? {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-terminal"), "decoded envelope retained an owner after initializer transfer"));
+                    }
                     let active = self
                         .envelope_decode_jobs
                         .get_mut(handle.operation.0)
+                        .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-owner"), "decoded envelope owner changed during exact initializer admission"))?;
-                    active.state = ActiveArtifactEnvelopeDecodeState::Complete;
-                    if !active.terminal_is_empty(&self.envelope_completed_records) {
+                    if !active.decode_worker_owners_are_terminal() {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-terminal"), "decoded envelope retained an owner after initializer transfer"));
                     }
+                    active.state = ActiveArtifactEnvelopeDecodeState::Complete;
                     let active =
                         self.envelope_decode_jobs.remove(handle.operation.0).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-owner"), "terminal decoded envelope changed before exact removal"))?;
                     drop(active);
@@ -22043,7 +22259,8 @@ pub mod app {
                     active.seal_members()?;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                return Ok(PluginCloseStep::Blocked { reason: "composed document replacement awaits its exact retained member ingress" });
+                self.complete_store_replacement_genesis(operation_id)?;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if state == ActiveArtifactStoreReplacementState::OpeningMembers {
                 return self
@@ -22212,6 +22429,115 @@ pub mod app {
             Ok(step)
         }
 
+        /// 🌱️ Completes an archive's member roster with every child the hydrated candidate parent declares,
+        /// the archive omits, and the app derives (`ArtifactApp::genesis_child_pack`) — the content-addressed
+        /// members a whole-document load (`Effect::LoadDocument`, which carries pack+spr only) can never
+        /// ship. Each minted entry is owner-stamped to the candidate root and takes the next ordinal after the
+        /// archived ones; the fixed member and byte authorities are re-checked over the completed roster. A
+        /// slot the app cannot derive is left alone, so closure validation still rejects it as `Incomplete`.
+        fn complete_document_archive_genesis(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<(), Fault> {
+            let archive = active.archive.as_mut().ok_or_else(|| plugin_sdk_fault("recursive document archive member roster owner is absent"))?;
+            let candidate = self
+                .store_replacement_jobs
+                .get(handle.operation.0)
+                .filter(|replacement| replacement.operation == handle.operation && replacement.generation == handle.generation)
+                .and_then(ActiveArtifactStoreReplacement::candidate_awaiting_members)
+                .ok_or_else(|| plugin_sdk_fault("document archive genesis has no hydrated candidate parent awaiting members"))?;
+            let dialect = candidate.envelope().dialect.clone().ok_or_else(|| plugin_sdk_fault("document archive genesis requires the candidate parent's exact dialect"))?;
+            let parent = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
+            let snapshot = candidate.snapshot_ref();
+            let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("document archive genesis child projection failed: {error}")))?;
+            // 🔢️ Archived entries are already reversed for ordinal-ordered popping; ordinals stay
+            // `0..n` for them and continue at `n` for every minted member, whatever the pop order.
+            let mut ordinal = archive.members.len();
+            let mut payload_bytes = archive.members.iter().fold(archive.parent_spr.len(), |total, entry| total + entry.envelope_pack.len());
+            for index in 0..projection.len() {
+                let Some((slot, fields)) = projection.get(index) else { break };
+                if archive.members.iter().any(|entry| entry.owner.slot == slot && entry.reference.artifact_id == fields.child_id) {
+                    continue;
+                }
+                let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id) else { continue };
+                let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
+                let schema = genesis_member_schema::<M>(&dialect)?;
+                let owner = store::OwnerRef { parent: parent.clone(), slot: slot.to_string(), child_id: fields.child_id.to_string() };
+                let envelope_pack = resolve_ready(store::genesis_member_envelope_pack(schema, &dialect, &owner, &initial_pack)).map_err(|error| plugin_sdk_fault(format!("genesis child {slot}/{} envelope: {error}", fields.child_id)))?;
+                if ordinal >= protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+                    return Err(plugin_sdk_fault("document archive genesis exceeds its fixed 1024-member authority"));
+                }
+                payload_bytes = payload_bytes.checked_add(envelope_pack.len()).filter(|bytes| *bytes <= protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES).ok_or_else(|| plugin_sdk_fault("document archive genesis exceeds its fixed byte authority"))?;
+                archive.members.push(protocol::OwnedDocumentMemberPackEntry {
+                    ordinal: u32::try_from(ordinal).map_err(|_| plugin_sdk_fault("document archive genesis ordinal exceeds u32"))?,
+                    reference: protocol::DocumentArchiveArtifactRef { artifact_id: fields.child_id.to_string(), artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() },
+                    owner: protocol::DocumentArchiveOwnerRef {
+                        parent: protocol::DocumentArchiveArtifactRef { artifact_id: parent.artifact_id.clone(), artifact_kind: parent.dialect.artifact_kind.clone(), standard: parent.dialect.standard.clone(), subset: parent.dialect.subset.clone() },
+                        slot: slot.to_string(),
+                        child_id: fields.child_id.to_string(),
+                    },
+                    envelope_pack,
+                });
+                ordinal += 1;
+                active.total = active.total.saturating_add(1);
+            }
+            Ok(())
+        }
+
+        /// 🌱️ Mints every derivable composed child onto a live envelope replacement's member roster —
+        /// the JSON ingress path ships only the parent envelope, so `ArtifactApp::genesis_child_pack`
+        /// must supply the same members `seed_genesis_children` opened at boot.
+        fn complete_store_replacement_genesis(&mut self, operation_id: u64) -> Result<(), Fault> {
+            let active = self
+                .store_replacement_jobs
+                .get(operation_id)
+                .ok_or_else(|| plugin_sdk_fault("live store replacement genesis lost its exact replacement authority"))?;
+            let handle = ArtifactEnvelopeDecodeOperationHandle { operation: active.operation, generation: active.generation };
+            let candidate = active
+                .retained_store
+                .as_ref()
+                .ok_or_else(|| plugin_sdk_fault("live store replacement genesis has no hydrated candidate parent"))?;
+            let dialect = candidate.envelope().dialect.clone().ok_or_else(|| plugin_sdk_fault("live store replacement genesis requires the candidate parent's exact dialect"))?;
+            let parent = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
+            let snapshot = candidate.snapshot_ref();
+            let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("live store replacement genesis child projection failed: {error}")))?;
+            let mut entries = Vec::new();
+            let mut ordinal = 0usize;
+            for index in 0..projection.len() {
+                let Some((slot, fields)) = projection.get(index) else { break };
+                let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id) else { continue };
+                let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
+                let schema = genesis_member_schema::<M>(&dialect)?;
+                let owner = store::OwnerRef { parent: parent.clone(), slot: slot.to_string(), child_id: fields.child_id.to_string() };
+                let envelope_pack = resolve_ready(store::genesis_member_envelope_pack(schema, &dialect, &owner, &initial_pack)).map_err(|error| plugin_sdk_fault(format!("genesis child {slot}/{} envelope: {error}", fields.child_id)))?;
+                if ordinal >= protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
+                    return Err(plugin_sdk_fault("live store replacement genesis exceeds its fixed 1024-member authority"));
+                }
+                entries.push(protocol::OwnedDocumentMemberPackEntry {
+                    ordinal: u32::try_from(ordinal).map_err(|_| plugin_sdk_fault("live store replacement genesis ordinal exceeds u32"))?,
+                    reference: protocol::DocumentArchiveArtifactRef { artifact_id: fields.child_id.to_string(), artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() },
+                    owner: protocol::DocumentArchiveOwnerRef {
+                        parent: protocol::DocumentArchiveArtifactRef { artifact_id: parent.artifact_id.clone(), artifact_kind: parent.dialect.artifact_kind.clone(), standard: parent.dialect.standard.clone(), subset: parent.dialect.subset.clone() },
+                        slot: slot.to_string(),
+                        child_id: fields.child_id.to_string(),
+                    },
+                    envelope_pack,
+                });
+                ordinal += 1;
+            }
+            let active = self
+                .store_replacement_jobs
+                .get_mut(operation_id)
+                .ok_or_else(|| plugin_sdk_fault("live store replacement genesis changed before member admission"))?;
+            active.begin_members(entries.len(), u64::MAX)?;
+            for entry in entries {
+                let mut pending = PendingDocumentArchiveMember::new(entry).map_err(|(fault, _)| fault)?;
+                while !pending.fill_one_page(store::OWNED_SCHEMA_DECODE_PAGE_BYTES)? {}
+                while pending.retire_source_step(store::OWNED_SCHEMA_DECODE_PAGE_BYTES) != PluginCloseStep::Complete {}
+                let ingress = pending.take_ingress(handle).map_err(|(fault, _)| fault)?;
+                active.admit_member(ingress).map_err(|(fault, _)| fault)?;
+            }
+            active.seal_members()?;
+            Ok(())
+        }
+
         fn advance_document_archive_load(
             &mut self,
             active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>,
@@ -22337,6 +22663,11 @@ pub mod app {
                     let state = self.store_replacement_jobs.get(handle.operation.0).map(|replacement| replacement.state);
                     match state {
                         Some(ActiveArtifactStoreReplacementState::AwaitingMembers) => {
+                            if !active.genesis_complete {
+                                self.complete_document_archive_genesis(active, handle)?;
+                                active.genesis_complete = true;
+                                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                            }
                             let expected = active.archive.as_ref().ok_or_else(|| plugin_sdk_fault("recursive document archive member roster owner is absent"))?.members.len();
                             if self.try_begin_owned_document_members(handle, expected, u64::MAX)? {
                                 active.phase = ActiveDocumentArchiveLoadPhase::BeginMember;
@@ -22346,7 +22677,21 @@ pub mod app {
                             }
                         }
                         Some(ActiveArtifactStoreReplacementState::Complete) | None => Err(plugin_sdk_fault("document archive parent initialization failed before retained member admission")),
-                        Some(_) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                        Some(ActiveArtifactStoreReplacementState::Initializing) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                        Some(_) => {
+                            // 🌱️ A childless candidate is sealed by the replacement lane itself
+                            // (`drive_store_replacement_jobs` begins and seals zero members the moment
+                            // it observes `AwaitingMembers`), so this load has no roster to admit and
+                            // only awaits the replacement's outcome; an archived member left behind
+                            // by that seal is a genuine ordering fault.
+                            let archived = active.archive.as_ref().map_or(0, |archive| archive.members.len());
+                            if archived != 0 {
+                                return Err(plugin_sdk_fault("document archive replacement sealed its member roster before the archived members were admitted"));
+                            }
+                            active.genesis_complete = true;
+                            active.phase = ActiveDocumentArchiveLoadPhase::AwaitReplacement;
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
                     }
                 }
                 ActiveDocumentArchiveLoadPhase::BeginMember => {
@@ -22499,15 +22844,16 @@ pub mod app {
             };
             *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
-            let live_generation = if closing {
-                self.envelope_decode_jobs.get(operation_id).map(|active| {
-                    active.cancel.cancel_now();
+            let live_generation = self
+                .envelope_decode_jobs
+                .get(operation_id)
+                .map(|active| {
+                    if closing {
+                        active.cancel.cancel_now();
+                    }
                     active.generation
                 })
-            } else {
-                Some(semio_framework_job::Generation(self.store.generation_now()))
-            }
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed during one fixed maintenance step"))?;
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed during one fixed maintenance step"))?;
             let step = self.envelope_decode_jobs.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?.drive(
                 &pool,
                 live_generation,
@@ -22518,6 +22864,20 @@ pub mod app {
             #[cfg(target_arch = "wasm32")]
             if let Some(now_ms) = semio_framework_job::default_now_ms() {
                 pool.pump(now_ms);
+            }
+            for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                match self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, closing)? {
+                    PluginCloseStep::Complete => break,
+                    PluginCloseStep::Pending { .. } => {}
+                    step => return Ok(step),
+                }
+            }
+            for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                match self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, closing)? {
+                    PluginCloseStep::Complete => break,
+                    PluginCloseStep::Pending { .. } => {}
+                    step => return Ok(step),
+                }
             }
             if self.envelope_decode_jobs.get(operation_id).is_some_and(|active| active.terminal_is_empty(&self.envelope_completed_records)) {
                 let active = self.envelope_decode_jobs.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "terminal envelope operation changed before exact removal"))?;
@@ -25531,9 +25891,9 @@ pub mod app {
                 if !self.has_runnable_artifact_envelope_decode() {
                     return Ok(());
                 }
-                self.drive_envelope_decode_jobs(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
                 self.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
                 self.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                self.drive_envelope_decode_jobs(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
                 let Some(started_us) = started_us else { return Ok(()) };
                 if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US) {
                     return Ok(());
@@ -25542,11 +25902,13 @@ pub mod app {
             Ok(())
         }
 
-        /// 🔎️ Whether any live envelope decode still has a step this turn can run. A decode that
-        /// reached `Ready` is excluded: it awaits its exact consumer publication, not a worker step,
-        /// so it must never hold the reactor in `more-work`.
+        /// 🔎️ Whether any live envelope decode still has worker close or step work this turn can run.
         fn has_runnable_artifact_envelope_decode(&self) -> bool {
             (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.envelope_decode_jobs.entry(index).is_some_and(|(_, active)| active.has_runnable_work()))
+        }
+
+        fn has_runnable_artifact_envelope_decode_worker_step(&self) -> bool {
+            self.has_runnable_artifact_envelope_decode()
         }
 
         /// 🎯️ The next mounted operation this turn's one publication unit can actually advance, taken from
@@ -25639,6 +26001,11 @@ pub mod app {
                     self.publish_mounted_typed_interaction_unit(mounted).await?;
                 } else {
                     self.publish_mounted_typed_operation_unit(mounted)?;
+                    if self.store.backbone_ref().is_some() {
+                        if let Some(PendingArtifactStorePublication::Artifact(publication)) = mounted.pending_artifact_publication.as_mut() {
+                            self.store.flush_published_apply_batch(publication).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                        }
+                    }
                     record_typed_operation_unit(if mounted.result_page.is_some() { TypedOperationUnitKind::Page } else { TypedOperationUnitKind::Store });
                 }
                 if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
@@ -26138,16 +26505,31 @@ pub mod app {
                         // 🧺️ ONE gesture is ONE batched publication: the whole artifact lane is drained
                         // into a single staged `Edit` (one history ledger slot, one undo step), instead
                         // of one edit per mutation per turn — see `store::begin_apply_batch`.
-                        match self.store.begin_apply_batch(
-                            mounted.operation.operation,
-                            mounted.artifact_generation,
-                            mounted.canonical_revision,
-                            mounted.meta.actor.clone(),
-                            std::mem::take(&mut emit.artifact_mutations),
-                            emit.description.take(),
-                            HistoryLane::Document,
-                            self.artifact_one_item_factory.as_ref(),
-                        ) {
+                        let mutations = std::mem::take(&mut emit.artifact_mutations);
+                        let description = emit.description.take();
+                        let publication_result = if self.store.backbone_ref().is_some() {
+                            self.store.begin_outbound_apply_batch(
+                                mounted.operation.operation,
+                                mounted.artifact_generation,
+                                mounted.canonical_revision,
+                                mounted.meta.actor.clone(),
+                                mutations,
+                                description,
+                                self.artifact_one_item_factory.as_ref(),
+                            )
+                        } else {
+                            self.store.begin_apply_batch(
+                                mounted.operation.operation,
+                                mounted.artifact_generation,
+                                mounted.canonical_revision,
+                                mounted.meta.actor.clone(),
+                                mutations,
+                                description,
+                                HistoryLane::Document,
+                                self.artifact_one_item_factory.as_ref(),
+                            )
+                        };
+                        match publication_result {
                             Ok(mut publication) => {
                                 publication.set_coalesce_key(emit.coalesce_key.take());
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
@@ -28145,10 +28527,10 @@ pub mod app {
                     PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                     step => Ok(step),
                 },
-                11 => match self.drive_envelope_decode_jobs(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
+                11 => {
+                    self.drive_artifact_envelope_decode_worker()?;
+                    Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                }
                 12 => match self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, false)? {
                     PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                     step => Ok(step),
@@ -28261,7 +28643,7 @@ pub mod app {
             self.tool_runs.presence()
         }
 
-        fn tool_run_trace_delta(&self, cursor: Option<semio_framework_tool_run::ToolRunTraceCursor>) -> Option<String> {
+        fn tool_run_trace_delta(&self, cursor: Option<ToolRunTraceCursor>) -> Option<String> {
             self.tool_runs.trace_delta(cursor, tool_run::TOOL_RUN_TRACE_DELTA_BYTES)
         }
 
@@ -28283,7 +28665,7 @@ pub mod app {
         fn has_runnable_typed_operations(&self) -> bool {
             self.tool_run_has_pending_work()
                 || !self.tool_operations.is_empty()
-                || self.has_runnable_artifact_envelope_decode()
+                || self.has_runnable_artifact_envelope_decode_worker_step()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
                 || self.typed_event_outbox.len() != 0
@@ -28864,7 +29246,20 @@ pub mod app {
             Ok(())
         }
 
+        /// 🏃️ A host poll is the interactive drive of a whole-document load. The background
+        /// maintenance pump advances one family per step across the whole rotation, which leaves the
+        /// ~20k bounded steps a demo-sized archive needs (decode, hydrate, member open, closure,
+        /// candidate views, commit) well over a minute from `Ready` in the browser; each poll therefore
+        /// spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` on that same rotation before reporting, so
+        /// progress scales with how eagerly the host asks and the pump's own bounds stay untouched.
         async fn poll_document_archive_load(&mut self, operation: u64) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+            let started_us = semio_framework_job::default_now_us();
+            while self.document_archive_loads.get(operation).is_some_and(|active| !active.terminal()) {
+                self.maintenance_step(1, DOCUMENT_ARCHIVE_POLL_STEP_BYTES)?;
+                if semio_framework_job::default_now_us().zip(started_us).is_none_or(|(now, started)| now.saturating_sub(started) >= DOCUMENT_ARCHIVE_POLL_WALL_US) {
+                    break;
+                }
+            }
             self.document_archive_loads
                 .get(operation)
                 .map(ActiveDocumentArchiveLoad::status)
@@ -30227,6 +30622,10 @@ pub mod app {
         fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             Err(plugin_sdk_fault("editor did not declare a loaded-parent child projection"))
         }
+        /// 🌱️ The editor's derivable-child genesis — see `ArtifactApp::genesis_child_pack`.
+        fn genesis_child_pack(_snapshot: &Self::Snapshot, _slot: &str, _child_id: &str) -> Option<Vec<u8>> {
+            None
+        }
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// @emoji 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
@@ -30699,6 +31098,10 @@ pub mod app {
         fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             Err(plugin_sdk_fault("viewer did not declare a loaded-parent child projection"))
         }
+        /// 🌱️ The viewer's derivable-child genesis — see `ArtifactApp::genesis_child_pack`.
+        fn genesis_child_pack(_snapshot: &Self::Snapshot, _slot: &str, _child_id: &str) -> Option<Vec<u8>> {
+            None
+        }
         const DOCUMENT_SCHEMA: &'static str;
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
@@ -31008,6 +31411,9 @@ pub mod app {
         const DIALECT: Dialect = E::DIALECT;
         fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             E::child_restore_projection(snapshot)
+        }
+        fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+            E::genesis_child_pack(snapshot, slot, child_id)
         }
         const APP_ID: &'static str = "surface";
         const ROLE: AppRole = E::ROLE;
@@ -31357,6 +31763,9 @@ pub mod app {
         const DIALECT: Dialect = V::DIALECT;
         fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             V::child_restore_projection(snapshot)
+        }
+        fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+            V::genesis_child_pack(snapshot, slot, child_id)
         }
         const APP_ID: &'static str = "surface";
         const ROLE: AppRole = V::ROLE;

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body};
+use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_gis_map_scene() {
@@ -13,11 +13,11 @@ async fn renders_gis_map_scene() {
 async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
     unsafe { std::env::set_var("SEMIO_ASSET_BASE_URL", "http://127.0.0.1:6141") };
     let mut app = app().await;
-    let json = render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).await;
-    assert!(json.contains("http://127.0.0.1:6141/osm/{z}/{x}/{y}.png"));
-    assert!(json.contains("http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf"));
+    let scene = render_tiled_map_scene(&mut app, GIS2D_PLAY_BODY_COMPOSITE).await;
+    assert_eq!(scene.tile_url_template, "http://127.0.0.1:6141/osm/{z}/{x}/{y}.png");
+    assert_eq!(scene.vector_tile_url_template, "http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf");
     unsafe { std::env::remove_var("SEMIO_ASSET_BASE_URL") };
-    drop(json);
+    drop(scene);
     close(&mut app);
 }
 

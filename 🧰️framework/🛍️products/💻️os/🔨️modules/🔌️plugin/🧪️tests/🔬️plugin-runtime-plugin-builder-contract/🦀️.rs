@@ -2216,7 +2216,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
 
         for _ in 0..4 {
-            app.maintenance_stage = 10;
+            app.maintenance_stage = 12;
             let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one returned decoder owner");
         }
         assert!(app.envelope_field_decoders.ticket_reclaimed(ticket));

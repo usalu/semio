@@ -43,44 +43,44 @@
   "stockLabel": "Oak Beam",
   "stockPose": {
     "position": [
-      0,
-      0,
-      0
+      0.0,
+      0.0,
+      0.0
     ],
     "axis": [
-      0,
-      0,
-      1
+      0.0,
+      0.0,
+      1.0
     ],
-    "angle": 0
+    "angle": 0.0
   },
   "stockPayload": {
     "id": "stock-1",
     "label": "Oak Beam",
     "solid": {
       "kind": "box",
-      "width": 1,
-      "depth": 1,
-      "height": 1
+      "width": 1.0,
+      "depth": 1.0,
+      "height": 1.0
     },
     "pose": {
       "position": [
-        0,
-        0,
-        0
+        0.0,
+        0.0,
+        0.0
       ],
       "axis": [
-        0,
-        0,
-        1
+        0.0,
+        0.0,
+        1.0
       ],
-      "angle": 0
+      "angle": 0.0
     }
   },
   "stockSolid": {
-    "childId": "stock-brep-8229db42da6b2653",
+    "childId": "stock-brep-7f66e598ea50b322",
     "target": {
-      "artifactId": "process-stock-brep",
+      "artifactId": "stock-brep-7f66e598ea50b322",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -89,9 +89,9 @@
     }
   },
   "steps": {
-    "childId": "steps-flow-e8aaab8e30ea6e7f",
+    "childId": "steps-flow-76eb8c7abf7ff3ac",
     "target": {
-      "artifactId": "process-steps-flow",
+      "artifactId": "steps-flow-76eb8c7abf7ff3ac",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -118,16 +118,16 @@
         },
         "pose": {
           "position": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "axis": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
-          "angle": 0
+          "angle": 0.0
         }
       }
     },
@@ -141,16 +141,16 @@
         "depth": 0.2,
         "pose": {
           "position": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "axis": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
-          "angle": 0
+          "angle": 0.0
         }
       }
     },
@@ -167,25 +167,25 @@
         },
         "pose": {
           "position": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "axis": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
-          "angle": 0
+          "angle": 0.0
         }
       }
     }
   ],
   "toolSolids": [
     {
-      "childId": "tool-step-1-brep-1720f5dc832321ac",
+      "childId": "tool-step-1-brep-0b3bc21b80751c64",
       "target": {
-        "artifactId": "process-tool-step-1-brep",
+        "artifactId": "tool-step-1-brep-0b3bc21b80751c64",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",
@@ -194,9 +194,9 @@
       }
     },
     {
-      "childId": "tool-step-3-brep-2b88a27754724652",
+      "childId": "tool-step-3-brep-275d02bbf785dfd4",
       "target": {
-        "artifactId": "process-tool-step-3-brep",
+        "artifactId": "tool-step-3-brep-275d02bbf785dfd4",
         "dialect": {
           "artifactKind": "s.stdio.semio",
           "standard": "v1",

@@ -37,6 +37,9 @@
     "nodes": [{ "id": "node-1", "label": "Root", "kind": "group" }]
   },
   "diff": {
+    "artifact": null,
+    "schema": null,
+    "id": null,
     "shapeModel": {
       "childId": "cad-shape-model-2",
       "target": {
@@ -44,6 +47,9 @@
         "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "model" }
       }
     },
+    "buildingModel": null,
+    "energyModel": null,
+    "structureClassicModel": null,
     "drawings": {
       "values": [
         {
@@ -55,6 +61,7 @@
         }
       ]
     },
+    "referencesByModelDefinitionId": null,
     "nodes": {
       "added": [{ "id": "node-2", "label": "Body", "kind": "solid" }],
       "removed": [],

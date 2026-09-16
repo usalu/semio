@@ -18,8 +18,9 @@ fn fem_analysis_settings_default_matches_pre_migration_values() {
 
 #[test]
 fn fem_initial_viewport_has_a_valid_explicit_pose() {
-    assert!(crate::viewport::INITIAL.validate().is_ok());
-    assert_eq!(crate::viewport::INITIAL.position, [4.0, -4.0, 3.0]);
+    assert!(viewport::INITIAL.validate().is_ok());
+    assert_eq!(viewport::INITIAL.position, [24.0, -20.0, 14.0]);
+    assert_eq!(viewport::INITIAL.target, [6.0, 3.0, 3.0]);
 }
 
 #[test]

@@ -7,10 +7,11 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces.
+    /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces — over `SemioMembers`, the
+    /// roster that opens the composed `s.stdio.semio` kit catalogue child every curation carries.
     pub enum SourcingApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

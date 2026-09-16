@@ -280,7 +280,13 @@ export async function produceFreshComponentV1<T>(
     await freshRun("node", [jco, "wit", component, "--output", witPath], repoRoot, env, control, "inspect-wit", 2, total);
     const wit = readFileSync(witPath, "utf8");
     if (Buffer.byteLength(wit) > FRESH_COMPONENT_MAX_BYTES) throw new Error("fresh component WIT exceeds its fixed boundary");
-    const witExports = [...wit.matchAll(/\bexport\s+([a-z][a-z0-9-]*)\s*;/gu)].map((match) => match[1]!).sort();
+    const witExports = [...wit.matchAll(/\bexport\s+([^;]+);/gu)]
+      .map((match) => {
+        const token = match[1]!.trim();
+        const iface = token.match(/\/([a-z][a-z0-9-]*)@/u)?.[1];
+        return iface ?? token;
+      })
+      .sort();
     if (!["checkpoint", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
     await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
     const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);

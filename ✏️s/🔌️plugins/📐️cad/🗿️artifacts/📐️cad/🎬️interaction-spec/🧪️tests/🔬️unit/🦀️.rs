@@ -51,7 +51,7 @@ async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
 /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
 #[semio_framework_async_macros::async_test]
 async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
     fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(dir) else { return };
         for entry in entries.flatten() {

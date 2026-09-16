@@ -826,6 +826,8 @@ pub struct AssemblyPreview {
     pub total_elements: usize,
     pub full_triplets: usize,
     pub free_triplets: usize,
+    /// 🧩️ Ids assembled since the previous published preview — a bounded delta, never the whole
+    /// roster, so a preview step stays under the interactive ceiling for any element count.
     pub assembled_element_ids: Vec<String>,
 }
 
@@ -938,6 +940,7 @@ struct AssemblyCheckpoint {
     merged_free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     checkpoint_due: bool,
     preview_due: bool,
+    preview_cursor: usize,
     resume_target: usize,
     merge_scan_partition: usize,
     merge_candidate: Option<(usize, AssemblyTriplet)>,
@@ -1501,6 +1504,7 @@ impl AssemblyJobConstruction {
                             merged_free: std::mem::take(&mut self.merged_free),
                             checkpoint_due: false,
                             preview_due: false,
+                            preview_cursor: 0,
                             resume_target: 0,
                             merge_scan_partition: 0,
                             merge_candidate: None,
@@ -1746,6 +1750,7 @@ impl<'model> AssemblyJob<'model> {
                 merged_free: cold_paged_owner(maximum_triplets)?,
                 checkpoint_due: false,
                 preview_due: false,
+                preview_cursor: 0,
                 resume_target: 0,
                 merge_scan_partition: 0,
                 merge_candidate: None,
@@ -1762,6 +1767,7 @@ impl<'model> AssemblyJob<'model> {
         }
         let mut job = Self::new(model, operation, checkpoint.partition_count).map_err(|error| error.to_string())?;
         job.state.resume_target = checkpoint.completed_elements;
+        job.state.preview_cursor = checkpoint.completed_elements;
         Ok(job)
     }
 
@@ -1783,7 +1789,7 @@ impl<'model> AssemblyJob<'model> {
             total_elements: self.state.total_elements,
             full_triplets: self.state.partitions.iter().map(|partition| partition.full.len()).sum(),
             free_triplets: self.state.partitions.iter().map(|partition| partition.free.len()).sum(),
-            assembled_element_ids: (0..self.state.element_cursor).filter_map(|index| self.model.element(index)).map(|element| element.id().to_string()).collect(),
+            assembled_element_ids: (self.state.preview_cursor..self.state.element_cursor).filter_map(|index| self.model.element(index)).map(|element| element.id().to_string()).collect(),
         }
     }
 
@@ -2569,7 +2575,10 @@ impl InteractiveJob for AssemblyJob<'_> {
             }
             let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(preview) => StepOutcome::PreviewReady(preview),
+                Ok(preview) => {
+                    self.state.preview_cursor = self.state.element_cursor;
+                    StepOutcome::PreviewReady(preview)
+                }
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             };
         }
@@ -2625,7 +2634,10 @@ impl InteractiveJob for AssemblyJob<'_> {
             self.state.preview_due = false;
             let bytes = encode_value(&self.preview());
             match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(preview) => StepOutcome::PreviewReady(preview),
+                Ok(preview) => {
+                    self.state.preview_cursor = self.state.element_cursor;
+                    StepOutcome::PreviewReady(preview)
+                }
                 Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
             }
         } else {
@@ -2677,10 +2689,17 @@ fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     let mut preview_sequence = 0;
     loop {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
-        match job.step(&mut context) {
-            StepOutcome::Complete(_) => break,
-            StepOutcome::Fault(_) | StepOutcome::Cancelled => return Err(FemError::Singular),
-            StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {}
+        let mut outcome = job.step(&mut context);
+        let failed = matches!(outcome, StepOutcome::Fault(_) | StepOutcome::Cancelled);
+        let complete = matches!(outcome, StepOutcome::Complete(_));
+        while !outcome.terminal_is_empty() {
+            outcome.close_step(1, usize::MAX);
+        }
+        if failed {
+            return Err(FemError::Singular);
+        }
+        if complete {
+            break;
         }
     }
     let unfactored = job.finish().expect("completed assembly owns its matrices");

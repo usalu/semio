@@ -286,16 +286,15 @@ impl<T, const N: usize> Default for UiFixedList<T, N> {
     }
 }
 
-/// 🧊️ Cold cloning allocates and copies every initialized payload; retained owners use explicit cursors.
+/// 🧊️ Cold cloning allocates one page at a time and copies every initialized payload — the clone owns
+/// exactly the pages its payloads need, never the source's spare backing; retained owners use
+/// explicit cursors.
 impl<T: Clone, const N: usize> Clone for UiFixedList<T, N> {
     fn clone(&self) -> Self {
         let mut result = Self::default();
-        if self.capacity() != 0 {
-            result.try_reserve().expect("cold clone allocation");
-        }
         for item in self.iter() {
-            if result.try_push_reserved(item.clone()).is_err() {
-                unreachable!("cold clone reserved exact logical capacity");
+            if result.try_push(item.clone()).is_err() {
+                unreachable!("cold clone admits at most the source's own logical length");
             }
         }
         result
@@ -339,9 +338,26 @@ impl<T, const N: usize> UiFixedList<T, N> {
         self.storage.push_reserved(value)
     }
 
-    /// 🧊️ Cold convenience combining allocation admission and one write; retained builders split them.
+    /// 🎟️ Admits backing pages until one slot is free — the page-exact reservation every retained
+    /// builder performs by hand (`UiPatchOps::try_push`), so a cold push never owns more than the next
+    /// page. A full-capacity reservation here priced one `ActionBinding` at 32 slots × 2 KiB × 3 census
+    /// copies (~240 KiB) and one `RowAction` at ~300 KiB, which capped a surface at ~16 actionable rows
+    /// of its 8 MiB reconcile budget (process3d workshop, 12 machines + 4 catalogs: `ui.surface-render
+    /// … bytes: 8390387`, ticket 26/09/15/DEV-PROCESS-REACT-E2E).
+    fn reserve_next_slot(&mut self) -> Result<(), &'static str> {
+        while !self.has_reserved_slot() {
+            let bytes = self.next_allocation_bytes()?;
+            if !self.try_reserve_one(bytes).map_err(|error| error.reason)?.progressed {
+                return Err("fixed list page admission made no progress");
+            }
+        }
+        Ok(())
+    }
+
+    /// 🧊️ Cold convenience combining page-exact allocation admission and one write; retained builders
+    /// split them.
     pub fn try_push(&mut self, value: T) -> Result<(), T> {
-        if self.len() == N || self.try_reserve().is_err() {
+        if self.len() == N || self.reserve_next_slot().is_err() {
             return Err(value);
         }
         self.try_push_reserved(value)
@@ -604,7 +620,7 @@ impl<V> UiFixedMap<V> {
     #[expect(clippy::result_large_err, reason = "Sorted fixed-map admission returns both original inputs when duplication or capacity rejects them.")]
     pub fn try_insert(&mut self, key: UiText, value: V) -> Result<(), (UiText, V)> {
         let Err(position) = self.search(&key) else { return Err((key, value)) };
-        if self.entries.len() == UI_FIXED_LIST_ITEMS || self.entries.try_reserve().is_err() {
+        if self.entries.len() == UI_FIXED_LIST_ITEMS || self.entries.reserve_next_slot().is_err() {
             return Err((key, value));
         }
         let mut carry = (key, value);

@@ -12,11 +12,5 @@
     "modalCount": 12,
     "bucklingCount": 8,
     "deformationScale": 100.0
-  },
-  "resultSourceId": null,
-  "resultMode": null,
-  "resultModeIndex": null,
-  "camera": null,
-  "solverResultsJson": null,
-  "meshPreviewJson": null
+  }
 }

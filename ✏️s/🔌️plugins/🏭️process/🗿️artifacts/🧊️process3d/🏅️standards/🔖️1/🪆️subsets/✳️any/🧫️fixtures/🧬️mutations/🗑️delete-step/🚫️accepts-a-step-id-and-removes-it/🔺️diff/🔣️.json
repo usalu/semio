@@ -9,7 +9,7 @@
   "steps": {
     "childId": "steps-flow-a2104e830ad0e9c1",
     "target": {
-      "artifactId": "process-steps-flow",
+      "artifactId": "steps-flow-a2104e830ad0e9c1",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

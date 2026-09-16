@@ -2051,6 +2051,18 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         }
         match self.session.poll() {
             WorkerJobPoll::Idle => {
+                #[cfg(not(target_arch = "wasm32"))]
+                if lane == Lane::Interactive {
+                    let (ticket, poll) = self
+                        .session
+                        .try_step_on_caller()
+                        .map_err(|contention| MountedWorkerJobPumpFault::Submit(WorkerJobSubmitFault::Contention(contention)))?;
+                    self.ticket = Some(ticket);
+                    return match poll {
+                        WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => self.pump_one(pool, lane),
+                        other => Ok(other),
+                    };
+                }
                 let ticket = self.session.try_submit_step(pool, lane).map_err(MountedWorkerJobPumpFault::Submit)?;
                 self.ticket = Some(ticket);
                 Ok(WorkerJobPoll::Submitted)
@@ -2073,6 +2085,41 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
                 Ok(WorkerJobPoll::Rejected)
             }
             poll => Ok(poll),
+        }
+    }
+
+    /// 🏃️ [`pump_one`] for one reactor-turn slice: on native hosts a submitted step runs on a pool
+    /// worker, so the caller must spin until [`WorkerJobPoll::Outcome`] or [`WorkerJobPoll::Terminal`]
+    /// before the decode/publication ladder can run field-decoder returns on this thread (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END). On wasm the cooperative pool is pumped by the caller.
+    pub fn pump_one_for_interactive_turn(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault>
+    where
+        J: Send,
+    {
+        match self.pump_one(pool, lane)? {
+            WorkerJobPoll::Submitted => self.await_pooled_interactive_step(pool, lane),
+            poll => Ok(poll),
+        }
+    }
+
+    fn await_pooled_interactive_step(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault>
+    where
+        J: Send,
+    {
+        #[cfg(target_arch = "wasm32")]
+        {
+            return Ok(WorkerJobPoll::Submitted);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            for _ in 0..4_096 {
+                match self.poll() {
+                    WorkerJobPoll::Submitted => std::thread::yield_now(),
+                    WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => return self.pump_one(pool, lane),
+                    poll => return Ok(poll),
+                }
+            }
+            Ok(WorkerJobPoll::Submitted)
         }
     }
 
@@ -2113,13 +2160,19 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> WorkerJobCloseStep {
-        if let Some(owner) = self.checked_out.take() {
+        if let Some(mut owner) = self.checked_out.take() {
             if maximum_items == 0 {
                 self.checked_out = Some(owner);
                 return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
+            if let Some(step) = owner.close_retained_payloads(maximum_items.min(1), maximum_bytes) {
+                if !matches!(step, WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 }) {
+                    self.checked_out = Some(owner);
+                    return step;
+                }
+            }
             owner.begin_close();
-            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            return self.session.close_step(maximum_items, maximum_bytes);
         }
         self.session.close_step(maximum_items, maximum_bytes)
     }
@@ -2982,6 +3035,25 @@ impl<J> WorkerJobOutcome<J> {
 
     pub fn take_outcome(&mut self) -> StepOutcome {
         self.authority.as_mut().and_then(|authority| authority.outcome.take()).expect("checked-out worker outcome owns exact outcome")
+    }
+
+    /// 🧹️ Bounded-closes any retained payload pages still held on the checked-out outcome before the
+    /// session authority is transferred into [`SESSION_CLOSE`].
+    pub fn close_retained_payloads(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<WorkerJobCloseStep> {
+        let Some(authority) = self.authority.as_mut() else { return None };
+        let Some(outcome) = authority.outcome.as_mut() else { return None };
+        if outcome.terminal_is_empty() {
+            authority.outcome = None;
+            return None;
+        }
+        Some(match outcome.close_step(maximum_items, maximum_bytes) {
+            JobPayloadCloseStep::Pending { released_items, released_bytes } => WorkerJobCloseStep::Pending { released_items, released_bytes },
+            JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
+                authority.outcome = None;
+                WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+            }
+            JobPayloadCloseStep::Complete => WorkerJobCloseStep::Blocked,
+        })
     }
 
     #[expect(clippy::result_large_err, reason = "Refused resumption returns the checked-out job authority and retained outcome without allocation or ownership loss.")]

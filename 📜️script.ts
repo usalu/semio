@@ -5025,8 +5025,8 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     editor.includes("fn mounted_job_prepare_snapshot_read(") &&
     !!render &&
     render.body.includes("progress.map(Fem2dMountedVisualLease::snapshot)") &&
+    render.body.includes("fem2d_structure_layers(doc") &&
     !render.body.includes("fem2d_live_visual_layers") &&
-    !render.body.includes("fem2d_structure_layers") &&
     !render.body.includes("fem2d_region_triangles") &&
     !render.body.includes("serde_json") &&
     !render.body.includes("sort") &&
@@ -6543,9 +6543,9 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs");
-  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
-  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
+  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
+  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
   const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
   const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
   const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
@@ -8322,14 +8322,14 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6i-only")) {
-      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
-      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
-      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
-      const fem3dViewer = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs");
-      const fem3dViewerModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
+      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
+      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
+      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
+      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
+      const fem3dViewer = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs");
+      const fem3dViewerModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
       const femPluginRoot = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
       const femGlue = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
       const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
@@ -8349,7 +8349,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6h-only")) {
-      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs");
+      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
       const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
       const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");

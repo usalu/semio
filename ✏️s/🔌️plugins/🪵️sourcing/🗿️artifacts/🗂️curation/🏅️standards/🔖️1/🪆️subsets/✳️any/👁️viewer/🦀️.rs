@@ -63,6 +63,10 @@ impl ArtifactViewer for SourcingViewer {
         crate::schema::default_document()
     }
 
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_catalog_pack(snapshot, slot, child_id)
+    }
+
     /// 👁️ Structurally read-only: the sole `SourcingViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a

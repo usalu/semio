@@ -49,7 +49,7 @@ async fn inverse_recreates_the_drawing_with_its_target() {
     assert_eq!(inverse.len(), 1, "delete-drawing inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateDrawing(step) => {
-            assert_eq!(step.child_id, "drawing-1", "the inverse must recreate the removed drawing id");
+            assert_eq!(step.child_id, "cad-drawing-1", "the inverse must recreate the removed drawing id");
             assert_eq!(step.target, "cad-drawing-1!s.stdio.semio@v1/drawing", "the inverse must carry the removed handle's target URI, not a stub");
         }
         other => panic!("delete-drawing must invert to create-drawing, got {other:?}"),

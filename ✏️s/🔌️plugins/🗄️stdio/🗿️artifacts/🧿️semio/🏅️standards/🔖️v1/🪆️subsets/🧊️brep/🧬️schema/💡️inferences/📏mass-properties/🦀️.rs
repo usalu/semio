@@ -880,7 +880,19 @@ fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::standards::v1:
     let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
         Surface::Plane { .. } if loop_has_only_straight_edges(body, loop_id) => {
-            let pts = loop_positions(body, loop_id)?;
+            let mut pts = loop_positions(body, loop_id)?;
+            // 🕳️ An inner loop (a hole) is wound OPPOSITE to the outer ring about the surface's natural
+            // normal (`euler::split_face_by_interior_curve`'s convention), and the callers subtract
+            // every inner contribution — so, exactly as the general branch's `ear_clip` normalises its
+            // UV polygon, the ring is walked CCW about the natural normal before the tetra sum, or a
+            // planar hole's contribution came back negated and `vol -= inner` ADDED its area (a
+            // through-pocket in a box read 1 + 0.16·… instead of 1 − 0.16, ticket
+            // 26/09/15/DEV-PROCESS-REACT-E2E).
+            if let Some(natural) = surface.normal(0.0, 0.0) {
+                if polygon_area_vector(&pts).dot(natural) < 0.0 {
+                    pts.reverse();
+                }
+            }
             let (sv, mx, my, mz) = signed_tetra_sum(&pts);
             // 🐛 FIX: this fast path derives its sign purely from the loop's own vertex winding,
             // which never encodes `face.flipped` — the general (non-planar) branch below DOES
@@ -899,6 +911,18 @@ fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::standards::v1:
             Ok((6.0 * m[IDX_VOL], 24.0 * m[IDX_MX], 24.0 * m[IDX_MY], 24.0 * m[IDX_MZ]))
         }
     }
+}
+
+/// 📐 Twice the vector area of the closed polygon `pts` — its direction is the winding's normal.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn polygon_area_vector(pts: &[Pnt3]) -> Vec3 {
+    let Some(&first) = pts.first() else { return Vec3::new(0.0, 0.0, 0.0) };
+    let mut area = Vec3::new(0.0, 0.0, 0.0);
+    for (i, &p) in pts.iter().enumerate() {
+        let q = pts[(i + 1) % pts.len()];
+        area = area + (p - first).cross(q - first);
+    }
+    area
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

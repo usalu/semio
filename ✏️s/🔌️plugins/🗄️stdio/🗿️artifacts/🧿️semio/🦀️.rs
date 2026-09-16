@@ -154,12 +154,15 @@ use subsets::{
     text::schema::mutations as text_mutation, value::schema::mutations as value_mutation, video::schema::mutations as video_mutation,
 };
 
+/// 📦️ Which retained snapshot decoder a subset's member opens through: `flow` streams its own binary
+/// protocol, every other subset's pack is its generic value encoding and opens through the framework's
+/// bounded `PackMemberSnapshotOpen`.
 macro_rules! semio_snapshot_open {
     (flow, $snapshot:ty) => {
         type SnapshotOpen = subsets::flow::schema::snapshot::binary::SemioFlowSnapshotDecode;
     };
     ($module:ident, $snapshot:ty) => {
-        type SnapshotOpen = dsl::UnsupportedMemberSnapshotOpen<$snapshot>;
+        type SnapshotOpen = dsl::PackMemberSnapshotOpen<$snapshot>;
     };
 }
 use subsets::{

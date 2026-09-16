@@ -34,6 +34,7 @@ fn op_binary_round_trips_and_agrees_with_text() {
 async fn fem3d_document_text_round_trips_through_the_store() {
     let fixture = cantilever_fixture();
     let mut store = semio_framework_plugin::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>());
     let mutations = vec![
         Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),
         Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone() }),
@@ -47,4 +48,8 @@ async fn fem3d_document_text_round_trips_through_the_store() {
     assert_eq!(store.snapshot().expect("snapshot"), fixture);
     semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
     semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    while !store.close_owned_terminal_is_empty() {
+        let step = store.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("fem3d document store closes through its exact bounded owners");
+        assert!(matches!(step, store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) || matches!(step, store::SnapshotRetirementStep::Complete));
+    }
 }

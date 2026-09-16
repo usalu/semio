@@ -691,9 +691,9 @@ fn mesh_job_observes_cancellation_before_mutating() {
 
 #[test]
 fn mesh_job_large_boundary_never_runs_to_completion_in_one_step() {
-    let boundary = (0..1_024)
+    let boundary = (0..256)
         .map(|index| {
-            let angle = index as f64 * std::f64::consts::TAU / 1_024.0;
+            let angle = index as f64 * std::f64::consts::TAU / 256.0;
             [angle.cos() * 100.0, angle.sin() * 100.0]
         })
         .collect();

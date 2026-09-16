@@ -28,9 +28,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-#[cfg(test)]
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Make
 
@@ -676,6 +674,113 @@ pub fn split_face_by_interior_curve(body: &mut Body, face: FaceId, edge_id: Edge
     }
 
     Ok((face, new_face))
+}
+
+/// 🖋️ Imprints a CLOSED imprint expressed PIECEWISE — a cycle of open intersection segments that
+/// lies entirely inside `face`'s trim and never touches its outer boundary (the canonical case: a
+/// box tool passing clean through a box stock leaves the stock's own cross-section as a rectangle
+/// of four line segments on each tool side face, and a square hole on the stock's top and bottom
+/// faces). The same two-ring shape as [`split_face_by_interior_curve`] — the cycle becomes a new
+/// inner loop (hole) on the original face and the outer ring of a second face on the same surface —
+/// only with the ring walked over every member of `chain` instead of one self-closing edge. `chain`
+/// must be end-to-end connected and closed (each member's `forward` flag oriented along the walk),
+/// as [`crate::standards::v1::subsets::brep::schema::diff::boolean`]'s chain assembly emits it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn split_face_by_interior_chain(body: &mut Body, face: FaceId, chain: &[ParametricEdge], rec: &mut OpRecorder) -> Result<(FaceId, FaceId), KernelError> {
+    if chain.len() < 2 {
+        return Err(KernelError::Operation(format!("interior chain on face {face} needs at least two members, got {}", chain.len())));
+    }
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let outer = face_data.outer.ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
+    let (outer_sign, chain_sign) = match body.surfaces.get(face_data.surface).and_then(|surface| surface.normal(0.0, 0.0)) {
+        // 🧭️ A ring on a plane (a box face) carries no p-curves, so its UV area reads 0; both windings
+        // are measured in 3D about the plane's own normal instead — the same reference for both.
+        Some(normal) if matches!(body.surfaces.get(face_data.surface), Some(Surface::Plane { .. })) => {
+            (points_signed_area_about(&loop_3d_points(body, outer), normal).signum(), points_signed_area_about(&chain_3d_points(body, chain), normal).signum())
+        }
+        _ => (loop_uv_signed_area(body, outer).signum(), chain_uv_signed_area(body, chain).signum()),
+    };
+    let reversed: Vec<ParametricEdge> = chain.iter().rev().map(|&(e, f, pc, pr)| (e, !f, pc, pr)).collect();
+    let (hole_members, new_outer_members) = if outer_sign == 0.0 || chain_sign != outer_sign { (chain, reversed.as_slice()) } else { (reversed.as_slice(), chain) };
+
+    let hole_loop = make_loop_pc(body, face, hole_members);
+    body.faces.get_mut(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.inners.push(hole_loop);
+
+    let new_outer = make_loop_pc(body, FaceId::from_raw(0, 0), new_outer_members);
+    let new_face = add_face(body, face_data.surface, Some(new_outer), vec![], face_data.flipped, face_data.tol, rec);
+    body.loops.get_mut(new_outer).ok_or_else(|| KernelError::MissingEntity(format!("loop {new_outer}")))?.face = new_face;
+
+    for (_, shell) in body.shells.iter_mut() {
+        if shell.faces.contains(&face) && !shell.faces.contains(&new_face) {
+            shell.faces.push(new_face);
+        }
+    }
+
+    Ok((face, new_face))
+}
+
+/// 🖋️ Signed UV area of a closed chain walked in member order — each member sampled along its
+/// own p-curve in its `forward` direction, so the sign answers the winding the same way
+/// [`loop_uv_signed_area`] does for an existing ring.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn chain_uv_signed_area(body: &Body, chain: &[ParametricEdge]) -> f64 {
+    const SAMPLES: usize = 8;
+    let mut points: Vec<Pnt2> = Vec::new();
+    for &(_, forward, pcurve_id, prange) in chain {
+        let Some(pcurve) = pcurve_id.and_then(|id| body.curves2.get(id)) else { continue };
+        let (t0, t1) = if forward { prange } else { (prange.1, prange.0) };
+        for i in 0..SAMPLES {
+            points.push(pcurve.eval(t0 + (t1 - t0) * i as f64 / SAMPLES as f64));
+        }
+    }
+    let mut area = 0.0;
+    for (i, p) in points.iter().enumerate() {
+        let q = points[(i + 1) % points.len()];
+        area += p.x * q.y - q.x * p.y;
+    }
+    area * 0.5
+}
+
+/// 🧭️ 3D samples along a ring's coedges, each edge curve walked in that coedge's own direction.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_3d_points(body: &Body, loop_id: LoopId) -> Vec<Pnt3> {
+    let members: Vec<(EdgeId, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| body.coedges.get(cid).map(|co| (co.edge, co.forward))).collect();
+    edges_3d_points(body, &members)
+}
+
+/// 🧭️ 3D samples along a chain's members, each edge curve walked in the member's own direction.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn chain_3d_points(body: &Body, chain: &[ParametricEdge]) -> Vec<Pnt3> {
+    let members: Vec<(EdgeId, bool)> = chain.iter().map(|&(e, f, _, _)| (e, f)).collect();
+    edges_3d_points(body, &members)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn edges_3d_points(body: &Body, members: &[(EdgeId, bool)]) -> Vec<Pnt3> {
+    const SAMPLES: usize = 8;
+    let mut points = Vec::new();
+    for &(edge_id, forward) in members {
+        let Some(edge) = body.edges.get(edge_id) else { continue };
+        let Some(curve) = body.curves3.get(edge.curve) else { continue };
+        let (t0, t1) = if forward { edge.range } else { (edge.range.1, edge.range.0) };
+        for i in 0..SAMPLES {
+            points.push(curve.eval(t0 + (t1 - t0) * i as f64 / SAMPLES as f64));
+        }
+    }
+    points
+}
+
+/// 🧭️ Signed area of the closed polygon `points` as seen along `normal` — positive when the walk is
+/// counter-clockwise about it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn points_signed_area_about(points: &[Pnt3], normal: Vec3) -> f64 {
+    let Some(&first) = points.first() else { return 0.0 };
+    let mut area = Vec3::new(0.0, 0.0, 0.0);
+    for (i, &p) in points.iter().enumerate() {
+        let q = points[(i + 1) % points.len()];
+        area = area + (p - first).cross(q - first);
+    }
+    area.dot(normal) * 0.5
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

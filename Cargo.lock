@@ -6621,6 +6621,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-obj",
@@ -9108,6 +9109,7 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-s-artifact-gis-gismap",
  "semio-s-artifact-gis-gisterrain",
+ "semio-s-artifact-stdio-semio",
  "semio-s-plugin-stdio",
  "serde_json",
 ]

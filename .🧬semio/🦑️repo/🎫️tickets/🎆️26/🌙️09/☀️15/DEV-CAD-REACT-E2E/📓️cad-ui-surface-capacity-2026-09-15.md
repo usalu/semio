@@ -1,5 +1,7 @@
 # CAD React UI Surface Capacity Fix (2026-09-15)
 
+> ⚠️ Superseded 2026-09-16 — the kind-reference workaround rendered every solid as a unit box at the origin. Inline tessellation rides the paged `meshes` lane and renders fine; see [cad-react-e2e-2026-09-16.md](./📓️cad-react-e2e-2026-09-16.md).
+
 ## Symptom
 
 After load, Shape/Building windows fault with:

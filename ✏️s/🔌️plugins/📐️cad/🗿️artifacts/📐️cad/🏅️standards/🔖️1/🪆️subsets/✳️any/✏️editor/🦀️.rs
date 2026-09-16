@@ -28,7 +28,7 @@ use crate::standards::v1::subsets::any::schema::inferences::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
-use crate::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
+use crate::{artifact_kind, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use dsl::json;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -107,16 +107,43 @@ pub const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 /// declares (granularities object/vertex/edge/face, `HierarchyProvider::Flat`).
 pub const CAD_INTERACTION_DOMAIN: &str = "cad";
 
-/// 🕹️ Owned snapshot of `InteractionView::selection(CAD_INTERACTION_DOMAIN)`, read once per dispatch
-/// by `ArtifactApp::handle` and threaded through `CadDispatchCtx` to every command handler.
-/// Decouples handlers from `semio_framework_plugin::app::InteractionView` itself — whose fields are
-/// `pub(crate)` to that crate, so this crate's own tests cannot construct one — command-level tests
-/// build this plain, cad-owned struct directly instead (see `🎮️commands/🔄️transform`).
+/// 🕹️ Owned snapshot of the framework's `"cad"` domain — `InteractionView::selection` plus the
+/// `"pointer"` hover — read once per dispatch by `ArtifactApp::handle` (threaded through
+/// `CadDispatchCtx` to every command handler) and once per render by
+/// `ArtifactApp::render_with_request_context` (threaded through [`CadPlayView`] to the world scene,
+/// the engagement HUD, the inspection panel and the document tree). Decouples both from
+/// `semio_framework_plugin::app::InteractionView` itself — whose fields are `pub(crate)` to that
+/// crate, so this crate's own tests cannot construct one — tests build this plain, cad-owned struct
+/// directly instead (see `🎮️commands/🔄️transform`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CadInteractionSnapshot {
     pub granularity: String,
     pub ids: Vec<String>,
     pub anchor_id: Option<String>,
+    pub hovered_ids: Vec<String>,
+}
+
+impl CadInteractionSnapshot {
+    /// 🐁️ The hover channel `World3dHost` publishes instance hover on (`world3dHoverActionArgs`).
+    pub const POINTER_CHANNEL: &'static str = "pointer";
+
+    pub fn from_interaction(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> Self {
+        let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
+        Self {
+            granularity: selection.granularity.clone(),
+            ids: selection.ids.clone(),
+            anchor_id: selection.anchor_id.clone(),
+            hovered_ids: interaction.hover(CAD_INTERACTION_DOMAIN, Self::POINTER_CHANNEL).ids.clone(),
+        }
+    }
+
+    pub fn is_selected(&self, id: &str) -> bool {
+        self.ids.iter().any(|selected| selected == id)
+    }
+
+    pub fn is_hovered(&self, id: &str) -> bool {
+        self.hovered_ids.iter().any(|hovered| hovered == id)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -284,6 +311,9 @@ pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId
 pub struct CadPlayView {
     pub document: CadSnapshot,
     pub runtime: CadPlayRuntime,
+    /// 🕹️ The live `"cad"` domain at this render — empty on the interaction-less `render` path
+    /// (exports, tests) and on every `handle`-side view.
+    pub interaction: CadInteractionSnapshot,
 }
 
 pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
@@ -314,7 +344,9 @@ pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_framewo
     Ok(UiValue::List(builder.finish()))
 }
 
-/// 🗺️ Admits one fixed CAD UI map value.
+/// 🗺️ Admits one fixed CAD UI map value. 🔑️ `UiMapBuilder::push` admits keys in strictly ascending
+/// order only — a later key that does not exceed the previous one is refused — so callers list
+/// entries sorted by key.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map admission failed"))?;
     for (key, value) in values {
@@ -1027,6 +1059,33 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
 pub struct CadPlayApp;
 
 impl CadPlayApp {
+    /// 🖼️ The one render implementation both trait entry points share.
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction };
+        let labels = cad_labels(view_state);
+        let window_kind_id = match body_key {
+            shape::BODY_KEY => shape::WINDOW_KIND_ID,
+            building::BODY_KEY => building::WINDOW_KIND_ID,
+            energy::BODY_KEY => energy::WINDOW_KIND_ID,
+            structure_classic::BODY_KEY => structure_classic::WINDOW_KIND_ID,
+            _ => shape::WINDOW_KIND_ID,
+        };
+        let active_utility = view_state.active_utility_id.as_deref();
+        let options = view.runtime.dislocate_options(window_kind_id);
+        match body_key {
+            shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
+            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels).map(semio_framework_plugin::built_to_component_tree),
+            inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
+    }
+
+
     /// 🔬️ CW7 preview-law seam: reads the operation-stamped engagement checkpoint from config only.
     pub fn gesture_preview(&self, config: &CadConfig) -> Option<CadGesturePreview> {
         let session_json = config.engagement_session_json.as_ref()?;
@@ -1100,7 +1159,7 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1130,14 +1189,15 @@ fn cad_retained_reduce(
     config: &CadConfig,
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id };
+    let hovered_ids = hover.get(CAD_INTERACTION_DOMAIN).filter(|hover| hover.channel == CadInteractionSnapshot::POINTER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
+    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id, hovered_ids };
     let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)), view_state: context.and_then(|context| context.view_state.clone()) };
     if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;
@@ -1247,6 +1307,12 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(config.contributions_json.len())
 }
 
+/// 🧺️ `work_items` counts staged edit ROWS (forward + inverse), never mutations: every
+/// `CadConfigMutation` inverts to exactly one `Snapshot` row, so a config gesture is ONE invertible
+/// item (`ArtifactStoreOneItemFootprint::for_one_invertible_item`). Declaring `work_items: 1` here
+/// fail-closed every config gesture (`setReferenceSelection`, `setCamera`, …) inside
+/// `ArtifactStore::fold_batch_item` with `batched item candidate failed its exact fixed fold contract`
+/// (ticket 26/09/15/DEV-CAD-REACT-E2E).
 fn admit_cad_config(config: &CadConfig) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     if config.selected_node_ids.len() > CAD_CONFIG_STORE_MAXIMUM_ITEMS {
         return Err("CAD config exceeds its fixed retained item envelope".into());
@@ -1255,13 +1321,13 @@ fn admit_cad_config(config: &CadConfig) -> Result<store::ArtifactStoreOneItemFoo
     if retained_bytes > CAD_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("CAD config exceeds its fixed retained byte envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     match mutation {
         CadConfigMutation::Snapshot { config } => admit_cad_config(config),
-        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: json.len() }),
+        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(json.len())),
         CadConfigMutation::SetContributions { .. } => Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
     }
 }
@@ -1455,13 +1521,16 @@ fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
         .saturating_add(snapshot.structure_classic_model.is_some() as usize)
 }
 
+/// 🧺️ Same fold contract as [`admit_cad_config`]: every `CadMutation` inverts to at most one row
+/// (`🧬️mutations/*/↩️inverse`), so an artifact gesture is one invertible item — forward row plus
+/// inverse row.
 fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let work_items = cad_snapshot_items(snapshot);
     let retained_bytes = cad_snapshot_retained_bytes(snapshot);
     if work_items > CAD_ARTIFACT_STORE_MAXIMUM_ITEMS || retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -1469,7 +1538,7 @@ fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::Artifact
     if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>, CadMutation), String> {
@@ -1844,7 +1913,7 @@ impl ArtifactEditor for CadPlayApp {
             let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: CadPlayRuntime::default() };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: CadPlayRuntime::default(), interaction: CadInteractionSnapshot::default() };
         let mut kernel = cad_brep_kernel();
         let solids = collect_modelspace_solids(&mut kernel, &view);
         if solids.is_empty() {
@@ -1881,39 +1950,35 @@ impl ArtifactEditor for CadPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
-        let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
-        let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
-        let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)), view_state: view_state.cloned() };
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::from_interaction(interaction), preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)), view_state: view_state.cloned() };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
+    /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] (exports, tests, the
+    /// framework's own `render_with_request_context` default body): one render implementation
+    /// ([`Self::render_body`]) against an empty `"cad"` domain.
     fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
-        let labels = cad_labels(view_state);
-        let window_kind_id = match body_key {
-            shape::BODY_KEY => shape::WINDOW_KIND_ID,
-            building::BODY_KEY => building::WINDOW_KIND_ID,
-            energy::BODY_KEY => energy::WINDOW_KIND_ID,
-            structure_classic::BODY_KEY => structure_classic::WINDOW_KIND_ID,
-            _ => shape::WINDOW_KIND_ID,
-        };
-        let active_utility = view_state.active_utility_id.as_deref();
-        let options = view.runtime.dislocate_options(window_kind_id);
-        match body_key {
-            shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
-            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels).map(semio_framework_plugin::built_to_component_tree),
-            inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        Self::render_body(body_key, doc, cfg, view_state, CadInteractionSnapshot::default())
+    }
+
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: resolves the live `"cad"` domain (selection +
+    /// `"pointer"` hover) once per render and threads it through [`CadPlayView`] into every body —
+    /// the world scenes' selected/hovered instance flags and gumball, the engagement HUD's selected
+    /// count, the inspection panel's selected-object fields and the document tree's marks.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        view_state: &ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, CadInteractionSnapshot::from_interaction(interaction))
     }
 
     fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
         let labels = cad_labels(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),

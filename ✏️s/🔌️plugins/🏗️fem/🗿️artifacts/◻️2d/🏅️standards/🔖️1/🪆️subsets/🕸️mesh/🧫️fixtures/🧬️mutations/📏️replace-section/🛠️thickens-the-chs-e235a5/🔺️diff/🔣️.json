@@ -14,7 +14,7 @@
           "id": "chs889",
           "name": "CHS 88.9x5.0",
           "area": 0.001318,
-          "iy": 0.00000116376
+          "iy": 1.16376e-06
         }
       }
     ],
@@ -23,12 +23,5 @@
   "supports": null,
   "loadCases": null,
   "combinations": null,
-  "analysis": null,
-  "resultSourceId": null,
-  "resultMode": null,
-  "resultModeIndex": null,
-  "camera": null,
-  "locale": null,
-  "solverResultsJson": null,
-  "meshPreviewJson": null
+  "analysis": null
 }

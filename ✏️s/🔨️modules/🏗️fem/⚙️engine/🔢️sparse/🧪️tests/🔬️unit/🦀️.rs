@@ -2172,111 +2172,143 @@ fn subspace_job_resume_and_scheduling_are_deterministic() {
     }
 }
 
-#[test]
-fn p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact() {
-    let n = 8;
-    let mut stiffness = Coo::new(n);
-    let mut mass = Coo::new(n);
-    for index in 0..n {
-        stiffness.add(index, index, (index + 1) as f64);
-        mass.add(index, index, 1.0);
-    }
-    let factor = ldlt_factor(&stiffness.to_csc_sym_upper()).expect("factor");
-    let operation = test_operation(122);
-    let mass = mass.to_csr();
-    let drive = |fuel: u64| {
-        let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
-        let mut replay_sequence = 0;
-        for _ in 0..200_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence);
-            match replay.step(&mut context) {
-                StepOutcome::Complete(candidate) => {
-                    close_payload(candidate.state);
-                    close_payload(candidate.output);
-                    let solution = replay.solution();
-                    while !InteractiveJob::terminal_is_empty(&replay) {
-                        let _ = InteractiveJob::close_step(&mut replay, 1, usize::MAX);
-                    }
-                    return solution;
-                }
-                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-                StepOutcome::PreviewReady(preview) => close_payload(preview),
-                StepOutcome::Fault(fault) => panic!("subspace replay fault: {:?}", fault.detail),
-                _ => {}
-            }
+// #region 🔖️LongTests
+/// ⏱️ `long` level: three fuel-1 subspace replays of a full checkpoint/preview cadence take ~40 s in a
+/// debug build, past the fundamental profile's 15 s per-test ceiling.
+mod long {
+    use super::*;
+
+    #[test]
+    fn p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact() {
+        let n = 8;
+        let mut stiffness = Coo::new(n);
+        let mut mass = Coo::new(n);
+        for index in 0..n {
+            stiffness.add(index, index, (index + 1) as f64);
+            mass.add(index, index, 1.0);
         }
-        panic!("subspace replay did not reach a terminal state")
-    };
-    let single = drive(1);
-    assert_eq!(drive(2), single);
-    assert_eq!(drive(4), single);
+        let factor = ldlt_factor(&stiffness.to_csc_sym_upper()).expect("factor");
+        let operation = test_operation(122);
+        let mass = mass.to_csr();
+        let drive = |fuel: u64| {
+            let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
+            let mut replay_sequence = 0;
+            for _ in 0..200_000 {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence);
+                match replay.step(&mut context) {
+                    StepOutcome::Complete(candidate) => {
+                        close_payload(candidate.state);
+                        close_payload(candidate.output);
+                        let solution = replay.solution();
+                        while !InteractiveJob::terminal_is_empty(&replay) {
+                            let _ = InteractiveJob::close_step(&mut replay, 1, usize::MAX);
+                        }
+                        return solution;
+                    }
+                    StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                    StepOutcome::PreviewReady(preview) => close_payload(preview),
+                    StepOutcome::Fault(fault) => panic!("subspace replay fault: {:?}", fault.detail),
+                    _ => {}
+                }
+            }
+            panic!("subspace replay did not reach a terminal state")
+        };
+        let single = drive(1);
+        assert_eq!(drive(2), single);
+        assert_eq!(drive(4), single);
 
-    let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
-    let before = validating.state.clone();
-    let mut validation_sequence = 0;
-    let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
-    assert_eq!(validating.step(&mut expired), StepOutcome::Yield);
-    assert!(validating.state == before);
-    let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
-    assert_eq!(validating.step(&mut one), StepOutcome::Yield);
-    assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
-    while !InteractiveJob::terminal_is_empty(&validating) {
-        let _ = InteractiveJob::close_step(&mut validating, 1, usize::MAX);
-    }
+        let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
+        let before = validating.state.clone();
+        let mut validation_sequence = 0;
+        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
+        assert_eq!(validating.step(&mut expired), StepOutcome::Yield);
+        assert!(validating.state == before);
+        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
+        assert_eq!(validating.step(&mut one), StepOutcome::Yield);
+        assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
+        while !InteractiveJob::terminal_is_empty(&validating) {
+            let _ = InteractiveJob::close_step(&mut validating, 1, usize::MAX);
+        }
 
-    let mut oversized = Vec::<(u32, f64)>::new();
-    oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
-    assert!(oversized.capacity() * size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
-    let mut columns = vec![Vec::new(); n];
-    columns[0] = oversized;
-    let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
-    let mut refused_sequence = 0;
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
-    assert!(matches!(refused_owner.step(&mut context), StepOutcome::Fault(_)));
-    while !InteractiveJob::terminal_is_empty(&refused_owner) {
-        let _ = InteractiveJob::close_step(&mut refused_owner, 1, usize::MAX);
-    }
-
-    for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
-        let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };
-        let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
-        let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
+        let mut oversized = Vec::<(u32, f64)>::new();
+        oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
+        assert!(oversized.capacity() * size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
+        let mut columns = vec![Vec::new(); n];
+        columns[0] = oversized;
+        let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
         let mut refused_sequence = 0;
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
-        assert!(matches!(refused.step(&mut context), StepOutcome::Fault(_)));
-        while !InteractiveJob::terminal_is_empty(&refused) {
-            let _ = InteractiveJob::close_step(&mut refused, 1, usize::MAX);
+        assert!(matches!(refused_owner.step(&mut context), StepOutcome::Fault(_)));
+        while !InteractiveJob::terminal_is_empty(&refused_owner) {
+            let _ = InteractiveJob::close_step(&mut refused_owner, 1, usize::MAX);
         }
-    }
 
-    let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
-    let mut publishing_sequence = 0;
-    for _ in 0..200_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
-            close_payload(checkpoint.state);
+        for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
+            let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };
+            let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
+            let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
+            let mut refused_sequence = 0;
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
+            assert!(matches!(refused.step(&mut context), StepOutcome::Fault(_)));
+            while !InteractiveJob::terminal_is_empty(&refused) {
+                let _ = InteractiveJob::close_step(&mut refused, 1, usize::MAX);
+            }
         }
-        if publishing.preview_writer.is_some() {
-            break;
-        }
-    }
-    assert!(publishing.preview_writer.is_some(), "retained preview page writer becomes interruptible before publication");
-    InteractiveJob::begin_close(&mut publishing);
-    for _ in 0..200_000 {
-        if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            break;
-        }
-    }
-    assert!(InteractiveJob::terminal_is_empty(&publishing));
 
-    let mut job = SubspaceIterationJob::new(operation, factor, mass, n, 3, 3);
-    let mut seen = std::collections::BTreeSet::new();
-    let mut sequence = 0;
-    for _ in 0..200_000 {
-        if seen.len() == 16 {
-            break;
+        let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
+        let mut publishing_sequence = 0;
+        for _ in 0..200_000 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
+                close_payload(checkpoint.state);
+            }
+            if publishing.preview_writer.is_some() {
+                break;
+            }
         }
-        seen.insert(job.state.work.stage as u8);
+        assert!(publishing.preview_writer.is_some(), "retained preview page writer becomes interruptible before publication");
+        InteractiveJob::begin_close(&mut publishing);
+        for _ in 0..200_000 {
+            if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                break;
+            }
+        }
+        assert!(InteractiveJob::terminal_is_empty(&publishing));
+
+        let mut job = SubspaceIterationJob::new(operation, factor, mass, n, 3, 3);
+        let mut seen = std::collections::BTreeSet::new();
+        let mut sequence = 0;
+        for _ in 0..200_000 {
+            if seen.len() == 16 {
+                break;
+            }
+            seen.insert(job.state.work.stage as u8);
+            job.state.checkpoint_due = true;
+            let checkpoint = loop {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+                if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                    break checkpoint.state;
+                }
+            };
+            let mut cancelled = restore_subspace(operation, checkpoint).expect("stage retained checkpoint");
+            let before = cancelled.state.clone();
+            let token = semio_framework_job::root_cancel_token();
+            semio_framework_async::block_on(token.cancel());
+            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
+            assert_eq!(cancelled.step(&mut cancelled_context), StepOutcome::Cancelled);
+            assert!(cancelled.state == before);
+            while !InteractiveJob::terminal_is_empty(&cancelled) {
+                let _ = InteractiveJob::close_step(&mut cancelled, 1, usize::MAX);
+            }
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            if let StepOutcome::Fault(fault) = job.step(&mut context) {
+                panic!("subspace stage walk fault: {:?}", fault.detail);
+            }
+        }
+        assert_eq!(seen.len(), 16);
+
+        assert!(matches!(restore_subspace(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
+        let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
         job.state.checkpoint_due = true;
         let checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
@@ -2284,63 +2316,39 @@ fn p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay
                 break checkpoint.state;
             }
         };
-        let mut cancelled = restore_subspace(operation, checkpoint).expect("stage retained checkpoint");
-        let before = cancelled.state.clone();
-        let token = semio_framework_job::root_cancel_token();
-        semio_framework_async::block_on(token.cancel());
-        let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
-        assert_eq!(cancelled.step(&mut cancelled_context), StepOutcome::Cancelled);
-        assert!(cancelled.state == before);
-        while !InteractiveJob::terminal_is_empty(&cancelled) {
-            let _ = InteractiveJob::close_step(&mut cancelled, 1, usize::MAX);
+        assert!(matches!(restore_subspace(wrong_generation, checkpoint), Err(NumericalCheckpointFault::Stale)));
+        job.state.checkpoint_due = true;
+        let checkpoint = loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint);
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
+        while !interrupted_restore.terminal_is_empty() {
+            match interrupted_restore.close_step(1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Complete => {}
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("subspace restore close cannot block"),
+            }
         }
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::Fault(fault) = job.step(&mut context) {
-            panic!("subspace stage walk fault: {:?}", fault.detail);
+        let mut closing = job;
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed subspace close cannot block"),
+            }
+            assert!(close_turns < 200_000);
         }
+        assert!(InteractiveJob::terminal_is_empty(&closing));
     }
-    assert_eq!(seen.len(), 16);
-
-    assert!(matches!(restore_subspace(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
-    let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
-    job.state.checkpoint_due = true;
-    let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break checkpoint.state;
-        }
-    };
-    assert!(matches!(restore_subspace(wrong_generation, checkpoint), Err(NumericalCheckpointFault::Stale)));
-    job.state.checkpoint_due = true;
-    let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break checkpoint.state;
-        }
-    };
-    let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint);
-    let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
-    while !interrupted_restore.terminal_is_empty() {
-        match interrupted_restore.close_step(1, usize::MAX) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            semio_framework_job::InteractiveJobCloseStep::Complete => {}
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("subspace restore close cannot block"),
-        }
-    }
-    let mut closing = job;
-    let mut close_turns = 0;
-    loop {
-        close_turns += 1;
-        match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
-            semio_framework_job::InteractiveJobCloseStep::Complete => break,
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed subspace close cannot block"),
-        }
-        assert!(close_turns < 200_000);
-    }
-    assert!(InteractiveJob::terminal_is_empty(&closing));
 }
+// #endregion 🔖️LongTests
 
 #[test]
 fn adversarial_solver_steps_stay_below_eight_milliseconds() {

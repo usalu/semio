@@ -246,6 +246,9 @@ export type PluginWasmHandle = {
   /** 🎞️ Subscribes to the `UiDirtyScope` a running operation asks the shell to refresh mid-operation (a tool run's live
    * process). Best effort: the shell's refresh coalescer drops what it cannot keep up with. Returns the unsubscribe. */
   readonly subscribeOperationProgress: (instanceId: number, listener: (uiScope: InvocationResponse["uiScope"]) => void) => () => void;
+  /** 💼️ Fires (coalesced) while an Isolated spawned job of `instanceId` reports `step-job` progress — the
+   * shell answers with a full refresh so surfaces adopting the job's retained output re-render as it advances. */
+  readonly subscribeSpawnedJobProgress?: (instanceId: number, listener: () => void) => () => void;
   readonly dispose: () => Promise<void>;
 };
 
@@ -1770,6 +1773,31 @@ async function yieldPluginUiContinuation(): Promise<void> {
  * waiting on instead of only counting the round trips it spent. A settle waiting on named surfaces
  * reports the ones that never published; a drain reports the surfaces it DID publish, because those
  * are the owners whose retirement is holding the guest in `MoreWork`. */
+/** 🧯️ The guest-side `Error` shell frames a settle collected (`shell_fault_effect` in
+ * `🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs` — a dirty surface whose render faulted, a refused commit), decoded to
+ * their display messages. A settle that throws because a requested surface never published would
+ * otherwise discard exactly the frame that says WHY (the render fault rides the same turn's effects,
+ * which `retainedUiRefreshEffects` only reads after a successful settle), leaving only
+ * `missing=[…], status=idle` to debug from. */
+function settleShellFaultMessages(actorId: string, results: readonly WireTurnResult[]): string[] {
+  const instanceId = Number(actorId.slice(actorId.lastIndexOf("#") + 1));
+  if (!Number.isFinite(instanceId)) return [];
+  const messages: string[] = [];
+  for (const result of results) {
+    for (const effect of result.effects) {
+      const bytes = shellFrameBytes(effect, instanceId);
+      if (!bytes) continue;
+      try {
+        const frame = decodeAppFrame(bytes);
+        if ("Error" in frame) messages.push(faultDisplayMessage(frame.Error.fault, decodePackValue));
+      } catch (error) {
+        messages.push(`undecodable shell frame: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
+  return messages;
+}
+
 function pluginTurnStalledError(actorId: string, results: readonly WireTurnResult[], requiredSurfaceIds: ReadonlySet<string> | undefined, zeroProgress: number, continuations: number, call?: TypedOperationCall): Error {
   const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
   const missing = [...(requiredSurfaceIds ?? [])].filter((surface) => !published.has(surface));
@@ -1830,13 +1858,13 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     throw new Error(
       `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
         `(required=${JSON.stringify([...(requiredSurfaceIds ?? [])])}, published=${JSON.stringify(published)}, ` +
-        `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`,
+        `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`,
     );
   }
   if (requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
     const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
     const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
-    throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`);
+    throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`);
   }
   activation?.assertActive();
   report?.({
@@ -2670,6 +2698,31 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * ticking, and the cancel it then issued tore the guest's live envelope down mid-run — browser-
    * measured 2026-09-10 as `unreachable` → `shard 0 lost` → `actor-activation.revoked` on every later
    * call. A host may not decide a plan is over; only its owner may. */
+  /** 🎞️ Coalesces a running job's progress into the shell's operation-progress refresh lane: at most one
+   * full refresh per {@link PLUGIN_JOB_PROGRESS_REFRESH_MS} per job, so a job publishing on every slice
+   * repaints at a bounded cadence while a job that reports nothing costs no repaint at all. */
+  const PLUGIN_JOB_PROGRESS_REFRESH_MS = 120;
+  const lastJobProgressRefreshMs = new Map<string, number>();
+  const spawnedJobProgressListeners = new Map<number, Set<() => void>>();
+  const subscribeSpawnedJobProgress = (instanceId: number, listener: () => void): (() => void) => {
+    const listeners = spawnedJobProgressListeners.get(instanceId) ?? new Set<() => void>();
+    listeners.add(listener);
+    spawnedJobProgressListeners.set(instanceId, listeners);
+    return () => {
+      listeners.delete(listener);
+      if (listeners.size === 0) spawnedJobProgressListeners.delete(instanceId);
+    };
+  };
+  const publishSpawnedJobProgress = (instanceId: number, key: string): void => {
+    const now = performance.now();
+    if (now - (lastJobProgressRefreshMs.get(key) ?? -Infinity) < PLUGIN_JOB_PROGRESS_REFRESH_MS) return;
+    lastJobProgressRefreshMs.set(key, now);
+    for (const listener of [...(spawnedJobProgressListeners.get(instanceId) ?? [])]) {
+      try { listener(); }
+      catch (error) { console.error("[DEBUG] spawned job progress subscriber failed", error); }
+    }
+  };
+
   const driveSpawnedJob = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
     const key = `${actorId}#${job}`;
     if (drivingJobs.has(key)) return;
@@ -2698,6 +2751,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           return;
         }
         if (progressed.value || isolatedJobUiPollEverySteps(step)) requestIsolatedJobUiPoll();
+        if (progressed.value && live()) publishSpawnedJobProgress(instanceId, key);
         await yieldPluginUiContinuation();
       }
     } catch (error) {
@@ -2706,6 +2760,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     } finally {
       endIsolatedJobDrive();
       drivingJobs.delete(key);
+      lastJobProgressRefreshMs.delete(key);
     }
   };
 
@@ -3304,7 +3359,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }
   };
 
-  return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort };
+  return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress };
 }
 
 /** 🩹️ A patch acknowledgement carries the guest's own publication receipt: the guest rejects an ack

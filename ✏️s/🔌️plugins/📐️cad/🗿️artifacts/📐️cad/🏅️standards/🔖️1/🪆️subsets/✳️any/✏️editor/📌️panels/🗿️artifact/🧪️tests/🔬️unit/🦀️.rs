@@ -4,21 +4,52 @@ use crate::editor::cad::terminology::cad_labels;
 use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
 use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
+use crate::editor::cad::forest_working_scene;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
 use crate::CadPaneId;
 use semio_framework_plugin::{ArtifactView, Locale, PluginApp, ViewModel};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_nodes() {
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: pane object sections
-    // render empty at this boundary now (documented gap, see `build_document_tree`'s own doc
-    // comment) — `object_tree_item_shows_name_with_kind_as_secondary_label`/
-    // `object_tree_item_includes_primitive_children` below cover the real (still-working)?
-    // tree-item builder directly instead.
-    let mut app = new_app().await;
-    let node = app.render(CAD_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render").root;
-    let json = serde_json::to_string(&node).unwrap();
-    assert!(json.contains("cad-node:"));
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let history = empty_history();
+    let doc = ArtifactView::new(&scene, &history);
+    let node = render_direct(&app, CAD_PLAY_BODY_ARTIFACT, &doc, &CadConfig::default(), &ViewModel::default()).expect("CAD UI assembly");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection");
+    assert!(json.contains("cad-node:node-root"), "{json}");
+    assert!(json.contains("Concrete Forest Left"));
+}
+
+/// 🪆️ Every pane's objects come from its composed child's local owner, row ids are the raw object
+/// ids the `"cad"` domain (which the tree is bound to) marks selection by, and a pane past the
+/// shared argument-arena page closes with a `+N` continuation row that accounts for every object
+/// the page left out (`semio_framework_plugin::paged_panel_section`).
+#[semio_framework_async_macros::async_test]
+async fn document_lists_every_pane_object_bound_to_the_cad_domain() {
+    let scene = forest_play_scene();
+    let working = forest_working_scene();
+    let tree = build_document_tree(&view(scene, CadPlayRuntime::default()), cad_labels(&ViewModel::default())).expect("document tree");
+    let semio_framework_plugin::Component::Tree(props) = &tree.component else { panic!("panel tree") };
+    assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(CAD_INTERACTION_DOMAIN));
+    let panes: [(&str, &[crate::standards::v1::subsets::any::io::geometry_import::CadObject]); 4] = [("shape", &working.objects), ("building", &working.building_objects), ("energy", &working.energy_objects), ("structure-classic", &working.structure_classic_objects)];
+    let mut listed = 0;
+    for (suffix, objects) in panes {
+        let section_key = format!("cad-play-document.{suffix}");
+        let section = tree.children.iter().find(|child| child.key.as_str() == section_key).unwrap_or_else(|| panic!("section {section_key}"));
+        let rows: Vec<&str> = section.children.iter().map(|row| row.key.as_str()).collect();
+        let placed = rows.iter().filter(|key| objects.iter().any(|object| object.id == **key)).count();
+        let omitted = section.children.iter().find(|row| row.key.as_str() == format!("{section_key}.more")).map_or(0, |more| match &more.component {
+            semio_framework_plugin::plugin_app_close_prelude::Component::TreeItem(props) => props.label.0.as_str().trim_start_matches('+').parse::<usize>().expect("continuation count"),
+            _ => panic!("continuation row is a tree item"),
+        });
+        assert_eq!(placed + omitted, objects.len(), "pane {suffix}: rows {rows:?} must account for every object");
+        assert!(rows.iter().all(|key| !key.starts_with("cad-object:")), "object rows use raw domain ids: {rows:?}");
+        listed += placed;
+    }
+    assert!(listed > 0, "at least the first page lists objects");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: tree }).expect("fixture projection");
+    assert!(json.contains("interactionSelect"), "rows pick through the framework domain");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -48,15 +79,13 @@ async fn object_tree_item_includes_primitive_children() {
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
     let labels = cad_labels(&ViewModel::default());
     let item = object_tree_item("shape", &object, labels).expect("object tree item");
-    let json = serde_json::to_string(&item).unwrap();
+    assert_eq!(item.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: item }).expect("fixture projection");
     assert!(json.contains("cad-primitive:"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn document_tree_selected_and_highlighted_ids_are_none_without_a_reference_selection() {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection/hover is
-    // framework-owned now, unreachable at this render boundary — only reference-overlay
-    // selection/hover still resolves here (see `document_tree_selected_ids`'s doc comment).
     let scene = default_document();
     let runtime = CadPlayRuntime::default();
     assert_eq!(document_tree_selected_ids(&scene, &runtime).expect("selection assembly"), None);
@@ -80,7 +109,7 @@ async fn cad_labels_translate_document_tree_panes_in_german() {
     let config = CadConfig::default();
     let view_state = ViewModel { locale: Locale::De, ..ViewModel::default() };
     let node = render_direct(&app, CAD_PLAY_BODY_ARTIFACT, &doc, &config, &view_state).expect("CAD UI assembly");
-    let json = serde_json::to_string(&node).unwrap();
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection");
     assert!(json.contains("\"Form\""));
     assert!(json.contains("Gebäude"));
     assert!(json.contains("Energie"));

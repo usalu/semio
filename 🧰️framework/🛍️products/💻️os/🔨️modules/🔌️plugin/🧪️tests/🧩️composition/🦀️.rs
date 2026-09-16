@@ -1795,65 +1795,80 @@ async fn retained_window_input_recursive_replacement_cancellation_and_stale_auth
 //#endregion 🧬️ComposedParentFixture
 
 //#region 📨️EnvelopeDecodeLadder
-/// 🐢️ Field owner that yields a fixed number of decode steps before it completes, so the decode
-/// ladder is measurable without a domain field catalog. `budget` steps of `Pending` on the same
-/// token exercise exactly the redelivery loop the real fresh decoder runs.
-struct SlowEnvelopeFieldDecoder {
+/// 🐢️ Wraps the real fresh field decoder and yields `budget` times on the first offered token so the
+/// decode ladder is measurable while the wire still decodes through the domain catalog.
+struct SlowFreshEnvelopeFieldDecoder {
     budget: usize,
     steps: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    inner: Box<dyn store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>,
 }
 
-impl SlowEnvelopeFieldDecoder {
-    fn new(budget: usize, steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> Self {
-        Self { budget, steps: std::sync::Arc::clone(steps) }
+impl SlowFreshEnvelopeFieldDecoder {
+    fn new(budget: usize, steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, inner: Box<dyn store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>) -> Self {
+        Self { budget, steps: std::sync::Arc::clone(steps), inner }
     }
 }
 
-impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation> for SlowEnvelopeFieldDecoder {
+impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation> for SlowFreshEnvelopeFieldDecoder {
     fn accept_field_token(
         &mut self,
-        _field_id: u16,
-        _token: store::OwnedSchemaToken,
-        _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        field_id: u16,
+        token: store::OwnedSchemaToken,
+        terminal: bool,
+        source: &store::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         self.steps.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         cx.consume_fuel(1);
-        if self.budget == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete);
+        if self.budget > 0 {
+            self.budget -= 1;
+            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
-        self.budget -= 1;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+        self.inner.accept_field_token(field_id, token, terminal, source, cx)
     }
 
-    fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::RecordComplete)
+    fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.finish_record(cx)
     }
 
     fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(0)
+        self.inner.next_close_byte_demand()
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        0
+        self.inner.maximum_close_byte_demand()
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        0
+        self.inner.maximum_retained_close_bytes()
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        true
+        self.inner.terminal_is_empty()
     }
 }
 
 fn envelope_law_pages() -> store::OwnedSchemaDecodePages {
-    let wire = br#"{"schema":"semio.composed-test/v1","id":"envelope-decode-law","vcs":{}}"#;
+    let snapshot = ComposedParentSnapshot { slot: None, revision: 0 };
+    let snapshot_hex = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let wire = serde_json::to_vec(&serde_json::json!({
+        "schema": ComposedParentApp::<false>::DOCUMENT_SCHEMA,
+        "id": "envelope-decode-law",
+        "vcs": {
+            "initialSnapshot": snapshot_hex,
+            "edits": [],
+            "changes": [],
+            "checkpoints": [],
+            "alternatives": []
+        },
+        "editMessages": [],
+        "conflicts": []
+    }))
+    .expect("schema-first composed envelope law fixture");
     let chunks = wire.chunks(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
     let mut pages =
         store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: wire.len() }).expect("envelope law page credits");
@@ -1872,8 +1887,23 @@ fn install_slow_envelope_decode(
 ) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
     let operation = semio_framework_job::OperationId(operation);
     let generation = semio_framework_job::Generation(app.store.generation_now());
-    app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowEnvelopeFieldDecoder::new(budget, steps)), store::ArtifactEnvelopeDecodeCompletion::new())
+    let bundle = ComposedParentApp::<true>::build_envelope_decode_owner_bundle().expect("composed parent envelope decode bundle");
+    let completion = store::ArtifactEnvelopeDecodeCompletion::new();
+    let inner = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&app.envelope_completed_records), std::sync::Arc::clone(&completion));
+    app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowFreshEnvelopeFieldDecoder::new(budget, steps, inner)), completion)
         .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
+}
+
+/// 🧹️ Pumps the post-`Ready` worker close ladder (same work production loads run via [`VcsArtifactApp::drain_ready_envelope_decode_worker_owners`]).
+fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) {
+    for _ in 0..32 {
+        if app.artifact_envelope_decode_worker_owners_are_terminal(handle) {
+            return;
+        }
+        app.drain_ready_envelope_decode_worker_owners(handle).expect("envelope decode worker-owner drain");
+        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+    assert!(app.artifact_envelope_decode_worker_owners_are_terminal(handle), "envelope decode worker owners still active after bounded drain");
 }
 
 /// 🚿️ Drives one live envelope decode to its terminal poll through the reactor-turn pump, so the
@@ -1882,11 +1912,26 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
     let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
     for _ in 0..100_000 {
         PluginApp::advance_typed_operation_publication(app).await.expect("one reactor turn drives the envelope decode worker");
-        poll = app.advance_artifact_envelope_load(handle).expect("envelope load advancement");
-        if poll != crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending {
+        poll = app.poll_artifact_envelope_decode(handle);
+        if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
         }
+        if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
+            break;
+        }
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("envelope decode maintenance");
+        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        poll = app.poll_artifact_envelope_decode(handle);
+        if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
+            return poll;
+        }
+        if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
+            break;
+        }
         semio_framework_async::yield_once().await;
+    }
+    if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
+        pump_envelope_decode_worker_close(app, handle);
     }
     poll
 }
@@ -1925,11 +1970,16 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
     let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let handle = install_slow_envelope_decode(&mut app, 812, 256, &steps);
     assert!(PluginApp::has_runnable_typed_operations(&app), "a live envelope decode is runnable reactor-turn work");
-    let poll = drain_envelope_decode(&mut app, handle).await;
+    drain_envelope_decode(&mut app, handle).await;
     let driven = steps.load(std::sync::atomic::Ordering::SeqCst);
-    assert_ne!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending, "the reactor-turn pump left the decode pending after {driven} steps");
+    assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready, "the reactor-turn pump left the decode ready after {driven} steps");
     assert!(driven >= 256, "the reactor-turn pump drove only {driven} decode steps");
     assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
+    app.cancel_artifact_envelope_load(handle).expect("cancel envelope law decode before fixture close");
+    for _ in 0..10_000 {
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("envelope law decode cancellation maintenance");
+        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
     close_member_admission_app(&mut app);
 }
 //#endregion 📨️EnvelopeDecodeLadder

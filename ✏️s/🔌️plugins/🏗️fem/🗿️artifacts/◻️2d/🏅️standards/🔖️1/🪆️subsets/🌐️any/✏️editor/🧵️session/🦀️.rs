@@ -21,18 +21,30 @@ const SESSION_ACTIVE_CAPACITY: usize = 32;
 const SESSION_SHELL_CAPACITY: usize = 64;
 const SESSION_MAXIMUM_INPUT_ITEMS: usize = 4_096;
 const SESSION_MAXIMUM_INPUT_BYTES: usize = 4 * 1_024 * 1_024;
-const SESSION_MAXIMUM_NODES: usize = 8;
-const SESSION_MAXIMUM_ELEMENTS: usize = 2;
+/// 📏️ Fixed model extents: document nodes/elements plus the region mesh's points/triangles share one
+/// `SESSION_OWNER_PAGE_BYTES` owner each (`model.nodes` at 48 B a node → 128 fit; `model.elements` at
+/// 256 B an element → 64 fit), and the bundled demo alone is 12 nodes + 9 elements + one meshed slab.
+const SESSION_MAXIMUM_NODES: usize = 48;
+const SESSION_MAXIMUM_ELEMENTS: usize = 24;
 const SESSION_MAXIMUM_SUPPORTS: usize = 64;
-const SESSION_MAXIMUM_MESH_POINTS: usize = 8;
-const SESSION_MAXIMUM_MESH_TRIANGLES: usize = 2;
+const SESSION_MAXIMUM_MESH_POINTS: usize = 80;
+const SESSION_MAXIMUM_MESH_TRIANGLES: usize = 40;
 const SESSION_MAXIMUM_REGION_HOLES: usize = 16;
 const SESSION_MAXIMUM_BOUNDARY_POINTS: usize = 64;
 const SESSION_MAXIMUM_OUTPUT_BYTES: usize = 16 * 1_024;
 const SESSION_MAXIMUM_VISUAL_LOADS: usize = 64;
 const SESSION_MAXIMUM_FAULT_BYTES: usize = 4_096;
-const SESSION_OWNER_PAGE_BYTES: usize = 4_096;
+const SESSION_OWNER_PAGE_BYTES: usize = 16_384;
 const SESSION_MAXIMUM_STRING_BYTES: usize = SESSION_OWNER_PAGE_BYTES;
+/// 🧮️ Census units one snapshot-read opportunity may charge before it yields to the next refresh —
+/// every unit is one owner or scalar of constant cost, so a whole demo-sized census (a few hundred
+/// units) admits in the opportunity that opened it instead of waiting one host refresh per unit.
+const SESSION_PREFLIGHT_UNITS_PER_OPPORTUNITY: usize = 4_096;
+/// ⏱️ Wall-clock ceiling of one host job step (the interactive 8 ms contract) and the most session
+/// units the job bridge drives inside it — each unit is one exact stage step, so a bounded drive
+/// replaces one host round trip per unit with one per ceiling.
+const SESSION_STEP_CEILING_MS: u64 = 8;
+const SESSION_UNITS_PER_STEP: usize = 65_536;
 const INPUT_BYTES: usize = 63;
 const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000;
 const FEM2D_JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;
@@ -943,16 +955,9 @@ fn close_retained_payload(payload: &mut RetainedJobPayload) {
 }
 
 fn take_retained_payload(mut payload: RetainedJobPayload, maximum_bytes: usize) -> Option<Vec<u8>> {
-    if payload.len() > maximum_bytes {
-        close_retained_payload(&mut payload);
-        return None;
-    }
-    let mut bytes = Vec::with_capacity(payload.len());
-    for page in 0..payload.page_count() {
-        bytes.extend_from_slice(payload.page(page)?);
-    }
+    let bytes = (payload.len() <= maximum_bytes).then(|| (0..payload.page_count()).map(|page| payload.page(page)).collect::<Option<Vec<&[u8]>>>().map(|pages| pages.concat())).flatten();
     close_retained_payload(&mut payload);
-    Some(bytes)
+    bytes
 }
 
 fn retained_payload_byte(payload: &RetainedJobPayload, index: usize) -> Option<u8> {
@@ -1012,6 +1017,7 @@ impl MountedState {
         }
         self.fault = Some(detail.clone());
         self.visual.state = FemVisualState::FaultedCancelled;
+        eprintln!("[DEBUG] fem2d session fault at {:?}: {}", self.stage, String::from_utf8_lossy(&detail));
         self.stage = MountedStage::Fault;
         JobStep::Failed(detail)
     }
@@ -1153,7 +1159,7 @@ impl MountedState {
             return JobStep::Running(None);
         }
         let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
-        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
+        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(SESSION_STEP_CEILING_MS).saturating_mul(1_000));
         let mut preview_sequence = self.preview_sequence;
         let result = (|| {
             let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
@@ -2173,13 +2179,33 @@ struct MountedBoundedJob {
 }
 
 impl BoundedJob for MountedBoundedJob {
+    /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
+    /// publishes output, or the session leaves `Running` — the host owes the job one round trip per
+    /// ceiling, never one per unit.
     fn step(&mut self, budget: JobBudget) -> JobStep {
         let Ok(mut shell) = self.shell.try_borrow_mut() else { return JobStep::Running(None) };
         let Some(state) = shell.as_mut() else { return JobStep::Failed(b"fem2d.session-owner-missing".to_vec()) };
         if state.identity != self.identity {
             return JobStep::Failed(b"fem2d.session-aba".to_vec());
         }
-        state.step(budget)
+        let Some(started) = semio_framework_job::default_now_us() else { return state.step(budget) };
+        let ceiling_ms = u64::from(budget.deadline_ms).min(SESSION_STEP_CEILING_MS);
+        let deadline = started.saturating_add(ceiling_ms.saturating_mul(1_000));
+        let mut fuel = budget.fuel;
+        let mut step = JobStep::Running(None);
+        for _ in 0..SESSION_UNITS_PER_STEP {
+            let now = semio_framework_job::default_now_us().unwrap_or(deadline);
+            if fuel == 0 || now >= deadline {
+                break;
+            }
+            let remaining_ms = u32::try_from(deadline.saturating_sub(now).div_ceil(1_000)).unwrap_or(u32::MAX).max(1);
+            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms });
+            fuel = fuel.saturating_sub(1);
+            if !matches!(step, JobStep::Running(None)) {
+                break;
+            }
+        }
+        step
     }
 
     fn cancel(&mut self) {
@@ -2305,11 +2331,17 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem2d
         }
         if !registry.preflight[current_slot].is_some_and(matches_render) {
             registry.preflight[current_slot] = Some(PendingSnapshotAdmission { app_instance_id: render.app_instance_id, render, cursor: SnapshotAdmissionCursor::new() });
-            return false;
         }
         let completed = {
             let preflight = registry.preflight[current_slot].as_mut().expect("matching FEM preflight retained");
-            match preflight.cursor.step_one(snapshot) {
+            let mut outcome = Ok(false);
+            for _ in 0..SESSION_PREFLIGHT_UNITS_PER_OPPORTUNITY {
+                outcome = preflight.cursor.step_one(snapshot);
+                if outcome != Ok(false) {
+                    break;
+                }
+            }
+            match outcome {
                 Ok(completed) => completed,
                 Err(detail) => {
                     registry.preflight[current_slot] = None;

@@ -1151,9 +1151,13 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
-/// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
-pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
+/// 👁️ Renders the document's own structure (nodes, members, supports, loads — a projection of the
+/// snapshot, no meshing or solving) plus the optional replaceable worker-job visual lease: the mesh and
+/// field pages ride the lease for a host that pages them, while every host that only draws
+/// `layers_json` (the React canvas today) still shows the model as it is edited.
+pub fn render_with_progress(doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316")));
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

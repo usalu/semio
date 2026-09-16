@@ -19,7 +19,7 @@ use semio_framework_ui_scene::{
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 //#region 🔖️Contract
 pub const FEM3D_MOUNTED_VISUAL_JOB_KIND: &str = "semio.fem3d.mounted-live-visual";
@@ -31,6 +31,14 @@ const MAXIMUM_ELEMENTS: usize = 128;
 const MAXIMUM_SUPPORTS: usize = 64;
 const MAXIMUM_LOADS: usize = 64;
 const MAXIMUM_FIELDS: usize = 128;
+/// 🧮️ Preflight census units one snapshot-read opportunity may charge before yielding to the next
+/// refresh — each unit is one constant-cost owner or item, so a demo-sized census admits within the
+/// opportunity that opened it rather than one host refresh per unit.
+const PREFLIGHT_UNITS_PER_OPPORTUNITY: usize = 4_096;
+/// ⏱️ Wall-clock ceiling of one host job step (the interactive 8 ms contract) and the most session
+/// units the job bridge drives inside it — one host round trip per ceiling, never one per unit.
+const STEP_CEILING_MS: u64 = 8;
+const UNITS_PER_STEP: usize = 65_536;
 const FAULT_BYTES: usize = WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 const JOB_TAG: u64 = 0xf3d0_0000_0000_0000;
 const JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;
@@ -2939,6 +2947,7 @@ impl MountedState {
     }
 
     fn fail(&mut self, detail: Vec<u8>) -> JobStep {
+        eprintln!("[DEBUG] fem3d session fault: {}", String::from_utf8_lossy(&detail));
         JobStep::Failed(if detail.capacity() <= FAULT_BYTES { detail } else { b"fem3d.visual-fault-capacity".to_vec() })
     }
 
@@ -2950,7 +2959,7 @@ impl MountedState {
             return JobStep::Running(None);
         }
         let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
-        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
+        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(STEP_CEILING_MS).saturating_mul(1_000));
         let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel, deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
         if cx.should_yield() {
             return JobStep::Running(None);
@@ -3437,10 +3446,32 @@ struct MountedJob {
 }
 
 impl BoundedJob for MountedJob {
+    /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
+    /// publishes output, or the session leaves `Running`.
     fn step(&mut self, budget: JobBudget) -> JobStep {
         let Ok(mut shell) = self.shell.try_borrow_mut() else { return JobStep::Running(None) };
         let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return JobStep::Failed(b"fem3d.visual-stale-shell".to_vec()) };
-        let step = state.step(budget);
+        let started = semio_framework_job::default_now_us();
+        let ceiling_ms = u64::from(budget.deadline_ms).min(STEP_CEILING_MS);
+        let deadline = started.map(|started| started.saturating_add(ceiling_ms.saturating_mul(1_000)));
+        let mut fuel = budget.fuel;
+        let mut step = JobStep::Running(None);
+        for _ in 0..UNITS_PER_STEP {
+            let Some(deadline) = deadline else {
+                step = state.step(budget);
+                break;
+            };
+            let now = semio_framework_job::default_now_us().unwrap_or(deadline);
+            if fuel == 0 || now >= deadline {
+                break;
+            }
+            let remaining_ms = u32::try_from(deadline.saturating_sub(now).div_ceil(1_000)).unwrap_or(u32::MAX).max(1);
+            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms });
+            fuel = fuel.saturating_sub(1);
+            if !matches!(step, JobStep::Running(None)) {
+                break;
+            }
+        }
         if matches!(&step, JobStep::Done(_)) {
             self.completed = true;
         }
@@ -3566,10 +3597,16 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3d
         };
         if !registry.pending[slot].is_some_and(matches) {
             registry.pending[slot] = Some(PendingSnapshot { render, preflight: SnapshotPreflight::new() });
-            return false;
         }
         let Some(pending) = registry.pending[slot].as_mut() else { return false };
-        match pending.preflight.step_one(snapshot) {
+        let mut outcome = Ok(false);
+        for _ in 0..PREFLIGHT_UNITS_PER_OPPORTUNITY {
+            outcome = pending.preflight.step_one(snapshot);
+            if outcome != Ok(false) {
+                break;
+            }
+        }
+        match outcome {
             Ok(complete) => complete,
             Err(()) => {
                 registry.pending[slot] = None;

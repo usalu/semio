@@ -232,6 +232,23 @@ pub fn stock_of(document: &CurationSnapshot) -> Vec<ObjectKind> {
     let _ = &document.catalog;
     document.stock_extra.iter().map(|row| ObjectKind { id: row.id.clone(), name: row.name.clone(), module_id: row.module_id.clone(), typology_path: row.typology_path.clone(), availability: row.availability, geometry: row.geometry.clone() }).collect()
 }
+
+/// 🪆️ The persisted slot name of the composed kit catalogue child — `CurationSnapshot::catalog`'s
+/// `#[child]` field, as the framework's child projection names it.
+pub const CATALOG_CHILD_SLOT: &str = "catalog";
+
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the catalogue: the kit half is a pure function of the
+/// stock (`catalog_snapshot_from_stock`), so a whole-document load or a fresh boot re-derives it here
+/// instead of shipping it. Answers only when the handle derived from the snapshot's own stock is the
+/// handle the snapshot declares — a document whose catalog id disagrees with its stock is left for
+/// closure validation to reject as `Incomplete`, never silently repaired.
+pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    if slot != CATALOG_CHILD_SLOT || child_id != document.catalog.child_id {
+        return None;
+    }
+    let stock = stock_of(document);
+    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
+}
 //#endregion 🔖️CatalogComposition
 
 //#region 🔖️ArtifactKind
@@ -315,15 +332,15 @@ pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declar
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait SourcingApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> SourcingApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

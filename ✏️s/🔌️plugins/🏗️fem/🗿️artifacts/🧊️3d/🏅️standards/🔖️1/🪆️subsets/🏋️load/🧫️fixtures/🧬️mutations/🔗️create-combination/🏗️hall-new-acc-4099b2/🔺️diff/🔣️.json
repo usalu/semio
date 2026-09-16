@@ -22,11 +22,5 @@
     "patched": [],
     "reordered": null
   },
-  "analysis": null,
-  "resultSourceId": null,
-  "resultMode": null,
-  "resultModeIndex": null,
-  "camera": null,
-  "solverResultsJson": null,
-  "meshPreviewJson": null
+  "analysis": null
 }

@@ -372,6 +372,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 mod tests;
 // #endregion 🧪️Tests
 
+#[cfg(feature = "component-app-assembly")]
 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs"]
 pub mod live_visual;
 

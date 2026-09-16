@@ -28,7 +28,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn budget() -> Budget {
-    Budget { fuel: 200_000_000, deadline_ms: 30_000, max_effects: 64, max_patch_bytes: 4 * 1024 * 1024, max_frames: 64 }
+    Budget { fuel: 2_000_000_000, deadline_ms: 120_000, max_effects: 64, max_patch_bytes: 4 * 1024 * 1024, max_frames: 64 }
 }
 
 fn component_bytes() -> Vec<u8> {

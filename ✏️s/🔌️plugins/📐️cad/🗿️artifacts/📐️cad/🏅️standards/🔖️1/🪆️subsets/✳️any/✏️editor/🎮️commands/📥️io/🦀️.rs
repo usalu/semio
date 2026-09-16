@@ -2,7 +2,7 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};
+use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadInteractionSnapshot, CadPlayView};
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
 use crate::CadSnapshot;
@@ -61,7 +61,7 @@ pub mod save_selected {
 
     pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: selected export has no host view context"))?)?;
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
         let export = export_spatial_json(&view, "selected", Some(pane))?;
         Ok(Emit::effect(cad_spatial_export_effect(&export, "cad.selected.spatial.dsl")))
     }
@@ -77,7 +77,7 @@ pub mod save_in_play {
     pub struct SaveInPlay {}
 
     pub fn handle(_payload: &SaveInPlay, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
         let effect = match export_solid_modelspace(&view, CAD_SOLID_EXPORT_DIALECT_STEP) {
             Some(export) => cad_solid_export_effect(export),
             None => cad_spatial_export_effect(&export_spatial_json(&view, "modelspace", None)?, "cad.modelspace.spatial.dsl"),
@@ -105,7 +105,7 @@ pub mod save_current {
             _ => CAD_SOLID_EXPORT_DIALECT_STEP,
         };
         let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
-        let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg) };
+        let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
         let effect = match export_solid_for_pane(&view, pane, format) {
             Some(export) => cad_solid_export_effect(export),
             None => cad_spatial_export_effect(&export_spatial_json(&view, "current", Some(pane))?, "cad.current.spatial.dsl"),

@@ -715,7 +715,7 @@ pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::Arti
     let content_hash = hasher.finish();
     let child_id = format!("{slug}-brep-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: format!("process-{slug}-brep"), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️BrepConverters
@@ -785,7 +785,7 @@ pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<Se
     let content_hash = hasher.finish();
     let child_id = format!("steps-flow-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "process-steps-flow".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 

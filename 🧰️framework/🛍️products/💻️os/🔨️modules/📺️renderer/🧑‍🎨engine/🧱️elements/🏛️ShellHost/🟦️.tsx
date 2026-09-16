@@ -5879,11 +5879,21 @@ function FrameworkOsShellInner({
     if (!plugin) return;
     const target = session;
     try {
-      return plugin.subscribeOperationProgress(target.instanceId, (uiScope) => {
+      const unsubscribeOperations = plugin.subscribeOperationProgress(target.instanceId, (uiScope) => {
         const scope = resolveUiDirtyScope(uiScope);
         if (scope.kind === "none") return;
         void applyHostEffects([], target, scope, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("typed-operation progress refresh failed", error));
       });
+      // 💼️ An Isolated spawned job (a mounted analysis, a fill plan) publishes no typed-operation
+      // scope; its host driver reports coalesced progress instead, and every window adopting the
+      // job's retained output re-renders through the same lane.
+      const unsubscribeJobs = plugin.subscribeSpawnedJobProgress?.(target.instanceId, () => {
+        void applyHostEffects([], target, { kind: "full" }, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned job progress refresh failed", error));
+      });
+      return () => {
+        unsubscribeOperations();
+        unsubscribeJobs?.();
+      };
     } catch (error) {
       if (!dropForRetiredInstance(target, "typed-operation progress subscription", error)) console.error("[DEBUG] typed-operation progress subscription failed", error);
       return;

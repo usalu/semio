@@ -100,7 +100,7 @@ fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed mutation JSON is not canonical");
 }
 
-/// 🔺️ A no-op produces the artifact's `Default` diff — all seventeen sparse slots left `None`.
+/// 🔺️ A no-op produces the artifact's `Default` diff — all ten sparse slots left `None`.
 #[test]
 fn produces_committed_diff() {
     let base = before();
@@ -113,7 +113,7 @@ fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical. `Fem2dDiff` carries a container-level `default` and no
-/// per-field skip, so all seventeen sparse slots must be present as `null`.
+/// per-field skip, so all ten sparse slots must be present as `null`.
 #[test]
 fn committed_diff_is_canonical() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
@@ -121,7 +121,7 @@ fn committed_diff_is_canonical() {
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed diff JSON is not canonical");
     let slots = original.as_object().expect("the committed diff is a JSON object");
-    assert_eq!(slots.len(), 17, "Fem2dDiff emits all seventeen sparse slots, got {slots:?}");
+    assert_eq!(slots.len(), 10, "Fem2dDiff emits all ten sparse slots, got {slots:?}");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`. For a no-op that

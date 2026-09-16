@@ -314,3 +314,96 @@ async fn analytic_primitives_are_structurally_valid() {
         assert!((signed - expected).abs() <= 5e-3 * expected, "{name}: signed volume {signed}, expected {expected}");
     }
 }
+
+/// 🧪 A box slab cutting clean THROUGH a box (process3d's crosscut): the tool overhangs the stock on
+/// four sides, so every stock face is split by two parallel open chains and each tool side face
+/// receives a closed rectangle of four line segments. The result is two disjoint boxes.
+#[semio_framework_async_macros::async_test]
+async fn box_minus_box_through_slab_splits_into_two_boxes() {
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let stock = make_box(&mut body, 3.0, 0.2, 0.3, &mut rec).unwrap();
+    let stock = translate_solid(&mut body, stock, Vec3::new(-1.5, -0.1, 0.0), &mut rec).unwrap();
+    let tool = make_box(&mut body, 0.02, 0.3, 0.4, &mut rec).unwrap();
+    let tool = translate_solid(&mut body, tool, Vec3::new(1.34, -0.15, -0.05), &mut rec).unwrap();
+    let cut = boolean_solid(&mut body, stock, tool, BooleanOp::Cut, 1e-6, &mut rec).map_err(|e| format!("{e:?}")).unwrap();
+    let issues = validate_body(&body);
+    assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    let vol = solid_volume(&body, cut, 1e-4).unwrap();
+    let expected = 3.0 * 0.2 * 0.3 - 0.02 * 0.2 * 0.3;
+    assert!((vol - expected).abs() / expected < 1e-3, "expected≈{expected}, got {vol}");
+}
+
+/// 🧪 A box pocket cutting THROUGH a box top-to-bottom while staying inside it laterally
+/// (process3d's inference fixture): the stock's top and bottom faces each receive a closed
+/// rectangle (hole), the tool's four side faces two parallel open chains. One solid with a
+/// square through-hole.
+#[semio_framework_async_macros::async_test]
+async fn box_minus_box_through_pocket_leaves_a_square_hole() {
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let stock = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let tool = make_box(&mut body, 0.4, 0.4, 1.2, &mut rec).unwrap();
+    let tool = translate_solid(&mut body, tool, Vec3::new(0.3, 0.3, -0.1), &mut rec).unwrap();
+    let cut = boolean_solid(&mut body, stock, tool, BooleanOp::Cut, 1e-6, &mut rec).map_err(|e| format!("{e:?}")).unwrap();
+    let issues = validate_body(&body);
+    assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    let vol = solid_volume(&body, cut, 1e-4).unwrap();
+    let expected = 1.0 - 0.4 * 0.4 * 1.0;
+    assert!((vol - expected).abs() / expected < 1e-3, "expected≈{expected}, got {vol}");
+}
+
+/// 🧪 A box pocket entering a box through one face and stopping inside it (a blind pocket): the
+/// entered face receives a closed rectangle, the tool's four side faces one open chain each, and the
+/// tool's far cap lies wholly inside the stock as the pocket floor.
+#[semio_framework_async_macros::async_test]
+async fn box_minus_box_blind_pocket_removes_the_pocket_volume() {
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let stock = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let tool = make_box(&mut body, 0.4, 0.4, 1.2, &mut rec).unwrap();
+    let tool = translate_solid(&mut body, tool, Vec3::new(0.1, 0.1, -0.7), &mut rec).unwrap();
+    let cut = boolean_solid(&mut body, stock, tool, BooleanOp::Cut, 1e-6, &mut rec).map_err(|e| format!("{e:?}")).unwrap();
+    let issues = validate_body(&body);
+    assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    let vol = solid_volume(&body, cut, 1e-4).unwrap();
+    let expected = 1.0 - 0.4 * 0.4 * 0.5;
+    assert!((vol - expected).abs() / expected < 1e-3, "expected≈{expected}, got {vol}");
+}
+
+/// 🧪 A notch whose tool is flush with the stock's top and both side faces (process3d's lap joint):
+/// three coplanar face pairs, the tool otherwise inside the stock. The result is the stock with an
+/// open rectangular notch, never a closed void.
+#[semio_framework_async_macros::async_test]
+async fn box_minus_box_flush_notch_removes_the_notch_volume() {
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let stock = make_box(&mut body, 3.0, 0.2, 0.3, &mut rec).unwrap();
+    let stock = translate_solid(&mut body, stock, Vec3::new(-1.5, -0.1, 0.0), &mut rec).unwrap();
+    let tool = make_box(&mut body, 0.3, 0.2, 0.08, &mut rec).unwrap();
+    let tool = translate_solid(&mut body, tool, Vec3::new(0.45, -0.1, 0.22), &mut rec).unwrap();
+    let cut = boolean_solid(&mut body, stock, tool, BooleanOp::Cut, 1e-6, &mut rec).map_err(|e| format!("{e:?}")).unwrap();
+    let issues = validate_body(&body);
+    assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    let vol = solid_volume(&body, cut, 1e-4).unwrap();
+    let expected = 3.0 * 0.2 * 0.3 - 0.3 * 0.2 * 0.08;
+    assert!((vol - expected).abs() / expected < 1e-3, "expected≈{expected}, got {vol}");
+}
+
+/// 🧪 A cylinder entering a box through one face and stopping inside it (a blind bore, process3d's
+/// dowel hole): the entered face receives a full circle, the cylinder's lateral face a seam-crossing
+/// circle, and its far cap becomes the bore's floor.
+#[semio_framework_async_macros::async_test]
+async fn box_minus_cylinder_blind_bore_removes_the_bore_volume() {
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let stock = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let bit = make_cylinder(&mut body, 0.1, 1.0, &mut rec).unwrap();
+    let bit = translate_solid(&mut body, bit, Vec3::new(0.5, 0.5, 0.5), &mut rec).unwrap();
+    let bored = boolean_solid(&mut body, stock, bit, BooleanOp::Cut, 1e-6, &mut rec).map_err(|e| format!("{e:?}")).unwrap();
+    let issues = validate_body(&body);
+    assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
+    let vol = solid_volume(&body, bored, 1e-4).unwrap();
+    let expected = 1.0 - std::f64::consts::PI * 0.1 * 0.1 * 0.5;
+    assert!((vol - expected).abs() / expected < 5e-3, "expected≈{expected}, got {vol}");
+}

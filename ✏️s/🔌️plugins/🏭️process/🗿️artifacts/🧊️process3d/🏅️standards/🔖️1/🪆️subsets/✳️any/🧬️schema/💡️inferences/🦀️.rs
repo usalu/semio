@@ -153,14 +153,23 @@ fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
     hasher.finish()
 }
 
-/// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
+/// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → centre → `rotate_sync` → `translate_sync`.
+///
+/// 🧭️ A `Pose.position` is the solid's CENTRE and its rotation turns the solid about that centre —
+/// the convention every authored document speaks (the timber default rests its 0.3 m stock on the
+/// ground at `z = 0.15`, the plate example drills at `x = −0.45` of a 1.2 m plate). The kernel's
+/// primitives are anchored elsewhere (`box_prim` spans `[0,w]×[0,d]×[0,h]` from its corner,
+/// `cylinder_prim` runs `z ∈ [0,h]`, `sphere_prim` is already centred), so each is first shifted
+/// by minus its own half extents ([`primitive_centre_offset`]). Left corner-anchored, the crosscut
+/// and lap-joint tools of the default document sat flush on the stock's own faces and the replay
+/// answered the unit-box fallback in the workpiece window (ticket 26/09/15/DEV-PROCESS-REACT-E2E).
 /// 🚫️ `kernel: &mut Brep` (not `&mut dyn BrepKernel`): `Brep` is the only `BrepKernel` implementor this
 /// crate ever constructs (`ProcessKernelReplay::kernel_mut`, the sole caller path below) — R11's
 /// "exactly one impl ⇒ delete the trait object, use the concrete type" — and `BrepKernel` is declared
 /// in `🗄️stdio`, a crate outside this packet's path scope, so it could not be `#[dyn_enum]`-closed here
 /// even if a second implementor existed.
 fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
-    let base = match spec {
+    let anchored = match spec {
         WorkingSolid::Box { width, depth, height } => kernel.box_prim(*width, *depth, *height).ok()?,
         WorkingSolid::Cylinder { radius, height } => kernel.cylinder_prim(*radius, *height).ok()?,
         WorkingSolid::Sphere { radius } => kernel.sphere_prim(*radius).ok()?,
@@ -173,11 +182,25 @@ fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         WorkingSolid::ImportedMesh { .. } => return None,
     };
+    let base = match primitive_centre_offset(spec) {
+        Some(offset) => kernel.translate(&anchored, offset).ok()?,
+        None => anchored,
+    };
     let rotated = if pose.angle != 0.0 { kernel.rotate(&base, pose.axis, pose.angle).ok()? } else { base };
     if pose.position != [0.0, 0.0, 0.0] {
         kernel.translate(&rotated, pose.position).ok()
     } else {
         Some(rotated)
+    }
+}
+
+/// 🧭️ The shift that moves a freshly built kernel primitive's own anchor onto its centre — `None`
+/// when the primitive is already centred or is not a kernel primitive at all.
+pub fn primitive_centre_offset(spec: &WorkingSolid) -> Option<[f64; 3]> {
+    match spec {
+        WorkingSolid::Box { width, depth, height } => Some([-width / 2.0, -depth / 2.0, -height / 2.0]),
+        WorkingSolid::Cylinder { height, .. } => Some([0.0, 0.0, -height / 2.0]),
+        WorkingSolid::Sphere { .. } | WorkingSolid::ImportedSolid { .. } | WorkingSolid::ImportedMesh { .. } => None,
     }
 }
 

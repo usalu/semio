@@ -37,6 +37,12 @@ fn icon_node(icon: bool) -> crate::TreeNode {
     )
     .unwrap()
 }
+/// 🧊️ Cold full reservation of a node's binding backing — `try_push` itself admits one page at a
+/// time, so the "second binding costs nothing" case has to reserve the spare slots it relies on.
+fn with_reserved_backing(mut node: crate::TreeNode) -> crate::TreeNode {
+    node.bindings.try_reserve().unwrap();
+    node
+}
 //#endregion 📐️Fixtures
 
 //#region 🧪️Laws
@@ -514,7 +520,7 @@ fn surface_ownership_inline_fields_do_not_allocate_a_second_owner() {
     for case in fixture["inlineCases"].as_array().unwrap() {
         let (before, after) = match case["name"].as_str().unwrap() {
             "tree-item-icon" => (icon_node(false), icon_node(true)),
-            "reserved-binding" => (with_binding(leaf("machine"), "fixture", "first"), with_binding(with_binding(leaf("machine"), "fixture", "first"), "fixture", "second")),
+            "reserved-binding" => (with_reserved_backing(with_binding(leaf("machine"), "fixture", "first")), with_binding(with_reserved_backing(with_binding(leaf("machine"), "fixture", "first")), "fixture", "second")),
             _ => unreachable!(),
         };
         assert_eq!(before.bindings.capacity(), after.bindings.capacity());

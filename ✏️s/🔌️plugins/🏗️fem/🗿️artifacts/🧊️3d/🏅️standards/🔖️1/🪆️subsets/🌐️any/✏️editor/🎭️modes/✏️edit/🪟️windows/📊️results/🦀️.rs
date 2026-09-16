@@ -6,13 +6,10 @@ pub mod config;
 
 use crate::app_surface::{DisplayMode, ResultDisplay};
 use self::config::Fem3dResultsWindowConfig;
-#[cfg(test)]
 use crate::Fem3dSnapshot;
 use crate::Viewport3dOrbit;
 use semio_framework_plugin::BuiltNode;
-#[cfg(test)]
 use semio_framework_plugin::Label;
-#[cfg(test)]
 use semio_framework_ui_contract::{Buildable, HasChildren};
 
 /// 🪟️ The manifest's Results window kind id.
@@ -32,7 +29,6 @@ fn config_result_display(cfg: &Fem3dResultsWindowConfig) -> ResultDisplay {
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every solid's footprint/height —
 /// drives mode-shape amplitude (see `crate::app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
 /// back to `1.0` for a degenerate model.
-#[cfg(test)]
 fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
@@ -61,13 +57,11 @@ fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
 }
 
 /// 📝️ Admits a result label into the fixture's semantic tree.
-#[cfg(test)]
 fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     semio_framework_plugin::built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM result text admission failed"))
 }
 
 /// 🏷️ Places a data caption above the fixture's world scene.
-#[cfg(test)]
 fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let caption = placeholder(Label::data(caption))?;
     let builder = semio_framework_ui_contract::column().try_children([caption, scene]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption children admission failed"))?;
@@ -75,7 +69,6 @@ fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::Ui
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-#[cfg(test)]
 pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let display = config_result_display(cfg);
     let camera = &cfg.camera;
@@ -86,21 +79,12 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig) -> semio_fram
     }
 }
 
-/// 👁️ Adopts the immutable mounted result packet without solving, meshing, sorting, or encoding during render.
-pub fn render_with_progress(camera: &Viewport3dOrbit, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let mut scene =
-        semio_framework_plugin::world3d_scene(crate::viewport::scene_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
-    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
-    eprintln!("[DEBUG] fem3d results window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
-    crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, &scene)
-}
 
 /// 📊️ Static results: solved fresh on every render (no cache, mirrors `Fem3dPlayApp`'s v0 design) —
 /// same node/member/solid instances as the model window, offset by the solved displacements, solids
 /// additionally colored by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all`
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
-#[cfg(test)]
 fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &Viewport3dOrbit) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::editor::fem3d::fem3d_scene_parts;
     use crate::fem3d_engine::fem3d_solve_all;
@@ -131,7 +115,6 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &Viewport
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
-#[cfg(test)]
 fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &Viewport3dOrbit) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::fem3d_scene_parts;
@@ -154,7 +137,6 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &Viewport3dOrbit
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent. `source_id` selects the
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
-#[cfg(test)]
 fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &Viewport3dOrbit) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::fem3d_scene_parts;

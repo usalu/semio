@@ -41,7 +41,10 @@ async fn drill_reduces_volume_below_stock() {
         label: "Drill".into(),
         enabled: true,
         origin: None,
-        measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.4, depth: 0.4, height: 1.2 }, pose: Pose { position: [0.3, 0.3, -0.1], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
+        // 🧭️ Poses are centres: a 1.2 m tool centred 0.4 m below the unit stock's own centre enters
+        // through the bottom face and stops 0.2 m short of the top — a blind pocket well inside the
+        // stock's sides.
+        measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.4, depth: 0.4, height: 1.2 }, pose: Pose { position: [0.1, 0.1, -0.4], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
     });
     let drilled_volume = processed_volume(&scene, None).expect("drilled volume");
     assert!(drilled_volume < stock_volume, "drilled volume {drilled_volume} should be less than stock volume {stock_volume}");
@@ -101,3 +104,25 @@ async fn box_primitive_spans_from_local_origin_corner() {
     assert!(min_z.abs() < 1e-4 && (max_z - 4.0).abs() < 1e-4, "box z should span [0, height], got [{min_z}, {max_z}]");
 }
 //#endregion 🧪️KernelReplay
+
+/// 🪚️ The default timber document replays to the last step through the kernel — every measure of
+/// the authored process (a through crosscut, a lap-joint notch flush with three faces, a dowel bore
+/// and the dowel itself) is a boolean the kernel answers, and each subtractive step reduces the volume.
+#[semio_framework_async_macros::async_test]
+async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
+    let snapshot = crate::schema::default_document();
+    let scene = crate::process_working_scene_from_snapshot(&snapshot);
+    assert_eq!(scene.steps.len(), 4, "timber fixture steps: {:?}", scene.steps.iter().map(|step| step.id.as_str()).collect::<Vec<_>>());
+    let mut session = ProcessKernelReplay::new();
+    let mut previous = session_volume(&mut session, &scene, Some(0));
+    assert!((previous - 3.0 * 0.2 * 0.3).abs() < 1e-9, "stock volume {previous}");
+    for limit in 1..=scene.steps.len() {
+        let volume = session_volume(&mut session, &scene, Some(limit));
+        let step = &scene.steps[limit - 1];
+        match step.measure {
+            ProcessMeasure::Attach { .. } => assert!(volume >= previous - 1e-12, "{} should not remove material: {previous} -> {volume}", step.id),
+            _ => assert!(volume < previous, "{} should remove material: {previous} -> {volume}", step.id),
+        }
+        previous = volume;
+    }
+}

@@ -13,7 +13,7 @@ pub(crate) mod context {
     /// asserts on `Drop` that its artifact store reached the terminal-empty shallow shell
     /// (`🏪️store/🦀️.rs`'s witness), so a bare drop aborts the whole test binary. The framework's own
     /// `context::close_registered_fixture_app` caps the drain at 64 turns of one item each
-    /// (`🔌️plugin/🦀️.rs:6699-6709`), which this app — 33 tool jobs plus five stores — outgrows, so the
+    /// (`🔌️plugin/🦀️.rs:6699-6709`), which this app — 31 tool jobs plus five stores — outgrows, so the
     /// pump runs here instead and is bounded only far enough to be a runaway guard.
     /// `Deref`/`DerefMut` keep every call site writing `&mut app` exactly as before. The drain never
     /// panics while the thread is ALREADY unwinding — a second panic in a destructor aborts the whole
@@ -142,7 +142,9 @@ pub(crate) mod context {
             },
         ];
         let json = dsl::json::to_json_string(&entries);
-        action(app, "setContributions", Some(&DslValue::object([("json".to_string(), DslValue::String(json))])));
+        // 🧵️ B1: an app's own behaviour dispatches only through the typed command channel —
+        // `handle_action` serves the framework-reserved verbs and rejects app command ids.
+        dispatch(app, Process3dCommand::SetContributions(set_contributions::SetContributions { json }));
     }
     
     /// 🧪️ Every test context app is wired to the real manifest registry. The registry-less `new_app` path
@@ -403,12 +405,12 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 33);
+    assert_eq!(ids.len(), 31);
     assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 25);
-    assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 8);
+    assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 6);
     assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
     assert_eq!(process3d_command_disposition("nonsense"), None);
-    assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 33);
+    assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 31);
     assert_eq!(process3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(process3d_resumable_contract().shape, ToolExecutionShape::Resumable);
     assert_eq!(process3d_resumable_contract().cancellation, ToolCancellationPolicy::PerOperation);
@@ -450,7 +452,7 @@ async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
         );
         assert_eq!(declared.get(id).copied(), Some(InteractiveJobClassification::Migrated), "{id} is not declared Migrated, so validate_ui_dispatch_classification would reject its UI dispatch");
     }
-    assert_eq!(lanes.len(), 33);
+    assert_eq!(lanes.len(), 31);
     assert!(<Process3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
     assert!(<Process3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
 }
@@ -594,7 +596,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 33, "every Process3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 31, "every Process3dCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.

@@ -487,7 +487,7 @@ struct Gis2dOneItemPreparation<P, M> {
 }
 
 fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
-    let retained_id = format!("gis2d-retained-{}", authority.next_sequence_number());
+    let retained_id = format!("gis2d-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
     let (id, mutation_id, timestamp) = stamp.map_or_else(
         || {
             let mutation_id = protocol::MutationId(format!("{retained_id}#0"));
@@ -826,6 +826,14 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn initial_snapshot() -> GisMapSnapshot {
         crate::schema::default_document()
+    }
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_gis_map_child_pack(snapshot, slot, child_id)
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the

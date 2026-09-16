@@ -13,9 +13,9 @@
           "id": "hea200",
           "name": "HEA 200 with warping restraint",
           "area": 0.00538,
-          "iy": 0.00003692,
-          "iz": 0.00001336,
-          "j": 0.0000625
+          "iy": 3.692e-05,
+          "iz": 1.336e-05,
+          "j": 6.25e-05
         }
       }
     ],
@@ -25,11 +25,5 @@
   "supports": null,
   "loadCases": null,
   "combinations": null,
-  "analysis": null,
-  "resultSourceId": null,
-  "resultMode": null,
-  "resultModeIndex": null,
-  "camera": null,
-  "solverResultsJson": null,
-  "meshPreviewJson": null
+  "analysis": null
 }

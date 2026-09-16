@@ -8,7 +8,8 @@
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 22,
+    "proofRows": 21,
+    "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
   },

@@ -7107,6 +7107,28 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     close_member_dialect_fixture(&mut child);
 }
 
+/// 🌱️ A derivable child's genesis envelope is minted from bytes alone and opens exactly like a
+/// store-printed one: same id, schema, dialect and owner, the initial snapshot as live content, no
+/// history — and a mismatched owner, like an empty initial pack, fails closed.
+#[semio_framework_async_macros::async_test]
+async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_store() {
+    let dialect = demo_child_dialect();
+    let parent = crate::os_io::ArtifactRef { artifact_id: "genesis-parent".into(), dialect: dialect.clone() };
+    let owner = OwnerRef { parent: parent.clone(), slot: "slot".into(), child_id: "genesis-child".into() };
+    let envelope_pack = genesis_member_envelope_pack("demo/v1", &dialect, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
+    let expected = crate::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
+    let mut opened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&owner), &envelope_pack).await.expect("open genesis member");
+    assert_eq!(opened.envelope().id, "genesis-child");
+    assert_eq!(opened.envelope().owner.as_ref(), Some(&owner));
+    assert_eq!(opened.envelope().dialect.as_ref(), Some(&dialect));
+    assert_eq!(opened.snapshot().expect("head snapshot"), DemoSnapshot { n: Some(5) });
+    assert!(opened.envelope().vcs.edits.is_empty(), "a genesis member carries no history");
+    close_member_dialect_fixture(&mut opened);
+    let other = OwnerRef { parent, slot: "other".into(), child_id: "genesis-child".into() };
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&other), &envelope_pack).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
+    assert!(matches!(genesis_member_envelope_pack("demo/v1", &dialect, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog() {
     type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;

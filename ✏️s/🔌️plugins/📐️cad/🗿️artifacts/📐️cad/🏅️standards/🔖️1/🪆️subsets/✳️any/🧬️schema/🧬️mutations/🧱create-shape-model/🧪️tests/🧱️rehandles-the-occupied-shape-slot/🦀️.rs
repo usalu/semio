@@ -36,12 +36,12 @@ fn applied() -> CadSnapshot {
 async fn replaces_the_shape_handle_in_place() {
     let after = applied();
     let handle = after.shape_model.as_ref().expect("create-shape-model leaves the slot occupied");
-    assert_eq!(handle.child_id, "shape-model-2", "create-shape-model must install the payload's child id");
+    assert_eq!(handle.child_id, "cad-shape-2", "create-shape-model must install the payload's child id");
     assert_eq!(handle.target.to_uri(), "cad-shape-2!s.stdio.semio@v1/model", "create-shape-model must parse the payload target URI back into a real ArtifactRef");
     assert!(
-        after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("building-model-1")
-            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1")
-            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"),
+        after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-building-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-energy-1")
+            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-structure-1"),
         "create-shape-model must leave the other three fixed model slots untouched"
     );
     assert_eq!(after.drawings.len(), 1, "create-shape-model must not touch the drawings child collection");
@@ -56,7 +56,7 @@ async fn inverse_reinstalls_the_displaced_shape_handle() {
     assert_eq!(inverse.len(), 1, "create-shape-model inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateShapeModel(step) => {
-            assert_eq!(step.child_id, "shape-model-1", "the inverse must reinstall the handle create-shape-model displaced");
+            assert_eq!(step.child_id, "cad-shape-1", "the inverse must reinstall the handle create-shape-model displaced");
             assert_eq!(step.target, "cad-shape-1!s.stdio.semio@v1/model", "the inverse must carry the displaced handle's target URI");
         }
         other => panic!("create-shape-model over an OCCUPIED slot must invert to create-shape-model, got {other:?}"),
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "create-shape-model/rehandles-the-occupied-shape-slot: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let slot = produced.diff().shape_model.as_ref().expect("create-shape-model fills the `shape_model` slot diff");
     let handle = slot.as_ref().expect("create-shape-model's diff sets the slot to the occupied arm");
-    assert_eq!(handle.child_id, "shape-model-2", "the slot diff carries the payload child id");
+    assert_eq!(handle.child_id, "cad-shape-2", "the slot diff carries the payload child id");
     assert!(produced.diff().drawings.is_none() && produced.diff().nodes.is_none(), "create-shape-model emits nothing but its own slot field");
 }
 

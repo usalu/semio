@@ -14,8 +14,8 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin,
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
     pub enum GisApps: PluginApp {
-        Gis2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>),
-        GisMapViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>>),
+        Gis2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        GisMapViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
         Gis3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>),
         GisTerrainViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>>),
     }
@@ -42,9 +42,9 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
             "gis2d",
             semio_s_artifact_gis_gismap::schema::gis2d_document_json_to_svg,
         )?)
-        .editor::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
+        .editor_with_members::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp, semio_s_artifact_stdio_semio::SemioMembers>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>()
-        .viewer::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>(semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer())
+        .viewer_with_members::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer, semio_s_artifact_stdio_semio::SemioMembers>(semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer())
         .viewer_mutation_roster::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>()
         .editor::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>(semio_s_artifact_gis_gisterrain::editor::gis3d::create_gis3d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>()

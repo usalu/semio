@@ -2,7 +2,8 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
+use crate::editor::cad::modes::edit::CAD_WORLD_PICK_GRANULARITY;
+use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of, CAD_INTERACTION_DOMAIN};
 use crate::mutations::change_reference_hidden::ChangeReferenceHidden;
 use crate::mutations::change_reference_locked::ChangeReferenceLocked;
 use crate::mutations::change_reference_width::ChangeReferenceWidth;
@@ -10,7 +11,7 @@ use crate::mutations::move_reference::MoveReference;
 use crate::op::CadMutation;
 use crate::CadSnapshot;
 use crate::{cad_pane_from_model_definition_id, CadPaneId};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PatchCadPlayReference
@@ -72,16 +73,27 @@ pub mod set_reference_selection {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &SetReferenceSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetReferenceSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id)).unwrap_or(CadPaneId::Shape);
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
         runtime.selected_reference_id = payload.reference_id.clone();
-        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection is
-        // framework-owned now, unreachable from this handler; only the app-owned node selection
-        // still clears here.
         runtime.selected_node_ids.clear();
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
+        // 🕹️ Mesh object selection is the framework-owned `"cad"` domain: a reference pick clears it
+        // through the sanctioned `InteractionWrite` lane (never a new verb), so the inspection panel —
+        // which lets a live object selection win — shows the reference the user just picked. An
+        // empty `Replace` is a no-op by `next_selection`'s contract, so the write SUBTRACTS the ids
+        // the dispatch snapshot says are selected (the same shape as puzzle 3d's `clear_selection`).
+        let mut emit = Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]);
+        if !ctx.interaction.ids.is_empty() {
+            let granularity = if ctx.interaction.granularity.is_empty() { CAD_WORLD_PICK_GRANULARITY } else { ctx.interaction.granularity.as_str() };
+            emit.interaction_writes.push(InteractionWrite {
+                domain: CAD_INTERACTION_DOMAIN.into(),
+                targets: ctx.interaction.ids.iter().map(|id| protocol::InteractionTarget { granularity: granularity.to_string(), id: id.clone() }).collect(),
+                merge: protocol::MergeMode::Subtractive,
+            });
+        }
+        Ok(emit)
     }
 }
 //#endregion 🔖️SetReferenceSelection

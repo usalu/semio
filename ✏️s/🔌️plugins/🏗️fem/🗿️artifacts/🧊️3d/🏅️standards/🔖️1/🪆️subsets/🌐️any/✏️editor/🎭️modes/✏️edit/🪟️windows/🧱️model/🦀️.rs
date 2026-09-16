@@ -7,7 +7,6 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-#[cfg(test)]
 use crate::Fem3dSnapshot;
 use crate::Viewport3dOrbit;
 
@@ -30,17 +29,17 @@ pub fn render(doc: &Fem3dSnapshot, camera: &Viewport3dOrbit) -> semio_framework_
     )
 }
 
-/// 👁️ Borrows a generation-qualified immutable renderer packet without scene rebuilding on the UI thread.
-///
-/// 🕳️ `meshes_json`/`instances_json` stay the literal `"[]"` by design: geometry travels on
-/// `scene.snapshot`, the `live_visual` page lease. A `None` lease therefore paints an EMPTY world — the
-/// `[DEBUG]` line below is the discriminator between "the reconcile job has not published yet / the
-/// identity did not line up" and "the app is genuinely rendering geometry".
-pub fn render_with_progress(camera: &Viewport3dOrbit, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// 👁️ Renders the undeformed structure (the same node/member/solid instances `render` draws, no
+/// displacement, no stress) and carries the generation-qualified `live_visual` page lease on
+/// `scene.snapshot` for a host that pages it — a host that only draws `meshes_json`/`instances_json`
+/// (the React world today) still shows the model as it is edited.
+pub fn render_with_progress(doc: &Fem3dSnapshot, camera: &Viewport3dOrbit, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    use crate::editor::fem3d::fem3d_scene_parts;
+
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     let mut scene =
-        semio_framework_plugin::world3d_scene(crate::viewport::scene_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
+        semio_framework_plugin::world3d_scene(crate::viewport::scene_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
-    eprintln!("[DEBUG] fem3d model window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene)
 }
 

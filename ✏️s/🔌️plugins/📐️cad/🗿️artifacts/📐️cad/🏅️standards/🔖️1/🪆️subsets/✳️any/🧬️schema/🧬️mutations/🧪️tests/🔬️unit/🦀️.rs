@@ -175,15 +175,15 @@ async fn create_node_outcome_obeys_the_policy_matrix() {
 async fn delete_drawing_outcome_obeys_the_policy_matrix() {
     let sample = sample_model_child("law-drawing-2");
     let mut base = sample_scene();
-    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-2".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-2".into() })).await;
+    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "cad-drawing-2".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_drawing_outcome_obeys_the_policy_matrix() {
     let base = sample_scene();
     let sample = sample_model_child("law-drawing-3");
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-3".into(), target: sample.target.to_uri() })).await;
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.to_uri() })).await;
 }
 //#endregion 🧪️OutcomeLaws
 //#region 🧪️KindsCatalog

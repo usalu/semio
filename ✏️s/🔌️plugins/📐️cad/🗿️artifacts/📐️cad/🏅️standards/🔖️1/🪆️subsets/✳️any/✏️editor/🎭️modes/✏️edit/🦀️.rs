@@ -6,17 +6,16 @@ use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
+use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
 use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
-use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_scale_json, resolve_object_mesh_url, typology_mesh_kind};
-use std::collections::HashSet;
+use crate::standards::v1::subsets::any::schema::inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use protocol::DslValue;
-use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
-    WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    mesh_from_kind, scene_surface, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput,
+    WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, World3dScene,
 };
+use std::hash::{Hash, Hasher};
 
 pub const CAD_PLAY_MODE_EDIT: &str = "edit";
 
@@ -56,59 +55,53 @@ pub fn layout() -> WindowLayout {
 //#endregion 🔖️Definition
 
 //#region 🔖️WorldScene
-/// 🐁️ ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh hover is the framework-owned
-/// `"cad"` interaction domain now, and `ArtifactApp::render` (unlike `handle`/`copy_fragment`/
-/// `cut_operations`) has NO `InteractionView` parameter — a per-object hover tint in the World3d
-/// scene payload is unreachable at this render boundary. Documented reduced-fidelity gap, matching
-/// this file's own pre-existing `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` gap notes; always `false` until
-/// a future wave threads render-time interaction state through.
-pub fn instance_is_component_hovered(_runtime: &CadPlayRuntime, _object_id: &str) -> bool {
-    false
+/// 🐁️ Whether the `"cad"` domain's `"pointer"` hover names this object (`CadPlayView::interaction`,
+/// resolved per render by `CadPlayApp::render_with_request_context`).
+pub fn instance_is_component_hovered(view: &CadPlayView, object_id: &str) -> bool {
+    view.interaction.is_hovered(object_id)
 }
 
-/// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection.
-/// ⚠️ Same `render`-has-no-`InteractionView` gap as `instance_is_component_hovered` — the gumball
-/// cannot know the current mesh selection here, so it never shows. Documented gap.
-pub fn gumball_active(_runtime: &CadPlayRuntime, _active_utility: Option<&str>, _options: CadDislocateOptions) -> bool {
-    false
+/// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection:
+/// the utility is active on this window, at least one of its transforms is enabled and the `"cad"`
+/// domain selects at least one of THIS pane's objects (`selected_ids`, already pane-scoped).
+pub fn gumball_active(selected_ids: &[String], active_utility: Option<&str>, options: CadDislocateOptions) -> bool {
+    active_utility == Some(CAD_DISLOCATE_UTILITY_ID) && (options.move_enabled || options.rotate_enabled) && !selected_ids.is_empty()
 }
 
-/// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `selected` is always `false` here — see
-/// `instance_is_component_hovered`'s doc comment for why `render` cannot know the current mesh
-/// selection. Documented reduced-fidelity gap.
 /// 🌉️ `f64_array_value` — small local helper turning a fixed-size point/vector array into a
 /// `DslValue::Array` of floats (mirrors `vec3_json` in `⚙️engine/🕹️interaction/🦀️.rs`).
 fn f64_array_value(values: &[f64]) -> DslValue {
     DslValue::Array(values.iter().map(|v| DslValue::float(*v)).collect())
 }
 
-/// 🥽️ Mesh id an instance references — URL-backed assets keep their stable `mesh:{slug}` id; every
-/// other object shares a built-in procedural kind the renderer already owns (`world3d_mesh_kind_entry`).
+/// 🎯️ Framing margin around the pane's content on the first delivery of a document (`world3d_fit_json`).
+pub const CAD_FIT_PADDING: f64 = 1.25;
+
+/// 🥽️ The granularity a world-3d pane pick selects under in the `"cad"` interaction domain.
+pub const CAD_WORLD_PICK_GRANULARITY: &str = "object";
+
+/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
+/// pack::json::Value` — reached here through `protocol`'s `os_pack` re-export of the same `pack`
+/// crate, never `serde_json`. Bridged once, here, at the point each mesh payload is assembled.
+fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> DslValue {
+    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
+}
+
+/// 🥽️ Mesh id an instance references — a URL-backed asset keeps its stable `mesh:{slug}` id (one
+/// shared `{ id, url }` entry per asset); every other object owns its own tessellation under its
+/// object id (`world_meshes_json` inlines the BREP mesh as `{ id, data }`).
 fn instance_mesh_id(object: &CadObject) -> String {
-    resolve_object_mesh_url(object).map_or_else(|| typology_mesh_kind(&object.typology).to_string(), |url| world3d_mesh_id_from_url(&url))
+    resolve_object_mesh_url(object).map_or_else(|| object.id.clone(), |url| world3d_mesh_id_from_url(&url))
 }
 
-/// 🥽️ Distinct built-in mesh kinds referenced by `objects`, in first-seen order.
-fn world_mesh_kinds(objects: &[CadObject]) -> Vec<String> {
-    let mut kinds = Vec::new();
-    let mut seen = HashSet::new();
-    for object in objects.iter().filter(|object| object.visible) {
-        let kind = typology_mesh_kind(&object.typology).to_string();
-        if seen.insert(kind.clone()) {
-            kinds.push(kind);
-        }
-    }
-    kinds
-}
-
-pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
+pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) -> String {
     let instances: Vec<DslValue> = objects
         .iter()
         .filter(|object| object.visible)
         .map(|object| {
             let mesh_id = instance_mesh_id(object);
-            let selected = false;
-            let hovered = instance_is_component_hovered(runtime, &object.id);
+            let selected = view.interaction.is_selected(&object.id);
+            let hovered = instance_is_component_hovered(view, &object.id);
             DslValue::object([
                 ("id".to_string(), DslValue::String(object.id.clone())),
                 ("meshId".to_string(), DslValue::String(mesh_id)),
@@ -125,25 +118,50 @@ pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRunti
     protocol::json::to_json_string(&instances)
 }
 
-pub(crate) fn world_meshes_json(objects: &[CadObject], _geometry: Option<&CadGeometry>) -> String {
-    let urls = collect_mesh_urls(objects);
-    if !urls.is_empty() {
-        return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
+/// 🥽️ The pane's mesh roster: one `{ id, url }` reference per URL-backed asset and one inline
+/// `{ id, data }` tessellation per kernel-backed object — a CAD solid is authored geometry no
+/// renderer can derive from a kind, so its triangles ride the paged `meshes` lane (bounded by carrier
+/// pages, not by the 32 KiB surface spine). An empty pane keeps the fallback kind so the viewport
+/// still has a mesh to frame.
+pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+    let mut meshes: Vec<DslValue> = Vec::new();
+    let mut url_ids: Vec<String> = Vec::new();
+    for object in objects.iter().filter(|object| object.visible) {
+        match resolve_object_mesh_url(object) {
+            Some(url) => {
+                let id = world3d_mesh_id_from_url(&url);
+                if url_ids.contains(&id) {
+                    continue;
+                }
+                meshes.push(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("url".to_string(), DslValue::String(url))]));
+                url_ids.push(id);
+            }
+            None => {
+                let data = object_mesh_data(object, geometry);
+                meshes.push(DslValue::object([("id".to_string(), DslValue::String(object.id.clone())), ("data".to_string(), mesh_data_to_dsl(&data))]));
+            }
+        }
     }
-    let kinds = world_mesh_kinds(objects);
-    if kinds.is_empty() {
-        return semio_framework_plugin::world3d_meshes_json_from_kinds(&[CAD_FALLBACK_MESH_KIND.to_string()]);
+    if meshes.is_empty() {
+        let data = mesh_from_kind(CAD_FALLBACK_MESH_KIND);
+        meshes.push(DslValue::object([("id".to_string(), DslValue::String(CAD_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&data))]));
     }
-    semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls(&kinds, &[])
+    protocol::json::to_json_string(&meshes)
 }
 
-/// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face
-/// selection AND hover are the framework-owned `"cad"` interaction domain now, unreachable at this
-/// render boundary (see `instance_is_component_hovered`'s doc comment) — `selectionMode`/
-/// `granularity`/`targets`/`componentIds`/`activeObjectId`/`hoveredComponent` are no longer emitted
-/// here (the client no longer needs them from this payload either: `interaction_domain`-bound UI
-/// gets its presence stamped by the framework wrapper post-render). `gumball_active` is always
-/// `false` for the same reason.
+/// 🎯️ Document identity for the pane's auto-fit: the host frames the content once per revision and
+/// never takes a user-moved camera back, so this must follow the DOCUMENT (which example is open and
+/// which objects its pane holds), not the object poses a transform edits.
+pub(crate) fn world_fit_revision(document: &CadSnapshot, pane: CadPaneId, objects: &[CadObject]) -> u32 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    document.id.hash(&mut hasher);
+    pane.model_definition_id().hash(&mut hasher);
+    for object in objects {
+        object.id.hash(&mut hasher);
+    }
+    (hasher.finish() >> 32) as u32
+}
+
 /// 🌉️ Insert-or-overwrite into a `DslValue::Object`'s entry list — `DslValue::Object` is a plain
 /// `Vec<(String, DslValue)>` (no `Map`-like `.insert`), so this is the mutable-upsert primitive
 /// every JSON-mutation site in this file shares.
@@ -155,10 +173,19 @@ fn dsl_object_upsert(entries: &mut Vec<(String, DslValue)>, key: &str, value: Ds
     }
 }
 
-pub fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
-    let mut value: DslValue = protocol::json::from_json_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| DslValue::object(Vec::new()));
+/// 🕹️ The scene's selection lane: the `"cad"` domain's selected/hovered ids RESTRICTED TO THIS PANE's
+/// objects, plus the dislocate gumball and engagement flags. The four panes share one domain, but
+/// `World3dHost` reads the lane's `hoveredId` as "the target THIS pane is publishing" (its
+/// background click re-picks it instead of clearing), so a hover that lives in another pane must not
+/// leak into this one's lane.
+pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects: &[CadObject], active_utility: Option<&str>, options: CadDislocateOptions) -> String {
+    let runtime = &view.runtime;
+    let owned = |id: &String| objects.iter().any(|object| &object.id == id);
+    let ids: Vec<String> = view.interaction.ids.iter().filter(|id| owned(id)).cloned().collect();
+    let hovered = view.interaction.hovered_ids.iter().find(|id| owned(id)).map(String::as_str);
+    let mut value: DslValue = protocol::json::from_json_str(&world3d_selection_json("rectangle", &ids, hovered)).unwrap_or_else(|_| DslValue::object(Vec::new()));
     if let DslValue::Object(entries) = &mut value {
-        let active = gumball_active(runtime, active_utility, options);
+        let active = gumball_active(&ids, active_utility, options);
         if active_utility == Some(CAD_DISLOCATE_UTILITY_ID) {
             dsl_object_upsert(entries, "transformMode", DslValue::String("transform".into()));
             dsl_object_upsert(
@@ -177,8 +204,13 @@ pub fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRuntime, a
         dsl_object_upsert(entries, "gumballActive", DslValue::Bool(active));
         dsl_object_upsert(entries, "engagementSessionActive", DslValue::Bool(runtime.engagement_session.is_some()));
         dsl_object_upsert(entries, "showEdges", DslValue::Bool(true));
-        if let Some(reference_id) = runtime.selected_reference_id.as_deref() {
-            dsl_object_upsert(entries, "referenceSelectedId", DslValue::String(reference_id.to_string()));
+        // 🖼️ Every pane's reference overlay reuses the same reference id (one `ref-concrete-forest` per
+        // model definition), so the app-owned reference selection is stamped only on the pane whose
+        // model definition it names — never on the three siblings sharing the id.
+        if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
+            if model_definition_id == pane.model_definition_id() {
+                dsl_object_upsert(entries, "referenceSelectedId", DslValue::String(reference_id.to_string()));
+            }
         }
     }
     protocol::json::to_json_string(&value)
@@ -233,16 +265,25 @@ pub(crate) fn cad_pane_working_objects(scene: &CadWorkingScene, pane: CadPaneId)
     }
 }
 
-pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, _surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
+pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
     let working_scene = cad_pane_working_scene(&envelope.document, pane);
     let empty: &[CadObject] = &[];
     let (objects, geometry) = working_scene.as_deref().map_or((empty, None), |scene| cad_pane_working_objects(scene, pane));
-    MeshWindowKit::render(&MeshView {
-        camera_json: camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-        meshes_json: world_meshes_json(objects, geometry),
-        instances_json: world_instances_json(objects, &envelope.runtime),
-        selection_json: world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
-    })
+    let mut scene = World3dScene::base(
+        camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
+        world_meshes_json(objects, geometry),
+        world_instances_json(objects, envelope),
+        world_selection_json(envelope, pane, objects, active_utility, options),
+    );
+    scene.references_json = world_references_json(&envelope.document, pane);
+    scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
+    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
+    // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/
+    // `interactionHover` (which `handle` reads back through `InteractionView`) instead of the legacy
+    // `worldPick`/`worldSelect`/`setHover` verbs this app has no handler for.
+    scene.domain_id = Some(CAD_INTERACTION_DOMAIN.into());
+    scene.domain_granularity_id = Some(CAD_WORLD_PICK_GRANULARITY.into());
+    scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️WorldScene
 
@@ -252,10 +293,9 @@ fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 }
 
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is framework-owned
-    // now and unreachable at this render boundary (see `instance_is_component_hovered`'s doc
-    // comment) — the status HUD can no longer report a live selected-object count. Documented gap.
-    let selected_count = 0;
+    // 🕹️ `window_engagements` has no request context (unlike `render_with_request_context`), so the
+    // HUD reports the `"cad"` selection only when the caller threaded one into `envelope`.
+    let selected_count = envelope.interaction.ids.len();
     let model_definition_id = pane.model_definition_id();
     let session_active = envelope.runtime.engagement_session.is_some();
     let possible_engagements: Vec<WindowEngagementPossible> = if let Some(session) = envelope.runtime.engagement_session.as_ref() {

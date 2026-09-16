@@ -11,7 +11,15 @@ async fn set_active_example_empty_then_reuse_round_trips_document() {
     assert!(app.snapshot().expect("projection").positions.is_empty());
     dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() })).await;
     assert!(!app.snapshot().expect("projection").positions.is_empty());
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
+    for _ in 0..10_000 {
+        app.maintenance_step(1, 4_096).expect("undo maintenance");
+        if app.snapshot().expect("projection").positions.is_empty() {
+            break;
+        }
+        std::thread::yield_now();
+    }
     assert!(app.snapshot().expect("projection").positions.is_empty(), "undo returns to the empty document");
     close(&mut app);
 }

@@ -9,7 +9,7 @@
   "steps": {
     "childId": "steps-flow-49e7fce5e42bc9b8",
     "target": {
-      "artifactId": "process-steps-flow",
+      "artifactId": "steps-flow-49e7fce5e42bc9b8",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -32,16 +32,16 @@
         "depth": 0.02,
         "pose": {
           "position": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "axis": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
-          "angle": 0
+          "angle": 0.0
         }
       }
     }
