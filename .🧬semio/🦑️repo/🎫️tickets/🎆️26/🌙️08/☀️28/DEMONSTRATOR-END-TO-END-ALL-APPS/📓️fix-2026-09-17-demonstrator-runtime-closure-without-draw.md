@@ -12,7 +12,12 @@ Reaching `flow` as the `extends` host of any selected extension also re-expanded
 2. **`runtimeComponentClosure`** — Host plugins linked via `extends` are added **shallowly** (host wasm only, no host `depends-on` / `consumes` expansion).
 3. **`🧫️cases.json`** — Removed `flow-extension-draw` from the expected extension roster (29 components in the union).
 
+## Follow-up (puzzle materialize)
+
+Demonstrator build also needed `@semio-tech/puzzle-plugin:materialize-release`. Example fixtures now ship pre-serialized `📄️document.json` (DSL parse fails at wasm descriptor probe for several puzzle2d fixtures). Puzzle3d/5d editors load JSON via `examples::…::SOURCE.document_json()`.
+
 ## Verification
 
 - `demonstratorRuntimeComponentIds()` — 29 ids, `flow-extension-draw` absent.
 - `bun nx test @semio-tech/mit-bestand-demonstrator` — 28/28 passed.
+- `puzzle-plugin:materialize-release` — succeeds after component rebuild.

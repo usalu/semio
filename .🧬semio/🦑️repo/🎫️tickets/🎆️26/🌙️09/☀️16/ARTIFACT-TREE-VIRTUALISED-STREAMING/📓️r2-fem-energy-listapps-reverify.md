@@ -140,7 +140,9 @@ fem's panel tests as of this run. Recommend F2 either raise the headroom to ~24 
 | `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️.rs` | `render(..)` takes `&TreeWindows<'_>`; the generations list is a `window_section_or_placeholder`; the `UiFixedList` accumulation loop is gone; `TreeWindows` imported |
 | `…/🗂️generations/🧪️tests/🔬️unit/🦀️.rs` | three window laws added beside the existing add-action law |
 | `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs` | both `FLOW_PLAY_BODY_GENERATIONS` dispatch arms build `TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS)` |
-| `.🧬semio/…/ARTIFACT-TREE-VIRTUALISED-STREAMING/🐚️r2-verify.sh` | the lane driver used below |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` | `wide_view()` asks for a realistic 8-row slice instead of 128 (`OPENED_ROWS`, documented); the marked-ids law builds a fresh `TreeWindows` for its second render — §3.4 |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/…/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` | only the same 4-line fresh-`TreeWindows` fix in the marked-ids law (F2 owns the rest of this file and is editing it live — its `wide_view` was already fixed by F2 and was left alone) |
+| `.🧬semio/…/ARTIFACT-TREE-VIRTUALISED-STREAMING/🐚️r2-verify.sh` | the lane driver |
 
 No other file in the twelve crates needed a change. Nothing was reverted, no peer edit was touched.
 
@@ -148,4 +150,150 @@ No other file in the twelve crates needed a change. Nothing was reverted, no pee
 
 ## 3. Verification
 
-(filled in below — see §3.1/§3.2/§3.3)
+All runs foreground, shared build dir, no `CARGO_TARGET_DIR`, env
+`DEVELOPER_DIR=/Library/Developer/CommandLineTools CARGO_INCREMENTAL=0 CARGO_PROFILE_WASM_DEV_DEBUG=false`.
+Logs under `🗑️generated/r2/`. Machine load 90–190 for the whole session (≈40 peer cargos, 3–5 rustc: the
+build dir lock, not the CPU, was the bottleneck — one `cargo check --target wasm32-wasip2` across ten
+crates took 21 m 48 s).
+
+### 3.1 `cargo check --target wasm32-wasip2` — **all twelve crates green**
+
+| Command | Result | Log |
+|---|---|---|
+| `cargo check --target wasm32-wasip2 --keep-going -p energy-model -p flow-flow -p dag-dag -p vcs-vcs -p note-note -p sequence-sequence -p writer-writer -p animate-presentation -p imperative-procedure -p remodel-remodeling` | **rc 0**, `Finished dev profile in 21m 48s`, **0 errors** (51 crates checked, warnings present ⇒ expansion really ran) | `wasm-a7-energy.txt` |
+| `cargo check --target wasm32-wasip2 --keep-going -p fem-2d -p fem-3d --features component-app-assembly` | **rc 0**, `Finished dev profile in 5m 38s`, **0 errors** | `wasm-fem.txt` |
+
+### 3.2 Window laws — **46 of 47 green; the one red is the swapped fem3d demo**
+
+Extracted by name from the full runs (a filtered re-run shares the same test binary, so the filter is
+just a projection of the same evidence; the fem panel filter was also run standalone).
+
+| Lane | Window laws |
+|---|---|
+| `cargo test --no-fail-fast -p energy-model -p flow -p dag -p vcs -p note -p sequence -p writer -p animate -p imperative -p remodel` | **42 passed, 0 failed** — every `…stamps…` / `…materialises…` / `…its_slice…` / `…granularity_and_the_tree…` / `…oversized…` law in all ten crates |
+| `cargo test --no-fail-fast -p fem-2d -p fem-3d --features component-app-assembly -- panels::` | fem2d **35 passed, 0 failed**; fem3d 18 passed, 17 failed (§3.4) | `laws-fem.txt` |
+| fem2d artifact-panel window laws | `an_oversized_document_stamps_every_extent_and_materialises_one_viewport` ✅ · `a_closed_container_stamps_its_extent_and_builds_no_child` ✅ · `a_window_request_materialises_exactly_its_own_range` ✅ · `rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select` ✅ |
+| fem3d artifact-panel window laws | the same first three ✅; `rows_declare_their_granularity_…` ❌ — it looks up row `"n1"`, an id the swapped demo no longer contains (§3.4) |
+| **flow generations (new, this packet)** | `an_oversized_generation_list_stamps_its_whole_total_and_materialises_at_most_its_slice` ✅ · `a_closed_generation_list_stamps_its_total_and_builds_no_children` ✅ · `a_generation_window_request_materialises_exactly_its_slice_keyed_by_the_generation_id` ✅ |
+
+### 3.3 Full suites
+
+| Crate | Result | Note |
+|---|---|---|
+| `semio-s-artifact-energy-model` | 6289 passed, **3 failed** | identical to 📓️a5-energy §6.2: the three `sim::tests::p7c*` `RetainedJobPayload` laws. No panel code. |
+| `semio-s-artifact-remodel-remodeling` | 1290 passed, **9 failed** | was 37 in A7; all remaining are `interactive-job.catalog-authority` |
+| `semio-s-artifact-dag-dag` | 176 passed, 28 failed | ditto |
+| `semio-s-artifact-flow-flow` | 131 passed, 95 failed | ditto |
+| `semio-s-artifact-note-note` | 332 passed, 57 failed | ditto |
+| `semio-s-artifact-sequence-sequence` | 73 passed, 130 failed | ditto + retirement witnesses |
+| `semio-s-artifact-imperative-procedure` | 82 passed, 59 failed | ditto |
+| `semio-s-artifact-vcs-vcs` | 97 passed, 18 failed | ditto |
+| `semio-s-artifact-writer-writer` | window + panel laws pass, then the binary **SIGABRTs** in `io::mutations::binary` ("thread caused non-unwinding panic") | 📓️a7 §5.3, unchanged |
+| `semio-s-artifact-animate-presentation` | all four window laws + the panel tests ran; two `tile_editor` scene tests fail | 📓️a7 §5, unchanged |
+| `semio-s-artifact-fem-2d` | **1257 passed, 4 failed** (was 1249/12 before this packet's two fixture fixes) | the 4 are pre-existing, §3.4 |
+| `semio-s-artifact-fem-3d` | 1087 passed, **42 failed** | 25 outside `panels::`, §3.4 |
+
+Logs: `full-a7-energy.txt`, `full-fem.txt`.
+
+**Every failure above is pre-existing and peer-owned, with one shared cause for the A7 set**: the
+framework tool-proof gate refuses the app fixture before any panel is rendered —
+
+```
+tool proof catalog must exactly join migrated generated declarations to live concrete factories:
+FaultCode("interactive-job.catalog-authority") … tool 'removeWidget' … schema='flow.snapshot'
+expected_schema='flow.host_snapshot' … owner_eq=true controller_eq=true schema_eq=false
+```
+
+(`🧰️framework/…/🔌️plugin/🦀️.rs:21838`). Every failing panel test in those ten crates is an
+`render_body(&mut app, …)` app-fixture test that dies there; **every test that drives `render(...)`
+directly — i.e. every window law — passes.** That is exactly 📓️a7-graph-and-list-apps.md §5.1.
+
+### 3.4 fem — what this packet fixed, and what is a peer's moving demo
+
+**Fixed here (regressions genuinely caused by this ticket's new node ledger):**
+
+1. `📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` (fem2d) — `wide_view()` asked for `rows: 128` on three
+   sections. Since F2's ledger, a host request RESERVES `1 + min(rows, UI_BUILT_CHILDREN_MAX)` records
+   off `TREE_WINDOW_BODY_NODE_BUDGET` (= `UI_DOCUMENT_NODES − 1 − TREE_WINDOW_FIXED_NODE_HEADROOM` =
+   `128 − 1 − 16` = 111) before any container is built, so 3 × 129 = 387 reserved the whole budget and
+   every container the host had NOT addressed materialised **zero** rows
+   (`a viewport this tall materialises section nodes whole — left: 0, right: 12`). Eight rows is a slice
+   a host can actually file (`Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`) and still exceeds all three
+   sections' counts. **8 fem2d panel laws went green.** fem3d's copy of this fixture had already been
+   fixed by F2 in the same file (it now asks for 4).
+2. `selected_and_hovered_ids_are_marked_from_the_interaction_snapshot` in **both** fem2d and fem3d —
+   the law rendered twice from ONE `TreeWindows`. That value carries the first-paint budget and the node
+   ledger in `Cell`s, so the second render ran on an exhausted ledger and returned `Err`
+   (`an oversized selection never faults the panel`). Design §5 says "build one `TreeWindows` per body
+   per render"; the fixture now does. **Green in both crates.** (`.is_ok()` also became `.expect(..)`
+   so the next failure names the fault instead of hiding it.)
+
+**NOT fixed (peer-owned, evidence below):**
+
+- **The fem3d demo document was swapped under its tests.** `demo()` is
+  `schema::snapshot::text::fem3d_boot_snapshot()`, which parses `examples::concrete_forest::PRIMARY_TEXT`
+  (asset last written 2026-09-16 20:26). The live document is now **20 nodes / 20 elements / 0 solids /
+  1 material / 2 sections / 2 supports / 2 load cases × 16 loads / 2 combinations**, keyed
+  `lc1b, lc2b, lv0…, l_col1, s_c1, c30, hex30`. The tests still name `n1`, `e1`, `e3`, `s_00`, `n00_g`,
+  `steel`. Proof: `a_selected_node_renders_bound_ordinate_inputs_3d` fails with
+  `no node keyed fem3d-play-inspection.node.x.input in {…"Solids":"0"…}` — the inspector fell through to
+  the document summary because the selected id resolves to no entity. **25 of the 42 fem3d failures are
+  outside `📌️panels` entirely** (`commands::patch_{node,element,load,material,section,solid,support}`,
+  `interaction::gumball::*`, `interaction::entity_kinds_resolve_every_id_of_the_demo`,
+  `standards::…::scene::*`, `fem3d_engine::mesh_preview`, `live_visual`, `viewer::…`) and cannot touch
+  panel trees. The remaining 17 panel failures are the same id mismatch, plus
+  `demo_document_lists_every_section_with_its_own_count` which now fails as
+  `materialises section combinations whole — left: 1, right: 2`: the enlarged demo (9 sections + 82 rows
+  + 3 nested containers ≈ 94 records, of which 27 are reserved by `wide_view`) no longer fits one body's
+  111-record ledger, so the tail section is starved — correct ledger behaviour, an obsolete assertion.
+  **F2 is editing this exact file right now** (it gained a `house()` fixture, a `body_nodes()` helper and
+  a lowered `wide_view` while this packet ran), so R2 deliberately did not rewrite those laws — that is
+  the House-sized law F2 owns.
+- **fem2d's 4 remaining failures** are 📓️a4-fem §4's list, unchanged:
+  `analyses::tests::assembly_job_one_fuel_steps_stay_below_eight_milliseconds` and
+  `mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step` (wall-clock budget laws in
+  the shared `✏️s/🔨️modules/🏗️fem` engine, failing under a load average of 90–190),
+  `editor::fem2d::component::unit_tests::every_route_declares_the_lane_its_handler_emits` and
+  `…::two_instances_converge_on_disjoint_edits` (peer classification/convergence work). None is panel code.
+
+---
+
+## 4. Duplicate `node_key` within one body (F2's new loud SDK error)
+
+Container node keys per body, checked for every app in scope:
+
+| App | Container node keys | Unique? |
+|---|---|---|
+| energy artifact | 11 namespaced section ids + zone/surface ids via `energy_target_id(EntityId)` | ✅ — `EntityId` is documented as "ONE shared space across every `Model` collection" (`…/🕹️interaction/🦀️.rs:92`) |
+| note | `note-play-blocks.blocks` / `.add` + `block_tree_row_id` = `note-play-block:{id}` | ✅ namespaced |
+| sequence | 2 section ids + `sequence-play-document.slot.{step_id}.{slot_name}` | ✅ namespaced |
+| writer | `writer-play-document.ast` + raw AST node ids (path-unique) | ✅ |
+| flow / dag / vcs / animate / imperative / remodel | namespaced section ids only (no nested containers) | ✅ |
+| **fem2d + fem3d artifact** | 9 namespaced section ids **+ raw `case.id` (load-case rows) + raw `combination.id` (combination rows)** | ⚠️ **two separate id spaces, both un-namespaced, in one body** |
+
+⚠️ **fem is the one residual risk.** `📌️panels/🗿️artifact/🦀️.rs` passes `&case.id` and `&combination.id`
+straight to `tree_window_item` as node keys (`🧊️3d` L277 / L293, `◻️2d` L281 / L296). fem validates
+duplicate ids **per collection** (`create_node_duplicate_id_is_fatal`, `mutation.duplicate-id`), never
+across collections, so a document with a load case and a combination both called `uls` would file two
+containers under one node key. **No shipped fem document collides** — I read every example: house
+(`dead/live/snow` vs `uls/sls`), concrete-forest (`dead/live` vs `uls/…`), demo (`dead/live` vs `uls`),
+and the schema/mutation fixtures (`point/self/drop/wind` vs `uls`) — so nothing is red today.
+
+I did NOT rename these keys: a container's node key must equal its row key for the host's
+`data-tree-window-key` addressing, and §8.2 fixes the row key to the raw domain target id that
+`interaction_topology` registers, so changing it would break viewport picks. The clean fix is one of
+(a) fem validating id uniqueness across load cases and combinations, or (b) `TreeWindow` keys becoming
+`(granularity, id)` rather than `id` — both P1/F2 decisions. **Flagged for F2 before the duplicate-key
+error lands.**
+
+---
+
+## 5. Not finished / not run
+
+- The two fem3d items above (demo-id mismatch, obsolete `materialises … whole` assertion) are left to the
+  peer who owns the demo and to F2, with the evidence in §3.4.
+- Wave-3 browser verification is not part of this packet. Note for whoever runs it: the ticket-scoped
+  probe `…/☀️16/ENERGY-3D-MODEL-TREE-INSPECTOR/🐍️energy-panels-probe.mjs` still asserts `/\.more$/i`
+  rows and will fail against a windowed tree (already flagged in 📓️a5-energy §6.5).
+- `<select>` option lists are still clamped at 24 (§1.4) — a contract gap, not app paging.
+- `TREE_WINDOW_FIXED_NODE_HEADROOM = 16` is under-sized for energy's fenestration inspector (§1.5).

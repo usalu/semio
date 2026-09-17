@@ -129,8 +129,8 @@ async fn a_selected_load_case_lists_its_loads_as_picks_3d() {
     assert_eq!(component_at(&json, "fem3d-play-inspection.load-case.self-weight.toggle"), "toggle");
     assert!(json.contains("patchLoadCase"));
     assert!(json.contains("interactionSelect"), "a load row hands the load to the framework-owned selection");
-    assert_eq!(component_at(&json, "l2"), "treeItem", "a pick row is an activatable tree item");
-    assert_eq!(component_at(&json, "l3"), "treeItem");
+    assert_eq!(component_at(&json, "q_l_spine"), "treeItem", "a pick row is an activatable tree item");
+    assert_eq!(component_at(&json, "q_l_b0"), "treeItem");
     assert!(carries_a_tree(&json), "{json}");
 }
 
@@ -152,7 +152,7 @@ async fn a_selected_combination_renders_one_factor_input_per_term_3d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
-    let json = english(&demo(), &["n00_g", "n20_g", "e1"]);
+    let json = english(&demo(), &["lc1b", "lc2b", "l_col1"]);
     assert!(json.contains("3 Selected"), "{json}");
     assert!(json.contains("fem3d-play-inspection.node.x.input"), "the fields belong to the first selected id");
 }

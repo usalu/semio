@@ -86,6 +86,57 @@ fn scanline_decoder_matches_batch_decode() {
 }
 
 #[test]
+fn stepped_scanline_decoder_matches_batch_decode_across_tiny_budgets() {
+    let image = gradient_checkerboard(37, 13);
+    let encoded = encode_png(&image).expect("encode");
+    let batch = decode_png(&encoded).expect("batch decode");
+    let mut scanline = PngScanlineDecoder::from_vec(encoded).expect("scanline decoder");
+    let mut pixels = Vec::new();
+    let mut pending_steps = 0usize;
+    loop {
+        match scanline.step(7).expect("bounded step") {
+            PngScanlineStep::Pending => pending_steps += 1,
+            PngScanlineStep::Row(row) => pixels.extend(row),
+            PngScanlineStep::Done => break,
+        }
+    }
+    assert!(pending_steps > image.height as usize, "a 7-unit budget must split every scanline across steps");
+    assert_eq!(pixels, batch.pixels);
+}
+
+#[test]
+fn stepped_scanline_decoder_rejects_corrupt_idat_crc_and_truncated_stream() {
+    let image = gradient_checkerboard(9, 9);
+    let encoded = encode_png(&image).expect("encode");
+    let drain = |bytes: Vec<u8>| -> Result<(), RasterError> {
+        let mut decoder = PngScanlineDecoder::from_vec(bytes)?;
+        while decoder.next_row()?.is_some() {}
+        Ok(())
+    };
+    let idat = encoded.windows(4).position(|window| window == b"IDAT").expect("IDAT chunk");
+    let mut corrupt = encoded.clone();
+    corrupt[idat + 8] ^= 0x01;
+    assert!(drain(corrupt).is_err(), "a flipped IDAT byte fails its chunk CRC or the zlib checksum");
+    let len = u32::from_be_bytes([encoded[idat - 4], encoded[idat - 3], encoded[idat - 2], encoded[idat - 1]]) as usize;
+    let mut truncated = encoded[..idat + 4].to_vec();
+    let short = len / 2;
+    truncated[idat - 4..idat].copy_from_slice(&(short as u32).to_be_bytes());
+    let mut chunk = b"IDAT".to_vec();
+    chunk.extend_from_slice(&encoded[idat + 4..idat + 4 + short]);
+    truncated.extend_from_slice(&encoded[idat + 4..idat + 4 + short]);
+    let mut crc = 0xFFFF_FFFFu32;
+    for &byte in &chunk {
+        crc ^= byte as u32;
+        for _ in 0..8 {
+            crc = if crc & 1 != 0 { 0xEDB88320 ^ (crc >> 1) } else { crc >> 1 };
+        }
+    }
+    truncated.extend_from_slice(&(crc ^ 0xFFFF_FFFF).to_be_bytes());
+    truncated.extend_from_slice(&encoded[encoded.len() - 12..]);
+    assert!(drain(truncated).is_err(), "a correctly framed but truncated zlib stream never decodes");
+}
+
+#[test]
 fn crc_mismatch_is_rejected() {
     let image = gradient_checkerboard(2, 2);
     let mut encoded = encode_png(&image).expect("encode");

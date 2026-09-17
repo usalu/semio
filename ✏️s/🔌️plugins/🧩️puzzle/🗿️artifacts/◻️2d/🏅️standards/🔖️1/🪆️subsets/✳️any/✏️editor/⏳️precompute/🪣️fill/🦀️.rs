@@ -376,9 +376,6 @@ fn fill_bounds_overlap_with(left: [f64; 4], right: [f64; 4], slack: f64) -> bool
     left[0] <= right[2] && left[2] >= right[0] && left[1] <= right[3] && left[3] >= right[1]
 }
 
-fn fill_bounds_overlap(left: [f64; 4], right: [f64; 4]) -> bool {
-    fill_bounds_overlap_with(left, right, 0.0)
-}
 
 fn fill_run_fault(context: &mut StepContext<'_>, code: &str) -> StepOutcome {
     match context.payload_from_bytes(JobPayloadStream::Fault, code.as_bytes()) {
@@ -1183,10 +1180,18 @@ impl Puzzle2dFillRunJob {
         ToolRunTraceSubject::Placement2d { shape: event.kind_index as u32, position: [event.position[0] as f32, event.position[1] as f32], rotation: 0.0 }
     }
 
+    /// ⏯️ Records ONE candidate's verdict. It deliberately spends no fuel: this run declares its unit as
+    /// `placements` (`🗣️terminology` `fill_unit`) and reports `completed = placements.len()`, so a unit of
+    /// fuel has to BE a placement or the tool-run panel's `Step` lies. It used to charge a unit per
+    /// decided candidate, and on a crowded board almost every candidate is a `host-collision` rejection —
+    /// so `Step` burned its single unit of fuel (`⏯️tool-run` grants exactly 1 while `Paused`) on a
+    /// rejection and the census never moved: measured 2026-09-17 as `atPause=29 after=29 waitedMs=30131`.
+    /// The tick is still bounded without this charge, by `deadline_exceeded()` and by the trace writer's
+    /// `FILL_RUN_TICK_FLUSH_BYTES` — a rejection costs bytes, and the loop yields on them.
     fn decide(&mut self, context: &mut StepContext<'_>, live: FillRunLive, reason: FillRunReason) {
+        let _ = context;
         if !self.replaying() {
             self.writer.upsert(live.key, reason.verdict(), reason.code(), live.subject);
-            context.consume_fuel(1);
         }
     }
 

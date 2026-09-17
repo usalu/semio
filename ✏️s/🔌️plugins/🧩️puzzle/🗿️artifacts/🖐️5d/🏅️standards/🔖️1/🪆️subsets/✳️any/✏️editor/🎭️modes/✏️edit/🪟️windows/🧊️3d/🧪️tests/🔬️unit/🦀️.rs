@@ -15,7 +15,7 @@ fn document_with_one_gripped_part() -> Puzzle5dDocument {
         "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [{ "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": { "position": [1.0, 0.0, 0.0] } }] }],
         "fasteners": []
     });
-    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&serde_json::from_str(&projection.to_string()).expect("projection"))).expect("document")
+    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document")
 }
 
 fn scene_with(interaction: Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime, active_utility: &str) -> Puzzle5dScene {
@@ -32,7 +32,7 @@ fn part_selection() -> Puzzle5dInteractionSnapshot {
 fn world_instances_paint_the_live_selection_and_hover() {
     let document = document_with_one_gripped_part();
     let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()] };
-    let instances: Value = serde_json::from_str(&world_instances_json(&document, &marked, None)).expect("instancesJson");
+    let instances: Value = serde_json::from_str::<serde_json::Value>(&world_instances_json(&document, &marked, None)).expect("instancesJson");
     assert_eq!(instances[0]["selected"], serde_json::json!(true));
     assert_eq!(instances[0]["hovered"], serde_json::json!(true));
     let idle: Value = serde_json::from_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None)).expect("instancesJson");
@@ -87,7 +87,7 @@ fn gumball_needs_a_transform_utility_a_selection_and_a_flag() {
 /// built from — the render half of "dispatch → config changes → measure reflects it".
 #[test]
 fn window_measures_expose_every_world_option_group() {
-    let labels = crate::editor::puzzle5d::terminology::Puzzle5dLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native);
+    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
     let runtime = Puzzle5dRuntime { grid_visible: false, grid_spacing: 4.0, lod_automatic: false, lod_manual: 250.0, ..Puzzle5dRuntime::default() };
     let envelope = scene_with(Puzzle5dInteractionSnapshot::default(), runtime, "select");
     let measures = window_measures(&envelope, labels);

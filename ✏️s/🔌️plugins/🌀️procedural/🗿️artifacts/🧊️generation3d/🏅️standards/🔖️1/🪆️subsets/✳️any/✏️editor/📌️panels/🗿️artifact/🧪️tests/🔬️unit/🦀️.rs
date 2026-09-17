@@ -225,4 +225,29 @@ fn a_document_window_request_materialises_exactly_its_slice() {
     assert_eq!(offset, 100, "the stamped offset is the requested one");
     assert_eq!(total as usize, nodes.len(), "the stamped total stays the whole document");
 }
+
+/// ⚖️ LAW: every windowed container in this body has a DISTINCT node key. A `TreeWindowRequest` is
+/// addressed by `(body_key, node_key)`, so two containers sharing a key would both answer one
+/// request and neither could be scrolled on its own. The outline mixes authored section keys
+/// (`procedural-play-graph.*`) with RAW widget ids for the per-node port windows, which is exactly
+/// where a document could collide with the panel's own namespace.
+#[test]
+fn every_windowed_container_carries_a_distinct_node_key() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    fn collect(node: &serde_json::Value, out: &mut Vec<String>) {
+        if node["component"]["window"].is_object() {
+            out.push(node["key"].as_str().unwrap_or_default().to_string());
+        }
+        for child in node["children"].as_array().cloned().unwrap_or_default().iter() {
+            collect(child, out);
+        }
+    }
+    let (nodes, edges) = oversized_graph();
+    let projection = outline_projection(&TreeWindows::unhosted(), &nodes, &edges);
+    let mut keys = Vec::new();
+    collect(&projection, &mut keys);
+    assert!(keys.len() >= 2, "the outline publishes windowed containers: {keys:?}");
+    let unique: std::collections::BTreeSet<&String> = keys.iter().collect();
+    assert_eq!(unique.len(), keys.len(), "two windowed containers share a node key: {keys:?}");
+}
 //#endregion 🪟️WindowLaws

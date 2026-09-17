@@ -16,7 +16,7 @@ async fn render_walks_element_children() {
     let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     let section = node.children.get(0).expect("tree section");
     let root = section.children.get(0).expect("tree root");
-    assert_eq!(root.key.as_str(), "");
+    assert_eq!(root.key.as_str(), XML_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
     let child = root.children.get(0).expect("child");
     assert_eq!(child.key.as_str(), "0");
 }

@@ -6,7 +6,9 @@
       6.0,
       0.0,
       0.0
-    ]
+    ],
+    "hidden": false,
+    "locked": false
   },
   "index": null
 }

@@ -16,6 +16,10 @@ pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyM
             let start = run.offset as usize;
             let bytes = pixels
                 .map(|buffer| {
+                    // 🎨️ A sparse (never painted) layer reads as the opaque-white default.
+                    if buffer.is_empty() {
+                        return vec![255; run.bytes.len()];
+                    }
                     let end = (start + run.bytes.len()).min(buffer.len());
                     if start < buffer.len() {
                         buffer[start..end].to_vec()

@@ -11,6 +11,10 @@ use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindD
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
+/// 🆔️ The document root's node id — the same token the editor window encodes. It must be non-empty:
+/// a tree row built with an empty id falls back to its positional `#0` key, which no
+/// `TreeWindowRequest` can name.
+pub const JSON_ROOT_NODE_ID: &str = "$";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -41,7 +45,7 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn node_view(path: &[String], key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
-    let id = path.join("/");
+    let id = if path.is_empty() { JSON_ROOT_NODE_ID.to_string() } else { path.join("/") };
     let prefix = key_label.map(|key| format!("{key}: ")).unwrap_or_default();
     match value {
         JsonValue::Object { members } => {

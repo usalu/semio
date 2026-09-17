@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::fem3d::terminology::fem3d_labels;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{ComponentTree, Locale, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
-use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
+use semio_framework_ui_contract::{TreeWindow, TREE_WINDOW_PATH_SEPARATOR, UI_BUILT_CHILDREN_MAX};
 
 //#region 🔖️Fixtures
 fn demo() -> Fem3dSnapshot {
@@ -27,9 +27,11 @@ fn german() -> &'static Fem3dLabels {
 /// containers in front of it. A fixture asking three times for 128 rows would reserve the whole
 /// budget and starve the six sections the host has not addressed — which is exactly the cap the React
 /// host applies to its own report (`Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`). These three sections
-/// hold two materials, one section and one analysis row, so eight is generous.
+/// hold one material, two sections and one analysis row between them, so two is exactly enough and
+/// leaves the rest of the budget to the six the host has not addressed — which the bundled
+/// concrete-forest document needs, at 97 of the 103 records a body may spend.
 fn wide_view() -> ViewModel {
-    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 8)).collect();
+    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 2)).collect();
     ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..Default::default() }
 }
 
@@ -87,6 +89,13 @@ fn extent_of(node: &BuiltNode) -> usize {
 /// 🪟️ One host window request for a container of this body.
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
     TreeWindowRequest { body_key: BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
+}
+
+/// 🔑️ A NESTED container is addressed by its window PATH — its parent section's key, the separator,
+/// then its own key — never by its bare id. That is what lets a load case and a combination both
+/// called `uls` keep independent windows while their node keys stay the raw pick target ids.
+fn nested_request(section_suffix: &str, node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
+    request(&format!("{TREE_NAMESPACE}.{section_suffix}{TREE_WINDOW_PATH_SEPARATOR}{node_key}"), open, offset, rows)
 }
 
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
@@ -178,8 +187,8 @@ async fn demo_document_lists_every_section_with_its_own_count() {
         assert_eq!(node.children.len(), count.max(1), "a viewport this tall materialises section {suffix} whole");
     }
     assert!(json.contains("Modal Count 3 · Buckling Count 3 · Deformation Scale 300"), "the analysis row carries the three settings");
-    assert_eq!(document.nodes.len(), 16, "the bundled demo is the two-storey hall");
-    assert_eq!(document.elements.len(), 16);
+    assert_eq!(document.nodes.len(), 20, "the bundled demo is the concrete forest");
+    assert_eq!(document.elements.len(), 20);
 }
 
 /// 🌳️ Row ids ARE the raw entity ids: the framework marks domain selection by them, so a composite
@@ -190,14 +199,13 @@ async fn rows_are_keyed_by_the_raw_entity_id_and_bound_to_the_fem3d_domain() {
     let tree = build(&document, english());
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM3D_INTERACTION_DOMAIN));
-    assert!(row_keys(section_node(&tree, "nodes")).contains(&"n00_g"));
-    assert!(row_keys(section_node(&tree, "elements")).contains(&"e1"));
-    assert!(row_keys(section_node(&tree, "solids")).contains(&"sol1"));
-    assert!(row_keys(section_node(&tree, "supports")).contains(&"s_00"));
+    assert!(row_keys(section_node(&tree, "nodes")).contains(&"lc1b"));
+    assert!(row_keys(section_node(&tree, "elements")).contains(&"l_col1"));
+    assert!(row_keys(section_node(&tree, "supports")).contains(&"s_c1"));
     assert!(row_keys(section_node(&tree, "load-cases")).contains(&"dead"));
     assert!(row_keys(section_node(&tree, "combinations")).contains(&"uls"));
-    assert!(row_keys(section_node(&tree, "materials")).contains(&"steel"));
-    assert!(row_keys(section_node(&tree, "sections")).contains(&"hea200"));
+    assert!(row_keys(section_node(&tree, "materials")).contains(&"c30"));
+    assert!(row_keys(section_node(&tree, "sections")).contains(&"hex30"));
 }
 
 /// 📋️ A load case row owns one child row per load, and a combination row one read-only child per
@@ -208,10 +216,11 @@ async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms()
     let tree = build(&document, english());
     let cases = section_node(&tree, "load-cases");
     let dead = cases.children.iter().find(|row| row.key.as_str() == "dead").expect("dead case row");
-    assert_eq!(row_keys(dead), vec!["l1"]);
-    assert_eq!(window_of(dead).total, 1, "a case row stamps the extent of its own loads");
+    assert_eq!(window_of(dead).total, 16, "a case row stamps the extent of its own loads");
+    assert!(row_keys(dead).contains(&"d_l_spine"), "{:?}", row_keys(dead));
     let live = cases.children.iter().find(|row| row.key.as_str() == "live").expect("live case row");
-    assert_eq!(row_keys(live), vec!["l2", "l3"]);
+    assert_eq!(window_of(live).total, 16);
+    assert!(row_keys(live).contains(&"q_l_spine"), "{:?}", row_keys(live));
     let uls = section_node(&tree, "combinations").children.iter().find(|row| row.key.as_str() == "uls").expect("uls row");
     assert_eq!(row_keys(uls), vec![format!("{TREE_NAMESPACE}.term.uls.dead").as_str(), format!("{TREE_NAMESPACE}.term.uls.live").as_str()]);
     assert_eq!(row_labels(uls), vec!["1.35 dead".to_string(), "1.5 live".to_string()]);
@@ -230,20 +239,18 @@ async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms()
 async fn rows_carry_the_human_label_of_their_entity() {
     let document = demo();
     let tree = build(&document, english());
-    assert!(row_labels(section_node(&tree, "nodes")).contains(&"n20_l1 · (8.00, 0.00, 2.80)".to_string()));
-    assert!(row_labels(section_node(&tree, "elements")).contains(&"e1 · Frame n00_g → n00_l1".to_string()));
-    assert!(row_labels(section_node(&tree, "solids")).contains(&"sol1 · First Floor Slab · 4 pts · Axis Z".to_string()));
-    assert!(row_labels(section_node(&tree, "supports")).contains(&"ss_0 · sc0 · Tx Ty Tz".to_string()));
-    assert!(row_labels(section_node(&tree, "load-cases")).contains(&"Dead Load · 1 Load · Self Weight".to_string()));
-    assert!(row_labels(section_node(&tree, "load-cases")).contains(&"Live Load · 2 Loads".to_string()));
+    assert!(row_labels(section_node(&tree, "nodes")).contains(&"lc1b · (2.70, 2.34, 0.00)".to_string()));
+    assert!(row_labels(section_node(&tree, "elements")).contains(&"l_col1 · Frame lc1b → lc1t".to_string()));
+    assert!(row_labels(section_node(&tree, "supports")).contains(&"s_c1 · lc1b · Tx Ty Tz Rx Ry Rz".to_string()));
+    assert!(row_labels(section_node(&tree, "load-cases")).contains(&"Dead Load · 16 Loads · Self Weight".to_string()));
+    assert!(row_labels(section_node(&tree, "load-cases")).contains(&"Live Load · 16 Loads".to_string()));
     assert!(row_labels(section_node(&tree, "combinations")).contains(&"ULS · 1.35 dead + 1.5 live".to_string()));
-    assert!(row_labels(section_node(&tree, "materials")).contains(&"Steel S235 · E 210 GPa".to_string()));
-    assert!(row_labels(section_node(&tree, "sections")).contains(&"HEA 200 · A 0.00538 m² · Iy 3.69e-5 m⁴".to_string()));
+    assert!(row_labels(section_node(&tree, "materials")).contains(&"C30/37 Concrete · E 33 GPa".to_string()));
+    assert!(row_labels(section_node(&tree, "sections")).contains(&"Hexagonal Column R 0.30 · A 0.233827 m² · Iy 0.00438425 m⁴".to_string()));
 
     let live = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "live").expect("live case row");
     let loads = row_labels(live);
-    assert!(loads.contains(&"Tz −5000 N @ n20_l1".to_string()), "{loads:?}");
-    assert!(loads.contains(&"1500 Pa @ sol1".to_string()), "{loads:?}");
+    assert!(loads.contains(&"wz −4952 N/m @ l_spine".to_string()), "{loads:?}");
 }
 
 /// 🔢️ A member UDL lists only its non-zero components, and a pathological name is clipped rather
@@ -270,11 +277,11 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
 async fn german_labels_resolve_across_the_whole_tree() {
     let document = demo();
     let json = projection(build(&document, german()));
-    assert!(json.contains("Knoten (16)"), "{json}");
-    assert!(json.contains("Elemente (16)"));
-    assert!(json.contains("Volumenkörper (1)"));
+    assert!(json.contains("Knoten (20)"), "{json}");
+    assert!(json.contains("Elemente (20)"));
+    assert!(json.contains("Volumenkörper (0)"));
     assert!(json.contains("Lastfälle (2)"));
-    assert!(json.contains("Rahmenstab n00_g → n00_l1"));
+    assert!(json.contains("Rahmenstab lc1b → lc1t"));
     assert!(json.contains("Eigengewicht"));
     assert!(json.contains("Anzahl Eigenformen"));
     assert!(!json.contains("Nodes ("));
@@ -289,7 +296,7 @@ async fn german_labels_resolve_across_the_whole_tree() {
 async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select() {
     let document = demo();
     let tree = build(&document, english());
-    let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == "n00_g").expect("n00_g row");
+    let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == "lc1b").expect("lc1b row");
     assert!(row.bindings.iter().next().is_none(), "a pick row binds no action of its own");
     let Component::TreeItem(props) = &row.component else { panic!("tree item") };
     assert_eq!(props.granularity.as_ref().map(|text| text.as_str()), Some(FEM3D_GRANULARITY_NODE));
@@ -313,14 +320,19 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let document = demo();
     let view = wide_view();
     let windows = TreeWindows::for_body(&view, BODY_KEY);
-    let interaction = Fem3dInteractionSnapshot { selected_ids: vec!["n00_g".into(), "e1".into()], hovered_ids: vec!["s_00".into()] };
+    let interaction = Fem3dInteractionSnapshot { selected_ids: vec!["lc1b".into(), "l_col1".into()], hovered_ids: vec!["s_c1".into()] };
     let tree = render(&document, &interaction, english(), &windows).expect("marked tree");
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM3D_INTERACTION_DOMAIN));
     let wide: Vec<String> = (0..80).map(|index| format!("n{index}")).collect();
     assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
     let interaction = Fem3dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
-    assert!(render(&document, &interaction, english(), &windows).is_ok(), "an oversized selection never faults the panel");
+    // 🪟️ A fresh `TreeWindows` per render: the value carries the render's first-paint budget and its
+    // body-wide node ledger in `Cell`s, so reusing the one the render above already spent would ask
+    // this panel to build a whole tree out of an exhausted ledger — which is not what the host does
+    // (`render_body` builds one per body per render).
+    let windows = TreeWindows::for_body(&view, BODY_KEY);
+    render(&document, &interaction, english(), &windows).expect("an oversized selection never faults the panel");
 }
 
 /// 🪆️ The app's manifest declares this panel under the framework's artifact tab, with the body key
@@ -369,7 +381,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
     let document = oversized();
-    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), request("wind", Some(false), 0, 48)]);
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), nested_request("load-cases", "wind", Some(false), 0, 48)]);
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a closed container still assembles");
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes).total, 60, "a closed section still announces its extent");
@@ -384,7 +396,7 @@ async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_own_range() {
     let document = oversized();
-    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request("wind", None, 5, 4)]);
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), nested_request("load-cases", "wind", None, 5, 4)]);
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes), TreeWindow { total: 60, offset: 20 });
@@ -425,7 +437,7 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
         request(&format!("{TREE_NAMESPACE}.supports"), Some(true), 0, 20),
         request(&format!("{TREE_NAMESPACE}.load-cases"), Some(true), 0, 4),
     ];
-    requests.extend((0..4).map(|case| request(&format!("hc{case}"), Some(true), 0, 8)));
+    requests.extend((0..4).map(|case| nested_request("load-cases", &format!("hc{case}"), Some(true), 0, 8)));
     let cost: u32 = requests.iter().map(|entry| 1 + entry.rows).sum();
     assert!(cost as usize <= semio_framework_plugin::TREE_WINDOW_BODY_NODE_BUDGET, "the fixture asks what the host is allowed to ask: {cost}");
     let view = viewing(requests);

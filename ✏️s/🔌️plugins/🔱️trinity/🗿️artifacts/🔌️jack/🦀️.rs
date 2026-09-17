@@ -323,6 +323,16 @@ pub fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
     jack_working_scene_for_handle(&snapshot.content)
 }
 
+/// 🌱️ The `content` member's genesis pack — the composed `s.stdio.semio` graph child a whole-document
+/// load materialises; the shell sends `members: []`, so without it the archive closure is `Incomplete`.
+pub fn genesis_jack_child_pack(snapshot: &JackSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
+        let scene = jack_working_scene(snapshot);
+        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&jack_content_snapshot_from_working(&scene.nodes, &scene.edges))
+    })
+}
+
 /// 🏗️ Mints a new content-addressed handle and transfers its scene into that exact owner.
 pub fn jack_content_child_with_owner(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
     let handle = jack_content_child_handle(&nodes, &edges);
@@ -739,16 +749,16 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 #[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

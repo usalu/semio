@@ -1,4 +1,4 @@
-import { toolJobPuzzleReservedRoutesExact } from "../../../../../📜️script.ts";
+import { toolJobPuzzle2dReservedRoutesExact, toolJobPuzzleReservedRoutesExact } from "../../../../../📜️script.ts";
 
 /** 🧪️ Executes tool job puzzle reserved routes policy assertions. */
 export function toolJobPuzzleReservedRoutesSelfTests(): number {
@@ -35,5 +35,37 @@ ${["Copy", "Cut", "Paste", "Import"].map((name) => `impl InteractiveJob for Puzz
     ["host terminal close witness omitted", () => exact(source, host.replace("WorkerJobCloseStep::Complete if session.terminal_is_empty()", "WorkerJobCloseStep::Complete"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle5d ${name} was falsely accepted.`);
+  return mutations.length + 1 + toolJobPuzzle2dReservedRoutesSelfTests(host);
+}
+
+/** 🧪️ Executes the puzzle 2d half of the reserved-routes policy — its clipboard producer is the
+ * one-step `Puzzle2dClipboardJob`, so the fixture proves route ownership, the app-owned fragment
+ * vocabulary, and the cancellable complete-before-output step rather than 5d's fixed-page ingress. */
+export function toolJobPuzzle2dReservedRoutesSelfTests(host: string): number {
+  const source = `
+const PUZZLE2D_CLIPBOARD_SCHEMA: &str = "puzzle.2d.clipboard.v1";
+fn puzzle2d_copy_fragment_from(fixture: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {}
+fn puzzle2d_cut_operations_from(fixture: &Value, node_ids: &[String]) -> Result<Vec<Puzzle2dMutation>, ClipboardError> {}
+fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<(Vec<Puzzle2dMutation>, Vec<String>), ClipboardError> {}
+impl InteractiveJob for Puzzle2dClipboardJob { fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome { if cx.is_cancelled() { return StepOutcome::Cancelled; } let emit = self.emit(); completion.complete(Ok(emit), EphemeralEmit::default()); let output = puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput, &self.raw_wire); StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }) } fn begin_close(&mut self) { self.closing = true; } fn terminal_is_empty(&self) -> bool { self.closing } }
+impl ArtifactReservedJob for Puzzle2dClipboardJob {}
+impl ArtifactEditor for Puzzle2dPlayApp { fn clipboard_media_type() {} fn copy_fragment(doc: &ArtifactView<'_, S>) {} fn cut_operations(doc: &ArtifactView<'_, S>) {} fn paste_operations(doc: &ArtifactView<'_, S>) {} fn build_reserved_tool_job(request: R) { if matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") { return Ok(Some(ArtifactReservedToolJob::new(Puzzle2dClipboardJob::new(request)))); } if request.tool_id.as_str() != PUZZLE2D_IMPORT_TOOL_ID { return Ok(None); } let ArtifactReservedToolInput::Media { port, media } = &request.input else {}; Ok(Some(ArtifactReservedToolJob::new(Puzzle2dImportJob::new(request, port, media)))) } }
+`;
+  const exact = (candidate = source, candidateHost = host) => toolJobPuzzle2dReservedRoutesExact(candidate, candidateHost);
+  if (!exact()) throw new Error("[verify interactivity tool-jobs] self-test Puzzle2d reserved routes valid fixture was falsely rejected.");
+  const mutations: readonly [string, () => boolean][] = [
+    ["app-owned reserved factory restored", () => exact(`puzzle2d_reserved_factory!(Puzzle2dCopyJobFactory, "copy", "puzzle.2d.reserved.copy.v1");\n${source}`)],
+    ["clipboard route branch handed back to the framework stub", () => exact(source.replace('if matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") { return Ok(Some(ArtifactReservedToolJob::new(Puzzle2dClipboardJob::new(request)))); }', ""))],
+    ["import-media branch omitted", () => exact(source.replace("ArtifactReservedToolJob::new(Puzzle2dImportJob::new(", "ArtifactReservedToolJob::new(OtherImportJob::new("))],
+    ["owned fragment schema omitted", () => exact(source.replace('const PUZZLE2D_CLIPBOARD_SCHEMA: &str = "puzzle.2d.clipboard.v1";', ""))],
+    ["cut operations producer omitted", () => exact(source.replace("fn puzzle2d_cut_operations_from(", "fn unused_cut_operations_from("))],
+    ["paste operations hook omitted", () => exact(source.replace("fn paste_operations(doc: &ArtifactView<'_, S>) {}", ""))],
+    ["route cancellation omitted", () => exact(source.replace("if cx.is_cancelled() { return StepOutcome::Cancelled; }", ""))],
+    ["retained output prepared before completion", () => exact(source.replace("completion.complete(Ok(emit), EphemeralEmit::default()); let output = puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput, &self.raw_wire);", "let output = puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput, &self.raw_wire); completion.complete(Ok(emit), EphemeralEmit::default());"))],
+    ["terminal close witness omitted", () => exact(source.replace("fn terminal_is_empty(&self) -> bool { self.closing }", ""))],
+    ["reserved job trait omitted", () => exact(source.replace("impl ArtifactReservedJob for Puzzle2dClipboardJob {}", ""))],
+    ["host bounded-emit guard omitted", () => exact(source, host.replace("Self::ensure_reserved_emit_bounded(action);", ""))],
+  ];
+  for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle2d ${name} was falsely accepted.`);
   return mutations.length + 1;
 }

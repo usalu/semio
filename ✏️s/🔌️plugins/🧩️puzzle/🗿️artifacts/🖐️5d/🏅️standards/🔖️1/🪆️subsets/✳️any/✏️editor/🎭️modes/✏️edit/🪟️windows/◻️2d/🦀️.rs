@@ -11,7 +11,7 @@ use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
-use semio_framework_plugin::{Board2dScene, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 
@@ -197,6 +197,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         placement_compatibility_json: envelope.document.kind_compatibility.clone().unwrap_or(json!([])).to_string(),
         lod_mode: envelope.runtime.lod_mode.clone(),
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
+        area_brush_size: None,
         domain_id: Some(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN.into()),
         suggestion_menu_json: None,
         tool_run_trace: None,

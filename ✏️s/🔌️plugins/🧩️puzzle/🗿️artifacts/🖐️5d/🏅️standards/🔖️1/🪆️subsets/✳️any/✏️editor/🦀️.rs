@@ -85,6 +85,9 @@ pub const PUZZLE5D_INTERACTION_DOMAIN: &str = "vortex";
 pub const PUZZLE5D_GRANULARITY_PART: &str = "part";
 pub const PUZZLE5D_GRANULARITY_GRIP: &str = "grip";
 pub const PUZZLE5D_GRANULARITY_FASTENER: &str = "fastener";
+/// 🧊️ The granularity a target-volume row picks with — puzzle 3d's own `targetVolume` spelling, so the
+/// two artifacts' outliners, inspectors and hosts read one vocabulary.
+pub const PUZZLE5D_GRANULARITY_TARGET_VOLUME: &str = "targetVolume";
 /// 🐁️ The pointer hover channel of the `vortex` domain — the one channel both panes paint from.
 pub const PUZZLE5D_HOVER_CHANNEL: &str = "pointer";
 
@@ -126,18 +129,14 @@ pub const PUZZLE5D_CHUNK_SIZE_MAX: f64 = 512.0;
 /// `crate::Puzzle5dSnapshot` — see that artifact's `🔖️ValueBridge` region — so
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
-pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT, "capsule-dream"));
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::concrete_forest::SOURCE.document_json().to_string());
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE.document_json().to_string());
+pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::capsule_dream::SOURCE.document_json().to_string());
 static CONCRETE_FOREST_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str()));
 static NAKAGIN_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()));
 static CAPSULE_DREAM_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CAPSULE_DREAM_EXAMPLE_JSON.as_str()));
 static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(empty_document);
 
-fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
-    dsl::json::to_json_string(&projection)
-}
 
 const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
 const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
@@ -376,9 +375,9 @@ pub struct Puzzle5dDocument {
     pub target_volumes: Vec<Puzzle5dTargetVolume>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub meta: Option<serde_json::Value>,
-    #[serde(default, rename = "kindCatalogs")]
+    #[serde(default, rename = "kindCatalogs", skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<serde_json::Value>,
-    #[serde(default, rename = "kindCompatibility")]
+    #[serde(default, rename = "kindCompatibility", skip_serializing_if = "Option::is_none")]
     pub kind_compatibility: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
@@ -400,8 +399,12 @@ pub fn empty_document() -> Puzzle5dDocument {
     Puzzle5dDocument { schema: PUZZLE5D_SCHEMA.into(), domain: "architecture".into(), parts: Vec::new(), fasteners: Vec::new(), target_volumes: Vec::new(), meta: None, kind_catalogs: None, kind_compatibility: None, label: None }
 }
 
+/// 📥️ Decodes a SHIPPED example's JSON into the editor twin. A failure here is a build defect in the
+/// example asset, never user input, so it is loud: the silent `empty_document()` fallback this used to
+/// carry is what let the 2026-09-17 example regression ship a zero-part Nakagin and Capsule Dream.
+/// User-supplied JSON arrives through `📥️import-fixture`, which refuses with a notice instead.
 pub fn document_from_json(json_text: &str) -> Puzzle5dDocument {
-    serde_json::from_str::<Puzzle5dDocument>(json_text).unwrap_or_else(|_| empty_document())
+    serde_json::from_str::<Puzzle5dDocument>(json_text).unwrap_or_else(|error| panic!("puzzle5d example document decodes: {error}"))
 }
 
 pub fn concrete_forest_example_document() -> Puzzle5dDocument {
@@ -873,6 +876,9 @@ impl Puzzle5dInteractionSnapshot {
     pub fn selected_fastener_ids(&self) -> &[String] {
         self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)
     }
+    pub fn selected_target_volume_ids(&self) -> &[String] {
+        self.selected_ids(PUZZLE5D_GRANULARITY_TARGET_VOLUME)
+    }
 
     /// 🎨️ Every marked id regardless of granularity — what the board pane paints as its selection and
     /// the world pane matches instances against.
@@ -1010,7 +1016,7 @@ pub fn puzzle5d_kind_catalog_label(document: &Puzzle5dDocument, kind_id: &str) -
         .into_iter()
         .flatten()
         .find(|entry| entry.get("id").and_then(serde_json::Value::as_str) == Some(kind_id))
-        .map(crate::editor::puzzle5d::panels::catalogue::catalog_kind_label)
+        .map(catalogue::catalog_kind_label)
         .unwrap_or_else(|| kind_id.to_string())
 }
 
@@ -1063,6 +1069,47 @@ pub fn puzzle5d_next_part_label(parts: &[Puzzle5dPart], document: &Puzzle5dDocum
                 }
             }
             None => unlabeled += 1,
+        }
+    }
+    max = max.max(unlabeled);
+    if max == 0 { root } else { format!("{root} {}", max + 1) }
+}
+
+/// 🔢️ `puzzle5d_next_part_label` read off the JSON projection instead of the typed document — the
+/// numbering a RETAINED creation Work needs, because those works only ever hold `Puzzle5dPlaySnapshot`'s
+/// projection. Same precedence and the same `puzzle5d_label_root`/`puzzle5d_label_number` arithmetic, so
+/// a part created by the palette and a part created by `addNode` land on the same series.
+pub fn puzzle5d_next_part_label_from_projection(projection: &Value, kind_id: &str) -> String {
+    let catalog_base = projection
+        .get("kindCatalogs")
+        .and_then(|catalogs| catalogs.get("parts"))
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .find(|entry| entry.get("id").and_then(Value::as_str) == Some(kind_id))
+        .and_then(|entry| ["label", "name", "id"].into_iter().find_map(|key| entry.get(key).and_then(Value::as_str).filter(|value| !value.is_empty())))
+        .unwrap_or(kind_id)
+        .to_string();
+    let peer_label = |part: &Value| part.get("3d").and_then(|pose| pose.get("label")).and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string);
+    let peers: Vec<String> = projection
+        .get("parts")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|part| part.get("partKind").and_then(Value::as_str) == Some(kind_id))
+        .map(|part| peer_label(part).unwrap_or_default())
+        .collect();
+    if peers.is_empty() {
+        return catalog_base;
+    }
+    let root = peers.iter().find(|label| !label.is_empty()).map(|label| puzzle5d_label_root(label)).unwrap_or(catalog_base);
+    let mut max = 0u32;
+    let mut unlabeled = 0u32;
+    for label in &peers {
+        if label.is_empty() {
+            unlabeled += 1;
+        } else if let Some(number) = puzzle5d_label_number(label, &root) {
+            max = max.max(number);
         }
     }
     max = max.max(unlabeled);
@@ -4325,8 +4372,13 @@ pub fn puzzle5d_cut_operations(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[Stri
     if parts.is_empty() {
         return Vec::new();
     }
-    let remove_part_ids: HashSet<&str> = parts.iter().map(|part| part.id.as_str()).collect();
-    let remove_fastener_ids: HashSet<&str> = fasteners.iter().map(|fastener| fastener.id.as_str()).collect();
+    // 🔒️ A LOCKED part is copied but never removed — a lock exists precisely to refuse a destructive
+    // gesture — and the fasteners of a surviving part survive with it, or the document is left half-cut.
+    // `Puzzle5dCutJob` applies the identical rule on the retained route; the two must never disagree.
+    let locked: HashSet<&str> = parts.iter().filter(|part| part.part_2d.locked.unwrap_or(false)).map(|part| part.id.as_str()).collect();
+    let remove_part_ids: HashSet<&str> = parts.iter().map(|part| part.id.as_str()).filter(|id| !locked.contains(id)).collect();
+    let remove_fastener_ids: HashSet<&str> =
+        fasteners.iter().filter(|fastener| !locked.contains(owning_part_id_local(&fastener.source)) && !locked.contains(owning_part_id_local(&fastener.target))).map(|fastener| fastener.id.as_str()).collect();
     let mut after = document;
     after.parts.retain(|part| !remove_part_ids.contains(part.id.as_str()));
     after.fasteners.retain(|fastener| !remove_fastener_ids.contains(fastener.id.as_str()));
@@ -4769,6 +4821,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 enum Puzzle5dTransformStage {
     Selection,
     Parts,
+    Volumes,
     Complete,
     Closing,
 }
@@ -4778,6 +4831,7 @@ struct Puzzle5dTransformWork {
     stage: Puzzle5dTransformStage,
     selection_cursor: usize,
     part_cursor: usize,
+    volume_cursor: usize,
     selected: HashSet<String>,
     mutations: Vec<Puzzle5dMutation>,
     locked: usize,
@@ -4792,6 +4846,7 @@ impl Puzzle5dTransformWork {
             stage: Puzzle5dTransformStage::Selection,
             selection_cursor: 0,
             part_cursor: 0,
+            volume_cursor: 0,
             selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
             mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
             locked: 0,
@@ -4823,6 +4878,35 @@ impl Puzzle5dTransformWork {
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
         crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
+
+    /// 📏️ The `[x, y, z]` extent a `scale` row carries in either arm of the `Puzzle5dScale` union — a bare
+    /// number is uniform, an array is per-axis, absent is unscaled.
+    fn scale_row(scale: Option<&Value>) -> [f64; 3] {
+        match scale {
+            Some(Value::Number(value)) => [value.as_f64(); 3],
+            Some(Value::Array(values)) => [values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)],
+            _ => [1.0; 3],
+        }
+    }
+
+    /// 🏁️ The ONE terminal step every transform arm ends on: one history edit per gesture under the
+    /// gumball's own coalesce key, or a single visible refusal when everything addressed was locked (an
+    /// empty delta is indistinguishable from a dead gumball).
+    fn complete(&mut self) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        self.stage = Puzzle5dTransformStage::Complete;
+        let coalesce_key = match self.tool_id {
+            "translateSelection" => "gumball-translate",
+            "rotateSelection" => "gumball-rotate",
+            "scaleSelection" => "gumball-scale",
+            _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
+        };
+        if self.moved == 0 && self.locked > 0 {
+            self.mutations.clear();
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+        }
+        let mutations = std::mem::take(&mut self.mutations);
+        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(coalesce_key.to_string()), ui_scope: UiDirtyScope::Full, ..Default::default() }))
+    }
 }
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dTransformWork {
@@ -4836,7 +4920,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
         let projection = puzzle5d_projection_value(&snapshot.0);
-        let items = Self::source_len(command, interaction).checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        let items = Self::source_len(command, interaction)
+            .checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(projection.get("targetVolumes").and_then(Value::as_array).map_or(0, Vec::len))?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -4868,21 +4954,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dTransformStage::Parts => {
                 let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
-                    self.stage = Puzzle5dTransformStage::Complete;
-                    let coalesce_key = match self.tool_id {
-                        "translateSelection" => "gumball-translate",
-                        "rotateSelection" => "gumball-rotate",
-                        "scaleSelection" => "gumball-scale",
-                        _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
-                    };
-                    // 🔒️ Every addressed part was locked: refuse VISIBLY. A locked part must not move, and an
-                    // empty delta is indistinguishable from a dead gumball.
-                    if self.moved == 0 && self.locked > 0 {
-                        self.mutations.clear();
-                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+                    if self.tool_id != "scaleSelection" {
+                        return self.complete();
                     }
-                    let mutations = std::mem::take(&mut self.mutations);
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(coalesce_key.to_string()), ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                    self.stage = Puzzle5dTransformStage::Volumes;
+                    return Ok(Self::progress("puzzle5d-transform-volume", "Scaling target volume", "Zielvolumen wird skaliert"));
                 };
                 self.part_cursor += 1;
                 let Some(id) = row.get("id").and_then(Value::as_str) else {
@@ -4918,12 +4994,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
                     }
                     "scaleSelection" => {
-                        let scale = part_3d.and_then(|part| part.get("scale"));
-                        let current = match scale {
-                            Some(Value::Number(value)) => [value.as_f64(); 3],
-                            Some(Value::Array(values)) => [values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)],
-                            _ => [1.0; 3],
-                        };
+                        let current = Self::scale_row(part_3d.and_then(|part| part.get("scale")));
                         crate::standards::v1::subsets::any::schema::mutations::scale_part_3d(
                             id.to_string(),
                             Some(crate::Puzzle5dScale::Vec3([current[0] * Self::axis(command, "sx", 1.0), current[1] * Self::axis(command, "sy", 1.0), current[2] * Self::axis(command, "sz", 1.0)])),
@@ -4933,6 +5004,29 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 };
                 self.mutations.push(mutation);
                 Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
+            }
+            Puzzle5dTransformStage::Volumes => {
+                let Some(row) = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.get(self.volume_cursor)) else {
+                    return self.complete();
+                };
+                self.volume_cursor += 1;
+                let Some(id) = row.get("id").and_then(Value::as_str) else {
+                    return Ok(Self::progress("puzzle5d-transform-volume", "Skipping malformed target volume", "Fehlerhaftes Zielvolumen wird übersprungen"));
+                };
+                if !self.selected.contains(id) {
+                    return Ok(Self::progress("puzzle5d-transform-volume", "Scanning target volume", "Zielvolumen wird geprüft"));
+                }
+                if row.get("locked").and_then(Value::as_bool).unwrap_or(false) {
+                    self.locked += 1;
+                    return Ok(Self::progress("puzzle5d-transform-volume", "Skipping locked target volume", "Gesperrtes Zielvolumen wird übersprungen"));
+                }
+                self.moved += 1;
+                let current = Self::scale_row(row.get("scale"));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::scale_target_volume(
+                    id.to_string(),
+                    Some(crate::Puzzle5dScale::Vec3([current[0] * Self::axis(command, "sx", 1.0), current[1] * Self::axis(command, "sy", 1.0), current[2] * Self::axis(command, "sz", 1.0)])),
+                ));
+                Ok(Self::progress("puzzle5d-transform-volume", "Scaling target volume", "Zielvolumen wird skaliert"))
             }
             Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
             Puzzle5dTransformStage::Closing => Err(Fault::from("puzzle5d-transform-closing")),
@@ -6805,8 +6899,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     id: created_id.clone(),
                     part_kind: Some(part_kind.clone()),
                     anchor: Default::default(),
-                    part_2d: crate::Puzzle5dPart2d { x, y, shape: Some("circle".to_string()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), text: Some(part_kind), ..Default::default() },
-                    part_3d: crate::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), ..Default::default() },
+                    part_2d: crate::Puzzle5dPart2d { x, y, shape: Some("circle".to_string()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), text: Some(part_kind.clone()), ..Default::default() },
+                    part_3d: crate::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), label: Some(puzzle5d_next_part_label_from_projection(&projection, &part_kind)), ..Default::default() },
                     grips: std::mem::take(&mut self.grips),
                 };
                 self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None));
@@ -7043,8 +7137,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     id: id.clone(),
                     part_kind: Some(part_kind.clone()),
                     anchor: Default::default(),
-                    part_2d: crate::Puzzle5dPart2d { x, y, shape: Some("circle".to_string()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), text: Some(part_kind), ..Default::default() },
-                    part_3d: crate::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), ..Default::default() },
+                    part_2d: crate::Puzzle5dPart2d { x, y, shape: Some("circle".to_string()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), text: Some(part_kind.clone()), ..Default::default() },
+                    part_3d: crate::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), label: Some(puzzle5d_next_part_label_from_projection(&projection, &part_kind)), ..Default::default() },
                     grips: std::mem::take(&mut self.grips),
                 };
                 self.created_id = Some(id);
@@ -7537,7 +7631,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 self.stage = Puzzle5dBoardEventsStage::Closing;
                 // 🪟️ A board `camera` row is the pane's own persisted pose. Dropping it (which this work did
                 // until 5A2) made pan/zoom in the board window revert on every refresh.
-                let window_config_mutations = match (self.camera2d.take(), self.view_state.as_ref()) {
+                let camera2d = self.camera2d.take();
+                let window_config_mutations = match (camera2d, self.view_state.as_ref()) {
                     (Some(camera2d), Some(view)) => {
                         let mut next = window_ownership::config_from_snapshot(self.window_config.as_ref());
                         next.camera2d = camera2d;
@@ -8069,6 +8164,24 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 }
 
+/// 📦️ Rows one `setActiveExample` step replays. A declared unit is a CHUNK, not a row:
+/// `🌙️capsule-dream` is 2 880 parts + 2 865 fasteners, so a row-per-unit extent (≈5 749, and ≈11 500 when
+/// reloading capsule-dream over itself) overruns the shared `PUZZLE_COMMAND_WORK_ITEMS` band and the
+/// switch could only ever refuse. Chunking makes the same replay fit without widening a constant three
+/// fixtures pin. It is 8× puzzle 3d's `PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK` on purpose: 3d steps over a
+/// TYPED snapshot, while every 5d work re-derives `puzzle5d_projection_value` per step, so a step's cost
+/// is dominated by that one O(document) projection rather than by the rows it then replays — fewer,
+/// fatter steps is strictly cheaper here, and capsule-dream's switch drops from ≈720 steps to ≈100.
+const PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 64;
+
+/// 🔢️ Stage transitions and whole-document rows a switch always pays on top of its chunks (label, domain,
+/// description, catalogs and one exhaustion step per cursored stage). 3d's own count, kept identical.
+const PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
+
+/// 🧮️ Mutations one switch may accumulate: exactly what the declared extent can legitimately produce, so
+/// `push` can never refuse work `extent` already admitted.
+const PUZZLE5D_SET_ACTIVE_EXAMPLE_MUTATIONS: usize = crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS * PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle5dSetActiveExampleStage {
     ClearFasteners,
@@ -8088,34 +8201,45 @@ enum Puzzle5dSetActiveExampleStage {
 struct Puzzle5dSetActiveExampleWork {
     stage: Puzzle5dSetActiveExampleStage,
     cursor: usize,
+    admitted: bool,
     mutations: Vec<Puzzle5dMutation>,
     view_state: Option<semio_framework_plugin::ViewModel>,
 }
 
 impl Default for Puzzle5dSetActiveExampleWork {
     fn default() -> Self {
-        Self { stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), view_state: None }
+        Self { stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), view_state: None }
     }
 }
 
 impl Puzzle5dSetActiveExampleWork {
     /// 📏️ How many semantic units switching to `target` from `snapshot` costs — every old fastener and
     /// part cleared, every old compatibility row dropped, then the target's own compatibility rows, parts
-    /// and fasteners, plus the four whole-document rows (label, domain, description, catalogs).
+    /// and fasteners, each counted in `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK`-sized steps, plus the fixed
+    /// stage-transition and whole-document rows.
     fn units(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot) -> Option<usize> {
         let projection = puzzle5d_projection_value(&snapshot.0);
         let target = Self::target(command)?;
-        snapshot
-            .0
-            .get("fasteners")
-            .and_then(serde_json::Value::as_array)
-            .map_or(0, Vec::len)
-            .checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
-            .checked_add(projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len))?
-            .checked_add(Self::compatibility_rows(target).len())?
-            .checked_add(target.parts.len())?
-            .checked_add(target.fasteners.len())?
-            .checked_add(4)
+        let rows = [
+            snapshot.0.get("fasteners").and_then(serde_json::Value::as_array).map_or(0, Vec::len),
+            projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len),
+            projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len),
+            Self::compatibility_rows(target).len(),
+            target.parts.len(),
+            target.fasteners.len(),
+        ];
+        rows.into_iter().try_fold(PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS, |units, len| units.checked_add(len.div_ceil(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK)))
+    }
+
+    /// ✂️ The next `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK` rows of a cursored stage, advancing the cursor.
+    fn take_chunk(cursor: &mut usize, len: usize) -> std::ops::Range<usize> {
+        if *cursor >= len {
+            return *cursor..*cursor;
+        }
+        let end = cursor.saturating_add(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK).min(len);
+        let range = *cursor..end;
+        *cursor = end;
+        range
     }
 
     fn target(command: &Puzzle5dCommand) -> Option<&'static Puzzle5dDocument> {
@@ -8138,7 +8262,7 @@ impl Puzzle5dSetActiveExampleWork {
     }
 
     fn push(&mut self, mutation: Puzzle5dMutation) -> Result<(), Fault> {
-        if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+        if self.mutations.len() >= PUZZLE5D_SET_ACTIVE_EXAMPLE_MUTATIONS {
             return Err(Fault::from("puzzle5d-set-active-example-output-capacity"));
         }
         self.mutations.push(mutation);
@@ -8178,15 +8302,21 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             self.stage = Puzzle5dSetActiveExampleStage::Complete;
             return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
         };
-        if Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
-            self.stage = Puzzle5dSetActiveExampleStage::Complete;
-            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
+        if !self.admitted {
+            self.admitted = true;
+            if Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
+                self.stage = Puzzle5dSetActiveExampleStage::Complete;
+                return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
+            }
         }
         match self.stage {
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
-                if let Some(id) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).and_then(|fastener| fastener.get("id")).and_then(Value::as_str) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id.to_string()))?;
+                let fasteners = projection.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let range = Self::take_chunk(&mut self.cursor, fasteners.len());
+                if !range.is_empty() {
+                    for id in fasteners[range].iter().filter_map(|fastener| fastener.get("id")).filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>() {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8194,9 +8324,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearParts => {
-                if let Some(id) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.cursor)).and_then(|part| part.get("id")).and_then(Value::as_str) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id.to_string()))?;
+                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let range = Self::take_chunk(&mut self.cursor, parts.len());
+                if !range.is_empty() {
+                    for id in parts[range].iter().filter_map(|part| part.get("id")).filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>() {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8220,11 +8353,16 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearCompatibility => {
-                if let Some(row) = projection.get("kindCompatibility").and_then(Value::as_array).and_then(|rows| rows.get(self.cursor)) {
-                    self.cursor += 1;
-                    let source = row.get("source").and_then(Value::as_str).unwrap_or("").to_string();
-                    let target = row.get("target").and_then(Value::as_str).unwrap_or("").to_string();
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
+                let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let range = Self::take_chunk(&mut self.cursor, rows.len());
+                if !range.is_empty() {
+                    let pairs: Vec<(String, String)> = rows[range]
+                        .iter()
+                        .map(|row| (row.get("source").and_then(Value::as_str).unwrap_or("").to_string(), row.get("target").and_then(Value::as_str).unwrap_or("").to_string()))
+                        .collect();
+                    for (source, target) in pairs {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8232,10 +8370,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddCompatibility => {
-                if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
-                    self.cursor += 1;
-                    let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                let rows = Self::compatibility_rows(target);
+                let range = Self::take_chunk(&mut self.cursor, rows.len());
+                if !range.is_empty() {
+                    for row in &rows[range] {
+                        let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
                 self.cursor = 0;
@@ -8249,11 +8390,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddParts => {
-                if let Some(part) = target.parts.get(self.cursor) {
-                    self.cursor += 1;
-                    let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                    let part = <crate::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
+                let range = Self::take_chunk(&mut self.cursor, target.parts.len());
+                if !range.is_empty() {
+                    for part in &target.parts[range] {
+                        let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                        let part = <crate::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
                 }
                 self.cursor = 0;
@@ -8261,22 +8404,24 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddFasteners => {
-                if let Some(fastener) = target.fasteners.get(self.cursor) {
-                    self.cursor += 1;
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
-                        fastener.id.clone(),
-                        fastener.source.clone(),
-                        fastener.target.clone(),
-                        fastener.fastener_kind.clone(),
-                        fastener.gap,
-                        fastener.shift,
-                        fastener.rise,
-                        fastener.rotation,
-                        fastener.turn,
-                        fastener.tilt,
-                        fastener.x,
-                        fastener.y,
-                    ))?;
+                let range = Self::take_chunk(&mut self.cursor, target.fasteners.len());
+                if !range.is_empty() {
+                    for fastener in &target.fasteners[range] {
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
+                            fastener.id.clone(),
+                            fastener.source.clone(),
+                            fastener.target.clone(),
+                            fastener.fastener_kind.clone(),
+                            fastener.gap,
+                            fastener.shift,
+                            fastener.rise,
+                            fastener.rotation,
+                            fastener.turn,
+                            fastener.tilt,
+                            fastener.x,
+                            fastener.y,
+                        ))?;
+                    }
                     return Ok(Self::progress("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
                 }
                 self.stage = Puzzle5dSetActiveExampleStage::Complete;
@@ -9803,5 +9948,11 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+/// 🧊️ The target-volume / Volume-Brush laws — a topic of its own so the one shared harness stays the
+/// only scaffold and this family's laws are readable as one block.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️target-volumes/🦀️.rs"]
+mod target_volume_tests;
 //#endregion 🧪️UnitTests
 

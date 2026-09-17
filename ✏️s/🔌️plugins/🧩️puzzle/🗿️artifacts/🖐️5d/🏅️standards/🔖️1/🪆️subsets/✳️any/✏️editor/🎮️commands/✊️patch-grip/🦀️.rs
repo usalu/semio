@@ -24,11 +24,18 @@ pub fn patch_grip(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if grip_full_ids.is_empty() {
         return;
     }
+    let owners: Vec<String> = grip_full_ids.iter().filter_map(|full_id| full_id.split_once(':').map(|(part, _)| part.to_string())).collect();
+    if ctx.refuse_when_locked(&owners) {
+        return;
+    }
     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
     let value = args.and_then(|value| value.get("value"));
     let delta = args.and_then(|value| value.get("delta"));
     let text = value.and_then(Value::as_str).map(str::to_string);
     for part in &mut ctx.scene.document.parts {
+        if part.part_2d.locked.unwrap_or(false) {
+            continue;
+        }
         let part_id = part.id.clone();
         for grip in &mut part.grips {
             if !grip_full_ids.contains(&puzzle5d_grip_full_id(&part_id, &grip.id)) {

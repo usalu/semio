@@ -4589,12 +4589,20 @@ pub struct ViewModel {
 
 /// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
 /// author's own default still stands) and the row window on screen, overscan included. `body_key`
-/// names the panel body the container lives in, `node_key` the authored container key within it.
+/// names the panel body the container lives in, `node_key` the container's **window path** within it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TreeWindowRequest {
     pub body_key: String,
+    /// 🔑️ The container's **window path**, not a bare node key: the node keys of its enclosing
+    /// windowed containers, outermost first, then its own key, joined by
+    /// `semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR` (U+001F). A top-level section's path
+    /// IS its own key, so a flat request is unchanged; a nested one is
+    /// `"fem3d-play-artifact.load-cases\u{1f}dead"`. Identity is the path rather than the key so that
+    /// two containers reusing one entity id under different parents — a load case and a combination
+    /// both called `uls`, one object id in four cad pane sections — keep independent open and window
+    /// state, while their node keys stay the raw pick target ids the interaction domain registers.
     pub node_key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]

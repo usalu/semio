@@ -30,6 +30,12 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
     TreeWindowRequest { body_key: S_PLAY_PARAMETERS_BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
 }
 
+/// 🔑️ The **window path** the host addresses one parameter's field window by: the enclosing list
+/// section's key, then the parameter's own key, joined by `TREE_WINDOW_PATH_SEPARATOR`.
+fn parameter_path(id: &str) -> String {
+    format!("{S_PLAY_PARAMETERS_LIST_KEY}{}s-play-parameters.{id}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 #[semio_framework_async_macros::async_test]
 async fn render_produces_the_add_parameter_header() {
     let projection = semio_framework_os::empty_workflow_snapshot().await;
@@ -82,7 +88,7 @@ async fn each_parameter_is_a_windowed_container_over_its_own_field_rows() {
     assert!(json.contains("\"total\":6"), "a numeric parameter stamps its six field rows: {json}");
     assert!(json.contains("s-play-parameters.parameter-0.name"), "the name row materialises: {json}");
     assert!(json.contains("s-play-parameters.parameter-0.step"), "the step constraint row materialises: {json}");
-    let closed = window_body(&projection, vec![request("s-play-parameters.parameter-0", Some(false), 0, 0)]);
+    let closed = window_body(&projection, vec![request(&parameter_path("parameter-0"), Some(false), 0, 0)]);
     assert!(!closed.contains("s-play-parameters.parameter-0.name"), "a closed parameter materialises no field rows: {closed}");
     assert!(closed.contains("s-play-parameters.parameter-1.name"), "its siblings are unaffected: {closed}");
 }

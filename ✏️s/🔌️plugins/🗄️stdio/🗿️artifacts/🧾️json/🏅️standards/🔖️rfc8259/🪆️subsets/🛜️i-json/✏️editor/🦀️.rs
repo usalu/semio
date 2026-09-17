@@ -30,10 +30,11 @@ pub enum JsonIJsonIJsonEditorCommand {
     SetNode { node_id: String, value: String },
 }
 
-/// 🧭️ `main::encode_path_id`'s inverse — `""` decodes to the empty (root) path.
+/// 🧭️ `main::encode_path_id`'s inverse — `main::JSON_ROOT_NODE_ID` (and the legacy empty string a
+/// pre-window body sent) decodes to the empty (root) path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
-    if node_id.is_empty() {
+    if node_id.is_empty() || node_id == main::JSON_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
     node_id

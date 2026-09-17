@@ -36,6 +36,8 @@ impl protocol::OpBinary for TrinityJackViewCommand {
 pub struct TrinityJackViewer;
 
 impl ArtifactViewer for TrinityJackViewer {
+    /// 🧩️ The same member roster the editor declares — see `TrinityJackPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
     type Config = NoConfig;
@@ -48,6 +50,10 @@ impl ArtifactViewer for TrinityJackViewer {
 
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_jack_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> JackSnapshot {
         empty_trinity_graph_fixture()

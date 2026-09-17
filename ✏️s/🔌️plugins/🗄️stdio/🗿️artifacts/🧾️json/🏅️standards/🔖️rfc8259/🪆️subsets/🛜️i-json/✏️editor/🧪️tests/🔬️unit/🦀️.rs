@@ -21,6 +21,7 @@ async fn editor_declares_the_tree_window() {
 #[semio_framework_async_macros::async_test]
 async fn decode_path_id_roundtrips_root_and_nested() {
     assert_eq!(decode_path_id("").unwrap(), Vec::<JsonPathSegment>::new());
+    assert_eq!(decode_path_id(main::JSON_ROOT_NODE_ID).unwrap(), Vec::<JsonPathSegment>::new());
     assert_eq!(decode_path_id("k=a/i=0").unwrap(), vec![JsonPathSegment::Key("a".into()), JsonPathSegment::Index(0)]);
     assert!(decode_path_id("bad").is_err());
 }

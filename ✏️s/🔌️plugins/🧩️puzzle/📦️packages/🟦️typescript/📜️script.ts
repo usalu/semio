@@ -101,8 +101,8 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
     {
       path: "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
       cases: [
-        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", gridVisible: true, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80, proximityRadius: 12, transformMove: true, transformRotate: true, selectableNodes: true, selectableHandles: true, selectableEdges: true }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridVisible", "gridSnapEnabled", "gridFactor", "suggestionOffset", "proximityRadius", "transformMove", "transformRotate", "selectableNodes", "selectableHandles", "selectableEdges"] },
-        { definition: "Puzzle2dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0, brushCandidates: [], brushCandidateSourceHandleId: "" }, keys: ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId"] },
+        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", gridVisible: true, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80, proximityRadius: 12, areaBrushWidth: 96, areaBrushHeight: 96, transformMove: true, transformRotate: true, selectableNodes: true, selectableHandles: true, selectableEdges: true }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridVisible", "gridSnapEnabled", "gridFactor", "suggestionOffset", "proximityRadius", "areaBrushWidth", "areaBrushHeight", "transformMove", "transformRotate", "selectableNodes", "selectableHandles", "selectableEdges"] },
+        { definition: "Puzzle2dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0, brushCandidates: [], brushCandidateSourceHandleId: "", suggestionMenu: null }, keys: ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId", "suggestionMenu"] },
       ],
     },
     {
@@ -140,8 +140,9 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
             gripDirection: "outwards",
             transformMove: true,
             transformRotate: true,
+            voxelDims: [4, 4, 4],
           },
-          keys: ["camera3d", "sun", "gridVisible", "gridSnapEnabled", "gridSpacing", "lodAutomatic", "lodDepthVariable", "lodManual", "selectableKinds", "gripShow", "gripDirection", "transformMove", "transformRotate"],
+          keys: ["camera3d", "sun", "gridVisible", "gridSnapEnabled", "gridSpacing", "lodAutomatic", "lodDepthVariable", "lodManual", "selectableKinds", "gripShow", "gripDirection", "transformMove", "transformRotate", "voxelDims"],
         },
         { definition: "Puzzle5dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0 }, keys: ["engagementInput", "brushCandidateIndex"] },
       ],
@@ -286,7 +287,10 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("puzzle2d_dispatch_emit(command, &snapshot.0, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?")
       && production.includes("puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
-      && production.includes("(addressed <= PUZZLE2D_SELECTION_BATCH_LIMIT).then_some(addressed.max(1))");
+      // 🧲️ An oversized selection is refused outright, never truncated, and a gesture that lands open
+      // handles prices its fixed proximity auto-connect budget on top of the entities it rewrites.
+      && production.includes("if addressed > PUZZLE2D_SELECTION_BATCH_LIMIT {\n        return None;\n    }")
+      && production.includes("Some(addressed.saturating_add(connects).max(1))");
   }
   if (owner.owner !== "Puzzle5dPlayApp") return true;
   const guard = production.indexOf('if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str())');

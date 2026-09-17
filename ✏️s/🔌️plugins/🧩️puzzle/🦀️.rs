@@ -93,7 +93,7 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
         .requests(CapabilityRequest {
             id: CapabilityId("ui.dialog".into()),
             scope: "plugin".into(),
-            reason: "puzzle3d's add-object flow opens the addObject dialog (Effect::OpenDialog)".into(),
+            reason: "puzzle3d's add-object flow opens the addObject dialog and puzzle5d's add-part flow the addPart dialog (Effect::OpenDialog)".into(),
             optional: false,
         })
         .requests(CapabilityRequest {

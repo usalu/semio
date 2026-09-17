@@ -168,15 +168,16 @@ def volume_at(document, identity, kind, where):
 
 
 def written_volume(volume, member, value):
-    """🫥 Writes one member of a target volume, or REMOVES it when the value is the one a committed
-    document omits — `False` for the two flags, `None` for the two optional pose members."""
+    """🫥 Writes one member of a target volume. The two flags are ALWAYS stated — unlike a part's, the
+    volume codec carries no `skip_serializing_if` on them — while the two optional pose members leave
+    the wire form entirely when cleared."""
     if member in VOLUME_OPTIONAL:
         if value is None:
             volume.pop(member, None)
         else:
             volume[member] = copy.deepcopy(value)
         return
-    written(volume, member, value)
+    volume[member] = copy.deepcopy(value)
 
 
 def with_volumes(document, volumes):
@@ -199,8 +200,8 @@ def validate(document, where):
         raise AssertionError("%s: targetVolumes carries a duplicate id in %r" % (where, volume_ids))
     for held in volumes_of(document):
         for member in ("hidden", "locked"):
-            if held.get(member) is False:
-                raise AssertionError("%s: target volume %r writes %s at its default False, which a committed document omits" % (where, held["id"], member))
+            if member not in held:
+                raise AssertionError("%s: target volume %r omits %s; unlike a part's flags the volume codec always states both" % (where, held["id"], member))
     ports = set()
     identifiers = [part["id"] for part in document["parts"]]
     if len(set(identifiers)) != len(identifiers):

@@ -433,12 +433,84 @@ pub use crate::schema::snapshot::NoteSnapshot;
 mod tests;
 //#endregion 🧪️Tests
 
-/// 🖼️ Encodes persisted Note fields and the local camera for an ink-canvas scene.
+//#region 🖋️InkCanvasWire
+/// 🖋️ The framework ink-canvas surface's document schema (`InkCanvasHost`'s `InkDocument`, the wgpu
+/// `InkDocumentJson`) — the host drops any other schema as "No scene".
+pub const INK_CANVAS_DOCUMENT_SCHEMA: &str = "ink.document";
+
+/// 🖼️ Projects persisted Note fields and the local camera onto the framework `ink.document` wire: the
+/// schema tag is the surface's own, and every text block's composed `content` record is flattened to
+/// the surface's bare `paragraphs` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END — the note schema tag and the
+/// nested child record left the canvas empty).
 pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -> String {
-    let mut value = dsl::os_pack::json_from_dsl_value(&dsl::ToValue::to_value(document));
-    value.as_object_mut().expect("NoteSnapshot is a record").insert("camera", dsl::os_pack::json_from_dsl_value(&dsl::ToValue::to_value(camera)));
-    dsl::os_pack::json_to_string(&value)
+    let mut value = dsl::ToValue::to_value(document);
+    if let dsl::DslValue::Object(entries) = &mut value {
+        for (key, field) in entries.iter_mut() {
+            match key.as_str() {
+                "schema" => *field = dsl::DslValue::String(INK_CANVAS_DOCUMENT_SCHEMA.into()),
+                "blocks" => ink_wire_blocks_from_note(field),
+                _ => {}
+            }
+        }
+        entries.push(("camera".into(), dsl::ToValue::to_value(camera)));
+    }
+    dsl::os_pack::json_to_string(&dsl::os_pack::json_from_dsl_value(&value))
 }
+
+fn entry<'a>(entries: &'a [(String, dsl::DslValue)], key: &str) -> Option<&'a dsl::DslValue> {
+    entries.iter().find(|(name, _)| name == key).map(|(_, value)| value)
+}
+
+fn is_kind(entries: &[(String, dsl::DslValue)], kind: &str) -> bool {
+    matches!(entry(entries, "kind"), Some(dsl::DslValue::String(value)) if value == kind)
+}
+
+fn ink_wire_blocks_from_note(blocks: &mut dsl::DslValue) {
+    let dsl::DslValue::Array(items) = blocks else { return };
+    for item in items {
+        let dsl::DslValue::Object(entries) = item else { continue };
+        if is_kind(entries, "text") {
+            if let Some(index) = entries.iter().position(|(name, _)| name == "content") {
+                let (_, content) = entries.remove(index);
+                let paragraphs = match content {
+                    dsl::DslValue::Object(record) => record.into_iter().find(|(name, _)| name == "paragraphs").map(|(_, value)| value),
+                    _ => None,
+                };
+                entries.push(("paragraphs".into(), paragraphs.unwrap_or(dsl::DslValue::Array(Vec::new()))));
+            }
+        } else if is_kind(entries, "group") {
+            if let Some((_, children)) = entries.iter_mut().find(|(name, _)| name == "children") {
+                ink_wire_blocks_from_note(children);
+            }
+        }
+    }
+}
+
+/// 🖋️ Inverse of [`note_canvas_document_json`] for one ink-canvas block: a text block's bare
+/// `paragraphs` become the composed [`NoteTextChild`] record (content-addressed by block id, so an
+/// unchanged block keeps its handle); group children recurse.
+pub fn note_block_value_from_ink_wire(block: &mut dsl::DslValue) -> Result<(), String> {
+    let dsl::DslValue::Object(entries) = block else { return Err("ink block is not a record".into()) };
+    if is_kind(entries, "text") && entry(entries, "content").is_none() {
+        let id = match entry(entries, "id") {
+            Some(dsl::DslValue::String(id)) => id.clone(),
+            _ => return Err("ink text block has no id".into()),
+        };
+        let paragraphs = match entries.iter().position(|(name, _)| name == "paragraphs") {
+            Some(index) => <Vec<NoteTextParagraph> as dsl::FromValue>::from_value(entries.remove(index).1).map_err(|error| error.to_string())?,
+            None => Vec::new(),
+        };
+        entries.push(("content".into(), dsl::ToValue::to_value(&note_text_child_record(&id, &paragraphs))));
+    } else if is_kind(entries, "group") {
+        if let Some((_, dsl::DslValue::Array(children))) = entries.iter_mut().find(|(name, _)| name == "children") {
+            for child in children {
+                note_block_value_from_ink_wire(child)?;
+            }
+        }
+    }
+    Ok(())
+}
+//#endregion 🖋️InkCanvasWire
 
 #[path = "."]
 pub mod standards {

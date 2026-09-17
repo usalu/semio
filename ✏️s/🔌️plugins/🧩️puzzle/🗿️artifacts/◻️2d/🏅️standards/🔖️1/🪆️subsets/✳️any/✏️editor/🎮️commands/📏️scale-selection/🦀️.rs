@@ -11,6 +11,9 @@ pub fn scale_selection(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let factor = args.and_then(|value| value.get("factor").or_else(|| value.get("value"))).and_then(Value::as_f64).filter(|factor| factor.is_finite() && *factor > 0.0 && *factor != 1.0);
     let Some(factor) = factor else { return };
     let selected_ids = ctx.selected_ids();
+    if ctx.refuse_when_locked(&selected_ids) {
+        return;
+    }
     puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Scale { factor });
     let region_ids = puzzle2d_selected_target_region_ids(&ctx.scene.fixture, &selected_ids);
     puzzle2d_transform_target_regions(&mut ctx.scene.fixture, &region_ids, Puzzle2dTransform::Scale { factor });

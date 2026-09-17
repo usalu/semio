@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
     let mesh = default_snapshot().objects[0].mesh.clone();
-    LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new() }
+    LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
 }
 
 //#region ⚖️SemanticLaws

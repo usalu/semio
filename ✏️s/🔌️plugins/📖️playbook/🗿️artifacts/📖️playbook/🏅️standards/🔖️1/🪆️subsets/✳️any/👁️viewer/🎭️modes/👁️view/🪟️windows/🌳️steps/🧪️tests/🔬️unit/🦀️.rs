@@ -61,6 +61,18 @@ async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
 }
 
 //#region 🪟️WindowLaws
+
+/// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
+/// first, then its own key — joined by `TREE_WINDOW_PATH_SEPARATOR`. Every node of a `TreeWindowKit`
+/// body sits under the kit's one root section, so a host request names that section first.
+fn window_path(keys: &[&str]) -> String {
+    let mut path = format!("{}-root", TreeWindowKit::KIND_ID);
+    for key in keys {
+        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(key);
+    }
+    path
+}
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
@@ -93,7 +105,7 @@ fn oversized_step_stamps_totals_and_never_a_continuation_row() {
 /// 🪟️ Law (b): a step the host closed stamps its total and materialises nothing.
 #[test]
 fn closed_step_stamps_total_and_materialises_no_blocks() {
-    let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: "s1".into(), open: Some(false), offset: 0, rows: 0 }]);
+    let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: window_path(&["s1"]), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":300"), "a closed step still stamps its extent: {json}");
     assert!(!json.contains("s1/b"), "a closed step materialises no blocks: {json}");
 }
@@ -101,7 +113,7 @@ fn closed_step_stamps_total_and_materialises_no_blocks() {
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw block id.
 #[test]
 fn host_window_materialises_exactly_its_slice() {
-    let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: "s1".into(), open: Some(true), offset: 100, rows: 10 }]);
+    let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: window_path(&["s1"]), open: Some(true), offset: 100, rows: 10 }]);
     assert!(json.contains("\"offset\":100"), "the step reports its offset: {json}");
     for index in 100..110 {
         assert!(json.contains(&format!("\"s1/b{index}\"")), "block {index} is inside the window: {json}");

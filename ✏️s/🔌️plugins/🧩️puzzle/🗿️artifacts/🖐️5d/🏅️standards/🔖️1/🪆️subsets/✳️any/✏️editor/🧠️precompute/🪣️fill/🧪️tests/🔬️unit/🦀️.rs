@@ -458,6 +458,7 @@ fn fill_run_finalize_publishes_one_edit_with_every_provisional_placement() {
     set_fill_count(&mut app, requested);
     let before = committed(&app);
     let parts = projection_of(&app)["parts"].as_array().map_or(0, Vec::len);
+    let fasteners = projection_of(&app)["fasteners"].as_array().map_or(0, Vec::len);
     assert_eq!(start(&mut app)["toolRun"], serde_json::json!("spawnJob"));
     pump(&mut app, "the run completes", |presence| presence.state == protocol::PresenceToolRunState::Complete);
     assert_eq!(app.tool_run_presence().expect("presence").completed, requested, "the run places what was requested");
@@ -467,7 +468,16 @@ fn fill_run_finalize_publishes_one_edit_with_every_provisional_placement() {
     assert_eq!(tool_run_action(&mut app, TOOL_RUN_FINALIZE_ACTION_ID, identity)["toolRun"], serde_json::json!("beginFinalize"));
     pump(&mut app, "finalize publishes", |presence| presence.state == protocol::PresenceToolRunState::Finalized);
     let finalized = projection_of(&app);
-    assert_eq!(finalized["parts"].as_array().map_or(0, Vec::len), parts + requested as usize, "finalize publishes every placement");
+    let published = finalized["parts"].as_array().expect("parts");
+    assert_eq!(published.len(), parts + requested as usize, "finalize publishes every placement");
+    assert_eq!(finalized["fasteners"].as_array().map_or(0, Vec::len), fasteners + requested as usize, "and one fastener per placement");
+    for part in &published[parts..] {
+        let flat = &part["2d"];
+        let spatial = &part["3d"];
+        assert!(flat["x"].as_f64().is_some() && flat["y"].as_f64().is_some(), "a published placement carries its FLAT pose: {part}");
+        assert_eq!(spatial["origin"].as_array().map_or(0, Vec::len), 3, "a published placement carries its SPATIAL pose: {part}");
+        assert!(part["grips"].as_array().is_some_and(|grips| !grips.is_empty()), "a published placement carries its grips: {part}");
+    }
     assert!(escape_identity(&mut app).is_none(), "a finalized run is terminal, so Escape no longer aborts it");
     dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(committed(&app), before, "one undo removes every placement: start → complete → finalize is ONE undo entry");

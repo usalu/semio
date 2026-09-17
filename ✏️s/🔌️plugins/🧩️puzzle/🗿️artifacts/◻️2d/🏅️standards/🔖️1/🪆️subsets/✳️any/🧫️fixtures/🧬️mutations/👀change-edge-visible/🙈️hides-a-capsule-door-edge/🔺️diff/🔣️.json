@@ -1,34 +1,34 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
         "patch": {
           "replacement": {
+            "gap": 0.0,
             "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
             "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d0",
             "target": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
-            "gap": 0,
-            "shift": 0,
-            "rise": 0,
-            "rotation": 0,
-            "turn": 0,
-            "tilt": 0,
-            "x": 0,
-            "y": 0,
-            "visible": false
+            "tilt": 0.0,
+            "turn": 0.0,
+            "visible": false,
+            "x": 0.0,
+            "y": 0.0
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "targetRegions": null,
-  "meta": null
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

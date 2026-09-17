@@ -10,7 +10,7 @@ fn tiny_mesh_json() -> String {
 fn tiny_object(id: &str, name: &str) -> crate::LowpolyObject {
     let mesh_workspace = tiny_mesh_json();
     let mesh = crate::mesh_child_handle(id, &mesh_workspace);
-    crate::LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")] }
+    crate::LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
 }
 
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.

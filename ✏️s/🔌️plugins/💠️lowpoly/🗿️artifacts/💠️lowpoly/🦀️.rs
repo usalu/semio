@@ -67,7 +67,17 @@ pub struct LowpolyPaintLayer {
 
 impl LowpolyPaintLayer {
     pub fn new(name: &str) -> Self {
-        Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: empty_paint_pixels() }
+        Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: Vec::new() }
+    }
+
+    /// 🎨️ Drops a never-painted buffer back to the sparse empty form (ticket 26/08/29/LOWPOLY-END-TO-END,
+    /// 2026-09-17): a full 1024² layer is 4 MiB, four times the store's one-item cap, so every
+    /// `addPrimitive` was refused. An empty `pixels` IS the opaque-white default everywhere it is read.
+    pub fn compacted(mut self) -> Self {
+        if !self.pixels.is_empty() && self.pixels.iter().all(|byte| *byte == 255) {
+            self.pixels = Vec::new();
+        }
+        self
     }
 }
 
@@ -275,6 +285,9 @@ pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &diff::schema
     for (position, stroke) in delta.strokes.iter().enumerate() {
         let i = stroke.layer_index as usize;
         let layer = layers.get_mut(i).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.invalid-index", "paint stroke layer index is out of range").at(["strokes".to_string(), position.to_string(), "layerIndex".to_string()]))?;
+        if layer.pixels.is_empty() {
+            layer.pixels = empty_paint_pixels();
+        }
         for (run_index, run) in stroke.runs.iter().enumerate() {
             let start = run.offset as usize;
             let end = start

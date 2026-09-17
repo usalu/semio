@@ -760,6 +760,7 @@ fn lowpoly_retained_reduce(
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone()).map_err(Fault::from)?;
             threaded.set_selection_object_id(selection_object_id.clone());
             let step_emit = ($handle)(&doc, &cfg, &mut threaded)?;
+            eprintln!("[DEBUG] lowpoly threaded {} artifact={} config={} selection={:?}", command.command_id(), step_emit.artifact_mutations.len(), step_emit.config_mutations.len(), selection);
             let transient = threaded.transient_snapshot().map_err(Fault::from)?;
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step_emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } });
         }};
@@ -959,6 +960,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
+        eprintln!("[DEBUG] lp work step tool={} stage={} complete={} closing={}", self.tool_id, self.stage, self.complete, self.closing);
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
         }
@@ -1046,6 +1048,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        eprintln!("[DEBUG] lp work close tool={} items={} bytes={}", self.tool_id, maximum_items, maximum_bytes);
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
@@ -1264,7 +1267,8 @@ fn admit_lowpoly_artifact_mutation(mutation: &LowpolyMutation) -> Result<store::
     if retained_bytes > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Lowpoly Artifact mutation exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    // ↩️ One forward row plus its point inverse (which, for `create-mesh`, carries the prior content too).
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes.saturating_mul(2)))
 }
 
 fn prepare_lowpoly_artifact(base: &LowpolySnapshot, mutation: LowpolyMutation) -> Result<(LowpolySnapshot, Vec<LowpolyMutation>, LowpolyMutation), String> {
@@ -1301,7 +1305,8 @@ fn admit_lowpoly_config_mutation(mutation: &LowpolyConfigMutation) -> Result<sto
     if retained_bytes > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Lowpoly config mutation exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    // ↩️ One forward row plus its point inverse (which, for `create-mesh`, carries the prior content too).
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes.saturating_mul(2)))
 }
 
 fn prepare_lowpoly_config(base: &LowpolyConfig, mutation: LowpolyConfigMutation) -> Result<(LowpolyConfig, Vec<LowpolyConfigMutation>, LowpolyConfigMutation), String> {
@@ -1413,6 +1418,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
         let authority = self.authority.as_ref().ok_or_else(|| "Lowpoly Artifact preparation lost its Store authority".to_string())?;
         let edit = lowpoly_store_edit("lowpoly-artifact-retained", forward, inverse, self.description.take(), authority);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        eprintln!("[DEBUG] lp prepared kind={} retained={} prepared_bytes={}", "one-item", self.retained_bytes, self.prepared_bytes);
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1439,22 +1445,30 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
     }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        eprintln!("[DEBUG] lp close_step closing={} items={} bytes={} prepared={} prepared_bytes={} mutation={}", self.closing, grant.maximum_items, grant.maximum_bytes, self.prepared.is_some(), self.prepared_bytes, self.mutation.is_some());
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        // 📄️ Byte accounting pages across grants: a document carrying mesh content outgrows one page, and
+        // demanding the whole size in a single grant returned `Blocked` forever (the extrude hang of
+        // 2026-09-17). The owner is dropped with the last page.
         if self.prepared.is_some() {
-            if grant.maximum_bytes < self.prepared_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
+            let released_bytes = self.prepared_bytes.min(grant.maximum_bytes);
+            self.prepared_bytes -= released_bytes;
+            if self.prepared_bytes == 0 {
+                self.prepared = None;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
             }
-            self.prepared = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.prepared_bytes });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
         if self.mutation.is_some() {
-            if grant.maximum_bytes < self.retained_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
+            let released_bytes = self.retained_bytes.min(grant.maximum_bytes);
+            self.retained_bytes -= released_bytes;
+            if self.retained_bytes == 0 {
+                self.mutation = None;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
             }
-            self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
         if let Some(description) = self.description.as_ref() {
             if grant.maximum_bytes < description.len() {
@@ -1554,6 +1568,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
         let authority = self.authority.as_ref().ok_or_else(|| "Lowpoly config preparation lost its Store authority".to_string())?;
         let edit = lowpoly_store_edit("lowpoly-config-retained", forward, inverse, self.description.take(), authority);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        eprintln!("[DEBUG] lp prepared kind={} retained={} prepared_bytes={}", "one-item", self.retained_bytes, self.prepared_bytes);
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1580,22 +1595,27 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
     }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        eprintln!("[DEBUG] lp close_step closing={} items={} bytes={} prepared={} prepared_bytes={} mutation={}", self.closing, grant.maximum_items, grant.maximum_bytes, self.prepared.is_some(), self.prepared_bytes, self.mutation.is_some());
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if self.prepared.is_some() {
-            if grant.maximum_bytes < self.prepared_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
+            let released_bytes = self.prepared_bytes.min(grant.maximum_bytes);
+            self.prepared_bytes -= released_bytes;
+            if self.prepared_bytes == 0 {
+                self.prepared = None;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
             }
-            self.prepared = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.prepared_bytes });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
         if self.mutation.is_some() {
-            if grant.maximum_bytes < self.retained_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
+            let released_bytes = self.retained_bytes.min(grant.maximum_bytes);
+            self.retained_bytes -= released_bytes;
+            if self.retained_bytes == 0 {
+                self.mutation = None;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
             }
-            self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
         if let Some(description) = self.description.as_ref() {
             if grant.maximum_bytes < description.len() {

@@ -2,7 +2,7 @@ use super::*;
 use crate::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
 fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
-    LowpolyObject { id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")] }
+    LowpolyObject { id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
 }
 
 #[semio_framework_async_macros::async_test]

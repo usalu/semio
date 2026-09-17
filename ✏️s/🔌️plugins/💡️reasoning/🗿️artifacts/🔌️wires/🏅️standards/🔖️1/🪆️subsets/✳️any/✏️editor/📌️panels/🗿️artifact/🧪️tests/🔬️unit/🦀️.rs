@@ -10,6 +10,7 @@ async fn document_has_identities_section() {
     let json = render_body(&mut app, APP_BODY_ARTIFACT).await;
     assert!(json.contains("wires-play-document.identities"));
     assert!(json.contains("Metabolism"));
+    crate::editor::wires::unit_tests::context::close(app);
 }
 
 #[semio_framework_async_macros::async_test]

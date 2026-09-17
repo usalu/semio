@@ -10,6 +10,10 @@ use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindD
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
+/// 🆔️ The document root's node id. It must be a real, non-empty key that no child-index path can
+/// spell: a tree row built with an empty id falls back to its positional `#0` key, which no
+/// `TreeWindowRequest` can name and which collides with any sibling that does the same.
+pub const XML_ROOT_NODE_ID: &str = "$";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -26,14 +30,14 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(&[], node),
-        None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },
+        None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
     };
     TreeWindowKit::render_windowed(&TreeView { roots: vec![root] }, windows)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn node_view(path: &[usize], node: &XmlNode) -> TreeNodeView {
-    let id = path.iter().map(|index| index.to_string()).collect::<Vec<_>>().join("/");
+    let id = if path.is_empty() { XML_ROOT_NODE_ID.to_string() } else { path.iter().map(|index| index.to_string()).collect::<Vec<_>>().join("/") };
     match node {
         XmlNode::Element { name, attrs, children } => {
             let child_views = children

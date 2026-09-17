@@ -1,39 +1,39 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
+  "edges": null,
+  "meta": null,
   "nodes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "81fe9985-4791-4e70-8b81-012e13eab8e2",
         "patch": {
           "replacement": {
-            "id": "81fe9985-4791-4e70-8b81-012e13eab8e2",
-            "nodeKind": "Capsule S",
-            "x": 143.08,
-            "y": 863.335,
-            "radius": 20,
-            "text": "cs_sl2_d0_t_f0_b_c1",
-            "iconKind": "capsule_s",
-            "scale": 1.5,
             "anchor": "fixed",
             "handles": [
               {
-                "id": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
-                "handleKind": "door capsule right",
                 "angle": -1.5707963267948966,
-                "radius": 3
+                "handleKind": "door capsule right",
+                "id": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
+                "radius": 3.0
               }
-            ]
+            ],
+            "iconKind": "capsule_s",
+            "id": "81fe9985-4791-4e70-8b81-012e13eab8e2",
+            "nodeKind": "Capsule S",
+            "radius": 20.0,
+            "scale": 1.5,
+            "text": "cs_sl2_d0_t_f0_b_c1",
+            "x": 143.08,
+            "y": 863.335
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "edges": null,
-  "targetRegions": null,
-  "meta": null
+  "schema": null,
+  "targetRegions": null
 }

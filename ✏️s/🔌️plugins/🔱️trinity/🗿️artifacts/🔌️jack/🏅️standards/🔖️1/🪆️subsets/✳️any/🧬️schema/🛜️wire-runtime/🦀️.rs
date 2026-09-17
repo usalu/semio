@@ -244,9 +244,29 @@ impl JackOwnedRetirement {
         Self { owner: std::mem::ManuallyDrop::new(Some(owner)), active: std::mem::ManuallyDrop::new(None), phase: 0 }
     }
 
+    /// ✂️ Releases a string within the grant: one larger than `maximum_bytes` is paged off from its tail
+    /// (char-boundary safe) instead of refused — a refusal is indistinguishable from a stall and pins every
+    /// archive hydration that retires the owner.
+    fn page_string_tail(value: &mut String, maximum_bytes: usize) -> Option<store::SnapshotRetirementStep> {
+        if value.len() <= maximum_bytes {
+            return None;
+        }
+        let mut cut = value.len() - maximum_bytes;
+        while cut < value.len() && !value.is_char_boundary(cut) {
+            cut += 1;
+        }
+        let released_bytes = value.len() - cut;
+        value.truncate(cut);
+        value.shrink_to_fit();
+        Some(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes })
+    }
+
     fn string_step(value: &mut String, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
-        if maximum_items == 0 || value.len() > maximum_bytes {
+        if maximum_items == 0 || maximum_bytes == 0 {
             return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(step) = Self::page_string_tail(value, maximum_bytes) {
+            return step;
         }
         let released_bytes = value.len();
         drop(std::mem::take(value));
@@ -262,13 +282,50 @@ impl JackOwnedRetirement {
     }
 
     fn optional_string_step(value: &mut Option<String>, maximum_items: usize, maximum_bytes: usize) -> Option<store::SnapshotRetirementStep> {
-        let string = value.as_ref()?;
-        if maximum_items == 0 || string.len() > maximum_bytes {
+        let string = value.as_mut()?;
+        if maximum_items == 0 || maximum_bytes == 0 {
             return Some(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(step) = Self::page_string_tail(string, maximum_bytes) {
+            return Some(step);
         }
         let released_bytes = string.len();
         drop(value.take());
         Some(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
+    }
+
+    /// 📏️ Bounded owned-byte size of one manifest entry — `Err` as soon as it exceeds the grant, so the
+    /// estimate itself never walks more than one grant's worth of fields.
+    fn properties_owned_bytes(properties: &[PropertyDef], maximum_bytes: usize) -> Result<usize, &'static str> {
+        properties.iter().try_fold(0usize, |bytes, property| {
+            let remaining = maximum_bytes.checked_sub(bytes).ok_or("jack-retirement.entry-too-large")?;
+            bytes.checked_add(JackSnapshotCloneAuthority::property_owned_bytes(property, remaining)?.max(1)).filter(|bytes| *bytes <= maximum_bytes).ok_or("jack-retirement.entry-too-large")
+        })
+    }
+
+    fn kind_owned_bytes(owner: &JackRetirementOwner, maximum_bytes: usize) -> Result<usize, &'static str> {
+        let (name, properties, port_kinds): (&str, &[PropertyDef], &[String]) = match owner {
+            JackRetirementOwner::NodeKind(kind) => (&kind.name, &kind.properties, &kind.port_kinds),
+            JackRetirementOwner::EdgeKind(kind) => (&kind.name, &kind.properties, &[]),
+            JackRetirementOwner::PortKind(kind) => (&kind.name, &kind.properties, &[]),
+            JackRetirementOwner::PropertyDef(property) => return JackSnapshotCloneAuthority::property_owned_bytes(property, maximum_bytes).map(|bytes| bytes.max(1)),
+            _ => return Err("jack-retirement.entry-not-shallow"),
+        };
+        let ports = port_kinds.iter().try_fold(name.len().max(1), |bytes, port| bytes.checked_add(port.len().max(1)).filter(|bytes| *bytes <= maximum_bytes)).ok_or("jack-retirement.entry-too-large")?;
+        ports.checked_add(Self::properties_owned_bytes(properties, maximum_bytes.checked_sub(ports).ok_or("jack-retirement.entry-too-large")?)?).filter(|bytes| *bytes <= maximum_bytes).ok_or("jack-retirement.entry-too-large")
+    }
+
+    /// 🧺️ A manifest entry whose whole owned size fits the grant is one released item: its nested
+    /// fields are already accounted by the bounded estimate, so it drops in this step instead of costing
+    /// a nested cursor turn per string (the 42-kind Nakagin manifest took ~55 s per retired snapshot).
+    fn release_or_spawn(active: &mut std::mem::ManuallyDrop<Option<Box<JackOwnedRetirement>>>, owner: JackRetirementOwner, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
+        match Self::kind_owned_bytes(&owner, maximum_bytes) {
+            Ok(released_bytes) if maximum_items > 0 => {
+                drop(owner);
+                store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }
+            }
+            _ => Self::spawn(active, owner),
+        }
     }
 
     fn spawn(active: &mut std::mem::ManuallyDrop<Option<Box<JackOwnedRetirement>>>, owner: JackRetirementOwner) -> store::SnapshotRetirementStep {
@@ -281,8 +338,11 @@ impl JackOwnedRetirement {
         let id = match entity {
             EntityRef::Node(id) | EntityRef::Edge(id) => id,
         };
-        if maximum_items == 0 || id.len() > maximum_bytes {
+        if maximum_items == 0 || maximum_bytes == 0 {
             return Some(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(step) = Self::page_string_tail(id, maximum_bytes) {
+            return Some(step);
         }
         let released_bytes = id.len();
         drop(std::mem::take(id));
@@ -313,21 +373,21 @@ impl JackOwnedRetirement {
                 }
                 4 => {
                     if let Some(kind) = value.manifest.node_kinds.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::NodeKind(kind));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::NodeKind(kind), maximum_items, maximum_bytes);
                     }
                     self.phase = 5;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 5 => {
                     if let Some(kind) = value.manifest.edge_kinds.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::EdgeKind(kind));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::EdgeKind(kind), maximum_items, maximum_bytes);
                     }
                     self.phase = 6;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 6 => {
                     if let Some(kind) = value.manifest.port_kinds.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::PortKind(kind));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::PortKind(kind), maximum_items, maximum_bytes);
                     }
                     self.phase = 7;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
@@ -601,7 +661,7 @@ impl JackOwnedRetirement {
                 0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::PropertyDef(value), maximum_items, maximum_bytes);
                     }
                     self.phase = 2;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
@@ -628,7 +688,7 @@ impl JackOwnedRetirement {
                 0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::PropertyDef(value), maximum_items, maximum_bytes);
                     }
                     self.phase = 2;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
@@ -642,7 +702,7 @@ impl JackOwnedRetirement {
                 0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
+                        return Self::release_or_spawn(&mut self.active, JackRetirementOwner::PropertyDef(value), maximum_items, maximum_bytes);
                     }
                     self.phase = 2;
                     store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
@@ -668,7 +728,16 @@ impl store::ErasedSnapshotRetirement for JackOwnedRetirement {
                 step => Ok(step),
             };
         }
-        Ok(self.advance(maximum_items.min(1), maximum_bytes))
+        let phase_before = self.phase;
+        let step = self.advance(maximum_items.min(1), maximum_bytes);
+        if let Some(JackRetirementOwner::Snapshot(value)) = self.owner.as_ref() {
+            if phase_before != self.phase || self.phase == 4 && value.manifest.node_kinds.len() % 16 == 0 {
+                eprintln!("[DEBUG] jack snapshot retirement phase {phase_before}->{} node_kinds={}", self.phase, value.manifest.node_kinds.len());
+            }
+        } else if self.owner.is_none() && phase_before != 0 {
+            eprintln!("[DEBUG] jack owned retirement terminal step={step:?}");
+        }
+        Ok(step)
     }
 
     fn terminal_is_empty(&self) -> bool {

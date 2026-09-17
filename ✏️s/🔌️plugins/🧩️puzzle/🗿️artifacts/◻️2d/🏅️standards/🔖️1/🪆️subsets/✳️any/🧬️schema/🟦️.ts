@@ -246,7 +246,22 @@ export function parsePuzzle2dArtifact(value: unknown, at = "$"): Puzzle2dArtifac
     camera: parsePuzzle2dCamera(row["camera"], `${at}.camera`),
     nodes: puzzlePuzzle2dArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parsePuzzle2dNode(item, `${at}.nodes[${index}]`)),
     edges: puzzlePuzzle2dArtifactGuardArray(row["edges"], `${at}.edges`).map((item, index) => parsePuzzle2dEdge(item, `${at}.edges[${index}]`)),
+    targetRegions: row["targetRegions"] === undefined ? [] : puzzlePuzzle2dArtifactGuardArray(row["targetRegions"], `${at}.targetRegions`).map((item, index) => parsePuzzle2dTargetRegion(item, `${at}.targetRegions[${index}]`)),
     meta: parsePuzzle2dMeta(row["meta"], `${at}.meta`),
+  };
+}
+
+export function parsePuzzle2dTargetRegion(value: unknown, at = "$"): Puzzle2dTargetRegion {
+  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  return {
+    id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
+    x: puzzlePuzzle2dArtifactGuardNumber(row["x"], `${at}.x`),
+    y: puzzlePuzzle2dArtifactGuardNumber(row["y"], `${at}.y`),
+    width: puzzlePuzzle2dArtifactGuardNumber(row["width"], `${at}.width`),
+    height: puzzlePuzzle2dArtifactGuardNumber(row["height"], `${at}.height`),
+    label: row["label"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["label"], `${at}.label`),
+    hidden: row["hidden"] === undefined ? false : puzzlePuzzle2dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
+    locked: row["locked"] === undefined ? false : puzzlePuzzle2dArtifactGuardBoolean(row["locked"], `${at}.locked`),
   };
 }
 

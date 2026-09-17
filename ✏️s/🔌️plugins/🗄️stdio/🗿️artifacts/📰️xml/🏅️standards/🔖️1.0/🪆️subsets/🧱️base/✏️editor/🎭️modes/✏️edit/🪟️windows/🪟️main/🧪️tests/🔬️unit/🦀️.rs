@@ -16,12 +16,24 @@ async fn render_walks_element_children() {
     let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     let section = node.children.get(0).expect("tree section");
     let root = section.children.get(0).expect("tree root");
-    assert_eq!(root.key.as_str(), "");
+    assert_eq!(root.key.as_str(), XML_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
     let child = root.children.get(0).expect("child");
     assert_eq!(child.key.as_str(), "0");
 }
 
 //#region 🪟️WindowLaws
+
+/// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
+/// first, then its own key — joined by `TREE_WINDOW_PATH_SEPARATOR`. Every node of a `TreeWindowKit`
+/// body sits under the kit's one root section, so a host request names that section first.
+fn window_path(keys: &[&str]) -> String {
+    let mut path = format!("{}-root", TreeWindowKit::KIND_ID);
+    for key in keys {
+        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(key);
+    }
+    path
+}
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
@@ -57,13 +69,13 @@ fn oversized_element_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":300"), "the root element stamps its full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("child-").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
+    assert!(json.matches("\"type\":\"treeItem\"").count() <= MEASURED_VIEWPORT_ROWS as usize + 1, "first paint materialises the root plus the measured viewport and stops: {json}");
 }
 
 /// 🪟️ Law (b): an element the host closed stamps its total and materialises nothing.
 #[test]
 fn closed_element_stamps_total_and_materialises_no_children() {
-    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: String::new(), open: Some(false), offset: 0, rows: 0 }]);
+    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[XML_ROOT_NODE_ID]), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":300"), "a closed element still stamps its extent: {json}");
     assert!(!json.contains("child-"), "a closed element materialises no children: {json}");
 }
@@ -71,7 +83,7 @@ fn closed_element_stamps_total_and_materialises_no_children() {
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw node id.
 #[test]
 fn host_window_materialises_exactly_its_slice() {
-    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: String::new(), open: Some(true), offset: 100, rows: 10 }]);
+    let json = window_body(&oversized_document(300), vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: window_path(&[XML_ROOT_NODE_ID]), open: Some(true), offset: 100, rows: 10 }]);
     assert!(json.contains("\"offset\":100"), "the root reports its offset: {json}");
     for index in 100..110 {
         assert!(json.contains(&format!("\"{index}\"")), "child {index} is inside the window: {json}");

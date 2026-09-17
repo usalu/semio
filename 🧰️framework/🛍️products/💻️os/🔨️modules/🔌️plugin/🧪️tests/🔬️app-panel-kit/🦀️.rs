@@ -264,6 +264,12 @@ mod panel_kit_tests {
         let source = std::fs::read_to_string(&tsx).expect("the host Tree element is readable");
         let spelling = format!("TREE_WINDOW_BODY_NODE_BUDGET = {TREE_WINDOW_BODY_NODE_BUDGET};");
         assert!(source.contains(&spelling), "{} must declare `{spelling}` on one line — the host's request cap and this ledger are one budget", tsx.display());
+        let separator = format!("TREE_WINDOW_PATH_SEPARATOR = \"{TREE_WINDOW_PATH_SEPARATOR}\";");
+        assert!(
+            source.contains(&separator) || source.contains("TREE_WINDOW_PATH_SEPARATOR = \"\\u001f\";"),
+            "{} must declare TREE_WINDOW_PATH_SEPARATOR as U+001F on one line — a path the host joins is the string the guest addresses containers by",
+            tsx.display()
+        );
     }
 
     /// 🧾️ The cost model, exactly: a body costs `1 + rows` per windowed container, every node charged
@@ -328,8 +334,92 @@ mod panel_kit_tests {
         assert_eq!(section_window(&section), Some(TreeWindow { total: 3, offset: 0 }));
     }
 
-    /// 🔑️ The host keys open state, geometry and windows by `node_key` alone, so a body that claims
-    /// one key twice would silently steer one container from the other. The second claim is refused.
+    /// 🔑️ One entity id under two different parents is TWO containers, and they must not steer each
+    /// other. The window path — parent keys, then own key — is what makes that true by construction,
+    /// with the node keys left exactly as the pick target ids the interaction domain registers.
+    #[semio_framework_async_macros::async_test]
+    async fn one_id_under_two_parents_keeps_two_independent_windows() {
+        let cases = window_entries(1);
+        let loads = window_entries(30);
+        let sep = TREE_WINDOW_PATH_SEPARATOR;
+        let view = ViewModel {
+            tree_windows: vec![
+                TreeWindowRequest { body_key: "body".to_string(), node_key: format!("ns.load-cases{sep}uls"), open: Some(true), offset: 4, rows: 3 },
+                TreeWindowRequest { body_key: "body".to_string(), node_key: format!("ns.combinations{sep}uls"), open: Some(false), offset: 0, rows: 0 },
+            ],
+            ..ViewModel::default()
+        };
+        let windows = TreeWindows::for_body(&view, "body");
+        let mut section = |id: &str| {
+            tree_window_section(&windows, id, window_label(), true, &cases, |_| {
+                let item = ui::tree_item(window_label()).try_id("uls").map_err(|_| ui_assembly_error("test.uls-id"))?;
+                tree_window_item(&windows, item, "uls", true, &loads, window_row)
+            })
+        };
+        let in_cases = section("ns.load-cases").expect("a load case named uls assembles");
+        let in_combinations = section("ns.combinations").expect("a combination named uls assembles beside it, not over it");
+        let Component::TreeItem(nested_case) = &in_cases.children[0].component else { panic!("expected a nested TreeItem") };
+        let Component::TreeItem(nested_combination) = &in_combinations.children[0].component else { panic!("expected a nested TreeItem") };
+        assert_eq!(in_cases.children[0].key.as_str(), "uls", "the node key stays the raw pick target id");
+        assert_eq!(in_combinations.children[0].key.as_str(), "uls");
+        assert_eq!(nested_case.window, Some(TreeWindow { total: 30, offset: 4 }), "the load case honours ITS request");
+        assert_eq!(in_cases.children[0].children.len(), 3);
+        assert_eq!(in_cases.children[0].children[0].key.as_str(), "ns.row.4");
+        assert_eq!(nested_combination.window, Some(TreeWindow { total: 30, offset: 0 }), "the combination is closed by ITS own request and keeps its extent");
+        assert!(in_combinations.children[0].children.is_empty(), "a closed container elsewhere in the body is not this one");
+    }
+
+    /// 🔑️ A top-level container's path IS its key, so every flat request and law is unchanged, and a
+    /// nested path addresses exactly one container.
+    #[semio_framework_async_macros::async_test]
+    async fn a_window_path_is_the_key_at_the_top_and_the_parent_chain_below() {
+        let windows = TreeWindows::unhosted();
+        assert_eq!(windows.path_of("ns.rows"), "ns.rows", "a top-level section is addressed by its bare key");
+        let entries = window_entries(1);
+        let seen = std::cell::RefCell::new(Vec::new());
+        tree_window_section(&windows, "a", window_label(), true, &entries, |_| {
+            seen.borrow_mut().push(windows.path_of("b"));
+            let item = ui::tree_item(window_label()).try_id("b").map_err(|_| ui_assembly_error("test.b-id"))?;
+            tree_window_item(&windows, item, "b", true, &entries, |_| {
+                seen.borrow_mut().push(windows.path_of("c"));
+                window_row(&0)
+            })
+        })
+        .expect("bounded fixture");
+        let sep = TREE_WINDOW_PATH_SEPARATOR;
+        assert_eq!(*seen.borrow(), vec![format!("a{sep}b"), format!("a{sep}b{sep}c")], "each level prefixes the chain above it");
+    }
+
+    /// 🧾️ The headroom is the fleet's measured worst case, not a guess: this rebuilds the fattest
+    /// shipped un-windowed block — energy's inspector with a fenestration selected, one windowed
+    /// selection list beside a 16-row field form and a 3-row Actions section — and pins that the whole
+    /// body still fits the reconciler's record arena.
+    #[semio_framework_async_macros::async_test]
+    async fn tree_window_headroom_covers_the_fattest_shipped_panel() {
+        let selected = window_entries(200);
+        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
+        let windows = TreeWindows::for_body(&view, "body");
+        let mut builder = PanelTreeBuilder::new("ns").expect("bounded fixture");
+        builder = builder.window_section(&windows, "ns.selection", Some(window_label()), true, &selected, window_row).expect("bounded fixture");
+        for (id, rows) in [("ns.fenestration", 16usize), ("ns.actions", 3)] {
+            let mut fixed = UiFixedList::default();
+            for index in 0..rows {
+                fixed.try_push(tree_item(format!("{id}.{index}"), format!("Field {index}")).expect("bounded fixture")).expect("bounded fixture");
+            }
+            builder = builder.section(id, Some(window_label()), true, fixed).expect("bounded fixture");
+        }
+        let body = builder.build().expect("bounded fixture");
+        let un_ledgered = body_nodes(&body) - 1 - (1 + body.children[0].children.len());
+        println!("[DEBUG] tree-window-ledger fattest-panel un_ledgered={un_ledgered} body_nodes={}", body_nodes(&body));
+        assert_eq!(un_ledgered, 21, "the energy fenestration inspector's own measured figure: 1 + 16 + 1 + 3");
+        assert!(un_ledgered <= TREE_WINDOW_FIXED_NODE_HEADROOM, "{un_ledgered} > {TREE_WINDOW_FIXED_NODE_HEADROOM}");
+        assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "a fully spent ledger beside the fattest fixed block still reconciles: {} > {UI_DOCUMENT_NODES}", body_nodes(&body));
+        assert_eq!(windows.nodes_remaining(), 0, "the windowed list took the whole ledger and not one record more");
+    }
+
+    /// 🔑️ The host keys open state, geometry and windows by the container's window PATH, so a body
+    /// that claims one path twice — two TRUE siblings under one parent — would silently steer one
+    /// container from the other. The second claim is refused.
     #[semio_framework_async_macros::async_test]
     async fn a_duplicate_node_key_in_one_body_is_refused() {
         let entries = window_entries(4);

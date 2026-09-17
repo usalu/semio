@@ -205,6 +205,12 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         placement_compatibility_json,
         lod_mode,
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
+        // 🖍️ The Area Brush's own W/H steppers as world extent — what ONE click paints. The regions
+        // themselves ride the fixture lane (the document's `targetRegions`), not a second carrier.
+        area_brush_size: Some({
+            let (width, height) = crate::editor::puzzle2d::puzzle2d_area_brush_extent_world(&envelope.runtime);
+            json!({ "width": width, "height": height }).to_string()
+        }),
         domain_id: Some(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN.into()),
         suggestion_menu_json,
         tool_run_trace: None,

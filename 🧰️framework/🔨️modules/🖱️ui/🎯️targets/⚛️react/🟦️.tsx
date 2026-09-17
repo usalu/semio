@@ -9563,6 +9563,7 @@ import {
   treeRowDragPayloadAttributes,
   treeRowHeightPx,
   treeWindowDomAttributes,
+  treeWindowPathOf,
   treeWindowRequestsForViewport,
   treeWindowRowIndexOf,
   treeWindowSpacerRows,
@@ -9572,6 +9573,7 @@ import {
   useTreeState,
   TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,
+  TREE_WINDOW_PATH_SEPARATOR,
   TREE_WINDOW_ROWS_MAX,
   type CatalogueItem,
   type CatalogueProps,
@@ -9673,6 +9675,7 @@ export {
   treeRowDragPayloadAttributes,
   treeRowHeightPx,
   treeWindowDomAttributes,
+  treeWindowPathOf,
   treeWindowRequestsForViewport,
   treeWindowRowIndexOf,
   treeWindowSpacerRows,
@@ -9682,6 +9685,7 @@ export {
   useTreeState,
   TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,
+  TREE_WINDOW_PATH_SEPARATOR,
   TREE_WINDOW_ROWS_MAX,
 };
 export type {

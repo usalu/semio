@@ -24,6 +24,7 @@ fn oversized(layers: usize) -> (LowpolySnapshot, LowpolyConfig) {
         smooth_shading: false,
         mesh: None,
         paint_layers: (0..layers).map(|index| LowpolyPaintLayer { name: format!("Layer {index}"), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: Vec::new() }).collect(),
+        mesh_content: String::new(),
     });
     (snapshot, LowpolyConfig { active_object_id: "obj-0".into(), ..Default::default() })
 }

@@ -11,10 +11,27 @@ async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str],
         .await
         .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
         .await
-        .io(AppIo::from_artifact(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).await)
+        .io(AppIo::from_artifact(artifact_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).await)
         .await
         .build_definition();
     semio_framework_os::register_app_io(plugin_id, &definition);
+}
+
+/// 🔑️ The **window path** the host addresses a nested branch by: the enclosing windowed containers'
+/// keys, outermost first (the `Apps` section, then every ancestor branch), joined by
+/// `TREE_WINDOW_PATH_SEPARATOR` — see `TreeWindows::path_of`.
+fn branch_path(segments: &[&str]) -> String {
+    let mut parts = vec![crate::engine::space::S_PLAY_CATALOGUE_TAB_ID.to_string()];
+    let mut id = String::from("s-play-catalogue.document");
+    for segment in segments {
+        id = format!("{id}.{segment}");
+        parts.push(id.clone());
+    }
+    parts.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
+fn open_branch(segments: &[&str], offset: u32, rows: u32) -> TreeWindowRequest {
+    TreeWindowRequest { body_key: S_PLAY_CATALOGUE_BODY_KEY.into(), node_key: branch_path(segments), open: Some(true), offset, rows }
 }
 
 /// 🛍️ The catalogue body exactly as the host reads it, for the host-known windows in `requests`.
@@ -28,15 +45,14 @@ async fn window_body(requests: Vec<TreeWindowRequest>) -> String {
 async fn catalogue_tree_nests_apps_by_canonical_document() {
     seed_app("puzzle", "s.puzzle2d@1/*#editor", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document").await;
     seed_app("puzzle", "s.puzzle3d@1/*#editor", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document").await;
-    let body_key = S_PLAY_CATALOGUE_BODY_KEY;
     let json = window_body(vec![
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio".into(), open: Some(true), offset: 0, rows: 32 },
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio.puzzle".into(), open: Some(true), offset: 0, rows: 32 },
+        open_branch(&["semio"], 0, 32),
+        open_branch(&["semio", "puzzle"], 0, 32),
     ])
     .await;
     assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"), "an opened branch materialises its children: {json}");
     assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"), "an opened branch materialises its children: {json}");
-    assert_eq!(json.matches("\"label\":\"puzzle\"").count(), 1);
+    assert_eq!(json.matches("\"key\":\"s-play-catalogue.document.semio.puzzle\"").count(), 1, "the two apps share ONE breadcrumb branch: {json}");
 }
 
 //#region 🪟️WindowLaws
@@ -69,10 +85,9 @@ async fn host_window_materialises_exactly_its_slice() {
     for index in 0..6 {
         seed_app("slice", &format!("s.slice{index}@1/*#editor"), &format!("Slice {index}"), &["semio", "slice", &format!("k{index}")], "slice.document").await;
     }
-    let body_key = S_PLAY_CATALOGUE_BODY_KEY;
     let json = window_body(vec![
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio".into(), open: Some(true), offset: 0, rows: 32 },
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio.slice".into(), open: Some(true), offset: 2, rows: 2 },
+        open_branch(&["semio"], 0, 32),
+        open_branch(&["semio", "slice"], 2, 2),
     ])
     .await;
     assert!(json.contains("\"offset\":2"), "the opened branch reports its offset: {json}");
@@ -88,10 +103,9 @@ async fn host_window_materialises_exactly_its_slice() {
 #[semio_framework_async_macros::async_test]
 async fn unbound_catalogue_keeps_row_payloads_and_declares_no_domain() {
     seed_app("puzzle", "s.puzzle2d@1/*#editor", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document").await;
-    let body_key = S_PLAY_CATALOGUE_BODY_KEY;
     let json = window_body(vec![
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio".into(), open: Some(true), offset: 0, rows: 32 },
-        TreeWindowRequest { body_key: body_key.into(), node_key: "s-play-catalogue.document.semio.puzzle".into(), open: Some(true), offset: 0, rows: 32 },
+        open_branch(&["semio"], 0, 32),
+        open_branch(&["semio", "puzzle"], 0, 32),
     ])
     .await;
     assert!(!json.contains("interactionDomain"), "the catalogue binds no domain: {json}");

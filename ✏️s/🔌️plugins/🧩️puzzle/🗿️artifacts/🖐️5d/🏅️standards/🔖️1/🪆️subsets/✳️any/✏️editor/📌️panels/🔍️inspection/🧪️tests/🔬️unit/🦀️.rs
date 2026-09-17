@@ -54,7 +54,7 @@ fn scene(ids: &[String]) -> Puzzle5dScene {
         })
         .collect();
     if ids.len() >= 2 {
-        document.fasteners = vec![crate::editor::puzzle5d::Puzzle5dFastener {
+        document.fasteners = vec![Puzzle5dFastener {
             id: "fastener-0".into(),
             source: puzzle5d_grip_full_id(&ids[0], "g0"),
             target: puzzle5d_grip_full_id(&ids[1], "g0"),

@@ -30,7 +30,7 @@ pub fn voxel_dim_measures(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) ->
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: puzzle5d_action("setVoxelDims", Some(object([("axis".to_string(), axis.into())]))),
+        on_change: puzzle5d_action("setVoxelDims", Some(object([("axis".to_string(), axis.to_string().into())]))),
     };
     vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]
 }

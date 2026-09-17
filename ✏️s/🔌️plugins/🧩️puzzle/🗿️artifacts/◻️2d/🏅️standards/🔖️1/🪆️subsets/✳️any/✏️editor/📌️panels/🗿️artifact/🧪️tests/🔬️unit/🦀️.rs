@@ -186,6 +186,16 @@ fn node_records(node: &BuiltNode) -> usize {
     1 + node.children.iter().map(node_records).sum::<usize>()
 }
 
+/// 🔑️ Every node key in one body. A windowed container is addressed by its authored key, so two
+/// containers (or two rows) sharing one key inside a body make the host's `TreeWindowRequest`
+/// ambiguous — the SDK refuses it.
+fn node_keys(node: &BuiltNode, keys: &mut Vec<String>) {
+    keys.push(node.key.as_str().to_string());
+    for child in node.children.iter() {
+        node_keys(child, keys);
+    }
+}
+
 /// 🧾️ The whole-document law: one container holds more entries than a whole `UI_DOCUMENT_NODES` arena
 /// AND every container is open at once asking for more rows than the arena could hold. Per-container
 /// clamps alone do not save this body — only the SDK's body-wide node ledger does. Every container
@@ -204,6 +214,14 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
         assert_eq!(window_of(container).expect("every container stamps its window").total as usize, total, "container {section} must stamp its FULL total however few rows it could afford");
     }
     let records = node_records(&tree);
+
+    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
+    let mut keys = Vec::new();
+    node_keys(&tree, &mut keys);
+    let mut unique = keys.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(unique.len(), keys.len(), "every node key in this body is unique ({} of {} distinct)", unique.len(), keys.len());
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
     let body = body_json(tree);
     assert!(!body.contains(".more"), "no continuation row closes an exhausted container: {body:.400}");
@@ -220,8 +238,8 @@ fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
             .iter()
             .map(|action| {
                 let asked = match action.action.args.as_ref() {
-                    Some(semio_framework_plugin::UiValue::Map(map)) => map.iter().find(|(key, _)| key == "value").and_then(|(_, value)| match value {
-                        semio_framework_plugin::UiValue::Bool(value) => Some(*value),
+                    Some(semio_framework_plugin::UiValue::Map(map)) => map.iter().find(|(key, _)| key.as_str() == "value").and_then(|(_, value)| match value {
+                        semio_framework_plugin::UiValue::Bool(value) => Some(value),
                         _ => None,
                     }),
                     _ => None,

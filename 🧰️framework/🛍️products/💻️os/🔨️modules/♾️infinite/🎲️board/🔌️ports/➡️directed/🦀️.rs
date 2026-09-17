@@ -212,6 +212,31 @@ pub mod scene_json {
         }
     }
 
+    /// 🎯️ One `targetRegions` row of the owning document, as the descriptor spells it. Derived, not
+    /// hand-written: unlike its node/edge siblings a region carries no free-form `userData`.
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
+    pub struct RegionDescJson {
+        pub id: String,
+        pub x: f64,
+        pub y: f64,
+        pub width: f64,
+        pub height: f64,
+        #[serde(default)]
+        #[value(default)]
+        pub label: Option<String>,
+        #[serde(default)]
+        #[value(default)]
+        pub hidden: Option<bool>,
+        #[serde(default)]
+        #[value(default)]
+        pub locked: Option<bool>,
+        #[serde(default)]
+        #[value(default)]
+        pub selected: Option<bool>,
+    }
+
     #[derive(Clone, Debug, Default, Deserialize, Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
@@ -222,6 +247,11 @@ pub mod scene_json {
         #[serde(default)]
         #[value(default)]
         pub wires: Vec<WireDescJson>,
+        /// @emoji 🎯️ Fill-constraining rectangles painted beneath every entity and hit-tested after
+        /// all of them — absent on a board that declares none.
+        #[serde(default)]
+        #[value(default)]
+        pub regions: Vec<RegionDescJson>,
         /// @emoji 💠️ JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
         #[serde(default)]
         #[value(default)]
@@ -234,9 +264,17 @@ pub mod scene_json {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct FixtureJson {
         pub schema: String,
-        pub camera: CameraJson,
+        /// @emoji 🎥️ Absent in every document whose camera is session state the host owns (puzzle 2d
+        /// since its `setCamera` became a View-kind verb): the parse keeps the camera it is looking
+        /// through instead of refusing the document and blanking the board.
+        #[serde(default)]
+        pub camera: Option<CameraJson>,
         pub nodes: Vec<serde_json::Value>,
         pub edges: Vec<serde_json::Value>,
+        /// @emoji 🎯️ The document's fill-constraining rectangles. Absent (never `[]`) on a board that
+        /// has none, exactly as the owning artifact's snapshot omits an empty `targetRegions`.
+        #[serde(default, rename = "targetRegions")]
+        pub target_regions: Vec<serde_json::Value>,
         #[serde(default)]
         pub meta: Option<serde_json::Value>,
     }
@@ -245,9 +283,16 @@ pub mod scene_json {
         fn to_value(&self) -> dsl::DslValue {
             dsl::DslValue::object([
                 ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-                ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
+                (
+                    "camera".to_string(),
+                    match &self.camera {
+                        Some(camera) => dsl::ToValue::to_value(camera),
+                        None => dsl::DslValue::Null,
+                    },
+                ),
                 ("nodes".to_string(), dsl::DslValue::Array(self.nodes.iter().map(dsl::DslValue::from).collect())),
                 ("edges".to_string(), dsl::DslValue::Array(self.edges.iter().map(dsl::DslValue::from).collect())),
+                ("targetRegions".to_string(), dsl::DslValue::Array(self.target_regions.iter().map(dsl::DslValue::from).collect())),
                 (
                     "meta".to_string(),
                     match &self.meta {
@@ -268,11 +313,12 @@ pub mod scene_json {
             let mut camera = None;
             let mut nodes = Vec::new();
             let mut edges = Vec::new();
+            let mut target_regions = Vec::new();
             let mut meta = None;
             for (key, entry) in fields {
                 match key.as_str() {
                     "schema" => schema = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                    "camera" => camera = Some(<CameraJson as dsl::FromValue>::from_value(entry).map_err(|e| e.under("camera"))?),
+                    "camera" => camera = if matches!(entry, dsl::DslValue::Null) { None } else { Some(<CameraJson as dsl::FromValue>::from_value(entry).map_err(|e| e.under("camera"))?) },
                     "nodes" => {
                         let dsl::DslValue::Array(items) = entry else {
                             return Err(dsl::ValueError::new("expected an array for nodes").under("nodes"));
@@ -285,11 +331,17 @@ pub mod scene_json {
                         };
                         edges = items.iter().map(serde_json::Value::from).collect();
                     }
+                    "targetRegions" => {
+                        let dsl::DslValue::Array(items) = entry else {
+                            return Err(dsl::ValueError::new("expected an array for targetRegions").under("targetRegions"));
+                        };
+                        target_regions = items.iter().map(serde_json::Value::from).collect();
+                    }
                     "meta" => meta = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
                     _ => {}
                 }
             }
-            Ok(FixtureJson { schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?, camera: camera.ok_or_else(|| dsl::ValueError::new("FixtureJson missing camera"))?, nodes, edges, meta })
+            Ok(FixtureJson { schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?, camera, nodes, edges, target_regions, meta })
         }
     }
 
@@ -418,6 +470,9 @@ pub mod types {
     pub enum ActiveUtility {
         Select,
         Brush,
+        /// @emoji 🖍️ Paints target regions: a click-drag rectangle, or a click that drops one of the
+        /// configured brush extent. Never picks, never marquees.
+        AreaBrush,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1190,13 +1245,13 @@ pub mod types {
 
 pub use crate::infinite::board::ports::*;
 pub use crate::infinite::board::{
-    area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, rotate_point_about, selection_contains_edge_curve, selection_contains_handle_point,
-    selection_contains_node_bounds, selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, snap_transform_angle, transform_pivot_of, transform_ring_angle_delta,
-    transform_ring_hit, transform_ring_radius_world, TransformGumballFlags, SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX, SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
-    TRANSFORM_RING_HIT_TOLERANCE_PX, TRANSFORM_ROTATE_SNAP_RADIANS,
+    area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_contains_edge_curve,
+    selection_contains_handle_point, selection_contains_node_bounds, selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, snap_region_scalar, snap_transform_angle,
+    transform_pivot_of, transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, RegionData, RegionGrip, TransformGumballFlags, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD,
+    SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX, SELECTION_MARQUEE_DRAG_THRESHOLD_PX, TRANSFORM_RING_HIT_TOLERANCE_PX, TRANSFORM_ROTATE_SNAP_RADIANS,
 };
 pub use crate::infinite::canvas;
-pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, SceneDescriptorJson, WireDescJson};
+pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, RegionDescJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 
 /// ➡️ Port graph engine with directed handle endpoints.

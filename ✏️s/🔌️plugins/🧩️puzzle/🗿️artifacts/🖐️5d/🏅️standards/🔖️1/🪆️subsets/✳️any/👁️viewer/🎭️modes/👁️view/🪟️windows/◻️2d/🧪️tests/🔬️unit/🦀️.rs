@@ -19,7 +19,20 @@ fn render_produces_a_scene_node_for_the_default_document() {
 fn fixture_carries_one_node_per_part_and_one_edge_per_fastener() {
     let document = Puzzle5dSnapshot {
         parts: vec![Puzzle5dPart { id: "teil-ä".into(), ..Default::default() }, Puzzle5dPart { id: "teil-ß".into(), ..Default::default() }],
-        fasteners: vec![Puzzle5dFastener { id: "kante-ß".into(), source: "teil-ä:g1".into(), target: "teil-ß:g1".into(), ..Default::default() }],
+        fasteners: vec![Puzzle5dFastener {
+            id: "kante-ß".into(),
+            source: "teil-ä:g1".into(),
+            target: "teil-ß:g1".into(),
+            fastener_kind: None,
+            gap: 0.0,
+            shift: 0.0,
+            rise: 0.0,
+            rotation: 0.0,
+            turn: 0.0,
+            tilt: 0.0,
+            x: 0.0,
+            y: 0.0,
+        }],
         ..Default::default()
     };
     let fixture: Value = serde_json::from_str(&board_fixture_json(&document)).expect("board fixture json");

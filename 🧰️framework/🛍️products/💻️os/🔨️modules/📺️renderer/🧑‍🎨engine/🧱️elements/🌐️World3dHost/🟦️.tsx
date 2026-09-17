@@ -1663,7 +1663,19 @@ export function leftoverWorldOverlayIdsInDocumentV1(ids: readonly string[], inst
     if (instance.interactionId) offered.add(instance.interactionId);
     if (instance.meshId) offered.add(instance.meshId);
   }
-  return ids.filter((id) => offered.has(id));
+  // 🧩️ A component target (`<interactionId>.<granularity>.<n>`) is covered by the instance it addresses.
+  return ids.filter((id) => offered.has(id) || [...offered].some((prefix) => id.startsWith(`${prefix}.`)));
+}
+
+/** 🪪️ The rendered instance id an id names — itself, or the instance whose `interactionId` it is. */
+export function worldActiveInstanceIdV1(instances: readonly WorldInstanceRecord[], id: string | null | undefined): string | undefined {
+  if (!id) return undefined;
+  return instances.find((instance) => instance.id === id)?.id ?? instances.find((instance) => instance.interactionId === id)?.id ?? id;
+}
+
+function worldIdsCoverInstanceV1(instances: readonly WorldInstanceRecord[], ids: readonly string[], instanceId: string): boolean {
+  const interactionId = instances.find((instance) => instance.id === instanceId)?.interactionId;
+  return ids.includes(instanceId) || (interactionId != null && ids.includes(interactionId));
 }
 
 export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
@@ -1693,7 +1705,10 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
     // the 180-object Nakagin document, every sample of a 12-minute run
     // (26/09/02/PUZZLE-3D-END-TO-END wave B46). The base's own active id is kept when the overlay still
     // names it, so a re-pick of the same object does not move the active one.
-    ...(leftover.ids.length > 0 ? { ids: leftover.ids, activeObjectId: base.activeObjectId && leftover.ids.includes(base.activeObjectId) ? base.activeObjectId : leftover.ids[0] } : {}),
+    // 🪪️ Overlay ids are INTERACTION targets (an instance's `interactionId`, e.g. lowpoly's
+    // `lowpoly-document.<id>`), while `activeObjectId` names a rendered instance: resolve back to the
+    // instance id, or every per-instance `activeObjectId` comparison (component picking, marquee) misses.
+    ...(leftover.ids.length > 0 ? { ids: leftover.ids, activeObjectId: worldActiveInstanceIdV1(instances, base.activeObjectId && worldIdsCoverInstanceV1(instances, leftover.ids, base.activeObjectId) ? base.activeObjectId : leftover.ids[0]) } : {}),
     hoveredId: leftover.hoveredId ?? base.hoveredId,
     gumballActive: leftover.gumballActive || Boolean(base.gumballActive),
     gumballTarget: pose.gumballTarget ?? base.gumballTarget,
@@ -1745,6 +1760,8 @@ export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, inte
     activeUtility: interaction.activeUtility ?? "select",
     showEdges: selection.showEdges ?? null,
     selectionMode: selection.selectionMode ?? selection.granularity ?? null,
+    componentIds: selection.componentIds ?? [],
+    targets: selection.targets ?? null,
   };
 }
 
@@ -2475,11 +2492,11 @@ export function world3dGumballSelectionArgsV1(selection: {
   readonly selectionMode?: string;
   readonly granularity?: string;
 }): { readonly mode: string; readonly ids: readonly string[] } {
-  const leftoverIds = selection.ids ?? [];
-  return {
-    mode: selection.selectionMode ?? selection.granularity ?? "object",
-    ids: leftoverIds.length > 0 ? leftoverIds : (selection.componentIds ?? []).map(String),
-  };
+  // 🧯️ No `componentIds` fallback: those are face/vertex/edge INDICES, so `.map(String)` produced ids
+  // like `"0"`, `"1"` that no `Puzzle3dObject.id` can ever match. The guest collected them, mutated
+  // nothing, and completed with a refusal — a transform that silently did nothing, minted exactly when
+  // the gesture had no object to act on. An empty list is the honest answer, and the caller refuses it.
+  return { mode: selection.selectionMode ?? selection.granularity ?? "object", ids: selection.ids ?? [] };
 }
 
 /** @emoji 🎛️ Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
@@ -2829,7 +2846,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
     [instance.id, onRootRef],
   );
   const chrome = useWorldInstanceChrome(instance.id, instance.objectKind);
-  const isActiveObject = instance.id === activeObjectId;
+  const isActiveObject = instance.id === activeObjectId || (instance.interactionId != null && instance.interactionId === activeObjectId);
   const colors = semanticColorsFromPalette(palette);
   const celebratingIds = useCelebratingWorldInstanceIds();
   const provisional = useToolRunProvisional(instance) || instance.provisional === true;
@@ -2957,6 +2974,9 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                   return;
                 }
                 if (!instancePickEnabled) return;
+                // 🧵️ Displayed edges (`showEdges`) are not pick targets unless edge granularity is armed: let the
+                // hit fall through to the face/instance under it instead of swallowing every click near a seam.
+                if (!targets.edge && !isCurveOnly) return;
                 event.stopPropagation();
                 // 🧵️ Centerline/curve objects are the model-definition instances — never decompose into edge components.
                 if (isCurveOnly && targets.mesh) {
@@ -2977,6 +2997,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               }}
               onPointerMove={(event) => {
                 if (!instancePickEnabled) return;
+                if (!targets.edge && !isCurveOnly) return;
                 event.stopPropagation();
                 if (isCurveOnly) {
                   onInstancePointerMove(instance.id);
@@ -4205,7 +4226,7 @@ function resolveMarqueeComponentIds(
   method: SelectionMarqueeMethod,
   coverage: SelectionMarqueeCoverage,
 ): readonly number[] {
-  const active = instances.find((instance) => instance.id === activeObjectId);
+  const active = instances.find((instance) => instance.id === activeObjectId) ?? instances.find((instance) => instance.interactionId === activeObjectId);
   if (!active) return [];
   const meshId = active.meshId ?? active.id;
   const meshData = meshes.find((mesh) => mesh.id === meshId)?.data;
@@ -5369,7 +5390,7 @@ export function world3dInstanceInteractionTargets(instances: readonly WorldInsta
  * domain: `<objectInteractionId>.<granularity>.<componentId>`, the object's own target id extended by the
  * component address (the lowpoly "mesh" domain's `lowpoly-document.<objectId>.<granularity>.<id>` rows). */
 export function world3dComponentInteractionTarget(instances: readonly WorldInstanceRecord[], objectId: string, granularity: string, componentId: number): { readonly granularity: string; readonly id: string } {
-  const record = instances.find((entry) => entry.id === objectId);
+  const record = instances.find((entry) => entry.id === objectId) ?? instances.find((entry) => entry.interactionId === objectId);
   return { granularity, id: `${record?.interactionId ?? objectId}.${granularity}.${componentId}` };
 }
 
@@ -5699,6 +5720,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * gumball's local preview). */
   const relocateSessionRef = useRef<World3dRelocateSession | null>(null);
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
+  /** 🕹️ The ids the gesture GRABBED, pinned at drag start. Resolving them per dispatch read whatever the
+   * selection happened to be when the delta was enqueued — and a gumball drag routinely changes the
+   * selection under itself (a press that misses the handle is a canvas pick that clears it). An id-less
+   * delta reaches the guest, matches no document object, and completes with a refusal notice instead of
+   * an edit: the long-standing `gumball-scene-delta` red, where `data-instances-json` never moved. */
+  const gumballGestureArgsRef = useRef<{ readonly mode: string; readonly ids: readonly string[] } | null>(null);
   /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only unless the selection record asks for
    * live dispatch; either way every delta and the closing `transformEnd` ride this one FIFO. */
   const gumballDragChainRef = useRef(Promise.resolve());
@@ -6640,7 +6667,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const dispatchGumballPoseDelta = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, selectionArgs(), kind);
+      // 🕹️ The gesture's OWN ids (pinned at drag start), never the selection as it stands now.
+      const base = gumballGestureArgsRef.current ?? selectionArgs();
+      if (base.ids.length === 0) {
+        console.info("gumball pose delta skipped", { reason: "no-selection-ids", transformMode: selection.transformMode, kind, args: base });
+        return Promise.resolve();
+      }
+      const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, base, kind);
       if (!payload) {
         // 🧯️ A drag whose pose did not move commits NOTHING. It used to synthesize a fixed 0.5 translate
         // along the handle's axis instead — a document edit the user never made, minted precisely when the
@@ -6673,6 +6706,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     (_kind: GumballHandleKind, before: GumballPose) => {
       (globalThis as { __gumballDragEntered?: boolean }).__gumballDragEntered = true;
       gumballDragStartPoseRef.current = before;
+      gumballGestureArgsRef.current = selectionArgs();
       gumballLiveCommittedPoseRef.current = before;
       gumballLiveLatestPoseRef.current = before;
       gumballLiveHandleKindRef.current = _kind;
@@ -6720,6 +6754,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         // One absolute delta — the app commits it directly; `transformEnd` only closes the host bracket.
         if (!gumballPosesEqual(startPose, after)) await dispatchGumballPoseDelta(kind, startPose, after);
         await Promise.resolve(dispatch("transformEnd"));
+        gumballGestureArgsRef.current = null;
       });
     },
     [dispatch, dispatchGumballPoseDelta, enqueueGumballDispatch, gumballLiveDispatch],

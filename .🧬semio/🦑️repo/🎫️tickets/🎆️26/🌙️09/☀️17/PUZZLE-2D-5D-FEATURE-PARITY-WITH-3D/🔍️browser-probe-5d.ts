@@ -857,8 +857,9 @@ add("select-same-kind", "§6-selection", "mutate", async () => {
 });
 
 /** 🗂️ The row VOCABULARY must follow the selection kind — a part, a grip and a fastener do not offer the
- * same verbs, and a menu ported verbatim from 3d would carry ids that are dead in 5d's own registry
- * (`📓️E3` §6: `focusSelection` vs `zoomToSelection` have opposite polarity between the two artifacts). */
+ * same verbs, and a menu ported verbatim from 3d would carry ids that are dead in 5d's own registry.
+ * Settled by slice 5A2: the surviving ids are `focusSelection` (the zoom verb) and
+ * `selectSameKindSelection` (the widen verb); `zoomToSelection`/`selectSameKind` no longer exist. */
 add("context-menu-rows", "§15-context-menu", "mutate", async () => {
   await ensureDocument(1);
   await closePanels();
@@ -1048,7 +1049,7 @@ add("fill-tool-chrome", "§12-fill", "read", async () => {
   const count = page.locator('[id*="puzzle5d-fill-count"] input, input[id*="fill-count"]').first();
   verdict("§12-fill", "fill-count-measure", (await countSafe(count)) > 0, { hook: "puzzle5d-fill-count (setFillCount)" });
   const body = await evalSafe(() => document.body.innerText, "");
-  verdict("§12-fill", "fill-weight-groups", /part weights|teilgewichte/i.test(body) && /grip weights|griffgewichte/i.test(body), { hook: "setObjectKindWeight|setVortexKindWeight" });
+  verdict("§12-fill", "fill-weight-groups", /part weights|teilgewichte/i.test(body) && /grip weights|griffgewichte/i.test(body), { hook: "puzzle5d-play-fill-distribution → setPartKindWeight|setGripKindWeight" });
 });
 
 add("fill-run", "§12-fill", "mutate", async () => {
@@ -1309,7 +1310,7 @@ add("delete-duplicate-focus", "§22-keys", "mutate", async () => {
   await pickWorldInstance();
   await page.keyboard.press("f").catch(() => {});
   const focused = await waitUntil(world, (v) => v.camera !== cameraBefore && v.camera !== "", MUTATION_MS);
-  verdict("§22-keys", "focus-selection-moves-camera", focused.ok, { hook: "focusSelection|zoomToSelection", waitedMs: focused.waitedMs });
+  verdict("§22-keys", "focus-selection-moves-camera", focused.ok, { hook: "focusSelection", waitedMs: focused.waitedMs });
 });
 
 add("clipboard", "§21-clipboard", "mutate", async () => {
@@ -1321,12 +1322,12 @@ add("clipboard", "§21-clipboard", "mutate", async () => {
   await settle(1);
   await page.keyboard.press("Control+v").catch(() => {});
   const pasted = await waitUntil(boardCensus, (census) => census > before, MUTATION_MS);
-  verdict("§21-clipboard", "copy-paste-adds", picked.ok && pasted.ok, { hook: "Puzzle5dClipboardJob", before, after: pasted.value, waitedMs: pasted.waitedMs });
+  verdict("§21-clipboard", "copy-paste-adds", picked.ok && pasted.ok, { hook: "Puzzle5dCopyJob|Puzzle5dCutJob|Puzzle5dPasteJob", before, after: pasted.value, waitedMs: pasted.waitedMs });
   const picked2 = await pickBoardNode();
   const beforeCut = await boardCensus();
   await page.keyboard.press("Control+x").catch(() => {});
   const cut = await waitUntil(boardCensus, (census) => census < beforeCut, MUTATION_MS);
-  verdict("§21-clipboard", "cut-removes", picked2.ok && cut.ok, { hook: "Puzzle5dClipboardJob", before: beforeCut, after: cut.value, waitedMs: cut.waitedMs });
+  verdict("§21-clipboard", "cut-removes", picked2.ok && cut.ok, { hook: "Puzzle5dCopyJob|Puzzle5dCutJob|Puzzle5dPasteJob", before: beforeCut, after: cut.value, waitedMs: cut.waitedMs });
   await page.keyboard.press("Control+v").catch(() => {});
   const back = await waitUntil(boardCensus, (census) => census >= beforeCut, MUTATION_MS);
   verdict("§21-clipboard", "paste-restores-cut", back.ok, { before: beforeCut, after: back.value, waitedMs: back.waitedMs });

@@ -2,8 +2,36 @@ use super::*;
 use crate::editor::note::unit_tests::context::{dispatch, note_app};
 use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
+use crate::{NoteCamera, NoteSnapshot};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
+
+/// 🖋️ One block spelled the way the ink-canvas host sends it — taken from the note's own canvas
+/// projection, so the test pins the round trip host wire → note block.
+fn ink_wire_block(block: &NoteBlockNode) -> serde_json::Value {
+    let snapshot = NoteSnapshot { blocks: vec![block.clone()], ..crate::schema::empty_note_snapshot() };
+    let document: serde_json::Value = serde_json::from_str(&crate::note_canvas_document_json(&snapshot, &NoteCamera::default())).expect("canvas JSON");
+    assert_eq!(document["schema"], "ink.document");
+    document["blocks"][0].clone()
+}
+
+#[semio_framework_async_macros::async_test]
+async fn ink_wire_text_block_round_trips_into_the_composed_text_record() {
+    let mut ids = crate::schema::NoteIdOwner::new("ink-wire-test", 0);
+    let block = create_block_by_kind(&mut ids, "text", 10.0, 10.0);
+    let wire = ink_wire_block(&block);
+    assert!(wire.get("content").is_none() && wire["paragraphs"].is_array(), "the host reads bare paragraphs: {wire}");
+    let mut value = dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&wire.to_string()).expect("wire JSON"));
+    crate::note_block_value_from_ink_wire(&mut value).expect("wire block");
+    assert_eq!(<NoteBlockNode as dsl::FromValue>::from_value(value).expect("note block"), block);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn malformed_ink_event_batches_fault_instead_of_vanishing() {
+    assert!(decode_canvas_events("[{\"mutation\":\"removeBlock\",\"blockId\":\"b1\"}]").is_err(), "a batch keyed by the retired `mutation` tag must fault");
+    assert!(decode_canvas_events("not json").is_err());
+    assert_eq!(decode_canvas_events("[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]").expect("host batch").len(), 1);
+}
 
 #[semio_framework_async_macros::async_test]
 async fn gesture_begin_live_commit_produces_single_undo_step() {
@@ -13,7 +41,7 @@ async fn gesture_begin_live_commit_produces_single_undo_step() {
     let new_id = block_id(&block).to_string();
 
     let begin_events = json!([
-        { "mutation": "addBlock", "block": serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&block)).expect("block JSON oracle"), "parentId": null, "index": null }
+        { "operation": "addBlock", "block": ink_wire_block(&block), "parentId": null, "index": null }
     ])
     .to_string();
     dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) })).await;
@@ -25,7 +53,7 @@ async fn gesture_begin_live_commit_produces_single_undo_step() {
             *block_x = x;
         }
         let live_events = json!([
-            { "mutation": "updateBlock", "blockId": new_id, "block": serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&moved)).expect("moved JSON oracle") }
+            { "operation": "updateBlock", "blockId": new_id, "block": ink_wire_block(&moved) }
         ])
         .to_string();
         dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: live_events, phase: "live".into(), select_ids: None })).await;

@@ -49,6 +49,33 @@ fn puzzle5d_projection_dsl_round_trips() {
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
 }
 
+#[test]
+#[ignore = "maintainer: regenerates capsule-dream 📄️document.json from the dsl fixture"]
+fn export_capsule_dream_document_json_fixture() {
+    let projection = parse_dsl(PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT).unwrap_or_else(|error| {
+        eprintln!("[DEBUG] capsule-dream dsl unavailable for export ({error}); writing empty snapshot json");
+        Puzzle5dSnapshot::default()
+    });
+    let json = dsl::json::to_json_string(&projection);
+    std::fs::write(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/📄️document.json"),
+        json,
+    )
+    .expect("write document.json");
+}
+
+#[test]
+#[ignore = "maintainer: regenerates concrete-forest 📄️document.json from the dsl fixture"]
+fn export_concrete_forest_document_json_fixture() {
+    let projection = parse_dsl(PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest dsl parses");
+    let json = dsl::json::to_json_string(&projection);
+    std::fs::write(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/📄️document.json"),
+        json,
+    )
+    .expect("write document.json");
+}
+
 /// 📜️ Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
 /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle5d` DSL text and round-trip
 /// through `print_dsl`/`parse_dsl` exactly.

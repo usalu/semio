@@ -73,6 +73,7 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, window_id: Opti
             // pair. Both are real `ToolRunSettingsReads` config pointers a live fill run re-reads.
             stepper_field(&format!("{ROOT}.contact-tolerance"), labels.contact_tolerance.as_str(), runtime.contact_tolerance, 0.5, "setBrushPlacementContactTolerance", window_id),
             stepper_field(&format!("{ROOT}.overlap-budget"), labels.overlap_budget.as_str(), runtime.brush_placement_overlap_budget, 0.5, "setBrushPlacementOverlapBudget", window_id),
+            stepper_field(&format!("{ROOT}.proximity-radius"), labels.proximity_radius.as_str(), runtime.proximity_radius, 1.0, "setProximityRadius", window_id),
         ])?)
         .map_err(|_| PluginAssemblyError::new("ui.section", "settings children admission failed"))?
         .try_build()

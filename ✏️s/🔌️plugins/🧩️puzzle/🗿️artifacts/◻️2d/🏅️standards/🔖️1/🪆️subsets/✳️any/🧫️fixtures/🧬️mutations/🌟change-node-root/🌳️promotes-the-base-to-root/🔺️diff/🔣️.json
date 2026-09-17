@@ -1,45 +1,45 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
+  "edges": null,
+  "meta": null,
   "nodes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
         "patch": {
           "replacement": {
-            "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
-            "nodeKind": "Base",
-            "x": 0.663,
-            "y": 983.866,
-            "radius": 20,
-            "text": "b",
-            "iconKind": "base",
-            "root": true,
             "anchor": "fixed",
             "handles": [
               {
-                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c0",
-                "handleKind": "core rectangular bottom",
                 "angle": -2.3561944901923453,
-                "radius": 3
+                "handleKind": "core rectangular bottom",
+                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c0",
+                "radius": 3.0
               },
               {
-                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
-                "handleKind": "core rectangular bottom",
                 "angle": -0.7853981633974483,
-                "radius": 3
+                "handleKind": "core rectangular bottom",
+                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
+                "radius": 3.0
               }
-            ]
+            ],
+            "iconKind": "base",
+            "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+            "nodeKind": "Base",
+            "radius": 20.0,
+            "root": true,
+            "text": "b",
+            "x": 0.663,
+            "y": 983.866
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "edges": null,
-  "targetRegions": null,
-  "meta": null
+  "schema": null,
+  "targetRegions": null
 }

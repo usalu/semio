@@ -12,8 +12,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
     pub enum TrinityApps: PluginApp {
-        JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>>),
-        JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>>),
+        JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
         RewritingEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>>),
         RewritingViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>>),
     }

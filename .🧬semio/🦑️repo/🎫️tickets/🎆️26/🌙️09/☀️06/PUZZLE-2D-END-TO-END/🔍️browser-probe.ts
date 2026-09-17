@@ -148,13 +148,14 @@ const boardVitals = () =>
         selection: el.getAttribute("data-board-selection-json") ?? "",
         camera: el.getAttribute("data-board-camera-json") ?? "",
         hovered: el.getAttribute("data-board-hovered-id") ?? "",
+        hoverPaint: el.getAttribute("data-board-hover-paint-id") ?? "",
         utility: el.getAttribute("data-board-active-utility") ?? "",
         parsed: el.getAttribute("data-board-fixture-parsed") ?? "",
         suggestions: el.getAttribute("data-board-suggestion-menu-json") ?? "",
         transform: el.getAttribute("data-board-transform-json") ?? "",
         regions: el.getAttribute("data-board-target-regions-json") ?? "",
       })),
-    [] as { surface: string; window: string; nodes: number; edges: number; handles: number; selection: string; camera: string; hovered: string; utility: string; parsed: string; suggestions: string; transform: string; regions: string }[],
+    [] as { surface: string; window: string; nodes: number; edges: number; handles: number; selection: string; camera: string; hovered: string; hoverPaint: string; utility: string; parsed: string; suggestions: string; transform: string; regions: string }[],
   );
 
 const inventory = () =>
@@ -479,6 +480,21 @@ const unfoldMeasures = async (windowId = OVERVIEW) => {
   return dump;
 };
 
+/** 🌳️ Presses one tree row's fold chevron, if it has one. A row whose gutter carries no button authors no
+ * children at all — which is a finding about the tree, not a gesture to retry. */
+const foldTreeRow = async (rowId: string) =>
+  evalSafe(
+    (id) => {
+      const row = document.getElementById(id);
+      const chevron = row?.querySelector('[data-slot="tree-gutter"] button, [data-slot="tree-gutter-slot"] button') as HTMLButtonElement | null;
+      if (!chevron) return false;
+      chevron.click();
+      return true;
+    },
+    false,
+    rowId,
+  );
+
 /** 🪪️ Resolves an AUTHORED control id to the id it carries in the document. A window measure is authored once
  * per window KIND and rendered once per open INSTANCE, so its DOM id is `${windowInstanceId}/${authoredId}`;
  * a panel body key is namespaced the same way (`panel:puzzle2d-play-inspector/…`). Idempotent on an id that
@@ -594,13 +610,21 @@ const nudgeControl = async (authored: string, windowId?: string) => {
   // optimistic draft for the whole round trip and moves the rendered `text` FIRST, so "the trigger now reads
   // minimap" is not evidence the guest answered — only `data-published-value` is. Controls without one (a
   // NumberStepper publishes nothing) fall back to any reading change.
+  // 🧯️ A reading that came back NULL is the control having left the document (a dev-HMR reload mid-lane),
+  // never a value that moved — without this guard `published: "false"` → `null` scored a green on a lane
+  // whose shell had just been torn down.
   const scored = before.published !== null;
   const settled = await waitUntil(
     () => readControl(before.id, windowId),
-    (after) => (scored ? (after?.published ?? null) !== before.published : JSON.stringify(after) !== JSON.stringify(before)),
+    (after) => after !== null && (scored ? (after.published ?? null) !== before.published : JSON.stringify(after) !== JSON.stringify(before)),
     30000,
   );
-  return { before, after: settled.value, waitedMs: settled.waitedMs, moved: settled.ok, scoredOn: scored ? "published" : "reading" };
+  // 🧾️ The dispatch hops the press produced, so a control that never moved says WHICH hop broke: a press
+  // that never reached the action channel at all, one the guest refused, or one whose answer never came back.
+  const dispatch = consoleSince(mark)
+    .filter((row) => /performInvocation|command ingress|dropped action|refus|notice|window-required/i.test(row) && !BENIGN_CONSOLE_RE.test(row))
+    .slice(-6);
+  return { before, after: settled.value, waitedMs: settled.waitedMs, moved: settled.ok, scoredOn: scored ? "published" : "reading", dispatch };
 };
 
 /** 🧰️ Unfolds one window's utility bar. `.unfold` is only in the document while the bar is folded. */
@@ -634,13 +658,42 @@ const armTool = async (toolId: string) => {
   return { found, pressed: settled.value, ok: found > 0 && settled.ok, waitedMs: settled.waitedMs };
 };
 
+/** 🔭️ Brings at least one node back INTO the overview pane and returns the ids that are now reachable.
+ *
+ * 🧯️ `nodeScreen` answers null for anything outside the pane, so a predecessor lane that zoomed in — or a
+ * `focusSelection` that recentred on a node the next lane deleted — leaves a one-node document entirely
+ * off-screen. Every lane behind it then reported "no node position", which reads exactly like the feature
+ * under test refusing. Zooming out at the pane centre is the cheapest framing gesture the board answers. */
+const frameBoard = async (attempts = 6) => {
+  let visible = await visibleNodeIds();
+  for (let attempt = 0; attempt < attempts && visible.length === 0; attempt++) {
+    const box = await overviewBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 400);
+    await settle(1);
+    visible = await visibleNodeIds();
+    if (visible.length) log(`  frameBoard recovered the board after ${attempt + 1} zoom-out(s): visible=${visible.length}`);
+  }
+  return visible;
+};
+
 /** 🎯️ Picks one visible node on the overview canvas and proves the selection through the pane's own
  * `data-board-selection-json`. Every selection-scoped lane's precondition. */
 const pickNode = async (index = 0) => {
-  const visible = await visibleNodeIds();
-  const id = visible[index] ?? visible[0] ?? null;
+  // 🎯️ The id and its SCREEN POINT are resolved together and retried together: a camera that is still
+  // settling (an example reload, a `focusSelection` in the lane before) hands out an id whose projection is
+  // already off-pane by the time it is asked for, and the lane then reports "no node position" for a board
+  // that has 180 of them.
+  let visible: string[] = [];
+  let id: string | null = null;
+  let at: { x: number; y: number } | null = null;
+  for (let attempt = 0; attempt < 3 && !at; attempt++) {
+    visible = await frameBoard();
+    id = visible[index] ?? visible[0] ?? null;
+    at = id ? await nodeScreen(id) : null;
+    if (!at) await settle(1);
+  }
   if (!id) return { id: null, at: null, picked: false, waitedMs: 0, selection: "", visible: visible.length };
-  const at = await nodeScreen(id);
   if (!at) return { id, at: null, picked: false, waitedMs: 0, selection: "", visible: visible.length };
   await page.mouse.click(at.x, at.y);
   const settled = await waitUntil(overviewVitals, (v) => selectionIds(v).includes(id), 15000);
@@ -648,9 +701,10 @@ const pickNode = async (index = 0) => {
 };
 
 /** 🎲️ Whether the overview board is actually PAINTED — `data-board-fixture-parsed` plus a non-zero node
- * count. A 2d board can go transiently blank inside a session when a descriptor resync announces every
- * document edge and exhausts the 256-slot event-credit queue (`📓️E7…` §4), and every verdict taken against
- * a blank board is a verdict about that, not about the feature under test. */
+ * count. A 2d board used to go blank for the rest of a session whenever a fixture parse was refused, because
+ * `parse_fixture_json` cleared the scene BEFORE it built and admitted the descriptor (slice 2A made the
+ * commit all-or-nothing). Every verdict taken against a blank board is a verdict about that, not about the
+ * feature under test, so the board is asked first and answers in its own verdict. */
 const boardPainted = async (pane = OVERVIEW) => {
   const v = await paneVitals(pane);
   return { parsed: v?.parsed ?? "", nodes: v?.nodes ?? -1, edges: v?.edges ?? -1, painted: (v?.nodes ?? -1) > 0 && (v?.parsed ?? "") === "true" };
@@ -734,12 +788,17 @@ const historyRows = async () => {
     {} as Record<string, string>,
   );
 };
+/** 🪟️ Rows the SHELL writes for its own chrome — panel toggles, tab switches, tool arming. They are
+ * `WindowConfig`/shell commands, never artifact mutations, and this probe produces one on every
+ * `clickTab`/`openHistory`. Named so a verdict about the DOCUMENT's ledger can report them instead of being
+ * decided by them. */
+const CHROME_HISTORY_ROW = /^(Toggle Panel|Switch Panel Tab|Activate Window|Resize Window|Set Active Tool|Set Active Utility|Collapse|Expand|Toggle Pane|Check In)/i;
+
 /** ⏪️ Presses one framework history control by id, reporting whether the control was there at all — these
- * are reserved verbs the shell owns, so a missing control is a framework finding, never an app one.
- * `revert` is looked up under BOTH spellings because the row :6012 renders is `framework.history.checkin`. */
+ * are reserved verbs the shell owns, so a missing control is a framework finding, never an app one. */
 const pressHistory = async (kind: "undo" | "redo" | "checkpoint" | "revert") => {
   await openHistory();
-  const candidates = kind === "revert" ? ["framework.history.revert", "framework.history.checkin"] : [`framework.history.${kind}`];
+  const candidates = [`framework.history.${kind}`];
   for (const id of candidates) {
     if (!(await countSafe(page.locator(`[id="${id}"]`)))) continue;
     await page.locator(`[id="${id}"]`).first().click({ force: true, timeout: 4000 }).catch(() => {});
@@ -800,6 +859,32 @@ const outlinerRows = async () => {
         .slice(0, 60),
     [] as { id: string; text: string; controls: string[] }[],
   );
+};
+
+/** 🕳️ A point on the overview canvas that no node occupies — the precondition of every "empty canvas"
+ * gesture. Guessing a corner instead put the press on the pane's own footer chrome and the context menu
+ * never opened at all (measured: `rows=[] waitedMs=20330`), which reads exactly like a missing menu. The
+ * spot is SEARCHED on a coarse grid inset from the pane edges and reported, so a board with no free space
+ * says so instead of silently aiming at a node. */
+const emptySpot = async (clearancePx = 60) => {
+  const box = await overviewBox();
+  const positions = await positionsOf();
+  const vitals = await overviewVitals();
+  let camera = { x: 0, y: 0, zoom: 1 };
+  try {
+    camera = JSON.parse(vitals?.camera || "{}") as { x: number; y: number; zoom: number };
+  } catch {
+    camera = { x: 0, y: 0, zoom: 1 };
+  }
+  const screens = Object.values(positions).map(([x, y]) => ({ x: box.x + box.width / 2 + (x - camera.x) * camera.zoom, y: box.y + box.height / 2 + (y - camera.y) * camera.zoom }));
+  const margin = 40;
+  for (let fy = 0.2; fy <= 0.85; fy += 0.1) {
+    for (let fx = 0.1; fx <= 0.9; fx += 0.1) {
+      const at = { x: box.x + margin + (box.width - 2 * margin) * fx, y: box.y + margin + (box.height - 2 * margin) * fy };
+      if (screens.every((node) => Math.hypot(node.x - at.x, node.y - at.y) > clearancePx)) return at;
+    }
+  }
+  return null;
 };
 
 /** 🩺️ Node poses keyed by id, the one reading every transform lane compares. */
@@ -873,8 +958,11 @@ register("camera-wheel", "read", async () => {
 });
 
 register("click-select", "read", async () => {
+  // 📄️ A document first: a boot that is still publishing its first fixture reports `nodes=0`, and the step
+  // then reads "no node position published" for a board that simply had not arrived yet.
+  await ensureDocument(1);
   const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
-  const first = (await visibleNodeIds())[0];
+  const first = (await frameBoard())[0];
   const at = first ? await nodeScreen(first) : null;
   if (!at) {
     verdict("6-selection", "click-select", false, { reason: "no node position published", ids: Object.keys(ids).length });
@@ -1268,10 +1356,13 @@ register("window-options", "read", async () => {
   ];
   for (const [id, owner] of OPTIONS) {
     const reading = await readControl(id, OVERVIEW);
-    verdict("4-window-options", `option-${id}-present`, Boolean(reading), { expectedSelector: `#${id}`, owner, reading, rail: reading ? undefined : rail.slice(0, 30) });
+    // 🧾️ An absent control carries the shell census with it: "the rail does not author this" and "the page
+    // reloaded out from under the lane" are two different findings and only `mounted` separates them.
+    const mounted = reading ? undefined : await snapshot().then((s) => ({ windows: s.windows.length, canvases: s.canvases }));
+    verdict("4-window-options", `option-${id}-present`, Boolean(reading), { expectedSelector: `#${id}`, owner, reading, mounted, rail: reading ? undefined : rail.slice(0, 30) });
     if (!reading) continue;
     const moved = await nudgeControl(id, OVERVIEW);
-    verdict("4-window-options", `option-${id}-changes`, moved.moved, { before: moved.before, after: moved.after, waitedMs: moved.waitedMs, scoredOn: moved.scoredOn, owner });
+    verdict("4-window-options", `option-${id}-changes`, moved.moved, { before: moved.before, after: moved.after, waitedMs: moved.waitedMs, scoredOn: moved.scoredOn, dispatch: moved.dispatch, owner });
   }
   const alive = await snapshot();
   verdict("4-window-options", "lane-responsive", alive.windows.length >= 3 && alive.canvases >= 3, { windows: alive.windows.length, canvases: alive.canvases });
@@ -1279,6 +1370,25 @@ register("window-options", "read", async () => {
 
 register("two-window-independence", "read", async () => {
   await closePanels();
+  // 🧘️ The panes are asked only once their INITIAL framing has settled. A freshly mounted shell publishes a
+  // default pose and then its fitted one, so a `before` read taken in that window reports the fit as the
+  // gesture's own doing — and a wheel dispatched into it is swallowed by the reframe.
+  // 🧘️ THREE identical consecutive samples, not two: each pane fits itself independently and the Detail
+  // pane's fit landed ~1.3 s after the Overview pane had already gone still, so a two-sample quiesce
+  // reported that late fit as the wheel gesture having moved the other pane's camera.
+  let previous = "";
+  let streak = 0;
+  const quiesced = await waitUntil(
+    async () => (await boardVitals()).filter((v) => v.surface.startsWith("window:2d-")).map((v) => v.camera).join("|"),
+    (shape) => {
+      streak = shape === previous && shape.length > 0 ? streak + 1 : 0;
+      previous = shape;
+      return streak >= 2;
+    },
+    30000,
+    1500,
+  );
+  log(`  camera quiesce settled=${quiesced.ok} waitedMs=${quiesced.waitedMs}`);
   const before = await boardVitals();
   const boards = () => boardVitals().then((all) => all.filter((v) => v.surface.startsWith("window:2d-")));
   const overviewBefore = before.find((v) => v.surface === `window:${OVERVIEW}`)?.camera ?? "";
@@ -1311,15 +1421,17 @@ register("history-panel", "read", async () => {
   const rows = await historyRows();
   log(`  history inventory: ${JSON.stringify(inventory).slice(0, 900)}`);
   verdict("20-history", "history-panel-opens", Object.keys(rows).length > 0, { rows: Object.keys(rows).length, head: Object.values(rows).slice(0, 5), inventory: inventory.slice(0, 12) });
-  for (const [kind, ids] of [
-    ["undo", ["framework.history.undo"]],
-    ["redo", ["framework.history.redo"]],
-    ["checkpoint", ["framework.history.checkpoint"]],
-    ["revert", ["framework.history.revert", "framework.history.checkin"]],
-  ] as const) {
-    let present = 0;
-    for (const id of ids) present += await countSafe(page.locator(`[id="${id}"]`));
-    verdict("20-history", `history-${kind}-control-present`, present > 0, { expectedSelector: ids.map((id) => `#${id}`).join(" | "), count: present, owner: "framework-reserved history verbs — an absent control is a framework finding, not a 2d one" });
+  // 🧾️ `framework.history.checkin` ("Check In (1)") is the VCS publish row, NOT a revert — aliasing the two
+  // would score a green for a verb the panel does not offer.
+  for (const kind of ["undo", "redo", "checkpoint", "revert"] as const) {
+    const id = `framework.history.${kind}`;
+    const present = await countSafe(page.locator(`[id="${id}"]`));
+    verdict("20-history", `history-${kind}-control-present`, present > 0, {
+      expectedSelector: `#${id}`,
+      count: present,
+      inventory: inventory.filter((row) => !row.includes(".entry.")),
+      owner: "framework-reserved history verbs — an absent control is a framework finding, not a 2d one",
+    });
   }
   await closePanels();
 });
@@ -1389,7 +1501,7 @@ register("add-node-dialog", "read", async () => {
   } else verdict("23-add-dialog", "add-node-kinds-are-live", false, { reason: "no kind select inside the dialog" });
   const submit = page.locator('[data-slot="dialog-content"] #ui.dialog.submit, [data-slot="dialog-content"] button').filter({ hasText: /^(add|hinzufügen)/i }).first();
   if (await countSafe(submit)) await submit.click({ force: true, timeout: 4000 }).catch(() => {});
-  const added = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 30000);
+  const added = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 30000);
   verdict("23-add-dialog", "add-node-dialog-adds-a-node", added.ok, { before, after: added.value?.nodes, waitedMs: added.waitedMs });
   await page.keyboard.press("Escape").catch(() => {});
 });
@@ -1402,7 +1514,7 @@ register("hover", "mutate", async () => {
     verdict("7-hover", "canvas-hover-paints", false, { reason: "board not painted", ...painted });
     return;
   }
-  const id = (await visibleNodeIds())[0];
+  const id = (await frameBoard())[0];
   const at = id ? await nodeScreen(id) : null;
   if (!at) {
     verdict("7-hover", "canvas-hover-paints", false, { reason: "no node position" });
@@ -1412,18 +1524,30 @@ register("hover", "mutate", async () => {
   await settle(0.6);
   const before = (await overviewVitals())?.hovered ?? "";
   await page.mouse.move(at.x, at.y, { steps: 8 });
+  // 🖌️ Two observables, because slice 2B made them two hops: the host paints the pointer's own pane
+  // immediately (`data-board-hover-paint-id`, no round trip) and the GUEST echoes the same id back into the
+  // scene (`data-board-hovered-id`, via `interactionHover` → `envelope.interaction.hovered_id()`). A lane
+  // that only read the echo could not tell a dead paint from a starved echo.
+  const painted2 = await waitUntil(overviewVitals, (v) => (v?.hoverPaint ?? "") === id, 10000);
+  verdict("7-hover", "canvas-hover-paints-locally", painted2.ok, { id, after: painted2.value?.hoverPaint, waitedMs: painted2.waitedMs, expectedSelector: "[data-surface-id]@data-board-hover-paint-id", owner: "slice 2B" });
   const hovered = await waitUntil(overviewVitals, (v) => (v?.hovered ?? "") === id, 20000);
   verdict("7-hover", "canvas-hover-paints", hovered.ok, {
     id,
     before,
     after: hovered.value?.hovered,
+    hoverPaint: hovered.value?.hoverPaint,
     waitedMs: hovered.waitedMs,
     expectedSelector: "[data-surface-id]@data-board-hovered-id",
-    owner: "slice 2B — `Puzzle2dInteractionSnapshot` resolves real hover ids but `🎭️modes/✏️edit/🦀️.rs` hardcodes `hovered_id: None` (E2 §7)",
+    owner: "slice 2B — the guest echo: `hovered_id: envelope.interaction.hovered_id()` in `🎭️modes/✏️edit/🦀️.rs`, fed by a coalesced `interactionHover` dispatch",
   });
-  await page.mouse.move(at.x - 160, at.y - 160, { steps: 8 });
-  const cleared = await waitUntil(overviewVitals, (v) => (v?.hovered ?? "") !== id, 15000);
-  verdict("7-hover", "canvas-hover-clears-on-exit", cleared.ok, { hovered: cleared.value?.hovered, waitedMs: cleared.waitedMs, note: "the guest must echo the hover leaving, not only entering" });
+  // 🚫️ The exit half is NOT reachable when the enter half never painted: `hovered` was already empty, so a
+  // bare "it is not `id` any more" passes vacuously on a lane that measured nothing.
+  if (!hovered.ok) verdict("7-hover", "canvas-hover-clears-on-exit", false, { reason: "not reachable — the hover never painted, so there is nothing for the exit to clear" });
+  else {
+    await page.mouse.move(at.x - 160, at.y - 160, { steps: 8 });
+    const cleared = await waitUntil(overviewVitals, (v) => (v?.hovered ?? "") !== id, 15000);
+    verdict("7-hover", "canvas-hover-clears-on-exit", cleared.ok, { hovered: cleared.value?.hovered, waitedMs: cleared.waitedMs, note: "the guest must echo the hover leaving, not only entering" });
+  }
   const rows = await outlinerRows();
   const row = rows.find((r) => r.id.includes(id)) ?? rows.find((r) => r.id.includes("/"));
   if (!row) verdict("7-hover", "tree-row-hover-paints-canvas", false, { reason: "no outliner entity row", rows: rows.length });
@@ -1446,7 +1570,7 @@ register("brush-place", "mutate", async () => {
   verdict("9-brush", "brush-arms", armed.ok, { ...armed, expectedSelector: '[data-slot="toggle-group-item"][id="brush"]' });
   await unfoldMeasures(OVERVIEW);
   const before = (await overviewVitals())?.nodes ?? -1;
-  const id = (await visibleNodeIds())[0];
+  const id = (await frameBoard())[0];
   const at = id ? await nodeScreen(id) : null;
   if (!at) {
     verdict("9-brush", "candidate-picker-appears", false, { reason: "no node position" });
@@ -1455,22 +1579,40 @@ register("brush-place", "mutate", async () => {
   // 🎯️ The rim, not the centre: a slot opens on a free HANDLE. The ring radius is the node radius the
   // inspector renders (24 world units) projected through the pane's own published zoom.
   const camera = JSON.parse((await overviewVitals())?.camera || '{"zoom":1}') as { zoom?: number };
-  const radius = 24 * (camera.zoom ?? 1);
-  const ring = Array.from({ length: 8 }, (_v, i) => ({ x: at.x + radius * Math.cos((i * Math.PI) / 4), y: at.y + radius * Math.sin((i * Math.PI) / 4) }));
+  // 🎯️ Free HANDLES sit on the node's rim, and the rim's screen radius is the node radius the inspector
+  // renders (24 world units) through the pane's published zoom. Three rings, because a handle glyph straddles
+  // the rim rather than sitting exactly on it.
+  const ring = [0.8, 1, 1.25].flatMap((scale) => {
+    const radius = 24 * (camera.zoom ?? 1) * scale;
+    return Array.from({ length: 8 }, (_v, i) => ({ x: at.x + radius * Math.cos((i * Math.PI) / 4), y: at.y + radius * Math.sin((i * Math.PI) / 4) }));
+  });
   let picker: Awaited<ReturnType<typeof readControl>> = null;
   let aim = at;
-  for (const spot of [at, ...ring]) {
-    await page.mouse.move(spot.x, spot.y, { steps: 6 });
-    const settled = await waitUntil(() => readControl("puzzle2d-brush-placement", OVERVIEW), (r) => Boolean(r), 4000, 400);
-    if (settled.value) {
-      picker = settled.value;
-      aim = spot;
-      break;
+  let openedVia = "none";
+  // 🔓️ Hover FIRST at every rim point, then press: `brushOpenSlot` may be authored as a hover-preview or as
+  // a click on a free handle, and a lane that only hovers cannot tell "no slot under the pointer" from "the
+  // slot opens on press". Both gestures are attempted and the one that worked is named.
+  for (const [gesture, run] of [
+    ["hover", async (spot: { x: number; y: number }) => page.mouse.move(spot.x, spot.y, { steps: 6 })],
+    ["click", async (spot: { x: number; y: number }) => page.mouse.click(spot.x, spot.y)],
+  ] as const) {
+    for (const spot of [at, ...ring]) {
+      await run(spot);
+      const settled = await waitUntil(() => readControl("puzzle2d-brush-placement", OVERVIEW), (r) => Boolean(r), 3000, 400);
+      if (settled.value) {
+        picker = settled.value;
+        aim = spot;
+        openedVia = gesture;
+        break;
+      }
     }
+    if (picker) break;
   }
+  log(`  brush slot openedVia=${openedVia} aim=${JSON.stringify(aim)}`);
   verdict("9-brush", "candidate-picker-appears", Boolean(picker), {
     reading: picker,
     aim,
+    openedVia,
     expectedSelector: "#puzzle2d-brush-placement",
     note: "☑️options/🖌️brush renders the placement Select only once `brush_candidates` is populated — an absent picker means no slot opened under the pointer",
   });
@@ -1482,8 +1624,8 @@ register("brush-place", "mutate", async () => {
     before: first,
     after: forward.value,
     waitedMs: forward.waitedMs,
-    expectedKeybinding: 'tab → brushCycleCandidate {"forward":true}',
-    owner: "slice 2B — `🎮️commands/🔁️cycle-candidate` already takes `forward: bool`, nothing binds a key to it",
+    expectedKeybinding: "tab → cycleBrushCandidate",
+    owner: "slice 2B — the chord is armed by the armed brush OR by an open popup, and its handler runs in the CAPTURE phase so one press is one step",
   });
   const mid = forward.value;
   await page.keyboard.press("Shift+Tab");
@@ -1492,27 +1634,54 @@ register("brush-place", "mutate", async () => {
     before: mid,
     after: back.value,
     waitedMs: back.waitedMs,
-    expectedKeybinding: 'shift+tab → brushCycleCandidate {"forward":false}',
-    owner: "slice 2B — 3d binds `shift+tab` → cycleBrushCandidateBack; 2d binds nothing (E2 item 2b)",
+    expectedKeybinding: "shift+tab → cycleBrushCandidateBack",
+    owner: "slice 2B — the exact 3d pair; a bubble-phase handler would advance the slot twice per press",
   });
   await page.mouse.click(aim.x, aim.y);
-  const placed = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 30000);
-  verdict("9-brush", "brush-click-places-a-node", placed.ok, { before, after: placed.value?.nodes, aim, waitedMs: placed.waitedMs, note: "`✅️commit-slot` is the only command that calls `apply_host_events` — a slot that never commits leaves the census flat" });
+  // 🧮️ Exactly ONE node: an unbounded `>` would score a document swap (an example reload is +179) as a
+  // brush placement.
+  const placed = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 30000);
+  verdict("9-brush", "brush-click-places-a-node", placed.ok, { before, after: placed.value?.nodes, aim, waitedMs: placed.waitedMs, note: "`acceptSuggestion` is the commit arm (`apply_host_events` → `brushPlace`, one document delta) — a slot that never commits leaves the census flat" });
   await armUtility("select");
 });
 
 register("suggestions-menu", "mutate", async () => {
-  await ensureDocument(1);
+  // 🖐️ A FREE handle is the subject: slice 2B shows the `suggestNodes` row only when exactly one handle is
+  // selected, and the engine resolves an empty candidate page for a handle that already carries an edge —
+  // so Nakagin (fully fastened) would refuse the popup politely and measure nothing. Concrete Forest is one
+  // node with eleven free handles.
+  if (((await overviewVitals())?.nodes ?? 0) !== 1) {
+    await selectExample(/concrete/i);
+    await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 1, 60000);
+  }
   await closePanels();
   const picked = await pickNode(0);
-  verdict("13-suggestions", "suggestions-precondition-selection", picked.picked, { ...picked, at: undefined });
+  verdict("13-suggestions", "suggestions-precondition-selection", picked.picked, { id: picked.id, selection: picked.selection, waitedMs: picked.waitedMs });
   if (!picked.at) return;
-  const menu = await openContextMenuAt(picked.at);
-  const suggestRow = menu.rows.find((row) => /suggest|vorschl/i.test(`${row.id ?? ""} ${row.text}`) || row.action === "brushOpenSlot");
+  // 🎯️ Handles sit on the node's rim, and `onContextMenu` selects whatever the right-click lands on — so
+  // the rim is walked until the menu that opens carries the row, and the point that produced it is named.
+  const camera = JSON.parse((await overviewVitals())?.camera || '{"zoom":1}') as { zoom?: number };
+  const rim = [0.8, 1, 1.25].flatMap((scale) => {
+    const radius = 24 * (camera.zoom ?? 1) * scale;
+    return Array.from({ length: 8 }, (_v, i) => ({ x: picked.at!.x + radius * Math.cos((i * Math.PI) / 4), y: picked.at!.y + radius * Math.sin((i * Math.PI) / 4) }));
+  });
+  let menu = { rows: [] as { id: string | null; action: string | null; text: string }[], waitedMs: 0 };
+  let suggestRow: { id: string | null; action: string | null; text: string } | undefined;
+  let anchor = picked.at;
+  for (const spot of rim) {
+    menu = await openContextMenuAt(spot);
+    suggestRow = menu.rows.find((row) => row.id === "suggestNodes" || row.action === "openHandleSuggestions");
+    if (suggestRow) {
+      anchor = spot;
+      break;
+    }
+    await closeContextMenu();
+  }
   verdict("13-suggestions", "context-menu-offers-suggestions", Boolean(suggestRow), {
     rows: menu.rows.map((r) => r.id),
-    expectedSelector: '[role="menuitem"][id="suggest"] with action `brushOpenSlot`',
-    owner: "slice 2B — `puzzle2d_context_menu_items` authors no suggest row, so the slot family is reachable only while Brush is armed (E2 §13)",
+    anchor,
+    expectedSelector: '[role="menuitem"][id="suggestNodes"] → `openHandleSuggestions`',
+    owner: "slice 2B — shown only when exactly ONE handle is selected, and only for a handle that carries no edge yet",
   });
   if (suggestRow?.id) await clickMenuRow(suggestRow.id);
   else await closeContextMenu();
@@ -1521,21 +1690,43 @@ register("suggestions-menu", "mutate", async () => {
     json: (opened.value?.suggestions ?? "").slice(0, 200),
     waitedMs: opened.waitedMs,
     expectedSelector: "[data-surface-id]@data-board-suggestion-menu-json",
-    owner: "slice 2B — Board2dHost publishes no suggestion-menu attribute today (World3dHost's analogue is `data-suggestion-menu-json`)",
+    owner: "slice 2B — `Board2dScene.suggestion_menu_json`, a bounded 8-row candidate page",
   });
   const before = (await overviewVitals())?.nodes ?? -1;
-  // 🔎️ Hover-preview BEFORE commit is the half 2d has never had: cycling moves the commit index directly,
-  // with no separate "just looking" state. A preview that changes the published menu without changing the
-  // document is what this asks for.
-  await page.keyboard.press("ArrowDown").catch(() => {});
-  const previewed = await waitUntil(async () => ({ menu: (await overviewVitals())?.suggestions ?? "", nodes: (await overviewVitals())?.nodes ?? -1 }), (s) => s.menu !== (opened.value?.suggestions ?? "") && s.nodes === before, 15000);
-  verdict("13-suggestions", "suggestion-hover-previews-without-committing", previewed.ok, { before, ...previewed.value, waitedMs: previewed.waitedMs, owner: "slice 2B" });
-  await page.keyboard.press("Enter").catch(() => {});
-  const accepted = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 30000);
-  verdict("13-suggestions", "suggestion-accept-places-a-node", accepted.ok, { before, after: accepted.value?.nodes, waitedMs: accepted.waitedMs });
+  // 🔎️ Hover-PREVIEW before commit is the half 2d never had: `hoverSuggestion` moves the previewed index
+  // without touching the document, so the published menu must change while the census does not.
+  const candidateRows = (await contextMenuRows()).filter((row) => /candidate|suggest/i.test(`${row.id ?? ""}`) || row.action === "hoverSuggestion");
+  if (candidateRows[0]?.id) await page.locator(`[id="${candidateRows[0].id}"]`).last().hover({ timeout: 3000 }).catch(() => {});
+  else await page.keyboard.press("ArrowDown").catch(() => {});
+  const previewed = await waitUntil(
+    async () => {
+      const v = await overviewVitals();
+      return { menu: v?.suggestions ?? "", nodes: v?.nodes ?? -1 };
+    },
+    (s) => s.menu !== (opened.value?.suggestions ?? "") && s.nodes === before,
+    15000,
+  );
+  verdict("13-suggestions", "suggestion-hover-previews-without-committing", previewed.ok, { before, ...previewed.value, rows: candidateRows.map((r) => r.id).slice(0, 6), waitedMs: previewed.waitedMs, owner: "slice 2B" });
+  const accept = (await contextMenuRows()).find((row) => row.action === "acceptSuggestion") ?? candidateRows[0];
+  if (accept?.id) await clickMenuRow(accept.id);
+  else await page.keyboard.press("Enter").catch(() => {});
+  // 🧾️ `acceptSuggestion` commits ONE document delta and re-selects the placed node (its `Interaction` lane
+  // is load-bearing), so the census and the selection are both asked — and the census is BOUNDED.
+  // 🧯️ `> before` alone is a false green: an Enter that fell through to the example picker swapped Concrete
+  // Forest (1 node) for Nakagin (180) and the lane scored `before=1 after=180` as a placement. One accept
+  // places exactly one node.
+  const accepted = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 30000);
+  verdict("13-suggestions", "suggestion-accept-places-a-node", accepted.ok, { before, after: accepted.value?.nodes, expected: before + 1, row: accept?.id, waitedMs: accepted.waitedMs });
+  const reselected = await waitUntil(overviewVitals, (v) => selectionIds(v).length > 0, 15000);
+  verdict("13-suggestions", "suggestion-accept-reselects-the-placed-node", accepted.ok && reselected.ok, { selection: reselected.value?.selection?.slice(0, 160), waitedMs: reselected.waitedMs, owner: "slice 2B" });
   await closeContextMenu();
-  const closed = await waitUntil(overviewVitals, (v) => (v?.suggestions ?? "").length <= 2, 15000);
-  verdict("13-suggestions", "suggestion-popup-closes", closed.ok, { json: (closed.value?.suggestions ?? "").slice(0, 120), waitedMs: closed.waitedMs });
+  // 🚫️ Closing is only a question once something OPENED — on a host that publishes no menu at all the
+  // "it is empty now" predicate is satisfied by the empty attribute it started with.
+  if (!opened.ok) verdict("13-suggestions", "suggestion-popup-closes", false, { reason: "not reachable — no popup was ever published, so there is nothing to close" });
+  else {
+    const closed = await waitUntil(overviewVitals, (v) => (v?.suggestions ?? "").length <= 2, 15000);
+    verdict("13-suggestions", "suggestion-popup-closes", closed.ok, { json: (closed.value?.suggestions ?? "").slice(0, 120), waitedMs: closed.waitedMs });
+  }
 });
 
 register("clipboard", "mutate", async () => {
@@ -1554,7 +1745,7 @@ register("clipboard", "mutate", async () => {
     await page.keyboard.press(key).catch(() => {});
     await settle(0.4);
   }
-  const pasted = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 30000);
+  const pasted = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 30000);
   verdict("21-clipboard", "copy-paste-adds-a-node", pasted.ok, {
     before,
     after: pasted.value?.nodes,
@@ -1590,7 +1781,7 @@ register("duplicate", "mutate", async () => {
     await page.keyboard.press(key).catch(() => {});
     await settle(0.5);
   }
-  const grew = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 30000);
+  const grew = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 30000);
   verdict("22-duplicate", "duplicate-adds-a-node", grew.ok, { before, after: grew.value?.nodes, source: picked.id, waitedMs: grew.waitedMs, expectedKeybinding: "mod+d → duplicateSelection" });
   const clones = Object.keys(await positionsOf()).filter((id) => !beforeIds.includes(id));
   const reselected = await waitUntil(overviewVitals, (v) => clones.length > 0 && clones.every((id) => selectionIds(v).includes(id)), 20000);
@@ -1698,7 +1889,12 @@ register("locked-refusal", "mutate", async () => {
   const beforeDelete = entityCount(await overviewVitals());
   await page.keyboard.press("Delete").catch(() => {});
   const deleted = await waitUntil(overviewVitals, (v) => entityCount(v) < beforeDelete, 15000);
-  verdict("8-locked", "locked-node-refuses-delete", !deleted.ok, { before: beforeDelete, after: entityCount(deleted.value), waitedMs: deleted.waitedMs });
+  verdict("8-locked", "locked-node-refuses-delete", !deleted.ok, {
+    before: beforeDelete,
+    after: entityCount(deleted.value),
+    waitedMs: deleted.waitedMs,
+    owner: "slice 2C — `🗑️delete-selection/🦀️.rs` reads no `locked` flag, so the lock that `puzzle2d_transform_selection` honours is ignored by Delete; measured 2026-09-17 on :6012 (12 entities → 0)",
+  });
   // 🔓️ Hand the document back UNLOCKED: a locked node silently refuses every later transform verdict in
   // this group, and a step that leaves state behind decides the steps after it.
   const unlockAt = (await nodeScreen(picked.id)) ?? picked.at;
@@ -1756,7 +1952,10 @@ register("rotate-gumball", "mutate", async () => {
 });
 
 register("engagement-grammar", "mutate", async () => {
-  await ensureDocument(1);
+  // 🧮️ A MULTI-node document, because `rotate`/`scale` turn the selection about its own centroid: one
+  // selected node IS its centroid, so both verbs are mathematically no-ops on it and a pose-delta assertion
+  // could only ever be red. `move` is the one verb a single node answers.
+  await ensureDocument(2);
   await closePanels();
   const picked = await pickNode(0);
   verdict("14-engagement", "engagement-precondition-selection", picked.picked, { id: picked.id, selection: picked.selection });
@@ -1781,24 +1980,42 @@ register("engagement-grammar", "mutate", async () => {
     before: poseBefore,
     after: moved.value,
     waitedMs: moved.waitedMs,
-    owner: "slice 2A — the shell's `normalizeEngagementActionText` PascalCases and strips the spaces the parser splits on (`move 50 25` → `Move5025`, E7 §1); `typed` shows exactly what Enter carried",
+    owner: "slice 2A — the shell's Action line now carries the typed text VERBATIM (it used to PascalCase and strip the spaces the parser splits on, `move 50 25` → `Move5025`); `typed` shows exactly what Enter carried, so a regression names itself",
   });
+  // 🎯️ A marquee gives the centroid verbs something to turn about. The subject is the first node the
+  // selection names, and its own pose is what both verdicts compare.
+  await setActions(false);
+  const box = await overviewBox();
+  await page.mouse.move(box.x + 24, box.y + 160);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 24, box.y + box.height - 40, { steps: 12 });
+  await page.mouse.up();
+  const many = await waitUntil(overviewVitals, (v) => selectionIds(v).length >= 2, 20000);
+  const subject = selectionIds(many.value)[0] ?? picked.id!;
+  verdict("14-engagement", "engagement-centroid-precondition", many.ok, { selected: selectionIds(many.value).length, subject, note: "rotate/scale turn the selection about its centroid, so they need at least two selected nodes to move anything" });
+  const poseForRotate = await poseOf(subject);
   const rotate = await submitEngagement("rotate 45");
-  const rotated = await waitUntil(() => poseOf(picked.id!), (pose) => JSON.stringify(pose) !== JSON.stringify(moved.value), 30000);
-  verdict("14-engagement", "engagement-rotate-with-arguments", rotate.present && rotated.ok, { typed: rotate.typed, before: moved.value, after: rotated.value, waitedMs: rotated.waitedMs, owner: "slice 2A" });
+  const rotated = await waitUntil(() => poseOf(subject), (pose) => JSON.stringify(pose) !== JSON.stringify(poseForRotate), 30000);
+  verdict("14-engagement", "engagement-rotate-with-arguments", rotate.present && many.ok && rotated.ok, { typed: rotate.typed, subject, before: poseForRotate, after: rotated.value, waitedMs: rotated.waitedMs, owner: "slice 2A" });
   const scale = await submitEngagement("scale 1.5");
-  const scaled = await waitUntil(() => poseOf(picked.id!), (pose) => JSON.stringify(pose) !== JSON.stringify(rotated.value), 30000);
-  verdict("14-engagement", "engagement-scale-with-arguments", scale.present && scaled.ok, { typed: scale.typed, before: rotated.value, after: scaled.value, waitedMs: scaled.waitedMs, owner: "slice 2A" });
+  const scaled = await waitUntil(() => poseOf(subject), (pose) => JSON.stringify(pose) !== JSON.stringify(rotated.value), 30000);
+  verdict("14-engagement", "engagement-scale-with-arguments", scale.present && many.ok && scaled.ok, { typed: scale.typed, subject, before: rotated.value, after: scaled.value, waitedMs: scaled.waitedMs, owner: "slice 2A" });
+  // 🔗️ The guest's `connect` arm takes its two operands from the LINE, or from exactly two selected HANDLES
+  // when the line is bare. `data-board-selection-json` carries handle ids alongside node ids (a handle reads
+  // `<nodeId>:<handle>`), so the EXPLICIT two-operand form is driven with two real handle ids — a bare
+  // `connect` over a 226-entity marquee is refused by construction and would measure nothing.
+  const handles = selectionIds(await overviewVitals()).filter((entityId) => entityId.includes(":"));
   const beforeEdges = (await overviewVitals())?.edges ?? -1;
-  const connect = await submitEngagement("connect");
-  const connected = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) > beforeEdges, 30000);
+  const connect = await submitEngagement(handles.length >= 2 ? `connect ${handles[0]} ${handles[1]}` : "connect");
+  const connected = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) === beforeEdges + 1, 30000);
   verdict("14-engagement", "engagement-connect-creates-an-edge", connect.present && connected.ok, {
     typed: connect.typed,
+    operands: handles.slice(0, 2),
     before: beforeEdges,
     after: connected.value?.edges,
     waitedMs: connected.waitedMs,
-    expectedVerb: "createEdge + a `connect` arm in 📨️engagement-submit",
-    owner: "slice 2D — edges can only be made through the engine-bridged `applyBoardEvents{edgeCreate}` today (E2 item 4)",
+    expectedVerb: "`connect [<handle> <handle>]` → createEdge",
+    owner: "slice 2D — `connect` + `🎮️commands/create_edge` are in source; the dev serve runs the previously staged plugin wasm, so a red here until the coordinator re-activates says nothing about the verb",
   });
   const beforeFill = (await overviewVitals())?.nodes ?? -1;
   const fill = await submitEngagement("fill 12");
@@ -1808,13 +2025,15 @@ register("engagement-grammar", "mutate", async () => {
   verdict("14-engagement", "engagement-fill-argument-sets-the-count", (count?.value ?? count?.published ?? "") === "12", { reading: count, expected: "12", note: "`fill <n>` must carry its argument into `setFillCount`, not merely arm the tool" });
   // 🔁️ Repeat-last re-runs the previous line without retyping it (`WindowEngagementInput.on_repeat_last`,
   // `None` in 2d today).
-  const poseBeforeRepeat = picked.id ? await poseOf(picked.id) : null;
+  const poseBeforeRepeat = await poseOf(subject);
   await submitEngagement("move 10 10");
   await settle(2);
   await page.keyboard.press("ArrowUp").catch(() => {});
   await page.keyboard.press("Enter").catch(() => {});
+  // 🧮️ `+20`, not `+10`: the line must land TWICE — once when it is submitted and once when repeat-last
+  // replays it. A single `+10` is exactly the shape of "repeat-last did nothing".
   const repeated = await waitUntil(
-    () => poseOf(picked.id!),
+    () => poseOf(subject),
     (pose) => Boolean(pose && poseBeforeRepeat && Math.abs(pose[0] - poseBeforeRepeat[0] - 20) < 0.5),
     25000,
   );
@@ -1839,7 +2058,7 @@ register("create-edge", "mutate", async () => {
     expectedSelector: '#action.createEdge inside [data-slot="window"][id="2d-overview"]',
     owner: "slice 2D — no host-dispatchable connect-two-handles verb in 2d (3d's is `createAttraction`)",
   });
-  const made = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) > beforeEdges, fired.present ? 30000 : 4000);
+  const made = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) === beforeEdges + 1, fired.present ? 30000 : 4000);
   verdict("11-edges", "create-edge-adds-an-edge", made.ok, { before: beforeEdges, after: made.value?.edges, waitedMs: made.waitedMs, owner: "slice 2D" });
   await setActions(false);
 });
@@ -1847,7 +2066,7 @@ register("create-edge", "mutate", async () => {
 register("proximity-connect", "mutate", async () => {
   await ensureDocument(2);
   await closePanels();
-  const visible = await visibleNodeIds();
+  const visible = await frameBoard();
   const [a, b] = [visible[0], visible[1]];
   const from = a ? await nodeScreen(a) : null;
   const to = b ? await nodeScreen(b) : null;
@@ -1862,7 +2081,7 @@ register("proximity-connect", "mutate", async () => {
   await page.mouse.down();
   await page.mouse.move(to.x - 18, to.y - 18, { steps: 18 });
   await page.mouse.up();
-  const connected = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) > beforeEdges, 30000);
+  const connected = await waitUntil(overviewVitals, (v) => (v?.edges ?? -1) === beforeEdges + 1, 30000);
   verdict("11-edges", "proximity-connect-on-drop", connected.ok, {
     before: beforeEdges,
     after: connected.value?.edges,
@@ -1939,15 +2158,17 @@ register("fill-controls", "mutate", async () => {
   await settle(1);
   const runText = () => evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel"]')).map((p) => (p as HTMLElement).innerText.replace(/\s+/g, " ")).join(" | ").slice(0, 400), "");
   const button = (pattern: RegExp) => page.locator("button", { hasText: pattern }).first();
-  // ⏯️ The four ToolRun transitions the framework contract declares (`📋️tool-run-contract.md` §2.4–§2.6).
-  // 2d inherits them from the framework, so a missing control here is a wiring finding, not a fill one.
-  for (const [name, pattern] of [["start", /^start$/i], ["pause", /^pause$/i], ["step", /^step$/i], ["abort", /^abort$/i], ["cancel", /^cancel$/i], ["finalize", /^finalize$/i]] as const) {
-    verdict("12-fill", `fill-${name}-control-present`, (await countSafe(button(pattern))) > 0, { pattern: String(pattern) });
-  }
+  // ⏯️ `Start` is the only transition an IDLE run offers; `Pause`/`Step`/`Abort`/`Finalize` mount once the
+  // run is live (`📋️tool-run-contract.md` §2.4–§2.6). Asking for all five before pressing Start reported
+  // four absent controls on a panel that was behaving correctly, so the live set is asked AFTER the start.
+  verdict("12-fill", "fill-start-control-present", (await countSafe(button(/^start$/i))) > 0, { pattern: "/^start$/i" });
   const before = (await overviewVitals())?.nodes ?? -1;
   if (await countSafe(button(/^start$/i))) await button(/^start$/i).click({ timeout: 4000 }).catch(() => {});
   const running = await waitUntil(runText, (text) => /running|searching/i.test(text), 30000, 1000);
   verdict("12-fill", "fill-run-reports-progress", running.ok, { status: running.value.slice(0, 200), waitedMs: running.waitedMs });
+  for (const [name, pattern] of [["pause", /^(pause|resume)$/i], ["step", /^step$/i], ["abort", /^abort$/i], ["finalize", /^finalize$/i]] as const) {
+    verdict("12-fill", `fill-${name}-control-present`, (await countSafe(button(pattern))) > 0, { pattern: String(pattern), status: running.value.slice(0, 160) });
+  }
   if (await countSafe(button(/^pause$/i))) await button(/^pause$/i).click({ timeout: 4000 }).catch(() => {});
   const paused = await waitUntil(runText, (text) => /paused/i.test(text), 25000, 800);
   verdict("12-fill", "fill-pause-halts-the-run", paused.ok, { status: paused.value.slice(0, 200), waitedMs: paused.waitedMs });
@@ -1963,7 +2184,10 @@ register("fill-controls", "mutate", async () => {
   const aborted = await waitUntil(runText, (text) => !/running|paused|retracting/i.test(text), 30000, 1000);
   verdict("12-fill", "fill-abort-ends-the-run", aborted.ok, { status: aborted.value.slice(0, 200), waitedMs: aborted.waitedMs });
   const after = (await overviewVitals())?.nodes ?? -1;
-  verdict("12-fill", "fill-abort-retracts-its-placements", after === before, { before, after, note: "an aborted run must leave the document where it found it" });
+  // 🧾️ A census of `-1` is the surface having left the document, never a retraction — without this guard a
+  // reload during the abort scored the lane on a board that was not there.
+  if (after < 0) verdict("12-fill", "fill-abort-retracts-its-placements", false, { before, after, reason: "not reachable — the board surface published no census (the shell remounted during the abort)" });
+  else verdict("12-fill", "fill-abort-retracts-its-placements", after === before, { before, after, note: "an aborted run must leave the document where it found it" });
 });
 
 register("fill-weights", "mutate", async () => {
@@ -1973,9 +2197,32 @@ register("fill-weights", "mutate", async () => {
   }
   await closePanels();
   await armTool("fill");
-  await unfoldMeasures(OVERVIEW);
+  // ⚖️ The weight trees are the FILL TOOL's own measures (`puzzle2d-tool-options-fill`), rendered in the
+  // mode-level Tool panel — not in the window measures rail — and both distribution groups are authored
+  // `default_open: Some(false)`, so their sliders only enter the document once the groups are expanded.
+  // 🧯️ Only the two DISTRIBUTION rows are folded, and only if they carry a chevron. A blanket "expand every
+  // foldable row in every open panel" pass collapsed their own parent (`puzzle2d-tool-options-fill`, authored
+  // `default_open: Some(true)`) and took the whole subtree out of the document with it.
+  for (const group of ["puzzle2d-play-suggestion-distribution-nodes", "puzzle2d-play-suggestion-distribution-handles"]) {
+    const id = await resolveDomId(group);
+    if (id) await foldTreeRow(id);
+  }
+  await settle(1.5);
+  // 🧾️ The two group ROWS and the per-kind SLIDERS are separate questions: a group that renders `(0%)` with
+  // no fold chevron is authoring no children at all, which says `puzzle2d_kind_ids(fixture, "nodes")` came
+  // back empty — a different finding from "the group is missing".
+  const groups = await evalSafe(
+    () => Array.from(document.querySelectorAll('[id*="puzzle2d-play-suggestion-distribution"]')).map((el) => `${el.id}=${(el as HTMLElement).innerText.replace(/\s+/g, " ").trim().slice(0, 30)} foldable=${Boolean(el.querySelector('[data-slot="tree-gutter"] button'))}`),
+    [] as string[],
+  );
+  verdict("12-fill", "fill-distribution-groups-present", groups.length >= 2, { groups, expectedSelector: '[id*="puzzle2d-play-suggestion-distribution"]' });
   const weightIds = await evalSafe(() => Array.from(document.querySelectorAll('[id*="puzzle2d-play-node-kind-"]')).map((el) => el.id).slice(0, 20), [] as string[]);
-  verdict("12-fill", "fill-weight-sliders-present", weightIds.length > 0, { ids: weightIds.slice(0, 8), expectedSelector: '[id*="puzzle2d-play-node-kind-"]', note: "`☑️options/🖌️brush` authors one slider per node kind, bound to setBrushKindWeights" });
+  verdict("12-fill", "fill-weight-sliders-present", weightIds.length > 0, {
+    ids: weightIds.slice(0, 8),
+    groups,
+    expectedSelector: '[id*="puzzle2d-play-node-kind-"]',
+    note: "`☑️options/🖌️brush` authors one slider per node kind (`setBrushKindWeights`); an empty, unfoldable group means the fixture's node-kind catalogue enumerated nothing",
+  });
   if (!weightIds.length) {
     verdict("12-fill", "fill-weights-change-the-distribution", false, { reason: "no weight slider" });
     return;
@@ -2000,8 +2247,8 @@ register("fill-weights", "mutate", async () => {
     const abort = page.locator("button", { hasText: /^abort$/i }).first();
     const snapshotHistogram = await histogram();
     if (await countSafe(abort)) await abort.click({ timeout: 4000 }).catch(() => {});
-    await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before, 30000);
-    return { ok: grew.ok, histogram: snapshotHistogram };
+    const restored = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before, 30000);
+    return { ok: grew.ok, histogram: snapshotHistogram, baseline: before, restored: restored.ok };
   };
   const first = await runFill();
   // ⚖️ Drive the FIRST kind's weight to zero and the last one's up, then re-run: the placed mix must move.
@@ -2012,11 +2259,17 @@ register("fill-weights", "mutate", async () => {
   }
   await settle(2);
   const second = await runFill();
-  verdict("12-fill", "fill-weights-change-the-distribution", first.ok && second.ok && JSON.stringify(first.histogram) !== JSON.stringify(second.histogram), {
+  // 🧾️ The two runs must have started from the SAME document, or the histograms differ because the board
+  // changed rather than because the weights did — a green that rests on a document swap is worse than a red.
+  const sameBaseline = first.baseline === second.baseline && first.baseline >= 0;
+  verdict("12-fill", "fill-weights-change-the-distribution", sameBaseline && first.ok && second.ok && JSON.stringify(first.histogram) !== JSON.stringify(second.histogram), {
     before: first.histogram,
     after: second.histogram,
+    baselines: [first.baseline, second.baseline],
+    sameBaseline,
+    restored: [first.restored, second.restored],
     zeroed: weightIds[0],
-    note: "RUN_SETTINGS_CONFIG declares /nodeKindWeights, so a weight change must reach the run's candidate order",
+    note: "RUN_SETTINGS_CONFIG declares /nodeKindWeights, so a weight change must reach the run's candidate order — and both runs must start from one document",
   });
 });
 
@@ -2031,23 +2284,39 @@ register("fill-history", "replace", async () => {
   await closePanels();
   await armTool("fill");
   await clickTab("framework.panel.toolRun");
+  const runText = () => evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel"]')).map((p) => (p as HTMLElement).innerText.replace(/\s+/g, " ")).join(" | ").slice(0, 400), "");
+  // 🧹️ A run left live (or paused) by an earlier lane owns the panel: `Start` is not offered and this lane
+  // measures the predecessor's run instead of its own. Any live run is abandoned first.
+  if (/running|paused|searching|retracting|ready to finalize/i.test(await runText())) {
+    const abort = page.locator("button", { hasText: /^abort$/i }).first();
+    if (await countSafe(abort)) await abort.click({ timeout: 4000 }).catch(() => {});
+    const cleared = await waitUntil(runText, (text) => !/running|paused|searching|retracting|ready to finalize/i.test(text), 45000, 1000);
+    log(`  fill-history abandoned an inherited run: cleared=${cleared.ok} waitedMs=${cleared.waitedMs}`);
+  }
   const start = page.locator("button", { hasText: /^start$/i }).first();
   if (await countSafe(start)) await start.click({ timeout: 4000 }).catch(() => {});
-  const runText = () => evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel"]')).map((p) => (p as HTMLElement).innerText.replace(/\s+/g, " ")).join(" | ").slice(0, 400), "");
   await waitUntil(runText, (text) => /ready to finalize|complete/i.test(text), 180000, 1000);
   const finalize = page.locator("button", { hasText: /^finalize$/i }).first();
   if (await countSafe(finalize)) await finalize.click({ timeout: 4000 }).catch(() => {});
   const filled = await waitUntil(overviewVitals, (v) => entityCount(v) > before, 60000);
   verdict("12-fill", "fill-places-nodes", filled.ok, { before, after: entityCount(filled.value), waitedMs: filled.waitedMs });
   const rowsAfter = await historyRows();
-  const added = Object.keys(rowsAfter).filter((id) => !(id in rowsBefore));
+  // 🏷️ Attributed, not counted. Opening the Tool-runs panel and arming the tool are SHELL commands that
+  // write their own `Toggle Panel`/`Set Active Tool` rows into the same list — this probe produces them, so
+  // a row only counts against the fill's ledger footprint once its label says it is not chrome.
+  const added = Object.keys(rowsAfter).filter((id) => !(id in rowsBefore) && !CHROME_HISTORY_ROW.test(rowsAfter[id] ?? ""));
+  const chrome = Object.keys(rowsAfter).filter((id) => !(id in rowsBefore) && CHROME_HISTORY_ROW.test(rowsAfter[id] ?? ""));
   // 🧾️ ONE ledger slot for the whole gesture. Every `ArtifactStore` has a fixed 64-entry, non-compacting
-  // ledger (`🌿️vcs/🦀️.rs`), so a 100-placement run that commits per placement blows it and Undo then has
-  // nothing correct to pop — exactly the `undo-changes-document` red of 2026-09-17 (`📓️E7…` §2).
+  // ledger (`🌿️vcs/🦀️.rs`), so a run that spends a slot per placement exhausts it and Undo has nothing
+  // correct left to pop. A fill run is a framework tool run whose ledger publishes exactly one `Edit` at
+  // finalize (`⏯️tool-run/🦀️.rs`), which is what this measures in the BROWSER — the guest-side law
+  // (`a_hundred_placement_fill_is_one_history_entry_that_undoes_and_redoes`, slice 2A) pins the same
+  // contract in-process.
   verdict("20-history", "fill-is-one-history-entry", added.length === 1, {
     added: added.map((id) => `${id}=${rowsAfter[id]}`).slice(0, 8),
     count: added.length,
-    owner: "slice 2A — `✅️commit-slot` commits once per placement; the run must publish one batch (or one coalesced amend) per gesture",
+    chromeRows: chrome.map((id) => `${id}=${rowsAfter[id]}`).slice(0, 8),
+    owner: "slice 2A — verified in-process; this lane is the runtime half of the same contract",
   });
   await closePanels();
   const opened = await setActions(true);
@@ -2078,8 +2347,14 @@ register("history-controls", "replace", async () => {
   const deleted = await waitUntil(overviewVitals, (v) => entityCount(v) < before, 30000);
   verdict("20-history", "edit-after-checkpoint-lands", deleted.ok, { before, after: entityCount(deleted.value), id: picked.id, waitedMs: deleted.waitedMs });
   const reverted = await pressHistory("revert");
-  const back = await waitUntil(overviewVitals, (v) => entityCount(v) === before, 45000);
-  verdict("20-history", "revert-restores-the-checkpoint", reverted && back.ok, { before, after: entityCount(back.value), waitedMs: back.waitedMs });
+  const back = await waitUntil(overviewVitals, (v) => entityCount(v) === before, reverted ? 45000 : 4000);
+  verdict("20-history", "revert-restores-the-checkpoint", reverted && back.ok, {
+    controlPresent: reverted,
+    before,
+    after: entityCount(back.value),
+    waitedMs: back.waitedMs,
+    owner: "framework — the History panel offers Undo / Redo / Checkpoint / Check In and no `framework.history.revert`; 'roll the document back to the last checkpoint' has no control in the shell (measured on :6012 2026-09-17)",
+  });
   const mid = entityCount(await overviewVitals());
   await pressHistory("undo");
   const undone = await waitUntil(overviewVitals, (v) => entityCount(v) !== mid, 30000);
@@ -2100,7 +2375,12 @@ register("selection-keybindings", "mutate", async () => {
     await settle(0.5);
   }
   const all = await waitUntil(overviewVitals, (v) => selectionIds(v).length > 1, 20000);
-  verdict("22-keys", "select-all-keybinding", all.ok, { selected: selectionIds(all.value).length, waitedMs: all.waitedMs, expectedKeybinding: "mod+a → selectAll" });
+  verdict("22-keys", "select-all-keybinding", all.ok, {
+    selected: selectionIds(all.value).length,
+    waitedMs: all.waitedMs,
+    expectedKeybinding: "mod+a → selectAll",
+    owner: "slice 2C — `create_puzzle2d_app` binds only `delete,backspace` and `mod+d`; `selectAll` exists as a context-menu row with no key",
+  });
   await page.keyboard.press("Escape").catch(() => {});
   const cleared = await waitUntil(overviewVitals, (v) => selectionIds(v).length === 0, 20000);
   verdict("22-keys", "escape-clears-the-selection", cleared.ok, { selection: cleared.value?.selection, waitedMs: cleared.waitedMs });
@@ -2130,10 +2410,14 @@ register("context-menu-rows", "mutate", async () => {
   await closeContextMenu();
   await page.keyboard.press("Escape").catch(() => {});
   const empty = await waitUntil(overviewVitals, (v) => selectionIds(v).length === 0, 15000);
-  const box = await overviewBox();
-  await page.mouse.click(box.x + 16, box.y + box.height - 16, { button: "right" });
+  const spot = await emptySpot();
+  if (!spot) {
+    verdict("15-context-menu", "empty-selection-offers-select-all", false, { reason: "no free canvas point on this document to right-click", cleared: empty.ok });
+    return;
+  }
+  await page.mouse.click(spot.x, spot.y, { button: "right" });
   const emptyMenu = await waitUntil(contextMenuRows, (rows) => rows.length > 0, 20000, 700);
-  verdict("15-context-menu", "empty-selection-offers-select-all", emptyMenu.value.some((row) => row.id === "selectAll"), { cleared: empty.ok, rows: emptyMenu.value.map((r) => r.id), waitedMs: emptyMenu.waitedMs });
+  verdict("15-context-menu", "empty-selection-offers-select-all", emptyMenu.value.some((row) => row.id === "selectAll"), { cleared: empty.ok, spot, rows: emptyMenu.value.map((r) => r.id), waitedMs: emptyMenu.waitedMs });
   await closeContextMenu();
 });
 //#endregion 🔖️Parity lanes

@@ -111,8 +111,7 @@ pub struct Puzzle5dWorldWindowConfig {
     pub grip_direction: String,
     pub transform_move: bool,
     pub transform_rotate: bool,
-    #[dsl(tuple)]
-    pub voxel_dims: Vec<u32>,
+    pub voxel_dims: [u32; 3],
 }
 
 impl Default for Puzzle5dWorldWindowConfig {
@@ -132,7 +131,7 @@ impl Default for Puzzle5dWorldWindowConfig {
             grip_direction: value.grip_direction,
             transform_move: value.transform_move,
             transform_rotate: value.transform_rotate,
-            voxel_dims: value.voxel_dims.to_vec(),
+            voxel_dims: value.voxel_dims,
         }
     }
 }
@@ -348,7 +347,7 @@ fn window_config_from_world(value: &Puzzle5dWorldWindowConfig) -> Puzzle5dWindow
     Puzzle5dWindowConfig {
         camera3d: value.camera3d.clone(),
         sun: value.sun.clone(),
-        voxel_dims: puzzle5d_voxel_dims(&value.voxel_dims),
+        voxel_dims: value.voxel_dims,
         grid_visible: value.grid_visible,
         grid_snap_enabled: value.grid_snap_enabled,
         grid_spacing: value.grid_spacing,
@@ -402,8 +401,8 @@ pub fn runtime(
     window: &Puzzle5dWindowConfig,
     transient: &Puzzle5dWindowTransient,
     window_id: &str,
-) -> crate::editor::puzzle5d::config::Puzzle5dRuntime {
-    let mut runtime = crate::editor::puzzle5d::config::Puzzle5dRuntime::default();
+) -> Puzzle5dRuntime {
+    let mut runtime = Puzzle5dRuntime::default();
     runtime.contact_tolerance = shared.contact_tolerance;
     runtime.proximity_radius = shared.proximity_radius;
     runtime.chunk_size = shared.chunk_size;
@@ -434,14 +433,7 @@ pub fn runtime(
     runtime
 }
 
-/// 🧊️ A persisted world-window voxel triple back as the fixed `[w, d, h]` the runtime reads; a short
-/// or absent list falls back to the boot extent rather than inventing a zero axis.
-fn puzzle5d_voxel_dims(values: &[u32]) -> [u32; 3] {
-    let boot = crate::editor::puzzle5d::PUZZLE5D_DEFAULT_VOXEL_DIMS;
-    [values.first().copied().unwrap_or(boot[0]).max(1), values.get(1).copied().unwrap_or(boot[1]).max(1), values.get(2).copied().unwrap_or(boot[2]).max(1)]
-}
-
-pub fn shared(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> crate::editor::puzzle5d::config::Puzzle5dConfig {
+pub fn shared(runtime: &Puzzle5dRuntime) -> crate::editor::puzzle5d::config::Puzzle5dConfig {
     let mut config = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
     config.fill_count = runtime.fill_count;
     config.contact_tolerance = runtime.contact_tolerance;
@@ -452,7 +444,7 @@ pub fn shared(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> cra
     config
 }
 
-pub fn config_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> Puzzle5dWindowConfig {
+pub fn config_from_runtime(runtime: &Puzzle5dRuntime) -> Puzzle5dWindowConfig {
     Puzzle5dWindowConfig {
         camera2d: runtime.camera2d.clone(),
         camera3d: runtime.camera3d.clone(),
@@ -475,7 +467,7 @@ pub fn config_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5dRu
     }
 }
 
-pub fn transient_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime, window_id: &str) -> Puzzle5dWindowTransient {
+pub fn transient_from_runtime(runtime: &Puzzle5dRuntime, window_id: &str) -> Puzzle5dWindowTransient {
     Puzzle5dWindowTransient { engagement_input: runtime.engagement_input_by_window.get(window_id).cloned().unwrap_or_default(), brush_candidate_index: runtime.brush_candidate_index }
 }
 
@@ -502,7 +494,7 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                 config: Puzzle5dWorldWindowConfig {
                     camera3d: config.camera3d,
                     sun: config.sun,
-                    voxel_dims: config.voxel_dims.to_vec(),
+                    voxel_dims: config.voxel_dims,
                     grid_visible: config.grid_visible,
                     grid_snap_enabled: config.grid_snap_enabled,
                     grid_spacing: config.grid_spacing,

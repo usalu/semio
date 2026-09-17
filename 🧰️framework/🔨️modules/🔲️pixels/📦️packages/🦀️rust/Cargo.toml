@@ -15,6 +15,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 png = "0.17.16"

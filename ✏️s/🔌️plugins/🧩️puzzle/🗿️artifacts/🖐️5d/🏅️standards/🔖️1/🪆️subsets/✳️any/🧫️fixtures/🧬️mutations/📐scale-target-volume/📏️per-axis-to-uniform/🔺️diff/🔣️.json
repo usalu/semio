@@ -29,7 +29,9 @@
               0.0,
               1.0
             ],
-            "scale": 2.0
+            "scale": 2.0,
+            "hidden": false,
+            "locked": false
           }
         }
       }

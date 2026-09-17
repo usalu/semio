@@ -2,7 +2,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
+import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌳️BranchDisclosure
@@ -337,6 +337,35 @@ describe("Tree windowed containers", () => {
     expect(container.querySelectorAll('[data-slot="tree-window-spacer"][data-tree-window-row]')).toHaveLength(0);
   });
 
+  /** 🔑️ A window is addressed by its PATH, because its node key is also the pick target id and two
+   * containers under different parents legitimately share one (📓️f2-sdk-body-node-ledger.md §10). */
+  it("stamps a window path that nests, and leaves a top-level container's path equal to its key", () => {
+    expect(TREE_WINDOW_PATH_SEPARATOR).toBe("\u001f");
+    expect(treeWindowPathOf(undefined, "objects")).toBe("objects");
+    expect(treeWindowPathOf("objects", "shared")).toBe(`objects${TREE_WINDOW_PATH_SEPARATOR}shared`);
+    expect(treeWindowPathOf("a", undefined)).toBeUndefined();
+
+    const nested = (parent: string) => ({ id: `${parent}/shared`, label: "Shared", defaultOpen: true, windowKey: "shared", windowPath: `${parent}${TREE_WINDOW_PATH_SEPARATOR}shared`, window: { total: 9, offset: 0 }, items: [{ id: `${parent}/shared/0`, label: "Child" }] });
+    const { container } = render(
+      <Tree
+        sections={[
+          { id: "left", label: "Left", defaultOpen: true, windowKey: "left", windowPath: "left", window: { total: 2, offset: 0 }, items: [nested("left")] },
+          { id: "right", label: "Right", defaultOpen: true, windowKey: "right", windowPath: "right", window: { total: 2, offset: 0 }, items: [nested("right")] },
+        ]}
+      />,
+    );
+
+    const windowed = Array.from(container.querySelectorAll("[data-tree-window-path]"));
+    expect(windowed.map((element) => element.getAttribute("data-tree-window-path"))).toEqual([
+      "left",
+      `left${TREE_WINDOW_PATH_SEPARATOR}shared`,
+      "right",
+      `right${TREE_WINDOW_PATH_SEPARATOR}shared`,
+    ]);
+    // 🎯️ The authored key — the pick target id — is untouched, and the two "shared" containers keep it.
+    expect(windowed.map((element) => element.getAttribute("data-tree-window-key"))).toEqual(["left", "shared", "right", "shared"]);
+  });
+
   it("windows a nested group row the same way it windows a section", () => {
     const { container } = render(
       <Tree
@@ -463,29 +492,35 @@ describe("capTreeWindowRequests", () => {
   });
 
   it("shrinks the overscan uniformly before any container loses a row the viewport shows", () => {
-    // 4 containers × (20 visible + 2 × 8 overscan) + 4 container nodes = 148; overscan 3 is the first fit.
+    // 4 containers × (20 visible + 2 × 8 overscan) + 4 container nodes = 148 — over budget. The rule gives
+    // overscan back uniformly until the body fits, so every container keeps its whole visible run and they
+    // all land on the SAME overscan. (Derived from the budget, which is jointly owned with the SDK ledger.)
     const keys = ["a", "b", "c", "d"];
+    const overscan = Math.max(0, Math.min(TREE_WINDOW_OVERSCAN_ROWS, Math.floor((Math.floor((TREE_WINDOW_BODY_NODE_BUDGET - keys.length) / keys.length) - 20) / 2)));
+    expect(overscan).toBeLessThan(TREE_WINDOW_OVERSCAN_ROWS);
     const requests = keys.map((key) => ({ key, offset: 30 - TREE_WINDOW_OVERSCAN_ROWS, rows: 20 + 2 * TREE_WINDOW_OVERSCAN_ROWS }));
     const capped = capTreeWindowRequests(requests, visible(keys.map((key) => [key, metrics()] as const)));
 
-    expect(capped).toEqual(keys.map((key) => ({ key, offset: 30 - 3, rows: 26 })));
+    expect(capped).toEqual(keys.map((key) => ({ key, offset: 30 - overscan, rows: 20 + 2 * overscan })));
     expect(nodeCost(capped)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
   });
 
   it("trims the container furthest from the viewport centre once there is no overscan left to give", () => {
-    // Zero overscan still costs 3 + 50 + 40 + 30 = 123; the 12 over budget come off the furthest one.
+    // Zero overscan still costs 3 + 50 + 40 + 30 = 123; everything over budget comes off the FURTHEST one.
     const requests = [
       { key: "far", offset: 0, rows: 50 },
       { key: "mid", offset: 0, rows: 40 },
       { key: "near", offset: 0, rows: 30 },
     ];
+    const excess = 3 + 50 + 40 + 30 - TREE_WINDOW_BODY_NODE_BUDGET;
+    expect(excess).toBeGreaterThan(0);
     const capped = capTreeWindowRequests(requests, visible([
       ["far", metrics({ visibleRows: 50, firstVisibleRow: 0, distancePx: 900 })],
       ["mid", metrics({ visibleRows: 40, firstVisibleRow: 0, distancePx: 100 })],
       ["near", metrics({ visibleRows: 30, firstVisibleRow: 0, distancePx: 10 })],
     ]));
 
-    expect(capped).toEqual([{ key: "far", offset: 0, rows: 38 }, { key: "mid", offset: 0, rows: 40 }, { key: "near", offset: 0, rows: 30 }]);
+    expect(capped).toEqual([{ key: "far", offset: 0, rows: 50 - excess }, { key: "mid", offset: 0, rows: 40 }, { key: "near", offset: 0, rows: 30 }]);
     expect(nodeCost(capped)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
   });
 

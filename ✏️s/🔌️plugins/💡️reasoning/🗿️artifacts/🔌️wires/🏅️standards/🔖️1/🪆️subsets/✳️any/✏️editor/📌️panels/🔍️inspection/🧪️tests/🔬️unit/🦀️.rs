@@ -7,6 +7,7 @@ async fn empty_selection_shows_document_summary() {
     let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES).await;
     assert!(json.contains("Schema:"));
     assert!(json.contains("Board nodes:"));
+    crate::editor::wires::unit_tests::context::close(app);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,4 +1,5 @@
-//! 📄️ Puzzle 5d play app panel — the document tree: parts (with their grips nested) and fasteners,
+//! 📄️ Puzzle 5d play app panel — the document tree: parts (with their grips nested), target volumes and
+//! fasteners,
 //! each row a pick target of the `vortex` interaction domain (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework paints selected/hovered
 //! presence after render.
@@ -14,13 +15,15 @@
 //!
 //! 🙈️ A part row additionally carries two INLINE toggles (show/hide, lock/unlock) dispatching
 //! `setSelectionFlag {entity, flag, ids, value}` — a row action, not a binding, and each asks for the
-//! INVERSE of the state the row is in. Grips and fasteners carry no such flag in this document model,
-//! so their rows carry no toggle. A row whose toggles the argument arena refuses is still built.
+//! INVERSE of the state the row is in. A target-volume row carries the same pair through its OWN verb,
+//! `setTargetVolumeFlag {flag, id, value}`, because `setSelectionFlag` writes the part slice only. Grips
+//! and fasteners carry no such flag in this document model, so their rows carry no toggle. A row whose
+//! toggles the argument arena refuses is still built.
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
-    find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_part_display_label, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP,
-    PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID,
+    find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_part_display_label, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dScene, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER,
+    PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, RowAction, RowActionPlacement, Trigger};
 use semio_framework_plugin::{
@@ -34,6 +37,7 @@ pub const BODY_KEY: &str = "puzzle.5d.play.artifact";
 pub const ROOT: &str = "puzzle5d-play-document";
 pub const PARTS_SECTION: &str = "puzzle5d-play-document.parts";
 pub const FASTENERS_SECTION: &str = "puzzle5d-play-document.fasteners";
+pub const TARGET_VOLUMES_SECTION: &str = "puzzle5d-play-document.target-volumes";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -140,6 +144,57 @@ fn part_row(windows: &TreeWindows<'_>, document: &Puzzle5dDocument, part: &Puzzl
     tree_window_item(windows, item, &part.id, false, &part.grips, |grip| grip_row(part, grip))
 }
 
+/// 🔁️ One target-volume toggle's `setTargetVolumeFlag` args, keys in STRICTLY ASCENDING order
+/// (`flag`, `id`, `value`). A volume is NOT flagged through `setSelectionFlag`: that verb writes the
+/// part slice only, so 5G's own `setTargetVolumeFlag` is the one authority over these two flags.
+fn volume_flag_args(id: &str, flag: &str, value: bool) -> UiAssemblyResult<UiValue> {
+    let text = |value: &str| UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag text admission failed"));
+    let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag map admission failed"))?;
+    for (key, value) in [("flag", text(flag)?), ("id", text(id)?), ("value", UiValue::Bool(value))] {
+        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag entry admission failed"))?;
+    }
+    Ok(UiValue::Map(args.finish()))
+}
+
+fn volume_hide_lock_actions(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) -> UiAssemblyResult<[RowAction; 2]> {
+    let binding = |flag: &str, value: bool| -> UiAssemblyResult<ActionBinding> {
+        let (action, args) = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setTargetVolumeFlag", Some(volume_flag_args(&volume.id, flag, value)?))?;
+        Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
+    };
+    Ok([
+        RowAction {
+            icon: ui_text(if volume.hidden { "eye-off" } else { "eye" })?,
+            label: Some(ui_label(if volume.hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
+            action: binding("hidden", !volume.hidden)?,
+            placement: RowActionPlacement::Row,
+        },
+        RowAction {
+            icon: ui_text(if volume.locked { "lock" } else { "lock-open" })?,
+            label: Some(ui_label(if volume.locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
+            action: binding("locked", !volume.locked)?,
+            placement: RowActionPlacement::Row,
+        },
+    ])
+}
+
+/// 🧊️ One target-volume row: a pick target of the same interaction domain, dimmed while hidden, with the
+/// two inline toggles a part row carries. Its toggles degrade exactly like a part's do.
+fn target_volume_row(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut item = pick_item(&volume.id, volume.id.clone(), "box-select", PUZZLE5D_GRANULARITY_TARGET_VOLUME)?.dimmed(volume.hidden);
+    if let Ok(actions) = volume_hide_lock_actions(volume, labels) {
+        for row_action in actions {
+            match item.try_row_action(row_action) {
+                Ok(next) => item = next,
+                Err((refused, _)) => {
+                    item = refused;
+                    break;
+                }
+            }
+        }
+    }
+    item.try_build().map_err(|_| PluginAssemblyError::new("ui.document.target-volume", "target volume row admission failed"))
+}
+
 fn fastener_row(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> UiAssemblyResult<BuiltNode> {
     pick_item(&fastener.id, fastener_label(document, fastener), "link", PUZZLE5D_GRANULARITY_FASTENER)?
         .try_build()
@@ -152,6 +207,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeW
     let document = &envelope.document;
     PanelTreeBuilder::new(ROOT)?
         .window_section_or_placeholder(windows, PARTS_SECTION, Some(ui_label(labels.parts.as_str())?), true, &document.parts, |part| part_row(windows, document, part, labels), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, TARGET_VOLUMES_SECTION, Some(ui_label(labels.target_volumes.as_str())?), false, &document.target_volumes, |volume| target_volume_row(volume, labels), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, FASTENERS_SECTION, Some(ui_label(labels.fasteners.as_str())?), false, &document.fasteners, |fastener| fastener_row(document, fastener), ui_label(labels.none.as_str())?)?
         .interaction_domain(PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_INTERACTION_DOMAIN)?
         .build()

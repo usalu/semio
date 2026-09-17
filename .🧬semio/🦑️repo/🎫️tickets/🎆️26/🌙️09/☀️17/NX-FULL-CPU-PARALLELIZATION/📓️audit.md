@@ -35,7 +35,7 @@
 - `cacheInternals.runtimeComponentClosure` uses a live getter plus `libraryBootstrap` export so contract tests see the async-loaded closure.
 - Print multi-document `run-many` via bootstrap now spreads `semioNxParallelFlag()` explicitly (in addition to `NX_PARALLEL` from `devToolingEnv()`).
 
-## Remaining gaps
+## Closeout (2026-09-17)
 
-- No live CPU saturation trace captured for a full demonstrator `prepare-dev` graph on this session (would need a long native build under load).
-- Many historical `4_build` launch entries from older seeds may still be absent if other contracts add new launcher requirements later.
+- Final `bun ./📜️script.ts test cache-contracts` exit 0 on this host.
+- Repo MCP ticket tools were unavailable in this session; ticket status set in `🎫️ticket.json` manually.

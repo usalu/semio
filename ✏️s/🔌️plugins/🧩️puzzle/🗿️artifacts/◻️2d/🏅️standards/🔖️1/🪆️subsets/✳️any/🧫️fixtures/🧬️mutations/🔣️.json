@@ -7,15 +7,15 @@
     },
     {
       "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "1d264bb59ba27d931f05359a37bb76c4e3f21abab77b17384ba2b84d11981db8"
+      "sha256": "5d2603aca389512d9c21711fa51cd876e23cef01493a6580effd7303e45c4de7"
     },
     {
       "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/🔺️diff/🔣️.json",
-      "sha256": "33dcdcdd81deea3730fbca22af99328dad108eaf2043e5d9cce44d85b8df839f"
+      "sha256": "55a2b2578af41d167793add677a44d253f7747cc7be38196ea23ab1ef4a1a4a0"
     },
     {
       "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/🦠️mutation/🔣️.json",
@@ -27,15 +27,15 @@
     },
     {
       "path": "⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2d636d55e8a1e5c7a0b6ad7c1905056af931f4199b6192c885ca4c687763ec23"
+      "sha256": "4a0686240b2d9d3ec08165a2b4d7e431308a3b561ecc1bb8a427268a01a58c29"
     },
     {
       "path": "⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "⚓change-node-anchor/⚓️fixed-to-derived/🔺️diff/🔣️.json",
-      "sha256": "7fb267ffcc3879921a3648a2d0a449376e6e5cb9a25440676cfe06148cd81e3b"
+      "sha256": "219ef75d0a78ae95ec11bd94c54de17c5a6ccf850f5fd0c9d1d1cb4b95a5e8dc"
     },
     {
       "path": "⚓change-node-anchor/⚓️fixed-to-derived/🦠️mutation/🔣️.json",
@@ -47,11 +47,11 @@
     },
     {
       "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -67,11 +67,11 @@
     },
     {
       "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "5165a5d63736b1a696687368744603054d10891676914ddc225c52e005c6696b"
+      "sha256": "d3d97bd93b310508a5e1060544ec1e35cd191ace5d4427d3d97706750f984e22"
     },
     {
       "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/🔺️diff/🔣️.json",
@@ -87,11 +87,11 @@
     },
     {
       "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -107,11 +107,11 @@
     },
     {
       "path": "✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "c9515145d80bf8955310436ee6ccf6eeb68258329922738c518a918fa957cd9b"
+      "sha256": "55e875ad066202012fd3a1f2071497f4eefb059ccfb2bcfe6bfaf1da21109d4b"
     },
     {
       "path": "✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "✂️disconnect-handles/🚫️removes-edge-1/🔺️diff/🔣️.json",
@@ -127,15 +127,15 @@
     },
     {
       "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "8c4939ca9f9495eb6473847c835089550cebe4f0eba5c5b538ed2ca80c247df0"
+      "sha256": "d1f763727d9dec7f28f4623f10b596ef607edd848c7d71bbb13db42ad1cc09c5"
     },
     {
       "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/🔺️diff/🔣️.json",
-      "sha256": "4158f1040ff43d4804334b52115bcb19ed79cfefff58e336ec7b83db17b60b00"
+      "sha256": "a162120fcb23d09d9bd42129b7735465824d486918a0d684589399a33fb2df74"
     },
     {
       "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/🦠️mutation/🔣️.json",
@@ -147,15 +147,15 @@
     },
     {
       "path": "✏️edit-node-text/✏️retitles-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d4100b8931af52c16f91186592fc5882d831bef821477fe844ae80bfa837271d"
+      "sha256": "bdccc2db1e8ea4955e8bcf289df73ef46912ec294e77df402475836ff4a1a75b"
     },
     {
       "path": "✏️edit-node-text/✏️retitles-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "✏️edit-node-text/✏️retitles-node-a/🔺️diff/🔣️.json",
-      "sha256": "1ef378746e5d1e0a8875586c90f8210c0eff96c66e3c35c1b80820a20b667e41"
+      "sha256": "ff743b501ba192c89da73190f64a5e02a6dde956acb97cb19edf022658a35f09"
     },
     {
       "path": "✏️edit-node-text/✏️retitles-node-a/🦠️mutation/🔣️.json",
@@ -167,11 +167,11 @@
     },
     {
       "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -187,19 +187,19 @@
     },
     {
       "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7329001034def0e406c3c30477ba896e9af4c1c8f5fd7db189507920aff2afe8"
+      "sha256": "fc17799fa835fffc398a6694a10a5dbe8052bb0b1d74437984a292e1d4d877b6"
     },
     {
       "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/🔺️diff/🔣️.json",
-      "sha256": "de9ede587ebd809fc4d718272a39f6d703aff03b5e1cbedc6fc25738e1067158"
+      "sha256": "6a70cb6b727c764c69dbad1502814c648d7cc76b4eb02d10f3462fc8e459e8b0"
     },
     {
       "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/🦠️mutation/🔣️.json",
-      "sha256": "a6841b1241bcf951a2129dc668d0dd8957948fa5d095479cc22504c82a64b1c2"
+      "sha256": "0d51f6b7421ce96983bb31ed7a64b14304d97ce0cf2e28b415c85504d71344fd"
     },
     {
       "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🎯️outcome/🔣️.json",
@@ -207,19 +207,19 @@
     },
     {
       "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "09f1a77431c9fff45a894d0b28e3d43afe759a4201a1d5dda66b726c94fb8909"
+      "sha256": "e4272bf1f7b34957fe1312ff0ba6a8886056997b5688ee393c5240d17fd51216"
     },
     {
       "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🔺️diff/🔣️.json",
-      "sha256": "1ca8709a2de3b9ea10ee13e8fb2d9aa2a2bd4366a3a571ed2f5fdda43a700bee"
+      "sha256": "8d1c4aa7e05e61ed942e5c7153e3fd20be5364271e9ae800b2a75303b30ebb41"
     },
     {
       "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🦠️mutation/🔣️.json",
-      "sha256": "7066d5b206b5efe50e8f8415e8af41f35368912a41b20168175c591128b366d5"
+      "sha256": "d0c20dfc2c8c88a7b0f86477a9f3cf1f505fbf324dbe66e69963b94fa855d609"
     },
     {
       "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
@@ -227,11 +227,11 @@
     },
     {
       "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -239,7 +239,7 @@
     },
     {
       "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
-      "sha256": "a334997eede045783edc23c29357ee03745367eb67d68c6cd326c284089ddd37"
+      "sha256": "8dff1c53dc01c2203efd4279a7f691df7d7d2dcd5e88c8f6c7ce169ce072bcc8"
     },
     {
       "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/🎯️outcome/🔣️.json",
@@ -247,11 +247,11 @@
     },
     {
       "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/🔺️diff/🚫️.absent",
@@ -267,15 +267,15 @@
     },
     {
       "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "5050be9fb44cb5416b689ba025c2f2c3f64a5d575bdd27730f214d354d2f1b30"
+      "sha256": "6c35c8f4f5e3c47b00c97d817b0f62bd7cdb6ca21f17888095d7c99f51870b85"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🔺️diff/🔣️.json",
-      "sha256": "13e419d6d9ddb257086018d0ba3dc553725428cc20f879baf6af7fdb9841d82f"
+      "sha256": "c96cefeba8f6602e65298def25fb8963990f222feec6ec0af56d5e8a5d4547df"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🦠️mutation/🔣️.json",
@@ -287,15 +287,15 @@
     },
     {
       "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "0c294d2563a23b8649df05c16f1851e712b81279cd309510422d3af5d8019524"
+      "sha256": "8ba71fe0b38cb66e07666962fd0783c76ddab59164ed14b7438db9f5f8bbd152"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/🔺️diff/🔣️.json",
-      "sha256": "3bccdd94ab093b52dd32d6547d17fea92a59fe3087d9f8109ba1a626e63f0f11"
+      "sha256": "be20a907a50387168b44d97e0dfba06300c602a61adb92a3a58eecba363131f9"
     },
     {
       "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/🦠️mutation/🔣️.json",
@@ -307,11 +307,11 @@
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "fe06835cc1b7e9afbc571400e9df8fa8bb05730575b12452b8f82b9507d0cf95"
+      "sha256": "136835e18ac0ac999d4eb1ee500b7c0a9cc5b72b71f86cca4850298e27fa4ce4"
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-manifest/🔺️diff/🔣️.json",
@@ -327,11 +327,11 @@
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d45ba47263ec67845b448e16f0e6f4a86ca4d44004410f2c11a97617e530f8c7"
+      "sha256": "0e01f100fd3f1cc3a550067f2e59fa55d8711ee409737fa20bd550e7f93adb95"
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/🔺️diff/🔣️.json",
@@ -347,11 +347,11 @@
     },
     {
       "path": "🌍create-target-region/🌍️appends-region-2/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "4f17cb146a4174d188485cd0b898d7a012c835c88be4fa5a65d8af5a56b11365"
+      "sha256": "ba3d531c99f6a5f06f890f9472d3c17bda124fb46396ba2c01f0a8004f35960b"
     },
     {
       "path": "🌍create-target-region/🌍️appends-region-2/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🌍create-target-region/🌍️appends-region-2/🔺️diff/🔣️.json",
@@ -367,11 +367,11 @@
     },
     {
       "path": "🌍create-target-region/🌍️paints-a-tower-footprint/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "0782ad961205f0a81ab8bdb9c8629ea19c4389cf8b3c32174236bad949af54c6"
+      "sha256": "58e819764b4c85bd0313350298350d02657e2f71ede0fd3dba9491494b830c6f"
     },
     {
       "path": "🌍create-target-region/🌍️paints-a-tower-footprint/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "5bd199fe127afd16d9586b3256723efa1f34263691e9b01a1d884f4a9946372d"
+      "sha256": "d41ebc60c45a4140ad996e901cbf03b7798ca6090b3a56bfbced932acea38b3c"
     },
     {
       "path": "🌍create-target-region/🌍️paints-a-tower-footprint/🔺️diff/🔣️.json",
@@ -387,11 +387,11 @@
     },
     {
       "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/🔺️diff/🚫️.absent",
@@ -407,15 +407,15 @@
     },
     {
       "path": "🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "18ebfd9ec2866f5953ded01af8c408a3d0bf33e89e370fd5f49ebcd0aa054a0f"
+      "sha256": "2bcb133a275bd2a49d14fbf7c4a6034981d484d2077669cfe99c69d64e78e164"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-node-a-to-root/🔺️diff/🔣️.json",
-      "sha256": "cd20facf39a5cb6bbf91d3ca55ebfaac66055caab67b32f7a59897a129936871"
+      "sha256": "c631804133e736fb903b4498dd898942698bab212182beb8f13ba4681a9a28f1"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-node-a-to-root/🦠️mutation/🔣️.json",
@@ -427,15 +427,15 @@
     },
     {
       "path": "🌟change-node-root/🌳️promotes-the-base-to-root/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "527bb9e19742b356b96b589c7c43d8cae34675065c39534bed499d5370d45f12"
+      "sha256": "5da779dc9019ddc87ffd6aae25ff4fd7a0fe397041768c5617eb51b94077ec61"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-the-base-to-root/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-the-base-to-root/🔺️diff/🔣️.json",
-      "sha256": "1c4884a2671faaff60b7f36f01d5b73330012ac9596945209db969f98055b8f0"
+      "sha256": "6fa70127556571a7d5ee46ac1706f07cda9f91302c3f7195dcf87a4cf469826d"
     },
     {
       "path": "🌟change-node-root/🌳️promotes-the-base-to-root/🦠️mutation/🔣️.json",
@@ -447,11 +447,11 @@
     },
     {
       "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -467,19 +467,19 @@
     },
     {
       "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "9923f194628e7cea1ec4f832f43ee7a3168bd7665f5dde8346c11cd355016b13"
+      "sha256": "d44321bd568ddcb56e23a232c6bb45ac66bedffa669ad703d59ab317b2c21bca"
     },
     {
       "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/🔺️diff/🔣️.json",
-      "sha256": "1d6a1ae633320d1ed16ede7e38082389e1d4cfe8f86564e44e229ebd8693a115"
+      "sha256": "22c54da3bd23ad06233c5eebb24b090df233f9de3944fd842a1e9d72e19169d2"
     },
     {
       "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/🦠️mutation/🔣️.json",
-      "sha256": "db89af3df09ed5ed6256b8c2eb85e4194e2b9eba0bb3173eb6b7909209048ea1"
+      "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
     },
     {
       "path": "🌱create-node/🌱️appends-node-c/🎯️outcome/🔣️.json",
@@ -487,19 +487,19 @@
     },
     {
       "path": "🌱create-node/🌱️appends-node-c/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "ef17ccc9a6b20fb985a481d0f4e1b6813754dd0629a034005e002ec3e30d85cf"
+      "sha256": "96af4376f29526fdb16bb11a9d2cd43532ddacaaffb5569f575f5049ed1c29ae"
     },
     {
       "path": "🌱create-node/🌱️appends-node-c/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🌱create-node/🌱️appends-node-c/🔺️diff/🔣️.json",
-      "sha256": "08760e40bdfe9e44004e458d09c50f5ea94370531311b1f2af2eedeca8929267"
+      "sha256": "96884d49b23c57a79c6ba89ed1c6a9e35398f60da7bd8febc28571a3881be047"
     },
     {
       "path": "🌱create-node/🌱️appends-node-c/🦠️mutation/🔣️.json",
-      "sha256": "573d8c48b03c1e0ce74ed88710f1f711609cb494fa5c337f437ba04cacd63bf6"
+      "sha256": "a42f919247a287e8adc3bcd0358b9c50f6aa26b4b61491d834fe09bd9a8c09ea"
     },
     {
       "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🎯️outcome/🔣️.json",
@@ -507,11 +507,11 @@
     },
     {
       "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🔺️diff/🚫️.absent",
@@ -519,7 +519,7 @@
     },
     {
       "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🦠️mutation/🔣️.json",
-      "sha256": "c8f7a7f28a74020b99921b1b1dfcca7601bf65c57dc227417ca16c68f80e4d31"
+      "sha256": "51d1d534f12da2b83f86340d795004bbdc13e4cb67c2ec73cbd2e3fad266713a"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🎯️outcome/🔣️.json",
@@ -527,15 +527,15 @@
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "a885e2e0c8693239965cc1dae26899305812d8fb2334e44f722423e28c665107"
+      "sha256": "56ef26b40825595706d651c0908b35adf5a278da1948bcf0e9a2f8c5506af4ba"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🔺️diff/🔣️.json",
-      "sha256": "ecd5e482a9345f741b39fb679cbdc0e514700bcf903667ebd2fb6743e3a0b5b3"
+      "sha256": "215194a0cf40f09819ce6e87d57ed3a725f6bd2f2baec562c60b44a9b7bc7ba0"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🦠️mutation/🔣️.json",
@@ -547,15 +547,15 @@
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "822a242b4172b0d3d8209da2765ae72ab0e55775dd9236b173d47fed019c7e13"
+      "sha256": "24a1bb7a47584814d69b13731bb2aa8267fb25cfada2ab661ea0f0122c30bb49"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-node-a-icon/🔺️diff/🔣️.json",
-      "sha256": "8a90e90b1e4800de94bd0700803fe4eea6f10ee77ace8ad189229f68d553720f"
+      "sha256": "f63334997cc617b25444cdf84f656a4d002ec39709139484d527a9ed9c3f38ae"
     },
     {
       "path": "🎨change-node-icon/🎨️swaps-node-a-icon/🦠️mutation/🔣️.json",
@@ -567,11 +567,11 @@
     },
     {
       "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -587,15 +587,15 @@
     },
     {
       "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "eb780077535fa8b69ff22aa3998aa631b1c8d86dd9c081465c42cc5577af9602"
+      "sha256": "50c405be24eb4c432845c838e9c961f871aaa4e4ba1f9f15144330feac3077c7"
     },
     {
       "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/🔺️diff/🔣️.json",
-      "sha256": "30ec3c4527dd9ce7b8640d352e3d705b5bcaa34c1310c2a11031f9ed397116bf"
+      "sha256": "db7bd10ab97cfb28e66041c9025a4ad5437254047e670231abf5190655fd14e7"
     },
     {
       "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/🦠️mutation/🔣️.json",
@@ -607,15 +607,15 @@
     },
     {
       "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "03ddee191d1257013b36bc1514cf3b1d4c9d3d80dd45de1bbecec83ad248b6e4"
+      "sha256": "f9475ecbcb20221690f93c51f7041643a639df0fc4f2f47d0a150a5b06dc8d86"
     },
     {
       "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/🔺️diff/🔣️.json",
-      "sha256": "f2964b0b492a30ad308dde4bb3c1fd0b622aac4fab8e8720fb5e067d2aa7f381"
+      "sha256": "7c9f43c00a6dbb752f284496e2032fb8a7c6a669a7f06fb32f59538bb0e30b71"
     },
     {
       "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/🦠️mutation/🔣️.json",
@@ -627,11 +627,11 @@
     },
     {
       "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -647,15 +647,15 @@
     },
     {
       "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "57c6d762674d04e72331779e59ba53eeab735e328bd8982bdbc3c304cfe278a4"
+      "sha256": "6d73e2554d507e5206f4cddff94c0b7cdf9110529bf8e2e917304ce2389428be"
     },
     {
       "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/🔺️diff/🔣️.json",
-      "sha256": "05fd24d60f137e87e96098fcbb4ab79bf1fb376d92797c3c39d079d97c9da370"
+      "sha256": "666de1af8860f62356c5c4ffefb4b4333c7fbc89facadbc3e6bf0dcd658eae6c"
     },
     {
       "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/🦠️mutation/🔣️.json",
@@ -667,15 +667,15 @@
     },
     {
       "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "a33e50169afd7cbe1193463dbc73ed8179eac66fd97dcad828a2c020a30ad4d8"
+      "sha256": "b63397d88e4b5a239edf8fd6bf6ee49b6a17df6a74f07fe3635532181d9b7089"
     },
     {
       "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/🔺️diff/🔣️.json",
-      "sha256": "1522623b6da9c3fac65b632929c19f6a4bb8c51466190c579e8364659b89a650"
+      "sha256": "c4a40f62ef97bfc76cc924c1abf86c11378b53c7d58a541b50675cc0ddf1079c"
     },
     {
       "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/🦠️mutation/🔣️.json",
@@ -687,11 +687,11 @@
     },
     {
       "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -707,15 +707,15 @@
     },
     {
       "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "358209d12c1d222f9b5390ad5a9bae35f2f3b47b0f034e8c325432852dba2ef6"
+      "sha256": "59ce07213ddcd3f3c29ce64bb64f9264fd8a4f738f37854a20313632760bdd87"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/🔺️diff/🔣️.json",
-      "sha256": "ad28026e454a058dcad754f2914ede26eecd3ee3942e2fc5df93dae58dfcd4f6"
+      "sha256": "8e74d58803ed3af7565355de97126b408a051c0856c995378919b046dbc96a4e"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/🦠️mutation/🔣️.json",
@@ -727,15 +727,15 @@
     },
     {
       "path": "👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3296e1f18585e08104f813536ef0d16dcc8f9f02420b973e78006ab66b41c37c"
+      "sha256": "38f29fc8779083a5db15e842546e61cf452958d6cab53f46f90929ab399850a4"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-edge-1/🔺️diff/🔣️.json",
-      "sha256": "c615e3088cd6d7c7828b6b4e527ae9d9e4b5e0d6882c595f0b811ed0355394a1"
+      "sha256": "caeb52c617d3c36ffeb4538a5c3dfc7e20404dc58c537e1d60cd429ca7bee5f3"
     },
     {
       "path": "👀change-edge-visible/🙈️hides-edge-1/🦠️mutation/🔣️.json",
@@ -747,11 +747,11 @@
     },
     {
       "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -767,15 +767,15 @@
     },
     {
       "path": "👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "a1b439eb99c19110d861b8c99e3d0a505a848b88dfc6bb723afeb0058f4056ce"
+      "sha256": "9e4a16958b8c488e749f61c1f493827b06bd9f5ad35695cc65040952f26214a9"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-a-capsule/🔺️diff/🔣️.json",
-      "sha256": "9be3eebdb19d12a81ba675b784090c7b99a99af55ff388bba03ce3417652f90c"
+      "sha256": "0747bb9748e4c81b7cb9e45840b5a4842cd627586d5eede53ac4dd4c1c136a54"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-a-capsule/🦠️mutation/🔣️.json",
@@ -787,15 +787,15 @@
     },
     {
       "path": "👁️change-node-visible/🙈️hides-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d83759bece8048b9e37bb9625073a050e5dbc928142d79aec9e2be6e537020df"
+      "sha256": "1153005f060619511e8c0636bec6cb11e4edf851ee6d3002a6e455c401881f31"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-node-a/🔺️diff/🔣️.json",
-      "sha256": "a37c6c7840c819582f0d7857ff16283f67febc4f54f751c7bf11be71e89903ea"
+      "sha256": "873823304025c235967780cd5759a1db96ced63e041e3946fb1686c245bceca4"
     },
     {
       "path": "👁️change-node-visible/🙈️hides-node-a/🦠️mutation/🔣️.json",
@@ -807,11 +807,11 @@
     },
     {
       "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -827,11 +827,11 @@
     },
     {
       "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "cfb01f38967f6479db6630ba91a93603193cda74420f73bba750afbc2db3a26b"
+      "sha256": "1f845874ce5f0c4bb1628d7152ff0fc6efeebfb44967146f3312156a3f718fbb"
     },
     {
       "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/🔺️diff/🔣️.json",
@@ -847,11 +847,11 @@
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-a-pair-the-relation-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-a-pair-the-relation-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-a-pair-the-relation-never-held/🔺️diff/🚫️.absent",
@@ -867,11 +867,11 @@
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3acb30097aa814806d1feda72ce3f4c3d0f0eff8dc374df74a2af2c8a2e17bc5"
+      "sha256": "817270cb4e30e53a63bdaf6a5e8bea24c41487e64f6906627ac08b43219e9335"
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/🔺️diff/🔣️.json",
@@ -887,15 +887,15 @@
     },
     {
       "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "5cb64e4c7490093da62157cbc0351b671b027715ee441b87f751efbf08fb9e95"
+      "sha256": "d99510ffc0713132a7d10391fd71503481ab5db5ba0548539dd4b3c3f891ffd5"
     },
     {
       "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/🔺️diff/🔣️.json",
-      "sha256": "5783345a5d9cd8616c589e1e5d28ef8e1350c49ce4deb0a03ad47137ec7a55d1"
+      "sha256": "cda1b2c157c8f7b2ed1c482ac77556d2d95372eea2d2b7f4917a557d7a993828"
     },
     {
       "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/🦠️mutation/🔣️.json",
@@ -907,19 +907,19 @@
     },
     {
       "path": "📍move-node/📍️moves-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2741b079f41e3dda4c668bcd8d20e88d7c6af3e74460c45c22f45de96e135966"
+      "sha256": "8dcbfe63e73b1966bde329ded6ecfb62c1aa3df4c25a4d406ee3243745566338"
     },
     {
       "path": "📍move-node/📍️moves-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "📍move-node/📍️moves-node-a/🔺️diff/🔣️.json",
-      "sha256": "506bf02a9eea1b0514ebfcf359b76008f3213aeb970e9ad1086cad475187b8c4"
+      "sha256": "788ebb9f5bf0b0027eccd6c92cbcd65771441e35706a9e427c636f88ccf287ab"
     },
     {
       "path": "📍move-node/📍️moves-node-a/🦠️mutation/🔣️.json",
-      "sha256": "adfec6c5bccbb2f55177ff3627e4a3013c03c7f9ef8d348214d6bcaebb1c7072"
+      "sha256": "91272b6484557b84f651fe0d845bb5ed253f9df572b5ef1f66b1dd705b3aa85d"
     },
     {
       "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
@@ -927,11 +927,11 @@
     },
     {
       "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -939,7 +939,7 @@
     },
     {
       "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
-      "sha256": "3672805404b9df93cfa2d2534e981563c8c4ec10a28f309fe2e011538e63f6d5"
+      "sha256": "1e5ff7527cb283ac0a935f758d7d3cc2b8849c3d8f6dc19c6e047ec50ca99358"
     },
     {
       "path": "📏scale-node/📏️doubles-node-a/🎯️outcome/🔣️.json",
@@ -947,19 +947,19 @@
     },
     {
       "path": "📏scale-node/📏️doubles-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b0f0e14065d3e676c2700450271004d7dd12150e61ca4268c946ca64fc899bd5"
+      "sha256": "cae7b0dae9b8184f623e11a764030ea576465b82ff877b3fceb27329afe78720"
     },
     {
       "path": "📏scale-node/📏️doubles-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "📏scale-node/📏️doubles-node-a/🔺️diff/🔣️.json",
-      "sha256": "405e08822f29336b7eabc763430eaae4160a66e19b8d15e0caef94a81d5c8efa"
+      "sha256": "f55369ebab158fc695c296607eff7374f577f4a139fb393f3042de6c8726e1fb"
     },
     {
       "path": "📏scale-node/📏️doubles-node-a/🦠️mutation/🔣️.json",
-      "sha256": "bf0083af3f5fffb8b19d6b2aab8a44bc5df99f41be18c630e903fc0ffb1c18d4"
+      "sha256": "1492da06181f92cb0070e8c3b93afe1898c09b6d79054b7268512192f8b896ab"
     },
     {
       "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🎯️outcome/🔣️.json",
@@ -967,15 +967,15 @@
     },
     {
       "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2a4ce77bbb1ad5ef9a95afb6b2ea6e60188289e04ef7ddd59f6be645ea172996"
+      "sha256": "363e9afc5b9798c62fb8a1d28636c97e369f998026b8b622ea93c6338af4bccd"
     },
     {
       "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🔺️diff/🔣️.json",
-      "sha256": "7b4071af27aedbc1fbb60ca16aa349da334b83d028b348ea08a54902f5b8856c"
+      "sha256": "6b9ebdcbcff0ca84a34f6332b1391df6ae63e4f5852b618ce81f3ac2f52120a7"
     },
     {
       "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🦠️mutation/🔣️.json",
@@ -987,11 +987,11 @@
     },
     {
       "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1007,11 +1007,11 @@
     },
     {
       "path": "📐resize-target-region/📐️widens-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "ac9e181de1f396607febccb3fc4fa1d51702b93d65142027215b6f38f1f7ab38"
+      "sha256": "e9c658a13abd52b921e64ffb42ff01250ace877c7dbdfe10f0bb3406b70e7081"
     },
     {
       "path": "📐resize-target-region/📐️widens-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "📐resize-target-region/📐️widens-region-1/🔺️diff/🔣️.json",
@@ -1027,11 +1027,11 @@
     },
     {
       "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1047,11 +1047,11 @@
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "16cd18a5a319985dc840832ad3e64cb0cfb17d9f0edfaecafee691aff5d6c45c"
+      "sha256": "b76090fe54428d6295bd00c63759f5501e6be6fc187805af021259bd59686cdd"
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/🔺️diff/🔣️.json",
@@ -1067,11 +1067,11 @@
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "788f4ce4a07f91acc0d96dcbb7099ed490ca12342163d762aa030dbbeacd5b10"
+      "sha256": "8d2ba6d186a78d336b2bd823258e2d008dcf505931d88936000eca95b1658415"
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/🔺️diff/🔣️.json",
@@ -1087,11 +1087,11 @@
     },
     {
       "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "788f4ce4a07f91acc0d96dcbb7099ed490ca12342163d762aa030dbbeacd5b10"
+      "sha256": "8d2ba6d186a78d336b2bd823258e2d008dcf505931d88936000eca95b1658415"
     },
     {
       "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/🔺️diff/🔣️.json",
@@ -1107,19 +1107,19 @@
     },
     {
       "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "6789ace603ea672dac840b04bbbd4c0e061a2b2959936d8e50d664692b33b7e6"
+      "sha256": "05a95bdfbc16f91bf63604d124a105acf3756eaac8fe31ccfbb3d0cc63837dce"
     },
     {
       "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/🔺️diff/🔣️.json",
-      "sha256": "7a533fe8b16903e345f44e21c557786aa6d49caaa30c8ffda4e2d683d3028d5b"
+      "sha256": "7dbcc4e1fda28527fe6873d5d7415d61ef525fbd1c6d5a0cc58480335b15b850"
     },
     {
       "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/🦠️mutation/🔣️.json",
-      "sha256": "c3ba245d857b6547628a2d4a86d1cfdcc59838af6754b5aefada23ddd6e236d0"
+      "sha256": "8eeeb9b6388e67a416fc83bb234772fdf44b5c84c72c5765bbbb2ce3064c4dfb"
     },
     {
       "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🎯️outcome/🔣️.json",
@@ -1127,11 +1127,11 @@
     },
     {
       "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🔺️diff/🚫️.absent",
@@ -1139,7 +1139,7 @@
     },
     {
       "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🦠️mutation/🔣️.json",
-      "sha256": "fae655576f5e3c1fb74935442a8f7a18d030e968f75b90c981f0b8b59f882c6d"
+      "sha256": "ac473fc3a9b892d581e0467c3bdfe10b985a4e3b6a81b86dc5e94d5db6da1193"
     },
     {
       "path": "🔏change-target-region-locked/🔏️locks-region-1/🎯️outcome/🔣️.json",
@@ -1147,11 +1147,11 @@
     },
     {
       "path": "🔏change-target-region-locked/🔏️locks-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "895b07b67228a0133f0add4a1a16fa21fdbfa94652cf0c1f2d01f0a45e7076a2"
+      "sha256": "1884d34622c95a7bd878fd447496c0fcafacf4c5f907b4f1db7575ec64a0a6a9"
     },
     {
       "path": "🔏change-target-region-locked/🔏️locks-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🔏change-target-region-locked/🔏️locks-region-1/🔺️diff/🔣️.json",
@@ -1167,11 +1167,11 @@
     },
     {
       "path": "🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1187,15 +1187,15 @@
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "55216f2c099b490cb484dd933f78b06ddb768cfde2bca3e8378705528e3016fc"
+      "sha256": "7d460db28b3fec4c2f0b06fe69c2fcacf266b74fdb04f9b4bc83a6511a3e9d34"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-edge-1/🔺️diff/🔣️.json",
-      "sha256": "01ea2e6ebcf063926da0efc744872d33bf1ecafcd634e593505a056f2ff87137"
+      "sha256": "9f854b57c5752abcc77ee795a8e19dc3f9aee52053789817a04e04ed0a82922b"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-edge-1/🦠️mutation/🔣️.json",
@@ -1207,15 +1207,15 @@
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2f9557ef4c95e32b50b717869d2dae50ca2b32bd35ab373e1d246a695f1403ab"
+      "sha256": "c52e583defabf0f27e723086d2521e6f5ad068cc81555065db8ca456cec5be0b"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/🔺️diff/🔣️.json",
-      "sha256": "936a1647e0f7bce32929403d0aa7719dd10b6b30a55970610dfddd76a9ba687f"
+      "sha256": "80da5a4c8fffb172020768bc3cb1362bd918bb5c9d03149004e126c88d4f66a6"
     },
     {
       "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/🦠️mutation/🔣️.json",
@@ -1227,11 +1227,11 @@
     },
     {
       "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1247,15 +1247,15 @@
     },
     {
       "path": "🔒change-node-locked/🔒️locks-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3e5b75c096247a6d5d9aa92ae13bba4e1858fcf7135e1fec5216c83ce2de63ea"
+      "sha256": "4d09177052211c3ee78c547dc522081f323edcb6032d5b7cb58ad5bba67b8872"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-node-a/🔺️diff/🔣️.json",
-      "sha256": "2140f2c1bb192a7e7aeb5bd20d096132ab0cb1a1db3d08314ed386482d148200"
+      "sha256": "6db014cc0854eac598aefdeb15504cadf34f7455947ebb249993f9b57f1b4f3c"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-node-a/🦠️mutation/🔣️.json",
@@ -1267,15 +1267,15 @@
     },
     {
       "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3c5179174381536c3940c63cc94b1b0b617c2ad744ecc85faa52bdfc158e36e6"
+      "sha256": "95aa2b94af01c8403252d877b93bfefd86e9715a97209f558b3d60ebb0338709"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/🔺️diff/🔣️.json",
-      "sha256": "8322831386121ce60c0e4212e3200f7351d1241f83a5f4d3d40cedb62d4b9ef3"
+      "sha256": "2f1d6ff784e05de1490a5b15ec17a776e0f344b31f56ee642332d167eccda7ef"
     },
     {
       "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/🦠️mutation/🔣️.json",
@@ -1287,11 +1287,11 @@
     },
     {
       "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1307,15 +1307,15 @@
     },
     {
       "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "fabfd091987fcea1caa05dceca06cfd0968ea42c9edf6509c59b3deaf33dcb2e"
+      "sha256": "8bbe6dc0062ba0be114a6def4501a1c484b243ad062f038536fca22f2701ba76"
     },
     {
       "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/🔺️diff/🔣️.json",
-      "sha256": "3ddb15edca5c2efebe51b8d6259cc84050319f86bc6e2c99ba4302c4c93891e7"
+      "sha256": "20ecc55791eb9f92cf14aedcb79b09e526793c03810b9be245473169537e6ae1"
     },
     {
       "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/🦠️mutation/🔣️.json",
@@ -1327,15 +1327,15 @@
     },
     {
       "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3ae7dc69ae47c84a51282a1c63a8ca094af1b09df4b213138360c2bd087a9afd"
+      "sha256": "b9e2c1b9ce239b8eb2eb8cabfa37f39cf2bf8aa0c944a05e4a00033415139778"
     },
     {
       "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/🔺️diff/🔣️.json",
-      "sha256": "e7f77f0288b6daa73aeda437952630e4b571648d48f019fbe81e0682c1734c30"
+      "sha256": "7008e497a8315f29e74c113ab45ad88c8e768ea5bd44667e6e9431545e894ed5"
     },
     {
       "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/🦠️mutation/🔣️.json",
@@ -1347,11 +1347,11 @@
     },
     {
       "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1367,11 +1367,11 @@
     },
     {
       "path": "🖋️edit-target-region-label/🖋️renames-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "c56c0b49c790b6b1711e70c39e20b2dcada66aa75e5b750a2a612a12018f507a"
+      "sha256": "34e7e92fa5ef388a1d2c851382e964baf4a372239556c3b8366e90aea9eb902d"
     },
     {
       "path": "🖋️edit-target-region-label/🖋️renames-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🖋️edit-target-region-label/🖋️renames-region-1/🔺️diff/🔣️.json",
@@ -1387,11 +1387,11 @@
     },
     {
       "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1407,11 +1407,11 @@
     },
     {
       "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "f064503749a831cd5f466383950458e06597cddb2c77bf50ca95cce86e61ceb8"
+      "sha256": "e81610de6e01125a6dd74c6af023c5d271c5d975e0ad3cbe0f6fe5bba476a8ab"
     },
     {
       "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/🔺️diff/🔣️.json",
@@ -1427,11 +1427,11 @@
     },
     {
       "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1447,11 +1447,11 @@
     },
     {
       "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "75f1a9fe06f5b2d34c2d926d30cdbf20cd1c713e844bf3879ea8b922ff583b61"
+      "sha256": "1d842e5858f5b2b4ea0ef400b7e8dce41f612c5e629e67cdd5730501a436a594"
     },
     {
       "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/🔺️diff/🔣️.json",
@@ -1467,11 +1467,11 @@
     },
     {
       "path": "🙈change-target-region-hidden/🙈️hides-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "fae7b0d0fd4fbf8616a588a9669f3e4d50251ee7fe2998292cff489e2dea4cb2"
+      "sha256": "4096106637d112b0a4d04ed472ada87a6abd5bf2f04d39e639292599920e6f60"
     },
     {
       "path": "🙈change-target-region-hidden/🙈️hides-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🙈change-target-region-hidden/🙈️hides-region-1/🔺️diff/🔣️.json",
@@ -1487,11 +1487,11 @@
     },
     {
       "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1507,11 +1507,11 @@
     },
     {
       "path": "🚀move-target-region/🚀️slides-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "5dbc796d025bf06e3f72d28f8f79e405a51a073cf324ae1b6fd0ea3fc520d861"
+      "sha256": "7ef8798654b3bc6284117c6e4316e19cfe08e7a610dd30459ef2142b4683abf6"
     },
     {
       "path": "🚀move-target-region/🚀️slides-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🚀move-target-region/🚀️slides-region-1/🔺️diff/🔣️.json",
@@ -1527,11 +1527,11 @@
     },
     {
       "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1547,11 +1547,11 @@
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "29aef6d35c2e271c159bc78217e6554cd55e2f1e114ce5342c3eab5fc81be721"
+      "sha256": "3b5cec67b94a17d76a60fb52435ab952cbbde587731a7b4b9d23e4981adaa743"
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/🔺️diff/🔣️.json",
@@ -1567,11 +1567,11 @@
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "1516fbd522d9187bd1818d274391b3e128f2d3e88e1a5c2f4dc92fdb091a6b22"
+      "sha256": "d2a6cb2e280fd1e2bff24601cb49ae53ae51aa1c0cc7ca95ab5793c1477591a9"
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/🔺️diff/🔣️.json",
@@ -1587,19 +1587,19 @@
     },
     {
       "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "c80c91c3ed09200143ec122e8f16563db02d06967a005225a186cd217ed5de58"
+      "sha256": "4038717b36d334ee3574b0f69db5e604ea57092b2def7c26af547e0b4925dc45"
     },
     {
       "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/🔺️diff/🔣️.json",
-      "sha256": "fe28bb599b0d4694f605e192677ddf0602988e4616e0e9a4d6feaf015acc2ccf"
+      "sha256": "9ea4978e2bbcb51849846d6af0452983c8d43660c5ece9e7cd7f6a59e8d4073f"
     },
     {
       "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/🦠️mutation/🔣️.json",
-      "sha256": "95af936126c814fc71e43af1369e07a3159c44b296dbae198983fd5d1576a915"
+      "sha256": "44ba2bc5d6eba703e119a34f759e8f1c91b6743da24a524bc319e2b953c88f16"
     },
     {
       "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🎯️outcome/🔣️.json",
@@ -1607,19 +1607,19 @@
     },
     {
       "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2283ab2daed1b29f58c09e0007ac0c013dcdcb5971cb992934bf0e3b803ee6c5"
+      "sha256": "25b78012e38b660656e607ca57e7b8ba69cd4943325f9e5fa7756b1c4811e28d"
     },
     {
       "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "5bd199fe127afd16d9586b3256723efa1f34263691e9b01a1d884f4a9946372d"
+      "sha256": "d41ebc60c45a4140ad996e901cbf03b7798ca6090b3a56bfbced932acea38b3c"
     },
     {
       "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🔺️diff/🔣️.json",
-      "sha256": "7df249fc574b4ce3cad21297a0bfc088551429e487952c4c6237871d0387e88f"
+      "sha256": "4eb8431c23ef818ebc4f3b54345f8ca8192990fb8ad45ebad217ee27feb34ea3"
     },
     {
       "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🦠️mutation/🔣️.json",
-      "sha256": "e31771dd2ac64cdd1d675d5b1814fbc5b8b2abc7ace9ed6b11e7b666d04dd970"
+      "sha256": "e2a98b666e8837ac9dba7ee0557bb071a270ceeaea45fdbc101b2284b85f7d99"
     },
     {
       "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
@@ -1627,11 +1627,11 @@
     },
     {
       "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1639,7 +1639,7 @@
     },
     {
       "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
-      "sha256": "5c21ede3cd0f03809db6b6965c25b9805004f92a8f1c8ec9a2fd8d3dea472408"
+      "sha256": "acd48d78bfb3eedd7e0abfaf12782ccdccf811f5160779e6c157c2700d0bdfc5"
     },
     {
       "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🎯️outcome/🔣️.json",
@@ -1647,19 +1647,19 @@
     },
     {
       "path": "🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "785df52887d84e0e62c2a5f7cd233cfc1531abcdee26e203eb9ae5137bea8499"
+      "sha256": "cb64c45e84beed79749b9cae3960d7251e1d92dcdb640f8fd262f06d6a79601b"
     },
     {
       "path": "🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🔺️diff/🔣️.json",
-      "sha256": "c27be3b4dd8094e3e5b486677eb25c8afa654db0b069ea800766265e72c78752"
+      "sha256": "ce006226401a0c2dff4b5df11ec3fd3ef11a6d87c90caa8fc393bb21c922caff"
     },
     {
       "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🦠️mutation/🔣️.json",
-      "sha256": "c0f4f0756e7fddac1c9330dd603fe00ebebf28fe4355cf67714f1dd726a59569"
+      "sha256": "56a21b3821582f6a53f2dd8df8553d22ebd8404b50bb88408a9e31fb07f492c1"
     },
     {
       "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
@@ -1667,11 +1667,11 @@
     },
     {
       "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1679,7 +1679,7 @@
     },
     {
       "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
-      "sha256": "2787328a37db214b262a43cdc12bd2a60114a58d5e5595d13276c09a62965cd0"
+      "sha256": "787b948960756968aceba4f2d9b2910d3167ddb5ce3e7abf66b274ee0c507138"
     },
     {
       "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🎯️outcome/🔣️.json",
@@ -1687,19 +1687,19 @@
     },
     {
       "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "8cb16cfab1bc5c2069b805400b1e9ec52526e0ba8494bdefe1affeb99bad42a4"
+      "sha256": "09f0fa2c51d4b7bdc8505b00615545766cd4bed984bed170da010c3ae3248904"
     },
     {
       "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🔺️diff/🔣️.json",
-      "sha256": "5332a21b235a9cdbb77f3874dd82ca58a6efd143a782a1ce687ef4f4bbbbad0a"
+      "sha256": "fc451c8d58da3b078e64d600a441b3b4402b7505057a45021a16e26d266c247d"
     },
     {
       "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🦠️mutation/🔣️.json",
-      "sha256": "572c248c94fe5f38bf9ea205519358bf14f5481f0326122e0e091a486355f3f7"
+      "sha256": "5e3ebc4f0818b7a605d8f56a47a4dd1e266f7182920179f9c011bbacb2b7e2e1"
     },
     {
       "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🎯️outcome/🔣️.json",
@@ -1707,11 +1707,11 @@
     },
     {
       "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🔺️diff/🔣️.json",
@@ -1719,7 +1719,7 @@
     },
     {
       "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🦠️mutation/🔣️.json",
-      "sha256": "af8e86648305759c15ad7f5abf1eafa41c80f84803d8df9047a23d369fa71247"
+      "sha256": "a036bac19b62a793e6b33ee20a183c7fbf08295189b6dc0392d751c287d1de67"
     },
     {
       "path": "🪢️connect-handles/🪢️adds-second-edge/🎯️outcome/🔣️.json",
@@ -1727,19 +1727,19 @@
     },
     {
       "path": "🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b8c870654fb6f1c17711a022168654239f1a8b0fff68dd7124546ec80e03a60f"
+      "sha256": "1a88b716dd8a2f0be9995263a84fa5a54b147f99767e58c77ed6fe75ae58694c"
     },
     {
       "path": "🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🪢️connect-handles/🪢️adds-second-edge/🔺️diff/🔣️.json",
-      "sha256": "4d0df74c228b8066c7e83e8b768f37eadb73fc2bda1ed598666b815d82f4dc54"
+      "sha256": "f0008943e4b8c02e0cc830119cd30d542f1a78b9b887de1e1bbb294704d17061"
     },
     {
       "path": "🪢️connect-handles/🪢️adds-second-edge/🦠️mutation/🔣️.json",
-      "sha256": "1b4256d6d0e1513ae8606ac82b519d4c0919e895bf2091f8cf8c90f1852268d9"
+      "sha256": "1c06fb31e1f687cd07e1c2e339b014ec1f3d15960584f5fbcea8c3ed7b31bdaa"
     },
     {
       "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🎯️outcome/🔣️.json",
@@ -1747,19 +1747,19 @@
     },
     {
       "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "38d69d6a9b88dc45d0c245ff3d48182d1bf53cd69f0d03b9d285e17673061a57"
+      "sha256": "eb03e81da96d3e6eb620953e0b4c10570adf506c7bf030c0644ee740123fd412"
     },
     {
       "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "b41bb7506ec0f89b751a303d4d59de6148f4eea423bed960e10c3d3eb5cf7efa"
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
       "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🔺️diff/🔣️.json",
-      "sha256": "0485efd0bd5f02ff0e47a692e680de75fd23d3943fea53bc168da1b118a2ee6b"
+      "sha256": "5ffa4650feb6a983f15fa5fdc70e723d76a482dce7d51f353b20f1a897e7c55f"
     },
     {
       "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🦠️mutation/🔣️.json",
-      "sha256": "c09566bd3cfe0a15ecb17a414c710cc0070bf4d3fe7e40a70ac3f626251d937d"
+      "sha256": "fb41cdb2018dca15b31a1055f055646f0360e5ba8581afc2783a4e59e36f85ad"
     },
     {
       "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/🎯️outcome/🔣️.json",
@@ -1767,11 +1767,11 @@
     },
     {
       "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/🔺️diff/🚫️.absent",
@@ -1787,11 +1787,11 @@
     },
     {
       "path": "🪦delete-target-region/🪦️removes-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "a516708af5e0abd9b058f1bc26af6f7682a379b82f665543af4c0dbe69b1318c"
+      "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
       "path": "🪦delete-target-region/🪦️removes-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "78145544a3dc5589583ffe9a238e6fecafb7257cecbd1de0549dcba114f7dfdd"
+      "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
       "path": "🪦delete-target-region/🪦️removes-region-1/🔺️diff/🔣️.json",

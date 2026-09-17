@@ -31,7 +31,7 @@ pub enum XmlAnyEditorCommand {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
-    if node_id.is_empty() {
+    if node_id.is_empty() || node_id == main::XML_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
     node_id.split('/').map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()

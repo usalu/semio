@@ -10,7 +10,8 @@ pub fn hover_suggestion(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) else {
         return;
     };
-    if puzzle2d_restore_brush_slot(ctx).is_none() {
+    let requested = args.and_then(|value| value.get("handleId")).and_then(|value| value.as_str()).map(str::to_string);
+    if puzzle2d_restore_brush_slot(ctx, requested.as_deref()).is_none() {
         return;
     }
     ctx.host.borrow_mut().brush_set_candidate_index(index as usize);

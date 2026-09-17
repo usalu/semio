@@ -39,6 +39,13 @@ fn section_key(suffix: &str) -> String {
     format!("{ROOT}.{suffix}")
 }
 
+/// 🔑️ The window PATH of a container nested inside `{ROOT}.{section}` — enclosing container keys,
+/// outermost first, then its own key, joined by `TREE_WINDOW_PATH_SEPARATOR`. A nested container is
+/// addressed by this, never by its bare node key, so one object id under two sections stays distinct.
+fn nested_key(section: &str, node_key: &str) -> String {
+    format!("{}{}{node_key}", section_key(section), ui::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 /// ♻️ Every built row is projected AND RETIRED: an argument map dropped without retirement never
 /// returns its credit, which would starve the panels assembled by the tests running beside this one.
 fn panel(fixture: &Puzzle3dFixture, view: &ViewModel) -> String {
@@ -132,7 +139,7 @@ fn an_oversized_document_stamps_every_containers_total_and_materialises_only_its
     let fixture = nakagin_fixture();
     assert!(fixture.objects.len() >= 100, "the Nakagin fixture must be the large document: {} objects", fixture.objects.len());
     let nested = fixture.objects.iter().find(|object| !object.vortices.is_empty()).expect("Nakagin objects carry vortices").clone();
-    let view = hosted(vec![request(&section_key("objects"), Some(true), 0, 10), request(&nested.id, Some(true), 0, 8)]);
+    let view = hosted(vec![request(&section_key("objects"), Some(true), 0, 10), request(&nested_key("objects", &nested.id), Some(true), 0, 8)]);
     let json = panel(&fixture, &view);
     let tree = tree_of(&json);
 
@@ -196,7 +203,7 @@ fn a_tree_window_request_materialises_exactly_its_slice() {
     assert_eq!(child_keys(section), expected, "exactly entries [120, 126) are built: {section}");
 
     // 🪺️ A nested group scrolls the same way, independently of its parent.
-    let nested = hosted(vec![request(&section_key("objects"), Some(true), 0, 2), request("object-1", Some(true), 2, 2)]);
+    let nested = hosted(vec![request(&section_key("objects"), Some(true), 0, 2), request(&nested_key("objects", "object-1"), Some(true), 2, 2)]);
     let tree = tree_of(&panel(&fixture, &nested));
     let row = node_at(&tree, "object-1").expect("the second object row");
     assert_eq!(window_of(row), (4, 2), "the object reports all four vortices and the slice start: {row}");
@@ -219,7 +226,7 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
     fixture.attractions.push(Puzzle3dAttraction { id: "attraction-1".into(), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
     let view = hosted(vec![
         request(&section_key("objects"), Some(true), 0, 8),
-        request("object-0", Some(true), 0, 8),
+        request(&nested_key("objects", "object-0"), Some(true), 0, 8),
         request(&section_key("references"), Some(true), 0, 8),
         request(&section_key("target-volumes"), Some(true), 0, 8),
         request(&section_key("attractions"), Some(true), 0, 8),
@@ -278,6 +285,18 @@ fn node_records(node: &serde_json::Value) -> usize {
     1 + node["children"].as_array().map_or(0, |children| children.iter().map(node_records).sum::<usize>())
 }
 
+/// 🔑️ Every node key in one body. A windowed container is addressed by its authored key, so two
+/// containers (or two rows) sharing one key inside a body make the host's `TreeWindowRequest`
+/// ambiguous — the SDK refuses it.
+fn node_keys(node: &serde_json::Value, keys: &mut Vec<String>) {
+    if let Some(key) = node["key"].as_str() {
+        keys.push(key.to_string());
+    }
+    for child in node["children"].as_array().into_iter().flatten() {
+        node_keys(child, keys);
+    }
+}
+
 /// 🧾️ THE whole-document law: one container holds more than a whole `UI_DOCUMENT_NODES` arena of
 /// entries AND every other container is open at once, each asking for more rows than the arena could
 /// ever hold. Per-container clamps alone do not save this body — only the body-wide node ledger does
@@ -305,7 +324,8 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
         request(&section_key("target-volumes"), Some(true), 0, 512),
         request(&section_key("attractions"), Some(true), 0, 512),
     ];
-    requests.extend((0..24).map(|index| request(&format!("object-{index}"), Some(true), 0, 512)));
+    // 🔑️ A nested container is addressed by its window PATH: the objects section, then the object row.
+    requests.extend((0..24).map(|index| request(&nested_key("objects", &format!("object-{index}")), Some(true), 0, 512)));
     let json = panel(&fixture, &hosted(requests));
     let tree = tree_of(&json);
 
@@ -321,6 +341,15 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 
     let records = node_records(&tree);
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
+
+    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
+    let mut keys = Vec::new();
+    node_keys(&tree, &mut keys);
+    let mut unique = keys.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(unique.len(), keys.len(), "every node key in this body is unique ({} of {} distinct)", unique.len(), keys.len());
+
     assert!(!json.contains(".more"), "no continuation row closes an exhausted container: {json}");
     assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
 }

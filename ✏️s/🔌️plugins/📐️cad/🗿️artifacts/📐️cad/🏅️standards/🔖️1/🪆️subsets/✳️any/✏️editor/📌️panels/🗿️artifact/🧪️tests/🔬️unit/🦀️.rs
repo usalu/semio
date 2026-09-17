@@ -178,6 +178,16 @@ fn node_records(node: &BuiltNode) -> usize {
     1 + node.children.iter().map(node_records).sum::<usize>()
 }
 
+/// 🔑️ Every node key in one body. A windowed container is addressed by its authored key, so two
+/// containers (or two rows) sharing one key inside a body make the host's `TreeWindowRequest`
+/// ambiguous — the SDK refuses it.
+fn node_keys(node: &BuiltNode, keys: &mut Vec<String>) {
+    keys.push(node.key.as_str().to_string());
+    for child in node.children.iter() {
+        node_keys(child, keys);
+    }
+}
+
 /// 🧾️ The whole-document law: the nodes container alone holds more entries than a whole
 /// `UI_DOCUMENT_NODES` arena, AND all nine sections plus every object group are open at once, each
 /// asking for far more rows than the arena could hold. Per-container clamps do not save this body —
@@ -196,7 +206,9 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
     let mut requests = vec![request("cad-play-document.nodes", Some(true), 0, 512)];
     for (suffix, objects) in panes {
         requests.push(request(&format!("cad-play-document.{suffix}"), Some(true), 0, 512));
-        requests.extend(objects.iter().map(|object| request(&object.id, Some(true), 0, 512)));
+        // 🔑️ A nested container is addressed by its window PATH — the enclosing section's key, the
+        // separator, then its own key — so the same object id under two pane sections stays distinct.
+        requests.extend(objects.iter().map(|object| request(&format!("cad-play-document.{suffix}{}{}", ui::TREE_WINDOW_PATH_SEPARATOR, object.id), Some(true), 0, 512)));
     }
     for model_definition_id in [CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC] {
         requests.push(request(&format!("cad-play-document.references.{model_definition_id}"), Some(true), 0, 512));
@@ -210,6 +222,14 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
     }
 
     let records = node_records(&tree);
+
+    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
+    let mut keys = Vec::new();
+    node_keys(&tree, &mut keys);
+    let mut unique = keys.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(unique.len(), keys.len(), "every node key in this body is unique ({} of {} distinct)", unique.len(), keys.len());
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
     let json = fixture_json(tree);
     assert!(!json.contains(".more"), "no continuation row closes an exhausted container: {json}");
@@ -229,9 +249,12 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     assert_eq!(props.label.0.as_str(), "U2");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Beam"));
 
+    // 🔑️ A second render is a second body: one `TreeWindows` may see a given node key only once
+    // (`ui.tree-window.duplicate-key`), so the German paint gets its own ledger, as `render_body` does.
     let de_view = ViewModel { locale: Locale::De, ..ViewModel::default() };
     let de_labels = cad_labels(&de_view);
-    let de_item = object_tree_item(&windows, "shape", &object, de_labels).expect("German object tree item");
+    let de_windows = TreeWindows::unhosted();
+    let de_item = object_tree_item(&de_windows, "shape", &object, de_labels).expect("German object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &de_item.component else {
         panic!("expected German tree item");
     };

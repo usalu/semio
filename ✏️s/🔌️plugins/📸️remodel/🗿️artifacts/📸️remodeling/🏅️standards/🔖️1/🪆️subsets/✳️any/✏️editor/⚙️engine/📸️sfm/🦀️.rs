@@ -20,6 +20,10 @@ const MAX_INTERACTIVE_SEED_CORRESPONDENCES: usize = 64;
 const MAX_INTERACTIVE_SEED_HYPOTHESES: usize = 32;
 const MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES: usize = 64;
 const MAX_INTERACTIVE_REGISTRATION_ATTEMPTS: u64 = 64;
+/// 🎯️ Bounded hypothesis batches the two-view registration fallback spends before it commits to the
+/// best essential matrix it found (each batch is one [`MAX_INTERACTIVE_SEED_HYPOTHESES`] draw from
+/// each of the five-point and eight-point estimators).
+const MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS: usize = 8;
 const MAX_INTERACTIVE_TRACK_OBSERVATIONS: usize = 8;
 const MAX_INTERACTIVE_TRACKS: usize = 512;
 
@@ -1002,6 +1006,13 @@ impl MinimalSolver for EssentialFivePointSolver {
 /// constraints that make the essential matrix's 5-DOF manifold degenerate for coplanar points under an
 /// unconstrained 8-point fit.
 pub fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64) -> Option<TwoViewResult> {
+    estimate_essential_five_point_with_limit(matches, k_a, k_b, threshold, seed, 2_000)
+}
+
+/// 🎯️ [`estimate_essential_five_point`] with an explicit RANSAC hypothesis cap, so an interactive
+/// worker step can spend a fixed number of minimal samples per call and keep the best model it has
+/// seen across calls instead of running an unbounded search in one step.
+pub fn estimate_essential_five_point_with_limit(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64, maximum_hypotheses: usize) -> Option<TwoViewResult> {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
@@ -1010,7 +1021,7 @@ pub fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Int
             ([ra[0], ra[1]], [rb[0], rb[1]])
         })
         .collect();
-    let cfg = RansacConfig { threshold, confidence: 0.999, max_iters: 2000, seed, scoring: RansacScoring::Msac };
+    let cfg = RansacConfig { threshold, confidence: 0.999, max_iters: maximum_hypotheses, seed, scoring: RansacScoring::Msac };
     // Deliberately plain `ransac`, not `lo_ransac` with a [`fit_fundamental_dlt`] local-optimization
     // refit: that linear 8-point-style refit is exactly the estimator this solver exists to outperform
     // on planar/low-parallax data, so refitting through it on every improved inlier set would silently
@@ -2051,9 +2062,34 @@ impl SeedPairPreparation {
 pub enum RegistrationPhase {
     Collect,
     Solve,
+    /// 📐️ PnP found no pose: pick the registered reference sharing the most direct matches.
+    TwoViewSelect,
+    /// 📐️ Collect that reference's correspondences (stride-subsampled to the bounded maximum).
+    TwoViewCollect,
+    /// 📐️ One bounded essential-matrix hypothesis batch per call, keeping the best model so far.
+    TwoViewSolve,
+    /// 📐️ Walk the triangulated tracks shared with the reference to recover the metric scale.
+    TwoViewScale,
+    /// 📐️ Commit the scaled pose once it reprojects the shared points.
+    TwoViewCommit,
     Triangulate,
     Done,
     Failed,
+}
+
+/// 📐️ Bounded two-view fallback state for one frame PnP could not register: essential matrix
+/// against the best-connected registered camera, scaled by the shared triangulated points (or, when
+/// matching left none, by the seed pair's baseline). Every field is a cursor or a fixed-size buffer,
+/// so no call materializes more than [`MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES`] items.
+struct TwoViewFallback {
+    reference: usize,
+    correspondences: Vec<([f64; 2], [f64; 2])>,
+    attempts: usize,
+    best: Option<TwoViewResult>,
+    relative: Option<Se3>,
+    cursor: usize,
+    scales: Vec<f64>,
+    shared: Vec<([f64; 3], [f64; 2])>,
 }
 
 pub struct RegistrationPreparation {
@@ -2063,11 +2099,12 @@ pub struct RegistrationPreparation {
     world_points: Vec<[f64; 3]>,
     observations: Vec<[f64; 2]>,
     phase: RegistrationPhase,
+    two_view: Option<Box<TwoViewFallback>>,
 }
 
 impl RegistrationPreparation {
     pub fn new(frame: usize) -> Self {
-        Self { frame, cursor: 0, attempts: 0, world_points: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), observations: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), phase: RegistrationPhase::Collect }
+        Self { frame, cursor: 0, attempts: 0, world_points: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), observations: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), phase: RegistrationPhase::Collect, two_view: None }
     }
 }
 
@@ -2471,7 +2508,7 @@ impl IncrementalSfm {
             }
             RegistrationPhase::Solve => {
                 if preparation.world_points.len() < P3pSolver::SAMPLE_SIZE {
-                    preparation.phase = RegistrationPhase::Failed;
+                    preparation.phase = RegistrationPhase::TwoViewSelect;
                 } else {
                     let config = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.5, max_iters: 1, seed: preparation.frame as u64 ^ preparation.attempts.wrapping_mul(0x9E37_79B9), scoring: RansacScoring::Msac };
                     preparation.attempts += 1;
@@ -2480,9 +2517,191 @@ impl IncrementalSfm {
                         preparation.cursor = 0;
                         preparation.phase = RegistrationPhase::Triangulate;
                     } else if preparation.attempts >= MAX_INTERACTIVE_REGISTRATION_ATTEMPTS {
-                        preparation.phase = RegistrationPhase::Failed;
+                        preparation.phase = RegistrationPhase::TwoViewSelect;
                     }
                 }
+            }
+            RegistrationPhase::TwoViewSelect => {
+                let registered: std::collections::BTreeSet<usize> = self.cameras.iter().map(|&(frame, _)| frame).collect();
+                let mut best: Option<(usize, usize)> = None;
+                for &(a, b, ref matches) in &self.pairwise_matches {
+                    if matches.len() < 8 {
+                        continue;
+                    }
+                    let reference = if a == preparation.frame && registered.contains(&b) {
+                        b
+                    } else if b == preparation.frame && registered.contains(&a) {
+                        a
+                    } else {
+                        continue;
+                    };
+                    if best.is_none_or(|(_, count)| matches.len() > count) {
+                        best = Some((reference, matches.len()));
+                    }
+                }
+                match best {
+                    Some((reference, _)) => {
+                        preparation.two_view = Some(Box::new(TwoViewFallback {
+                            reference,
+                            correspondences: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES),
+                            attempts: 0,
+                            best: None,
+                            relative: None,
+                            cursor: 0,
+                            scales: Vec::new(),
+                            shared: Vec::new(),
+                        }));
+                        preparation.phase = RegistrationPhase::TwoViewCollect;
+                    }
+                    None => preparation.phase = RegistrationPhase::Failed,
+                }
+            }
+            RegistrationPhase::TwoViewCollect => {
+                let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                let mut collected: Vec<([f64; 2], [f64; 2])> = Vec::new();
+                for &(a, b, ref matches) in &self.pairwise_matches {
+                    let flip = if a == fallback.reference && b == preparation.frame {
+                        false
+                    } else if a == preparation.frame && b == fallback.reference {
+                        true
+                    } else {
+                        continue;
+                    };
+                    // 📏️ Deterministic stride subsample so one solve never sees more than the bounded
+                    // maximum, however dense the pair's match table is.
+                    let stride = matches.len().div_ceil(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES).max(1);
+                    for matched in matches.iter().step_by(stride) {
+                        let pair = if flip { (self.obs_px(fallback.reference, matched.b), self.obs_px(preparation.frame, matched.a)) } else { (self.obs_px(fallback.reference, matched.a), self.obs_px(preparation.frame, matched.b)) };
+                        if collected.len() < MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES {
+                            collected.push(pair);
+                        }
+                    }
+                }
+                fallback.correspondences = collected;
+                preparation.phase = if fallback.correspondences.len() >= 8 { RegistrationPhase::TwoViewSolve } else { RegistrationPhase::Failed };
+            }
+            RegistrationPhase::TwoViewSolve => {
+                const FIVE_POINT_THRESHOLD: f64 = 0.005;
+                let intrinsics = self.intrinsics;
+                let frame = preparation.frame;
+                let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                let seed = (frame as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ fallback.attempts as u64;
+                // 🎯️ One bounded hypothesis batch per call from each estimator; the five-point
+                // manifold survives the low-parallax video geometry the linear eight-point fit
+                // degenerates on, and MSAC scores over the same correspondences are comparable, so
+                // the better model simply wins across calls.
+                let candidates = [
+                    estimate_essential_five_point_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, FIVE_POINT_THRESHOLD, seed, MAX_INTERACTIVE_SEED_HYPOTHESES),
+                    estimate_essential_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES),
+                ];
+                for candidate in candidates.into_iter().flatten() {
+                    if fallback.best.as_ref().is_none_or(|best| candidate.score < best.score) {
+                        fallback.best = Some(candidate);
+                    }
+                }
+                fallback.attempts += 1;
+                if fallback.attempts < MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS {
+                    return Ok(false);
+                }
+                let relative = fallback.best.as_ref().and_then(|estimate| {
+                    let TwoViewModel::Fundamental(essential) = estimate.model else { return None };
+                    let rays: Vec<([f64; 2], [f64; 2])> = estimate
+                        .inliers
+                        .iter()
+                        .take(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES)
+                        .map(|&index| {
+                            let left = intrinsics.unproject_ray(fallback.correspondences[index].0);
+                            let right = intrinsics.unproject_ray(fallback.correspondences[index].1);
+                            ([left[0], left[1]], [right[0], right[1]])
+                        })
+                        .collect();
+                    decompose_essential(&essential, &rays)
+                });
+                match relative {
+                    Some(relative) => {
+                        fallback.relative = Some(relative);
+                        fallback.cursor = 0;
+                        preparation.phase = RegistrationPhase::TwoViewScale;
+                    }
+                    None => preparation.phase = RegistrationPhase::Failed,
+                }
+            }
+            RegistrationPhase::TwoViewScale => {
+                let frame = preparation.frame;
+                let limit = self.tracks.tracks.len().min(MAX_INTERACTIVE_TRACKS);
+                for _ in 0..work_budget.max(1) {
+                    let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                    if fallback.cursor >= limit {
+                        preparation.phase = RegistrationPhase::TwoViewCommit;
+                        break;
+                    }
+                    let track_id = fallback.cursor;
+                    fallback.cursor += 1;
+                    let reference = fallback.reference;
+                    let relative = fallback.relative.expect("solved relative pose");
+                    let Some(&point) = self.points.get(&track_id) else { continue };
+                    let track = &self.tracks.tracks[track_id];
+                    let (Some(pixel_reference), Some(pixel_frame)) = (self.track_obs_in(track, reference), self.track_obs_in(track, frame)) else { continue };
+                    let ray_reference = self.intrinsics.unproject_ray(pixel_reference);
+                    let ray_frame = self.intrinsics.unproject_ray(pixel_frame);
+                    let rotation = mat3d_to_array(&relative.r.0);
+                    let Some(unit_point) = triangulate_normalized_pair(&rotation, relative.t, [ray_reference[0], ray_reference[1]], [ray_frame[0], ray_frame[1]]) else { continue };
+                    let Some(reference_pose) = self.pose_of(reference) else { continue };
+                    let metric_distance = norm3(sub3(point, camera_center(&reference_pose)));
+                    let unit_distance = norm3(unit_point);
+                    if unit_distance < 1e-9 || metric_distance < 1e-9 {
+                        continue;
+                    }
+                    let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                    if fallback.scales.len() < MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES {
+                        fallback.scales.push(metric_distance / unit_distance);
+                        fallback.shared.push((point, pixel_frame));
+                    }
+                }
+            }
+            RegistrationPhase::TwoViewCommit => {
+                let frame = preparation.frame;
+                let fallback = preparation.two_view.as_mut().expect("two-view fallback");
+                let relative = fallback.relative.expect("solved relative pose");
+                let Some(reference_pose) = self.pose_of(fallback.reference) else {
+                    preparation.phase = RegistrationPhase::Failed;
+                    return Ok(false);
+                };
+                let scale = if fallback.scales.is_empty() {
+                    // 🏃️ Sparse-track path (JPEG/video matching left no shared triangulated point):
+                    // borrow the seed pair's baseline so every chained two-view pose shares one
+                    // metric, instead of abandoning the frame.
+                    if self.cameras.len() < 2 {
+                        preparation.phase = RegistrationPhase::Failed;
+                        return Ok(false);
+                    }
+                    let baseline = norm3(sub3(camera_center(&self.cameras[0].1), camera_center(&self.cameras[1].1)));
+                    if baseline < 1e-9 {
+                        preparation.phase = RegistrationPhase::Failed;
+                        return Ok(false);
+                    }
+                    baseline
+                } else {
+                    fallback.scales.sort_by(f64::total_cmp);
+                    let median = fallback.scales[fallback.scales.len() / 2];
+                    let spread = fallback.scales[fallback.scales.len() - 1] / fallback.scales[0];
+                    if !median.is_finite() || median <= 1e-9 || !spread.is_finite() || (fallback.scales.len() >= 2 && spread > 1.5) {
+                        preparation.phase = RegistrationPhase::Failed;
+                        return Ok(false);
+                    }
+                    median
+                };
+                let pose = CameraPose(Se3 { r: relative.r, t: scale3(relative.t, scale) }.semio_compose_rs(&reference_pose.0));
+                let maximum_reprojection = self.cfg.ransac_threshold_px * 3.0;
+                let consistent = fallback.shared.iter().any(|&(point, pixel)| reproject(&self.intrinsics, &pose, point).is_some_and(|predicted| ((predicted[0] - pixel[0]).powi(2) + (predicted[1] - pixel[1]).powi(2)).sqrt() <= maximum_reprojection));
+                if !fallback.shared.is_empty() && !consistent {
+                    preparation.phase = RegistrationPhase::Failed;
+                    return Ok(false);
+                }
+                self.cameras.push((frame, pose));
+                preparation.two_view = None;
+                preparation.cursor = 0;
+                preparation.phase = RegistrationPhase::Triangulate;
             }
             RegistrationPhase::Triangulate => {
                 for _ in 0..work_budget.max(1) {

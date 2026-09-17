@@ -431,6 +431,11 @@
       "name": "layout-react-attach",
       "url": "http://localhost:6079",
       "port": 6079
+    },
+    {
+      "name": "note-react-attach",
+      "url": "http://localhost:6080",
+      "port": 6080
     }
   ]
 }

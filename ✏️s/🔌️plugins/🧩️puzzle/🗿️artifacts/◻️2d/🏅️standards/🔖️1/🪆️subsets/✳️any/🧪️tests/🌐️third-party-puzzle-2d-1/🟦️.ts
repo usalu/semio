@@ -39,9 +39,11 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 // #region 🧫️Vectors
 /** 🧫️ The declared fixture. Its DIRECTORY is the mutation vocabulary; every vector is found beneath it. */
 const VECTOR_ROOT_URI = "shared://🧬️mutations/🔣️.json";
-const SCENARIOS_DIR = "🧪️tests";
-const LEAF_SCHEMA = "🧬️schema/🔣️.json";
-const MEMBERS = ["schema", "camera", "nodes", "edges", "meta"] as const;
+/** 🧬️ The leaf's draft-07 payload schema, reached from the fixture root — the committed vectors and
+ * the mutation vocabulary they belong to live in sibling trees (`🧫️fixtures` and `🧬️schema`). */
+const LEAF_SCHEMA = ["..", "..", "🧬️schema", "🧬️mutations"] as const;
+const LEAF_SCHEMA_LEAF = ["🧬️schema", "🔣️.json"] as const;
+const MEMBERS = ["schema", "camera", "nodes", "edges", "targetRegions", "meta"] as const;
 /** 🕸️ The seven kinds whose correctness is topological — the only ones a graph library can speak to. */
 const GRAPH_KINDS = ["create-node", "delete-node", "add-node-handle", "remove-node-handle", "replace-node-handle", "connect-handles", "disconnect-handles"];
 const RELATION_KINDS = ["connect-kind-compatibility", "disconnect-kind-compatibility"];
@@ -84,9 +86,9 @@ function vectors(ctx: AdapterContext): Vector[] {
   if (cached !== undefined) return cached;
   const found: Vector[] = [];
   for (const leaf of readdirSync(root).sort()) {
-    const scenarios = join(root, leaf, SCENARIOS_DIR);
+    const scenarios = join(root, leaf);
     if (!existsSync(scenarios) || !statSync(scenarios).isDirectory()) continue;
-    const schema = readJson(root, leaf, LEAF_SCHEMA);
+    const schema = readJson(root, ...LEAF_SCHEMA, leaf, ...LEAF_SCHEMA_LEAF);
     for (const scenario of readdirSync(scenarios).sort()) {
       const directory = join(scenarios, scenario);
       if (!statSync(directory).isDirectory()) continue;
@@ -337,7 +339,7 @@ function payloadSchemas(ctx: AdapterContext): AdapterOutcome {
     let checks = 1;
     if (vector.mutation.mutation !== tagOf(vector.kind)) failures.push(`${vector.id}: the committed payload is tagged ${JSON.stringify(vector.mutation.mutation)} where its leaf declares ${vector.kind}`);
     if (vector.schema === null) {
-      failures.push(`${vector.id}: the mutation leaf carries no ${LEAF_SCHEMA}`);
+      failures.push(`${vector.id}: the mutation leaf carries no ${join(...LEAF_SCHEMA_LEAF)}`);
       rows.push({ id: vector.id, kind: vector.kind, checks });
       continue;
     }

@@ -13,6 +13,10 @@ use ::semio_framework_schema::ArtifactSchema;
 /// `serde_json::to_value`/`from_value` on this type directly anymore. `serde` stays derived under
 /// `#[cfg(test)]` only, as the differential oracle the `🧪️tests/**` fixture suite still checks
 /// this type's wire shape against.
+///
+/// 🎯️ `target_regions` is the one collection skipped when empty (unlike `nodes`/`edges`): every
+/// document written before target regions existed stays byte-identical, so the whole committed
+/// fixture corpus remains canonical.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -37,8 +41,6 @@ pub struct Puzzle2dSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub edges: Vec<Puzzle2dEdge>,
-    // 🎯️ Skipped when empty (unlike `nodes`/`edges`): every document written before target regions
-    // existed stays byte-identical, so the whole committed fixture corpus remains canonical.
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[dsl(table)]

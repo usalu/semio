@@ -28,9 +28,10 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
         return Ok(Emit::default());
     }
     ctx.set_mesh_workspace_map(build.mesh_workspace().clone());
-    let Some(new_object) = build.snapshot().objects.iter().find(|object| object.id == new_id).cloned() else {
+    let Some(mut new_object) = build.snapshot().objects.iter().find(|object| object.id == new_id).cloned() else {
         return Ok(Emit::default());
     };
+    new_object.paint_layers = new_object.paint_layers.into_iter().map(crate::LowpolyPaintLayer::compacted).collect();
     let index = projection.objects.len();
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added object used to also
     // reset the mesh domain's selection/targets to whole-object/empty here — that state is

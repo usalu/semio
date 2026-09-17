@@ -607,3 +607,55 @@ fn snap_transform_angle_quantizes_only_under_the_snap_modifier() {
     assert!(snap_transform_angle(0.0, true).abs() < 1e-12, "a zero drag stays a zero rotation");
     assert!((snap_transform_angle(-20.0_f64.to_radians(), true) + 15.0_f64.to_radians()).abs() < 1e-9, "negative drags snap symmetrically");
 }
+
+//#region 🎯️TargetRegions
+/// 📐️ Every region reader sees one rectangle no matter which corner the brush started from.
+#[test]
+fn region_bounds_normalize_a_negative_extent() {
+    assert_eq!(region_bounds(10.0, 20.0, 30.0, 40.0), [10.0, 20.0, 40.0, 60.0], "a positive extent measures forward from the corner");
+    assert_eq!(region_bounds(40.0, 60.0, -30.0, -40.0), [10.0, 20.0, 40.0, 60.0], "the same rectangle painted backwards reads identically");
+    assert_eq!(region_bounds(0.0, 0.0, 0.0, 0.0), [0.0, 0.0, 0.0, 0.0], "a collapsed rectangle normalizes to itself");
+}
+
+/// 🤏️ Grip precedence inside one rectangle: corners beat edges, edges beat the body, and a point
+/// outside the rectangle plus its screen-width band is no grip at all.
+#[test]
+fn region_grip_prefers_corners_then_edges_then_the_body() {
+    let bounds = [0.0, 0.0, 100.0, 100.0];
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(50.0, 50.0)), Some(RegionGrip::Body), "the middle is the body");
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(0.0, 50.0)), Some(RegionGrip::West), "the left edge is the west grip");
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(50.0, 100.0)), Some(RegionGrip::South), "the bottom edge is the south grip");
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(100.0, 100.0)), Some(RegionGrip::SouthEast), "a corner outranks both edges meeting there");
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(0.0, 0.0)), Some(RegionGrip::NorthWest), "and so does the opposite corner");
+    assert_eq!(region_grip_at(bounds, 1.0, Point::new(-REGION_HIT_TOLERANCE_PX - 1.0, 50.0)), None, "past the band is a miss");
+    // 🔍️ The band is a constant SCREEN width, so zooming in shrinks its world reach.
+    assert_eq!(region_grip_at(bounds, 4.0, Point::new(-REGION_HIT_TOLERANCE_PX / 2.0, 50.0)), None, "at zoom 4 the same world offset has left the band");
+}
+
+/// 📐️ A grip drag moves only the edges it owns, and no extent may collapse: an edge pushed past its
+/// opposite stops at the floor instead of minting a rectangle no fill placement could ever satisfy.
+#[test]
+fn region_grip_drag_moves_only_its_own_edges_and_never_collapses() {
+    let bounds = [0.0, 0.0, 100.0, 100.0];
+    assert_eq!(region_grip_drag(bounds, RegionGrip::Body, 10.0, -5.0), [10.0, -5.0, 110.0, 95.0], "a body drag is a pure translation");
+    assert_eq!(region_grip_drag(bounds, RegionGrip::East, 20.0, 999.0), [0.0, 0.0, 120.0, 100.0], "the east grip ignores the vertical component");
+    assert_eq!(region_grip_drag(bounds, RegionGrip::North, 999.0, -20.0), [0.0, -20.0, 100.0, 100.0], "the north grip ignores the horizontal component");
+    assert_eq!(region_grip_drag(bounds, RegionGrip::SouthWest, -10.0, 10.0), [-10.0, 0.0, 100.0, 110.0], "a corner grip moves one edge per axis");
+    let crushed = region_grip_drag(bounds, RegionGrip::West, 1_000.0, 0.0);
+    assert!((crushed[2] - crushed[0] - REGION_MIN_EXTENT_WORLD).abs() < 1e-9, "a west grip dragged past the east edge stops at the floor, got {crushed:?}");
+    assert!((crushed[2] - 100.0).abs() < 1e-9, "and the edge it does not own never moved");
+    let inverted = region_grip_drag(bounds, RegionGrip::South, 0.0, -1_000.0);
+    assert!((inverted[3] - inverted[1] - REGION_MIN_EXTENT_WORLD).abs() < 1e-9, "the same floor holds on the vertical axis, got {inverted:?}");
+}
+
+/// 🧲️ One snap definition for paint, move and resize: quantized under a real step, untouched without one.
+#[test]
+fn snap_region_scalar_quantizes_only_under_a_real_step() {
+    assert!((snap_region_scalar(23.0, Some(10.0)) - 20.0).abs() < 1e-9, "23 snaps down to 20");
+    assert!((snap_region_scalar(26.0, Some(10.0)) - 30.0).abs() < 1e-9, "26 snaps up to 30");
+    assert!((snap_region_scalar(-23.0, Some(10.0)) + 20.0).abs() < 1e-9, "snapping is symmetric about the origin");
+    assert!((snap_region_scalar(23.0, None) - 23.0).abs() < 1e-9, "no step leaves the value alone");
+    assert!((snap_region_scalar(23.0, Some(0.0)) - 23.0).abs() < 1e-9, "a zero step is not a step");
+    assert!(snap_region_scalar(f64::NAN, Some(10.0)).is_nan(), "a non-finite value is passed through rather than rounded to zero");
+}
+//#endregion 🎯️TargetRegions

@@ -1,214 +1,214 @@
 {
-  "schema": "puzzle.2d.fixture",
   "camera": {
     "x": 230.72767272727273,
     "y": 93.53074909090908,
-    "zoom": 2
+    "zoom": 2.0
+  },
+  "edges": [],
+  "meta": {
+    "kindCompatibility": [
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l",
+        "specificity": "vortex",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l",
+        "specificity": "vortex",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l",
+        "specificity": "vortex",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l",
+        "specificity": "vortex",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l-m",
+        "specificity": "vortex",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l-m",
+        "specificity": "vortex",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l-m",
+        "specificity": "vortex",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-l-m",
+        "specificity": "vortex",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s",
+        "specificity": "vortex",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s",
+        "specificity": "vortex",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s",
+        "specificity": "vortex",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s",
+        "specificity": "vortex",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s-m",
+        "specificity": "vortex",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s-m",
+        "specificity": "vortex",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s-m",
+        "specificity": "vortex",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "b-s-m",
+        "specificity": "vortex",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "c-b",
+        "specificity": "vortex",
+        "target": "c-t"
+      }
+    ],
+    "manifestId": "concrete-forest"
   },
   "nodes": [
     {
-      "id": "seed-left-001",
-      "nodeKind": "Hexagonal Cut Concrete Forest Left",
-      "shape": "rectangle",
-      "x": 230.72767272727273,
-      "y": 93.53074909090908,
-      "width": 48,
-      "height": 48,
-      "text": "Hexagonal Cut Concrete Forest Left",
       "anchor": "fixed",
       "handles": [
         {
-          "id": "seed-left-001:v0",
-          "handleKind": "b-l",
           "angle": -1.5707963267948966,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v1",
-          "handleKind": "b-l-m",
-          "angle": -0.9995976625058433,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v2",
           "handleKind": "b-l",
+          "id": "seed-left-001:v0",
+          "radius": 3.0
+        },
+        {
+          "angle": -0.9995976625058433,
+          "handleKind": "b-l-m",
+          "id": "seed-left-001:v1",
+          "radius": 3.0
+        },
+        {
           "angle": -0.4283989982167899,
-          "radius": 3
+          "handleKind": "b-l",
+          "id": "seed-left-001:v2",
+          "radius": 3.0
         },
         {
-          "id": "seed-left-001:v3",
-          "handleKind": "b-s-m",
           "angle": 0.14279966607226324,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v4",
-          "handleKind": "b-s",
-          "angle": 0.7139983303613167,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v5",
           "handleKind": "b-s-m",
-          "angle": 1.28519699465037,
-          "radius": 3
+          "id": "seed-left-001:v3",
+          "radius": 3.0
         },
         {
-          "id": "seed-left-001:v6",
+          "angle": 0.7139983303613167,
           "handleKind": "b-s",
+          "id": "seed-left-001:v4",
+          "radius": 3.0
+        },
+        {
+          "angle": 1.28519699465037,
+          "handleKind": "b-s-m",
+          "id": "seed-left-001:v5",
+          "radius": 3.0
+        },
+        {
           "angle": 1.856395658939423,
-          "radius": 3
+          "handleKind": "b-s",
+          "id": "seed-left-001:v6",
+          "radius": 3.0
         },
         {
-          "id": "seed-left-001:v7",
-          "handleKind": "c-b",
           "angle": 2.4275943232284765,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v8",
-          "handleKind": "c-t",
-          "angle": 2.99879298751753,
-          "radius": 3
-        },
-        {
-          "id": "seed-left-001:v9",
           "handleKind": "c-b",
-          "angle": -2.713193655373004,
-          "radius": 3
+          "id": "seed-left-001:v7",
+          "radius": 3.0
         },
         {
-          "id": "seed-left-001:v10",
+          "angle": 2.99879298751753,
           "handleKind": "c-t",
+          "id": "seed-left-001:v8",
+          "radius": 3.0
+        },
+        {
+          "angle": -2.713193655373004,
+          "handleKind": "c-b",
+          "id": "seed-left-001:v9",
+          "radius": 3.0
+        },
+        {
           "angle": -2.14199499108395,
-          "radius": 3
+          "handleKind": "c-t",
+          "id": "seed-left-001:v10",
+          "radius": 3.0
         }
-      ]
+      ],
+      "height": 48.0,
+      "id": "seed-left-001",
+      "nodeKind": "Hexagonal Cut Concrete Forest Left",
+      "shape": "rectangle",
+      "text": "Hexagonal Cut Concrete Forest Left",
+      "width": 48.0,
+      "x": 230.72767272727273,
+      "y": 93.53074909090908
     }
   ],
-  "edges": [],
-  "meta": {
-    "manifestId": "concrete-forest",
-    "kindCompatibility": [
-      {
-        "source": "b-l",
-        "target": "b-l",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l",
-        "target": "b-l-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l",
-        "target": "b-s",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l",
-        "target": "b-s-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l-m",
-        "target": "b-l",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l-m",
-        "target": "b-l-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l-m",
-        "target": "b-s",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-l-m",
-        "target": "b-s-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s",
-        "target": "b-l",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s",
-        "target": "b-l-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s",
-        "target": "b-s",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s",
-        "target": "b-s-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s-m",
-        "target": "b-l",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s-m",
-        "target": "b-l-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s-m",
-        "target": "b-s",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "b-s-m",
-        "target": "b-s-m",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "c-b",
-        "target": "c-t",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      }
-    ]
-  }
+  "schema": "puzzle.2d.fixture"
 }

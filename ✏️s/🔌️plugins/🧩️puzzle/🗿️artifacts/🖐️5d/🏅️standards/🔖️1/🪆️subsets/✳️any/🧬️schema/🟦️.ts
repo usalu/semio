@@ -243,7 +243,7 @@ export function parsePuzzle5dArtifact(value: unknown, at = "$"): Puzzle5dArtifac
     kindCompatibility: puzzlePuzzle5dArtifactGuardArray(row["kindCompatibility"], `${at}.kindCompatibility`).map((item, index) => parsePuzzle5dKindCompatibility(item, `${at}.kindCompatibility[${index}]`)),
     parts: puzzlePuzzle5dArtifactGuardArray(row["parts"], `${at}.parts`).map((item, index) => parsePuzzle5dPart(item, `${at}.parts[${index}]`)),
     fasteners: puzzlePuzzle5dArtifactGuardArray(row["fasteners"], `${at}.fasteners`).map((item, index) => parsePuzzle5dFastener(item, `${at}.fasteners[${index}]`)),
-    targetVolumes: puzzlePuzzle5dArtifactGuardArray(row["targetVolumes"], `${at}.targetVolumes`).map((item, index) => parsePuzzle5dTargetVolume(item, `${at}.targetVolumes[${index}]`)),
+    targetVolumes: row["targetVolumes"] === undefined ? [] : puzzlePuzzle5dArtifactGuardArray(row["targetVolumes"], `${at}.targetVolumes`).map((item, index) => parsePuzzle5dTargetVolume(item, `${at}.targetVolumes[${index}]`)),
   };
 }
 export function parsePuzzle5dTargetVolume(value: unknown, at = "$"): Puzzle5dTargetVolume {

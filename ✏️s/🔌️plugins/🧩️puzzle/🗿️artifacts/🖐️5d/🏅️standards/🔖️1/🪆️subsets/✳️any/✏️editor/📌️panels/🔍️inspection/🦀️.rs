@@ -14,8 +14,9 @@
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
-    engine_grip_kind, puzzle5d_grip_full_id, puzzle5d_part_display_label, part_scale_json, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene,
-    PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_PLAY_CONTROLLER_ID,
+    engine_grip_kind, part_scale_json, puzzle5d_grip_full_id, puzzle5d_part_display_label, target_volume_flat_rect, target_volume_scale_json, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip,
+    Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME,
+    PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, ui_node_list, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
@@ -113,6 +114,16 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, ids: &[S
     let action = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(UiValue::Map(builder.finish())))?;
     push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
 }
+/// 🧊️ A target volume's own flag toggle — `setTargetVolumeFlag {flag, id, value}`, 5G's verb, because
+/// `setSelectionFlag` only ever writes the part slice. Keys ascend: `flag`, `id`, `value`.
+fn volume_flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, volume_id: &str, field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector volume flag map admission failed"))?;
+    for (key, value) in [("flag", text_value(field)?), ("id", text_value(volume_id)?), ("value", UiValue::Bool(!pressed))] {
+        builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector volume flag entry admission failed"))?;
+    }
+    let action = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setTargetVolumeFlag", Some(UiValue::Map(builder.finish())))?;
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
+}
 //#endregion 🔖️Rows
 
 //#region 🔖️Sections
@@ -162,6 +173,19 @@ fn fastener_fields(fastener: &Puzzle5dFastener, ids: &[String], labels: &Puzzle5
     Ok(fields)
 }
 
+fn target_volume_fields(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut fields = UiFixedList::default();
+    read_only(&mut fields, "target-volume.id", labels.id.as_str(), &volume.id)?;
+    read_only(&mut fields, "target-volume.origin", labels.volume_origin.as_str(), vec3(volume.origin))?;
+    read_only(&mut fields, "target-volume.orientation", labels.orientation.as_str(), vec4(volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
+    read_only(&mut fields, "target-volume.scale", labels.scale.as_str(), vec3(target_volume_scale_json(volume)))?;
+    let rect = target_volume_flat_rect(volume);
+    read_only(&mut fields, "target-volume.flat", labels.flat_x.as_str(), format!("{}, {}, {}, {}", rect[0], rect[1], rect[2], rect[3]))?;
+    volume_flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), &volume.id, "hidden", volume.hidden)?;
+    volume_flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), &volume.id, "locked", volume.locked)?;
+    Ok(fields)
+}
+
 /// 🪟️ One entity's inspector body: the windowed selected-id section (only when the selection names
 /// ids at all) followed by that entity's own field group.
 fn entity_tree(id: &str, label: &str, ids: &[String], fields: UiAssemblyResult<UiFixedList<BuiltNode>>, windows: &TreeWindows<'_>, labels: &Puzzle5dLabels) -> UiAssemblyResult<BuiltNode> {
@@ -207,8 +231,24 @@ fn selected_section(document: &Puzzle5dDocument, interaction: &Puzzle5dInteracti
             let ids = interaction.selected_fastener_ids();
             document.fasteners.iter().find(|fastener| Some(&fastener.id) == ids.first()).map(|fastener| entity_tree("fastener", labels.fastener.as_str(), ids, fastener_fields(fastener, ids, labels), windows, labels))
         }
+        PUZZLE5D_GRANULARITY_TARGET_VOLUME => {
+            let ids = interaction.selected_target_volume_ids();
+            document
+                .target_volumes
+                .iter()
+                .find(|volume| Some(&volume.id) == ids.first())
+                .map(|volume| entity_tree("target-volume", labels.target_volume.as_str(), ids, target_volume_fields(volume, labels), windows, labels))
+        }
         _ => None,
     }
+    .or_else(|| {
+        let ids = &interaction.selected;
+        document
+            .target_volumes
+            .iter()
+            .find(|volume| ids.iter().any(|id| id == &volume.id))
+            .map(|volume| entity_tree("target-volume", labels.target_volume.as_str(), ids, target_volume_fields(volume, labels), windows, labels))
+    })
     .or_else(|| {
         let ids = &interaction.selected;
         document.parts.iter().find(|part| ids.iter().any(|id| id == &part.id)).map(|part| entity_tree("part", labels.part.as_str(), ids, part_fields(part, document, ids, labels), windows, labels))

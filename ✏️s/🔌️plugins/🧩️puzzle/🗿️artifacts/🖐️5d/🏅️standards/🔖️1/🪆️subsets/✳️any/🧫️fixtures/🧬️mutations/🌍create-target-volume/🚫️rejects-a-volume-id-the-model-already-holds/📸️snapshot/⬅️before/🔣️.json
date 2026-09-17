@@ -139,7 +139,9 @@
         2.0,
         2.0,
         2.0
-      ]
+      ],
+      "hidden": false,
+      "locked": false
     }
   ]
 }

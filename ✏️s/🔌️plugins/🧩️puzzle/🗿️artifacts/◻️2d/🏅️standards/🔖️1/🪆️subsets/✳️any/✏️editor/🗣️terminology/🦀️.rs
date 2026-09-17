@@ -99,7 +99,6 @@ semio_framework_plugin::app_labels! {
         target_suggestions: native_en "Target Suggestions", native_de "Vorschläge anvisieren", reuse_en "Target Suggestions", reuse_de "Vorschläge anvisieren";
         cycle_candidate: native_en "Next Candidate", native_de "Nächster Kandidat", reuse_en "Next Candidate", reuse_de "Nächster Kandidat";
         cycle_candidate_back: native_en "Previous Candidate", native_de "Vorheriger Kandidat", reuse_en "Previous Candidate", reuse_de "Vorheriger Kandidat";
-        no_placement: native_en "No placement available", native_de "Keine Platzierung möglich", reuse_en "No placement available", reuse_de "Keine Platzierung möglich";
         fill_unit: native_en "placements", native_de "Platzierungen", reuse_en "placements", reuse_de "Platzierungen";
         fill_stage_capture: native_en "Capturing the board", native_de "Brett wird erfasst", reuse_en "Capturing the assembly", reuse_de "Baugruppe wird erfasst";
         fill_stage_search: native_en "Searching an open handle", native_de "Offener Anschluss wird gesucht", reuse_en "Searching an open connection point", reuse_de "Offener Verbindungspunkt wird gesucht";
@@ -136,6 +135,8 @@ semio_framework_plugin::app_labels! {
         cut: native_en "Cut", native_de "Ausschneiden", reuse_en "Cut", reuse_de "Ausschneiden";
         paste: native_en "Paste", native_de "Einfügen", reuse_en "Paste", reuse_de "Einfügen";
         cut_locked: native_en "A locked node cannot be cut", native_de "Ein gesperrter Knoten kann nicht ausgeschnitten werden", reuse_en "A locked building component cannot be cut", reuse_de "Eine gesperrte Baukomponente kann nicht ausgeschnitten werden";
+        // 🔒️ The one sentence every refused lock gesture raises — delete, drag, rotate, transform, inspector patch
+        selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
     }

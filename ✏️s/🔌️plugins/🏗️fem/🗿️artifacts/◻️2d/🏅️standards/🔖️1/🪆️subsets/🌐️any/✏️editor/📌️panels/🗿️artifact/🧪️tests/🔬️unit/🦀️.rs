@@ -20,8 +20,21 @@ fn german() -> &'static Fem2dLabels {
 /// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
 /// COLLAPSED opened explicitly — the label, nesting and keying laws read the tree itself, so they ask
 /// for every row rather than one screenful, and a closed container is correctly empty.
+///
+/// 🧾️ `OPENED_ROWS` is deliberately a REALISTIC slice, not `UI_BUILT_CHILDREN_MAX`. Since the SDK
+/// gained its body-wide node ledger, every host request RESERVES `1 + min(rows, UI_BUILT_CHILDREN_MAX)`
+/// records off `TREE_WINDOW_BODY_NODE_BUDGET` ahead of first paint, in request order, so that a
+/// container the user scrolled to cannot be starved by the containers in front of it. Three requests
+/// of 128 reserve 387 of a 111-record budget and starve EVERY container the host has NOT addressed —
+/// the demo's nodes/elements/supports sections then materialise zero rows. The React host caps its
+/// own report the same way (`Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`), so a fixture asking for
+/// 128×3 is not a request a host can actually file. Eight is generous: these three sections hold
+/// three materials, four sections and one analysis row, so they still materialise whole.
+/// (Mirrors the identical `wide_view` fixture in the 🧊️3d artifact's panel tests.)
+const OPENED_ROWS: u32 = 8;
+
 fn wide_view() -> ViewModel {
-    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 128)).collect();
+    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, OPENED_ROWS)).collect();
     ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..Default::default() }
 }
 
@@ -277,7 +290,12 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let wide: Vec<String> = (0..80).map(|index| format!("n{index}")).collect();
     assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
     let interaction = Fem2dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
-    assert!(render(&document, &interaction, english(), &windows).is_ok(), "an oversized selection never faults the panel");
+    // 🪟️ A fresh `TreeWindows` per render: the value carries the render's first-paint budget and its
+    // body-wide node ledger in `Cell`s, so reusing the one the render above already spent would ask
+    // this panel to build a whole tree out of an exhausted ledger — which is not what the host does
+    // (`render_body` builds one per body per render).
+    let windows = TreeWindows::for_body(&view, BODY_KEY);
+    render(&document, &interaction, english(), &windows).expect("an oversized selection never faults the panel");
 }
 
 /// 🪆️ The app's manifest declares this panel under the framework's artifact tab, with the body key

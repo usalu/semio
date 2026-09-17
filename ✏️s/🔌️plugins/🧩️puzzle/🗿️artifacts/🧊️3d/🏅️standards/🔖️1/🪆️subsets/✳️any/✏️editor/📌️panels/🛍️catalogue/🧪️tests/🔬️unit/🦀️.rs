@@ -154,7 +154,7 @@ fn a_closed_catalogue_section_stamps_its_total_and_materialises_no_child() {
 #[test]
 fn a_tree_window_request_materialises_exactly_its_slice_of_the_catalog() {
     let envelope = scene(wide_catalog(120, 12));
-    let view = hosted(vec![request(&section_key("objects"), Some(true), 90, 4), request("kind-91", Some(true), 3, 3)]);
+    let view = hosted(vec![request(&section_key("objects"), Some(true), 90, 4), request(&format!("{}{}kind-91", section_key("objects"), ui::TREE_WINDOW_PATH_SEPARATOR), Some(true), 3, 3)]);
     let tree = tree_of(&json_of(&envelope, &view));
     let objects = node_at(&tree, &section_key("objects")).expect("objects section");
     assert_eq!(window_of(objects), (120, 90), "the section reports all 120 kinds and where the slice starts: {objects}");

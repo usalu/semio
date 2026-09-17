@@ -69,6 +69,48 @@ function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly 
   }
 }
 
+/** @emoji 🗂️ The kind ids this board knows, by the engine's own hover domain (`resolveElementKindHover`
+ * answers `"node" | "handle" | "edge" | "wire"`). Read straight off the scene's kind catalogs, so the
+ * host hard-codes no panel's id scheme and no owning plugin. */
+export function board2dKindDomainById(glyphCatalogsJson: string): ReadonlyMap<string, string> {
+  const out = new Map<string, string>();
+  let catalogs: unknown;
+  try {
+    catalogs = JSON.parse(glyphCatalogsJson);
+  } catch {
+    return out;
+  }
+  if (typeof catalogs !== "object" || catalogs === null) return out;
+  const slices: readonly (readonly [string, string])[] = [
+    ["nodeKinds", "node"],
+    ["handleKinds", "handle"],
+    ["edgeKinds", "edge"],
+    ["wireKinds", "wire"],
+  ];
+  for (const [key, domain] of slices) {
+    const rows = (catalogs as Record<string, unknown>)[key];
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const id = (row as { readonly id?: unknown })?.id;
+      if (typeof id === "string" && id.length > 0 && !out.has(id)) out.set(id, domain);
+    }
+  }
+  return out;
+}
+
+/** @emoji 🖱️ Resolves a hovered chrome element's DOM id to `(domain, kindId)`. A catalogue row is named
+ * `<sectionId>.<kindId>` (puzzle 2d: `puzzle2d-play-kinds.nodes.beam`), so the trailing dot segment — or
+ * the whole id, for a bare-kind row like puzzle 3d's — is the candidate, and it counts only when this
+ * board's OWN catalogs know it. That keeps the host generic: no panel id prefix, no plugin name. */
+export function board2dKindHoverFromElementId(elementId: string | null | undefined, kindDomainById: ReadonlyMap<string, string>): { readonly domain: string; readonly kindId: string } | null {
+  if (!elementId) return null;
+  for (const candidate of [elementId.slice(elementId.lastIndexOf(".") + 1), elementId]) {
+    const domain = kindDomainById.get(candidate);
+    if (domain) return { domain, kindId: candidate };
+  }
+  return null;
+}
+
 /** @emoji 🩺️ The board's boot/sync verdict as one probe row — whether the last fixture parsed, how big it
  * was, why it was refused, how many drained rows are still waiting for a flush, and which guest scene
  * revision this pane last applied. The board twin of `World3dHost`'s `data-status-json`. */
@@ -126,6 +168,18 @@ export function parseBoard2dTransformFlags(encoded: string | null | undefined): 
     return { move: typeof parsed.move === "boolean" ? parsed.move : true, rotate: typeof parsed.rotate === "boolean" ? parsed.rotate : true };
   } catch {
     return { move: true, rotate: true };
+  }
+}
+/** @emoji 🖍️ Reads `Board2dScene.areaBrushSize` (`{"width":number,"height":number}`). A missing or
+ * malformed payload answers `0`, which the engine reads as "keep the extent you have" — an area brush
+ * that silently collapsed to a zero-area rectangle would paint regions no fill placement can satisfy. */
+export function parseBoard2dAreaBrushSize(encoded: string | null | undefined): { readonly width: number; readonly height: number } {
+  if (!encoded) return { width: 0, height: 0 };
+  try {
+    const parsed = JSON.parse(encoded) as { width?: unknown; height?: unknown };
+    return { width: typeof parsed.width === "number" && parsed.width > 0 ? parsed.width : 0, height: typeof parsed.height === "number" && parsed.height > 0 ? parsed.height : 0 };
+  } catch {
+    return { width: 0, height: 0 };
   }
 }
 /** @emoji 🐁️ Classifies every entity id the fixture carries into the `vortex`-domain granularity a
@@ -227,7 +281,7 @@ export function board2dSuggestionMenuItems(menu: Board2dSuggestionMenu, labels: 
     action: "acceptSuggestion",
     args: { index: candidate.index, ...(menu.handleId ? { handleId: menu.handleId } : {}) },
     hoverAction: "hoverSuggestion",
-    hoverArgs: { index: candidate.index },
+    hoverArgs: { index: candidate.index, ...(menu.handleId ? { handleId: menu.handleId } : {}) },
   }));
 }
 //#endregion Parsing
@@ -237,7 +291,7 @@ export function board2dSuggestionMenuItems(menu: Board2dSuggestionMenu, labels: 
 // it travels on the framework's own `interactionHover` lane through {@link latestBoard2dHoverId}, so a
 // pointermove never queues a retained board-events job. Listing it here is what keeps it out of the batch.
 const PUZZLE2D_TRANSIENT_EVENT_NAMES = new Set(["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "transformPreview", "hover"]);
-const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "nodeRotate"]);
+const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "nodeRotate", "regionCreate", "regionMove", "regionResize"]);
 
 /** @emoji 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. */
 export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
@@ -565,7 +619,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const mapSuggestionMenu = useMapContextMenuSpecs(dispatchSuggestion);
   const shellContextMenuFallback = useShellContextMenuFallback();
 
-  /** @emoji 🩺️ Republishes the three live probe vitals straight onto the container, the way
+  /** @emoji 🩺️ Republishes the live probe vitals straight onto the container, the way
    * `data-board-fixture-parsed` already is: a gumball drag and a marquee update these every frame, and
    * routing that through React state would re-render the whole pane on each pointer move. */
   const publishBoardVitals = useCallback((): void => {
@@ -575,6 +629,11 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     try {
       container.setAttribute("data-board-interaction-json", session?.interactionJson?.() ?? "{}");
       container.setAttribute("data-board-transform-json", session?.transformGumballJson?.() ?? "{}");
+      container.setAttribute("data-board-target-regions-json", session?.targetRegionsJson?.() ?? "[]");
+      // 🩺️ `data-board-positions-json` names NODES only, so nothing in the DOM could ever be aimed at a
+      // handle — `connect`, `openHandleSuggestions` and `createEdge` all take handle ids. The engine
+      // answers viewport-bounded and capped, so a 358-handle document publishes a bounded attribute.
+      container.setAttribute("data-board-handle-positions-json", session?.handlePositionsJson?.() ?? "{}");
     } catch {
       /* session not ready */
     }
@@ -663,10 +722,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   //#endregion SuggestionMenu
 
   //#region Hover
-  /** @emoji 🐁️ What THIS pane's own raycast last resolved under the pointer. `scene.hoveredId` is the
-   * guest's echo of it and lags a round trip, so while the pointer is inside this canvas the local
-   * answer wins and the echo is only adopted by the panes the pointer is NOT over. */
-  const localHoveredIdRef = useRef<string | null>(null);
   const granularityById = useMemo(() => board2dGranularityById(scene?.fixtureJson ?? ""), [scene?.fixtureJson]);
   const granularityByIdRef = useRef(granularityById);
   granularityByIdRef.current = granularityById;
@@ -678,6 +733,41 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (id === null) container.removeAttribute("data-board-hover-paint-id");
     else container.setAttribute("data-board-hover-paint-id", id);
   }, []);
+
+  /** @emoji 🖱️ Transitive KIND hover: pointing at a catalogue kind row anywhere in the chrome paints every
+   * node/handle/edge of that kind on EVERY board pane, the 2d twin of puzzle 3d's `hoveredKindId`. The
+   * engine already owns the whole mechanism (`set_hovered_kind_silent` → `ids_matching_kind_hover` →
+   * `hovered_style_kind`); nothing called it, which is why 2B had to leave the catalogue rows unbound.
+   *
+   * 🧲️ It listens on the document rather than taking a per-row action, for two reasons: a hover is not a
+   * document verb (it must never cost a guest round trip or a repaint), and a per-row `UiValue` arg map
+   * is exactly the tree-row cost that starves sibling panels. The row is recognised by ITS OWN kind id
+   * matched against this board's catalogs, so no panel id scheme and no plugin name is hard-coded here. */
+  const kindDomainById = useMemo(() => board2dKindDomainById(scene?.glyphCatalogsJson ?? ""), [scene?.glyphCatalogsJson]);
+  const kindDomainByIdRef = useRef(kindDomainById);
+  kindDomainByIdRef.current = kindDomainById;
+  useEffect(() => {
+    const container = containerRef.current;
+    let painted: string | null = null;
+    const paint = (hover: { readonly domain: string; readonly kindId: string } | null): void => {
+      const next = hover ? `${hover.domain}:${hover.kindId}` : null;
+      if (next === painted) return;
+      painted = next;
+      applyToSession(sessionRef.current, (session) => session.setHoveredKindSilent?.(hover?.domain ?? null, hover?.kindId ?? null));
+      if (!container) return;
+      if (next === null) container.removeAttribute("data-board-hovered-kind");
+      else container.setAttribute("data-board-hovered-kind", next);
+    };
+    const onPointerOver = (event: globalThis.PointerEvent): void => {
+      const target = event.target instanceof globalThis.Element ? event.target.closest<globalThis.HTMLElement>("[id]") : null;
+      paint(board2dKindHoverFromElementId(target?.id, kindDomainByIdRef.current));
+    };
+    globalThis.document.addEventListener("pointerover", onPointerOver, true);
+    return () => {
+      globalThis.document.removeEventListener("pointerover", onPointerOver, true);
+      paint(null);
+    };
+  }, [sessionEpoch]);
   /** @emoji 🐁️ At most one `interactionHover` round trip outstanding, the rest coalesced onto the latest
    * target — the board twin of `World3dHost`'s `dispatchInstanceHover`. An app declaring no interaction
    * domain publishes nothing rather than dispatching a verb no window kind owns. */
@@ -705,7 +795,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       // and the sibling panes follow without a whole-surface republish per pointermove.
       const hovered = latestBoard2dHoverId(rows);
       if (hovered !== undefined) {
-        localHoveredIdRef.current = hovered;
         publishHoverPaint(hovered);
         dispatchBoardHover(hovered);
       }
@@ -1002,7 +1091,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   // echo lagging a round trip behind would blink the live hover off and back on.
   useEffect(() => {
     if (!scene || hoverActiveRef.current) return;
-    localHoveredIdRef.current = scene.hoveredId ?? null;
     publishHoverPaint(scene.hoveredId ?? null);
     applyToSession(sessionRef.current, (session) => session.setHoveredIdSilent?.(scene.hoveredId ?? null));
   }, [publishHoverPaint, sessionEpoch, scene?.hoveredId]);
@@ -1049,6 +1137,13 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!scene) return;
     applyToSession(sessionRef.current, (session) => session.setGridFactor?.(scene.gridFactor));
   }, [sessionEpoch, scene?.gridFactor]);
+
+  // 🖍️ What ONE area-brush click paints; a click-drag states its own rectangle and ignores this.
+  useEffect(() => {
+    if (!scene) return;
+    const size = parseBoard2dAreaBrushSize(scene.areaBrushSize);
+    applyToSession(sessionRef.current, (session) => session.setAreaBrushExtent?.(size.width, size.height));
+  }, [sessionEpoch, scene?.areaBrushSize]);
 
   useEffect(() => {
     if (!scene || scene.suggestionOffset <= 0) return;
@@ -1184,7 +1279,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, beginCameraInteraction, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, scheduleRender, scene?.interactive, settleGestureEnd]);
+  }, [peerScope, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd]);
   //#endregion Pointer
 
   //#region Keyboard

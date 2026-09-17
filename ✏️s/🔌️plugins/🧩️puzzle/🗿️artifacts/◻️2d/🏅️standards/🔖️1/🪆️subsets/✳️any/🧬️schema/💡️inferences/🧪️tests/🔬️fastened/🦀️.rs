@@ -62,6 +62,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
             x: 0.0,
             y: 0.0,
         }],
+        target_regions: Vec::new(),
         meta: Puzzle2dMeta::default(),
     };
     fastened_layout_snapshot(&mut snapshot);

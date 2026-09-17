@@ -1,21 +1,21 @@
 {
+  "index": null,
   "mutation": "createNode",
   "node": {
-    "id": "node-c",
-    "nodeKind": "node-kind-c",
-    "shape": "circle",
-    "x": 80,
-    "y": 0,
-    "radius": 6,
-    "text": "Gamma",
     "anchor": "fixed",
     "handles": [
       {
-        "id": "handle-3",
+        "angle": 0.0,
         "handleKind": "handle-kind-a",
-        "angle": 0
+        "id": "handle-3"
       }
-    ]
-  },
-  "index": null
+    ],
+    "id": "node-c",
+    "nodeKind": "node-kind-c",
+    "radius": 6.0,
+    "shape": "circle",
+    "text": "Gamma",
+    "x": 80.0,
+    "y": 0.0
+  }
 }

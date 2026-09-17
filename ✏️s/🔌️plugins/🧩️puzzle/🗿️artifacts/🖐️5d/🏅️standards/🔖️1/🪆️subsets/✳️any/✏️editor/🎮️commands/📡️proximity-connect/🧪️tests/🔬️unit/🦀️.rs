@@ -87,13 +87,13 @@ fn proximity_search_matches_the_scan_and_stays_below_the_interactive_ceiling_at_
         let mut best = vec![(Duration::MAX, Duration::MAX); sampled.len()];
         for _ in 0..rounds {
             for (index, part) in sampled.iter().enumerate() {
-                let mut scene = Puzzle5dScene { document: document.clone(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into() };
+                let mut scene = Puzzle5dScene { document: document.clone(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
                 let mut ctx = Puzzle5dActionCtx { scene: &mut scene, snapshot: &snapshot, instance_owner: None, window_id: "puzzle5d-3d", window_kind: "puzzle5d-3d", selection: &selection, view_state: None, tool_run: None, effects: Vec::new(), interaction_writes: Vec::new(), abort: false };
                 let started = Instant::now();
                 proximity_connect(&mut ctx, Some(&dsl::json!({ "partId": part.id.as_str() })));
                 best[index].0 = best[index].0.min(started.elapsed());
                 assert_eq!(scene.document.fasteners[document.fasteners.len()..].iter().map(|fastener| fastener.source.clone()).collect::<Vec<_>>(), peers(&document, &part.id, true), "{name}: proximityConnect fastens the gated peers as sources");
-                let mut scene = Puzzle5dScene { document: document.clone(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into() };
+                let mut scene = Puzzle5dScene { document: document.clone(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
                 let mut ctx = Puzzle5dActionCtx { scene: &mut scene, snapshot: &snapshot, instance_owner: None, window_id: "puzzle5d-3d", window_kind: "puzzle5d-3d", selection: &selection, view_state: None, tool_run: None, effects: Vec::new(), interaction_writes: Vec::new(), abort: false };
                 let started = Instant::now();
                 world_relocate(&mut ctx, Some(&dsl::json!({ "objectId": part.id.as_str(), "position": part.part_3d.origin.to_vec() })));

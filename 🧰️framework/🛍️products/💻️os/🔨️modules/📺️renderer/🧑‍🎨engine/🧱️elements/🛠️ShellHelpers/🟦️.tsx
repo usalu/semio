@@ -2587,6 +2587,22 @@ export function checkinCancelText(locale: string): string {
   return frozenLabelText(CHECKIN_CANCEL_LABEL, locale);
 }
 
+/** 🕰️ The History panel's own five labels. They were English string literals in the JSX, so the whole
+ * panel read untranslated to a German pass while the Rust/wgpu twin of the same panel
+ * (`🔌️plugin/🦀️.rs` `framework.history.*`) has always been bilingual. `revert` names the per-entry
+ * `↶` control, which is the shell's ONLY revert-to-command affordance. */
+const HISTORY_PANEL_LABELS: Readonly<Record<"undo" | "redo" | "checkpoint" | "commands" | "revert", FrozenLabel>> = {
+  undo: { en: "Undo", de: "Rückgängig" },
+  redo: { en: "Redo", de: "Wiederholen" },
+  checkpoint: { en: "Checkpoint", de: "Checkpoint" },
+  commands: { en: "Commands", de: "Befehle" },
+  revert: { en: "Revert to Command", de: "Auf Befehl zurücksetzen" },
+};
+
+export function historyPanelText(key: keyof typeof HISTORY_PANEL_LABELS, locale: string): string {
+  return frozenLabelText(HISTORY_PANEL_LABELS[key], locale);
+}
+
 /** 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint": the one predicate gating BOTH the
  * `#s-checkin` affordance's presence and the auto check-in timer's arming, mirroring
  * `isMutationKindDefinition`'s "one definition of what counts as an editing verb" precedent —
@@ -4060,9 +4076,18 @@ export function buildActionCategoryTree(
       defaultOpen: true,
       items: categoryActions.map((action): TreeDataItem => {
         const icon = action.iconId ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
-        const rowClassName = disabled ? "pointer-events-none opacity-50" : undefined;
+        // 🧯️ The armed-utility gate is about the APP's own verbs — a brush that owns the pointer must not
+        // have "Delete Selection" pressed out from under it. It is NOT about the framework's own reserved
+        // rows: `mod+z` undoes while the brush is armed (the chord is bound outside this pane), so a pane
+        // that refuses `#action.undo` at the same moment is inconsistent with its own keybinding. That
+        // inconsistency is the whole defect — `pointer-events-none` swallows the click AND the handler
+        // short-circuits, so the row reported as inert with no fault and no console line while
+        // `framework.history.undo` (ungated) undid the same document (measured 2026-09-17, ◻️2d battery
+        // `undo-action-row-changes-document`; every lane after the first `armUtility` was affected).
+        const rowDisabled = disabled && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.id);
+        const rowClassName = rowDisabled ? "pointer-events-none opacity-50" : undefined;
         if (!actionRequiresStagedForm(action)) {
-          return { id: `action.${action.id}`, label: action.label, icon, className: rowClassName, onClick: () => !disabled && onExecute({ controllerId, action: action.id }) };
+          return { id: `action.${action.id}`, label: action.label, icon, className: rowClassName, onClick: () => !rowDisabled && onExecute({ controllerId, action: action.id }) };
         }
         const expanded = expandedActionId === action.id;
         return {
@@ -4070,7 +4095,7 @@ export function buildActionCategoryTree(
           label: `${action.label}…`,
           icon: icon ?? <Icon icon={expanded ? "chevron-down" : "chevron-right"} size="small" />,
           className: rowClassName,
-          onClick: () => !disabled && onExpandedChange(expanded ? null : action.id),
+          onClick: () => !rowDisabled && onExpandedChange(expanded ? null : action.id),
         };
       }),
     });

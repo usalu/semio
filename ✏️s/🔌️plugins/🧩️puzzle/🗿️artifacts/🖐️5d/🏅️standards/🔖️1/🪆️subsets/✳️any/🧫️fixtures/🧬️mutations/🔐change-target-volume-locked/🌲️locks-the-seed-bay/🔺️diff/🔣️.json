@@ -34,7 +34,8 @@
               4.676537,
               3.0
             ],
-            "locked": true
+            "locked": true,
+            "hidden": false
           }
         }
       }

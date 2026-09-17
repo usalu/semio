@@ -165,6 +165,7 @@ mod tests {
             ],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
@@ -318,6 +319,7 @@ mod tests {
             handles: vec![],
             edges: vec![EdgeDescJson { id: "e1".into(), source: "a".into(), target: "b".into(), edge_kind: Some("wires.owns".into()), source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();

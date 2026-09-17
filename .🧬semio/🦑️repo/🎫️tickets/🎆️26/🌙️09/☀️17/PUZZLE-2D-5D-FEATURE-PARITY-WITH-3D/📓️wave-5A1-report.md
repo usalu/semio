@@ -98,11 +98,20 @@ proof block and the factory cannot drift:
 Coordination note for 5A2: this is the shared contract line the slice brief said "whoever gets there
 first sets to the 3d values" — it is done, and both proof blocks now reference the consts.
 
-The retained-jobs fixture `capacities` block is deliberately **not** raised: the shared law
+The retained-jobs fixture `capacities` block is deliberately **not** raised with it: the shared law
 `language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle`
-(`✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🧪️tests/🔬️unit/🦀️.rs:139-170`) pins `capacities`
-to the crate-shared `PUZZLE_COMMAND_*` constants, and puzzle 3d carries the same intentional
-asymmetry (wide factory contract, shared-constant fixture capacities).
+(`✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🧪️tests/🔬️unit/🦀️.rs:148-158`) builds its expectation
+from the crate-shared `PUZZLE_COMMAND_*` constants (8 192 / 512), and puzzle 3d carries exactly the same
+intentional asymmetry — wide factory contract (`PUZZLE3D_IMPORT_RAW_BYTES = 262_144`), shared-constant
+fixture capacities.
+
+**Repair after the outage:** a sibling had propagated the widened band into the 5d fixture
+(`capacities.rawBytes` 262 144, `capacities.decodedItems` 16 384, and the `max`/`maxPlusOne` vectors at
+262 144/262 145 while their asserted `fingerprint` stayed `8193:…`). That is red against the shared law
+for the whole 5d crate and internally self-contradictory, so this slice restored the four numbers to the
+shared constants, matching 3d exactly. The underlying limitation is worth a coordinator decision: the
+fixture has no way to state a per-artifact admission band today, because `expected()` in the shared law
+is artifact-agnostic (§4.6).
 
 ### 1.5 Fixtures
 
@@ -164,11 +173,46 @@ Two pre-existing laws were updated for the rename and the widened routing set:
 hard-coded one-line `PUZZLE5D_WINDOW_TOOL_IDS` literal became an iteration over the const itself, so it
 no longer breaks every time a sibling slice adds a window verb).
 
-## 2. Commands run
+## 2. Commands run — verdicts
 
-(filled in §5)
+All outputs are under `TICKET/🗑️generated/5A1/`. Every cargo invocation carried `CARGO_INCREMENTAL=0`.
 
-## 3. Not verified by this slice
+| # | command | verdict | evidence |
+|---|---|---|---|
+| 1 | `cargo check -p semio-s-artifact-puzzle-5d --features component-app-assembly` | **GREEN, exit 0** | `check-native.txt:1787` `Checking semio-s-artifact-puzzle-5d` (a real from-scratch compile, not a replay), `:1813` `generated 2 warnings`, `:1814` `Finished dev profile … in 15m 06s`, `EXIT=0`. `grep -c '^error'` = **0**. |
+| 2 | `cargo check … --target wasm32-wasip2` | **GREEN, exit 0** | `check-wasm32-wasip2.txt`, 0 errors, same 2 warnings, `Finished … in 3.50s`, `EXIT=0`. Cargo reported every unit fresh, so the warnings are replayed — under `checksum-freshness` that still means the CURRENT 5d source is what produced those artifacts, but this verdict is a cache hit, not a compile I drove. |
+| 3 | `cargo test … --lib -- verbs lod_and_suggestion retained_factory_contract kind_weight` | **RED — not mine, owed to integration** | `test-5A1.txt`, `EXIT=101`, "could not compile (lib test) due to 14 previous errors". **Zero of those errors are in a file this slice owns** — see §3. My laws therefore compiled but the crate's test binary could not link, so none of the 8 laws has been *executed* yet. |
+| 4 | `cargo check … --message-format=short` (the single gated re-check the 19:55 addendum asks for) | **INCONCLUSIVE — never got the lock** | `check-final.txt` stops after 24 lines of framework-dependency warnings, still `Blocking waiting for file lock on artifact directory` behind 9 concurrent peer invocations. Per the 19:55 addendum I did not wait it out. Its purpose was only to re-confirm command 1 against the sibling edits that landed after it; command 1 is the authoritative green, and everything this slice owns was re-verified unchanged by grep afterwards (all 14 verbs × 4 registries, all 8 laws, all 6 handlers). |
+| 5 | `bun ./📜️script.ts publication-authority-audit` | **RED — not mine** | blocked in `validateWindowOwnershipSchemas` before it ever reaches an owner oracle: first `Puzzle5dBoardWindowConfig … missing gridVisible/selectableKinds` (5E), then `Puzzle2dWindowConfig … missing areaBrushWidth/areaBrushHeight` (2F), then `Puzzle5dWorldWindowConfig … missing voxelDims` (5G). Each time a slice adds a window-config field it must also extend the hard-coded `cases` list in `📦️packages/🟦️typescript/📜️script.ts`. |
+| 6 | `bun TICKET/🗑️generated/5A1/owner-oracle-5d.ts` (stand-in for the half of the audit the schema cases block) | **ALL PASS (10/10)** | re-run after both outages: manifest rows == fixture routes; classifications match; `PUZZLE5D_RETAINED_TOOL_IDS` == migrated routes; publication contracts == migrated routes; proof tools == migrated routes; declared lanes == fixture lanes; all 14 of this slice's verbs Migrated + retained + contracted + proved; the old weight vocabulary is gone; the retained-jobs fixture `toolIds` equals the Rust registry in order. |
+| 7 | `rustfmt --edition 2024 --emit stdout` on all 8 edited Rust files | parses clean | syntax gate used between the outages while the artifact-directory lock was contended. |
+
+Warning counts: the 5d crate emits **2** warnings on both targets, both pre-existing
+`unused_qualifications` (`✏️editor/🦀️.rs:9412` and `✏️editor/🪟️window/🦀️.rs:276`) and neither in code this
+slice touched.
+
+Build-environment note: the fleet kept 6–18 concurrent `cargo` invocations on this one crate all
+afternoon (load average peaked at 129). Command 1 waited ~40 min on the artifact-directory lock before
+it started. The gate in the 15:15 addendum never opened for me (it read 6–9 throughout), so per the
+19:55 addendum I stopped waiting and took exactly one invocation per milestone.
+
+## 3. Not verified by this slice / owed to integration
+
+**The 8 laws have never been executed.** The 5d `lib test` target does not compile, and every error is in
+another slice's file. From `test-5A1.txt` (14 errors, paths relative to
+`🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/`):
+
+| file | errors | owner |
+|---|---|---|
+| `✏️editor/🧪️tests/🔬️target-volumes/🦀️.rs` | 10 (`E0433` unresolved `world3d`/`board2d`, `E0425` `puzzle5d_labels`, `E0599` `handle_action` on `Puzzle5dTestApp`) | 5G — the file imports `crate::editor::puzzle5d::*` but the window modules are not re-exported there, and it calls the framework-reserved `handle_action` the test harness deliberately replaced with `dispatch` |
+| `✏️editor/🪟️window/🧪️tests/🔬️unit/🦀️.rs:111` | 1 (`E0063` missing `voxel_dims`) | 5G — they added the field to `Puzzle5dWorldWindowConfig` without updating their own round-trip fixture |
+| `✏️editor/🧠️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs:477` | 2 (`E0599` `is_number` on `dsl::JsonValue`) | 5B |
+| `🧬️schema/💡️inferences/**/🧪️tests/🔬️unit/🦀️.rs` | 2 (`E0063` missing `target_volumes`) | 5G |
+
+I deliberately did not fix any of them (19:55 addendum §2, and rule 17). **Integration owes:** once the
+crate's test target links, run
+`CARGO_INCREMENTAL=0 cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib -- verbs lod_and_suggestion retained_factory_contract kind_weight`
+— that filter selects exactly this slice's 8 laws plus the two it amended.
 
 - No Nx / activate / serve / Playwright run — the coordinator owns those. The verbs are proven live at
   the **registry + retained-factory + publication** level, not against a running browser.
@@ -199,8 +243,46 @@ no longer breaks every time a sibling slice adds a window verb).
 3. **Whoever writes the 5d registries last** — re-sync
    `…/🧫️fixtures/🗄️retained-jobs/🔣️.json:"toolIds"` to the exact ordered `PUZZLE5D_RETAINED_TOOL_IDS`.
    The oracle law compares the two arrays with `assert_eq!`, so any registry append without a fixture
-   append is a red test for everyone. It was synced to 65 ids at the end of this slice.
+   append is a red test for everyone. Verified in sync at 70 ids at the end of this slice (check 6 in
+   §2 asserts exactly this, so re-running that script is a one-second way to confirm it).
 4. **Coordinator** — `📓️E1-3d-feature-inventory.md` row 50 records
    `setBrushPlacementContactTolerance` as `WindowConfig`; 3d's source declares `Config`.
+5. **Whoever raised the 5d fixture `capacities`** — it is back at the shared `PUZZLE_COMMAND_*`
+   constants (§1.4). The widened band is real but it lives on the FACTORY
+   (`PUZZLE5D_RETAINED_RAW_BYTES`), not in the fixture, exactly as in 3d. Raising the fixture block
+   turns `language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle` red for the
+   whole 5d crate.
+6. **Coordinator — the retained-jobs fixture cannot express a per-artifact admission band.**
+   `expected()` (`🎮️commands/🧵️retained/🧪️tests/🔬️unit/🦀️.rs:148-158`) compares `capacities` against
+   the shared constants for all three artifacts, while 3d and now 5d both run a wider factory contract.
+   Either the law should read the artifact's own factory contract, or the fixture should carry both
+   numbers. Out of this slice's remit (shared test file, all three artifacts).
+7. **5E (projection) — `setCamera`/`setCamera3d` parse the WHOLE `Puzzle5dCamera3d`.** After 5E added
+   `up` and `projection` to that struct (`🎚️config/🦀️.rs:85-104`), a host orbit payload carrying only
+   `{position,target,zoom}` re-parses the camera with `#[value(default)]` for the two new fields, i.e.
+   it resets the pane's projection. This slice deliberately did **not** diverge from puzzle 3d here:
+   3d's `📷️set-camera/🦀️.rs:6-11` does the identical whole-struct parse into a `Puzzle3dCamera` that
+   carries the same two fields, so either both are fine (the host always sends the full camera) or both
+   need the same merge — that is a decision for whoever owns `setProjection`/`setProjectionParam`, and
+   inventing a 5d-only second mechanism would violate the port-from-3d rule.
 
-## 5. Verdicts
+8. **Integration (both crate integrators)** — the 5d `lib test` target is red on four other slices'
+   files (§3, exact list with error codes). Nothing in this slice is blocking it; the production `lib`
+   compiles clean on both targets.
+
+## 5. State at hand-off
+
+- **Production source: green.** `cargo check` native (a real from-scratch compile of the 5d crate) and
+  `--target wasm32-wasip2` both exit 0 with 0 errors and the same 2 pre-existing warnings. The one
+  re-check the 19:55 addendum asks for never got the artifact-directory lock (§2 row 4); integration
+  should treat the first native compile of the 5d `lib` it manages to run as the confirmation.
+- **Publication authority: consistent.** All ten owner-oracle invariants pass; `Puzzle5dPlayApp` now has
+  zero `batch-only-pending-rewrite` groups, and the 14 verbs this slice owns are `Migrated` with exact
+  lanes in every registry.
+- **Laws: written, compiled, not yet executed.** The crate's test binary cannot link because of four
+  sibling files. This is the one thing this slice could not verify by running, and it is stated as such
+  rather than claimed.
+- **Nothing left half-done inside this slice.** Every verb, registry row, handler port, schema-facing
+  fixture row, label and law named in the brief is landed; the two items I chose not to do
+  (`suggestion_offset` on the world pane, the whole-camera projection reset) are deliberate,
+  argued hand-offs to the slice that owns those structs, not omissions.

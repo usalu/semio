@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor::note::commands::set_fixture_json;
+use crate::schema::empty_note_snapshot;
 use semio_framework::kernel::Effect;
 
 /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
@@ -27,24 +28,19 @@ async fn set_fixture_json_replaces_document() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_loads_semio_blocks() {
+async fn set_active_example_loads_the_registered_demo_and_refuses_unknown_ids() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = semio_framework_plugin::NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
 
-    let emit = handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).expect("handle");
+    let emit = handle(&SetActiveExample { example_id: crate::standards::v1::subsets::any::examples::demo::ID.into() }, &doc, &cfg, &mut ctx).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert_eq!(loaded.blocks.len(), 1);
 
-    let emit = handle(&SetActiveExample { example_id: String::new() }, &doc, &cfg, &mut ctx).expect("handle");
-    let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
-        panic!("expected a LoadDocument effect");
-    };
-    let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert!(loaded.blocks.is_empty());
+    assert!(handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).is_err(), "an unregistered example id must fault, not load an empty document");
 }

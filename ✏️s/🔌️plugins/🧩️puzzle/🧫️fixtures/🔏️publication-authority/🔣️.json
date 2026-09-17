@@ -330,10 +330,12 @@
             "artifact"
           ],
           "routes": [
+            "addTargetVolume",
             "createFastener",
             "cut",
             "deleteFastener",
             "deleteSelection",
+            "deleteTargetVolume",
             "duplicateSelection",
             "editFastener",
             "import-media",
@@ -343,58 +345,14 @@
             "patchGrip",
             "patchPart",
             "proximityConnect",
+            "relocateTargetVolume",
             "retargetFastener",
             "rotateSelection",
             "scaleSelection",
             "setSelectionFlag",
+            "setTargetVolumeFlag",
             "translateSelection",
             "worldRelocate"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "config",
-            "interaction"
-          ],
-          "routes": [
-            "setActiveExample"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "interaction"
-          ],
-          "routes": [
-            "addBrushPart",
-            "addNode",
-            "addPartKind"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "window-config",
-            "interaction"
-          ],
-          "routes": [
-            "applyBoardEvents"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "window-config",
-            "window-transient",
-            "interaction"
-          ],
-          "routes": [
-            "engagementSubmit"
           ]
         },
         {
@@ -464,6 +422,7 @@
             "setSunElevation",
             "setSunIntensity",
             "setTransformGumballFlag",
+            "setVoxelDims",
             "toggleSun"
           ]
         },
@@ -479,6 +438,52 @@
             "engagementControlSelect",
             "engagementInput",
             "engagementRepeatLast"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "addBrushPart",
+            "addNode",
+            "addPartKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "interaction"
+          ],
+          "routes": [
+            "setActiveExample"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "interaction"
+          ],
+          "routes": [
+            "applyBoardEvents"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
           ]
         }
       ]

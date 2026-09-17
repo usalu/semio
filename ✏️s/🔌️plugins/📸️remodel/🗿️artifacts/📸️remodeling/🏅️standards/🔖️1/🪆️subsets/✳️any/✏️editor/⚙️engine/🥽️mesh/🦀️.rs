@@ -549,87 +549,140 @@ pub fn extract_tsdf(vol: &remodeling_dense::TsdfVolume, iso: f64, bounds_min: [i
     TriMesh { positions, triangles }
 }
 
-static TEMPDIAG_SN_VERTS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static TEMPDIAG_SN_EDGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-/// 🧊️ Resumable marching-tetrahedra checkpoint. One fuel unit samples and marches one voxel cube;
-/// ordered edge welding avoids a whole-table rehash in any continuation.
+/// 🧊️ Resumable, bounded isosurface extraction for the interactive worker: naive surface nets
+/// (Gibson 1998, "Constrained Elastic Surface Nets") over the TSDF lattice. One fuel unit visits
+/// one lattice point `p` and its three positive axis edges; every edge whose two samples straddle
+/// `iso` emits one quad joining the vertices of the four voxel cubes that share that edge, each
+/// cube vertex being the mean of its known sign-changing edge crossings (computed once, cached by
+/// cube origin, so neighbours always weld to the identical vertex and the net is crack-free).
+///
+/// 📐️ Why not the marching-tetrahedra split [`extract_tsdf`] uses: the six-tet decomposition
+/// adds face and body diagonals, so it emits roughly one vertex per crossed lattice edge of seven
+/// edge families and two to four triangles per surface cube — on the accepted 8³ sphere fixture it
+/// crossed the 512-element interactive envelope halfway through the domain (292 vertices / 513
+/// triangles), and the synthetic orbit reconstruction faulted at the surface stage the same way.
+/// A surface net spends one vertex per surface cube and two triangles per crossed axis edge, which
+/// is the leanest closed surface the lattice supports and fits the envelope with room to spare.
 pub struct TsdfExtractionPreparation {
     iso: f64,
     bounds_min: [i32; 3],
-    bounds_max: [i32; 3],
+    /// Exclusive iteration limit: one past the inclusive upper lattice bound, so the edges lying
+    /// on the domain's far faces are visited too.
+    limit: [i32; 3],
     cursor: [i32; 3],
-    weld: BTreeMap<EdgeKey, u32>,
+    cube_vertices: BTreeMap<Lattice, u32>,
     positions: Vec<[f64; 3]>,
     triangles: Vec<[u32; 3]>,
     complete: bool,
     exceeded: bool,
 }
 
+const SURFACE_NET_ELEMENT_CEILING: usize = 512;
+/// ⏱️ Lattice points one interactive pipeline dispatch visits: an unobserved point is one block
+/// lookup, and even a point whose three edges all cross samples at most twelve new cube vertices.
+const TSDF_EXTRACTION_POINTS_PER_DISPATCH: usize = 32;
+
 impl TsdfExtractionPreparation {
     pub fn new(iso: f64, bounds_min: [i32; 3], bounds_max: [i32; 3]) -> Self {
         let cells = (bounds_max[0] - bounds_min[0]).max(0) as usize * (bounds_max[1] - bounds_min[1]).max(0) as usize * (bounds_max[2] - bounds_min[2]).max(0) as usize;
-        Self { iso, bounds_min, bounds_max, cursor: bounds_min, weld: BTreeMap::new(), positions: Vec::new(), triangles: Vec::new(), complete: cells == 0, exceeded: false }
+        let limit = [bounds_max[0] + 1, bounds_max[1] + 1, bounds_max[2] + 1];
+        Self { iso, bounds_min, limit, cursor: bounds_min, cube_vertices: BTreeMap::new(), positions: Vec::new(), triangles: Vec::new(), complete: cells == 0, exceeded: false }
     }
 
     fn advance_cursor(&mut self) {
         self.cursor[2] += 1;
-        if self.cursor[2] >= self.bounds_max[2] {
+        if self.cursor[2] >= self.limit[2] {
             self.cursor[2] = self.bounds_min[2];
             self.cursor[1] += 1;
-            if self.cursor[1] >= self.bounds_max[1] {
+            if self.cursor[1] >= self.limit[1] {
                 self.cursor[1] = self.bounds_min[1];
                 self.cursor[0] += 1;
-                if self.cursor[0] >= self.bounds_max[0] {
+                if self.cursor[0] >= self.limit[0] {
                     self.complete = true;
                 }
             }
         }
     }
 
-    pub fn advance(&mut self, volume: &remodeling_dense::TsdfVolume, cube_budget: usize) -> bool {
+    /// 📍️ The surface-net vertex of the voxel cube at `origin`, created on first use: the mean of
+    /// the interpolated crossings on those of its twelve edges whose two corners are both observed
+    /// and straddle `iso`. `None` only when the cube has no such edge.
+    fn cube_vertex(&mut self, volume: &remodeling_dense::TsdfVolume, origin: Lattice) -> Option<u32> {
+        if let Some(&index) = self.cube_vertices.get(&origin) {
+            return Some(index);
+        }
         const OFFSETS: [(i32, i32, i32); 8] = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0), (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)];
-        for _ in 0..cube_budget.max(1) {
+        const EDGES: [(usize, usize); 12] = [(0, 1), (1, 2), (3, 2), (0, 3), (4, 5), (5, 6), (7, 6), (4, 7), (0, 4), (1, 5), (2, 6), (3, 7)];
+        let corners: [Option<Corner>; 8] = std::array::from_fn(|slot| {
+            let lattice = lattice_add(origin, OFFSETS[slot]);
+            volume.sample(lattice.0, lattice.1, lattice.2).map(|(value, _)| Corner { key: lattice, pos: [(lattice.0 as f64 + 0.5) * volume.voxel_size, (lattice.1 as f64 + 0.5) * volume.voxel_size, (lattice.2 as f64 + 0.5) * volume.voxel_size], val: value })
+        });
+        let mut sum = [0.0; 3];
+        let mut crossings = 0usize;
+        for (a, b) in EDGES {
+            let (Some(a), Some(b)) = (corners[a], corners[b]) else { continue };
+            if (a.val < self.iso) == (b.val < self.iso) {
+                continue;
+            }
+            let t = ((self.iso - a.val) / (b.val - a.val)).clamp(0.0, 1.0);
+            sum = add3(sum, lerp3(a.pos, b.pos, t));
+            crossings += 1;
+        }
+        if crossings == 0 {
+            return None;
+        }
+        let index = self.positions.len() as u32;
+        self.positions.push(scale3(sum, 1.0 / crossings as f64));
+        self.cube_vertices.insert(origin, index);
+        Some(index)
+    }
+
+    pub fn advance(&mut self, volume: &remodeling_dense::TsdfVolume, point_budget: usize) -> bool {
+        for _ in 0..point_budget.max(1) {
             if self.complete {
                 break;
             }
-            let origin = (self.cursor[0], self.cursor[1], self.cursor[2]);
-            let mut corners = [Corner { key: (0, 0, 0), pos: [0.0; 3], val: 0.0 }; 8];
-            let mut known = true;
-            for (slot, offset) in OFFSETS.iter().enumerate() {
-                let lattice = lattice_add(origin, *offset);
-                let Some((value, _)) = volume.sample(lattice.0, lattice.1, lattice.2) else {
-                    known = false;
+            let p = (self.cursor[0], self.cursor[1], self.cursor[2]);
+            if let Some((here, _)) = volume.sample(p.0, p.1, p.2) {
+                let inside = here < self.iso;
+                // (axis, first other axis, second other axis) in cyclic order, so the cube cycle
+                // below winds counter-clockwise about +axis.
+                for (axis, b, c) in [(0usize, 1usize, 2usize), (1, 2, 0), (2, 0, 1)] {
+                    let unit = |along: usize| -> (i32, i32, i32) { (i32::from(along == 0), i32::from(along == 1), i32::from(along == 2)) };
+                    let next = lattice_add(p, unit(axis));
+                    let Some((there, _)) = volume.sample(next.0, next.1, next.2) else { continue };
+                    if inside == (there < self.iso) {
+                        continue;
+                    }
+                    let (eb, ec) = (unit(b), unit(c));
+                    let minus = |q: Lattice, d: (i32, i32, i32)| (q.0 - d.0, q.1 - d.1, q.2 - d.2);
+                    let cubes = [minus(minus(p, eb), ec), minus(p, ec), p, minus(p, eb)];
+                    let mut quad = [0u32; 4];
+                    let mut complete_quad = true;
+                    for (slot, cube) in cubes.into_iter().enumerate() {
+                        match self.cube_vertex(volume, cube) {
+                            Some(index) => quad[slot] = index,
+                            None => complete_quad = false,
+                        }
+                    }
+                    if !complete_quad {
+                        continue;
+                    }
+                    // The outward normal points from the inside sample toward the outside one:
+                    // +axis when `p` is inside, so the counter-clockwise cycle keeps its order.
+                    if !inside {
+                        quad.reverse();
+                    }
+                    self.triangles.push([quad[0], quad[1], quad[2]]);
+                    self.triangles.push([quad[0], quad[2], quad[3]]);
+                }
+                if self.positions.len() > SURFACE_NET_ELEMENT_CEILING || self.triangles.len() > SURFACE_NET_ELEMENT_CEILING {
+                    self.exceeded = true;
+                    self.complete = true;
                     break;
-                };
-                corners[slot] = Corner { key: lattice, pos: [(lattice.0 as f64 + 0.5) * volume.voxel_size, (lattice.1 as f64 + 0.5) * volume.voxel_size, (lattice.2 as f64 + 0.5) * volume.voxel_size], val: value };
-            }
-            if known {
-                let inside = corners.iter().filter(|corner| corner.val < self.iso).count();
-                if inside != 0 && inside != 8 {
-                    TEMPDIAG_SN_VERTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-                for slot in [1usize, 3, 4] {
-                    if (corners[0].val < self.iso) != (corners[slot].val < self.iso) {
-                        TEMPDIAG_SN_EDGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    }
-                }
-                for tetrahedron in cube_tets(&corners) {
-                    march_tet(tetrahedron, self.iso, &mut self.weld, &mut self.positions, &mut self.triangles);
-                    if (self.positions.len() > 512 || self.triangles.len() > 512) && std::env::var_os("TEMPDIAG_NOCAP").is_none() {
-                        self.exceeded = true;
-                        eprintln!("TEMPDIAG tsdf-extract exceeded at cursor {:?} of {:?}..{:?}: {} positions {} triangles", self.cursor, self.bounds_min, self.bounds_max, self.positions.len(), self.triangles.len());
-                        self.complete = true;
-                        break;
-                    }
                 }
             }
-            if !self.complete {
-                self.advance_cursor();
-            }
-        }
-        if self.complete && !self.exceeded {
-            let norms: Vec<f64> = self.positions.iter().map(|p| (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]).sqrt()).collect();
-            eprintln!("TEMPDIAG tsdf-extract complete {:?}..{:?}: {} positions {} triangles; surface-nets estimate {} verts {} quads; norm range {:?}", self.bounds_min, self.bounds_max, self.positions.len(), self.triangles.len(), TEMPDIAG_SN_VERTS.load(std::sync::atomic::Ordering::Relaxed), TEMPDIAG_SN_EDGES.load(std::sync::atomic::Ordering::Relaxed), (norms.iter().cloned().fold(f64::INFINITY, f64::min), norms.iter().cloned().fold(0.0, f64::max)));
+            self.advance_cursor();
         }
         self.complete
     }
@@ -4177,7 +4230,7 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
         match stage {
             Stage::Mc => {
                 if let (Some(extraction), Some(volume)) = (state.extraction.as_mut(), state.tsdf.as_ref()) {
-                    let complete = extraction.advance(volume, 1);
+                    let complete = extraction.advance(volume, TSDF_EXTRACTION_POINTS_PER_DISPATCH);
                     if extraction.exceeded() {
                         let message = "interactive mesh envelope exceeded during bounded TSDF extraction".to_string();
                         state.failed = Some(message.clone());

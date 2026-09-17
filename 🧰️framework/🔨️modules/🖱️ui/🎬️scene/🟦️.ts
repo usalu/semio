@@ -980,6 +980,8 @@ export type Board2dScene = {
   readonly lodMode: string;
   /** 🕹️ Which selection-gumball handles this board's select utility composes, as `{"move":boolean,"rotate":boolean}`; absent leaves the engine default (both on). */
   readonly transformFlags?: string;
+  /** 🖍️ World extent one area-brush CLICK paints, as `{"width":number,"height":number}`; absent leaves the engine default. A click-drag states its own rectangle. */
+  readonly areaBrushSize?: string;
   /** 🎯️ The framework interaction domain this board's picks and hovers belong to; absent means the app declares none and the host publishes no `interactionHover`. */
   readonly domainId?: string;
   /** 💡️ The one-shot handle-suggestions popup this window has open, as a {@link Board2dSuggestionMenu} JSON string; absent is the closed state. */

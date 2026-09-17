@@ -192,7 +192,13 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
         if !layer.visible {
             continue;
         }
-        let pixels = layer.pixels.as_slice();
+        let default_pixels;
+        let pixels = if layer.pixels.is_empty() {
+            default_pixels = crate::empty_paint_pixels();
+            default_pixels.as_slice()
+        } else {
+            layer.pixels.as_slice()
+        };
         let opacity = layer.opacity.clamp(0.0, 1.0);
         for (dst, src) in out.chunks_mut(4).zip(pixels.chunks(4)) {
             let sa = (src.get(3).copied().unwrap_or(255) as f32 / 255.0) * opacity;

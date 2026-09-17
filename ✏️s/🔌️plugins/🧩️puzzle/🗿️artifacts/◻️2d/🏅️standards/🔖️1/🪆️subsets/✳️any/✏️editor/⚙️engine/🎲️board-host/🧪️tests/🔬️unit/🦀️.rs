@@ -94,6 +94,7 @@ pub(crate) mod context {
             ],
             edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None }],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         }
     }
@@ -162,6 +163,7 @@ pub(crate) mod context {
             ],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         }
     }

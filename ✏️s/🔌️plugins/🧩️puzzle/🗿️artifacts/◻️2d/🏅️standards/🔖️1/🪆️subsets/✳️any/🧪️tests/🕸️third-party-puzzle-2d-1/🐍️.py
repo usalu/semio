@@ -75,8 +75,11 @@ SNAPSHOT_AFTER = ("📸️snapshot", "➡️after", "🔣️.json")
 MUTATION_LEAF = ("🦠️mutation", "🔣️.json")
 DIFF_LEAF = ("🔺️diff", "🔣️.json")
 OUTCOME_LEAF = ("🎯️outcome", "🔣️.json")
-SCENARIOS_DIR = "🧪️tests"
-LEAF_SCHEMA = "🧬️schema/🔣️.json"
+LEAF_SCHEMA_ROOT = ("..", "..", "🧬️schema", "🧬️mutations")
+"""🧬️ The mutation vocabulary, reached from the fixture root: the committed vectors and the leaf
+draft-07 schemas they are validated against live in sibling trees (`🧫️fixtures` and `🧬️schema`)."""
+
+LEAF_SCHEMA = ("🧬️schema", "🔣️.json")
 
 GRAPH_KINDS = ("create-node", "delete-node", "add-node-handle", "remove-node-handle", "replace-node-handle", "connect-handles", "disconnect-handles")
 """🕸️ The seven kinds whose correctness is topological — the only ones a graph library can speak to."""
@@ -92,8 +95,8 @@ too and are handled beside them."""
 COMPATIBILITY_ATTRS = ("bidirectional", "important", "specificity")
 """🤝 The three attributes a compatibility record carries beyond its two endpoints."""
 
-MEMBERS = ("schema", "camera", "nodes", "edges", "meta")
-"""🗂️ The five members of `Puzzle2dSnapshot` — and the five collections the typed diff keys on."""
+MEMBERS = ("schema", "camera", "nodes", "edges", "targetRegions", "meta")
+"""🗂️ The six members of `Puzzle2dSnapshot` — and the six collections the typed diff keys on."""
 
 CIRCLE_SEGMENTS = 512
 """⭕️ Quadrant segments shapely polygonises a circle with. High enough that `area` lands on πr² to
@@ -144,10 +147,10 @@ def vectors(ctx):
         return DISCOVERED[root]
     found = []
     for leaf in sorted(os.listdir(root)):
-        scenarios = os.path.join(root, leaf, SCENARIOS_DIR)
+        scenarios = os.path.join(root, leaf)
         if not os.path.isdir(scenarios):
             continue
-        schema = read_json(root, leaf, LEAF_SCHEMA)
+        schema = read_json(root, *LEAF_SCHEMA_ROOT, leaf, *LEAF_SCHEMA)
         for scenario in sorted(os.listdir(scenarios)):
             directory = os.path.join(scenarios, scenario)
             if not os.path.isdir(directory):
@@ -509,7 +512,7 @@ def payload_schemas(ctx):
         checks += 1
         schema = vector["schema"]
         if schema is None:
-            failures.append("%s: the mutation leaf carries no %s" % (vector["id"], LEAF_SCHEMA))
+            failures.append("%s: the mutation leaf carries no %s" % (vector["id"], os.path.join(*LEAF_SCHEMA)))
             rows.append({"id": vector["id"], "kind": vector["kind"], "checks": checks})
             continue
         validator_class = jsonschema.validators.validator_for(schema)

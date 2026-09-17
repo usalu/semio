@@ -24,7 +24,7 @@ async fn document_tree_lists_active_object() {
 fn object(index: usize, mesh_json: Option<&str>) -> crate::LowpolyObject {
     let id = format!("obj-{index}");
     let mesh = mesh_json.map(|json| crate::mesh_child_handle(&id, json));
-    crate::LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new() }
+    crate::LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
 }
 
 /// 🪟️ A document of `objects` objects whose ACTIVE first one carries a several-hundred-element mesh (an

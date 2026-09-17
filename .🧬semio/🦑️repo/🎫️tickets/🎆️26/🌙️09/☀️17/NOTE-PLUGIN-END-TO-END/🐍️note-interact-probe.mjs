@@ -1,9 +1,9 @@
 /** 🎛️ Note interaction probe: boots the note react playground (6080) and proves document mutations through the shell.
- * Block counts come from the Canvas window's engagement status (`N blocks · zoom z`), so counting never toggles a panel
+ * Block counts are the distinct `data-ink-block-id`s inside the Canvas window host, so counting never toggles a panel
  * (panel toggles land their own shell ledger entries, which mod+z would pop instead of the document edit).
  * Steps: (1) boot, (2) Canvas Actions pane `addBlock` (kind=text) → +1, (3) `addBlock` + immediate mod+z → back,
  * (4) Artifact panel quick-add row "Add Math" → +1 and a new tree row, (5) click a block tree row → aria-selected,
- * (6) Delete key (`deleteSelection`) → −1, (7) mod+z → restored, (8) canvas surface scene carries the blocks.
+ * (6) Delete key (`deleteSelection`) → −1, (7) mod+z → restored, (8) page reload → block count survives.
  * Usage: cd <ticket> && SEMIO_PROBE_OUT=note-interact-1 bun 🐍️note-interact-probe.mjs
  */
 import { chromium } from "playwright";
@@ -32,14 +32,16 @@ const note = async (step, detail, from) => {
 };
 const state = () => page.evaluate(() => {
   const body = document.body.innerText.replace(/\s+/g, " ");
-  const counts = body.match(/(\d+) blocks · zoom/);
+  const canvas = document.querySelector('[data-surface-id="window:note-composite"]');
   const rows = [...document.querySelectorAll('[role="treeitem"]')].map((el) => ({ text: el.innerText.replace(/\s+/g, " ").trim().slice(0, 60), selected: el.getAttribute("aria-selected") }));
   const hosts = [...document.querySelectorAll("[data-surface-id]")].map((el) => ({ id: el.getAttribute("data-surface-id"), canvases: el.querySelectorAll("canvas").length, svg: el.querySelectorAll("svg *").length, text: (el.innerText ?? "").slice(0, 80) }));
   return {
     ready: document.documentElement.getAttribute("data-semio-os-ready"),
     error: document.documentElement.getAttribute("data-semio-os-error"),
-    blocks: counts ? Number(counts[1]) : null,
+    blocks: canvas ? new Set([...canvas.querySelectorAll('[data-ink-block-id]')].map((el) => el.getAttribute('data-ink-block-id'))).size : null,
     noScene: (body.match(/No scene/g) ?? []).length,
+    docBlocks: (() => { const row = [...document.querySelectorAll('[role="treeitem"]')].map((el) => el.innerText.replace(/\s+/g, " ").trim()).find((t) => /^Blocks \d+$/.test(t)); return row ? Number(row.split(" ")[1]) : null; })(),
+    utility: [...document.querySelectorAll('[role="treeitem"]')].map((el) => el.innerText.replace(/\s+/g, " ").trim()).find((t) => /^Utility /.test(t)) ?? null,
     rows,
     hosts,
     engagements: [...document.querySelectorAll('[id$=".engagement"]')].map((el) => el.id),
@@ -86,7 +88,8 @@ let count = s.blocks ?? 0;
 
 {
   const a = await submitAction("addBlock", { kind: "text" });
-  const after = await settle((x) => x.blocks === count + 1);
+  let after = await settle((x) => x.blocks === count + 1);
+  if (after.blocks !== count + 1) after = await settle((x) => x.blocks === count + 1);
   await note("add-block-text", { ...a, after: after.blocks, added: after.blocks === count + 1 }, a.from);
   count = after.blocks ?? count;
 }
@@ -100,36 +103,74 @@ let count = s.blocks ?? 0;
 }
 {
   const from = lines.length;
+  const closedActions = await page.locator('[id="framework.window.noteComposite.engagement.toggle"]').first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
+  await page.waitForTimeout(1000);
   const opened = await togglePanel("Artifact");
   await page.waitForTimeout(2000);
   const rowsBefore = (await state()).rows.length;
   const add = page.locator('[role="treeitem"]', { hasText: "Add Math" }).first();
   const clicked = (await add.count()) ? await add.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
   const after = await settle((x) => x.blocks === count + 1 && x.rows.length > rowsBefore);
-  await note("panel-add-math", { opened, clicked, before: count, after: after.blocks, rowsBefore, rowsAfter: after.rows.length, added: after.blocks === count + 1, rows: after.rows.slice(0, 20) }, from);
+  await note("panel-add-math", { closedActions, opened, clicked, before: count, after: after.blocks, rowsBefore, rowsAfter: after.rows.length, added: after.blocks === count + 1, rows: after.rows.map((r) => r.text) }, from);
   count = after.blocks ?? count;
 }
+const blockRow = (rows) => rows.find((r) => /^(Text|Table|Math|Image|Group|Ink) /.test(r.text));
 {
   const from = lines.length;
-  const current = await state();
-  const blockRow = current.rows.find((r) => !/^Add |^Artifact$|^Document$/.test(r.text) && r.text.length > 0);
-  const row = blockRow ? page.locator('[role="treeitem"]', { hasText: blockRow.text }).last() : null;
-  const clicked = row && (await row.count()) ? await row.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
-  const after = await settle((x) => x.rows.some((r) => r.selected === "true"));
-  await note("select-block-row", { target: blockRow?.text ?? null, clicked, selected: after.rows.filter((r) => r.selected === "true").map((r) => r.text) }, from);
-  const togg = await togglePanel("Artifact");
-  await page.waitForTimeout(1000);
+  const target = blockRow((await state()).rows);
+  const row = target ? page.locator('[role="treeitem"]', { hasText: target.text }).first() : null;
+  const clicked = row && (await row.count()) ? await row.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
+  const after = await settle((x) => x.rows.some((r) => r.text === target?.text && r.selected === "true"));
+  await note("select-block-row", { target: target?.text ?? null, clicked, selected: after.rows.filter((r) => r.selected === "true").map((r) => r.text), selectLines: lines.slice(from).filter((l) => /interactionSelect/.test(l)).slice(0, 3).map((l) => l.slice(0, 200)) }, from);
   const del = lines.length;
-  await page.locator('[data-surface-id]').first().hover({ force: true }).catch(() => {});
   await page.keyboard.press("Delete");
   const deleted = await settle((x) => x.blocks === count - 1);
-  await note("delete-selection", { panelClosed: togg, before: count, after: deleted.blocks, deleted: deleted.blocks === count - 1 }, del);
+  await note("delete-selection", { before: count, after: deleted.blocks, deleted: deleted.blocks === count - 1, rows: deleted.rows.map((r) => r.text) }, del);
   if (deleted.blocks === count - 1) {
     const und = lines.length;
     await page.keyboard.press(`${mod}+z`);
     const restored = await settle((x) => x.blocks === count);
     await note("undo-delete", { after: restored.blocks, restored: restored.blocks === count }, und);
+    count = restored.blocks ?? count;
   } else count = deleted.blocks ?? count;
+}
+{
+  const from = lines.length;
+  await togglePanel("Artifact");
+  await page.waitForTimeout(800);
+  const host = page.locator('[data-surface-id="window:note-composite"]').first();
+  const clickId = async (id) => { const el = page.locator(`[id="${id}"]`).first(); return (await el.count()) ? el.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent"; };
+  const utilityToggle = await clickId("framework.window.noteComposite.utilityBar.unfold");
+  await page.waitForTimeout(1200);
+  const drawGroup = await clickId("ui.utilities.note-composite.group.group:Draw");
+  await page.waitForTimeout(1200);
+  const armed = `${drawGroup}/${await clickId("pencil")}`;
+  await page.waitForTimeout(1500);
+  const beforeDoc = (await state()).docBlocks;
+  const box = await host.boundingBox();
+  if (box) {
+    const x0 = box.x + box.width * 0.4, y0 = box.y + box.height * 0.6;
+    await page.mouse.move(x0, y0);
+    await page.mouse.down();
+    for (let i = 1; i <= 12; i++) { await page.mouse.move(x0 + i * 12, y0 + Math.sin(i / 2) * 30); await page.waitForTimeout(30); }
+    await page.mouse.up();
+  }
+  const after = await settle((x) => beforeDoc !== null && x.docBlocks === beforeDoc + 1);
+  await note("canvas-pencil-stroke", { utilityToggle, armed, utility: after.utility, before: beforeDoc, after: after.docBlocks, drawn: beforeDoc !== null && after.docBlocks === beforeDoc + 1, inkLines: lines.slice(from).filter((l) => /inkApplyEvents|ink-events/.test(l)).slice(0, 4).map((l) => l.slice(0, 240)) }, from);
+  const und = lines.length;
+  await page.keyboard.press(`${mod}+z`);
+  const undone = await settle((x) => x.docBlocks === beforeDoc);
+  await note("undo-pencil-stroke", { after: undone.docBlocks, undone: undone.docBlocks === beforeDoc }, und);
+  count = undone.blocks ?? count;
+}
+{
+  const from = lines.length;
+  await page.reload({ waitUntil: "domcontentloaded" });
+  let after = null;
+  for (let i = 0; i < 120; i++) { await page.waitForTimeout(1000); after = await state(); if (after.ready && after.blocks !== null && after.blocks > 0 && i > 5) break; if (i > 60 && after.ready) break; }
+  await page.waitForTimeout(3000);
+  after = await state();
+  await note("reload", { before: count, after: after.blocks, survived: after.blocks === count, example: after.example }, from);
 }
 {
   const final = await state();

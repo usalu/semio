@@ -6470,7 +6470,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               value,
               placeholder: uiDataLabel("Action"),
               onChange: setValue,
-              onSubmit: (draft) => submitted.push(draft),
+              onSubmit: (draft: string) => submitted.push(draft),
               onRepeatLast: () => repeated.push("last"),
             }}
           />
@@ -6857,7 +6857,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("Search onChange carries the typed line verbatim, spaces and arguments included", () => {
       const changed: string[] = [];
-      render(<Search input={{ value: "", onChange: (next) => changed.push(next), placeholder: uiDataLabel("Action") }} />);
+      render(<Search input={{ value: "", onChange: (next: string) => changed.push(next), placeholder: uiDataLabel("Action") }} />);
       const field = screen.getByPlaceholderText("Action");
       fireEvent.change(field, { target: { value: "set height" } });
       fireEvent.change(field, { target: { value: "move 50 25" } });
@@ -6897,7 +6897,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               value,
               placeholder: uiDataLabel("Action"),
               onChange: setValue,
-              onSubmit: (next) => submitted.push(next),
+              onSubmit: (next: string) => submitted.push(next),
             }}
           />
         );

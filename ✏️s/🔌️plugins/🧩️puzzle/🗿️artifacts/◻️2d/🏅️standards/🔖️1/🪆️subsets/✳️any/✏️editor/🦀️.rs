@@ -391,17 +391,35 @@ fn document_board_kind_catalogs_json(catalogs: &Value) -> Option<String> {
     contributes_node_kinds.then(|| Value::Object(out).to_string())
 }
 
-/// 🗂️ [`board_kind_catalogs_json`] with the same last resort the fill run takes: a document naming
-/// neither `meta.kindCatalogs` nor a `meta.manifestId` — Concrete Forest, and any board a user drew —
-/// still implies exactly the node kinds it shows ([`inferred_node_kind_rows`]). Without this fallback
-/// the engine's `node_kinds` map stays empty and every brush/suggestion candidate lookup silently
-/// yields nothing, which is a picker that opens on a free handle and lists nothing forever.
+/// 🗂️ [`board_kind_catalogs_json`] under the SAME node-kind resolution law the fill run already uses
+/// (`precompute::fill::fill_kind_rows`): a brush or suggestion candidate can only be built from a node
+/// kind that carries handle templates, so a resolved catalog whose `nodeKinds` are all template-less —
+/// Concrete Forest's manifest rows are presentation only — falls back to the kinds the document itself
+/// implies ([`inferred_node_kind_rows`]), and a document resolving no catalog at all uses them outright.
+/// Without this the engine's usable `node_kinds` map stays empty and every candidate lookup silently
+/// yields nothing: a picker that opens on a free handle and lists nothing forever.
 pub fn board_kind_catalogs_json_or_inferred(fixture: &Value) -> Option<String> {
-    if let Some(json) = board_kind_catalogs_json(fixture) {
+    let inferred = || {
+        let rows = inferred_node_kind_rows(fixture);
+        (!rows.is_empty()).then_some(rows)
+    };
+    let Some(json) = board_kind_catalogs_json(fixture) else {
+        return inferred().map(|rows| json!({ "nodeKinds": Value::Array(rows) }).to_string());
+    };
+    let Some(mut catalogs) = serde_json::from_str::<Value>(&json).ok().filter(Value::is_object) else {
+        return Some(json);
+    };
+    let templated = catalogs.get("nodeKinds").and_then(Value::as_array).is_some_and(|rows| rows.iter().any(|row| row.get("handles").and_then(Value::as_array).is_some_and(|handles| !handles.is_empty())));
+    if templated {
         return Some(json);
     }
-    let rows = inferred_node_kind_rows(fixture);
-    (!rows.is_empty()).then(|| json!({ "nodeKinds": Value::Array(rows) }).to_string())
+    match inferred() {
+        Some(rows) => {
+            catalogs["nodeKinds"] = Value::Array(rows);
+            Some(catalogs.to_string())
+        }
+        None => Some(json),
+    }
 }
 
 /// 🗂️ The kind ids present in the document itself, used whenever the fixture carries no explicit
@@ -1044,9 +1062,25 @@ pub fn puzzle2d_paint_target_region(fixture: &mut Value, origin: (f64, f64), siz
     let grid = grid_factor.abs().max(0.1);
     let snapped = ((origin.0 / grid).round() * grid, (origin.1 / grid).round() * grid);
     let extent = (size.0.max(1.0) * grid, size.1.max(1.0) * grid);
+    puzzle2d_push_target_region(fixture, snapped.0, snapped.1, extent.0, extent.1)
+}
+
+/// 🎯️ Mints ONE region row from an already-resolved world rectangle and answers its id. The single
+/// place a `targetRegions` entry is born: the palette verb reaches it through
+/// [`puzzle2d_paint_target_region`] (brush cells → world extent), the board engine's `regionCreate`
+/// reaches it with the rectangle the pointer released on, and both mint the same shape.
+pub fn puzzle2d_push_target_region(fixture: &mut Value, x: f64, y: f64, width: f64, height: f64) -> String {
     let id = new_node_id("target-region");
-    puzzle2d_push_entity(fixture, "targetRegions", json!({ "id": id, "x": snapped.0, "y": snapped.1, "width": extent.0, "height": extent.1, "hidden": false, "locked": false }));
+    puzzle2d_push_entity(fixture, "targetRegions", json!({ "id": id, "x": x, "y": y, "width": width, "height": height, "hidden": false, "locked": false }));
     id
+}
+
+/// 🖍️ The Area Brush's W/H steppers as WORLD extent: the steppers count grid cells, the engine and
+/// the board both work in board units, and [`puzzle2d_paint_target_region`] uses the same product —
+/// so a click on the canvas and a dispatch of `addTargetRegion` paint the identical rectangle.
+pub fn puzzle2d_area_brush_extent_world(runtime: &Puzzle2dPlayRuntime) -> (f64, f64) {
+    let grid = runtime.grid_factor.abs().max(0.1);
+    (runtime.area_brush_width.max(1.0) * grid, runtime.area_brush_height.max(1.0) * grid)
 }
 
 /// 🚚️ Absolute pose push from the gumball for one unlocked region — the 2d twin of puzzle3d's
@@ -1322,6 +1356,24 @@ pub fn puzzle2d_selected_node_ids(fixture: &Value, selected: &[String]) -> Vec<S
         .collect()
 }
 
+/// 🔐️ Whether ANY addressed entity — node, handle, edge or target region — carries `locked: true`.
+/// The one predicate every destructive/moving verb asks before it touches the document, so a lock is
+/// the same promise for `deleteSelection`, a board drag, the rotate ring, the three transform verbs
+/// and an inspector patch. Wider than [`puzzle2d_selection_is_locked`], which only answers for the
+/// node/handle pair the clipboard's cut fragment is built from.
+pub fn puzzle2d_addresses_locked_entity(fixture: &Value, ids: &[String]) -> bool {
+    if ids.is_empty() {
+        return false;
+    }
+    let addressed: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    let locked = |entity: &Value| entity.get("locked").and_then(Value::as_bool) == Some(true);
+    let hits = |entity: &Value| entity.get("id").and_then(Value::as_str).is_some_and(|id| addressed.contains(id));
+    let node_locked = fixture_nodes(fixture).iter().any(|node| {
+        (hits(node) && locked(node)) || node.get("handles").and_then(Value::as_array).into_iter().flatten().any(|handle| hits(handle) && locked(handle))
+    });
+    node_locked || fixture_edges(fixture).iter().any(|edge| hits(edge) && locked(edge)) || fixture_target_regions(fixture).iter().any(|region| hits(region) && locked(region))
+}
+
 /// 🔒️ Whether any of these nodes (or one of their handles) refuses to be cut.
 pub fn puzzle2d_selection_is_locked(fixture: &Value, node_ids: &[String]) -> bool {
     let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
@@ -1418,6 +1470,7 @@ pub fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragmen
         }
         puzzle2d_push_edge(&mut after, clone);
     }
+    puzzle2d_relabel_nodes(&mut after, &pasted);
     Ok((puzzle2d_document_delta_operations(fixture, &after), pasted))
 }
 //#endregion 📋️Clipboard
@@ -1456,6 +1509,8 @@ fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selec
     host.set_grid_snap_enabled(envelope.runtime.grid_snap_enabled);
     host.set_transform_flags(envelope.runtime.transform_move, envelope.runtime.transform_rotate);
     let _ = host.set_grid_factor(envelope.runtime.grid_factor);
+    let (brush_width, brush_height) = puzzle2d_area_brush_extent_world(&envelope.runtime);
+    host.set_area_brush_extent(brush_width, brush_height);
     host.set_suggestion_offset(envelope.runtime.suggestion_offset);
     if let Ok(weights_json) = serde_json::to_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
@@ -1485,9 +1540,9 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// this no longer reconciles anything selection-shaped. Camera is deliberately NOT mirrored here:
 /// every action that moves the camera already writes the config's camera fields directly — re-deriving
 /// it from `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
-pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
+pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) -> bool {
     let events_raw = drain_board_events_json(host);
-    apply_board_events::apply_board_events_from_json(&events_raw, envelope);
+    apply_board_events::apply_board_events_from_json(&events_raw, envelope)
 }
 
 /// 🖌️ Re-enters the board host's brush slot on the handle this window transient remembers. The guest
@@ -1496,11 +1551,15 @@ pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
 /// slot before it reads an index. The rebuild is deterministic (same fixture, same kind catalogs, same
 /// weights), so the candidate page is the one the client painted and the index the popup names is the
 /// candidate that gets placed. An open popup claims the slot's hover; the armed brush only targets it.
-pub fn puzzle2d_restore_brush_slot(ctx: &mut Puzzle2dActionCtx<'_>) -> Option<String> {
+/// `requested` is the handle the CALLER named — the popup's own rows carry it, so a client that still
+/// has the menu on screen never depends on the transient having round-tripped back to the guest yet.
+pub fn puzzle2d_restore_brush_slot(ctx: &mut Puzzle2dActionCtx<'_>, requested: Option<&str>) -> Option<String> {
     let popup = ctx.scene.runtime.suggestion_menu.as_ref().map(|menu| menu.handle_id.clone()).filter(|handle_id| !handle_id.is_empty());
-    let handle_id = popup.clone().or_else(|| Some(ctx.scene.runtime.brush_candidate_source_handle_id.clone()).filter(|handle_id| !handle_id.is_empty()))?;
+    let named = requested.filter(|handle_id| !handle_id.is_empty()).map(str::to_string);
+    let opened = named.clone().or_else(|| popup.clone());
+    let handle_id = opened.clone().or_else(|| Some(ctx.scene.runtime.brush_candidate_source_handle_id.clone()).filter(|handle_id| !handle_id.is_empty()))?;
     let mut host = ctx.host.borrow_mut();
-    if popup.is_some() {
+    if named.is_some() || popup.is_some() {
         host.brush_open_slot(&handle_id);
     } else {
         host.brush_target_slot(Some(&handle_id));
@@ -1697,7 +1756,7 @@ puzzle2d_command_variants! {
 }
 
 impl protocol::OpBinary for Puzzle2dCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = &PUZZLE2D_TOOL_JOB_IDS;
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -1740,6 +1799,33 @@ pub struct Puzzle2dActionCtx<'a> {
 impl<'a> Puzzle2dActionCtx<'a> {
     pub fn selected_ids(&self) -> Vec<String> {
         self.selection.ids.clone()
+    }
+
+    /// 🧯️ Raises exactly ONE localized sentence on the shell's transient-notice channel
+    /// (`Effect::Notify` → `ShellHost`'s `showTransientNotice`). A second call inside the same action
+    /// adds nothing, so the effect list of a refusal stays fixed-width — the twin of puzzle3d's
+    /// `Puzzle3dActionCtx::notice`.
+    pub fn notice(&mut self, message: impl Fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> &'static str) {
+        if self.effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })) {
+            return;
+        }
+        let text = message(self.labels).to_string();
+        self.effects.push(Effect::Notify { message: text });
+    }
+
+    /// 🔒️ The single lock gate every destructive or moving 2d verb asks first: a locked node, handle,
+    /// edge or target region among `ids` refuses the whole gesture with one visible sentence, makes no
+    /// document edit and raises no fault. Answers whether it refused, so an arm reads
+    /// `if ctx.refuse_when_locked(&ids) { return }`. A silent no-op is what this replaces — the
+    /// 2026-09-17 battery measured `deleteSelection` erasing 12 locked entities while the same node's
+    /// drag was (silently) refused.
+    pub fn refuse_when_locked(&mut self, ids: &[String]) -> bool {
+        if !puzzle2d_addresses_locked_entity(&self.scene.fixture, ids) {
+            return false;
+        }
+        self.notice(|labels| labels.selection_locked.as_str());
+        *self.ui_scope = UiDirtyScope::None;
+        true
     }
 }
 
@@ -1958,6 +2044,32 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "proximityConnect",
     "setProximityRadius",
 ];
+
+/// 🧭️ The two framework-injected host-configuration verbs. They are `InteractiveJobClassification::Migrated`
+/// in the manifest and [`Puzzle2dPlayApp::host_configuration_mutation`] resolves each to one Config
+/// mutation, so they need a generated tool id — without which `validate_tool_job_rows` refuses
+/// [`Puzzle2dHostConfigurationProofs`]' generic bounded proofs and `dispatch_action` fails closed.
+/// They carry NO app-owned factory, so they stay out of [`PUZZLE2D_RETAINED_TOOL_IDS`], which is what
+/// keys [`Puzzle2dRetainedCommandJobFactory`] and what the retained-jobs fixture pins.
+pub(crate) const PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS: &[&str] = &["setActiveTool", "setActiveUtility"];
+
+/// 🗂️ Every generated tool id this app declares: the app-owned retained verbs plus the two
+/// host-configuration verbs. `OpBinary::TOOL_JOB_IDS` — the list the framework joins against the
+/// migrated manifest rows.
+pub(crate) const PUZZLE2D_TOOL_JOB_IDS: [&str; PUZZLE2D_RETAINED_TOOL_IDS.len() + PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len()] = {
+    let mut ids = [""; PUZZLE2D_RETAINED_TOOL_IDS.len() + PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len()];
+    let mut index = 0;
+    while index < PUZZLE2D_RETAINED_TOOL_IDS.len() {
+        ids[index] = PUZZLE2D_RETAINED_TOOL_IDS[index];
+        index += 1;
+    }
+    let mut host = 0;
+    while host < PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len() {
+        ids[index + host] = PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS[host];
+        host += 1;
+    }
+    ids
+};
 const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
 
 /// 🎬️ The retained verbs whose whole completion is [`puzzle2d_dispatch_emit`] — one `🎮️commands/*`
@@ -2763,7 +2875,12 @@ fn puzzle2d_dispatch_emit(
             _ => {}
         }
     }
-    apply_host_events(&mut host.borrow_mut(), &mut scene);
+    // 🔒️ The engine's own drained rows can carry a refused lock too (a brush/engagement arm that moved
+    // the host first); the epilogue answers it with the SAME one sentence the arms raise, never twice.
+    if apply_host_events(&mut host.borrow_mut(), &mut scene) && !effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })) {
+        let labels = view_state.map_or_else(|| puzzle2d_labels(&semio_framework_plugin::ViewModel::default()), puzzle2d_labels);
+        effects.push(Effect::Notify { message: labels.selection_locked.as_str().to_string() });
+    }
     let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture);
     operations.append(&mut artifact_mutations);
     // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
@@ -3714,8 +3831,8 @@ impl Puzzle2dRedrawHandlesWork {
     /// 🧭️ Delegates to the board engine's own conventions — east-zero for circles, north-zero for
     /// rectangles — so a chunked redraw and the engine's whole-fixture snap agree numerically.
     fn angle_toward(from: Puzzle2dRedrawShape, toward: Puzzle2dRedrawShape) -> Option<f64> {
-        let center = crate::editor::puzzle2d::engine::Point::new(from.center[0], from.center[1]);
-        let target = crate::editor::puzzle2d::engine::Point::new(toward.center[0], toward.center[1]);
+        let center = Point::new(from.center[0], from.center[1]);
+        let target = Point::new(toward.center[0], toward.center[1]);
         if crate::editor::puzzle2d::engine::distance_between(center, target) <= 1e-9 {
             return None;
         }
@@ -5372,5 +5489,11 @@ pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️clipboard/🦀️.rs"]
 mod clipboard_tests;
+
+/// 🔒️ The lock's own laws — delete, the board drag rows, the rotate ring, the three transform verbs
+/// and an inspector patch each refuse a locked entity with exactly ONE sentence and no edit.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️locks/🦀️.rs"]
+mod lock_tests;
 //#endregion 🧪️UnitTests
 

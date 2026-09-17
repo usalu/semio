@@ -14,11 +14,12 @@ pub mod board_host {
     use super::{
         board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, rotate_point_about, selection_drag_enclosing, selection_drag_shape, snap_transform_angle, transform_pivot_of,
+        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_drag_enclosing, selection_drag_shape,
+        snap_region_scalar, snap_transform_angle, transform_pivot_of,
         transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
-        EdgeStrokePattern, EdgeTipDef, TRANSFORM_RING_HIT_TOLERANCE_PX,
-        EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson,
-        SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
+        EdgeStrokePattern, EdgeTipDef, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, TRANSFORM_RING_HIT_TOLERANCE_PX,
+        EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
+        RegionGrip, SceneDescriptorJson, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
     use crate::infinite::canvas::camera::Camera;
     use crate::infinite::canvas::geom_sel::{
@@ -120,6 +121,9 @@ pub mod board_host {
     const EDGE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::EDGE_HIT_TOLERANCE_PX;
     const HANDLE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::HANDLE_HIT_TOLERANCE_PX;
     const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_MARKER_SCALE;
+    /// 🧱️ Hard ceiling on the handle rows [`BoardHost::handle_positions_json`] publishes into the DOM.
+    /// Nakagin carries 358 handles; a DOM attribute is not a place to stream a document.
+    const BOARD_HANDLE_VITALS_CAP: usize = 128;
     /// Radial offset from node rim to indirect-handle center, as a fraction of node half-extent (circle radius or half the shorter rectangle side).
     const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_RING_GAP_SCALE;
     const LINK_DRAG_MIN_DISTANCE_PX: f64 = ui_styling::metrics::board::LINK_DRAG_MIN_DISTANCE_PX;
@@ -130,6 +134,9 @@ pub mod board_host {
     const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
     const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_CLICK_MAX_DISTANCE_PX;
     const BOUNDED_DRAG_HIT_PAD_PX: f64 = ui_styling::metrics::board::BOUNDED_DRAG_HIT_PAD_PX;
+    /// 🖍️ World extent an area-brush click paints before the utility's own steppers state one — one
+    /// large grid cell, so the very first region a user drops is visible without configuring anything.
+    const REGION_DEFAULT_BRUSH_EXTENT_WORLD: f64 = ui_styling::metrics::board::GRID_WORLD_LARGE;
     const DEFAULT_WIRE_KIND_ID: &str = "wire.link";
 
     const PUZZLE_2D_LODS: &[Lod; 6] = &[
@@ -1535,6 +1542,27 @@ pub mod board_host {
         start_handle_angles: BTreeMap<String, f64>,
     }
 
+    /// 🚚️ A live target-region gesture: which region, which grip, and the bounds it was grabbed at.
+    /// Every frame re-derives from `start_bounds`, so the preview never accumulates float drift and a
+    /// cancel restores the exact pre-gesture rectangle.
+    #[derive(Clone, Debug)]
+    struct BoardRegionDrag {
+        id: String,
+        grip: RegionGrip,
+        grab: Point,
+        start_bounds: [f64; 4],
+        bounds: [f64; 4],
+    }
+
+    /// 🖍️ A live area-brush paint: the grid-snapped anchor and the corner the pointer is at. A release
+    /// that never left the anchor commits the configured brush extent instead of a zero-area sliver.
+    #[derive(Clone, Debug)]
+    struct BoardRegionPaint {
+        anchor: Point,
+        corner: Point,
+        dragged: bool,
+    }
+
     #[derive(Clone, Debug)]
     struct FixtureDropPreviewSnapshot {
         node_kind_id: String,
@@ -1583,6 +1611,9 @@ pub mod board_host {
         NodeDelete,
         IndirectConnect,
         ProximityConnect,
+        RegionCreate,
+        RegionMove,
+        RegionResize,
     }
 
     impl BoardEventKind {
@@ -1607,6 +1638,9 @@ pub mod board_host {
                 Self::NodeDelete => "nodeDelete",
                 Self::IndirectConnect => "indirectConnect",
                 Self::ProximityConnect => "proximityConnect",
+                Self::RegionCreate => "regionCreate",
+                Self::RegionMove => "regionMove",
+                Self::RegionResize => "regionResize",
             }
         }
     }
@@ -1993,6 +2027,54 @@ pub mod board_host {
             payload.finish(BoardEventKind::NodeRotate, None)
         }
 
+        /// 🎯️ One painted target region, as the normalized rectangle the brush released on. The id is
+        /// minted by the document, never here — the engine paints geometry, the guest owns identity.
+        fn region_create(bounds: [f64; 4]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"x\":")?;
+            payload.number(bounds[0])?;
+            payload.raw(",\"y\":")?;
+            payload.number(bounds[1])?;
+            payload.raw(",\"width\":")?;
+            payload.number(bounds[2] - bounds[0])?;
+            payload.raw(",\"height\":")?;
+            payload.number(bounds[3] - bounds[1])?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::RegionCreate, None)
+        }
+
+        /// 🚚️ A region body drag committed on release: the new minimum corner only, so a move never
+        /// re-states an extent it did not touch.
+        fn region_move(id: &str, bounds: [f64; 4]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            payload.string(id)?;
+            payload.raw(",\"x\":")?;
+            payload.number(bounds[0])?;
+            payload.raw(",\"y\":")?;
+            payload.number(bounds[1])?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::RegionMove, Some(id))
+        }
+
+        /// 📐️ A region grip drag committed on release: corner AND extent, because a west/north grip
+        /// moves the minimum corner as well as the size.
+        fn region_resize(id: &str, bounds: [f64; 4]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            payload.string(id)?;
+            payload.raw(",\"x\":")?;
+            payload.number(bounds[0])?;
+            payload.raw(",\"y\":")?;
+            payload.number(bounds[1])?;
+            payload.raw(",\"width\":")?;
+            payload.number(bounds[2] - bounds[0])?;
+            payload.raw(",\"height\":")?;
+            payload.number(bounds[3] - bounds[1])?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::RegionResize, Some(id))
+        }
+
         fn link_compatible(source: &str, node_ids: &[String]) -> Result<Self, BoardEventFault> {
             let mut payload = BoardPayloadBuilder::new();
             payload.raw("{\"source\":")?;
@@ -2334,6 +2416,9 @@ pub mod board_host {
         pub handles: BTreeMap<String, HandleData>,
         pub edges: BTreeMap<String, EdgeData>,
         pub wires: BTreeMap<String, WireData>,
+        /// @emoji 🎯️ Fill-constraining rectangles, keyed by document id. Painted beneath every entity,
+        /// hit-tested after all of them, and counted against the descriptor census like any other entity.
+        pub regions: BTreeMap<String, RegionData>,
         /// Catalog keyed by `handle_kind` id (see `set_board_kind_catalogs_from_json`).
         pub handle_kinds: BTreeMap<String, HandleKindDef>,
         pub wire_kinds: BTreeMap<String, WireKindDef>,
@@ -2423,6 +2508,12 @@ pub mod board_host {
         transform_flags: TransformGumballFlags,
         /// @emoji 🔄️ The live rotate-ring gesture, `None` whenever the ring is merely drawn.
         transform_drag: Option<BoardTransformDrag>,
+        /// @emoji 🚚️ The live region move/resize gesture (`None` when no region is being dragged).
+        region_drag: Option<BoardRegionDrag>,
+        /// @emoji 🖍️ The live area-brush rectangle (`None` unless the areaBrush utility is painting).
+        region_paint: Option<BoardRegionPaint>,
+        /// @emoji 🖍️ World width/height an area-brush CLICK (no drag) paints, from the utility's own steppers.
+        area_brush_extent: (f64, f64),
         pub port_mode: GraphPortMode,
         interaction_revision: u64,
         pending_delete_planning: Option<BoardDeletePlanningOperation>,
@@ -2481,6 +2572,7 @@ pub mod board_host {
         Handles,
         Edges,
         Wires,
+        Regions,
         Selection,
         Preselect,
         PreselectRemoved,
@@ -3516,6 +3608,7 @@ pub mod board_host {
                 handles: BTreeMap::new(),
                 edges: BTreeMap::new(),
                 wires: BTreeMap::new(),
+                regions: BTreeMap::new(),
                 handle_kinds: BTreeMap::new(),
                 wire_kinds: BTreeMap::new(),
                 node_kinds: BTreeMap::new(),
@@ -3577,6 +3670,9 @@ pub mod board_host {
                 brush_slot_suggestions_active: false,
                 transform_flags: TransformGumballFlags::default(),
                 transform_drag: None,
+                region_drag: None,
+                region_paint: None,
+                area_brush_extent: (REGION_DEFAULT_BRUSH_EXTENT_WORLD, REGION_DEFAULT_BRUSH_EXTENT_WORLD),
                 port_mode: GraphPortMode::Ported,
                 interaction_revision: 0,
                 pending_delete_planning: None,
@@ -3845,6 +3941,18 @@ pub mod board_host {
                         drop(key);
                         self.close_entity_retirement = Some(BoardEntityRetirement::new(BoardRemovedEntity::Wire(value)));
                     } else {
+                        self.close_phase = BoardHostClosePhase::Regions;
+                    }
+                }
+                BoardHostClosePhase::Regions => {
+                    if let Some((key, value)) = self.regions.pop_first() {
+                        self.push_close_string(key);
+                        self.push_close_string(value.id);
+                        self.push_close_optional_string(value.label);
+                    } else if let Some(drag) = self.region_drag.take() {
+                        self.push_close_string(drag.id);
+                    } else {
+                        self.region_paint = None;
                         self.close_phase = BoardHostClosePhase::Selection;
                     }
                 }
@@ -4010,6 +4118,9 @@ pub mod board_host {
                 && self.handles.is_empty()
                 && self.edges.is_empty()
                 && self.wires.is_empty()
+                && self.regions.is_empty()
+                && self.region_drag.is_none()
+                && self.region_paint.is_none()
                 && self.handle_kinds.is_empty()
                 && self.wire_kinds.is_empty()
                 && self.node_kinds.is_empty()
@@ -7418,7 +7529,13 @@ pub mod board_host {
                 self.brush_finish_slot();
             }
             self.brush_slot_source_id = Some(source_handle_id.to_string());
-            let Some(source) = self.handles.get(source_handle_id).cloned() else {
+            // 🔗️ A handle that already carries an edge is not open, so it grows nothing. The pointer
+            // path filters those out before it ever enters a slot (`brush_nearest_slot_source`); the
+            // direct entry points (`brush_open_slot`, `brush_target_slot`) reach this instead, and the
+            // slot must then resolve an EMPTY page rather than a wrong one — that empty page is what a
+            // fully fastened document's suggestions popup reads as "no placement available".
+            let fastened = self.handle_has_incident_edge(source_handle_id);
+            let Some(source) = self.handles.get(source_handle_id).filter(|_| !fastened).cloned() else {
                 self.brush_candidates.clear();
                 self.brush_candidate_index = 0;
                 self.brush_rebuild_preview();
@@ -7460,13 +7577,19 @@ pub mod board_host {
         }
 
         pub fn set_active_utility(&mut self, label: &str) {
-            let next = if label == "brush" { ActiveUtility::Brush } else { ActiveUtility::Select };
+            let next = match label {
+                "brush" => ActiveUtility::Brush,
+                "areaBrush" => ActiveUtility::AreaBrush,
+                _ => ActiveUtility::Select,
+            };
             if self.active_utility == next {
                 return;
             }
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_finish_slot();
             }
+            self.cancel_region_paint();
+            self.cancel_region_drag();
             self.active_utility = next;
             self.interaction = Interaction::None;
             self.bump_content_scene_generation();
@@ -8534,6 +8657,9 @@ pub mod board_host {
             for w in self.wires.values_mut() {
                 w.selected = chrome.contains(&w.id);
             }
+            for r in self.regions.values_mut() {
+                r.selected = chrome.contains(&r.id);
+            }
         }
 
         fn push_select_event(&mut self) {
@@ -8671,6 +8797,8 @@ pub mod board_host {
         /// @emoji 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
             self.transform_drag.is_some()
+                || self.region_drag.is_some()
+                || self.region_paint.is_some()
                 || matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. } | Interaction::DragNodes { .. } | Interaction::Pan { .. })
         }
 
@@ -8678,7 +8806,11 @@ pub mod board_host {
         /// the armed utility, the hovered id and the selection/preselect sizes. Published by the React
         /// host as `data-board-interaction-json`, the board twin of `World3dHost`'s `data-interaction-json`.
         pub fn interaction_json(&self) -> String {
-            let mode = if self.transform_drag.is_some() {
+            let mode = if self.region_paint.is_some() {
+                "regionPaint"
+            } else if self.region_drag.is_some() {
+                "regionDrag"
+            } else if self.transform_drag.is_some() {
                 "transformRotate"
             } else {
                 match self.interaction {
@@ -8696,6 +8828,7 @@ pub mod board_host {
             let utility = match self.active_utility {
                 ActiveUtility::Select => "select",
                 ActiveUtility::Brush => "brush",
+                ActiveUtility::AreaBrush => "areaBrush",
             };
             let mut out = String::from("{\"mode\":\"");
             out.push_str(mode);
@@ -8719,6 +8852,66 @@ pub mod board_host {
             out.push_str(",\"deferringDescriptorSync\":");
             out.push_str(if self.defers_descriptor_sync_from_js() { "true" } else { "false" });
             out.push('}');
+            out
+        }
+
+        /// @emoji 🩺️ Every handle the pane can actually be POINTED AT, as one bounded probe row:
+        /// world position, owning node, handle kind, and whether the handle is still free (no incident
+        /// edge — the precondition `openHandleSuggestions` and `createEdge` both need). `data-board-
+        /// positions-json` carries NODES only, so nothing in the DOM ever named a handle and no
+        /// headless caller could aim at one.
+        ///
+        /// 🧱️ Bounded twice over, because Nakagin carries 358 handles: the row set is the camera's own
+        /// viewport (a handle off-screen cannot be clicked, so publishing it buys nothing) and then a
+        /// hard [`BOARD_HANDLE_VITALS_CAP`]. `total`/`onScreen`/`capped` say exactly what was left out.
+        pub fn handle_positions_json(&self) -> String {
+            let (w, h) = (f64::from(self.width), f64::from(self.height));
+            let mut rows: Vec<(&str, Point, &str, &str, bool)> = Vec::new();
+            let mut on_screen = 0usize;
+            for (id, handle) in &self.handles {
+                let Some(world) = self.handle_world_pos(handle) else { continue };
+                let screen = self.world_to_screen(world);
+                if screen.x < 0.0 || screen.y < 0.0 || screen.x > w || screen.y > h || !self.handle_effectively_visible(id.as_str()) {
+                    continue;
+                }
+                on_screen += 1;
+                if rows.len() < BOARD_HANDLE_VITALS_CAP {
+                    rows.push((id.as_str(), world, handle.node_id.as_str(), handle.handle_kind.as_str(), !self.handle_has_incident_edge(id.as_str())));
+                }
+            }
+            let quote = |value: &str, out: &mut String| {
+                out.push('"');
+                out.push_str(&value.replace('\\', "\\\\").replace('"', "\\\""));
+                out.push('"');
+            };
+            let mut out = String::from("{\"total\":");
+            out.push_str(&self.handles.len().to_string());
+            out.push_str(",\"onScreen\":");
+            out.push_str(&on_screen.to_string());
+            out.push_str(",\"published\":");
+            out.push_str(&rows.len().to_string());
+            out.push_str(",\"capped\":");
+            out.push_str(if on_screen > rows.len() { "true" } else { "false" });
+            out.push_str(",\"rows\":[");
+            for (index, (id, world, node_id, handle_kind, open)) in rows.iter().copied().enumerate() {
+                if index > 0 {
+                    out.push(',');
+                }
+                out.push('[');
+                quote(id, &mut out);
+                out.push(',');
+                out.push_str(&world.x.to_string());
+                out.push(',');
+                out.push_str(&world.y.to_string());
+                out.push(',');
+                quote(node_id, &mut out);
+                out.push(',');
+                quote(handle_kind, &mut out);
+                out.push(',');
+                out.push_str(if open { "true" } else { "false" });
+                out.push(']');
+            }
+            out.push_str("]}");
             out
         }
 
@@ -9483,6 +9676,16 @@ pub mod board_host {
                     }
                 }
             }
+            // 🎯️ Regions are the least specific target on the board — last in the list, so a context
+            // menu offers the graph first and the backdrop only when nothing else is under the point.
+            for region in self.regions.values() {
+                if region.hidden {
+                    continue;
+                }
+                if region_grip_at(self.region_live_bounds(region), zoom, point).is_some() {
+                    Self::push_pick_target(&mut out, "region", region.id.clone(), 3, region.label.clone().or_else(|| Some(region.id.clone())));
+                }
+            }
             out
         }
 
@@ -9611,7 +9814,14 @@ pub mod board_host {
         /// leaves a half-built board, and a fixture parse that clears first leaves an EMPTY one (three
         /// blank panes, 2026-09-17), so both preflight through here and mutate only once it passes.
         fn descriptor_admission(desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
-            let entity_count = desc.nodes.len().checked_add(desc.handles.len()).and_then(|count| count.checked_add(desc.edges.len())).and_then(|count| count.checked_add(desc.wires.len())).ok_or(NormalPortError::EventCredits)?;
+            let entity_count = desc
+                .nodes
+                .len()
+                .checked_add(desc.handles.len())
+                .and_then(|count| count.checked_add(desc.edges.len()))
+                .and_then(|count| count.checked_add(desc.wires.len()))
+                .and_then(|count| count.checked_add(desc.regions.len()))
+                .ok_or(NormalPortError::EventCredits)?;
             if entity_count > BOARD_DESCRIPTOR_ITEM_CAPACITY {
                 return Err(NormalPortError::EventCredits);
             }
@@ -9622,6 +9832,7 @@ pub mod board_host {
                 .chain(desc.handles.iter().map(|handle| handle.id.len()))
                 .chain(desc.edges.iter().map(|edge| edge.id.len()))
                 .chain(desc.wires.iter().map(|wire| wire.id.len()))
+                .chain(desc.regions.iter().map(|region| region.id.len()))
                 .try_fold(0usize, usize::checked_add)
                 .ok_or(NormalPortError::EventCredits)?;
             if entity_id_bytes > BOARD_DESCRIPTOR_BYTE_CAPACITY {
@@ -9661,6 +9872,8 @@ pub mod board_host {
             let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
             let want_edges: BTreeSet<_> = desc.edges.iter().map(|e| e.id.clone()).collect();
             let want_wires: BTreeSet<_> = desc.wires.iter().map(|w| w.id.clone()).collect();
+            let want_regions: BTreeSet<_> = desc.regions.iter().map(|r| r.id.clone()).collect();
+            self.regions.retain(|id, _| want_regions.contains(id));
             self.edges.retain(|id, _| want_edges.contains(id));
             self.wires.retain(|id, _| want_wires.contains(id));
             self.handles.retain(|id, _| want_handles.contains(id));
@@ -9795,8 +10008,29 @@ pub mod board_host {
                     },
                 );
             }
+            for r in &desc.regions {
+                self.regions.insert(
+                    r.id.clone(),
+                    RegionData {
+                        id: r.id.clone(),
+                        x: r.x,
+                        y: r.y,
+                        width: r.width,
+                        height: r.height,
+                        label: r.label.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()),
+                        hidden: r.hidden.unwrap_or(false),
+                        locked: r.locked.unwrap_or(false),
+                        selected: r.selected.unwrap_or(false),
+                    },
+                );
+            }
             if !self.is_preselect_active() {
                 let mut new_selection = BTreeSet::new();
+                for r in &desc.regions {
+                    if r.selected == Some(true) {
+                        new_selection.insert(r.id.clone());
+                    }
+                }
                 for n in &desc.nodes {
                     if n.selected == Some(true) {
                         new_selection.insert(n.id.clone());
@@ -9866,6 +10100,7 @@ pub mod board_host {
         }
 
         pub fn clear_scene(&mut self) {
+            self.regions.clear();
             self.edges.clear();
             self.wires.clear();
             self.handles.clear();
@@ -9891,7 +10126,7 @@ pub mod board_host {
                 _ => return false,
             };
             let has_ports = port_mode.has_ports();
-            let (camera_x, camera_y, camera_zoom) = (f.camera.x, f.camera.y, f.camera.zoom);
+            let camera = f.camera.as_ref().map(|camera| (camera.x, camera.y, camera.zoom));
             let Some(desc) = Self::fixture_scene_descriptor(f, has_ports) else {
                 return false;
             };
@@ -9902,7 +10137,9 @@ pub mod board_host {
             if !has_ports {
                 self.selection_options.select_handles = false;
             }
-            self.set_camera(camera_x, camera_y, camera_zoom);
+            if let Some((x, y, zoom)) = camera {
+                self.set_camera(x, y, zoom);
+            }
             self.clear_scene();
             self.sync_descriptor_with(&desc, false).is_ok()
         }
@@ -10067,6 +10304,29 @@ pub mod board_host {
                     user_data: None,
                     visible: board_json_visible_option(e),
                     locked: board_json_locked_option(e),
+                });
+            }
+            // 🎯️ Target regions are optional by construction (the artifact omits an empty collection),
+            // so a malformed row is skipped rather than refusing the whole document: a board that
+            // cannot paint its constraint rectangles must still paint its graph.
+            for entry in f.target_regions {
+                let Some(o) = entry.as_object() else {
+                    continue;
+                };
+                let Some(id) = o.get("id").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()) else {
+                    continue;
+                };
+                let read = |key: &str| o.get(key).and_then(|v| v.as_f64()).filter(|v| v.is_finite()).unwrap_or(0.0);
+                desc.regions.push(RegionDescJson {
+                    id: id.into(),
+                    x: read("x"),
+                    y: read("y"),
+                    width: read("width"),
+                    height: read("height"),
+                    label: o.get("label").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string()),
+                    hidden: o.get("hidden").and_then(|v| v.as_bool()),
+                    locked: o.get("locked").and_then(|v| v.as_bool()),
+                    selected: o.get("selected").and_then(|v| v.as_bool()),
                 });
             }
             Some(desc)
@@ -10537,6 +10797,13 @@ pub mod board_host {
             let generation = self.content_scene_generation;
             let cam_aff = self.camera_content_affine();
             let overlay_ids = self.interaction_overlay_entity_ids();
+            // 🎯️ Target regions are the backdrop: painted before the first entity layer, always in
+            // world space, so nothing they overlap is ever hidden behind them.
+            if !self.regions.is_empty() || self.region_paint.is_some() {
+                let mut region_layer = Scene::new();
+                self.append_target_region_paint(&mut region_layer, true);
+                scene.append(&region_layer, Some(cam_aff));
+            }
             let mut fill_layer = Scene::new();
             self.append_nodes_and_handles_with_overlay_chrome(&mut fill_layer, None, lod, true, None, &overlay_ids, NodeHandlePaintLayer::Fill);
             scene.append(&fill_layer, Some(cam_aff));
@@ -12074,6 +12341,16 @@ pub mod board_host {
             self.set_selection_screen_preview(None);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            // 🖍️ The area brush owns the whole pointer while it is armed: a press anchors a region
+            // rectangle instead of picking, so the same gesture can never also start a marquee.
+            if self.active_utility == ActiveUtility::AreaBrush {
+                if button == 1 {
+                    self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
+                } else if button == 0 {
+                    self.begin_region_paint(world);
+                }
+                return;
+            }
             if self.active_utility == ActiveUtility::Brush {
                 if button == 1 {
                     self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
@@ -12177,6 +12454,11 @@ pub mod board_host {
                     return;
                 }
             }
+            // 🎯️ LAST of all the pick paths: a region is the board's backdrop, so it is only grabbed
+            // once the nodes, handles, edges and the rotate ring have all missed.
+            if hit.is_none() && button == 0 && self.try_begin_region_drag_at(world) {
+                return;
+            }
             if hit.is_none() && button == 0 {
                 self.interaction = Interaction::SelectionPending { initial_ids: self.selection.clone(), start: world, start_screen: screen };
                 self.set_hovered_id(None);
@@ -12200,6 +12482,20 @@ pub mod board_host {
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            if self.active_utility == ActiveUtility::AreaBrush {
+                if let Interaction::Pan { origin, start_screen } = self.interaction.clone() {
+                    let delta = screen - start_screen;
+                    self.set_camera(origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom);
+                    self.interaction = Interaction::Pan { origin, start_screen };
+                    return;
+                }
+                self.update_region_paint(world);
+                return;
+            }
+            if self.region_drag.is_some() {
+                self.update_region_drag(world);
+                return;
+            }
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
                 match std::mem::replace(&mut self.interaction, Interaction::None) {
@@ -12358,6 +12654,17 @@ pub mod board_host {
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            if self.active_utility == ActiveUtility::AreaBrush {
+                if matches!(self.interaction, Interaction::Pan { .. }) {
+                    self.interaction = Interaction::None;
+                }
+                self.commit_region_paint();
+                return;
+            }
+            if self.commit_region_drag() {
+                self.update_hover_from_world(world);
+                return;
+            }
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
                 if matches!(self.interaction, Interaction::Pan { .. }) {
@@ -12463,6 +12770,10 @@ pub mod board_host {
 
         pub fn pointer_leave_screen(&mut self, alt: bool) {
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
+            if self.cancel_region_paint() || self.cancel_region_drag() {
+                self.set_hovered_id(None);
+                return;
+            }
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
                 self.brush_finish_slot();
@@ -12479,6 +12790,9 @@ pub mod board_host {
 
         /// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
         pub fn cancel_area_select(&mut self) -> bool {
+            if self.cancel_region_paint() || self.cancel_region_drag() {
+                return true;
+            }
             if self.cancel_transform_drag() {
                 return true;
             }
@@ -12596,7 +12910,7 @@ pub mod board_host {
         /// @emoji 🩺️ The gumball's whole probe-visible state: which handles are composed, whether the
         /// ring is drawn, and the live drag's pivot/angle. Read as `data-board-transform-json`.
         pub fn transform_gumball_json(&self) -> String {
-            let geometry = self.transform_gumball_geometry();
+            let geometry = self.transform_drag.as_ref().map(|drag| (drag.pivot, drag.radius_world)).or_else(|| self.transform_gumball_geometry());
             let mut out = String::from("{\"move\":");
             out.push_str(if self.transform_flags.move_enabled { "true" } else { "false" });
             out.push_str(",\"rotate\":");
@@ -12718,7 +13032,9 @@ pub mod board_host {
 
         /// @emoji ⭕️ Paints the ring, its pivot dot and the live grab spoke.
         fn append_transform_gumball_paint(&self, scene: &mut Scene, world_space: bool) {
-            let Some((pivot, radius_world)) = self.transform_gumball_geometry() else {
+            // ⭕️ While the gesture is live the ring is the one grabbed at press time: re-deriving it from
+            // the turning nodes would make the band breathe under the cursor for a non-circular selection.
+            let Some((pivot, radius_world)) = self.transform_drag.as_ref().map(|drag| (drag.pivot, drag.radius_world)).or_else(|| self.transform_gumball_geometry()) else {
                 return;
             };
             let center = self.draw_space_point(pivot, world_space);
@@ -12739,6 +13055,290 @@ pub mod board_host {
             }
         }
         //#endregion 🕹️TransformGumball
+
+        //#region 🎯️TargetRegions
+        /// @emoji 🖍️ World width/height an area-brush CLICK paints; a non-finite or non-positive axis
+        /// keeps the previous extent rather than minting a zero-area region no fill could ever satisfy.
+        pub fn set_area_brush_extent(&mut self, width: f64, height: f64) {
+            let (mut w, mut h) = self.area_brush_extent;
+            if width.is_finite() && width > 0.0 {
+                w = width;
+            }
+            if height.is_finite() && height > 0.0 {
+                h = height;
+            }
+            if (w - self.area_brush_extent.0).abs() < 1e-9 && (h - self.area_brush_extent.1).abs() < 1e-9 {
+                return;
+            }
+            self.area_brush_extent = (w, h);
+        }
+
+        pub fn area_brush_extent(&self) -> (f64, f64) {
+            self.area_brush_extent
+        }
+
+        /// @emoji 🧲️ The world step every region gesture quantizes to, or `None` while the grid-snap
+        /// modifier is off — one definition shared by paint, move and resize.
+        fn region_snap_step(&self) -> Option<f64> {
+            if !self.grid_snap_enabled {
+                return None;
+            }
+            self.lod_visible_grid_snap_step_world()
+        }
+
+        fn snap_region_point(&self, point: Point) -> Point {
+            let step = self.region_snap_step();
+            Point::new(snap_region_scalar(point.x, step), snap_region_scalar(point.y, step))
+        }
+
+        /// @emoji 📐️ Live bounds of one region: the gesture's preview while it is the dragged one, the
+        /// document's rectangle otherwise.
+        fn region_live_bounds(&self, region: &RegionData) -> [f64; 4] {
+            match self.region_drag.as_ref().filter(|drag| drag.id == region.id) {
+                Some(drag) => drag.bounds,
+                None => region_bounds(region.x, region.y, region.width, region.height),
+            }
+        }
+
+        /// @emoji 🩺️ Every region this board holds, in id order, as the probe reads them out of
+        /// `data-board-target-regions-json`. Bounds are normalized and reflect a live drag, so the
+        /// attribute and the pixels never disagree mid-gesture.
+        pub fn target_regions_json(&self) -> String {
+            let mut out = String::from("[");
+            for (index, region) in self.regions.values().enumerate() {
+                if index > 0 {
+                    out.push(',');
+                }
+                let [min_x, min_y, max_x, max_y] = self.region_live_bounds(region);
+                out.push_str("{\"id\":\"");
+                out.push_str(&region.id.replace('\\', "\\\\").replace('"', "\\\""));
+                out.push_str("\",\"x\":");
+                out.push_str(&min_x.to_string());
+                out.push_str(",\"y\":");
+                out.push_str(&min_y.to_string());
+                out.push_str(",\"width\":");
+                out.push_str(&(max_x - min_x).to_string());
+                out.push_str(",\"height\":");
+                out.push_str(&(max_y - min_y).to_string());
+                if let Some(label) = region.label.as_deref() {
+                    out.push_str(",\"label\":\"");
+                    out.push_str(&label.replace('\\', "\\\\").replace('"', "\\\""));
+                    out.push('"');
+                }
+                out.push_str(",\"hidden\":");
+                out.push_str(if region.hidden { "true" } else { "false" });
+                out.push_str(",\"locked\":");
+                out.push_str(if region.locked { "true" } else { "false" });
+                out.push_str(",\"selected\":");
+                out.push_str(if region.selected { "true" } else { "false" });
+                out.push('}');
+            }
+            out.push(']');
+            out
+        }
+
+        /// @emoji 🎯️ The region grip under `world`, asked ONLY after the nodes, handles, edges and the
+        /// rotate ring have all missed — a region is the board's backdrop, never a lid over its graph.
+        /// A hidden region is not paint and therefore not a pick target either.
+        fn region_grip_hit_world(&self, world: Point) -> Option<(String, RegionGrip)> {
+            let zoom = self.camera.zoom;
+            let mut best: Option<(String, RegionGrip)> = None;
+            for region in self.regions.values() {
+                if region.hidden {
+                    continue;
+                }
+                let Some(grip) = region_grip_at(self.region_live_bounds(region), zoom, world) else { continue };
+                // 🤏️ A real grip always outranks a body: overlapping rectangles must still be resizable
+                // at the edge of the one on top, otherwise a region enclosing another would swallow it.
+                let replaces = match best.as_ref() {
+                    None => true,
+                    Some((_, previous)) => *previous == RegionGrip::Body || grip != RegionGrip::Body,
+                };
+                if replaces {
+                    best = Some((region.id.clone(), grip));
+                }
+            }
+            best
+        }
+
+        /// @emoji 🚚️ Grabs a region: the body moves it, a corner/edge grip resizes it. A LOCKED region
+        /// refuses the grab outright — it still paints and still selects, it simply cannot be dragged.
+        fn try_begin_region_drag_at(&mut self, world: Point) -> bool {
+            let Some((id, grip)) = self.region_grip_hit_world(world) else {
+                return false;
+            };
+            let Some((start_bounds, locked)) = self.regions.get(&id).map(|region| (region_bounds(region.x, region.y, region.width, region.height), region.locked)) else {
+                return false;
+            };
+            let ids: Vec<String> = merge_pick_into_selection(&self.selection, &id, "replace").into_iter().collect();
+            self.set_selection_ids_gestured(&ids, None);
+            if locked {
+                self.interaction = Interaction::None;
+                self.set_hovered_id(None);
+                return true;
+            }
+            self.region_drag = Some(BoardRegionDrag { id, grip, grab: world, start_bounds, bounds: start_bounds });
+            self.set_hovered_id(None);
+            true
+        }
+
+        /// @emoji 👁️ Re-derives the whole preview from the grab-time rectangle, so the drag never
+        /// accumulates float drift. Emits nothing: a region gesture is ONE document edit, on release.
+        fn update_region_drag(&mut self, world: Point) {
+            let Some(mut drag) = self.region_drag.take() else {
+                return;
+            };
+            let step = self.region_snap_step();
+            let dx = snap_region_scalar(world.x - drag.grab.x, step);
+            let dy = snap_region_scalar(world.y - drag.grab.y, step);
+            drag.bounds = region_grip_drag(drag.start_bounds, drag.grip, dx, dy);
+            self.region_drag = Some(drag);
+            self.bump_content_scene_generation();
+        }
+
+        /// @emoji 🏁️ Ends a region gesture with exactly ONE row: `regionMove` for a body drag,
+        /// `regionResize` for a grip drag. A release that moved nothing commits nothing.
+        fn commit_region_drag(&mut self) -> bool {
+            let Some(drag) = self.region_drag.take() else {
+                return false;
+            };
+            if drag.bounds == drag.start_bounds {
+                return true;
+            }
+            let event = if drag.grip == RegionGrip::Body { BoardOwnedEvent::region_move(&drag.id, drag.bounds) } else { BoardOwnedEvent::region_resize(&drag.id, drag.bounds) };
+            if let Some(region) = self.regions.get_mut(&drag.id) {
+                region.x = drag.bounds[0];
+                region.y = drag.bounds[1];
+                region.width = drag.bounds[2] - drag.bounds[0];
+                region.height = drag.bounds[3] - drag.bounds[1];
+            }
+            self.bump_content_scene_generation();
+            let Some(reservation) = self.reserve_owned_event(event) else {
+                return true;
+            };
+            self.publish_event_reservation(reservation);
+            true
+        }
+
+        /// @emoji ↩️ Abandons a live region gesture without touching the document.
+        fn cancel_region_drag(&mut self) -> bool {
+            if self.region_drag.take().is_none() {
+                return false;
+            }
+            self.bump_content_scene_generation();
+            true
+        }
+
+        fn begin_region_paint(&mut self, world: Point) {
+            let anchor = self.snap_region_point(world);
+            self.region_paint = Some(BoardRegionPaint { anchor, corner: anchor, dragged: false });
+            self.set_hovered_id(None);
+            self.bump_content_scene_generation();
+        }
+
+        fn update_region_paint(&mut self, world: Point) {
+            let Some(mut paint) = self.region_paint.take() else {
+                return;
+            };
+            paint.corner = self.snap_region_point(world);
+            paint.dragged = (paint.corner.x - paint.anchor.x).abs() > 1e-9 || (paint.corner.y - paint.anchor.y).abs() > 1e-9;
+            self.region_paint = Some(paint);
+            self.bump_content_scene_generation();
+        }
+
+        /// @emoji 📐️ The rectangle the live paint would commit: the dragged box, or the configured
+        /// brush extent anchored at the press point when the gesture never left it.
+        fn region_paint_bounds(paint: &BoardRegionPaint, extent: (f64, f64)) -> [f64; 4] {
+            if paint.dragged {
+                return region_bounds(paint.anchor.x, paint.anchor.y, paint.corner.x - paint.anchor.x, paint.corner.y - paint.anchor.y);
+            }
+            region_bounds(paint.anchor.x, paint.anchor.y, extent.0, extent.1)
+        }
+
+        /// @emoji 🏁️ Ends an area-brush gesture with exactly ONE `regionCreate` row. A rectangle that
+        /// collapsed on either axis is refused rather than published — the same floor a resize honours.
+        fn commit_region_paint(&mut self) -> bool {
+            let Some(paint) = self.region_paint.take() else {
+                return false;
+            };
+            self.bump_content_scene_generation();
+            let bounds = Self::region_paint_bounds(&paint, self.area_brush_extent);
+            if bounds[2] - bounds[0] < REGION_MIN_EXTENT_WORLD || bounds[3] - bounds[1] < REGION_MIN_EXTENT_WORLD {
+                return true;
+            }
+            let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::region_create(bounds)) else {
+                return true;
+            };
+            self.publish_event_reservation(reservation);
+            true
+        }
+
+        fn cancel_region_paint(&mut self) -> bool {
+            if self.region_paint.take().is_none() {
+                return false;
+            }
+            self.bump_content_scene_generation();
+            true
+        }
+
+        /// @emoji 🎯️ Paints every visible region — translucent fill, outline, corner grips on the
+        /// selected one, and a corner tag for a labelled one. Appended BEFORE the node fill layer, so
+        /// a region is always the backdrop of the graph and never covers an entity.
+        ///
+        /// The board engine owns no text primitive, so the `label` is a corner tag here and the string
+        /// itself reaches the reader through [`Self::target_regions_json`] and the inspector.
+        fn append_target_region_paint(&self, scene: &mut Scene, world_space: bool) {
+            let zoom = self.camera.zoom.max(1e-9);
+            let grip = REGION_GRIP_PX / zoom;
+            let inset = REGION_LABEL_INSET_PX / zoom;
+            for region in self.regions.values() {
+                if region.hidden {
+                    continue;
+                }
+                let [min_x, min_y, max_x, max_y] = self.region_live_bounds(region);
+                let hovered = self.hovered_id.as_deref() == Some(region.id.as_str());
+                let dragging = self.region_drag.as_ref().is_some_and(|drag| drag.id == region.id);
+                let stroke_color = if region.selected || dragging {
+                    self.canvas_theme.node_stroke_selected
+                } else if hovered {
+                    self.canvas_theme.node_stroke_hovered
+                } else {
+                    self.canvas_theme.selection_preview_stroke
+                };
+                let top_left = self.draw_space_point(Point::new(min_x, min_y), world_space);
+                let bottom_right = self.draw_space_point(Point::new(max_x, max_y), world_space);
+                let rect = Rect::new(top_left.x, top_left.y, bottom_right.x, bottom_right.y);
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, self.canvas_theme.selection_preview_fill, None, &rect);
+                let mut outline = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
+                if region.locked {
+                    outline.set_dash_pattern(vec![4.0, 4.0]);
+                }
+                scene.stroke(&outline, Affine::IDENTITY, stroke_color, None, &rect);
+                if region.label.is_some() {
+                    let tag_x = self.draw_space_point(Point::new(min_x + inset, min_y + inset), world_space);
+                    let tag_far = self.draw_space_point(Point::new(min_x + inset + grip * 2.0, min_y + inset + grip * 0.6), world_space);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, stroke_color, None, &Rect::new(tag_x.x, tag_x.y, tag_far.x, tag_far.y));
+                }
+                if (region.selected || dragging) && !region.locked {
+                    for (cx, cy) in [(min_x, min_y), (max_x, min_y), (min_x, max_y), (max_x, max_y)] {
+                        let near = self.draw_space_point(Point::new(cx - grip / 2.0, cy - grip / 2.0), world_space);
+                        let far = self.draw_space_point(Point::new(cx + grip / 2.0, cy + grip / 2.0), world_space);
+                        scene.fill(FillRule::NonZero, Affine::IDENTITY, stroke_color, None, &Rect::new(near.x, near.y, far.x, far.y));
+                    }
+                }
+            }
+            if let Some(paint) = self.region_paint.as_ref() {
+                let [min_x, min_y, max_x, max_y] = Self::region_paint_bounds(paint, self.area_brush_extent);
+                let near = self.draw_space_point(Point::new(min_x, min_y), world_space);
+                let far = self.draw_space_point(Point::new(max_x, max_y), world_space);
+                let rect = Rect::new(near.x, near.y, far.x, far.y);
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, self.canvas_theme.selection_preview_fill, None, &rect);
+                let mut preview = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
+                preview.set_dash_pattern(vec![6.0, 5.0]);
+                scene.stroke(&preview, Affine::IDENTITY, self.canvas_theme.node_stroke_selected, None, &rect);
+            }
+        }
+        //#endregion 🎯️TargetRegions
 
         /// @emoji 📦️ Starts a group drag when `world` lies inside the padded union bounds of the current selection (minimap/overview LOD).
         fn try_begin_bounded_selection_drag_at(&mut self, world: Point) -> bool {

@@ -433,7 +433,7 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let keys = FillRunCheckpoint::decode(&checkpoint).expect("checkpoint decodes").placements;
     let provisional = decoded(&base.ops);
 
-    let mut clean_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::clone(&document), &provisional, Some(&checkpoint));
+    let mut clean_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::clone(&document), &provisional, Some(&checkpoint), 0.0);
     let mut clean = RunLog::continuing(&base.ops);
     run_to_complete(&mut clean_job, INTERACTIVE_LANE_FUEL, &mut clean);
     assert!(clean.retracts.is_empty() && clean.steps.is_empty());
@@ -444,7 +444,7 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let Puzzle2dMutation::CreateNode(create) = &provisional[conflicted * FILL_RUN_OPS_PER_PLACEMENT] else { panic!("create_node") };
     let mut head = document.0.clone();
     head["nodes"].as_array_mut().expect("nodes").push(json!({ "id": "intruder", "shape": "circle", "x": create.node.x, "y": create.node.y, "radius": 1.0, "handles": [] }));
-    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot(head)), &provisional, Some(&checkpoint));
+    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot(head)), &provisional, Some(&checkpoint), 0.0);
     let mut conflict = RunLog::continuing(&base.ops);
     run_to_complete(&mut conflict_job, INTERACTIVE_LANE_FUEL, &mut conflict);
     let kept = conflicted * FILL_RUN_OPS_PER_PLACEMENT;
@@ -665,6 +665,6 @@ fn the_fill_collision_test_reads_the_placement_tuning_slack() {
     assert!(!fill_bounds_overlap_with(left, right, -1.0), "an overlap budget re-opens the gap");
     let coincident = fill_node_bounds(0.0, 0.0, Some(1.0), true, Some(2.0), Some(2.0));
     assert!(fill_bounds_overlap_with(left, coincident, -1_000.0), "no budget may shrink a footprint past its centre");
-    assert_eq!(fill_bounds_overlap(left, right), fill_bounds_overlap_with(left, right, 0.0), "the untuned test is the zero-slack test");
+    assert!(fill_bounds_overlap_with(left, left, 0.0), "a footprint always collides with itself at zero slack");
 }
 //#endregion 🚧️PlacementSlack

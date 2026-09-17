@@ -487,12 +487,15 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.hovered_id)
             || Self::close_string(&mut cache.active_utility)
             || Self::close_string(&mut cache.selection_method)
+            || cache.selectable_kinds.take().is_some()
+            || cache.grid_visible.take().is_some()
             || cache.grid_snap_enabled.take().is_some()
             || cache.grid_factor.take().is_some()
             || cache.suggestion_offset.take().is_some()
             || Self::close_string(&mut cache.brush_weights_json)
             || Self::close_string(&mut cache.lod_mode)
             || Self::close_string(&mut cache.transform_flags)
+            || Self::close_string(&mut cache.area_brush_size)
             || Self::close_string(&mut cache.size_key)
             || Self::close_string(&mut cache.tool_run_trace_window_id)
         {
@@ -1569,12 +1572,15 @@ struct BoardSyncCache {
     hovered_id: Option<String>,
     active_utility: Option<String>,
     selection_method: Option<String>,
+    selectable_kinds: Option<(bool, bool, bool)>,
+    grid_visible: Option<bool>,
     grid_snap_enabled: Option<bool>,
     grid_factor: Option<f64>,
     suggestion_offset: Option<f64>,
     brush_weights_json: Option<String>,
     lod_mode: Option<String>,
     transform_flags: Option<String>,
+    area_brush_size: Option<String>,
     size_key: Option<String>,
     tool_run_trace_window_id: Option<String>,
 }
@@ -1617,12 +1623,15 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.hovered_id.is_none()
         && cache.active_utility.is_none()
         && cache.selection_method.is_none()
+        && cache.selectable_kinds.is_none()
+        && cache.grid_visible.is_none()
         && cache.grid_snap_enabled.is_none()
         && cache.grid_factor.is_none()
         && cache.suggestion_offset.is_none()
         && cache.brush_weights_json.is_none()
         && cache.lod_mode.is_none()
         && cache.transform_flags.is_none()
+        && cache.area_brush_size.is_none()
         && cache.size_key.is_none()
         && cache.tool_run_trace_window_id.is_none()
 }
@@ -2377,9 +2386,18 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.placement_compatibility_json = Some(board.placement_compatibility_json.clone());
         changed = true;
     }
-    if fixture_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) {
-        host.set_selection_options(&board.selection_method, "replace", true, true, true);
+    // 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
+    // selectable-kind filter decides which granularity a pick may reach at all.
+    let selectable_kinds = (board.selectable_nodes, board.selectable_edges, board.selectable_handles);
+    if fixture_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) || cache.selectable_kinds != Some(selectable_kinds) {
+        host.set_selection_options(&board.selection_method, "replace", selectable_kinds.0, selectable_kinds.1, selectable_kinds.2);
         cache.selection_method = Some(board.selection_method.clone());
+        cache.selectable_kinds = Some(selectable_kinds);
+        changed = true;
+    }
+    if cache.grid_visible != Some(board.grid_visible) {
+        host.set_grid_visible(board.grid_visible);
+        cache.grid_visible = Some(board.grid_visible);
         changed = true;
     }
     if fixture_applied || cache.selection_json.as_deref() != Some(board.selection_json.as_str()) {
@@ -2443,7 +2461,27 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.transform_flags = Some(transform_flags);
         changed = true;
     }
+    let area_brush_size = board.area_brush_size.clone().unwrap_or_else(|| BOARD2D_DEFAULT_AREA_BRUSH_SIZE_JSON.to_string());
+    if cache.area_brush_size.as_deref() != Some(area_brush_size.as_str()) {
+        let (width, height) = board2d_area_brush_size_from_json(&area_brush_size);
+        host.set_area_brush_extent(width, height);
+        cache.area_brush_size = Some(area_brush_size);
+        changed = true;
+    }
     changed
+}
+
+/// 🖍️ What a board that never declares `areaBrushSize` paints on a click — a non-positive axis is
+/// refused by the engine itself, so the sentinel simply leaves the host's own default standing.
+const BOARD2D_DEFAULT_AREA_BRUSH_SIZE_JSON: &str = "{\"width\":0,\"height\":0}";
+
+/// 🖍️ Reads `{"width":f64,"height":f64}`; a malformed payload answers `(0, 0)`, which the engine
+/// reads as "keep the extent you have" rather than collapsing the brush.
+fn board2d_area_brush_size_from_json(json: &str) -> (f64, f64) {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+        return (0.0, 0.0);
+    };
+    (value.get("width").and_then(serde_json::Value::as_f64).unwrap_or(0.0), value.get("height").and_then(serde_json::Value::as_f64).unwrap_or(0.0))
 }
 
 /// 🕹️ Both gumball handles on — what a board that never declares `transformFlags` composes.

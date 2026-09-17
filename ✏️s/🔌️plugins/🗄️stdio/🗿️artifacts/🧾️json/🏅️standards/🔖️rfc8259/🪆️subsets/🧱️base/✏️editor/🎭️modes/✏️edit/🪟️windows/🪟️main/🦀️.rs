@@ -23,11 +23,19 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️PathEncoding
+/// 🆔️ The document root's node id. It must be a real, non-empty key: a tree row built with an empty
+/// id falls back to its positional `#0` key, which no `TreeWindowRequest` can name and which collides
+/// with any sibling that does the same.
+pub const JSON_ROOT_NODE_ID: &str = "$";
+
 /// 🧭️ `k=<key>` for an object member, `i=<index>` for an array element, joined by `/` — the
 /// window's own node-id encoding of a `JsonPath`, independent of (and simpler than) the artifact's
-/// own `JsonPathSegment` wire shape. Root is the empty string.
+/// own `JsonPathSegment` wire shape. Root is [`JSON_ROOT_NODE_ID`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_path_id(segments: &[String]) -> String {
+    if segments.is_empty() {
+        return JSON_ROOT_NODE_ID.to_string();
+    }
     segments.join("/")
 }
 

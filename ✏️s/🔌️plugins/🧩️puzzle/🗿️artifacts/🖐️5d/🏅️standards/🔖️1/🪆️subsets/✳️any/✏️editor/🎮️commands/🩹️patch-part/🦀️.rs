@@ -24,12 +24,15 @@ pub fn patch_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if part_ids.is_empty() {
         return;
     }
+    if ctx.refuse_when_locked(&part_ids.iter().cloned().collect::<Vec<String>>()) {
+        return;
+    }
     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
     let value = args.and_then(|value| value.get("value"));
     let delta = args.and_then(|value| value.get("delta"));
     let text = value.and_then(Value::as_str).map(str::to_string);
     for part in &mut ctx.scene.document.parts {
-        if !part_ids.contains(&part.id) {
+        if !part_ids.contains(&part.id) || part.part_2d.locked.unwrap_or(false) {
             continue;
         }
         match field {

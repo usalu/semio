@@ -28,3 +28,5 @@ parts [id:TEXT part-kind:REF anchor:TEXT part-2d:REC part-3d:REC grips:LIST] {
 }
 fasteners [id:TEXT source:TEXT target:TEXT fastener-kind:REF gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM] {
 }
+target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] {
+}

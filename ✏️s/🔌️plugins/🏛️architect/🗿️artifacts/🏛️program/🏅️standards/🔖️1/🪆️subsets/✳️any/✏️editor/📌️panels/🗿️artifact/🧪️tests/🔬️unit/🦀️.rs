@@ -106,9 +106,19 @@ fn a_host_window_materialises_exactly_its_slice() {
 /// rows: switching the active register is unrelated to entity selection, so they keep `selectRegister`.
 #[test]
 fn pick_rows_carry_granularity_while_the_tree_carries_the_one_interaction_select() {
-    let json = window_body(&oversized_program(4), Vec::new());
+    let json = window_body(&oversized_program(4), vec![request("architect-document.registers", Some(true), 0, 4)]);
     assert_eq!(json.matches("interactionSelect").count(), 1, "exactly one tree-level interactionSelect binding: {json}");
     assert!(json.contains("\"granularity\":\"entity\""), "element rows are marked as pick targets: {json}");
     assert!(json.contains("selectRegister"), "register rows keep their own action: {json}");
+}
+
+/// 🪟️ The 66-row register summary is authored CLOSED so it cannot swallow the shared first-paint
+/// budget: it stamps its extent, materialises nothing, and the elements section — this panel's subject
+/// — gets the viewport.
+#[test]
+fn the_register_summary_is_closed_on_first_paint_so_elements_get_the_viewport() {
+    let json = window_body(&oversized_program(300), Vec::new());
+    assert!(!json.contains("architect-document.register."), "no register row materialises on a cold paint: {json}");
+    assert!(json.contains("\"key\":\"element-0\""), "the elements section gets the first-paint budget: {json}");
 }
 //#endregion 🪟️WindowLaws

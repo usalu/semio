@@ -16,6 +16,9 @@ pub fn translate_selection(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>
         return;
     }
     let selected_ids = ctx.selected_ids();
+    if ctx.refuse_when_locked(&selected_ids) {
+        return;
+    }
     puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Translate { dx, dy });
     let region_ids = puzzle2d_selected_target_region_ids(&ctx.scene.fixture, &selected_ids);
     puzzle2d_transform_target_regions(&mut ctx.scene.fixture, &region_ids, Puzzle2dTransform::Translate { dx, dy });

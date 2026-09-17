@@ -75,7 +75,7 @@ pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Pu
         meta: Puzzle3dMeta { kind_catalogs: Some(puzzle3d_kind_catalogs(document, catalogs)?), kind_compatibility },
         objects: document.parts.iter().map(|part| puzzle3d_object(part, document.kind_catalogs.as_ref())).collect(),
         attractions: document.fasteners.iter().map(puzzle3d_attraction).collect(),
-        target_volumes: Vec::new(),
+        target_volumes: document.target_volumes.iter().map(puzzle3d_target_volume).collect(),
         references: Vec::new(),
     };
     dsl::FromValue::from_value(dsl::ToValue::to_value(&typed)).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))
@@ -183,6 +183,20 @@ fn puzzle3d_scale(scale: &serde_json::Value) -> Option<Puzzle3dScale> {
     }
 }
 
+/// 🧊️ One 5d target volume as the planner's own: the box is already stated in the 3d pose space both
+/// artifacts share, so the bridge renames the type and nothing else. A HIDDEN volume still constrains
+/// — `hidden` is a paint flag, and dropping it here would silently widen the fill region.
+pub(crate) fn puzzle3d_target_volume(volume: &crate::editor::puzzle5d::Puzzle5dTargetVolume) -> semio_s_artifact_puzzle_3d::Puzzle3dTargetVolume {
+    semio_s_artifact_puzzle_3d::Puzzle3dTargetVolume {
+        id: volume.id.clone(),
+        origin: volume.origin,
+        orientation: volume.orientation,
+        scale: volume.scale.as_ref().and_then(puzzle3d_scale),
+        hidden: volume.hidden,
+        locked: volume.locked,
+    }
+}
+
 fn puzzle3d_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
     Puzzle3dAttraction { id: fastener.id.clone(), attracting: fastener.source.clone(), attracted: fastener.target.clone(), gap: fastener.gap, shift: fastener.shift, rise: fastener.rise, rotation: fastener.rotation, turn: fastener.turn, tilt: fastener.tilt, x: fastener.x, y: fastener.y }
 }
@@ -275,6 +289,15 @@ impl Puzzle5dPlannerBoard {
         [part.center[0] + host.1.cos() * distance, part.center[1] + host.1.sin() * distance]
     }
 
+    /// 🏷️ The display label the next placement of `part_kind` takes: this board already carries every
+    /// committed part and every provisional placement of the run, so a filled part is numbered in the same
+    /// series a hand-placed one would join (`puzzle5d_next_part_label`'s contract, over the board).
+    fn next_label(&self, part_kind: &str) -> String {
+        let base = crate::editor::puzzle5d::puzzle5d_kind_catalog_label(&self.catalogs, part_kind);
+        let peers = self.parts.iter().filter(|part| part.part_kind == part_kind).count();
+        if peers == 0 { base } else { format!("{base} {}", peers.saturating_add(1)) }
+    }
+
     /// 🧲️ The flat center of a candidate posed at `origin`: beside the grip nearest to it.
     fn candidate_center(&self, origin: [f64; 3]) -> [f64; 2] {
         match self.grid.nearest(origin, PUZZLE5D_PLANNER_HOST_GRIP_REACH) {
@@ -304,6 +327,7 @@ impl Puzzle5dPlannerBoard {
         let own = |grip: &str| grip.split_once(':').is_some_and(|(part, _)| part == object.id);
         let host = [&connect.attracting, &connect.attracted].into_iter().find(|grip| !own(grip)).and_then(|grip| self.grips.get(grip.as_str()).copied()).ok_or_else(|| Fault::from("puzzle5d-planner-host-grip"))?;
         let center = self.beside(host, PUZZLE5D_DEFAULT_PART_RADIUS);
+        let label = object.label.clone().filter(|label| !label.is_empty()).unwrap_or_else(|| self.next_label(&part_kind));
         let part = Puzzle5dPart {
             id: object.id.clone(),
             part_kind: part_kind.clone(),
@@ -317,7 +341,7 @@ impl Puzzle5dPlannerBoard {
                     Puzzle3dScale::Uniform(factor) => serde_json::json!(factor),
                     Puzzle3dScale::Vec3(axes) => serde_json::json!(axes),
                 }),
-                label: None,
+                label: Some(label),
             },
             grips,
         };

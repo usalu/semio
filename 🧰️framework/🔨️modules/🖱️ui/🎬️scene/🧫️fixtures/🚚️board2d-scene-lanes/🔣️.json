@@ -18,6 +18,7 @@
     "placementCompatibilityJson",
     "lodMode",
     "transformFlags",
+    "areaBrushSize",
     "lanes"
   ],
   "lanes": [

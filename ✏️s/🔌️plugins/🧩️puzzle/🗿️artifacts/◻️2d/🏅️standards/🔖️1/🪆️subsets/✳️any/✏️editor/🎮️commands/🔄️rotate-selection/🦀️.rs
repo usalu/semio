@@ -11,5 +11,8 @@ pub fn rotate_selection(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         .filter(|value| value.is_finite() && *value != 0.0);
     let Some(radians) = radians else { return };
     let selected_ids = ctx.selected_ids();
+    if ctx.refuse_when_locked(&selected_ids) {
+        return;
+    }
     puzzle2d_transform_selection(&mut ctx.scene.fixture, &selected_ids, Puzzle2dTransform::Rotate { radians });
 }

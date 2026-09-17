@@ -34,7 +34,8 @@
               2.0,
               2.0
             ],
-            "locked": true
+            "locked": true,
+            "hidden": false
           }
         }
       }

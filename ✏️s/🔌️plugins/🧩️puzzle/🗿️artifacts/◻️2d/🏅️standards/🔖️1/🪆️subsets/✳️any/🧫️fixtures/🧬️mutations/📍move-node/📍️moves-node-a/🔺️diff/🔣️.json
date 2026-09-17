@@ -1,43 +1,43 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
+  "edges": null,
+  "meta": null,
   "nodes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "node-a",
         "patch": {
           "replacement": {
-            "id": "node-a",
-            "nodeKind": "node-kind-a",
-            "shape": "circle",
-            "x": 5,
-            "y": 7,
-            "radius": 10,
-            "text": "Alpha",
-            "iconKind": "icon-alpha",
             "anchor": "fixed",
             "handles": [
               {
-                "id": "handle-1",
+                "angle": 0.0,
                 "handleKind": "handle-kind-a",
-                "angle": 0
+                "id": "handle-1"
               },
               {
-                "id": "handle-spare",
+                "angle": 1.5,
                 "handleKind": "handle-kind-a",
-                "angle": 1.5
+                "id": "handle-spare"
               }
-            ]
+            ],
+            "iconKind": "icon-alpha",
+            "id": "node-a",
+            "nodeKind": "node-kind-a",
+            "radius": 10.0,
+            "shape": "circle",
+            "text": "Alpha",
+            "x": 5.0,
+            "y": 7.0
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "edges": null,
-  "targetRegions": null,
-  "meta": null
+  "schema": null,
+  "targetRegions": null
 }

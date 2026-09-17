@@ -385,3 +385,5 @@ edges [id:TEXT source:TEXT target:TEXT edge-kind:TEXT source-tip:TEXT target-tip
   feba8972-394f-4ecc-923c-9f1701881fd0 "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d0" "14507529-de04-4eaa-bf7d-beddca7d46e9:link" _ _ _ _ _ 0 0 0 0 0 0 0 0
   ff58a7b3-40c5-4a45-a260-c124706a1b8c "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9:sl0_d3" "549de7e4-6d98-4f86-b068-6461b88de67d:link" _ _ _ _ _ 0 0 0 0 0 0 0 0
 }
+target-regions [id:TEXT x:NUM y:NUM width:NUM height:NUM label:TEXT hidden:BOOL locked:BOOL] {
+}

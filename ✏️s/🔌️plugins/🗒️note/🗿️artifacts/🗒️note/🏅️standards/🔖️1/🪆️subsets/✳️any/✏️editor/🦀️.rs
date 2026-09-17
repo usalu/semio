@@ -94,6 +94,21 @@ fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> Ac
 fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
+
+/// 🧰️ The utility armed for the window being rendered or dispatched: the React host arms utilities per
+/// window instance (`active_utility_by_window_id`) and mirrors only the shell's ACTIVE window into the flat
+/// `active_utility_id`, so a pane that is not the active window read `None` and ran every pencil drag as a
+/// `selectDirect` pick (ticket 26/09/17/NOTE-PLUGIN-END-TO-END; draw's `drawing_active_utility` precedent).
+pub fn note_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
+    view.window_id
+        .as_deref()
+        .and_then(|window| view.active_utility_by_window_id.get(window))
+        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
+        .map(String::as_str)
+        .filter(|utility| !utility.is_empty())
+        .or(view.active_utility_id.as_deref())
+        .unwrap_or("selectDirect")
+}
 //#endregion 🔖️Utilities
 
 //#region 🔖️Interaction
@@ -336,7 +351,7 @@ mod args_bridge {
                 map(&mut entries, "value", text);
                 NoteCommand::PatchBlocks(decode(action, only(entries, &["block_ids", "field", "value"]))?)
             }
-            "setActiveExample" => NoteCommand::SetActiveExample(decode(action, only(fold(args, &[("value", "example_id"), ("id", "example_id")], &[("example_id", string("semio"))]), &["example_id"]))?),
+            "setActiveExample" => NoteCommand::SetActiveExample(decode(action, only(fold(args, &[("value", "example_id"), ("id", "example_id")], &[("example_id", string(crate::standards::v1::subsets::any::examples::demo::ID))]), &["example_id"]))?),
             "setFixtureJson" => {
                 let mut entries = fold(args, &[("value", "json"), ("text", "json")], &[]);
                 map(&mut entries, "json", text);
@@ -593,7 +608,7 @@ impl ArtifactEditor for NotePlayApp {
         let document = doc.snapshot;
         let window = crate::editor::note::window::config_from_view(cfg);
         let labels = note_play_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
+        let active_utility = note_active_utility(view_state);
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
@@ -609,7 +624,7 @@ impl ArtifactEditor for NotePlayApp {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
+        let active_utility = note_active_utility(view_state);
         match kind {
             Some(NOTE_PLAY_WINDOW_COMPOSITE) => HashMap::from([(window_id.to_string(), composite::engagement(doc.snapshot, &config.camera, ""))]),
             Some(NOTE_PLAY_WINDOW_NAVIGATOR) => HashMap::from([(window_id.to_string(), navigator::engagement(active_utility))]),
@@ -622,13 +637,13 @@ impl ArtifactEditor for NotePlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
         let transient = crate::editor::note::window::transient_from_view(transient);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectDirect");
+        let active_utility = note_active_utility(view_state);
         match kind {
             Some(NOTE_PLAY_WINDOW_COMPOSITE) => HashMap::from([(window_id.to_string(), composite::engagement(doc.snapshot, &config.camera, &transient.engagement_input))]),
             Some(NOTE_PLAY_WINDOW_NAVIGATOR) => HashMap::from([(window_id.to_string(), navigator::engagement(active_utility))]),
@@ -731,8 +746,8 @@ pub fn create_note_app() -> AppDefinition {
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new("semio", LocalizedLabel::native("Semio", "Semio")),
-                ]).required().default_value(&"semio"),
+                    ActionArgOption::new(crate::standards::v1::subsets::any::examples::demo::ID, crate::standards::v1::subsets::any::examples::demo::label()),
+                ]).required().default_value(&crate::standards::v1::subsets::any::examples::demo::ID),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)

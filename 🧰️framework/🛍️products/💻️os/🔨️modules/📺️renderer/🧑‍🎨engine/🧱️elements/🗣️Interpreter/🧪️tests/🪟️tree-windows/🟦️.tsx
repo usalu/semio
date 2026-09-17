@@ -10,7 +10,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   void source;
 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
-  const { Scrollable, TREE_WINDOW_BODY_NODE_BUDGET } = await import("@semio-tech/ui-react");
+  const { Scrollable, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_PATH_SEPARATOR } = await import("@semio-tech/ui-react");
   const { createElement } = await import("react");
 
   type AnyRecord = Record<string, any>;
@@ -58,11 +58,24 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   /** 📐️ The container's own materialised rows, laid out at one row pitch each starting `firstRowTopRows`
    * below the viewport origin — the geometry a container none of whose rows is expanded really has. */
   function ownRows(container: HTMLElement): HTMLElement[] {
-    return (Array.from(container.querySelectorAll("[data-tree-window-row]")) as HTMLElement[]).filter((row) => row.closest("[data-tree-window-key]") === container);
+    return (Array.from(container.querySelectorAll("[data-tree-window-row]")) as HTMLElement[]).filter((row) => row.closest("[data-tree-window-path]") === container);
   }
 
   function stubRows(container: HTMLElement, firstRowTopRows: number): void {
     ownRows(container).forEach((row, index) => stubRect(row, firstRowTopRows + index, 1));
+  }
+
+  /** 🔑️ Collects what the observer shouts while `run` executes, so a law can assert on silence too. */
+  async function captureErrors(run: () => Promise<void>): Promise<string[]> {
+    const messages: string[] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => void messages.push(String(args[0]));
+    try {
+      await run();
+    } finally {
+      console.error = original;
+    }
+    return messages;
   }
 
   const nodeCost = (requests: readonly AnyRecord[]) => requests.length + requests.reduce((sum: number, request: AnyRecord) => sum + request.rows, 0);
@@ -104,7 +117,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     ];
   }
 
-  const windowedByKey = (container: HTMLElement): Map<string, HTMLElement> => new Map(Array.from(container.querySelectorAll("[data-tree-window-key]")).map((element) => [(element as HTMLElement).getAttribute("data-tree-window-key")!, element as HTMLElement]));
+  /** 🪟️ Windowed containers by their window PATH — the identity the host keys everything by. */
+  const windowedByKey = (container: HTMLElement): Map<string, HTMLElement> => new Map(Array.from(container.querySelectorAll("[data-tree-window-path]")).map((element) => [(element as HTMLElement).getAttribute("data-tree-window-path")!, element as HTMLElement]));
 
   describe("🪟️ interpreted tree windows", () => {
     afterEach(() => cleanup());
@@ -301,7 +315,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rendered = renderWindowedTree(nestedNodes(100, 3, 50, 20), (requests, viewportRows) => reports.push({ requests, viewportRows }), (tree) => createElement(Scrollable, null, tree));
       const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
       const windowed = windowedByKey(rendered.container);
-      expect([...windowed.keys()]).toEqual(["objects", "objects.1"]);
+      // 🔑️ The nested container is addressed by its PATH, its parent's key then its own.
+      expect([...windowed.keys()]).toEqual(["objects", `objects${TREE_WINDOW_PATH_SEPARATOR}objects.1`]);
 
       scrollTo(area, 30, 20);
       // 📐️ Section: 0 leading + (row 0, then row 1 = a 50-row subtree, then row 2) + 97 trailing = 150 rows.
@@ -313,7 +328,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       stubRect(sectionRows[1]!, -29, 1);
       stubRect(sectionRows[2]!, 22, 1);
       // 📐️ Child: its own 20 materialised rows + a 30-row trailing spacer, starting 28 rows up.
-      const child = windowed.get("objects.1")!;
+      const child = windowed.get(`objects${TREE_WINDOW_PATH_SEPARATOR}objects.1`)!;
       stubRect(child, -28, 50);
       stubRows(child, -28);
 
@@ -322,15 +337,68 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       const last = reports[reports.length - 1];
       const sectionRequest = last.requests.find((request) => request.nodeKey === "objects")!;
-      const childRequest = last.requests.find((request) => request.nodeKey === "objects.1")!;
+      const childRequest = last.requests.find((request) => request.nodeKey === `objects${TREE_WINDOW_PATH_SEPARATOR}objects.1`)!;
       // 🎯️ The viewport sits inside the section's SECOND row, not its thirtieth.
       expect(sectionRequest).toEqual({ nodeKey: "objects", offset: 0, rows: 17 });
       expect(sectionRequest.offset).toBeLessThanOrEqual(1);
       expect(sectionRequest.offset + sectionRequest.rows).toBeGreaterThan(1);
       // 🎯️ The child is a windowed container in its own right and streams on its own row index.
-      expect(childRequest).toEqual({ nodeKey: "objects.1", offset: 14, rows: 36 });
+      expect(childRequest).toEqual({ nodeKey: `objects${TREE_WINDOW_PATH_SEPARATOR}objects.1`, offset: 14, rows: 36 });
       expect(childRequest.offset + childRequest.rows).toBeLessThanOrEqual(50);
       expect(nodeCost(last.requests)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
+    });
+
+    /** 🔑️ `📐️cad` builds the same `object.id` under four pane sections and `🏗️fem` builds `case.id` and
+     * `combination.id` in one body — and that key is also the pick target id, so it cannot be namespaced
+     * (📓️f2-sdk-body-node-ledger.md §10). Under key identity the two containers would share one open state,
+     * one window and each other's measurements; under PATH identity they are two windows that happen to name
+     * the same entity, and the pick still dispatches the bare key. */
+    it("gives the same node key under two different parents two independent windows", async () => {
+      const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
+      const shared = (parent: string, id: number) => [
+        treeItem(id, "shared", "Shared", { defaultOpen: true, window: { total: 40, offset: 0 } }, [id + 1]),
+        treeItem(id + 1, `${parent}.shared.0`, "Child 0"),
+      ];
+      const nodes: AnyRecord[] = [
+        node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2, 3]),
+        node(2, "left", { type: "treeSection", label: "Left", defaultOpen: true, window: { total: 4, offset: 0 } }, [10]),
+        node(3, "right", { type: "treeSection", label: "Right", defaultOpen: true, window: { total: 4, offset: 0 } }, [20]),
+        ...shared("left", 10),
+        ...shared("right", 20),
+      ];
+      const rendered = renderWindowedTree(nodes, (requests, viewportRows) => reports.push({ requests, viewportRows }), (tree) => createElement(Scrollable, null, tree));
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const windowed = windowedByKey(rendered.container);
+      const leftShared = `left${TREE_WINDOW_PATH_SEPARATOR}shared`;
+      const rightShared = `right${TREE_WINDOW_PATH_SEPARATOR}shared`;
+      expect([...windowed.keys()]).toEqual(["left", leftShared, "right", rightShared]);
+      // 🎯️ The authored key — the pick target id — is the SAME string for both nested containers.
+      expect(windowed.get(leftShared)!.getAttribute("data-tree-window-key")).toBe("shared");
+      expect(windowed.get(rightShared)!.getAttribute("data-tree-window-key")).toBe("shared");
+
+      scrollTo(area, 0, 20);
+      // 📐️ Only the left branch is on screen; the right one sits far below it.
+      stubRect(windowed.get("left")!, 0, 42);
+      stubRows(windowed.get("left")!, 0);
+      stubRect(windowed.get(leftShared)!, 1, 40);
+      stubRows(windowed.get(leftShared)!, 1);
+      stubRect(windowed.get("right")!, 60, 42);
+      stubRows(windowed.get("right")!, 60);
+      stubRect(windowed.get(rightShared)!, 61, 40);
+      stubRows(windowed.get(rightShared)!, 61);
+
+      const shouted = await captureErrors(async () => {
+        area.dispatchEvent(new Event("scroll"));
+        await frame();
+      });
+
+      const last = reports[reports.length - 1];
+      expect(last.requests.map((request) => request.nodeKey)).toEqual(["left", leftShared, "right", rightShared]);
+      // 🎯️ Two independent measurements: the visible one streams rows, the one below the fold asks for none.
+      expect(last.requests.find((request) => request.nodeKey === leftShared)!.rows).toBeGreaterThan(0);
+      expect(last.requests.find((request) => request.nodeKey === rightShared)).toEqual({ nodeKey: rightShared, offset: 0, rows: 0 });
+      // 🎯️ …and one shared node key under two parents is NOT a duplicate.
+      expect(shouted.filter((message) => message.includes("[tree-window] duplicate key"))).toEqual([]);
     });
 
     /** 🔑️ Two containers under one key share one open state and one window on both sides of the wire, and
@@ -343,7 +411,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const rendered = mountScrollable([{ key: "objects", total: 20 }, { key: "shadow", total: 20 }], () => {});
         const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
         const windowed = windowedByKey(rendered.container);
-        windowed.get("shadow")!.setAttribute("data-tree-window-key", "objects");
+        windowed.get("shadow")!.setAttribute("data-tree-window-path", "objects");
         scrollTo(area, 0, 20);
         stubRect(windowed.get("objects")!, 0, 20);
         stubRect(windowed.get("shadow")!, 20, 20);

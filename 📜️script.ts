@@ -3665,6 +3665,51 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
   return exactFactories && resumableJobs && fixedIngress && retainedProtocol && hostProtocol && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
 }
 
+/** @emoji 📋️ Puzzle 2d's half of the reserved-route policy. Its clipboard producer is the one-step
+ * `Puzzle2dClipboardJob` (ported from puzzle3d), not puzzle5d's four fixed-page state machines, so the
+ * fixed-page ingress clauses do not apply — what it must prove instead is that the app owns the route
+ * at all (`copy`/`cut`/`paste` built here, never left as the framework's empty stub), that it owns a
+ * fragment vocabulary (`clipboard_media_type`/`copy_fragment`/`cut_operations`/`paste_operations` over
+ * `puzzle.2d.clipboard.v1`), that `import-media` keeps its own branch, and that the one step is
+ * cancellable, completes BEFORE it prepares its retained output, and closes to terminal-empty. */
+function toolJobPuzzle2dReservedRoutesExact(source: string, host: string): boolean {
+  const implStart = source.indexOf("impl ArtifactEditor for Puzzle2dPlayApp");
+  const implOpen = implStart < 0 ? -1 : source.indexOf("{", implStart);
+  const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
+  if (!implementation) return false;
+  const jobStart = source.indexOf("impl InteractiveJob for Puzzle2dClipboardJob");
+  const jobOpen = jobStart < 0 ? -1 : source.indexOf("{", jobStart);
+  const job = jobOpen < 0 ? undefined : toolJobRustBlock(source, jobOpen);
+  if (!job) return false;
+  const exactFactories = !/puzzle2d_reserved_factory!|Puzzle2d(?:Copy|Cut|Paste)JobFactory/.test(source)
+    && TOOL_JOB_PLUGIN_RESERVED_IDS.every((id) => id === "import-media" ? implementation.body.includes("PUZZLE2D_IMPORT_TOOL_ID") : implementation.body.includes(`"${id}"`));
+  const ownedFragment = source.includes('const PUZZLE2D_CLIPBOARD_SCHEMA: &str = "puzzle.2d.clipboard.v1"')
+    && implementation.body.includes("fn clipboard_media_type()")
+    && implementation.body.includes("fn copy_fragment(")
+    && implementation.body.includes("fn cut_operations(")
+    && implementation.body.includes("fn paste_operations(")
+    && source.includes("fn puzzle2d_copy_fragment_from(")
+    && source.includes("fn puzzle2d_cut_operations_from(")
+    && source.includes("fn puzzle2d_paste_operations_on(");
+  const routedHere = implementation.body.includes('matches!(request.tool_id.as_str(), "copy" | "cut" | "paste")')
+    && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle2dClipboardJob::new(request))")
+    && implementation.body.includes("ArtifactReservedToolInput::Media")
+    && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle2dImportJob::new(");
+  const resumableJob = job.body.includes("cx.is_cancelled()")
+    && job.body.includes("StepOutcome::Cancelled")
+    && job.body.includes("completion.complete(")
+    && job.body.indexOf("completion.complete(") < job.body.indexOf("puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput")
+    && job.body.includes("CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }")
+    && job.body.includes("fn begin_close(&mut self)")
+    && job.body.includes("fn terminal_is_empty(&self) -> bool")
+    && source.includes("impl ArtifactReservedJob for Puzzle2dClipboardJob");
+  const hostProtocol = host.includes("async fn run_framework_reserved_job")
+    && host.includes("self.validate_framework_reserved_commit(action, permit).await?")
+    && host.includes("Self::ensure_reserved_emit_bounded(")
+    && host.includes("permit.is_cancelled().await");
+  return exactFactories && ownedFragment && routedHere && resumableJob && hostProtocol;
+}
+
 
 
 function toolJobSegmentedQueueHardBounded(source: string): boolean {
@@ -6537,6 +6582,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const puzzle2d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs");
   const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs");
   const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit");
@@ -6655,6 +6701,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobQualifiedProofBeforeDecode(plugin)) failures.push("a typed JSON or intent route decodes before selecting its exact qualified proof identity");
   const frameworkReservedExact = toolJobFrameworkReservedRoutesExact(plugin);
   const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d, plugin);
+  const puzzle2dReservedExact = toolJobPuzzle2dReservedRoutesExact(puzzle2d, plugin);
   const importPreparationBounded = toolJobImportPreparationBounded(plugin);
   const fullToolOperationJobBounded = toolJobFullOperationBounded(plugin);
   const storeOneItemPublicationBounded = toolJobStoreBatchPublicationBounded(store, plugin);
@@ -6686,6 +6733,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactor, store, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
   if (!toolJobFemNumericalMicrocursorExact(femSparse, femMesh, femAnalyses, femEngineModel, femElements2d, fem2dSession, jobRuntime)) failures.push("P6h FEM numerical LDLT, subspace, constraint recovery, or fixed-schema stiffness loops lack exact persistent microcursors, owner credit, identity, or hostile laws");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
+  if (!puzzle2dReservedExact) failures.push("Puzzle2d clipboard/import routes lack an app-owned fragment vocabulary, the four reserved route branches, or a cancellable complete-before-output clipboard step");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
   if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
   if (!toolJobDropCancellationBounded(plugin)) failures.push("VcsArtifactApp Drop synchronously drains the whole live-operation cancellation map instead of O(1) scope cancellation with bounded asynchronous cleanup");
@@ -25509,6 +25557,7 @@ export {
   interactivityProductionSource,
   type PolicyRustSourceEvidence,
   toolJobPuzzleReservedRoutesExact,
+  toolJobPuzzle2dReservedRoutesExact,
   toolJobLiveFixedReplayExact,
   toolJobFemNumericalMicrocursorExact,
   toolJobAppOwnedRows,

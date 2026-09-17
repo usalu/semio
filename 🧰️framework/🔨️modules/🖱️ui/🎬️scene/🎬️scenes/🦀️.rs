@@ -1948,6 +1948,10 @@ pub struct Board2dScene {
     /// deliberately absent, same law as the puzzle-3d gumball.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transform_flags: Option<String>,
+    /// 🖍️ World extent one area-brush CLICK paints, as `{"width":f64,"height":f64}` — `None` leaves the
+    /// engine's own default. A click-drag states its own rectangle and ignores this.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub area_brush_size: Option<String>,
     /// 🎯️ The framework interaction domain this board's picks and hovers belong to — the owning app's
     /// declared `InteractionDefinition.id`. `None` means the app declares none and the host publishes
     /// no `interactionHover` at all.
@@ -1989,6 +1993,7 @@ scene_pack_wire!(Board2dScenePack, Board2dScene {
     placement_compatibility_json: String,
     lod_mode: String,
     transform_flags: Option<String>,
+    area_brush_size: Option<String>,
     domain_id: Option<String>,
     suggestion_menu_json: Option<String>,
     tool_run_trace: Option<String>,
@@ -2169,6 +2174,7 @@ impl Board2dScene {
             lod_mode: board2d_default_lod_mode(),
             domain_id: None,
             transform_flags: None,
+            area_brush_size: None,
             suggestion_menu_json: None,
             tool_run_trace: None,
             lanes: Vec::new(),
@@ -2198,6 +2204,7 @@ impl ToValue for Board2dScene {
         value_push(&mut entries, "placementCompatibilityJson", &self.placement_compatibility_json);
         value_push(&mut entries, "lodMode", &self.lod_mode);
         value_push_option(&mut entries, "transformFlags", &self.transform_flags);
+        value_push_option(&mut entries, "areaBrushSize", &self.area_brush_size);
         value_push_option(&mut entries, "domainId", &self.domain_id);
         value_push_option(&mut entries, "suggestionMenuJson", &self.suggestion_menu_json);
         value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
@@ -2229,6 +2236,7 @@ impl FromValue for Board2dScene {
             placement_compatibility_json: value_decode_default(&entries, "placementCompatibilityJson", board2d_default_placement_compatibility_json)?,
             lod_mode: value_decode_default(&entries, "lodMode", board2d_default_lod_mode)?,
             transform_flags: value_decode_option(&entries, "transformFlags")?,
+            area_brush_size: value_decode_option(&entries, "areaBrushSize")?,
             domain_id: value_decode_option(&entries, "domainId")?,
             suggestion_menu_json: value_decode_option(&entries, "suggestionMenuJson")?,
             tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,

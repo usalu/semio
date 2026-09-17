@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createElement, Fragment } from "react";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import type { BuiltNode } from "@semio-tech/framework";
+import { TREE_WINDOW_PATH_SEPARATOR } from "@semio-tech/ui-react";
 import { createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -221,6 +222,37 @@ describe("🪟️ panel body tree window context", () => {
     // `tree-section-panel:outliner/outliner.objects`; every report arrives re-keyed on the authored key.
     expect(sink.opens.length).toBeGreaterThan(0);
     expect(new Set(sink.opens.map((entry) => JSON.stringify(entry)))).toEqual(new Set([JSON.stringify(["outliner", "outliner.objects", false])]));
+  });
+
+  /** 🔑️ The same node key under two parents is two windows — `📐️cad` builds one `object.id` under four pane
+   * sections and that key is also the pick target id, so it cannot be namespaced
+   * (📓️f2-sdk-body-node-ledger.md §10). Host-owned expansion therefore keys by PATH. */
+  it("folds one of two containers that share a node key, by path, and leaves its twin open", () => {
+    const sink = { opens: [] as [string, string, boolean][] };
+    const shared = (parent: string) =>
+      builtNode(parent, { type: "treeSection", label: parent, defaultOpen: true, window: { total: 2, offset: 0 } }, [
+        builtNode("shared", { type: "treeItem", label: "Shared", description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, rowActions: [], window: { total: 1, offset: 0 } }, [
+          builtNode(`${parent}.shared.0`, { type: "treeItem", label: `${parent} child`, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] }),
+        ]),
+      ]);
+    const body = builtNode("outliner", { type: "tree", interactionDomain: null }, [shared("left"), shared("right")]);
+    const closedLeft = { [`left${TREE_WINDOW_PATH_SEPARATOR}shared`]: false, [`right${TREE_WINDOW_PATH_SEPARATOR}shared`]: true };
+
+    const config = uiNodeToTreePanelConfig(body, () => {}, "outliner", hostFor(closedLeft, sink));
+    const rendered = render(createElement(Fragment, null, config.emptyState));
+
+    // 🪟️ A closed group renders no branch content at all, so its window path is simply not in the DOM.
+    const paths = Array.from(rendered.container.querySelectorAll("[data-tree-window-path]")).map((element) => element.getAttribute("data-tree-window-path"));
+    expect(paths).toEqual(["left", "right", `right${TREE_WINDOW_PATH_SEPARATOR}shared`]);
+    expect(rendered.container.textContent).not.toContain("left child");
+    expect(rendered.container.textContent).toContain("right child");
+
+    const groups = rendered.container.querySelectorAll('[data-tree-row-kind="group"]');
+    expect(groups.length).toBe(2);
+    // 🖱️ A group row folds from its chevron; the row shell itself carries the selection handler.
+    fireEvent.click((groups[1] as Element).querySelector("button") as Element);
+    // 🔑️ …and the fold comes back under the RIGHT branch's path, never the bare shared key.
+    expect(new Set(sink.opens.map((entry) => entry[1]))).toEqual(new Set([`right${TREE_WINDOW_PATH_SEPARATOR}shared`]));
   });
 
   it("leaves the tree uncontrolled when no host channel is provided", () => {

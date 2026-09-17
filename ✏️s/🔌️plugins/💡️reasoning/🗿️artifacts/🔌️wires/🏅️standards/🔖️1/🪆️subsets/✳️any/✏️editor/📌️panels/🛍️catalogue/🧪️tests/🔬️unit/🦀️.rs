@@ -7,6 +7,7 @@ async fn catalogue_lists_identity_and_relationship_kinds() {
     let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE).await;
     assert!(json.contains("Identity kinds"));
     assert!(json.contains("Relationship kinds"));
+    crate::editor::wires::unit_tests::context::close(app);
 }
 
 #[semio_framework_async_macros::async_test]

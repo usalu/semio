@@ -31,7 +31,7 @@ fn note_ink_canvas_payload_matches_the_json_oracle() {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic canvas surface") };
         let scene: semio_framework_ui_scene::InkCanvasScene = semio_framework_ui_scene::decode(props).expect("decode actual packed scene");
         let actual: serde_json::Value = serde_json::from_str(&scene.document_json).expect("independent canvas JSON oracle");
-        assert_eq!(actual["schema"], fixture["schema"]);
+        assert_eq!(actual["schema"], fixture["canvasSchema"], "the canvas speaks the framework ink-canvas wire, not note's own document schema");
         assert_eq!(actual["camera"], fixture["camera"]);
         assert_eq!(actual["blocks"], serde_json::json!([]));
         assert_eq!(scene.active_utility, fixture["utility"].as_str().expect("utility"));

@@ -195,6 +195,7 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 /// doc and reading back its post-edit content both need the cache.
 pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
     let Some(mut doc) = build_doc(projection, config, ctx) else {
+        eprintln!("[DEBUG] mesh_edit build_doc refused");
         return Emit::default();
     };
     let object_id = doc.active_object_id().to_string();
@@ -202,7 +203,8 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut
         return Emit::default();
     };
     let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
-    if edit(&mut doc).is_err() {
+    if let Err(error) = edit(&mut doc) {
+        eprintln!("[DEBUG] mesh_edit edit failed: {error} selection={:?}", doc.selection());
         return Emit::default();
     }
     if doc.sync_meshes_to_snapshot().is_err() {

@@ -6,7 +6,7 @@ use crate::editor::puzzle2d::{puzzle2d_restore_brush_slot, puzzle2d_window_and_m
 /// SAME slot the suggestions popup and the armed brush share. The host wraps the index and re-emits
 /// the candidate page, so the scene's index follows without this arm guessing it.
 pub fn cycle_candidate(ctx: &mut Puzzle2dActionCtx<'_>, forward: bool) {
-    if puzzle2d_restore_brush_slot(ctx).is_none() {
+    if puzzle2d_restore_brush_slot(ctx, None).is_none() {
         return;
     }
     ctx.host.borrow_mut().brush_cycle_candidate(forward);

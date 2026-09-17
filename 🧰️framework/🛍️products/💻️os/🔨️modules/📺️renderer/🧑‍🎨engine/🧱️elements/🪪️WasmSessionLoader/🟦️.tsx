@@ -296,6 +296,7 @@ export type Board2dWasmSession = {
   setHoveredIdSilent?(id?: string | null): void;
   setActiveUtility?(label: string): void;
   setSelectionOptions?(method: string, mode: string, selectNodes: boolean, selectEdges: boolean, selectHandles: boolean): void;
+  setGridVisible?(visible: boolean): void;
   setGridSnapEnabled?(enabled: boolean): void;
   setGridFactor?(v: number): void;
   setSuggestionOffset?(distance: number): void;
@@ -322,6 +323,14 @@ export type Board2dWasmSession = {
   transformGumballJson?(): string;
   /** @emoji 🩺️ Live gesture vitals (`{mode,utility,hoveredId,selectionCount,preselectCount,revision}`). */
   interactionJson?(): string;
+  /** @emoji 🖍️ World extent one area-brush CLICK paints; a click-drag states its own rectangle. */
+  setAreaBrushExtent?(width: number, height: number): void;
+  /** @emoji 🩺️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
+  targetRegionsJson?(): string;
+  /** @emoji 🩺️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */
+  handlePositionsJson?(): string;
+  /** @emoji 🖱️ Transitive same-kind hover: every element of `kindId` in `domain` paints hovered, with no board event and no guest round trip. Both `null` clears it. */
+  setHoveredKindSilent?(domain: string | null, kindId: string | null): void;
   setFixtureDropPreviewJson?(json: string): void;
   clearFixtureDropPreview?(): void;
   defersDescriptorSyncFromJs?(): boolean;

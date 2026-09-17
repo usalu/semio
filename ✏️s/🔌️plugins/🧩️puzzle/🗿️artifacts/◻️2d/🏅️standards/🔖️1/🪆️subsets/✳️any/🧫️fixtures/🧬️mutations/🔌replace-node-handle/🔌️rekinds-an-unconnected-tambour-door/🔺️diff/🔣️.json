@@ -1,92 +1,92 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
+  "edges": null,
+  "meta": null,
   "nodes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
         "patch": {
           "replacement": {
-            "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
-            "nodeKind": "Tambour",
-            "x": 86.132,
-            "y": 720.927,
-            "radius": 20,
-            "text": "t_f1_b_c1",
-            "iconKind": "tambour",
             "anchor": "fixed",
             "handles": [
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:b",
-                "handleKind": "tambour rectangular bottom",
                 "angle": 1.5707963267948966,
-                "radius": 3
+                "handleKind": "tambour rectangular bottom",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:b",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d0",
-                "handleKind": "door tambour right",
                 "angle": -0.31415926535897953,
-                "radius": 3
+                "handleKind": "door tambour right",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d0",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d1",
-                "handleKind": "door tambour right",
                 "angle": -1.256637061435917,
-                "radius": 3
+                "handleKind": "door tambour right",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d1",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d2",
-                "handleKind": "door tambour right",
                 "angle": -1.884955592153876,
-                "radius": 3
+                "handleKind": "door tambour right",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d2",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d3",
-                "handleKind": "door tambour left",
                 "angle": -2.8274333882308142,
-                "radius": 3
+                "handleKind": "door tambour left",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d3",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d0",
-                "handleKind": "door tambour right",
                 "angle": 2.827433388230814,
-                "radius": 3
-              },
-              {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d1",
-                "handleKind": "door tambour left",
-                "angle": 1.8849555921538763,
-                "radius": 3
-              },
-              {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d0",
                 "handleKind": "door tambour right",
-                "angle": 1.2566370614359168,
-                "radius": 3
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d0",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d1",
+                "angle": 1.8849555921538763,
                 "handleKind": "door tambour left",
-                "angle": 0.31415926535897953,
-                "radius": 3
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d1",
+                "radius": 3.0
               },
               {
-                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:t",
-                "handleKind": "tambour rectangular top",
+                "angle": 1.2566370614359168,
+                "handleKind": "door tambour right",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d0",
+                "radius": 3.0
+              },
+              {
+                "angle": 0.31415926535897953,
+                "handleKind": "door tambour left",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d1",
+                "radius": 3.0
+              },
+              {
                 "angle": -1.5707963267948966,
-                "radius": 3
+                "handleKind": "tambour rectangular top",
+                "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:t",
+                "radius": 3.0
               }
-            ]
+            ],
+            "iconKind": "tambour",
+            "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
+            "nodeKind": "Tambour",
+            "radius": 20.0,
+            "text": "t_f1_b_c1",
+            "x": 86.132,
+            "y": 720.927
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "edges": null,
-  "targetRegions": null,
-  "meta": null
+  "schema": null,
+  "targetRegions": null
 }

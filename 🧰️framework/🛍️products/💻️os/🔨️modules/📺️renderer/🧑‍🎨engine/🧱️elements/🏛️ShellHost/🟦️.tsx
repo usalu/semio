@@ -520,6 +520,7 @@ import {
   checkinSubmitText,
   computeSyncPillState,
   createLatestAsyncDispatcher,
+  historyPanelText,
   presenceClientIdentity,
   preserveJsonIdentity,
   programArmedToolRevealV1,
@@ -2670,21 +2671,28 @@ function FrameworkOsShellInner({
       const owner = `cold:${crypto.randomUUID()}`;
       const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
       let loaded = false;
-      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive); loaded = unbound(); } }); }
+      console.log("[DEBUG] loadDocumentArchive cold", owner, unbound());
+      try { await lane.replace(owner, unbound, async () => { console.log("[DEBUG] loadDocumentArchive cold lane entered", unbound()); if (unbound()) { await load(instanceId, archive); loaded = unbound(); console.log("[DEBUG] loadDocumentArchive cold guest loaded", loaded); } }); }
       finally { await lane.close(owner); }
       return loaded;
     }
     const [runtimeKey, entry] = owned;
+    console.log("[DEBUG] loadDocumentArchive owned", runtimeKey, entry.port !== null);
     const retirement = entry.port?.retire();
     void retirement?.catch(() => {});
     entry.port = null;
     return entry.replacements.replace(archive, async (candidate, latest) => {
       const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
+      console.log("[DEBUG] loadDocumentArchive replacement turn", exact());
       await lane.replace(entry.clientInstanceId, exact, async () => {
+        console.log("[DEBUG] loadDocumentArchive lane entered");
         await retirement;
+        console.log("[DEBUG] loadDocumentArchive port retired", exact());
         if (!exact()) return;
         await load(instanceId, candidate);
+        console.log("[DEBUG] loadDocumentArchive guest loaded", exact());
         if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
+        console.log("[DEBUG] loadDocumentArchive backbone bound");
       });
     });
   }, [bindDocumentBackbone, documentAttachmentLane]);
@@ -5557,7 +5565,9 @@ function FrameworkOsShellInner({
           if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
-            await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner));
+            console.log("[DEBUG] loadDocument effect", baseSession.pluginId, baseSession.instanceId, packBytes.length, sprBytes.length, isCurrentEffectOwner(effectOwner));
+            const loadedDebug = await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner)).catch((error) => { console.log("[DEBUG] loadDocument threw", String(error)); throw error; });
+            console.log("[DEBUG] loadDocument loaded", loadedDebug);
           } else {
             // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
             // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`
@@ -8999,8 +9009,8 @@ function FrameworkOsShellInner({
             id: "framework.history.actions",
             label: shellLabel("ui.panel.history"),
             items: [
-              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
-              { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
+              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>{historyPanelText("undo", uiLocale)}</button> },
+              { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>{historyPanelText("redo", uiLocale)}</button> },
               // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
               // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
               // absent outright for a viewer (never disabled — a viewer role has no meaningful
@@ -9010,7 +9020,7 @@ function FrameworkOsShellInner({
               ...(!canCheckIn(session.app.role)
                 ? []
                 : [
-                    { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> },
+                    { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>{historyPanelText("checkpoint", uiLocale)}</button> },
                     {
                       id: "framework.history.checkin",
                       label: "",
@@ -9042,13 +9052,22 @@ function FrameworkOsShellInner({
           },
           {
             id: "framework.history.commands",
-            label: "Commands",
+            label: historyPanelText("commands", uiLocale),
             items: entries.map((entry) => ({
               id: `framework.history.entry.${entry.seq}`,
               label: entry.count && entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label,
               description: entry.opLines?.join(" · "),
               dimmed: entry.applied === false,
-              control: entry.revertible && !isViewer ? <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>↶</button> : undefined,
+              // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
+              // nothing outside a mouse could reach it: the ◻️2d/🧊️3d batteries both looked for a
+              // `framework.history.revert` that has never existed and scored the panel as lacking revert
+              // altogether. The id is per entry, because the verb takes that entry's `entrySeq`.
+              control:
+                entry.revertible && !isViewer ? (
+                  <button type="button" id={`framework.history.entry.${entry.seq}.revert`} title={historyPanelText("revert", uiLocale)} aria-label={historyPanelText("revert", uiLocale)} onClick={() => onAction({ controllerId: session.app.controllerId, action: "revertToCommand", args: { entrySeq: entry.seq } })}>
+                    ↶
+                  </button>
+                ) : undefined,
             })),
           },
         ],

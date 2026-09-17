@@ -739,9 +739,14 @@ export const TREE_WINDOW_ROWS_MAX = 128;
  * (📓️s3-review-streaming-loop.md §1). Two magic numbers across a wasm boundary cannot be kept in step by
  * hand, so this line is the parity anchor: the Rust side greps this file for
  * `TREE_WINDOW_BODY_NODE_BUDGET = <n>` and fails if it disagrees. Keep the spelling on one line.
+ *
+ * 🧾️ `128 - 1 - 24`: the record arena, less the tree root, less `TREE_WINDOW_FIXED_NODE_HEADROOM` — the
+ * reserve for rows a panel builds WITHOUT a window (the energy inspector's sixteen fenestration fields
+ * being the fleet's measured worst case). Raised from 16 to 24, and this number from 111 to 103, by F2
+ * after 📓️r2-fem-energy-listapps-reverify.md §1.5 measured that body at 21 un-ledgered records.
  * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §7
  **/
-export const TREE_WINDOW_BODY_NODE_BUDGET = 111;
+export const TREE_WINDOW_BODY_NODE_BUDGET = 103;
 
 /** @emoji 📐️ One MATERIALISED row of a windowed container as the DOM measured it: which entry of the child list it is, and where its own top edge sits — in the same space as the container's `top`. */
 export interface TreeWindowRowMeasure {
@@ -945,21 +950,47 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
   return { leading, trailing: Math.max(0, total - leading - materialisedCount) };
 }
 
+/**
+ * 🪟️ Joins one windowed container's `windowKey` onto its enclosing windowed containers' — U+001F, the ASCII
+ * UNIT SEPARATOR, which is what a control character is FOR and which no authored node key contains.
+ *
+ * 🧯️ A window is addressed by its PATH, never by its node key alone, because the node key is also the pick
+ * target id the tree-level `interactionSelect` dispatches (`targets: [{granularity, id: record.key}]`) and so
+ * cannot be namespaced to make it unique. Two containers legitimately share a key across a body — `📐️cad`
+ * builds the same `object.id` under four pane sections, `🏗️fem` builds `case.id` and `combination.id` in one
+ * body — and under key identity they would share one open state, one window, and each other's measurements
+ * (📓️f2-sdk-body-node-ledger.md §10). The path is unique by construction and costs the ids nothing.
+ *
+ * 🔗️ Mirror of the ui-contract's Rust `TREE_WINDOW_PATH_SEPARATOR = "\u{1f}"`; kept on one line, as the
+ * escape ``, for the parity law to read.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️f2-sdk-body-node-ledger.md §10
+ **/
+export const TREE_WINDOW_PATH_SEPARATOR = "";
+
+/** @emoji 🪟️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
+export function treeWindowPathOf(parentWindowPath: string | undefined, windowKey: string | undefined): string | undefined {
+  if (windowKey === undefined || windowKey.length === 0) return undefined;
+  return parentWindowPath ? `${parentWindowPath}${TREE_WINDOW_PATH_SEPARATOR}${windowKey}` : windowKey;
+}
+
 /** @emoji 📮️ DOM mirror of a container's window, stamped on its branch content element — the element whose top edge IS row 0 of the child list, so a measurement of it plus these numbers is the whole observer contract. */
 export interface TreeWindowDomAttributes {
   readonly "data-tree-window-key"?: string;
+  readonly "data-tree-window-path"?: string;
   readonly "data-tree-window-total": number;
   readonly "data-tree-window-offset": number;
   readonly "data-tree-window-length": number;
 }
 
-/** @emoji 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). */
-export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined, materialisedCount: number, windowKey: string | undefined): TreeWindowDomAttributes | undefined {
+/** @emoji 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
+export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined, materialisedCount: number, windowKey: string | undefined, windowPath?: string): TreeWindowDomAttributes | undefined {
   if (!childWindow) return undefined;
   const total = Math.max(0, Math.floor(childWindow.total));
   const offset = Math.min(Math.max(0, Math.floor(childWindow.offset)), total);
+  const path = windowPath ?? treeWindowPathOf(undefined, windowKey);
   return {
     ...(windowKey === undefined ? {} : { "data-tree-window-key": windowKey }),
+    ...(path === undefined ? {} : { "data-tree-window-path": path }),
     "data-tree-window-total": total,
     "data-tree-window-offset": offset,
     "data-tree-window-length": materialisedCount,
@@ -1014,8 +1045,10 @@ export interface TreeDataItem {
   contextMenu?: ContextMenuItem[];
   /** @emoji 🪟️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
-  /** @emoji 🔑️ The authored node key the host reports back in its window requests (NOT {@link TreeDataItem.id}, which is a DOM id). */
+  /** @emoji 🔑️ The authored node key — the pick target id, NOT {@link TreeDataItem.id}, which is a DOM id. */
   windowKey?: string;
+  /** @emoji 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. What the host keys its state by and reports back; the same key under two parents is two windows. Defaults to {@link TreeDataItem.windowKey} for a top-level container. */
+  windowPath?: string;
 }
 
 export interface TreeDataSection {
@@ -1039,8 +1072,10 @@ export interface TreeDataSection {
   draggable?: boolean;
   /** @emoji 🪟️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
-  /** @emoji 🔑️ The authored node key the host reports back in its window requests (NOT {@link TreeDataSection.id}, which is a DOM id). */
+  /** @emoji 🔑️ The authored node key — the pick target id, NOT {@link TreeDataSection.id}, which is a DOM id. */
   windowKey?: string;
+  /** @emoji 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. A top-level section's path IS its key. */
+  windowPath?: string;
 }
 
 /** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
@@ -3333,7 +3368,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       branchCount={branchCount}
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
-      windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey)}
+      windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey, item.windowPath)}
       windowRowIndex={windowRowIndex}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
@@ -3426,7 +3461,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       }}
       isLastSection={isLastSection}
       isDropReady={sectionDropReady}
-      windowAttributes={treeWindowDomAttributes(childWindow, items.length, section.windowKey)}
+      windowAttributes={treeWindowDomAttributes(childWindow, items.length, section.windowKey, section.windowPath)}
     >
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
       {items.map((item, index) => (

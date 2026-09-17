@@ -657,6 +657,10 @@ impl ArtifactOwnedToolJobFactory for JackRetainedDocumentJobFactory {
 //#endregion 🧵️RetainedConfigCommands
 
 impl ArtifactEditor for TrinityJackPlayApp {
+    /// 🧩️ The roster the composed `s.stdio.semio` `content` child opens through — a `NoMembers` editor
+    /// cannot materialise the child `genesis_child_pack` derives, so every whole-document load failed its
+    /// archive closure.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
     type Config = NoConfig;
@@ -867,6 +871,10 @@ impl ArtifactEditor for TrinityJackPlayApp {
             return Ok(None);
         }
         edit::tools::reorganize::build_job(request.identity, &request.snapshot, request.checkpoint, request.provisional).map(Some)
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_jack_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> JackSnapshot {

@@ -52,7 +52,7 @@ pub struct Puzzle5dSnapshot {
     pub fasteners: Vec<Puzzle5dFastener>,
     /// 🧊️ Oriented boxes constraining where the fill planner may place — the 3d-projection half of
     /// the document; the board pane paints their derived flat rectangles.
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     #[dsl(table)]
     #[state(artifact)]
     pub target_volumes: Vec<Puzzle5dTargetVolume>,

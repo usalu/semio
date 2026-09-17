@@ -31,3 +31,16 @@ No `+N` continuation rows anywhere. Every tree section/group shows its complete 
 - State found: F1 selector edit + F2 SDK node ledger on disk but unverified/unreported; A6 (procedural/process3d/block) tests rc=101, no report; A8 stale sweep: 5 crates BUILD-ERR, 4 with failing window laws, 5 with no laws.
 - Brief: 📓️wave4-resume-brief.md. Launched — Opus: F1 (host scroll streaming), F2 (SDK body node ledger), A6a (procedural), A6b (process3d+block), A8a (forms/layout/reasoning/shooting), A8b (architect/lowpoly/space/trinity), A8c (rest), R1 (puzzle+cad re-verify), R2 (fem/energy/A7 re-verify). Sonnet: S1 (plugin residue audit), S2 (framework+TS residue/conformance audit), S3 (streaming-loop correctness review).
 - Next: wave 5 fixes from S1–S3, then browser re-probe (step e scroll streaming) on fem3d House, cad, puzzle3d, process3d + one list app.
+
+## 2026-09-17 ~15:00
+- Audits done: 📓️s1-audit-plugin-residue.md (31/32 plugins windowed; norm HIGH → A8c, space parameters panel MEDIUM → A8b), 📓️s2-audit-framework-ts-residue.md (framework/TS conform, zero residue; SpaceAdministration cursor paging = network list, out of scope), 📓️s3-review-streaming-loop.md (2 HIGH: host/guest budget constants don't compose; uniform row pitch breaks with nested open containers; MEDIUM: off-screen open containers re-request; key collisions).
+- Coordinator decisions from S3: one `TREE_WINDOW_BODY_NODE_BUDGET` (=111) in ui-contract + TS parity law, cost `1 + rows` per container charged once; real row geometry via `data-tree-window-row`; off-screen containers sent as `rows: 0` at held offset, guest order-independent; duplicate node_key per body = loud SDK error + host console.error.
+- F1 DONE (📓️f1-host-scroll-streaming.md): all of the above on the host; Tree 31/31, Interpreter 112/112, ShellHelpers 21/21.
+- Usage limit killed F2, A6a, A6b, A8a, A8b, A8c, R1, R2 at ~11:20; all resumed by SendMessage at 14:56.
+- Next: wave 5 browser re-probe (step e per F1 §7) after F2 lands and guests are restaged.
+
+## 2026-09-17 ~21:10
+- DONE + reported: A6b (📓️a6b-process3d-block.md, block inspectors windowed, 20 laws), R2 (📓️r2-…; flow Generations body windowed; 46/47 laws), F2 first pass (📓️f2-…; budget in ui-contract, order-independent reservations, parity law, 26/26 panel-kit, House laws green).
+- Coordinator decision (F2 §10): window identity = container PATH (`TREE_WINDOW_PATH_SEPARATOR = U+001F`; enclosing windowed container keys + own key); node keys / pick ids untouched; only duplicate sibling paths refused. SDK (F2) + host (F1) implementing; stdio-json base + writer get unique sibling keys.
+- Second usage-limit cut at ~16:10 (reset 19:50) killed F1, F2, A6a, A8a, A8b, A8c, R1 mid-run; all resumed 21:08 with "checkpoint report first" instruction.
+- Known peer breakage: fem3d demo swapped to concrete-forest at 12:02 (commit 0b460ed19f) → 42 stale fem3d tests (window laws → F2; rest fem owner).

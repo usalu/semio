@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteMutation`s via
 /// `note_ops_from_canvas_events`, while `setCamera` publishes to the exact composite-window config.
 #[derive(Clone, Debug, FromValue)]
-#[value(tag = "mutation")]
+#[value(tag = "operation")]
 enum NoteCanvasEvent {
     #[value(rename = "addBlock", rename_all = "camelCase")]
     AddBlock {
@@ -128,6 +128,23 @@ fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEven
     }
     operations
 }
+/// 🖋️ Decodes the ink-canvas host's `InkCanvasEvent[]` batch (framework `ink.document` block shapes) into
+/// note events — a malformed batch is a fault, never a silently empty gesture.
+fn decode_canvas_events(events_json: &str) -> Result<Vec<NoteCanvasEvent>, Fault> {
+    let invalid = |detail: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("note.ink-events.invalid"), detail);
+    let parsed = dsl::os_pack::json::parse(events_json).map_err(|error| invalid(format!("ink events are not JSON: {error:?}")))?;
+    let mut value = dsl::os_pack::json_to_dsl_value(&parsed);
+    if let dsl::DslValue::Array(events) = &mut value {
+        for event in events {
+            if let dsl::DslValue::Object(entries) = event {
+                if let Some((_, block)) = entries.iter_mut().find(|(name, _)| name == "block") {
+                    crate::note_block_value_from_ink_wire(block).map_err(invalid)?;
+                }
+            }
+        }
+    }
+    <Vec<NoteCanvasEvent> as dsl::FromValue>::from_value(value).map_err(|error| invalid(format!("ink events do not decode: {error}")))
+}
 //#endregion 🔖️CanvasEvents
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -145,7 +162,7 @@ pub struct InkApplyEvents {
 // sends it) but is no longer acted on.
 pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let events: Vec<NoteCanvasEvent> = dsl::os_pack::from_json_str(&payload.events_json).unwrap_or_default();
+    let events = decode_canvas_events(&payload.events_json)?;
     let mut window_config_mutations = Vec::new();
     for event in &events {
         if let NoteCanvasEvent::SetCamera { camera } = event {

@@ -3,7 +3,9 @@
 use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_connect;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, inspection};
-use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, puzzle2d_selection_write, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
+use crate::editor::puzzle2d::{
+    apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, puzzle2d_push_target_region, puzzle2d_relocate_target_region, puzzle2d_selection_write, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene,
+};
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::{json, Value};
 
@@ -46,6 +48,17 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
                 window_bodies = true;
                 panel_properties = true;
             }
+            // 🎯️ A painted region adds an outliner row; a moved or resized one only changes geometry,
+            // so it repaints the panes and the inspector without churning the layers tree.
+            "regionCreate" => {
+                window_bodies = true;
+                panel_layers = true;
+                panel_properties = true;
+            }
+            "regionMove" | "regionResize" => {
+                window_bodies = true;
+                panel_properties = true;
+            }
             "brushPlace" | "edgeCreate" | "edgeDelete" | "nodeDelete" => {
                 window_bodies = true;
                 panel_layers = true;
@@ -74,10 +87,16 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
     }
     UiDirtyScope::Partial { window_bodies: if window_bodies { panes } else { Vec::new() }, panel_bodies, utilities: false, tools: false, engagements, measures, labels: false }
 }
-pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) {
+/// 🎲️ Folds one engine event batch into the scene. Answers whether a LOCKED entity refused a gesture
+/// in the batch, so the caller can raise the single visible notice a refused drag owes — the three
+/// moving rows (`nodeMove`, `nodeDragEnd`, `nodeRotate`) never touch a locked node, and never touch
+/// the unlocked half of a mixed gesture either: a lock refuses the gesture, it does not silently
+/// mutilate it.
+pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) -> bool {
     let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
-        return;
+        return false;
     };
+    let mut refused_locked = false;
     for event in events {
         let Some(name) = event.get("name").and_then(|value| value.as_str()) else {
             continue;
@@ -96,6 +115,15 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             // new edges back together.
             "nodeDragEnd" => {
                 let mut dropped: Vec<String> = Vec::new();
+                let moved_ids: Vec<String> = payload
+                    .get("moves")
+                    .and_then(Value::as_array)
+                    .map(|moves| moves.iter().filter_map(|entry| entry.get("id").and_then(Value::as_str)).map(str::to_string).collect())
+                    .unwrap_or_default();
+                if crate::editor::puzzle2d::puzzle2d_addresses_locked_entity(&envelope.fixture, &moved_ids) {
+                    refused_locked = true;
+                    continue;
+                }
                 if let Some(moves) = payload.get("moves").and_then(|value| value.as_array()) {
                     for entry in moves {
                         let Some(id) = entry.get("id").and_then(|value| value.as_str()) else {
@@ -124,18 +152,56 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
                 if ids.is_empty() {
                     continue;
                 }
+                if crate::editor::puzzle2d::puzzle2d_addresses_locked_entity(&envelope.fixture, &ids) {
+                    refused_locked = true;
+                    continue;
+                }
                 crate::editor::puzzle2d::puzzle2d_transform_selection(&mut envelope.fixture, &ids, crate::editor::puzzle2d::Puzzle2dTransform::Rotate { radians });
             }
             "nodeMove" => {
                 let Some(id) = payload.get("id").and_then(|value| value.as_str()) else {
                     continue;
                 };
+                if crate::editor::puzzle2d::puzzle2d_addresses_locked_entity(&envelope.fixture, &[id.to_string()]) {
+                    refused_locked = true;
+                    continue;
+                }
                 if let Some(x) = payload.get("x").and_then(|value| value.as_f64()) {
                     patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "x", Some(&json!(x)), None);
                 }
                 if let Some(y) = payload.get("y").and_then(|value| value.as_f64()) {
                     patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "y", Some(&json!(y)), None);
                 }
+            }
+            // 🎯️ The board's area brush released: ONE rectangle, already grid-snapped by the engine,
+            // through the SAME document push `addTargetRegion` ends in — so a canvas paint and a
+            // dispatched verb mint the identical row, as a single history edit.
+            "regionCreate" => {
+                let read = |key: &str| payload.get(key).and_then(Value::as_f64).filter(|value| value.is_finite());
+                let (Some(x), Some(y), Some(width), Some(height)) = (read("x"), read("y"), read("width"), read("height")) else {
+                    continue;
+                };
+                if width <= 0.0 || height <= 0.0 {
+                    continue;
+                }
+                puzzle2d_push_target_region(&mut envelope.fixture, x, y, width, height);
+            }
+            // 🚚️ A region body drag and a grip drag both commit through `relocateTargetRegion`'s own
+            // reducer, which refuses a locked region — the engine refuses the grab too, so the two
+            // halves agree and a locked rectangle can never move by either route.
+            "regionMove" | "regionResize" => {
+                let Some(id) = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) else {
+                    continue;
+                };
+                let read = |key: &str| payload.get(key).and_then(Value::as_f64).filter(|value| value.is_finite());
+                let (Some(x), Some(y)) = (read("x"), read("y")) else {
+                    continue;
+                };
+                let mut after = json!({ "position": [x, y] });
+                if let (Some(width), Some(height)) = (read("width"), read("height")) {
+                    after["size"] = json!([width, height]);
+                }
+                puzzle2d_relocate_target_region(&mut envelope.fixture, id, &after);
             }
             "brushPlace" => {
                 apply_brush_place_payload(&mut envelope.fixture, &payload);
@@ -145,9 +211,12 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
                     edges.push(payload);
                 }
             }
+            // 🗑️ One delete path for every granularity: the id may name a node, a handle, an edge or
+            // a target region, so both collections are asked and whichever holds it drops it.
             "nodeDelete" => {
                 if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
                     delete_selection_from_host_snapshot(&mut envelope.fixture, &[id.to_string()]);
+                    crate::editor::puzzle2d::delete_target_regions_from_fixture(&mut envelope.fixture, &[id.to_string()]);
                 }
             }
             "edgeDelete" => {
@@ -171,6 +240,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             _ => {}
         }
     }
+    refused_locked
 }
 /// 🐢️ `UiDirtyScope.windowBodies`/`.panelBodies` are matched against `AppDefinition.windowKinds[].bodyKey`
 /// on the shell side (`buildUiRefreshRequest`'s `uiRefreshWantsWindow`), so these must be the body-key
@@ -199,8 +269,13 @@ pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
     };
     let events = serde_json::from_str::<Vec<Value>>(events_json).ok();
     *ctx.ui_scope = events.as_deref().map_or(UiDirtyScope::Full, puzzle2d_board_events_scope);
-    apply_board_events_from_json(events_json, ctx.scene);
+    let refused_locked = apply_board_events_from_json(events_json, ctx.scene);
     if let Some(write) = events.as_deref().and_then(|events| board_selection_write(events, &ctx.scene.fixture)) {
         ctx.interaction_writes.push(write);
+    }
+    // 🔒️ A drag the lock refused is answered ONCE per batch — the gesture streams `nodeMove` rows at
+    // pointer rate, and a notice per row would replace the board with a wall of toasts.
+    if refused_locked {
+        ctx.notice(|labels| labels.selection_locked.as_str());
     }
 }

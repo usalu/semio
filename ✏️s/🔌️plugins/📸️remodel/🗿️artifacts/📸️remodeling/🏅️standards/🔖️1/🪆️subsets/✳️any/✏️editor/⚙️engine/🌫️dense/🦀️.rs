@@ -399,6 +399,12 @@ pub enum PatchMatchPhase {
 
 /// 🌫️ Owned PatchMatch checkpoint. Each advance touches at most `pixel_budget` hypotheses; image
 /// buffers are filled incrementally and the completed map is moved out without a terminal copy.
+/// ⏱️ Pixels one `pixel_budget` unit covers in the phases that evaluate no matching cost
+/// (buffer growth, publication): a plain per-pixel copy is thousands of times cheaper than one
+/// multi-view ZNCC evaluation, so charging both one unit per pixel made the cheap phases dominate a
+/// run's step count.
+pub const PATCH_MATCH_BULK_PIXELS_PER_UNIT: usize = 4_096;
+
 pub struct PatchMatchPreparation {
     width: u32,
     height: u32,
@@ -449,7 +455,7 @@ impl PatchMatchPreparation {
         }
         match self.phase {
             PatchMatchPhase::Allocate => {
-                let end = self.cursor.saturating_add(budget).min(pixels);
+                let end = self.cursor.saturating_add(budget.saturating_mul(PATCH_MATCH_BULK_PIXELS_PER_UNIT)).min(pixels);
                 self.depths.resize(end, 0.0);
                 self.normals.resize(end, [0.0, 0.0, -1.0]);
                 self.costs.resize(end, -1.0);
@@ -538,7 +544,7 @@ impl PatchMatchPreparation {
                 }
             }
             PatchMatchPhase::Publish => {
-                let end = self.cursor.saturating_add(budget).min(pixels);
+                let end = self.cursor.saturating_add(budget.saturating_mul(PATCH_MATCH_BULK_PIXELS_PER_UNIT)).min(pixels);
                 for index in self.cursor..end {
                     if self.costs[index] > -1.0 {
                         self.output.depth[index] = self.depths[index];

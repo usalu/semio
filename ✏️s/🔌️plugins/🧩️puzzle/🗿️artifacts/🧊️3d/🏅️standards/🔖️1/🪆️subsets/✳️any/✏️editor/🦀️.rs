@@ -115,8 +115,8 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// local structural-twin mirror of `crate::Puzzle3dSnapshot`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `from_json_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::concrete_forest::SOURCE.document_json().to_string());
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.document_json().to_string());
 static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 static EMPTY_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(empty_fixture);
@@ -4620,7 +4620,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
         let object_selection = Self::explicit_ids(command).map_or_else(|| Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).map_or(0, |selection| selection.ids.len()), Vec::len);
         let volume_selection = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).map_or(0, |selection| selection.ids.len());
-        let items = object_selection.checked_add(volume_selection)?.checked_add(snapshot.typed().objects.len())?.checked_add(snapshot.typed().target_volumes.len())?;
+        // 🧮️ Four terminating steps beside the four cursor walks — one to close each of `ObjectSelection`,
+        // `VolumeSelection`, `Objects` and `Volumes`. The extent is the preflight pacing counter, so an
+        // under-declared one is not a truncation, only a lie about how long this work is.
+        let items = object_selection.checked_add(volume_selection)?.checked_add(snapshot.typed().objects.len())?.checked_add(snapshot.typed().target_volumes.len())?.checked_add(4)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -4691,7 +4694,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.stage = Puzzle3dScaleStage::Complete;
                     let mutations = std::mem::take(&mut self.mutations);
                     if mutations.is_empty() && (!self.objects.is_empty() || !self.volumes.is_empty()) {
-                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+                        // 🔒️ "Produced no mutation" is not the same claim as "the selection is locked". A
+                        // gumball delta carrying stale leftover ids — ids no document entity answers to —
+                        // took this branch and told the user their selection was locked when nothing was.
+                        // Ask the `locked` flags themselves, and say `nothing_selected` otherwise; a
+                        // refusal that names the wrong cause is worse than none.
+                        let locked = snapshot.typed().objects.iter().any(|object| self.objects.contains(&object.id) && object.locked)
+                            || snapshot.typed().target_volumes.iter().any(|volume| self.volumes.contains(&volume.id) && volume.locked);
+                        let label: fn(&Puzzle3dLabels) -> &'static str = if locked { |labels| labels.selection_locked.as_str() } else { |labels| labels.nothing_selected.as_str() };
+                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), label)));
                     }
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }));
                 };

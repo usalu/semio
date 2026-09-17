@@ -41,6 +41,7 @@ fn flatten_writes_diagram_offsets_onto_part_2d() {
             },
         ],
         fasteners: vec![Puzzle5dFastener { id: "f".into(), source: "p:top".into(), target: "c:bottom".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 }],
+        target_volumes: Vec::new(),
     };
     flatten_snapshot_inplace(&mut snapshot);
     let child = snapshot.parts.iter().find(|part| part.id == "c").expect("c");

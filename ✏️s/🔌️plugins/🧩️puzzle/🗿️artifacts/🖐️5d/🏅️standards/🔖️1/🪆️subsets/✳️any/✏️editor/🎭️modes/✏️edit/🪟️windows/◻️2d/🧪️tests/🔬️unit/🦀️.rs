@@ -15,7 +15,7 @@ fn board_document() -> Puzzle5dDocument {
         "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [{ "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": {} }] }],
         "fasteners": []
     });
-    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&serde_json::from_str(&projection.to_string()).expect("projection"))).expect("document")
+    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document")
 }
 
 fn board_scene_with(interaction: crate::editor::puzzle5d::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_framework_plugin::Board2dScene {
@@ -62,7 +62,7 @@ fn board_scene_carries_the_pane_grid_and_pick_filter() {
 /// 🎚️ Law: every option group this pane owns is present and reflects the runtime it was built from.
 #[test]
 fn window_measures_expose_every_board_option_group() {
-    let labels = crate::editor::puzzle5d::terminology::Puzzle5dLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native);
+    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
     let runtime = Puzzle5dRuntime { grid_visible: false, grid_factor: 4.0, ..Puzzle5dRuntime::default() };
     let envelope = Puzzle5dScene { document: board_document(), runtime, active_utility: "select".into(), interaction: crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default() };
     let measures = window_measures(&envelope, labels);

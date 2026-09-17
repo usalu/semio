@@ -32,7 +32,7 @@ const note = async (step, detail, from) => {
 const state = () => page.evaluate(() => {
   const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
   const hosts = [...document.querySelectorAll("[data-surface-id]")].map((el) => { const st = parse(el.getAttribute("data-status-json")); return { id: el.getAttribute("data-surface-id"), phase: st?.phase, fault: st?.fault?.code ?? null, canvases: el.querySelectorAll("canvas").length, textLength: (el.innerText ?? "").length }; });
-  const rows = [...document.querySelectorAll('[role="treeitem"]')].map((el) => ({ id: el.id, text: el.innerText.replace(/\s+/g, " ").trim().slice(0, 60), selected: el.getAttribute("aria-selected") === "true" }));
+  const rows = [...document.querySelectorAll('[role="treeitem"][id^="panel:trinity-document/"]')].map((el) => ({ id: el.id, text: el.innerText.replace(/\s+/g, " ").trim().slice(0, 60), selected: el.getAttribute("aria-selected") === "true" }));
   return {
     ready: document.documentElement.getAttribute("data-semio-os-ready"),
     error: document.documentElement.getAttribute("data-semio-os-error"),
@@ -68,10 +68,12 @@ const submitAction = async (actionId, args, windowPattern) => {
   await page.waitForTimeout(1500);
   const filled = [];
   for (const [key, value] of Object.entries(args)) {
-    const input = page.locator(`[id$=".${key}"], [id="${key}"], [name="${key}"], input[aria-label="${key}"], select[aria-label="${key}"]`).first();
+    const input = page.locator(`input[id="${key}"], textarea[id="${key}"], button[id="${key}"][role="combobox"]`).first();
     if (!(await input.count())) { filled.push(`${key}:absent`); continue; }
     const tag = await input.evaluate((el) => el.tagName);
-    const done = tag === "SELECT" ? input.selectOption(String(value)) : input.fill(String(value));
+    const done = tag === "BUTTON"
+      ? input.click({ force: true }).then(() => page.waitForTimeout(500)).then(() => page.locator('[role="option"]').filter({ hasText: new RegExp(`^\\s*${String(value)}\\s*$`, "i") }).first().click({ timeout: 5000, force: true })).then(() => page.keyboard.press("Escape"))
+      : input.fill(String(value));
     await done.then(() => filled.push(`${key}=${value}`)).catch((e) => filled.push(`${key}:${String(e).slice(0, 80)}`));
   }
   const submit = page.locator(`[id$=".action.${actionId}.execute"]`).first();
@@ -79,6 +81,9 @@ const submitAction = async (actionId, args, windowPattern) => {
   return { from, engagement, toggled, rowId, clicked, filled, submitted, actionRows: opened.actionRows.slice(0, 20) };
 };
 
+if (process.env.SEMIO_PROBE_GUEST_DIAGNOSTICS === "1") await page.addInitScript(() => { try { localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"); } catch {} });
+const only = (process.env.SEMIO_PROBE_ONLY ?? "").split(",").filter(Boolean);
+const wants = (step) => !only.length || only.includes(step);
 await page.goto(url, { waitUntil: "domcontentloaded" });
 let s = null;
 for (let i = 0; i < 240; i++) { await page.waitForTimeout(1000); s = await state(); if (s.ready && s.hosts.length && i > 10) break; if (s.error) break; }
@@ -90,7 +95,8 @@ let baseline;
   baseline = await countWithPanel((x) => x.treeItems > 2);
   await note("artifact-panel-baseline", baseline, from);
 }
-const pickRow = baseline.rowsHead.find((r) => r.id && !/→/.test(r.text) && !/trinity-document\.(nodes|edges)$/.test(r.id) && r.text && !/^Pieces|^Connections|^Teile|^Verbindungen/.test(r.text));
+const pickRow = baseline.rowsHead.find((r) => /^jack_orphan\b/.test(r.text)) ?? baseline.rowsHead[baseline.rowsHead.length - 1];
+const rawId = (row) => (row?.id ?? "").replace(/^panel:trinity-document\//, "");
 {
   const from = lines.length;
   await togglePanel();
@@ -102,26 +108,45 @@ const pickRow = baseline.rowsHead.find((r) => r.id && !/→/.test(r.text) && !/t
   await page.waitForTimeout(800);
   await note("select-node", { pickRow, clicked, selected: after.selected, interactionLines: lines.slice(from).filter((l) => /interactionSelect/.test(l)).slice(0, 4).map((l) => l.slice(0, 200)) }, from);
 }
-{
+const selectRow = async (match) => {
+  await togglePanel();
+  const listed = await settle((x) => x.treeItems > 2);
+  const row = listed.rowsHead.find((r) => match.test(r.text));
+  const clicked = row ? await page.locator(`[id="${row.id}"]`).first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
+  const after = await settle((x) => x.selected.length > 0);
+  await togglePanel();
+  await page.waitForTimeout(800);
+  return { row, clicked, selected: after.selected };
+};
+if (wants("delete")) {
+  const picked = await selectRow(/^jack_orphan\b/);
   const a = await submitAction("deleteSelection", {}, /graph/i);
-  await page.waitForTimeout(3000);
   const after = await countWithPanel((x) => x.treeItems < baseline.treeItems);
-  await note("delete-selection", { ...a, itemsBefore: baseline.treeItems, deleted: after.treeItems < baseline.treeItems, itemsAfter: after.treeItems, rowsHead: after.rowsHead.slice(0, 8) }, a.from);
-  const from = lines.length;
-  await page.keyboard.press(process.platform === "darwin" ? "Meta+z" : "Control+z");
-  await page.waitForTimeout(3000);
-  const undone = await countWithPanel((x) => x.treeItems === baseline.treeItems);
-  await note("undo-delete", { undoLines: lines.slice(from).filter((l) => /undo|Undo/.test(l)).slice(0, 4).map((l) => l.slice(0, 260)), itemsBefore: baseline.treeItems, restored: undone.treeItems === baseline.treeItems, itemsAfter: undone.treeItems }, from);
+  await note("delete-selection", { picked, ...a, itemsBefore: baseline.treeItems, deleted: after.treeItems < baseline.treeItems, itemsAfter: after.treeItems }, a.from);
+  baseline = after;
 }
-{
-  const nodeId = pickRow?.id ?? "";
-  const a = await submitAction("patchNodes", { nodeIds: nodeId, field: "name", value: "probe-renamed" }, /graph/i);
+if (wants("undo")) {
+  // ⏪️ The app's own Undo action row, NOT mod+z: the shell's keybinding pops the shared input ledger,
+  // whose top entry after a panel toggle is that toggle (it replays as a refused `shell.panelToggle`).
+  const picked = await selectRow(/^jack_prune\b/);
+  const a = await submitAction("deleteSelection", {}, /graph/i);
+  const deleted = await countWithPanel((x) => x.treeItems < baseline.treeItems);
+  await note("undo-delete-mutation", { picked, ...a, itemsBefore: baseline.treeItems, deleted: deleted.treeItems < baseline.treeItems, itemsAfter: deleted.treeItems }, a.from);
+  const from = lines.length;
+  const undo = await submitAction("undo", {}, /graph/i);
+  const restored = await countWithPanel((x) => x.treeItems === baseline.treeItems);
+  await note("undo-restores", { ...undo, itemsAfterDelete: deleted.treeItems, itemsBefore: baseline.treeItems, restored: restored.treeItems === baseline.treeItems, itemsAfter: restored.treeItems }, from);
+  baseline = restored;
+}
+if (wants("patch")) {
+  const nodeId = rawId(baseline.rowsHead.find((r) => /^b\b/.test(r.text)) ?? pickRow);
+  const a = await submitAction("patchNodes", { nodeIds: nodeId, field: "Name", value: "probe-renamed" }, /graph/i);
   await page.waitForTimeout(3000);
   const after = await countWithPanel((x) => x.rowsHead.some((r) => /probe-renamed/.test(r.text)));
   await note("patch-nodes", { ...a, nodeId, renamed: after.rowsHead.some((r) => /probe-renamed/.test(r.text)) }, a.from);
 }
-{
-  const a = await submitAction("setActiveExample", { exampleId: "nakagin" }, /graph/i);
+if (wants("example")) {
+  const a = await submitAction("setActiveExample", { exampleId: "Nakagin — Table" }, /graph/i);
   await page.waitForTimeout(4000);
   const after = await countWithPanel((x) => !x.rowsHead.some((r) => /probe-renamed/.test(r.text)) && x.treeItems === baseline.treeItems);
   await note("set-active-example", { ...a, reloaded: !after.rowsHead.some((r) => /probe-renamed/.test(r.text)), itemsAfter: after.treeItems, itemsBefore: baseline.treeItems, loadLines: lines.slice(a.from).filter((l) => /LoadDocument|replacement|archive/i.test(l)).slice(0, 4).map((l) => l.slice(0, 300)) }, a.from);

@@ -188,6 +188,10 @@ const COMPRESSED_ROPE_LEAF_BYTES: usize = 4_096;
 /// Huffman-decoded, dequantized, inverse-transformed 8x8 blocks, which keeps one unit far below
 /// the 8 ms worker ceiling even in an unoptimized build.
 const JPEG_UNITS_PER_STEP: usize = 1;
+/// ⏱️ Inflater advances (one compressed byte in / one filtered scanline byte out at most) one PNG
+/// decoder microstep runs: a maximum-width RGBA row is 16 385 filtered bytes, so a row spans a few
+/// steps instead of the whole zlib stream being inflated in one.
+const PNG_INFLATE_UNITS_PER_STEP: usize = 4_096;
 
 #[derive(Default)]
 struct CompressedRopeReadCounters {
@@ -349,8 +353,9 @@ enum BoundedDecodeState {
     Finished,
 }
 
-/// 🧩️ Repository-owned decoder state over a persistent 4-KiB-leaf rope. PNG consumes one
-/// scanline per call. JPEG probing advances 4 KiB per call, then the shared baseline codec's
+/// 🧩️ Repository-owned decoder state over a persistent 4-KiB-leaf rope. PNG reads one leaf per
+/// call, then inflates at most `PNG_INFLATE_UNITS_PER_STEP` bytes per call (yielding each scanline
+/// as it completes). JPEG probing advances 4 KiB per call, then the shared baseline codec's
 /// resumable decoder reads the same rope directly (no whole-input join allocation): one call parses
 /// the marker segments, every later call decodes one MCU and then converts one output row.
 pub struct BoundedStillDecoder {
@@ -401,7 +406,7 @@ impl BoundedStillDecoder {
                     Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
                 }
             }
-            BoundedDecodeState::PngDecode { buffer } => match semio_framework_pixels::PngScanlineDecoder::new(&buffer) {
+            BoundedDecodeState::PngDecode { buffer } => match semio_framework_pixels::PngScanlineDecoder::from_vec(buffer) {
                 Ok(decoder) => {
                     let width = decoder.width();
                     let height = decoder.height();
@@ -410,13 +415,17 @@ impl BoundedStillDecoder {
                 }
                 Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
             },
-            BoundedDecodeState::PngRows { mut decoder, width, height, mut pixels } => match decoder.next_row() {
-                Ok(Some(mut row)) => {
+            BoundedDecodeState::PngRows { mut decoder, width, height, mut pixels } => match decoder.step(PNG_INFLATE_UNITS_PER_STEP) {
+                Ok(semio_framework_pixels::PngScanlineStep::Pending) => {
+                    self.state = BoundedDecodeState::PngRows { decoder, width, height, pixels };
+                    BoundedDecodeProgress::Working
+                }
+                Ok(semio_framework_pixels::PngScanlineStep::Row(mut row)) => {
                     pixels.append(&mut row);
                     self.state = BoundedDecodeState::PngRows { decoder, width, height, pixels };
                     BoundedDecodeProgress::Working
                 }
-                Ok(None) => BoundedDecodeProgress::Complete(ImageRgba8 { width, height, data: pixels }),
+                Ok(semio_framework_pixels::PngScanlineStep::Done) => BoundedDecodeProgress::Complete(ImageRgba8 { width, height, data: pixels }),
                 Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
             },
             BoundedDecodeState::JpegProbe { rope, cursor } => {

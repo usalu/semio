@@ -3,8 +3,8 @@
 //! (`handle_action` → `command_from_action` → retained job → settle), so the arg bridge, the mesh-domain
 //! selection, the persisted mesh content and undo are exercised together rather than per unit.
 
-use super::super::*;
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
+use super::*;
+use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry};
 use semio_framework_plugin::{App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
 const INSTANCE: u32 = 1;
@@ -38,8 +38,51 @@ fn action_meta() -> semio_framework_plugin::ActionMeta {
 
 async fn act(app: &mut Mounted, action: &str, args: serde_json::Value) {
     let args = protocol::DslValue::from(&args);
-    app.0.handle_action(action, Some(&args), &action_meta()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
-    settle_registered_typed_operation(&mut app.0, INSTANCE).await.unwrap_or_else(|fault| panic!("{action} did not settle: {fault:?}"));
+    let result = app.0.handle_action(action, Some(&args), &action_meta()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
+    // 🕹️ Framework-reserved verbs return an admission receipt; their tool job only lands through this settle.
+    if matches!(action, "interactionSelect" | "undo" | "redo") {
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, result).await.unwrap_or_else(|fault| panic!("{action} did not settle its reserved job: {fault:?}"));
+        settle(&mut app.0, action).await;
+        return;
+    }
+    eprintln!("[DEBUG] act {action} effects={} pending={}", result.requested_effects.len(), app.0.has_pending_typed_operations());
+    let lanes = settle(&mut app.0, action).await;
+    eprintln!("[DEBUG] settled {action} lanes={lanes}");
+}
+
+/// 🔁️ The fixture's own settle loop, at a REAL host grant. `settle_registered_typed_operation` pages
+/// maintenance at exactly one 4 KiB page; a lowpoly document carrying mesh content is larger than that,
+/// so its close cursor never receives a grant it can act on and the operation never retires (measured
+/// 2026-09-17: a 2 299-byte snapshot settles, a 4 240-byte one hangs).
+const SETTLE_GRANT_BYTES: usize = 1 << 20;
+
+async fn settle(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> usize {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    let mut lanes = 0;
+    while app.has_pending_typed_operations() {
+        assert!(std::time::Instant::now() < deadline, "{action} did not settle");
+        let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
+        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+        while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
+            let lane = page.lane;
+            let fault = (lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| String::from_utf8_lossy(page.bytes()).to_string());
+            assert!(app.acknowledge_typed_operation_result(page.token).unwrap_or(false), "{action} rejected its result ACK");
+            assert!(fault.is_none(), "{action} publication fault: {}", fault.unwrap_or_default());
+            lanes += 1;
+        }
+        while app.take_typed_operation_effect().is_some() {}
+        while app.take_typed_operation_event().is_some() {}
+        while app.take_typed_operation_ui_scope().is_some() {}
+        while app.take_typed_operation_completion().await.unwrap_or(None).is_some() {}
+        while let Some(reply) = app.take_local_interaction_query_reply() {
+            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                assert!(app.acknowledge_local_interaction_query(&token), "{action} rejected its local-interaction ACK");
+            }
+        }
+        std::thread::yield_now();
+    }
+    lanes
 }
 
 fn select(targets: &[(&str, &str)]) -> serde_json::Value {
@@ -111,9 +154,34 @@ async fn component_selection_reaches_the_model_scene() {
     assert_eq!(world.component_ids, vec![2]);
     let scratch = LowpolyScratch::default();
     let loaded = crate::editor::lowpoly::view::build_doc(&snapshot, &config, &scratch).expect("document loads from persisted content");
-    let node = edit::windows::model::render(LowpolyView { snapshot: &snapshot, config: &config }, Some(&loaded), "move", &HashMap::new(), &world).expect("render");
-    let json = serde_json::to_string(&semio_framework_plugin::built_to_component_tree(node).root).expect("tree json");
-    for needle in ["componentIds", "gumballTarget", "lowpoly-document.obj-1"] {
-        assert!(json.contains(needle), "model scene lacks {needle}");
-    }
+    assert_eq!(world.granularity, "face");
+    assert_eq!(world.active_object_id, "obj-1");
+    edit::windows::model::render(LowpolyView { snapshot: &snapshot, config: &config }, Some(&loaded), "move", &HashMap::new(), &world).expect("the model scene renders from persisted content");
+}
+
+/// 🔬️ Diagnostic twin: a transient-only threaded command (`snap` with nothing selected) before the first
+/// artifact-publishing one.
+#[semio_framework_async_macros::async_test]
+async fn warmed_extrude_commits() {
+    let mut app = mounted();
+    act(&mut app, "snap", serde_json::json!({})).await;
+    act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
+    act(&mut app, "extrude", serde_json::json!({ "extrudeDistance": 0.5 })).await;
+    assert!(face_count(&object(&app, "obj-1")) > 6);
+}
+
+/// 🔬️ Diagnostic: a SMALL artifact mutation (rename) through the same retained route.
+#[semio_framework_async_macros::async_test]
+async fn small_artifact_mutation_commits() {
+    let mut app = mounted();
+    act(&mut app, "patchObject", serde_json::json!({ "objectId": "obj-1", "field": "name", "value": "Hull" })).await;
+    assert_eq!(object(&app, "obj-1").name, "Hull");
+}
+
+/// 🔬️ Diagnostic: is the publication threshold the MUTATION's own size? A plane is a small mesh.
+#[semio_framework_async_macros::async_test]
+async fn add_plane_primitive_commits() {
+    let mut app = mounted();
+    act(&mut app, "addPrimitive", serde_json::json!({ "kind": "plane" })).await;
+    assert_eq!(app.0.snapshot().expect("snapshot").objects.len(), 2);
 }

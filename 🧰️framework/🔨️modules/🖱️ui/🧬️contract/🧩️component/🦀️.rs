@@ -442,10 +442,20 @@ pub struct TreeWindow {
 /// control child) carry no node key, so neither side can address or budget them per container. The
 /// body budget holds this many records back for them.
 ///
-/// 🧾️ The value is the framework's own worst case, not a guess: the history panel is the widest
-/// un-windowed block in the fleet — one Actions section wrapping undo, redo and three filter rows,
-/// plus its own section node — and the fem/cad/puzzle outliners add none at all. 16 doubles that.
-pub const TREE_WINDOW_FIXED_NODE_HEADROOM: usize = 16;
+/// 🧾️ The value is the fleet's MEASURED worst case, not a guess. The fattest shipped un-windowed block
+/// is the energy inspector with a fenestration selected
+/// (`✏️s/🔌️plugins/🔋️energy/…/📌️panels/🔍️inspection/🦀️.rs`): a `Window` section node plus the
+/// **sixteen** field rows `fenestration_rows` pushes (id, name, surface, U-value, SHGC, VLT, area,
+/// height, sill height, frame, divider, overhang depth/offset, fin depth/offset, glazing), plus an
+/// `Actions` section node and its ≤3 rows = **21** records that carry no window and no node key, so
+/// neither side can budget them per container. Next fattest: fem2d/fem3d's inspector with a solid
+/// selected (1 + 10 + 1 + 3 = 15) and the framework's own history panel (1 + 5 + 1 = 7). 24 covers the
+/// measured maximum with three records of margin, and `tree_window_headroom_covers_the_fattest_shipped_panel`
+/// in the plugin SDK's `🔬️app-panel-kit` laws rebuilds that energy body shape and pins it.
+///
+/// ⚠️ A panel that builds MORE than this in fixed rows must move them onto a window: the ledger cannot
+/// see them, so they are the one way a body can still outgrow [`crate::UI_DOCUMENT_NODES`].
+pub const TREE_WINDOW_FIXED_NODE_HEADROOM: usize = 24;
 
 /// 🧾️ The ONE body-wide node budget both sides of the streaming loop spend, in node records:
 /// `UI_DOCUMENT_NODES` (the reconciler's per-surface record arena,
@@ -459,6 +469,22 @@ pub const TREE_WINDOW_FIXED_NODE_HEADROOM: usize = 16;
 /// (`🌳️Tree/🟦️.tsx`), and the guest's `semio_framework_plugin::TreeWindows` ledger spends the same
 /// number, so a request the host is allowed to make is a request the guest can always honour in full.
 pub const TREE_WINDOW_BODY_NODE_BUDGET: usize = crate::UI_DOCUMENT_NODES - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM;
+
+/// 🔑️ Joins the segments of a windowed container's **window path** — the identity both sides of the
+/// streaming loop address a container by (`ViewModel::tree_windows[].node_key`).
+///
+/// 🔑️ A container's path is the node keys of its enclosing windowed containers, outermost first, then
+/// its own key. A top-level section's path is therefore just its own key, so every flat request stays
+/// exactly what it was; a load case's loads nested under `fem3d-play-artifact.load-cases` are
+/// `"fem3d-play-artifact.load-cases\u{1f}dead"`. This is what makes container identity collision-free
+/// BY CONSTRUCTION while node keys and pick target ids stay untouched: a document whose load case and
+/// whose combination are both called `uls` gives them different paths, because their parents differ.
+/// Two containers can still collide only as true siblings under one parent — which the UI document
+/// itself already refuses (`DuplicateSiblingKey`).
+///
+/// 🔑️ U+001F (INFORMATION SEPARATOR ONE) is the separator because it cannot occur in a `UiText` node
+/// key an author writes, so a path never aliases a key that happens to contain the separator.
+pub const TREE_WINDOW_PATH_SEPARATOR: &str = "\u{1f}";
 
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

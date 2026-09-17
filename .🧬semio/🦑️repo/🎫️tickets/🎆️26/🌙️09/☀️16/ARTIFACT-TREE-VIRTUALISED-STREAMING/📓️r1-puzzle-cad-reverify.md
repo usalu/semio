@@ -7,7 +7,8 @@ Packet R1 of wave 4 (📓️wave4-resume-brief.md). Re-audits and re-runs what �
 Crates: `semio-s-artifact-puzzle-3d`, `semio-s-artifact-puzzle-2d`, `semio-s-artifact-puzzle-5d`
 (all `--features component-app-assembly`) and `semio-s-artifact-cad-cad` (no extra feature).
 
-> ⏳️ VERIFICATION SECTION IS BEING FILLED IN — see §4.
+> Status: cad + puzzle-3d fully green (window laws + wasm); puzzle-2d green on every window law with two peer-owned
+> failures elsewhere; puzzle-5d wasm green but its test binary is uncompilable under a live peer refactor (§5, §6).
 
 ## 1. SDK state this packet was verified against
 
@@ -147,6 +148,88 @@ section and every object group), and the law then asserts
 
 This is the app-level mirror of the SDK law `nine_windowed_sections_share_one_body_wide_node_ledger`.
 
+## 3b. Node-key uniqueness per body (F2's `ui.tree-window.duplicate-key`)
+
+F2 made a repeated `node_key` inside one body a loud SDK error
+(`PluginAssemblyError { code: "ui.tree-window.duplicate-key" }`). Audited every body of the four apps:
+
+| body | windowed node keys | verdict |
+|---|---|---|
+| puzzle-3d artifact | `{ROOT}.objects/.references/.target-volumes/.attractions` + each object's raw id | unique |
+| puzzle-3d catalogue | four `{ROOT}.*` section keys + each object-kind's raw `kind_id` | unique |
+| puzzle-3d inspector | `puzzle3d-play-inspector.ids` only | unique |
+| puzzle-2d artifact / catalogue / inspector | 2 / 3 / 1 distinct section consts | unique |
+| puzzle-5d artifact / catalogue | 2 section consts + each part's raw id / 4 section consts | unique |
+| cad artifact | 4 pane sections + 4 `…references.{modelDefinitionId}` + `…nodes` + each object's raw id | unique |
+| cad catalogue / inspector | `cad-play-catalogue.typologies` / `cad-play-inspector.ids` | unique |
+
+Every whole-document law added in §3 now also asserts that **every node key in the projected body is
+distinct** (`node_keys` helper + sort/dedup), so a future collision fails the app's own suite rather
+than the SDK's.
+
+⚠️ cad had a latent cross-pane question — the same object id can in principle appear in two pane
+sections, and the row key must stay the RAW id because the `"cad"` domain marks selection by it.
+Window identity is now the container **path** (parent container keys + own key), so two panes carrying
+one object id no longer collide and no id namespacing is needed. The forest document's ids are distinct
+across panes in any case, which the new cad law measures.
+
+**One real duplicate-key fault was found and fixed**, in a cad test rather than in production:
+`…/📐️cad/…/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs::object_tree_item_shows_name_with_kind_as_secondary_label`
+built the SAME object twice (English, then German) through ONE `TreeWindows`, which is two renders of
+one body sharing one ledger. It now takes a fresh `TreeWindows::unhosted()` for the German paint, as
+`render_body` does per render.
+
 ## 4. Verification
 
-⏳️ pending — filled in below once the runs complete.
+All runs foreground, `DEVELOPER_DIR=/Library/Developer/CommandLineTools CARGO_INCREMENTAL=0
+CARGO_PROFILE_WASM_DEV_DEBUG=false`, shared build dir, logs under `🗑️generated/r1/`.
+
+| command | result | log |
+|---|---|---|
+| `cargo check -p semio-framework-plugin` | ✅ `Finished dev in 17.40s`, 0 errors | — |
+| `cargo test -p semio-s-artifact-cad-cad --lib -- panels:: --test-threads=1` | ✅ **25 passed; 0 failed** (332 filtered out) | `cad-panels.txt` |
+| `cargo check -p semio-s-artifact-cad-cad --target wasm32-wasip2` | ✅ `Finished dev in 32.18s`, 0 errors (1 pre-existing warning) | `cad-wasm.txt` |
+| `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib -- panels:: --test-threads=1` | ✅ **27 passed; 0 failed** (719 filtered out) | `puzzle-3d-panels.txt` |
+| `cargo check -p semio-s-artifact-puzzle-3d --features component-app-assembly --target wasm32-wasip2` | ✅ `Finished dev in 39.68s`, 0 errors | `puzzle-3d-wasm.txt` |
+| `cargo test -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib -- panels:: --test-threads=1` | ⚠️ **13 passed; 2 failed** — every window law green; both failures peer-owned (§5) | `puzzle-2d-panels.txt` |
+| `cargo check -p semio-s-artifact-puzzle-2d --features component-app-assembly --target wasm32-wasip2` | ✅ `Finished`, 0 errors | `puzzle-2d-wasm.txt` |
+| `cargo check -p semio-s-artifact-puzzle-5d --features component-app-assembly --target wasm32-wasip2` | ✅ `Finished`, 0 errors | `puzzle-5d-wasm.txt` |
+| `cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib -- panels::` | ❌ **cannot compile** — live peer refactor, §5 | `puzzle-5d-panels.txt` |
+
+The new laws, verbatim from the logs:
+
+```
+editor::cad::panels::document::tests::a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling ... ok
+editor::cad::panels::inspection::tests::a_wide_selection_windows_its_ids_by_raw_id_without_starving_the_field_group ... ok
+editor::puzzle3d::panels::artifact::tests::a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling ... ok
+editor::puzzle2d::panels::artifact::tests::a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling ... ok
+```
+
+## 5. Failures that are NOT this packet's
+
+1. **puzzle-2d, 2 failures.** `panels::artifact::tests::document_panel_lists_nodes_section` panics in
+   `…/◻️2d/…/📚️examples/🏗️nakagin-capsule-tower/🦀️.rs:31` —
+   `nakagin-capsule-tower example dsl parses: expected List, found Absent at 1:1`; the neighbouring
+   `labels_resolve_native_english_and_german_and_reuse` then dies on the poisoned `LazyLock` the same
+   example caches. The DSL asset itself (`🖼️assets/🏢️tower/🗣️.dsl.semio`) is unchanged since Aug 9, while
+   that example's `🦀️.rs` was edited by a peer at **15:22 today** (worktree-modified, unstaged) — a live
+   change to the snapshot text parser, not to any panel, tree or window. Every window law in the same run
+   is green.
+2. **puzzle-5d, whole test binary does not compile.** A peer is adding target volumes to puzzle-5d right
+   now: an untracked `…/🖐️5d/…/✏️editor/🧪️tests/🔬️target-volumes/` module, `Puzzle5dSnapshot.target_volumes`,
+   `Puzzle5dScene.interaction`, a `⏳️precompute` → `🧠️precompute` rename, plus an unqualified-path sweep in
+   `…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` and `…/🎭️modes/✏️edit/🪟️windows/*` (`cannot find module or crate
+   world3d / board2d / config`; `Puzzle5dLabels::labels`; `Puzzle5dTestApp::handle_action`). Those editor
+   files were last written at 15:30 while my build was running. **No error names this packet's files** —
+   `…/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` appears in no diagnostic — and the crate's LIB compiles
+   clean for `wasm32-wasip2` in the same window. Retried twice, ~30 min apart, same peer-owned set.
+
+## 6. Not finished
+
+- puzzle-5d's panel laws (including its new whole-document law) are **written but not run** — the crate's
+  test binary cannot be compiled while the peer's target-volume work is mid-flight. Retry with
+  `cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib -- panels:: --test-threads=1`.
+- The four FULL crate suites were not reached: the machine carried a 25-35-process cargo fleet for most of
+  this packet (load average ~90-100) and exclusive acquisition of the shared `.cargo-artifact-lock`
+  starved for 45+ minutes at a stretch, so the budget went to the window-law filters and the wasm checks.
+  a1 §5 / a2 §5 / a3 §6 record the pre-existing whole-suite failure sets for these crates.

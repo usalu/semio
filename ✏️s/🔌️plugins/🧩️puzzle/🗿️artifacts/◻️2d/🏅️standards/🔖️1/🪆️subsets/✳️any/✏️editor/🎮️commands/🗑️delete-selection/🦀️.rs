@@ -10,6 +10,9 @@ pub fn delete_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
     if selected_ids.is_empty() {
         return;
     }
+    if ctx.refuse_when_locked(&selected_ids) {
+        return;
+    }
     let clear = puzzle2d_clear_selection_write(&ctx.scene.fixture, &selected_ids);
     ctx.host.borrow_mut().delete_selection();
     delete_selection_from_host_snapshot(&mut ctx.scene.fixture, &selected_ids);

@@ -29,7 +29,7 @@ const note = async (step, detail, from) => {
 };
 const state = () => page.evaluate(() => {
   const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
-  const world = document.querySelector('[data-surface-id="lowpoly.play.main"]');
+  const world = document.querySelector('[data-surface-id="window:lowpoly-main"]');
   const meshes = parse(world?.getAttribute("data-meshes-json") ?? "[]") ?? [];
   const selection = parse(world?.getAttribute("data-selection-json") ?? "null");
   const rect = world?.getBoundingClientRect();
@@ -38,10 +38,10 @@ const state = () => page.evaluate(() => {
     error: document.documentElement.getAttribute("data-semio-os-error"),
     world: rect ? { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height), canvases: world.querySelectorAll("canvas").length, status: parse(world.getAttribute("data-status-json"))?.phase ?? null } : null,
     meshes: meshes.map((m) => ({ id: m.id, faces: (m.data?.faceIds ?? []).length, triangles: (m.data?.indices ?? []).length / 3 })),
-    selection: selection ? { mode: selection.selectionMode, targets: selection.targets, ids: selection.ids, componentIds: selection.componentIds, gumballActive: selection.gumballActive, gumballTarget: selection.gumballTarget, active: selection.activeObjectId } : null,
+    selection: selection ? { mode: selection.selectionMode, targets: selection.targets, ids: selection.selectedIds ?? selection.ids, componentIds: selection.componentIds, raw: JSON.stringify(selection).slice(0, 400), gumballActive: selection.gumballActive, gumballTarget: selection.gumballTarget, active: selection.activeObjectId } : null,
     engagements: [...document.querySelectorAll('[id$=".engagement"]')].map((el) => el.id),
     actionRows: [...document.querySelectorAll('[id^="action."]')].map((el) => el.id),
-    selectToggles: [...document.querySelectorAll('[id^="lowpoly-select-"]')].map((el) => el.id),
+    selectToggles: [...document.querySelectorAll('[id*="lowpoly-select-"]')].map((el) => el.id),
     bodyHead: document.body.innerText.replace(/\s+/g, " ").slice(0, 400),
   };
 });
@@ -65,6 +65,7 @@ const submitAction = async (actionId, args) => {
   const submitted = (await submit.count()) ? await submit.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "no-execute-control (row click executes)";
   return { toggled, clicked, submitted };
 };
+const openOptions = async () => { if (await page.locator('[id="lowpoly-main/lowpoly-select-face"]').count()) return "open"; const b = page.locator('button:has-text("Window Options")').first(); if (await b.count()) await b.click({ force: true }); await page.waitForTimeout(1000); return "clicked"; };
 const clickWorldCenter = async (dx = 0, dy = 0) => {
   const s = await state();
   if (!s.world) return "no-world";
@@ -80,7 +81,8 @@ const baseFaces = faces(s);
 
 {
   const from = lines.length;
-  const toggled = await clickId("lowpoly-select-face");
+  await openOptions();
+  const toggled = await clickId("lowpoly-main/lowpoly-select-face");
   const after = await settle((x) => x.selection?.mode === "face");
   await note("face-granularity", { toggled, selection: after.selection, toggles: after.selectToggles }, from);
 }
@@ -114,7 +116,8 @@ const baseFaces = faces(s);
 }
 {
   const from = lines.length;
-  const toggled = await clickId("lowpoly-select-mesh");
+  await openOptions();
+  const toggled = await clickId("lowpoly-main/lowpoly-select-mesh");
   await settle((x) => x.selection?.mode === "mesh", 10);
   const clicked = await clickWorldCenter();
   const after = await settle((x) => (x.selection?.ids ?? []).length > 0);

@@ -198,6 +198,16 @@ fn node_records(node: &BuiltNode) -> usize {
     1 + node.children.iter().map(node_records).sum::<usize>()
 }
 
+/// 🔑️ Every node key in one body. A windowed container is addressed by its authored key, so two
+/// containers (or two rows) sharing one key inside a body make the host's `TreeWindowRequest`
+/// ambiguous — the SDK refuses it.
+fn node_keys(node: &BuiltNode, keys: &mut Vec<String>) {
+    keys.push(node.key.as_str().to_string());
+    for child in node.children.iter() {
+        node_keys(child, keys);
+    }
+}
+
 /// 🧾️ The whole-document law: one container holds more entries than a whole `UI_DOCUMENT_NODES` arena
 /// AND every container — both sections and two dozen part groups — is open at once, each asking for
 /// more rows than the arena could hold. Per-container clamps alone do not save this body: only the
@@ -209,7 +219,8 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     let (parts_len, grips_len, fasteners_len) = (ui::UI_DOCUMENT_NODES + 72, 24, ui::UI_DOCUMENT_NODES + 16);
     let scene = scaled_scene(parts_len, grips_len, fasteners_len);
     let mut requests = vec![request(PARTS_SECTION, Some(true), 0, 512), request(FASTENERS_SECTION, Some(true), 0, 512)];
-    requests.extend((0..24).map(|index| request(&format!("part-{index}"), Some(true), 0, 512)));
+    // 🔑️ A nested container is addressed by its window PATH: the parts section, then the part row.
+    requests.extend((0..24).map(|index| request(&format!("{PARTS_SECTION}{}part-{index}", ui::TREE_WINDOW_PATH_SEPARATOR), Some(true), 0, 512)));
     let view = windows_for(requests);
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a fully open oversized outliner must be admitted");
@@ -221,6 +232,14 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
         assert_eq!(window_of(part).expect("an open part group stamps its own window").total as usize, grips_len, "part group {} must stamp its full grip total", part.key.as_str());
     }
     let records = node_records(&tree);
+
+    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
+    let mut keys = Vec::new();
+    node_keys(&tree, &mut keys);
+    let mut unique = keys.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(unique.len(), keys.len(), "every node key in this body is unique ({} of {} distinct)", unique.len(), keys.len());
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
     let body = body_json(tree);
     assert!(!body.contains(".more"), "no continuation row closes an exhausted container: {body:.400}");
@@ -239,8 +258,8 @@ fn part_rows_read_authored_labels_and_numbered_peers() {
         Puzzle5dPart { id: "b".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::Puzzle5dPart3d { label: Some("Capsule 2".into()), ..Default::default() }, grips: Vec::new() },
         Puzzle5dPart { id: "c".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: Default::default(), grips: Vec::new() },
     ];
-    assert_eq!(crate::editor::puzzle5d::puzzle5d_part_display_label(&document.parts[0], &document), "Capsule");
-    assert_eq!(crate::editor::puzzle5d::puzzle5d_part_display_label(&document.parts[2], &document), "capsule", "an unlabelled part falls back to its kind's catalogue name");
+    assert_eq!(puzzle5d_part_display_label(&document.parts[0], &document), "Capsule");
+    assert_eq!(puzzle5d_part_display_label(&document.parts[2], &document), "capsule", "an unlabelled part falls back to its kind's catalogue name");
     assert_eq!(crate::editor::puzzle5d::puzzle5d_next_part_label(&document.parts, &document, "capsule"), "Capsule 3", "the highest numbered peer is 2, so the next one is 3");
     assert_eq!(crate::editor::puzzle5d::puzzle5d_next_part_label(&document.parts, &document, "core"), "core", "the first instance of a kind takes the bare catalogue name");
 }

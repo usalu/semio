@@ -6,8 +6,9 @@ use crate::editor::forms::FORMS_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
 async fn document_tree_declares_drop_action() {
     let mut app = forms_app().await;
     let json = render_body(&mut app, BODY_ARTIFACT).await;
-    assert!(json.contains(r#""dropAction""#));
+    assert!(json.contains(r#""trigger":"drop""#), "the tree carries a drop-trigger binding: {json}");
     assert!(json.contains("dropQuestionKind"));
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -15,6 +16,7 @@ async fn document_lists_steps() {
     let mut app = forms_app().await;
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("forms-play-document.steps"));
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -74,6 +76,12 @@ fn oversized() -> FormsSnapshot {
 
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
     TreeWindowRequest { body_key: FORMS_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }
+}
+
+/// 🪟️ A nested container's node key is its PATH from the body root — the SDK addresses a step row as
+/// `<steps section>␟<step tree id>`, so a request naming the bare row id addresses nothing.
+fn step_path(step_id: &str) -> String {
+    format!("{FORMS_PLAY_DOCUMENT_STEPS}{}{step_id}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 /// 🪟️ A REALISTIC measured viewport. A large `tree_viewport_rows` is not a harmless over-request: a wide
@@ -136,7 +144,7 @@ async fn an_oversized_form_stamps_every_extent_and_materialises_one_viewport() {
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
     let spec = oversized();
-    let closed_step = build(&spec, &viewing(512, vec![request("step:s00", Some(false), 0, 48)]));
+    let closed_step = build(&spec, &viewing(512, vec![request(&step_path("step:s00"), Some(false), 0, 48)]));
     let first = steps_section(&closed_step).children.iter().next().expect("a step row");
     assert_eq!(window_or_empty(first).expect("window").total, 120, "a closed step row still announces its questions");
     assert!(first.children.is_empty(), "a closed step row builds no question");
@@ -152,13 +160,13 @@ async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_own_range() {
     let spec = oversized();
-    let tree = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(FORMS_PLAY_DOCUMENT_STEPS, None, 10, 4), request("step:s10", None, 0, 0)]));
+    let tree = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(FORMS_PLAY_DOCUMENT_STEPS, None, 10, 4), request(&step_path("step:s10"), None, 0, 0)]));
     let steps = steps_section(&tree);
     assert_eq!(window_or_empty(steps), Some(TreeWindow { total: 120, offset: 10 }));
     let expected_steps: Vec<String> = (10..14).map(|index| format!("step:s{index:02}")).collect();
     assert_eq!(row_keys(steps), expected_steps.iter().map(String::as_str).collect::<Vec<_>>(), "exactly steps [10, 14) keyed by their canonical tree ids");
 
-    let nested = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request("step:s00", None, 50, 6)]));
+    let nested = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(&step_path("step:s00"), None, 50, 6)]));
     let first = steps_section(&nested).children.iter().next().expect("a step row");
     assert_eq!(window_or_empty(first), Some(TreeWindow { total: 120, offset: 50 }));
     let expected_questions: Vec<String> = (50..56).map(|index| format!("q00-{index:03}")).collect();
@@ -171,7 +179,7 @@ async fn a_window_request_materialises_exactly_its_own_range() {
 #[semio_framework_async_macros::async_test]
 async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select() {
     let spec = oversized();
-    let tree = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(FORMS_PLAY_DOCUMENT_STEPS, None, 0, 2), request("step:s00", None, 0, 2)]));
+    let tree = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(FORMS_PLAY_DOCUMENT_STEPS, None, 0, 2), request(&step_path("step:s00"), None, 0, 2)]));
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FORMS_INTERACTION_FIELDS));
     let binding = tree.bindings.iter().next().expect("the tree binds the domain select");

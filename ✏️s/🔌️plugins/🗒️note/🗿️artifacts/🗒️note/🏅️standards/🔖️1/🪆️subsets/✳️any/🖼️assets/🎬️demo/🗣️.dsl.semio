@@ -1,7 +1,7 @@
 semio note.note.dsl v1
 schema=note.document id=semio title=Semio grid-visible=true grid-spacing=32 grid-subdivisions=4 grid-opacity=0.35 snap-enabled=false snap-grid-spacing=8 pencil-width=3 eraser-radius=12
 blocks {
-  text id=text-semio name=Welcome x=48 y=48 width=320 height=120 rotation=0 visible=true locked=false font-size=24 font-weight=normal align=left content=child_id=note-text-5cba14f4835b5558 target="text-semio-text!s.stdio.semio@v1/text"
+  text id=text-semio name=Welcome x=48 y=48 width=320 height=120 rotation=0 visible=true locked=false font-size=24 font-weight=normal align=left content=handle=child_id=note-text-f42b3fecd19a3854 target="text-semio-text!s.stdio.semio@v1/text" paragraphs=[ p runs=[ r "Welcome to semio note" ] ]
 }
 assets={
   asset-1=mime=image/png data="data:image/png;base64,abc==" width=10 height=20

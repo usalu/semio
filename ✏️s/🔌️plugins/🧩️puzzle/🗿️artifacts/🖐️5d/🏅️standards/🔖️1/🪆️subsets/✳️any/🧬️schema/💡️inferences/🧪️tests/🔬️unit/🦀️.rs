@@ -44,6 +44,7 @@ fn chain_snapshot() -> Puzzle5dSnapshot {
         kind_compatibility: Vec::new(),
         parts: vec![parent, child],
         fasteners: vec![fastener],
+        target_volumes: Vec::new(),
     }
 }
 //#endregion 🧸️Fixtures

@@ -145,34 +145,37 @@ impl dsl::FromValue for Puzzle5dScale {
     }
 }
 
-/// 🔗️ Hand `DslField` bridge for `Puzzle5dScale`: binds through the existing unbounded
-/// `Shape::Tuple(Float, None)` primitive (the same one `#[dsl(tuple)] Vec<f64>` fields already use
-/// elsewhere) rather than `Shape::Value` — `scale=2` (uniform) and `scale=2,3,4` (per-axis) print/
-/// parse as plain packed literals, no bespoke Shape variant needed.
+/// 🔗️ Hand `DslField` bridge for `Puzzle5dScale`: `target_volumes` is a `#[dsl(table)]` collection, so
+/// this field prints as a BARE positional table column. The unbounded `Shape::Tuple(Float, None)` it
+/// used while `scale` was only ever reached through the nested keyed `part-3d` record is rejected there
+/// at parse time (`table column 'scale' has a non-self-delimiting shape (TUPLE) and cannot be a table
+/// column`, the engine's own `validate_table_columns`), so it binds through the bracketed
+/// `Shape::List(Float)` the sibling `puzzle_3d::Puzzle3dScale` already uses: `scale=[2]` (uniform) /
+/// `scale=[2 3 4]` (per-axis), self-delimiting regardless of item count.
 impl dsl::DslField for Puzzle5dScale {
     fn shape() -> dsl::Shape {
-        dsl::Shape::Tuple(Box::new(dsl::Shape::Float), None)
+        dsl::Shape::List(Box::new(dsl::Shape::Float))
     }
     fn to_value(&self) -> dsl::FieldValue {
         match self {
-            Puzzle5dScale::Uniform(scale) => dsl::FieldValue::Tuple(vec![dsl::FieldValue::Float(*scale)]),
-            Puzzle5dScale::Vec3(vec3) => dsl::FieldValue::Tuple(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
+            Puzzle5dScale::Uniform(scale) => dsl::FieldValue::List(vec![dsl::FieldValue::Float(*scale)]),
+            Puzzle5dScale::Vec3(vec3) => dsl::FieldValue::List(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
         }
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Tuple(items) if items.len() == 1 => match &items[0] {
+            dsl::FieldValue::List(items) if items.len() == 1 => match &items[0] {
                 dsl::FieldValue::Float(scale) => Ok(Puzzle5dScale::Uniform(*scale)),
                 other => Err(format!("expected Float, found {other:?}")),
             },
-            dsl::FieldValue::Tuple(items) if items.len() >= 3 => {
+            dsl::FieldValue::List(items) if items.len() >= 3 => {
                 let axis = |i: usize| match &items[i] {
                     dsl::FieldValue::Float(v) => Ok(*v),
                     other => Err(format!("expected Float, found {other:?}")),
                 };
                 Ok(Puzzle5dScale::Vec3([axis(0)?, axis(1)?, axis(2)?]))
             }
-            other => Err(format!("expected a 1- or 3-item Tuple, found {other:?}")),
+            other => Err(format!("expected a 1- or 3-item List, found {other:?}")),
         }
     }
 }

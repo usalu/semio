@@ -5090,6 +5090,7 @@ describe("framework renderer hosts", () => {
     expect(rows.map((row) => row.hoverAction)).toEqual(["hoverSuggestion", "hoverSuggestion"]);
     expect(rows.map((row) => row.checked)).toEqual([false, true]);
     expect(rows[1]?.args).toEqual({ index: 1, handleId: "n1:h0" });
+    expect(rows[1]?.hoverArgs).toEqual({ index: 1, handleId: "n1:h0" });
   });
 
   it("refuses politely: a pending slot shows one disabled checking row, a resolved empty slot one disabled no-placement row", () => {

@@ -48,6 +48,8 @@ import {
   loadingBorderElementClass,
   interactionMergeFromModifiers,
   renderControlIcon,
+  TREE_WINDOW_PATH_SEPARATOR,
+  treeWindowPathOf,
   treeWindowRequestsForViewport,
   treeWindowVisibleRowsForViewport,
   useLabel,
@@ -1465,9 +1467,12 @@ export type TreeWindowReportV1 = { readonly nodeKey: string; readonly offset: nu
  * means "nobody is listening": the tree keeps `<Tree>`'s own uncontrolled per-mount open state and
  * measures nothing, which is exactly what a story, a fixture or a wgpu-side mount wants.
  *
- * `openStates` is keyed by authored node key, the same identity `setOpen` reports back and
- * `ViewModel::tree_windows` carries to the guest; `TreeView` translates to and from `<Tree>`'s DOM ids
- * ({@link uiNodeDomId}) at the boundary, so no host map ever holds a volatile id. */
+ * `openStates` is keyed by WINDOW PATH for a windowed container ({@link treeWindowPathOf}: its enclosing
+ * windowed containers' node keys and its own, joined by `TREE_WINDOW_PATH_SEPARATOR`) and by authored node key
+ * for anything else — the same identity `setOpen` reports back and `ViewModel::tree_windows` carries to the
+ * guest. Never the node key alone for a window: that string is also the pick target id and two containers
+ * under different parents share it by design (📓️f2-sdk-body-node-ledger.md §10). `TreeView` translates to and
+ * from `<Tree>`'s DOM ids ({@link uiNodeDomId}) at the boundary, so no host map ever holds a volatile id. */
 export type TreeWindowContextValue = {
   readonly bodyKey: string;
   readonly openStates: Readonly<Record<string, boolean>>;
@@ -1568,7 +1573,10 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
   const measured: TreeWindowContainerMeasure[] = [];
   for (const element of Array.from(root.querySelectorAll("[data-tree-window-key]"))) {
     if (!(element instanceof HTMLElement)) continue;
-    const key = element.getAttribute("data-tree-window-key");
+    // 🪟️ The window's IDENTITY is its path; `-key` is the authored node key, which is also the pick target
+    // id and is legitimately shared by containers under different parents. `-key` is the fallback only for a
+    // top-level container, where the two are the same string anyway.
+    const key = element.getAttribute("data-tree-window-path") || element.getAttribute("data-tree-window-key");
     if (!key) continue;
     const total = treeWindowAttributeNumber(element, "data-tree-window-total");
     if (total <= 0) continue;
@@ -1647,7 +1655,7 @@ function reportDuplicateTreeWindowKeys(containers: readonly TreeWindowContainerM
     const once = `${bodyKey} ${container.key}`;
     if (reported.has(once)) continue;
     reported.add(once);
-    console.error(`[tree-window] duplicate key ${JSON.stringify(container.key)} in panel body ${JSON.stringify(bodyKey)} — two windowed containers share one window and one open state; give every windowed container its own node key`);
+    console.error(`[tree-window] duplicate key ${JSON.stringify(container.key.split(TREE_WINDOW_PATH_SEPARATOR).join(" › "))} in panel body ${JSON.stringify(bodyKey)} — two windowed containers share one window path, so they share one window and one open state; give sibling containers distinct node keys`);
   }
 }
 
@@ -1723,7 +1731,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
  * filled WHILE walking, so a row's own click closure can read the whole tree's pick table (a range pick
  * resolves ids the walk had not reached yet when that row was converted). */
 export type TreeWalkContextV1 = {
-  /** 🪟️ Host-owned expansion, keyed by authored node key. */
+  /** 🪟️ Host-owned expansion, keyed by window path (windowed containers) or authored node key (everything else). */
   readonly openStates?: Readonly<Record<string, boolean>>;
   /** 🪟️ Filled while walking: the same expansion re-keyed onto `<Tree>`'s DOM ids. */
   readonly domOpenStates?: Record<string, boolean>;
@@ -1794,9 +1802,12 @@ export function treeDomIdFromOpenStateIdV1(stateId: string): string {
   return stateId;
 }
 
-/** 🪟️ Records one converted row's identity in the walk's translation tables. */
-function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, key: string, domId: string): void {
-  if (!walk || !key) return;
+/** 🪟️ Records one converted row's identity in the walk's translation tables. `identity` is the row's WINDOW
+ * PATH when it is a windowed container and its authored key otherwise — the same string the host's open map,
+ * its window map and `ViewModel::tree_windows` are keyed by, and the one an `onOpenStateChange` reports back. */
+function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, identity: string, domId: string): void {
+  if (!walk || !identity) return;
+  const key = identity;
   walk.keysByDomId?.set(domId, key);
   const open = walk.openStates?.[key];
   if (open === undefined || !walk.domOpenStates) return;
@@ -1804,10 +1815,18 @@ function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, key: string, d
 }
 //#endregion 🪟️TreeWindows
 
-export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1): TreeDataItem {
+export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string): TreeDataItem {
   const { record, props } = node;
-  const domId = uiNodeDomId(state.surface, record.key, record.id);
-  registerTreeWalkRow(walk, record.key, domId);
+  // 🪟️ A WINDOW is identified by its path; an unwindowed row has no window identity and keeps its authored
+  // key, which is the only thing the host ever holds for it (a fold).
+  const windowPath = props.window ? treeWindowPathOf(parentWindowPath, record.key) : undefined;
+  // 🔑️ …and the window's ROW id is the path too, because `🌳️Tree` keys its expansion map by row id and the
+  // authored key is legitimately shared across a body (`📐️cad`'s one `object.id` under four pane sections):
+  // two rows under one id would fold together. Identical to the key for a top-level container, so nothing
+  // flat changes; `walk.pickTargets` still resolves this id back to the bare `record.key`, so picks do not
+  // notice (📓️f2-sdk-body-node-ledger.md §10).
+  const domId = uiNodeDomId(state.surface, windowPath ?? record.key, record.id);
+  registerTreeWalkRow(walk, windowPath ?? record.key, domId);
   const presence = overlay.byKey.get(record.key) ?? {};
   const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
@@ -1821,6 +1840,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     id: domId,
     window: props.window ?? undefined,
     windowKey: record.key || undefined,
+    windowPath,
     label: props.label,
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
@@ -1833,7 +1853,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), context)}</> : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk)) : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
     actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
@@ -1863,16 +1883,19 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
       const items = collectTreeItems(state, sectionRecord.children ?? []);
       const domId = uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id);
-      registerTreeWalkRow(walk, sectionRecord.key, domId);
+      // 🪟️ A section is top-level, so its window path IS its key — a flat body is unchanged by path identity.
+      const windowPath = sectionProps.window ? treeWindowPathOf(undefined, sectionRecord.key) : undefined;
+      registerTreeWalkRow(walk, windowPath ?? sectionRecord.key, domId);
       return {
         id: domId,
         window: sectionProps.window ?? undefined,
         windowKey: sectionRecord.key || undefined,
+        windowPath,
         label: sectionProps.label ?? "",
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk, windowPath)),
       };
     });
     return { sections, walk };

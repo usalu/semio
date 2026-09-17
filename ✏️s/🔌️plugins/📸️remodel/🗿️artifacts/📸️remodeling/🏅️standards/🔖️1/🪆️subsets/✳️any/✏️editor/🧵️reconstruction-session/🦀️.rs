@@ -1055,7 +1055,6 @@ impl ReconstructionRunJob {
     }
 
     fn fault(&mut self, reason: ReconstructionRunReason, args: &[u64]) {
-        eprintln!("TEMPDIAG reconstruction run fault {reason:?} {args:?} engine failure {:?}", self.engine.as_ref().map(|engine| engine.stage()));
         self.step(reason, args);
         self.phase = RunPhase::Settled;
         self.owed.push_back(Owed::Fault);

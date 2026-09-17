@@ -353,14 +353,14 @@ async fn initial_document_seeds_building_component_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn extension_question_falls_back_without_contribution() {
     let node = render_extension_question(&building_component_question(), &Object::new(), &[], "try", true);
-    let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("Extension unavailable"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_emits_external_slot_when_contribution_registered() {
     let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), "try", true);
-    let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
 }
@@ -383,7 +383,7 @@ async fn extension_question_emits_external_slot_when_topic_contribution_register
         )),
     }];
     let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, "try", true);
-    let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
 }

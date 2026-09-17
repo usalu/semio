@@ -1,8 +1,8 @@
 {
-  "mutation": "replaceNodeGeometry",
   "id": "node-a",
-  "newShape": "rectangle",
+  "mutation": "replaceNodeGeometry",
+  "newHeight": 16.0,
   "newRadius": null,
-  "newWidth": 24,
-  "newHeight": 16
+  "newShape": "rectangle",
+  "newWidth": 24.0
 }

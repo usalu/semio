@@ -92,14 +92,18 @@ const readTree = (namespace) => page.evaluate((nsIn) => {
   });
   const num = (el, name) => Number(el.getAttribute(name) ?? "NaN");
   const nsKeys = new Set(rows.map((r) => r.key));
-  const containers = [...(rootEl.querySelectorAll('[data-tree-window-key]') ?? [])].map((el) => {
+  // 🔑️ A window is addressed by its PATH (`data-tree-window-path`): the enclosing windowed containers' node
+  // keys, outermost first, then its own, joined by U+001F. `data-tree-window-key` stays the authored node key
+  // — the pick target id — and is legitimately shared by containers under different parents.
+  const containers = [...(rootEl.querySelectorAll('[data-tree-window-path]') ?? [])].map((el) => {
     const rect = el.getBoundingClientRect();
     const spacers = [...el.querySelectorAll('[data-slot="tree-window-spacer"]')]
-      .filter((s) => s.closest("[data-tree-window-key]") === el)
+      .filter((s) => s.closest("[data-tree-window-path]") === el)
       .map((s) => ({ edge: s.getAttribute("data-tree-window-spacer"), rows: Number(s.getAttribute("data-tree-window-rows") ?? "NaN"), heightPx: Math.round(s.getBoundingClientRect().height) }));
-    const ownRows = [...el.querySelectorAll(`[id^="${prefix}"]`)].filter((r) => r.closest("[data-tree-window-key]") === el);
+    const ownRows = [...el.querySelectorAll(`[id^="${prefix}"]`)].filter((r) => r.closest("[data-tree-window-path]") === el);
     return {
       key: el.getAttribute("data-tree-window-key"),
+      path: el.getAttribute("data-tree-window-path"),
       slot: el.getAttribute("data-slot"),
       total: num(el, "data-tree-window-total"),
       offset: num(el, "data-tree-window-offset"),

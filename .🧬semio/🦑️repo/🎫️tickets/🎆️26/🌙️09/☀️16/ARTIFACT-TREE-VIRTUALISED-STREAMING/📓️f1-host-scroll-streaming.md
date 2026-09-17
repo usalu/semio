@@ -8,13 +8,14 @@ Files changed (all absolute, all surgical; no `🗑️generated` folder swept, n
 
 | file | what |
 | --- | --- |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx` | `TREE_WINDOW_BODY_ROWS_MAX` → `TREE_WINDOW_BODY_NODE_BUDGET = 111` + `1 + rows` cost model in `capTreeWindowRequests`; `TreeWindowRowMeasure` + `TreeWindowContainerMeasure.rows`; `treeWindowRowIndexAt` (real row geometry) inside `treeWindowVisibleRowsForViewport`; `treeWindowRowIndexOf`; `data-tree-window-row` stamped on every materialised row (`TreeItemProps.windowRowIndex`, all three `TreeItem` layouts, threaded from both data views) |
-| `…/🖱️ui/🎯️targets/⚛️react/🟦️.tsx` | re-export list only: renamed constant, `treeWindowRowIndexOf`, `TreeWindowRowMeasure` |
-| `…/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx` | row-index stamping law, variable-row-pitch law, `🧮️BodyRowsBudget` → `🧮️BodyNodeBudget` rewritten for the node cost model |
-| `…/💻️os/…/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx` | `treeWindowScrollViewport` rewritten; `treeWindowDocumentScroller`, `treeWindowViewportMetrics`, `treeWindowRowsUnder`, `treeWindowBodyRequestsV1`, `reportDuplicateTreeWindowKeys` added; `treeWindowContainersUnder` re-based on client space + row measures; `useTreeWindowObserver` measure/listen rules |
-| `…/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx` | 6 new laws (scroll-element selection ×3, client-box measurement, settled-window idempotence ×2, nested container, duplicate key), existing laws re-based on real row geometry |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx` | `TREE_WINDOW_PATH_SEPARATOR`, `treeWindowPathOf`, `TreeData{Item,Section}.windowPath`, `data-tree-window-path`; `TREE_WINDOW_BODY_ROWS_MAX` → `TREE_WINDOW_BODY_NODE_BUDGET` + `1 + rows` cost model in `capTreeWindowRequests`; `TreeWindowRowMeasure` + `TreeWindowContainerMeasure.rows`; `treeWindowRowIndexAt` (real row geometry) inside `treeWindowVisibleRowsForViewport`; `treeWindowRowIndexOf`; `data-tree-window-row` stamped on every materialised row (`TreeItemProps.windowRowIndex`, all three `TreeItem` layouts, threaded from both data views) |
+| `…/🖱️ui/🎯️targets/⚛️react/🟦️.tsx` | re-export list only: renamed constant, `treeWindowRowIndexOf`, `TreeWindowRowMeasure`, `TREE_WINDOW_PATH_SEPARATOR`, `treeWindowPathOf` |
+| `…/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx` | window-path law, row-index stamping law, variable-row-pitch law, `🧮️BodyRowsBudget` → `🧮️BodyNodeBudget` rewritten for the node cost model |
+| `…/💻️os/…/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx` | `treeWindowScrollViewport` rewritten; `treeWindowDocumentScroller`, `treeWindowViewportMetrics`, `treeWindowRowsUnder`, `treeWindowBodyRequestsV1`, `reportDuplicateTreeWindowKeys` added; `treeWindowContainersUnder` re-based on client space + row measures + path keying; window paths computed in the walk; a windowed row's DOM id path-qualified; `useTreeWindowObserver` measure/listen rules |
+| `…/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx` | 7 new laws (incl. one node key under two parents = two independent windows) (scroll-element selection ×3, client-box measurement, settled-window idempotence ×2, nested container, duplicate key), existing laws re-based on real row geometry |
 | `…/🧱️elements/🛠️ShellHelpers/🟦️.tsx` | `TreeWindowBodyState.measured`; `reportWindows` records measured + open; `setOpen(true)` forgets a stale measurement; `viewStateFields` fallback narrowed |
-| `…/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/🟦️.tsx` | 3 new scheduler laws (off-screen vs never-measured, fold-wins-over-report, body switch) |
+| `🎫️…/🐍️tree-window-probe.mjs` | selects containers by `[data-tree-window-path]` (same element, same ownership filters) and reports `path` beside `key` |
+| `…/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/🟦️.tsx` | 4 new laws (off-screen vs never-measured, fold-wins-over-report, body switch, path-keyed fold of one of two containers sharing a key) |
 
 `🏛️ShellHost/🟦️.tsx` was **not** touched — its wiring (scheduler, `settled`, `viewStateFields` in both view
 states, per-tab memo cache) was already correct and is unchanged.
@@ -82,7 +83,7 @@ and the body budget is spent where the rows actually are.
 ## 3. One body budget, one cost model — coordinator decision (1)
 
 ```ts
-export const TREE_WINDOW_BODY_NODE_BUDGET = 111;
+export const TREE_WINDOW_BODY_NODE_BUDGET = 103;   // F2 lowered 111 → 103 to match the real ledger
 ```
 
 in `🌳️Tree/🟦️.tsx` (exact spelling, one line, for **F2's Rust parity law to grep**). It is a hand-written
@@ -141,6 +142,39 @@ order-independence on the guest is what makes that safe.
 by — so it names the key, the body, and what goes wrong (one open state and one window shared, one measurement
 silently overwriting the other).
 
+## 5b. A window is addressed by its PATH, not by its node key
+
+The node key of a windowed container is also the **pick target id** the tree-level `interactionSelect`
+dispatches (`targets: [{granularity, id: record.key}]`), so it cannot be namespaced to make it unique — and it
+is not unique: `📐️cad` builds the same `object.id` under four pane sections of one body and `🏗️fem` builds
+`case.id` and `combination.id` in one body (`📓️f2-sdk-body-node-ledger.md` §10). Under key identity those
+containers shared one open state, one window, and each other's measurements.
+
+```ts
+export const TREE_WINDOW_PATH_SEPARATOR = "\u001f";   // 🌳️Tree/🟦️.tsx, one line, U+001F
+treeWindowPathOf(parentWindowPath, windowKey)          // enclosing windowed containers, outermost first, then its own
+```
+
+Byte-for-byte the SDK's `TreeWindows::path_of` (`🔌️plugin/🦀️.rs:6070`) and
+`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR = "\u{1f}"`. **A top-level section's path IS its
+key**, so every flat body — requests, view state, laws, probe expectations — is byte-identical to before.
+A nested container's path is `parent␟child`.
+
+What is keyed by path: `TreeWindowBodyState.open` / `.windows` / `.measured`, the observer's container map and
+report signature, `treeWindows[].nodeKey` on the wire, duplicate detection, and the controlled open-state
+lookup. What is **not**: `data-tree-window-key`, `walk.pickTargets` and every dispatched pick — those stay the
+authored `record.key`.
+
+**One further collision had to go with it.** `<Tree>` keys its expansion map by the ROW's DOM id, and
+`uiNodeDomId(surface, key, …)` is `<surface>/<key>` — so the two `shared` rows above carried the *same* HTML
+id and folded together whatever the host asked. A windowed container's row id is therefore
+`uiNodeDomId(surface, windowPath, …)`; identical to before for a top-level container, and `walk.pickTargets`
+still maps that id back to the bare `record.key`, so the pick does not notice. Unwindowed rows are untouched.
+
+The path is computed **structurally**, while the interpreter walks records to `TreeData` (each row is handed
+its parent's window path), and mirrored into the DOM as `data-tree-window-path` — one attribute read, no
+ancestor walk in the observer, and a path that is visible to the browser probe.
+
 ## 6. No request/refresh feedback loop
 
 Three independent stops, all now true by construction:
@@ -167,41 +201,43 @@ waiting for the next store revision.
 ## 7. The DOM / scroll contract `🐍️tree-window-probe.mjs` step (e) must now satisfy
 
 Per panel body, with `scroller` = the element `treeWindowScrollViewport` resolves (in practice
-`[data-slot="scroll-area"]`, the one with `scrollHeight − clientHeight > 1`):
+`[data-slot="scroll-area"]`, the one with `scrollHeight − clientHeight > 1`). **`data-tree-window-path` is new**;
+nothing else in this contract changed with path identity, and on a flat body every value is what it was.
 
 | # | assertion |
 | --- | --- |
 | e1 | `scroller.scrollHeight − scroller.clientHeight > 1` — the observed element really scrolls. The inner `[data-slot="scroll-area-viewport"]` must NOT be the scroller (`scrollHeight === clientHeight` there). |
-| e2 | Every windowed container carries all four `data-tree-window-{key,total,offset,length}` on its `tree-section-content` / `tree-item-content` / `tree-property-content` element, with `offset + length ≤ total`. |
-| e3 | Each such container's own rows carry `data-tree-window-row`, values exactly `offset … offset+length−1` in ascending top order, selected by `[data-tree-window-row]` filtered on `closest('[data-tree-window-key]') === container`. |
+| e2 | Every windowed container carries `data-tree-window-{key,path,total,offset,length}` on its `tree-section-content` / `tree-item-content` / `tree-property-content` element, with `offset + length ≤ total`. |
+| e2b | **`-path` is the identity**: a top-level container's `-path` equals its `-key`; a nested one's is `<parent path>\u001f<key>`. The same `-key` may appear twice in a body (that is legal and not a duplicate); the same `-path` may not. Every `treeWindows[].nodeKey` the host sends equals some container's `-path`. |
+| e3 | Each such container's own rows carry `data-tree-window-row`, values exactly `offset … offset+length−1` in ascending top order, selected by `[data-tree-window-row]` filtered on `closest('[data-tree-window-path]') === container`. |
 | e4 | Container extent: `rect.height ≈ total × rowHeight + Σ(nested expanded extents)`; leading spacer `data-tree-window-rows === offset`, trailing `=== total − offset − length`; a zero-row spacer is absent. |
 | e5 | **Streaming.** Set `scroller.scrollTop = k × rowHeight` for a `k` well past the current window, wait ≤ 500 ms, re-read: `data-tree-window-offset` has moved and the new `[offset, offset+length)` covers the row under `scroller.scrollTop` — i.e. `offset ≤ rowAt(scrollTop) < offset + length`, where `rowAt` is read off the `data-tree-window-row` tops, not off `scrollTop / rowHeight`. |
 | e6 | **Stability.** `scroller.scrollTop` and `scroller.scrollHeight` are unchanged (±1 px) across that refresh. |
 | e7 | **Idempotence.** With the scroll position held, no further `refreshUi` for that body occurs in the next 1 s (count `partial` refreshes for `panelBodies: [bodyKey]`), and `data-tree-window-offset` stops moving. |
-| e8 | **Budget.** `Σ over the body's containers of (1 + data-tree-window-length) ≤ 111`, and no `nodes: N vs max_nodes` fault in the console. |
+| e8 | **Budget.** `Σ over the body's containers of (1 + data-tree-window-length) ≤ TREE_WINDOW_BODY_NODE_BUDGET` (103 as of 2026-09-17; read the constant, do not hard-code it), and no `nodes: N vs max_nodes` fault in the console. |
 | e9 | **Lazy expand.** Click a closed container whose `total > 0`: the header wears `.border-loading` and its content has a full-`total` spacer for at most one refresh, then `length > 0` and the ring clears. |
-| e10 | **Nesting.** Expand a group inside a windowed section, scroll into it: the SECTION's `data-tree-window-offset` still covers that group's own row index (the group's content element is still in the DOM). |
-| e11 | No duplicate `data-tree-window-key` within one body, and no `[tree-window] duplicate key` console error. |
+| e10 | **Nesting.** Expand a group inside a windowed section, scroll into it: the SECTION's `data-tree-window-offset` still covers that group's own row index (the group's content element is still in the DOM), and the group's `-path` is `<section key>\u001f<group key>`. |
+| e11 | No duplicate `data-tree-window-path` within one body, and no `[tree-window] duplicate key` console error. (A duplicate `-key` under different parents is expected and must NOT be reported.) |
 | e12 | Unchanged from before: no `.more` key, no `+N` label anywhere in the body. |
 
 ## 8. What was run, in the foreground, and what it said
 
 | gate | result |
 | --- | --- |
-| `@semio-tech/ui-react` — `test long "🌳️Tree"` | **31 passed / 31** (23 before this packet). |
-| `@semio-tech/ui-react` — `test long` (whole corpus) | **18 failed / 759 passed (777)**, 3 files. **Zero in `🌳️Tree`** (`grep -c "FAIL .*🌳️Tree"` → 0). Pre-existing / peer-owned — evidence below. Log: `🗑️generated/f1/vitest-ui-react.txt`. |
+| `@semio-tech/ui-react` — `test long "🌳️Tree"` | **32 passed / 32** (23 before this packet). |
+| `@semio-tech/ui-react` — `test long` (whole corpus) | **17 failed / 761 passed (778)**, 2 files. **Zero in `🌳️Tree`** (`grep -c "FAIL .*🌳️Tree"` → 0). Pre-existing / peer-owned — evidence below. Log: `🗑️generated/f1/vitest-ui-react.txt`. |
 | `@semio-tech/ui-react:typecheck` | 664 errors repo-wide, **0 in any file this packet wrote**. The only `🌳️Tree` lines are the six P4a already recorded as pre-existing (`📖️stories` 66/100, `🧪️tests/🧩️component` 111/153/154/169), byte-identical. `🌳️Tree/🟦️.tsx` and `🎯️targets/⚛️react/🟦️.tsx`: zero. Log: `🗑️generated/f1/typecheck-ui-react.txt`. |
-| `@semio-tech/framework-renderer-react` — `test long "🗣️Interpreter"` | **112 passed / 112** (the whole in-source Interpreter corpus, including the 12 tree-window laws). Log: `🗑️generated/f1/vitest-renderer-interpreter.txt`. |
-| `@semio-tech/framework-renderer-react` — `test long "ShellHelpers"` | **21 passed / 21** across 3 files (tree-windows 10, `🧩️component`, `⏯️tool-run-panel`). Log: `🗑️generated/f1/vitest-renderer-shellhelpers.txt`. |
-| `@semio-tech/framework-renderer-react:typecheck` | 859 errors repo-wide, **0 in any line this packet wrote**. The four in files it touches are byte-identical to `HEAD` (verified with `git show HEAD:<path>`): `🗣️Interpreter/🟦️.tsx(306,24)` `treeSectionsCatalogueDragMime`, `(2205,164)` `import.meta.dir`, `🗣️Interpreter/🧪️tests/🧪️unknown-component-placeholder(140,45)`, `🛠️ShellHelpers/🟦️.tsx(656,26)` `Uint8Array`/`BlobPart`. All four are TS-lib/typing drift on untouched lines. Log: `🗑️generated/f1/typecheck-renderer-react.txt`. |
+| `@semio-tech/framework-renderer-react` — `test long "🗣️Interpreter"` | **113 passed / 113** (the whole in-source Interpreter corpus, including the 13 tree-window laws). Log: `🗑️generated/f1/vitest-renderer-interpreter.txt`. |
+| `@semio-tech/framework-renderer-react` — `test long "ShellHelpers"` | **22 passed / 22** across 3 files (tree-windows 11, `🧩️component`, `⏯️tool-run-panel`). Log: `🗑️generated/f1/vitest-renderer-shellhelpers.txt`. |
+| `@semio-tech/framework-renderer-react:typecheck` | 858 errors repo-wide, **0 in any line this packet wrote**. The four in files it touches are byte-identical to `HEAD` (verified with `git show HEAD:<path>`): `🗣️Interpreter/🟦️.tsx(308,24)` `treeSectionsCatalogueDragMime`, `(2228,164)` `import.meta.dir`, `🗣️Interpreter/🧪️tests/🧪️unknown-component-placeholder(140,45)`, `🛠️ShellHelpers/🟦️.tsx(656,26)` `Uint8Array`/`BlobPart`. All four are TS-lib/typing drift on untouched lines. Log: `🗑️generated/f1/typecheck-renderer-react.txt`. |
 
 `test long` on the WHOLE renderer corpus still exceeds its own 300 s harness budget (pre-existing, P4b's O3), so
 the two suites above were run by path filter.
 
-### The 18 ui-react failures are not this packet's
+### The 17 ui-react failures are not this packet's
 
-- 16 of them are in `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s own in-source tests; the other two are
-  `📨️UIDialog` and `🕸️Diagram`. This packet's only edit to that react-target file is three names added to the
+- 16 of them are in `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s own in-source tests; the other is
+  `📨️UIDialog`. This packet's only edit to that react-target file is three names added to the
   re-export lists — the rest of its working-tree diff is a **peer's** concurrent rewrite of
   `normalizeEngagementActionText` / `applySearchSpaceAction` / the new `searchSpaceConfirmsLine` (that peer's own
   `Shell components > Search…` failures were still red at 10:43 and green by 11:21, with no change from me).
@@ -212,7 +248,8 @@ the two suites above were run by path filter.
   `UIDialog` / `Diagram`-perf assertions. None touches a tree, a window, paging, `setPanelPage`,
   `UI_BUILT_CHILDREN_MAX` or `UI_VALUE_PAGE_ROWS`. `tree helpers > WindowChrome stamps data-dim` is P4a's
   documented in-suite pollution case (green in isolation).
-- P4a measured 17 on this corpus before wave 4; the delta is peer churn in that one file, in both directions.
+- P4a measured 17 on this corpus before wave 4; the count has moved in both directions with peer churn in that
+  one file and has been 17, 18 and 24 during this packet — never once inside `🌳️Tree`.
 
 ## 9. A peer's broken file blocked the renderer gates for 45 minutes
 
@@ -232,18 +269,29 @@ harness under `🗑️generated/f1`, 11/11 green; it has been deleted now that t
 
 ## 10. What F2 must match
 
-1. **`TREE_WINDOW_BODY_NODE_BUDGET = 111`** lives on one line in
+1. **`TREE_WINDOW_BODY_NODE_BUDGET`** lives on one line in
    `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`, spelled exactly like that, for the Rust parity law to
-   grep. If the SDK ledger's real figure is not 111, change the Rust constant and this line together.
+   grep. F2 has since lowered it 111 → **103** to match the real ledger; the Tree tests now DERIVE their
+   expectations from the constant rather than pinning a number, so the next parity change costs no test edits.
 2. **The cost model the host prices with is `1 + rows` per windowed container, every container in the body,
-   nested ones once.** The host guarantees `Σ(1 + rows) ≤ 111` over the whole report. If the guest charges
+   nested ones once.** The host guarantees `Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET` over the whole report. If the guest charges
    anything else — a nested `tree_window_item` twice, a per-body fixed headroom on top — the two sides diverge
    again exactly as §1 of the review describes.
 3. **Every container in the body appears in `ViewModel.tree_windows`**, including off-screen ones at `rows: 0`.
    Those must materialise spacers only and cost one node. They are sorted by `(bodyKey, nodeKey)`, so the guest
    must be order-independent.
 4. **`rows: 0` must not be read as "closed"** — the container stays open and keeps its `offset`.
-5. **Duplicate `node_key` within one body**: the host now logs `[tree-window] duplicate key …` once. F2's SDK
+5. **Window identity is the PATH** (`TreeWindows::path_of`, verified byte-identical to
+   `treeWindowPathOf`): enclosing windowed containers' keys, outermost first, then its own, joined by U+001F;
+   a top-level container's path IS its key. Every `treeWindows[].nodeKey` the host sends is a path. `node_key`
+   in `TreeWindowRequest` therefore means "path"; the authored key is only ever the pick target id.
+6. **`TREE_WINDOW_PATH_SEPARATOR`** is on one line in `🌳️Tree/🟦️.tsx`. The parity law
+   (`🔌️plugin/🧪️tests/🔬️app-panel-kit/🦀️.rs:267`) accepts either a raw U+001F byte or the `\u001f` escape; the
+   file currently carries the **raw byte**, which a peer normalised it to. ⚠️ A raw control character in source
+   is invisible and easily lost — the coordinator's own brief lost it in transit — so if that line is ever
+   rewritten, prefer the escape; the law already accepts it.
+7. **Duplicate `node_key` within one body**: the host now logs `[tree-window] duplicate key …` once, on a
+   duplicate **path**. Two containers sharing a node key under different parents are legal and silent. F2's SDK
    refusal should name the same thing so the two messages read as one fault.
 
 ## 11. Open issues

@@ -63,11 +63,26 @@ mod tests {
         panic!("mounted fill close exceeded bounded opportunities");
     }
 
+    /// 🔁️ `WorkerPool::try_submit` is a TRY: it answers `Contended` whenever the live worker thread
+    /// holds its own lane queue, and `Saturated` when that queue is full. Both are back-pressure the
+    /// owner is expected to retry — `submit_retained_timer_job` reschedules on exactly these two —
+    /// so treating the first refusal as a fault made every mounted fill law flaky-by-construction.
     fn pump_fill_session(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>, pool: &semio_framework_async::WorkerPool) -> WorkerJobPoll {
-        match session.pump_one(pool, semio_framework_async::Lane::Background) {
-            Ok(poll) => poll,
-            Err(_) => panic!("mounted fill pump fault"),
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            match session.pump_one(pool, semio_framework_async::Lane::Background) {
+                Ok(poll) => return poll,
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
+                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated,
+                ))) => std::thread::yield_now(),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Contention(_))) => std::thread::yield_now(),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(kind))) => panic!("mounted fill pump fault: the worker pool refused the step submission ({kind:?})"),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted)) => panic!("mounted fill pump fault: the step sequence is exhausted"),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Take(_)) => panic!("mounted fill pump fault: the finished step could not be taken back"),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::MissingTicket) => panic!("mounted fill pump fault: the session holds no ticket"),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::CheckedOut) => panic!("mounted fill pump fault: an outcome is still checked out"),
+            }
         }
+        panic!("mounted fill pump never won admission within its bounded opportunities")
     }
 
     fn close_fill_job(mut job: BoardFillJob) {
@@ -180,8 +195,16 @@ mod tests {
                         StepOutcome::Yield => {
                             session.resume().expect("yield resume");
                         }
-                        StepOutcome::Cancelled => panic!("fill job unexpectedly cancelled"),
+                        StepOutcome::Cancelled => {
+                            while !outcome.terminal_is_empty() {
+                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                            }
+                            panic!("fill job unexpectedly cancelled");
+                        }
                         StepOutcome::Fault(_) => {
+                            while !outcome.terminal_is_empty() {
+                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                            }
                             let code = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
                             panic!("fill job faulted: {code:?}");
                         }
@@ -317,6 +340,7 @@ mod tests {
             }],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
@@ -333,6 +357,52 @@ mod tests {
         assert!(ev2.contains("a:h0"));
         assert!(ev2.contains("nodeId"));
         assert!(ev2.contains("edgeId"));
+    }
+
+    /// 🔗️ LAW: "open handle" is ONE definition across all three slot entry points. The pointer path
+    /// already skipped a fastened handle; `brush_open_slot` (the suggestions popup) must resolve an
+    /// EMPTY candidate page on one too, so a fully fastened document refuses politely instead of
+    /// placing a second node on an existing fastening.
+    #[test]
+    fn board_host_brush_open_slot_refuses_a_fastened_handle() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 2.0);
+        h.set_active_utility("select");
+        h.set_suggestion_offset(40.0);
+        h.set_brush_node_size(40.0);
+        let catalogs = json!({
+            "handleKinds": [{ "id": "port", "name": "Port", "color": "#888" }],
+            "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }] }]
+        });
+        h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
+        let fixture = json!({
+            "schema": "puzzle.2d.fixture",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "a", "nodeKind": "a.kind", "shape": "circle", "radius": 40.0, "x": 0.0, "y": 0.0, "handles": [
+                    { "id": "a:h0", "handleKind": "port", "angle": 0.0 },
+                    { "id": "a:h1", "handleKind": "port", "angle": 3.141592653589793 }
+                ] },
+                { "id": "b", "nodeKind": "a.kind", "shape": "circle", "radius": 40.0, "x": 200.0, "y": 0.0, "handles": [
+                    { "id": "b:h0", "handleKind": "port", "angle": 3.141592653589793 }
+                ] }
+            ],
+            "edges": [{ "id": "e0", "edgeKind": "link", "source": "a:h0", "target": "b:h0" }]
+        });
+        assert!(h.parse_fixture_json(&fixture.to_string()), "the two-node fixture must parse");
+        let _ = h.drain_events_json();
+
+        h.brush_open_slot("a:h0");
+        let fastened = h.drain_events_json();
+        assert!(fastened.contains("\"candidates\":[]"), "a fastened handle must resolve an empty candidate page, got: {fastened}");
+        h.brush_commit_slot();
+        assert!(!h.drain_events_json().contains("brushPlace"), "an empty page must place nothing");
+
+        h.brush_open_slot("a:h1");
+        let free = h.drain_events_json();
+        assert!(free.contains("brush.kind"), "a free handle must still resolve its compatible kinds, got: {free}");
+        h.brush_cancel_slot();
     }
 
     #[test]
@@ -390,6 +460,7 @@ mod tests {
             }],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
@@ -917,7 +988,12 @@ mod tests {
                             break;
                         }
                         StepOutcome::Yield => session.resume().expect("field cursor yield resume"),
-                        StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("field cursor job terminated before checkpoint"),
+                        StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => {
+                            while !outcome.terminal_is_empty() {
+                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                            }
+                            panic!("field cursor job terminated before checkpoint");
+                        }
                     }
                 }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => panic!("field cursor session entered invalid phase"),
@@ -1169,6 +1245,7 @@ mod tests {
             ],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
@@ -1243,6 +1320,7 @@ mod tests {
             }],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
@@ -1506,6 +1584,7 @@ mod tests {
             }],
             edges: vec![],
             wires: vec![],
+            regions: vec![],
             selection_exit_highlight_ids: vec![],
         }
     }

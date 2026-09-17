@@ -64,7 +64,7 @@ pub(crate) mod context {
             .await
             .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
             .await
-            .io(AppIo::from_artifact(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
+            .io(AppIo::from_artifact(artifact_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
                 .await
                 .with_ports(ports)
                 .await)
@@ -264,11 +264,11 @@ async fn initial_snapshot_is_empty_not_demo() {
 async fn node_graph_viewport_writes_typed_workflow_camera_config() {
     let projection = SpaceApp::initial_snapshot().await;
     let config = SpaceConfig::default();
-    let viewport = semio_framework_os::Viewport2d { x: 17.0, y: -9.0, zoom: 2.5 };
-    let emit = context::studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(commands::node_graph_viewport::NodeGraphViewport { viewport })).await.expect("viewport");
+    let viewport = semio_framework_os_kernel::Viewport2d { x: 17.0, y: -9.0, zoom: 2.5 };
+    let emit = context::studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(crate::engine::space::commands::node_graph_viewport::NodeGraphViewport { viewport })).await.expect("viewport");
     assert!(emit.artifact_mutations.is_empty());
     let next = context::apply_config(&config, &emit.config_mutations).await;
-    assert_eq!(next.camera.get(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW), Some(&SpaceWindowCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom }));
+    assert_eq!(next.camera.get(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW), Some(&crate::engine::space::config::SpaceWindowCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom }));
 }
 
 #[semio_framework_async_macros::async_test]

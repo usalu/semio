@@ -3,12 +3,14 @@
 //! as its own `create_object`/`connect_vortices` pairs.
 
 use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
-use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d_object, puzzle3d_snapshot, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
+use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d_object, puzzle3d_snapshot, puzzle3d_target_volume, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
 use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::tools::fill as fill3d;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{connect_vortices, create_object, Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{
+    change_target_volume_hidden, change_target_volume_locked, connect_vortices, create_object, create_target_volume, delete_target_volume, move_target_volume, rotate_target_volume, scale_target_volume, Puzzle3dMutation,
+};
 use std::sync::Arc;
 
 //#region 🔖️Build
@@ -55,9 +57,30 @@ fn puzzle3d_ops(provisional: &[Puzzle5dMutation]) -> Result<Vec<Puzzle3dMutation
         .map(|mutation| match mutation {
             Puzzle5dMutation::CreatePart(create) => Ok(create_object(puzzle3d_object(&editor_part(&create.part)?, None), None)),
             Puzzle5dMutation::ConnectGrips(connect) => Ok(connect_vortices(connect.id.clone(), connect.source.clone(), connect.target.clone(), connect.gap, connect.shift, connect.rise, connect.rotation, connect.turn, connect.tilt, connect.x, connect.y)),
+            Puzzle5dMutation::CreateTargetVolume(create) => Ok(create_target_volume(puzzle3d_target_volume(&editor_target_volume(&create.target_volume)?), create.index)),
+            Puzzle5dMutation::DeleteTargetVolume(delete) => Ok(delete_target_volume(delete.id.clone())),
+            Puzzle5dMutation::MoveTargetVolume(moved) => Ok(move_target_volume(moved.id.clone(), moved.new_origin)),
+            Puzzle5dMutation::RotateTargetVolume(rotated) => Ok(rotate_target_volume(rotated.id.clone(), rotated.new_orientation)),
+            Puzzle5dMutation::ScaleTargetVolume(scaled) => Ok(scale_target_volume(scaled.id.clone(), scaled.new_scale.map(puzzle3d_scale))),
+            Puzzle5dMutation::ChangeTargetVolumeHidden(changed) => Ok(change_target_volume_hidden(changed.id.clone(), changed.new_hidden)),
+            Puzzle5dMutation::ChangeTargetVolumeLocked(changed) => Ok(change_target_volume_locked(changed.id.clone(), changed.new_locked)),
             _ => Err(Fault::from("puzzle5d-fill-run-provisional")),
         })
         .collect()
+}
+
+/// 🧊️ One schema target volume as the editor's own document type — the same `serde_json` hop
+/// `editor_part` takes for a part, so the planner bridge reads one shape whichever side minted it.
+fn editor_target_volume(volume: &crate::Puzzle5dTargetVolume) -> Result<crate::editor::puzzle5d::Puzzle5dTargetVolume, Fault> {
+    serde_json::from_value(serde_json::Value::from(&dsl::ToValue::to_value(volume))).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
+}
+
+/// 📏️ A schema-side `Puzzle5dScale` as the planner's own scale union.
+fn puzzle3d_scale(scale: crate::Puzzle5dScale) -> semio_s_artifact_puzzle_3d::Puzzle3dScale {
+    match scale {
+        crate::Puzzle5dScale::Uniform(factor) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Uniform(factor),
+        crate::Puzzle5dScale::Vec3(axes) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Vec3(axes),
+    }
 }
 
 //#endregion 🔖️Build

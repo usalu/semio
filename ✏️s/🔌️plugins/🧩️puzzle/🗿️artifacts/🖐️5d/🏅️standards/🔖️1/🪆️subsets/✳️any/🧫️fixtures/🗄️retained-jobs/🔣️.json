@@ -4,6 +4,11 @@
   "documentSchema": "puzzle.5d",
   "payloadSchema": "puzzle.5d.tool-command.v1",
   "toolIds": [
+    "addTargetVolume",
+    "deleteTargetVolume",
+    "relocateTargetVolume",
+    "setTargetVolumeFlag",
+    "setVoxelDims",
     "canvasPointerDown",
     "cycleBrushCandidate",
     "cycleBrushCandidateBack",
@@ -74,6 +79,7 @@
     "addBrushPart",
     "addNode",
     "addPartKind",
+    "addTargetVolume",
     "applyBoardEvents",
     "canvasPointerDown",
     "createFastener",
@@ -81,6 +87,7 @@
     "cycleBrushCandidateBack",
     "deleteFastener",
     "deleteSelection",
+    "deleteTargetVolume",
     "duplicateSelection",
     "editFastener",
     "engagementAbort",
@@ -98,6 +105,7 @@
     "patchPart",
     "proximityConnect",
     "registerBrushMesh",
+    "relocateTargetVolume",
     "retargetFastener",
     "rotateSelection",
     "scaleSelection",
@@ -130,7 +138,9 @@
     "setSunAzimuth",
     "setSunElevation",
     "setSunIntensity",
+    "setTargetVolumeFlag",
     "setTransformGumballFlag",
+    "setVoxelDims",
     "targetBrushSuggestions",
     "toggleSun",
     "translateSelection",
@@ -138,8 +148,8 @@
     "worldRelocate"
   ],
   "capacities": {
-    "rawBytes": 262144,
-    "decodedItems": 16384,
+    "rawBytes": 8192,
+    "decodedItems": 512,
     "workItems": 4096,
     "outputBytes": 262144,
     "stepMicros": 7500,
@@ -517,6 +527,34 @@
       "boundedSelectionBoundary",
       "interactionWrite",
       "closeOwner"
+    ],
+    "addTargetVolume": [
+      "boundedOriginDecode",
+      "gridSnap",
+      "createVolumeMutation",
+      "closeOwner"
+    ],
+    "deleteTargetVolume": [
+      "volumeScan",
+      "deleteVolumeMutation",
+      "closeOwner"
+    ],
+    "relocateTargetVolume": [
+      "volumeScan",
+      "originMutation",
+      "orientationMutation",
+      "scaleMutation",
+      "closeOwner"
+    ],
+    "setTargetVolumeFlag": [
+      "volumeScan",
+      "flagMutation",
+      "closeOwner"
+    ],
+    "setVoxelDims": [
+      "boundedScalarDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
     ]
   },
   "hostileSourceMutations": [
@@ -719,7 +757,7 @@
     },
     {
       "id": "max",
-      "rawBytes": 262144,
+      "rawBytes": 8192,
       "padding": "jsonWhitespace",
       "control": "pollAckClose",
       "expected": "terminalEmpty",
@@ -727,7 +765,7 @@
     },
     {
       "id": "maxPlusOne",
-      "rawBytes": 262145,
+      "rawBytes": 8193,
       "control": "admit",
       "expected": "rejectedUnchanged",
       "fingerprint": "8193:0:0:0:0:0"
@@ -1863,7 +1901,8 @@
       "expectedInteraction": "subtractiveClearSelection",
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "note": "the document really becomes that example's own part/fastener count"
     },
     {
       "id": "setActiveExampleConcreteForest",
@@ -1875,10 +1914,11 @@
       "documentFasteners": 0,
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "note": "the document really becomes that example's own part/fastener count"
     },
     {
-      "id": "setActiveExampleCapsuleDreamRefused",
+      "id": "setActiveExampleOverCapacity",
       "toolId": "setActiveExample",
       "input": {
         "exampleId": "capsule-dream"
@@ -1889,6 +1929,7 @@
         "capacityGate"
       ],
       "expectedNotice": "exampleTooLarge",
+      "note": "an example whose switch costs more semantic units than workItems refuses with one notice and an unchanged document; it never answers extent None (the opaque capacity fault)",
       "control": "pollAckClose",
       "expected": "terminalEmpty",
       "fingerprint": "0:0:0:0:0:0"
@@ -2160,6 +2201,135 @@
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
       "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addTargetVolumeGridSnapped",
+      "toolId": "addTargetVolume",
+      "input": {
+        "origin": [
+          3.4,
+          -2.1,
+          0.0
+        ]
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addTargetVolumeWithoutOrigin",
+      "toolId": "addTargetVolume",
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "deleteTargetVolumeExact",
+      "toolId": "deleteTargetVolume",
+      "input": {
+        "id": "target-volume-1"
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "relocateTargetVolumeFullPose",
+      "toolId": "relocateTargetVolume",
+      "input": {
+        "volumeId": "target-volume-1",
+        "after": {
+          "position": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "quaternion": [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "scale": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        }
+      },
+      "control": "pollEachProgressAckClose",
+      "expectedOrder": [
+        "moveTargetVolume:target-volume-1",
+        "rotateTargetVolume:target-volume-1",
+        "scaleTargetVolume:target-volume-1"
+      ],
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "relocateTargetVolumeLockedIsRefused",
+      "toolId": "relocateTargetVolume",
+      "input": {
+        "volumeId": "target-volume-locked",
+        "after": {
+          "position": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        }
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setTargetVolumeFlagHidden",
+      "toolId": "setTargetVolumeFlag",
+      "input": {
+        "id": "target-volume-1",
+        "flag": "hidden",
+        "value": true
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setVoxelDimsExact",
+      "toolId": "setVoxelDims",
+      "input": {
+        "axis": "w",
+        "value": 9
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedWindowConfigField": {
+        "voxelDims": [
+          9,
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "id": "setVoxelDimsClampsAboveMax",
+      "toolId": "setVoxelDims",
+      "input": {
+        "axis": "h",
+        "value": 4096
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedWindowConfigField": {
+        "voxelDims": [
+          4,
+          4,
+          64
+        ]
+      }
     }
   ],
   "oracle": {

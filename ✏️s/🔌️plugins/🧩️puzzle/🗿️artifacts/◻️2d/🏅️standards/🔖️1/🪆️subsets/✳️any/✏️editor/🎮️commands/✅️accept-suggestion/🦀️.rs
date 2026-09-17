@@ -17,14 +17,15 @@ fn dismiss(ctx: &mut Puzzle2dActionCtx<'_>) {
 /// handle first; `apply_host_events` then replays the host's `brushPlace` into the fixture, node and
 /// edge landing in the same delta. A document with no open handle places nothing and simply closes.
 pub fn accept_suggestion(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
-    if puzzle2d_restore_brush_slot(ctx).is_none() {
+    let requested = args.and_then(|value| value.get("handleId")).and_then(|value| value.as_str()).map(str::to_string);
+    if puzzle2d_restore_brush_slot(ctx, requested.as_deref()).is_none() {
         return dismiss(ctx);
     }
     let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map_or(ctx.scene.runtime.brush_candidate_index, |index| index as usize);
     ctx.host.borrow_mut().brush_set_candidate_index(index);
     let before: Vec<String> = fixture_nodes(&ctx.scene.fixture).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).map(str::to_string).collect();
     ctx.host.borrow_mut().brush_commit_slot();
-    apply_host_events(&mut ctx.host.borrow_mut(), ctx.scene);
+    let _ = apply_host_events(&mut ctx.host.borrow_mut(), ctx.scene);
     dismiss(ctx);
     let placed: Vec<String> = fixture_nodes(&ctx.scene.fixture).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).filter(|id| !before.iter().any(|known| known == id)).map(str::to_string).collect();
     if !placed.is_empty() {

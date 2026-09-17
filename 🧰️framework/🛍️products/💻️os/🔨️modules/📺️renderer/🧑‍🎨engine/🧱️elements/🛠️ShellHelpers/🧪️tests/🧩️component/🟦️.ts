@@ -14,6 +14,7 @@ import {
   segmentedDownloadSinkFactory,
   type SegmentedDownloadSink,
 } from "../../../📤️SegmentedDownload/🟦️.ts";
+import { buildActionCategoryTree, type ResolvedActionDefinition } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧱️Fixtures
@@ -151,3 +152,37 @@ describe("segmented download assembled sink", () => {
   });
 });
 //#endregion 🧺️AssembledSink
+
+//#region 🧰️ActionPaneGate
+describe("actions pane utility gate", () => {
+  const action = (id: string, kind: "history" | "mutation"): ResolvedActionDefinition =>
+    ({ id, label: id, kind, inPalette: true, args: [] }) as unknown as ResolvedActionDefinition;
+  const rows = (disabled: boolean) => {
+    const executed: string[] = [];
+    const sections = buildActionCategoryTree("2d-overview", "puzzle2d-play", [action("undo", "history"), action("deleteSelection", "mutation")], null, {}, disabled, () => {}, () => {}, () => {}, (descriptor) => executed.push(descriptor.action));
+    const items = sections.flatMap((section) => section.items ?? []);
+    return { executed, byId: new Map(items.map((item) => [item.id, item])) };
+  };
+
+  /** 🧯️ An armed utility gates the APP's verbs and nothing else. `mod+z` undoes while a brush is armed
+   * (the chord is bound outside this pane), so a pane that refuses `#action.undo` at the same moment
+   * contradicts its own keybinding — that contradiction made the row measure as inert with no fault
+   * (2026-09-17 ◻️2d battery, `undo-action-row-changes-document`). */
+  it("keeps framework-reserved rows pressable while an armed utility gates the app's own verbs", () => {
+    const gated = rows(true);
+    expect(gated.byId.get("action.deleteSelection")?.className).toContain("pointer-events-none");
+    expect(gated.byId.get("action.undo")?.className).toBeUndefined();
+    gated.byId.get("action.deleteSelection")?.onClick?.();
+    gated.byId.get("action.undo")?.onClick?.();
+    expect(gated.executed).toEqual(["undo"]);
+  });
+
+  /** ✅️ With no utility armed nothing is gated at all — the fix narrows the gate, it does not remove it. */
+  it("presses every row when no utility is armed", () => {
+    const open = rows(false);
+    open.byId.get("action.deleteSelection")?.onClick?.();
+    open.byId.get("action.undo")?.onClick?.();
+    expect(open.executed).toEqual(["deleteSelection", "undo"]);
+  });
+});
+//#endregion 🧰️ActionPaneGate

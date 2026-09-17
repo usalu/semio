@@ -148,6 +148,7 @@ fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
         placement_compatibility_json: "[]".into(),
         lod_mode: "automatic".into(),
         transform_flags: None,
+        area_brush_size: None,
         domain_id: None,
         suggestion_menu_json: None,
         tool_run_trace: None,

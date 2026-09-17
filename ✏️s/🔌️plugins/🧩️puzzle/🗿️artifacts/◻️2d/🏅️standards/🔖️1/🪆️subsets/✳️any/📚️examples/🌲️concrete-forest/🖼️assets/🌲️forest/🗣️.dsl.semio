@@ -30,3 +30,5 @@ nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height
 }
 edges [id:TEXT source:TEXT target:TEXT edge-kind:TEXT source-tip:TEXT target-tip:TEXT visible:BOOL locked:BOOL gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM x:NUM y:NUM] {
 }
+target-regions [id:TEXT x:NUM y:NUM width:NUM height:NUM label:TEXT hidden:BOOL locked:BOOL] {
+}

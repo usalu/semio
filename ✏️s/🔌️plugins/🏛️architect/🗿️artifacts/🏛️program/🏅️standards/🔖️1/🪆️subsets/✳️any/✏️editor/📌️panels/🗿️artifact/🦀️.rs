@@ -46,6 +46,10 @@ fn element_row(element: &ProgramElement) -> UiAssemblyResult<BuiltNode> {
     ui_node(row, &id)
 }
 
+/// 🪟️ The 66-row register summary is authored CLOSED: the first-paint row budget is shared across the
+/// body in document order, so an open register roster would swallow all of it and the elements section
+/// — this panel's actual subject and its only pick surface — would materialise zero rows on a cold
+/// paint. Closed, it still stamps its full `total`, so the host can open and stream it on demand.
 pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let summary = status_summary(program);
     let meta = ui_node_list([
@@ -55,7 +59,7 @@ pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> UiAssembl
     ])?;
     PanelTreeBuilder::new("architect-document")?
         .section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?
-        .window_section(windows, "architect-document.registers", Some(ui_label("Registers")?), true, &summary.by_register, |row| {
+        .window_section(windows, "architect-document.registers", Some(ui_label("Registers")?), false, &summary.by_register, |row| {
             let args = ui_value_map([("registerId", ui_value_text(&row.register)?)])?;
             tree_item_with_action(format!("architect-document.register.{}", row.register), ui_label(format!("{} ({})", row.register, row.count))?, None, architect_action("selectRegister", Some(args))?)
         })?

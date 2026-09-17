@@ -69,7 +69,7 @@ export interface Puzzle5dWorldWindowConfig {
   gripDirection: string;
   transformMove: boolean;
   transformRotate: boolean;
-  voxelDims: number[];
+  voxelDims: [number, number, number];
 }
 
 export interface Puzzle5dWindowTransient {

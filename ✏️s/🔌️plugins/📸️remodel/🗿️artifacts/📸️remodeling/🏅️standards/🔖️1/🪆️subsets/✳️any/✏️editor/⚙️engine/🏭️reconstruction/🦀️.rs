@@ -1273,7 +1273,13 @@ impl ReconstructionEngine {
     /// registered neighbors; returns whether more cameras remain.
     fn step_dense_stereo(&mut self) -> bool {
         const LUMA_PIXELS_PER_STEP: usize = 2_048;
-        const PATCH_PIXELS_PER_STEP: usize = 1;
+        // ⏱️ One PatchMatch pixel evaluates `(2r + 1)²` reference samples against every source view
+        // per hypothesis; the admitted worst case (radius 4, eight sources = 648 samples) is held to
+        // one pixel per step, and a lighter configuration takes proportionally more pixels.
+        const PATCH_SAMPLES_PER_STEP: usize = 648;
+        let patch_side = 2 * self.params.dense.window_radius.clamp(1, 4) as usize + 1;
+        let patch_sources = self.params.dense_source_views.clamp(1, 8);
+        let patch_pixels_per_step = (PATCH_SAMPLES_PER_STEP / (patch_side * patch_side * patch_sources)).max(1);
         let n_dense = self.dense_camera_indices.len();
         if n_dense == 0 {
             return false;
@@ -1327,7 +1333,7 @@ impl ReconstructionEngine {
             }
             DenseStereoPhase::PatchMatch => {
                 let patch_match = preparation.patch_match.get_or_insert_with(|| remodeling_dense::PatchMatchPreparation::new(preparation.reference_gray.width, preparation.reference_gray.height));
-                if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &self.params.dense, PATCH_PIXELS_PER_STEP) {
+                if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &self.params.dense, patch_pixels_per_step) {
                     let complete = self.dense_preparation.take().expect("completed dense preparation");
                     let map = complete.patch_match.expect("completed patch match").finish().expect("finished depth map");
                     self.record(EngineObservation::DepthMapEstimated { view: slot, samples: map.depth.iter().filter(|depth| depth.is_finite() && **depth > 0.0).count() });
@@ -1458,10 +1464,7 @@ impl ReconstructionEngine {
         match remodeling_mesh::mesh_pipeline_step(pipeline, 1) {
             remodeling_mesh::MeshPipelineStatus::Working { stage, .. } => MeshStepOutcome::Working(mesh_stage_to_engine_stage(stage)),
             remodeling_mesh::MeshPipelineStatus::Done => MeshStepOutcome::Done,
-            remodeling_mesh::MeshPipelineStatus::Failed(msg) => {
-                eprintln!("TEMPDIAG mesh pipeline failed: {msg}");
-                MeshStepOutcome::Failed(msg)
-            }
+            remodeling_mesh::MeshPipelineStatus::Failed(msg) => MeshStepOutcome::Failed(msg),
         }
     }
 

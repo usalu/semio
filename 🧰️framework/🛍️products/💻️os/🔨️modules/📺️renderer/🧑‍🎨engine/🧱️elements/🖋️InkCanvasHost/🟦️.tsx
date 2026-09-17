@@ -117,7 +117,6 @@ export interface InkDocument {
   readonly camera: InkCamera;
   readonly blocks: readonly InkItem[];
   readonly assets?: Readonly<Record<string, InkImageAsset>>;
-  readonly activeUtility?: string;
   readonly gridVisible?: boolean;
   readonly gridSpacing?: number;
   readonly gridSubdivisions?: number;
@@ -1087,7 +1086,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   );
 
   const selectionBounds = useMemo(() => (doc ? inkSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
-  const utility = doc?.activeUtility ?? "selectDirect";
+  const utility = scene?.activeUtility || "selectDirect";
   const showResizeHandles = !isNavigator && (utility === "selectDirect" || utility === "selectMarquee") && Boolean(selectionBounds) && selectedIds.length > 0;
 
   const beginMove = useCallback(

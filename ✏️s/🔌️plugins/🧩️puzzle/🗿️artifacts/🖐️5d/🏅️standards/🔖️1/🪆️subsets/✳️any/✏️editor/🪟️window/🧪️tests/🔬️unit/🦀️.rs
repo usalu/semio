@@ -99,6 +99,8 @@ use super::*;
             suggestion_offset: 4.75,
             grid_snap_enabled: false,
             grid_factor: 0.25,
+            grid_visible: false,
+            selectable_kinds: Puzzle5dSelectableKinds { parts: true, grips: false, fasteners: true },
         };
         assert_ne!(board, Puzzle5dBoardWindowConfig::default(), "the board fixture must differ from the default");
         let decoded = <Puzzle5dBoardWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&board)).expect("board pack decodes");
@@ -107,8 +109,26 @@ use super::*;
         assert_eq!(parsed, board, "one board text round trip must preserve every persisted option");
 
         let world = Puzzle5dWorldWindowConfig {
-            camera3d: Puzzle5dCamera3d { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5 },
+            camera3d: Puzzle5dCamera3d {
+                position: [1.0, 2.0, 3.0],
+                target: [4.0, 5.0, 6.0],
+                zoom: 2.5,
+                up: Some([0.0, 0.0, 1.0]),
+                projection: semio_framework_plugin::WorldProjectionConfig { kind: "orthographic".into(), orthographic_view: "front".into(), fov: 35.0, ..Default::default() },
+            },
             sun: WorldSunConfig { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 0.5, color: "#102030".into() },
+            grid_visible: false,
+            grid_snap_enabled: true,
+            grid_spacing: 2.5,
+            lod_automatic: false,
+            lod_depth_variable: true,
+            lod_manual: 640.0,
+            selectable_kinds: Puzzle5dSelectableKinds { parts: false, grips: true, fasteners: true },
+            grip_show: crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_ALWAYS.into(),
+            grip_direction: crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_INWARDS.into(),
+            transform_move: false,
+            transform_rotate: true,
+            voxel_dims: [7, 2, 64],
         };
         assert_ne!(world, Puzzle5dWorldWindowConfig::default(), "the world fixture must differ from the default");
         let decoded = <Puzzle5dWorldWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&world)).expect("world pack decodes");

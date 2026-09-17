@@ -5763,3 +5763,5 @@ fasteners [id:TEXT source:TEXT target:TEXT fastener-kind:REF gap:NUM shift:NUM r
   ea3e8a3e-599a-451b-b65f-12947ca78714 "23260301-988d-41cb-b075-142b08045cd0:3836a9b5-e7e1-4f79-b406-596b522d9bd6" "1a4453a9-8df7-42ef-bedf-b972dec47109:4abd66f3-c635-4cd0-85d9-0d5fbdcbec79" default 5.025 -0.335 0 10.049988 0 358.66003 0 2.96
   "69bfe200-6112-4e09-9ce8-3e77d1a665c9" "1a4453a9-8df7-42ef-bedf-b972dec47109:3836a9b5-e7e1-4f79-b406-596b522d9bd6" "e6a95c19-d66e-4e74-a164-b316806022ed:4abd66f3-c635-4cd0-85d9-0d5fbdcbec79" default 5.025 -0.335 0 10.049988 0 358.66003 0 2.96
 }
+target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] {
+}

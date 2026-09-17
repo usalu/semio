@@ -148,6 +148,21 @@ async fn the_catalogue_panel_never_renders_a_continuation_row() {
     assert!(!json.contains(".more\""), "a windowed catalogue has no continuation row: {json}");
     assert!(!json.contains(r#""label":"+"#), "a windowed catalogue publishes no `+n` label: {json}");
 }
+
+/// ⚖️ LAW: every windowed container in this body has a DISTINCT node key. A `TreeWindowRequest` is
+/// addressed by `(body_key, node_key)`, so two containers sharing a key would both answer one
+/// request and the host could never scroll either independently. The group keys are derived from the
+/// registered `CatalogueSection` ids, which is exactly where a future extension could collide with
+/// the panel's own `…catalogue.widgets` section — this law is what makes that collision loud.
+#[semio_framework_async_macros::async_test]
+async fn every_windowed_container_carries_a_distinct_node_key() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_CATALOGUE).await;
+    let keys: Vec<String> = rendered_windows(&json).into_iter().map(|window| window.key).collect();
+    let unique: std::collections::BTreeSet<&String> = keys.iter().collect();
+    assert_eq!(unique.len(), keys.len(), "two windowed containers share a node key: {keys:?}");
+}
 //#endregion 🪟️WindowLaws
 
 /// ⚖️ LAW: the spotlight browses the SAME roster the panel windows. The canvas spotlight reads the

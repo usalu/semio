@@ -1094,7 +1094,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let ui_scope = match outcome {
             ToolRunActionOutcome::Applied(ToolRunEffect::SpawnJob) => UiDirtyScope::Full,
             ToolRunActionOutcome::Applied(_) => self.tool_runs.dirty_scope(),
-            ToolRunActionOutcome::Rejected(_) => UiDirtyScope::None,
+            // 🧯️ A rejection REPAINTS the panel. The panel's buttons carry the run identity captured when
+            // the panel last rendered, and a settings change bumps the live generation — so a stale press
+            // was rejected, published `UiDirtyScope::None`, and therefore left the same stale identity on
+            // the button: every later press was silently rejected too, forever. Measured 2026-09-17 on a
+            // ◻️2d fill that stayed `Paused · Searching an open handle (2/5)` for 30 s after Abort.
+            ToolRunActionOutcome::Rejected(_) => self.tool_runs.dirty_scope(),
         };
         let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), ui_scope).await;
         result.output = output;
@@ -1137,7 +1142,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             (ToolRunAction::Step, Some(generation)) => ToolRunEvent::Step { run, generation },
             (ToolRunAction::Finalize, Some(generation)) => ToolRunEvent::Finalize { run, generation },
             (ToolRunAction::Abort, Some(generation)) => {
-                let publishing = selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| finalize.published || finalize.publication.as_ref().is_some_and(|publication| !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)));
+                // 🛑️ An abort is idempotent in the generation: it ends the run whatever that run was last
+                // reconfigured to, exactly as `Dismiss` above already ignores generation entirely. Checking
+                // the button's captured generation made Abort unreachable after any settings change — the
+                // one control whose whole job is to get out of a run it cannot otherwise leave.
+                let generation = self.tool_runs.slot().filter(|slot| slot.run == run).map_or(generation, |slot| slot.generation);
+                let publishing =selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| finalize.published || finalize.publication.as_ref().is_some_and(|publication| !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)));
                 ToolRunEvent::Abort { run, generation, publishing }
             }
             (ToolRunAction::Start, _) => unreachable!("start handled above"),

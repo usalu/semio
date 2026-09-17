@@ -5937,7 +5937,7 @@ pub mod app {
     /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
     /// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
     /// implement; [`TreeWindows`] is this side of it.
-    pub use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM};
+    pub use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
 
     /// 🪟️ What one container materialises this render: `len` rows starting at `offset` out of `total`.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -5984,15 +5984,22 @@ pub mod app {
     /// A stale `offset` past the end clamps to the LAST window (`total - rows`), never to an empty
     /// slice of a non-empty container.
     ///
-    /// 🔑️ **`node_key` is unique per body, among containers that publish a window.** The host keys
-    /// open state, geometry and windows by that string alone — it is the built node's own key, which
-    /// is also the pick target id — so two windowed containers sharing one key silently steer each
-    /// other. The second container to claim a key is refused with `ui.tree-window.duplicate-key`
-    /// rather than mis-served. A container with no entries the host has never addressed publishes no
-    /// window, is not addressable, and therefore claims nothing: a tree whose leaves are built through
+    /// 🔑️ **A container is addressed by its window PATH, never by its bare node key.** The path is the
+    /// enclosing windowed containers' keys, outermost first, then its own key, joined by
+    /// [`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR`] — see [`Self::path_of`]. A
+    /// top-level section's path IS its key, so a flat body is byte-identical to a bare-key one; a
+    /// nested one is `"…load-cases\u{1f}dead"`. This is what makes container identity collision-free
+    /// BY CONSTRUCTION without touching node keys or pick target ids: a load case and a combination
+    /// both called `uls`, or one object id repeated across four cad pane sections, differ in their
+    /// parents and therefore in their paths, and keep independent open and window state.
+    ///
+    /// 🔑️ Two containers can then collide only as TRUE SIBLINGS under one parent — which the UI
+    /// document itself already refuses (`DuplicateSiblingKey`). The second sibling to claim a path is
+    /// refused here first, with `ui.tree-window.duplicate-key`, so the author sees the cause rather
+    /// than the symptom. A container with no entries the host has never addressed publishes no window,
+    /// is not addressable, and therefore claims nothing: a tree whose leaves are built through
     /// [`tree_window_item`] (a JSON document, an AST) is bound by this rule only at the nodes that
-    /// actually have children. App panels namespace nested ids per entity KIND
-    /// (`"{section}.{entity-id}"`) whenever two collections could share an id space.
+    /// actually have children.
     ///
     /// 🧾️ Running out is not a fault. A container the ledger cannot seat still builds and still stamps
     /// its full `TreeWindow { total, offset }` with a shorter — possibly empty — materialised run, so
@@ -6012,7 +6019,7 @@ pub mod app {
         nodes: std::cell::Cell<isize>,
         reserved: std::cell::Cell<usize>,
         claimed: std::cell::RefCell<Vec<String>>,
-        nested: std::cell::Cell<bool>,
+        path: std::cell::RefCell<Vec<String>>,
     }
 
     impl<'a> TreeWindows<'a> {
@@ -6052,8 +6059,32 @@ pub mod app {
                 nodes: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET as isize),
                 reserved: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET - unreserved),
                 claimed: std::cell::RefCell::new(Vec::new()),
-                nested: std::cell::Cell::new(false),
+                path: std::cell::RefCell::new(Vec::new()),
             }
+        }
+
+        /// 🔑️ The **window path** `node_key` is addressed by from where the render currently stands:
+        /// the enclosing windowed containers' keys, outermost first, then `node_key`, joined by
+        /// [`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR`]. At the top level this is
+        /// `node_key` itself, so a flat body's requests and laws are byte-identical to before.
+        pub fn path_of(&self, node_key: &str) -> String {
+            let path = self.path.borrow();
+            if path.is_empty() {
+                return node_key.to_owned();
+            }
+            let mut joined = String::new();
+            for segment in path.iter() {
+                joined.push_str(segment);
+                joined.push_str(TREE_WINDOW_PATH_SEPARATOR);
+            }
+            joined.push_str(node_key);
+            joined
+        }
+
+        /// 🧾️ Whether the render currently stands inside an enclosing window's row closure — the
+        /// container being built there is that row, already charged by its parent.
+        fn is_nested(&self) -> bool {
+            !self.path.borrow().is_empty()
         }
 
         /// 🧾️ Node records this body may still materialise — every container and every row this
@@ -6073,11 +6104,11 @@ pub mod app {
         /// host has never addressed stamps nothing, so it is not addressable and two of them cannot
         /// steer each other. That is what keeps a tree of leaf rows (a JSON document, an AST) out of
         /// the uniqueness requirement — it binds containers, not rows.
-        fn claim_window(&self, node_key: &str, entries: usize) -> UiAssemblyResult<()> {
-            if entries == 0 && self.request(node_key).is_none() {
+        fn claim_window(&self, path: &str, entries: usize) -> UiAssemblyResult<()> {
+            if entries == 0 && self.seat(path).is_none() {
                 return Ok(());
             }
-            self.claim(node_key)
+            self.claim(path)
         }
 
         fn claim(&self, node_key: &str) -> UiAssemblyResult<()> {
@@ -6101,7 +6132,7 @@ pub mod app {
         /// 🧾️ Charges the node of a container that is about to be built — nothing when the container is
         /// itself a row of an enclosing window, which already paid for it (charged exactly once).
         fn debit_container(&self) {
-            if !self.nested.get() {
+            if !self.is_nested() {
                 self.debit(1);
             }
         }
@@ -6128,9 +6159,10 @@ pub mod app {
             self.seat(node_key).map(|(request, _)| *request)
         }
 
-        /// 🔽️ Whether `node_key` is expanded — a host `open` wins over the author's default.
+        /// 🔽️ Whether `node_key` is expanded — a host `open` wins over the author's default. The key
+        /// is resolved against the current [`Self::path_of`] scope, so callers pass the plain id.
         pub fn is_open(&self, node_key: &str, default_open: bool) -> bool {
-            self.request(node_key).and_then(|request| request.open).unwrap_or(default_open)
+            self.request(&self.path_of(node_key)).and_then(|request| request.open).unwrap_or(default_open)
         }
 
         /// 🪟️ The slice `node_key` materialises this render out of `total` logical entries, charged to
@@ -6139,7 +6171,11 @@ pub mod app {
         /// a container on its first paint gets only what no request is holding, and only as much as the
         /// shared viewport budget still allows.
         pub fn slice(&self, node_key: &str, default_open: bool, total: usize) -> TreeSlice {
-            let seat = self.seat(node_key);
+            self.sliced(&self.path_of(node_key), default_open, total)
+        }
+
+        fn sliced(&self, path: &str, default_open: bool, total: usize) -> TreeSlice {
+            let seat = self.seat(path);
             if let Some((_, reservation)) = seat {
                 self.reserved.set(self.reserved.get().saturating_sub(reservation.replace(0)));
             }
@@ -6163,8 +6199,8 @@ pub mod app {
             TreeWindow { total: slice.total as u32, offset: slice.offset as u32 }
         }
 
-        fn stamp(&self, node_key: &str, slice: &TreeSlice) -> Option<TreeWindow> {
-            (slice.total > 0 || self.request(node_key).is_some()).then(|| Self::window(slice))
+        fn stamp(&self, path: &str, slice: &TreeSlice) -> Option<TreeWindow> {
+            (slice.total > 0 || self.seat(path).is_some()).then(|| Self::window(slice))
         }
     }
 
@@ -6173,11 +6209,11 @@ pub mod app {
     /// full `BuiltChildren` — ends the window early with a shorter materialised run; any other error
     /// propagates. Rows are built with the ledger's `nested` flag raised, so a row that is itself a
     /// windowed container does not charge its own node twice.
-    fn tree_window_rows<B: HasChildren, T>(mut builder: B, windows: &TreeWindows<'_>, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
+    fn tree_window_rows<B: HasChildren, T>(mut builder: B, windows: &TreeWindows<'_>, id: &str, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
         for entry in &entries[slice.offset..slice.offset + slice.len] {
-            let outer = windows.nested.replace(true);
+            windows.path.borrow_mut().push(id.to_owned());
             let built = row(entry);
-            windows.nested.set(outer);
+            windows.path.borrow_mut().pop();
             let node = match built {
                 Ok(node) => node,
                 Err(error) if error.code == "ui.fixed-capacity" => break,
@@ -6195,12 +6231,13 @@ pub mod app {
     /// never a `+N` continuation row. The section node itself is charged to the body-wide node ledger
     /// before its rows are — see [`TreeWindows`].
     pub fn tree_window_section<T>(windows: &TreeWindows<'_>, id: &str, label: Label, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-        windows.claim_window(id, entries.len())?;
+        let path = windows.path_of(id);
+        windows.claim_window(&path, entries.len())?;
         windows.debit_container();
-        let slice = windows.slice(id, default_open, entries.len());
+        let slice = windows.sliced(&path, default_open, entries.len());
         let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
-        let builder = tree_window_rows(builder, windows, entries, &slice, row)?;
-        let builder = match windows.stamp(id, &slice) {
+        let builder = tree_window_rows(builder, windows, id, entries, &slice, row)?;
+        let builder = match windows.stamp(&path, &slice) {
             Some(window) => builder.window(window),
             None => builder,
         };
@@ -6238,11 +6275,12 @@ pub mod app {
     /// charges its own. Either way its rows come off the same body-wide ledger as the sections around
     /// it — see [`TreeWindows`].
     pub fn tree_window_item<T>(windows: &TreeWindows<'_>, item: TreeItemBuilder, id: &str, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-        windows.claim_window(id, entries.len())?;
+        let path = windows.path_of(id);
+        windows.claim_window(&path, entries.len())?;
         windows.debit_container();
-        let slice = windows.slice(id, default_open, entries.len());
-        let builder = tree_window_rows(item.default_open(default_open), windows, entries, &slice, row)?;
-        let builder = match windows.stamp(id, &slice) {
+        let slice = windows.sliced(&path, default_open, entries.len());
+        let builder = tree_window_rows(item.default_open(default_open), windows, id, entries, &slice, row)?;
+        let builder = match windows.stamp(&path, &slice) {
             Some(window) => builder.window(window),
             None => builder,
         };
@@ -39676,7 +39714,7 @@ pub use app::{
     MAINTENANCE_STAGES,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
-pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM};
+pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —

@@ -14526,7 +14526,21 @@
         "⛓️dead-in-combos-e73167",
         "🚨️no-such-member-3fe6e9",
         "🧨️zero-modes-a27c74",
-        "📦️package-boundary-classification"
+        "📦️package-boundary-classification",
+        "🌲️paints-the-seed-bay",
+        "🚫️rejects-a-volume-id-the-model-already-holds",
+        "🌲️clears-the-seed-bay",
+        "🚫️rejects-deleting-a-volume-the-model-never-held",
+        "🌲️shifts-the-seed-bay-north",
+        "🚫️rejects-moving-a-volume-the-model-never-held",
+        "🌲️squares-the-seed-bay",
+        "🚫️rejects-rotating-a-volume-the-model-never-held",
+        "🌲️widens-the-seed-bay",
+        "🚫️rejects-scaling-a-volume-the-model-never-held",
+        "🌲️hides-the-seed-bay",
+        "🚫️rejects-hiding-a-volume-the-model-never-held",
+        "🌲️locks-the-seed-bay",
+        "🚫️rejects-locking-a-volume-the-model-never-held"
       ],
       "source": "registry"
     },

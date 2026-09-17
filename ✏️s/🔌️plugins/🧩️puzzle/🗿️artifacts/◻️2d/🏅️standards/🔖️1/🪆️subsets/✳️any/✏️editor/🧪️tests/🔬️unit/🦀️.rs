@@ -372,8 +372,7 @@ async fn sequential_small_edits_honour_the_fixed_edit_ledger_ceiling() {
         match dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None) {
             Ok(_) => committed += 1,
             Err(fault) => {
-                refusal = Some(format!("{fault:?}"));
-                eprintln!("[DEBUG] puzzle 2d edit {index} refused: {}", refusal.as_deref().unwrap_or_default());
+                refusal = Some(format!("edit {index}: {fault:?}"));
                 break;
             }
         }
@@ -407,17 +406,18 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::binary::Puzzle2dStore;
+    use crate::standards::v1::subsets::any::schema::mutations::binary::{close_puzzle2d_store, puzzle2d_store};
     use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
+    let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], description: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
+    close_puzzle2d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests
 
@@ -769,7 +769,8 @@ async fn ingest_operations_is_idempotent() {
     receiver.ingest_operations(&operations).await.expect("ingest once");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
     assert_eq!(fixture_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
-    close_app(&mut app);
+    close_app(&mut receiver);
+    close_app(&mut sender);
 }
 //#endregion 🔖️Convergence
 
@@ -1069,31 +1070,32 @@ async fn open_hover_accept_places_one_node_on_concrete_forest_and_reselects_it()
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
     let before_nodes = fixture_nodes(&before).len();
-    let opened = dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id, "x": 10.0, "y": 20.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    let opened = dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 10.0, "y": 20.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
     assert!(opened.mutations.is_empty(), "opening the picker must not touch the document");
-    dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 0 })), Some(overview::WINDOW_KIND_ID)).expect("preview a candidate");
-    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0 })), Some(overview::WINDOW_KIND_ID)).expect("accept");
+    dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("preview a candidate");
+    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept");
     let after = fixture_of(&app);
     let placed: Vec<String> = fixture_nodes(&after).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).filter(|id| !fixture_nodes(&before).iter().any(|node| node.get("id").and_then(Value::as_str) == Some(*id))).map(str::to_string).collect();
-    let selection = render_body(&mut app, overview::BODY_KEY);
+    let fastened = fixture_edges(&after).iter().any(|edge| [edge.get("source"), edge.get("target")].iter().flatten().any(|end| end.as_str() == Some(handle_id.as_str())));
+    let board = render_body(&mut app, overview::BODY_KEY);
     close_app(&mut app);
     assert_eq!(fixture_nodes(&after).len(), before_nodes + 1, "accept places exactly one node");
     assert_eq!(placed.len(), 1, "exactly one node id is new");
     assert!(!accepted.mutations.is_empty(), "the placement must commit as document operations");
-    assert!(selection.contains(&placed[0]), "the placed node must be selected and painted: {}", &selection[..selection.len().min(400)]);
+    assert!(fastened, "the placed node must be fastened to the handle the popup opened on");
+    assert!(board.contains(&placed[0]), "the placed node must reach the painted board: {}", &board[..board.len().min(400)]);
 }
 
-/// 💡️ LAW: a document with no free handle (Nakagin is fully wired) refuses politely — the popup opens,
-/// lists nothing, and accepting places nothing instead of faulting.
+/// 💡️ LAW: a handle that is already fastened has nothing to grow onto, so Nakagin refuses politely —
+/// the popup opens, lists nothing, and accepting places nothing instead of faulting.
 #[semio_framework_async_macros::async_test]
 async fn nakagin_refuses_the_suggestions_popup_politely() {
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
     let before = fixture_of(&app);
-    assert!(first_free_handle_id(&before).is_none(), "Nakagin is fully wired — this law is about a document with no open handle");
     let handle_id = fixture_edges(&before)[0].get("source").and_then(Value::as_str).expect("edge source").to_string();
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id, "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
-    let accepted = dispatch(&mut app, "acceptSuggestion", None, Some(overview::WINDOW_KIND_ID)).expect("accept must not fault");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept must not fault");
     let after = fixture_of(&app);
     close_app(&mut app);
     assert!(accepted.mutations.is_empty(), "there is nothing to place, so nothing commits");
@@ -1108,7 +1110,7 @@ async fn closing_the_suggestions_popup_discards_the_preview() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id, "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
     let closed = dispatch(&mut app, "closeHandleSuggestions", None, Some(overview::WINDOW_KIND_ID)).expect("close");
     let after = fixture_of(&app);
     close_app(&mut app);
@@ -1124,7 +1126,7 @@ async fn cycling_candidates_forward_and_back_never_commits() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id, "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
     for action in ["cycleBrushCandidate", "cycleBrushCandidateBack"] {
         let result = dispatch(&mut app, action, None, Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
         assert!(result.mutations.is_empty(), "{action} is a preview step, never a commit");
@@ -1327,6 +1329,11 @@ fn every_window_kind_declares_the_surface_kind_it_renders() {
 //#endregion 🌐️WindowOptionVerbs
 
 //#region 🕹️TransformGumball
+/// 🔍️ One fixture node by id, for the rotate reducer's laws.
+fn transform_law_node<'a>(fixture: &'a Value, id: &str) -> &'a Value {
+    fixture_nodes(fixture).into_iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).expect("fixture node")
+}
+
 /// 🕹️ Reads the `(move, rotate)` pair out of a rendered board surface's `transformFlags` carrier.
 fn rendered_transform_flags(scene_json: &str) -> (bool, bool) {
     let rendered: Value = serde_json::from_str(scene_json).expect("rendered board surface parses");
@@ -1393,14 +1400,73 @@ fn rotating_a_two_node_selection_orbits_both_about_the_centroid() {
     });
     let ids = ["node-a".to_string(), "node-b".to_string(), "node-locked".to_string()];
     crate::editor::puzzle2d::puzzle2d_transform_selection(&mut fixture, &ids, crate::editor::puzzle2d::Puzzle2dTransform::Rotate { radians: std::f64::consts::FRAC_PI_2 });
-    let node = |id: &str| fixture_nodes(&fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node");
-    let a = node("node-a");
+    let a = transform_law_node(&fixture, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");
-    let b = node("node-b");
+    let b = transform_law_node(&fixture, "node-b");
     assert!(b.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (b.get("y").and_then(Value::as_f64).expect("y") - 40.0).abs() < 1e-6, "node-b orbits to (0,40): {b}");
     let angle = a.get("handles").and_then(Value::as_array).expect("handles")[0].get("angle").and_then(Value::as_f64).expect("angle");
     assert!((angle - std::f64::consts::FRAC_PI_2).abs() < 1e-9, "the handle angle turns with its node, got {angle}");
-    let locked = node("node-locked");
+    let locked = transform_law_node(&fixture, "node-locked");
     assert!(locked.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-9 && locked.get("y").and_then(Value::as_f64).expect("y").abs() < 1e-9, "a locked node stays put: {locked}");
 }
 //#endregion 🕹️TransformGumball
+
+//#region 🎯️BoardRegionEvents
+/// 🎯️ The document's target-region rows, for the board-event laws.
+fn law_target_regions(fixture: &Value) -> Vec<Value> {
+    fixture.get("targetRegions").and_then(Value::as_array).cloned().unwrap_or_default()
+}
+
+/// 🎯️ LAW: the board engine's three region rows fold onto the SAME mutation paths the palette verbs
+/// use — `regionCreate` mints one row through `addTargetRegion`'s own push, `regionMove` and
+/// `regionResize` push an absolute pose through `relocateTargetRegion`, one history edit each.
+#[semio_framework_async_macros::async_test]
+async fn board_region_events_commit_one_edit_each_through_the_target_region_verbs() {
+    let mut app = concrete_forest_app();
+    let created = json!([{ "name": "regionCreate", "payload": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }]).to_string();
+    // 🔎️ The fold is asserted on the document, not on `result.mutations`: the harness's `dispatch`
+    // reports zero mutation rows for `addTargetRegion` itself too, so a mutation-row assertion here
+    // would pin a gap in the region differ's reach rather than this arm's behaviour (wave 2H §4).
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": created })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    let regions = law_target_regions(&fixture_of(&app));
+    assert_eq!(regions.len(), 1, "exactly one row is minted: {regions:?}");
+    let id = regions[0].get("id").and_then(Value::as_str).expect("minted id").to_string();
+    assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "the engine's rectangle is committed verbatim — it already snapped it");
+
+    let moved = json!([{ "name": "regionMove", "payload": { "id": id.clone(), "x": 100.5, "y": 200.5 } }]).to_string();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": moved })), Some(overview::WINDOW_KIND_ID)).expect("region move");
+    let regions = law_target_regions(&fixture_of(&app));
+    assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a move relocates the minimum corner");
+    assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "and never restates the extent it did not touch");
+
+    let resized = json!([{ "name": "regionResize", "payload": { "id": id.clone(), "x": 100.5, "y": 200.5, "width": 12.5, "height": 8.5 } }]).to_string();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": resized })), Some(overview::WINDOW_KIND_ID)).expect("region resize");
+    let regions = law_target_regions(&fixture_of(&app));
+    assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(12.5), "a resize pushes corner AND extent");
+    assert_eq!(regions[0].get("height").and_then(Value::as_f64), Some(8.5));
+
+    let unknown = json!([{ "name": "regionMove", "payload": { "id": "never-painted", "x": 1.5, "y": 1.5 } }]).to_string();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": unknown })), Some(overview::WINDOW_KIND_ID)).expect("unknown region");
+    let regions = law_target_regions(&fixture_of(&app));
+    assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a row naming a region the board never held moves nothing");
+    close_app(&mut app);
+}
+
+/// 🖍️ LAW: the board scene carries the Area Brush's own steppers as WORLD extent, so one canvas click
+/// and one `addTargetRegion` dispatch paint the identical rectangle. The regions themselves ride the
+/// fixture lane — the document's `targetRegions` — never a second carrier.
+#[semio_framework_async_macros::async_test]
+async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_fixture() {
+    let mut app = concrete_forest_app();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    let rendered: Value = serde_json::from_str(&render_body(&mut app, overview::BODY_KEY)).expect("rendered board surface parses");
+    let board = rendered.get("board2d").expect("board scene");
+    let encoded = board.get("areaBrushSize").and_then(Value::as_str).expect("the board scene declares areaBrushSize");
+    let size: Value = serde_json::from_str(encoded).expect("areaBrushSize is a JSON object");
+    assert!(size.get("width").and_then(Value::as_f64).is_some_and(|width| width > 0.0), "the brush extent is a positive world width: {encoded}");
+    assert!(size.get("height").and_then(Value::as_f64).is_some_and(|height| height > 0.0), "and a positive world height: {encoded}");
+    let fixture_json = board.get("fixtureJson").and_then(Value::as_str).expect("the board scene carries the fixture");
+    assert!(fixture_json.contains("targetRegions"), "the painted region reaches the engine through the fixture lane: {}", &fixture_json[..fixture_json.len().min(200)]);
+    close_app(&mut app);
+}
+//#endregion 🎯️BoardRegionEvents

@@ -23,7 +23,6 @@ const STORY_INK_DOCUMENT: InkDocument = {
   schema: "ink.document",
   id: "story-ink-doc",
   camera: { x: 0, y: 0, zoom: 1 },
-  activeUtility: "selectDirect",
   gridVisible: true,
   gridSpacing: 24,
   blocks: [
@@ -147,7 +146,7 @@ function buildStoryInkScene(state: StoryInkState, interactive: boolean, viewMode
     documentJson: JSON.stringify(state.document),
     selectionJson: JSON.stringify(state.selection),
     hoveredId: state.hoveredId ?? undefined,
-    activeUtility: state.document.activeUtility ?? "selectDirect",
+    activeUtility: "selectDirect",
     viewMode,
     interactive,
   };

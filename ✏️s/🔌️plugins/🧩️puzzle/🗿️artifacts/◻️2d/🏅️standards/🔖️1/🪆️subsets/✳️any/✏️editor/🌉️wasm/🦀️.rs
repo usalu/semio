@@ -318,6 +318,12 @@ impl BoardSession {
         puzzle_2d_lod_scale_json()
     }
 
+    /// 👁️ Shows or hides the world grid (`setGridVisible` on the guest). Never touches snapping.
+    #[wasm_bindgen(js_name = setGridVisible)]
+    pub fn set_grid_visible_wasm(&mut self, visible: bool) {
+        self.state.borrow_mut().host.set_grid_visible(visible);
+    }
+
     #[wasm_bindgen(js_name = setGridSnapEnabled)]
     pub fn set_grid_snap_enabled_wasm(&mut self, enabled: bool) {
         self.state.borrow_mut().host.set_grid_snap_enabled(enabled);
@@ -345,10 +351,30 @@ impl BoardSession {
         self.state.borrow().host.transform_gumball_json()
     }
 
+    /// 🖍️ World extent one area-brush CLICK paints (`setAreaBrushSize` on the guest, in grid cells,
+    /// converted to board units by the caller). A click-drag states its own rectangle.
+    #[wasm_bindgen(js_name = setAreaBrushExtent)]
+    pub fn set_area_brush_extent_wasm(&mut self, width: f64, height: f64) {
+        self.state.borrow_mut().host.set_area_brush_extent(width, height);
+    }
+
+    /// 🩺️ Every target region the board holds — published as `data-board-target-regions-json`.
+    #[wasm_bindgen(js_name = targetRegionsJson)]
+    pub fn target_regions_json_wasm(&self) -> String {
+        self.state.borrow().host.target_regions_json()
+    }
+
     /// 🩺️ The live gesture/utility/hover snapshot — published as `data-board-interaction-json`.
     #[wasm_bindgen(js_name = interactionJson)]
     pub fn interaction_json_wasm(&self) -> String {
         self.state.borrow().host.interaction_json()
+    }
+
+    /// 🩺️ Every on-screen handle with its world position, owning node, kind and free/occupied state —
+    /// published as `data-board-handle-positions-json`, viewport-bounded and capped by the engine.
+    #[wasm_bindgen(js_name = handlePositionsJson)]
+    pub fn handle_positions_json_wasm(&self) -> String {
+        self.state.borrow().host.handle_positions_json()
     }
 
     #[wasm_bindgen(js_name = setSuggestionOffset)]

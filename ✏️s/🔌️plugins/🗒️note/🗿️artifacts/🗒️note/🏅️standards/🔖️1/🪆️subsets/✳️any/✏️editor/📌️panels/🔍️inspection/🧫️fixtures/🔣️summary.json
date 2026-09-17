@@ -1,5 +1,5 @@
 {
-  "schema": "note.document",
+  "canvasSchema": "ink.document",
   "camera": {
     "x": 2.5,
     "y": -3.25,

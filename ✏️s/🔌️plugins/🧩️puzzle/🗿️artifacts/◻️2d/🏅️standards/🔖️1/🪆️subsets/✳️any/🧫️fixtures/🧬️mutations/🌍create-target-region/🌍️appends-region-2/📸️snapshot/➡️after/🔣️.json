@@ -1,100 +1,100 @@
 {
-  "schema": "puzzle.2d.fixture",
   "camera": {
-    "x": 0,
-    "y": 0,
-    "zoom": 1
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
   },
-  "nodes": [
-    {
-      "id": "node-a",
-      "nodeKind": "node-kind-a",
-      "shape": "circle",
-      "x": 0,
-      "y": 0,
-      "radius": 10,
-      "text": "Alpha",
-      "iconKind": "icon-alpha",
-      "anchor": "fixed",
-      "handles": [
-        {
-          "id": "handle-1",
-          "handleKind": "handle-kind-a",
-          "angle": 0
-        },
-        {
-          "id": "handle-spare",
-          "handleKind": "handle-kind-a",
-          "angle": 1.5
-        }
-      ]
-    },
-    {
-      "id": "node-b",
-      "nodeKind": "node-kind-b",
-      "shape": "rectangle",
-      "x": 40,
-      "y": 20,
-      "width": 30,
-      "height": 12,
-      "anchor": "fixed",
-      "handles": [
-        {
-          "id": "handle-2",
-          "handleKind": "handle-kind-b",
-          "angle": 3
-        }
-      ]
-    }
-  ],
   "edges": [
     {
-      "id": "edge-1",
-      "source": "handle-1",
-      "target": "handle-2",
       "edgeKind": "edge-kind-a",
-      "gap": 1,
-      "shift": 0,
-      "rise": 0,
-      "rotation": 0,
-      "turn": 0,
-      "tilt": 0,
-      "x": 0,
-      "y": 0,
+      "gap": 1.0,
+      "id": "edge-1",
+      "rise": 0.0,
+      "rotation": 0.0,
+      "shift": 0.0,
+      "source": "handle-1",
       "sourceTip": "none",
-      "targetTip": "arrow"
-    }
-  ],
-  "targetRegions": [
-    {
-      "id": "region-1",
-      "x": -12.5,
-      "y": -12.5,
-      "width": 80.5,
-      "height": 60.5,
-      "hidden": false,
-      "locked": false
-    },
-    {
-      "id": "region-2",
-      "x": 100.5,
-      "y": 0.5,
-      "width": 40.5,
-      "height": 40.5,
-      "hidden": false,
-      "locked": false
+      "target": "handle-2",
+      "targetTip": "arrow",
+      "tilt": 0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
     }
   ],
   "meta": {
-    "manifestId": "manifest-alpha",
     "kindCompatibility": [
       {
-        "source": "handle-kind-a",
-        "target": "handle-kind-b",
         "bidirectional": true,
         "important": false,
-        "specificity": "handle"
+        "source": "handle-kind-a",
+        "specificity": "handle",
+        "target": "handle-kind-b"
       }
-    ]
-  }
+    ],
+    "manifestId": "manifest-alpha"
+  },
+  "nodes": [
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 0.0,
+          "handleKind": "handle-kind-a",
+          "id": "handle-1"
+        },
+        {
+          "angle": 1.5,
+          "handleKind": "handle-kind-a",
+          "id": "handle-spare"
+        }
+      ],
+      "iconKind": "icon-alpha",
+      "id": "node-a",
+      "nodeKind": "node-kind-a",
+      "radius": 10.0,
+      "shape": "circle",
+      "text": "Alpha",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "anchor": "fixed",
+      "handles": [
+        {
+          "angle": 3.0,
+          "handleKind": "handle-kind-b",
+          "id": "handle-2"
+        }
+      ],
+      "height": 12.0,
+      "id": "node-b",
+      "nodeKind": "node-kind-b",
+      "shape": "rectangle",
+      "width": 30.0,
+      "x": 40.0,
+      "y": 20.0
+    }
+  ],
+  "schema": "puzzle.2d.fixture",
+  "targetRegions": [
+    {
+      "height": 60.5,
+      "hidden": false,
+      "id": "region-1",
+      "locked": false,
+      "width": 80.5,
+      "x": -12.5,
+      "y": -12.5
+    },
+    {
+      "height": 40.5,
+      "hidden": false,
+      "id": "region-2",
+      "locked": false,
+      "width": 40.5,
+      "x": 100.5,
+      "y": 0.5
+    }
+  ]
 }

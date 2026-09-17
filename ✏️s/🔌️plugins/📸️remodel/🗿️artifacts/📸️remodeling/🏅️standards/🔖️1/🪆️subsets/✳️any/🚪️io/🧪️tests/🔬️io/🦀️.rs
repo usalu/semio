@@ -212,7 +212,7 @@ async fn png_export_round_trips_a_stored_texture_asset() {
     let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
     // 🧩️ Admitted through `create-asset` itself: the export reads the asset's DURABLE leaves back
     // (`remodeling_asset`), which a bare `assets.insert` of the handle never writes.
-    let create = crate::op::create_asset("tex-1".into(), asset);
+    let create = crate::mutations::create_asset("tex-1".into(), asset);
     let outcome = <crate::RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&create, &scene);
     assert!(!outcome.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "create-asset tex-1 rejected: {:?}", outcome.messages());
     let mut scene = protocol::MutationDiff::apply(outcome.diff(), &scene).expect("create-asset tex-1 applies");

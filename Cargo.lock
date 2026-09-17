@@ -5827,6 +5827,7 @@ name = "semio-framework-pixels"
 version = "0.1.0"
 dependencies = [
  "png 0.17.16",
+ "semio-framework-deflate",
 ]
 
 [[package]]
@@ -9796,6 +9797,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-tool-run",
+ "semio-s-artifact-stdio-semio",
  "semio-s-artifact-trinity-jack",
  "semio-s-artifact-trinity-rewriting",
 ]

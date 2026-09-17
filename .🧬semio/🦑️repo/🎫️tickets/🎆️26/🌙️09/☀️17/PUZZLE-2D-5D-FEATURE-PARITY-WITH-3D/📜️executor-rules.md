@@ -21,3 +21,22 @@ Read the root `AGENTS.md` and `✏️s/🔌️plugins/🧩️puzzle/AGENTS.md` (
 7. Known runtime traps in this codebase (do not reintroduce): `BatchOnlyPendingRewrite` verbs are dead in the app; an unclassified verb aborts the descriptor probe; undeclared publication lanes fault; `UiFixedList` has 32 slots and `UiText` 512 bytes (use `UiText::clipped`, paged/tree-window sections); map keys of `UiValue` maps must be ascending; never encode a scene straight into the 32 KiB surface doc (use `scene_surface` lanes); stay under 64 KiB contiguous guest requests; every store dies after 64 applied edits so a multi-placement gesture must be ONE edit; per-frame state belongs in the window transient, not config; work must declare an honest extent and fold footprint (`work_items`).
 8. Port from 3d (or from the sibling artifact that already has the feature) — read the source you port from fully; do not invent a second mechanism when one exists. Prefer reusing/generalising shared code that sits close by over copy-paste when both artifacts can share it without a new dependency edge.
 9. Deliverable: working, compiled source + laws, and ONE report `TICKET/📓️wave-<slice>-report.md` (what landed with file:line, registries touched, commands run with verdicts and warning counts, what is NOT verified, hand-offs to other slices). Your final chat reply is ≤12 lines pointing at the report. Do not stop halfway or ask whether to continue; finish the slice.
+
+## Addendum 2026-09-17 15:15 (after the 11:50 session-limit outage)
+- The whole fleet was cut mid-slice by a usage limit and resumed. Re-read your own region of the tree before continuing: siblings and peers kept editing, and the auto-committer ran.
+- Disk hit 0 GiB during the outage (incremental caches). `CARGO_INCREMENTAL=0` on EVERY cargo invocation is mandatory.
+- Build gate: 18 concurrent checks of one crate starved everybody. Before any cargo command wait until fewer than 3 cargo invocations for your crate are alive:
+  `until [ "$(pgrep -f 'cargo (check|test).*semio-s-artifact-puzzle-[2]d' | wc -l)" -lt 3 ]; do sleep 20; done` (use `[5]d` for the 5d crate; the bracket keeps your own shell from matching). Batch your edits and check at milestones, not after every edit.
+
+## Addendum 2026-09-17 19:55 (after the SECOND usage-limit outage, 16:45–19:50)
+- The fleet burns the 5-hour usage window in about one hour, mostly in build-wait/poll loops against a crate that siblings keep half-broken. NEW RULE: spend tokens on source, not on waiting.
+  1. Finish your remaining SOURCE work (code, laws, fixtures, schema twins, labels) first.
+  2. Then run at most ONE gated native `cargo check` of your crate with `--message-format=short` into your generated folder. Fix only errors whose path is inside YOUR slice's files (grep the output by path). Errors in other slices' files are NOT yours — list them in your report and move on; never loop waiting for siblings.
+  3. Run your filtered tests / wasm32-wasip2 check only if that check was green. Otherwise mark them "owed to integration" in the report.
+  4. Never sleep-poll for more than 5 minutes in total. Write the report and END your turn — two integrator agents take each crate to green afterwards.
+- Do not start serve supervisors or any other long-lived process (seven duplicate supervisor loops were found and killed).
+
+## Addendum 2026-09-17 20:10 — CORRECTED build gate (the 15:15 one deadlocks: `pgrep -f` also matches every WAITING shell, whose argv contains the cargo command that follows the loop)
+Count real cargo binaries only:
+`until [ "$(ps -axo args= | awk '$1 ~ /\/cargo$/ && /semio-s-artifact-puzzle-2d/' | wc -l)" -lt 3 ]; do sleep 20; done`
+(swap the crate name). If you are stuck in the old gate, abandon it and use this one.

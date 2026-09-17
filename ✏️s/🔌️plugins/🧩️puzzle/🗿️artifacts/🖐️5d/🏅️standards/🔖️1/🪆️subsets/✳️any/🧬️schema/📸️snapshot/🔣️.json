@@ -10,8 +10,7 @@
     "meta",
     "kindCompatibility",
     "parts",
-    "fasteners",
-    "targetVolumes"
+    "fasteners"
   ],
   "properties": {
     "schema": {

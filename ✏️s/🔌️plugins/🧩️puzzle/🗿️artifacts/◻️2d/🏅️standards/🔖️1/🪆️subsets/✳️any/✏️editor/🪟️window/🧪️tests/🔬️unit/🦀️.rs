@@ -204,9 +204,18 @@ use super::*;
             camera_y: -7.25,
             camera_zoom: 2.5,
             lod_mode: "manual".into(),
+            grid_visible: false,
             grid_snap_enabled: true,
             grid_factor: 0.25,
             suggestion_offset: 4.75,
+            proximity_radius: 9.5,
+            area_brush_width: 12.5,
+            area_brush_height: 6.25,
+            transform_move: false,
+            transform_rotate: false,
+            selectable_nodes: false,
+            selectable_handles: false,
+            selectable_edges: false,
         };
         assert_ne!(original, Puzzle2dWindowConfig::default(), "the fixture must differ from the default in every field it asserts");
         let bytes = store::ArtifactPack::encode_pack(&original);

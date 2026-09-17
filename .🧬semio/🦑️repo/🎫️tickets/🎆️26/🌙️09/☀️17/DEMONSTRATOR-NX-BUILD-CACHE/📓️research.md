@@ -28,3 +28,11 @@ Nx already fingerprints these targets with `{ dependentTasksOutputFiles: "**/*",
 - `testDemonstratorRuntime` in `⚡️cache-contracts` asserts `activate-dev` outputs.
 - `♻️mit-bestand/🧺️demonstrator/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts` — wasm link closure (separate from Nx, shrinks demonstrator crate).
 - Manual: two consecutive `bun nx run @semio-tech/mit-bestand-demonstrator:prepare-dev` with no source edits — second run should report cache hits for `component-dev` / `materialize-dev` / `prepare-*` leaves.
+
+## Closure (2026-09-17)
+
+**Delivered (caching):** Descriptor staging dirs no longer pollute cargo `nativeSources`; `activate-dev` is restorable from Nx cache; cache-contracts cover demonstrator runtime outputs. Warm `@semio-tech/puzzle-plugin:component-dev` — **5/5 cache hits (100%)**; `nativeSources` shows `.🛂️descriptor-staging-*` exclusions via `nx show project`.
+
+**Not closed (end-to-end goal):** `@semio-tech/puzzle-plugin:materialize-dev` still fails during descriptor probe (`describe()` → wasm `RuntimeError: unreachable`) even when the graph reports **6/6 Nx cache hits** — so `prepare-dev` cannot be validated as a full warm rebuild. Nx also flags `component-dev` / `framework-graph:generate` as flaky.
+
+**Follow-up ticket:** Fix puzzle wasm `describe` (or materialize probe path), then run `prepare-dev` twice and record hit ratio on `component-dev`, `materialize-dev`, and prepare leaves.
