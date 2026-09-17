@@ -36,7 +36,7 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
-const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
+pub(crate) const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
 pub use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_PLAY_BODY_MAIN;
 pub use crate::editor::lowpoly::modes::paint::windows::uv::LOWPOLY_PLAY_BODY_UV;
 pub use crate::editor::lowpoly::panels::catalogue::LOWPOLY_PLAY_BODY_CATALOGUE;
@@ -91,16 +91,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 //#endregion 🔖️Constants
@@ -345,6 +335,194 @@ use utility::set_utility_param;
 use uv::{clear_seam, mark_uv_seam, unwrap_active};
 //#endregion 🔖️Commands
 
+//#region 🔖️ActionBridge
+/// 🎯️ Folds the host's `{action, args}` vocabulary (camelCase keys, JSON floats, merged control `value`s)
+/// into the snake_case `FromValue` payloads of `🎮️commands/*`. Without it every shell-dispatched verb is
+/// refused as "not a framework-reserved action".
+mod args_bridge {
+    use super::*;
+    use dsl::DslValue;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float`; integer codecs decode exact
+    /// integers only, so whole finite floats get their integer variant back.
+    fn integral(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Snake-cases every key, applies `aliases` (source → destination, never overwriting a present
+    /// destination) and seeds `defaults` for keys still absent.
+    fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> Vec<(String, DslValue)> {
+        let mut entries: Vec<(String, DslValue)> = Vec::new();
+        if let Some(DslValue::Object(object)) = args {
+            for (key, value) in object {
+                put(&mut entries, &snake(key), integral(value.clone()));
+            }
+        }
+        for (from, into) in aliases {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                put(&mut entries, into, value);
+            }
+        }
+        for (key, value) in defaults {
+            if !entries.iter().any(|(existing, _)| existing == key) {
+                entries.push(((*key).to_string(), value.clone()));
+            }
+        }
+        entries
+    }
+
+    /// 📝️ Moves the merged control `value` into the JSON-text `value_json` field the reducers re-parse.
+    fn value_json(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
+        if !entries.iter().any(|(key, _)| key == "value_json") {
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == "value").cloned() {
+                put(&mut entries, "value_json", DslValue::String(dsl::json::to_json_string(&value)));
+            }
+        }
+        entries.retain(|(key, _)| key != "value");
+        entries
+    }
+
+    /// 📝️ Prints a control value into a `String` field (`"0.5"`, `"true"`, or the text itself).
+    fn text_value(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
+        if let Some(slot) = entries.iter_mut().find(|(key, _)| key == "value") {
+            slot.1 = match slot.1.clone() {
+                DslValue::String(text) => DslValue::String(text),
+                DslValue::Null => DslValue::String(String::new()),
+                other => DslValue::String(dsl::json::to_json_string(&other)),
+            };
+        }
+        entries
+    }
+
+    /// 📷️ Accepts `{position, target, fov}` or the World3d host's `{windowId, camera: {position, target, zoom, up}}`.
+    fn camera(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
+        if let Some((_, DslValue::Object(pose))) = entries.iter().find(|(key, _)| key == "camera").cloned() {
+            for (key, value) in pose {
+                if matches!(key.as_str(), "position" | "target" | "fov") && !entries.iter().any(|(existing, _)| existing == &key) {
+                    entries.push((key, value));
+                }
+            }
+        }
+        entries.retain(|(key, _)| matches!(key.as_str(), "position" | "target" | "fov"));
+        let float = |value: &DslValue| match value {
+            DslValue::Number(dsl::Number::Float(v)) => DslValue::Number(dsl::Number::Float(*v)),
+            DslValue::Number(dsl::Number::UInt(v)) => DslValue::Number(dsl::Number::Float(*v as f64)),
+            DslValue::Number(dsl::Number::Int(v)) => DslValue::Number(dsl::Number::Float(*v as f64)),
+            other => other.clone(),
+        };
+        for key in ["position", "target"] {
+            if let Some(slot) = entries.iter_mut().find(|(existing, _)| existing == key) {
+                if let DslValue::Array(items) = &slot.1 {
+                    slot.1 = DslValue::Array(items.iter().map(float).collect());
+                }
+            }
+        }
+        if let Some(slot) = entries.iter_mut().find(|(existing, _)| existing == "fov") {
+            slot.1 = float(&slot.1);
+        } else {
+            entries.push(("fov".into(), DslValue::Number(dsl::Number::Float(50.0))));
+        }
+        entries
+    }
+
+    /// 🧲️ The World3d gumball sends `{mode, ids}` naming the host's own selection (string target ids);
+    /// the reducers read the live mesh-domain selection instead, so both are dropped.
+    fn gumball(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
+        entries.retain(|(key, _)| key != "ids" && key != "mode");
+        entries
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, entries: Vec<(String, DslValue)>) -> Result<T, Fault> {
+        T::from_value(DslValue::Object(entries)).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("lowpoly action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<LowpolyCommand, Fault> {
+        const OBJECT: &[(&str, &str)] = &[("id", "object_id"), ("value", "object_id")];
+        let plain = || fold(args, &[], &[]);
+        let none = || Vec::new();
+        let zero = || DslValue::Number(dsl::Number::Float(0.0));
+        Ok(match action {
+            "addPrimitive" => LowpolyCommand::AddPrimitive(decode(action, fold(args, &[("value", "kind")], &[]))?),
+            "patchObject" => LowpolyCommand::PatchObject(decode(action, value_json(fold(args, &[("id", "object_id")], &[])))?),
+            "extrude" => LowpolyCommand::Extrude(decode(action, fold(args, &[("value", "extrude_distance"), ("distance", "extrude_distance")], &[]))?),
+            "inset" => LowpolyCommand::Inset(decode(action, fold(args, &[("value", "inset_amount"), ("amount", "inset_amount")], &[]))?),
+            "bevel" => LowpolyCommand::Bevel(decode(action, fold(args, &[("value", "bevel_amount"), ("amount", "bevel_amount"), ("segments", "bevel_segments")], &[]))?),
+            "loopCut" => LowpolyCommand::LoopCut(decode(action, fold(args, &[("value", "loop_cuts"), ("cuts", "loop_cuts")], &[]))?),
+            "subdivide" => LowpolyCommand::Subdivide(decode(action, none())?),
+            "triangulate" => LowpolyCommand::Triangulate(decode(action, none())?),
+            "mirror" => LowpolyCommand::Mirror(decode(action, fold(args, &[("value", "axis")], &[]))?),
+            "decimate" => LowpolyCommand::Decimate(decode(action, fold(args, &[("value", "decimate_ratio"), ("ratio", "decimate_ratio")], &[]))?),
+            "flipFaces" => LowpolyCommand::FlipFaces(decode(action, fold(args, &[("ids", "face_ids")], &[("face_ids", DslValue::Array(Vec::new()))]))?),
+            "merge" => LowpolyCommand::Merge(decode(action, none())?),
+            "dissolve" => LowpolyCommand::Dissolve(decode(action, none())?),
+            "snap" => LowpolyCommand::Snap(decode(action, none())?),
+            "toggleSmooth" => LowpolyCommand::ToggleSmooth(decode(action, none())?),
+            "unwrapActive" => LowpolyCommand::UnwrapActive(decode(action, none())?),
+            "markUvSeam" => LowpolyCommand::MarkUvSeam(decode(action, fold(args, &[("value", "seam"), ("ids", "edge_ids")], &[]))?),
+            "clearSeam" => LowpolyCommand::ClearSeam(decode(action, none())?),
+            "translateSelection" => LowpolyCommand::TranslateSelection(decode(action, gumball(fold(args, &[("x", "dx"), ("y", "dy"), ("z", "dz")], &[("dx", zero()), ("dy", zero()), ("dz", zero())])))?),
+            "rotateSelection" => LowpolyCommand::RotateSelection(decode(action, gumball(fold(args, &[], &[("ax", zero()), ("ay", DslValue::Number(dsl::Number::Float(1.0))), ("az", zero()), ("angle", zero())])))?),
+            "scaleSelection" => LowpolyCommand::ScaleSelection(decode(action, gumball(fold(args, &[("x", "sx"), ("y", "sy"), ("z", "sz")], &[("sx", DslValue::Number(dsl::Number::Float(1.0))), ("sy", DslValue::Number(dsl::Number::Float(1.0))), ("sz", DslValue::Number(dsl::Number::Float(1.0)))])))?),
+            "addPaintLayer" => LowpolyCommand::AddPaintLayer(decode(action, plain())?),
+            "paintStrokeEnd" => LowpolyCommand::PaintStrokeEnd(decode(action, none())?),
+            "paintFill" => LowpolyCommand::PaintFill(decode(action, plain())?),
+            "fillBucket" => LowpolyCommand::FillBucket(decode(action, plain())?),
+            "transformEnd" => LowpolyCommand::TransformEnd(decode(action, none())?),
+            "importSnapshotJson" => LowpolyCommand::ImportSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
+            "replaceSnapshotJson" => LowpolyCommand::ReplaceSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
+            "engagementSubmit" => LowpolyCommand::EngagementSubmit(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[])))?),
+            "setActiveObject" => LowpolyCommand::SetActiveObject(decode(action, fold(args, OBJECT, &[]))?),
+            "setActivePaintLayer" => LowpolyCommand::SetActivePaintLayer(decode(action, fold(args, &[("index", "layer_index"), ("value", "layer_index")], &[]))?),
+            "setUtilityParam" => LowpolyCommand::SetUtilityParam(decode(action, value_json(plain()))?),
+            "engagementInput" => LowpolyCommand::EngagementInput(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[("value", DslValue::String(String::new()))])))?),
+            "toggleShowEdges" => LowpolyCommand::ToggleShowEdges(decode(action, none())?),
+            "toggleSun" => LowpolyCommand::ToggleSun(decode(action, none())?),
+            "setSunAzimuth" => LowpolyCommand::SetSunAzimuth(decode(action, fold(args, &[], &[("value", zero())]))?),
+            "setSunElevation" => LowpolyCommand::SetSunElevation(decode(action, fold(args, &[], &[("value", zero())]))?),
+            "setSunIntensity" => LowpolyCommand::SetSunIntensity(decode(action, fold(args, &[], &[("value", zero())]))?),
+            "setCamera" => LowpolyCommand::SetCamera(decode(action, camera(plain()))?),
+            "paintStrokeBegin" => LowpolyCommand::PaintStrokeBegin(decode(action, none())?),
+            "paintSample" => LowpolyCommand::PaintSample(decode(action, plain())?),
+            "paintStroke" => LowpolyCommand::PaintStroke(decode(action, plain())?),
+            "paintAt" => LowpolyCommand::PaintAt(decode(action, plain())?),
+            "canvasPointerDown" => LowpolyCommand::CanvasPointerDown(decode(action, plain())?),
+            "canvasPointerMove" => LowpolyCommand::CanvasPointerMove(decode(action, plain())?),
+            "transformBegin" => LowpolyCommand::TransformBegin(decode(action, none())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the lowpoly editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🧵️RetainedCommands
 const LOWPOLY_RETAINED_PAYLOAD_SCHEMA: &str = "lowpoly.command.v1";
 const LOWPOLY_RETAINED_RAW_BYTES: usize = 16_384;
@@ -565,10 +743,11 @@ fn lowpoly_retained_reduce(
     // scheduler-owned `InteractionState` — `selection_from_state`'s own doc comment names this exact
     // seam ("typed retained reducers read the same immutable domain selection directly from their
     // scheduler-owned request context, without manufacturing a host-only InteractionView").
-    let active_object_id = resolve_active_object_id(snapshot, config);
     let empty_domain_selection = protocol::DomainSelection::default();
     let domain_selection = interaction.selection.get(MESH_INTERACTION_DOMAIN).unwrap_or(&empty_domain_selection);
+    let active_object_id = crate::editor::lowpoly::view::active_object_for_selection(snapshot, config, domain_selection);
     let selection = selection_from_state(&active_object_id, domain_selection);
+    let selection_object_id = crate::editor::lowpoly::view::selection_object_id(snapshot, domain_selection);
     // 🕸️ Commands whose handler reaches `session::build_doc`/`mesh_edit`, the mid-drag paint stroke
     // scratch, or the mid-drag gumball transform scratch cannot use a blank `LowpolyScratch::default()`
     // — `LowpolyDocument::reload_meshes` (`⚙️engine/🦀️.rs`) rejects every mesh edit past the
@@ -579,12 +758,14 @@ fn lowpoly_retained_reduce(
     macro_rules! threaded {
         ($handle:expr) => {{
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone()).map_err(Fault::from)?;
+            threaded.set_selection_object_id(selection_object_id.clone());
             let step_emit = ($handle)(&doc, &cfg, &mut threaded)?;
             let transient = threaded.transient_snapshot().map_err(Fault::from)?;
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step_emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } });
         }};
     }
     let mut bounded = LowpolyScratch::default();
+    bounded.set_selection_object_id(selection_object_id.clone());
     let emit = match command {
         LowpolyCommand::PatchObject(payload) => patch_object::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::AddPaintLayer(payload) => add_paint_layer::handle(payload, &doc, &cfg, &mut bounded),
@@ -1039,6 +1220,7 @@ fn lowpoly_object_retained_bytes(object: &LowpolyObject) -> usize {
         .len()
         .saturating_add(object.name.len())
         .saturating_add(object.mesh.as_ref().map_or(0, |mesh| mesh.child_id.len().saturating_add(mesh.target.to_uri().len())))
+        .saturating_add(object.mesh_content.len())
         .saturating_add(object.paint_layers.iter().fold(0, |bytes, layer| bytes.saturating_add(lowpoly_paint_layer_retained_bytes(layer))))
 }
 
@@ -1469,9 +1651,14 @@ fn lowpoly_render(
     cfg: &ConfigView<'_, LowpolyConfig>,
     view_state: &semio_framework_plugin::ViewModel,
     scratch: &mut LowpolyScratch,
+    interaction: Option<&InteractionView<'_>>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let projection = doc.snapshot;
     let config = cfg.snapshot;
+    let empty_domain_selection = protocol::DomainSelection::default();
+    let domain_selection = interaction.map_or(&empty_domain_selection, |interaction| interaction.selection(MESH_INTERACTION_DOMAIN));
+    let world_selection = crate::editor::lowpoly::view::world_selection_from_state(projection, config, domain_selection, interaction.and_then(|interaction| interaction.active_granularity(MESH_INTERACTION_DOMAIN)));
+    scratch.set_selection_object_id(crate::editor::lowpoly::view::selection_object_id(projection, domain_selection));
     let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
     if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
@@ -1483,16 +1670,16 @@ fn lowpoly_render(
     let view = LowpolyView { snapshot: render_projection, config };
     let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_ARTIFACT).then(|| crate::editor::lowpoly::view::build_doc(projection, config, scratch)).flatten();
     let node = match body_key {
-        LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
+        LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache, &world_selection),
         LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
         LOWPOLY_PLAY_BODY_ARTIFACT => match &loaded {
-            Some(loaded) => document_panel::render(view, loaded, labels),
+            Some(loaded) => document_panel::render(view, loaded, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_ARTIFACT)),
             None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document"))
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
         },
-        LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-        LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels),
-        LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels),
+        LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_CATALOGUE)),
+        LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_INSPECTION)),
+        LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_LAYERS)),
         _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
     }?;
@@ -1530,6 +1717,56 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(LowpolyConfigStorePreparationFactory))
+    }
+
+    // 🧹️ Registered-app store ownership: without owners + disposers for every lane the mounted instance
+    // faults `interactive-job.close-owned-disposer-missing` and threaded commands cannot republish scratch.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default lowpoly presence is the exact empty terminal")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -1694,6 +1931,10 @@ impl ArtifactEditor for LowpolyPlayApp {
         command.command_id()
     }
 
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<LowpolyCommand, Fault> {
+        args_bridge::command_from_action(action, args)
+    }
+
     /// 🕹️ `interaction` is the mesh domain's current selection/hover/mode/granularity, resolved once per
     /// dispatch into `LowpolyScratch::current_selection` — the `app_commands!`-generated `dispatch` calls
     /// every leaf `🎮️commands/*::handle(payload, doc, cfg, ctx)` uniformly (no `interaction` parameter
@@ -1709,14 +1950,16 @@ impl ArtifactEditor for LowpolyPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
-        let active = resolve_active_object_id(doc.snapshot, cfg.snapshot);
+        let domain_selection = interaction.selection(MESH_INTERACTION_DOMAIN);
+        let active = crate::editor::lowpoly::view::active_object_for_selection(doc.snapshot, cfg.snapshot, domain_selection);
         let selection = selection_from_interaction(&active, interaction);
         let mut scratch = LowpolyScratch::from_transient(&LowpolyTransient::default(), selection).map_err(Fault::from)?;
+        scratch.set_selection_object_id(crate::editor::lowpoly::view::selection_object_id(doc.snapshot, domain_selection));
         command.dispatch(doc, cfg, &mut scratch)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        lowpoly_render(body_key, doc, cfg, view_state, &mut LowpolyScratch::default())
+        lowpoly_render(body_key, doc, cfg, view_state, &mut LowpolyScratch::default(), None)
     }
 
     fn render_with_request_context(
@@ -1726,10 +1969,10 @@ impl ArtifactEditor for LowpolyPlayApp {
         cfg: &ConfigView<'_, LowpolyConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let mut scratch = LowpolyScratch::from_transient(transient.snapshot, crate::LowpolySelection::default()).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("lowpoly.transient", error))?;
-        lowpoly_render(body_key, doc, cfg, view_state, &mut scratch)
+        lowpoly_render(body_key, doc, cfg, view_state, &mut scratch, Some(interaction))
     }
 
     fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -1997,6 +2240,10 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔌️mounted/🦀️.rs"]
+mod mounted_tests;
 //#endregion 🧪️UnitTests
 
 

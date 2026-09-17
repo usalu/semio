@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin::BuiltNode;
 
 fn project(node: BuiltNode) -> serde_json::Value {
     let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
@@ -12,7 +13,7 @@ fn presentation_semantic_panels_match_the_json_oracle() {
     let (_, tiles) = crate::presentation_working_scene(&document);
     for row in vectors["cases"].as_array().expect("locales") {
         let labels = semio_framework_plugin::resolve_labels::<AnimatePresentationLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() });
-        let tree = project(crate::editor::animate::panels::artifact::render(&document, labels).expect("document"));
+        let tree = project(crate::editor::animate::panels::artifact::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["tiles"]);
         let catalogue = crate::editor::animate::panels::catalogue::render(&document, labels).expect("catalogue");
         let grid_args: Vec<serde_json::Value> = catalogue.children[0].children.iter().skip(1).take(2).map(|node| serde_json::to_value(&node.bindings[0].args).expect("independent binding oracle")).collect();

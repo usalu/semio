@@ -5,6 +5,10 @@ export interface Puzzle5dConfig {
   /** @state config */
   contactTolerance: number;
   /** @state config */
+  proximityRadius: number;
+  /** @state config */
+  chunkSize: number;
+  /** @state config */
   objectKindWeights: Record<string, number>;
   /** @state config */
   vortexKindWeights: Record<string, number>;
@@ -33,5 +37,5 @@ const weights = (value: unknown, at: string): Record<string, number> => Object.f
 
 export function parsePuzzle5dConfig(value: unknown, at = "$"): Puzzle5dConfig {
   const row = record(value, at);
-  return { fillCount: count(row.fillCount, `${at}.fillCount`), contactTolerance: finite(row.contactTolerance, `${at}.contactTolerance`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
+  return { fillCount: count(row.fillCount, `${at}.fillCount`), contactTolerance: finite(row.contactTolerance, `${at}.contactTolerance`), proximityRadius: finite(row.proximityRadius, `${at}.proximityRadius`), chunkSize: finite(row.chunkSize, `${at}.chunkSize`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
 }

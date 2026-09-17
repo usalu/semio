@@ -6,7 +6,7 @@
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::{puzzle5d_inferred_kind_rows, ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -37,7 +37,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn catalog_kind_label(entry: &Value) -> String {
+/// 🏷️ One catalogue entry's display name: its authored `label`, else its `name`, else its id.
+pub fn catalog_kind_label(entry: &Value) -> String {
     entry
         .get("label")
         .and_then(|value| value.as_str())
@@ -48,10 +49,13 @@ fn catalog_kind_label(entry: &Value) -> String {
         .into()
 }
 
+/// 🖱️ The catalogue drop payload. `kindId` is what the board pane's drop reads; `objectKind`/`meshUrl`
+/// are what the world pane's engine-side ghost reader resolves a live mesh preview from, so one row
+/// drags into either pane of the same app.
 fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> Value {
-    let mut payload = json!({ "kindId": kind_id, "catalogSlice": "nodes" });
+    let mut payload = json!({ "kindId": kind_id, "objectKind": kind_id, "partKind": kind_id, "catalogSlice": "nodes" });
     if let Some(object) = payload.as_object_mut() {
-        for key in ["shape", "radius", "width", "height", "iconKind"] {
+        for key in ["shape", "radius", "width", "height", "iconKind", "meshUrl"] {
             if let Some(value) = entry.get(key) {
                 object.insert(key.into(), value.clone());
             }
@@ -95,23 +99,26 @@ fn indexed(entries: &[Value]) -> Vec<(usize, &Value)> {
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
-    let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-    let mut part_entries = slice("parts");
-    if part_entries.is_empty() {
-        let mut ids: Vec<String> = envelope.document.parts.iter().map(|part| part.part_kind.clone()).collect();
-        ids.sort();
-        ids.dedup();
-        part_entries = ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect();
-    }
-    let grips = slice("grips");
-    let fasteners = slice("fasteners");
-    let ropes = slice("ropes");
-    let (parts, grips, fasteners, ropes) = (indexed(&part_entries), indexed(&grips), indexed(&fasteners), indexed(&ropes));
+    // 🧬️ None of the three 5d examples authors `kindCatalogs`, so an authored-only read renders four
+    // empty sections and makes every catalogue drop impossible; a slice the document does not author
+    // falls back to the kinds the document itself already names.
+    let slice = |key: &str| match catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default() {
+        entries if entries.is_empty() => puzzle5d_inferred_kind_rows(&envelope.document, key),
+        entries => entries,
+    };
+    let part_entries = slice("parts");
+    let grip_entries = slice("grips");
+    let fastener_entries = slice("fasteners");
+    let rope_entries = slice("ropes");
+    let part_rows = indexed(&part_entries);
+    let grip_rows = indexed(&grip_entries);
+    let fastener_rows = indexed(&fastener_entries);
+    let rope_rows = indexed(&rope_entries);
     PanelTreeBuilder::new(ROOT)?
-        .window_section_or_placeholder(windows, PARTS_SECTION, Some(ui_label(labels.parts.as_str())?), !parts.is_empty(), &parts, |entry| kind_catalog_item(PARTS_SECTION, entry, Some("addPartKind")), ui_label(labels.none.as_str())?)?
-        .window_section_or_placeholder(windows, GRIPS_SECTION, Some(ui_label(labels.grips.as_str())?), !grips.is_empty(), &grips, |entry| kind_catalog_item(GRIPS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
-        .window_section_or_placeholder(windows, FASTENERS_SECTION, Some(ui_label(labels.fasteners.as_str())?), !fasteners.is_empty(), &fasteners, |entry| kind_catalog_item(FASTENERS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
-        .window_section_or_placeholder(windows, ROPES_SECTION, Some(ui_label(labels.ropes.as_str())?), !ropes.is_empty(), &ropes, |entry| kind_catalog_item(ROPES_SECTION, entry, None), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, PARTS_SECTION, Some(ui_label(labels.parts.as_str())?), !part_rows.is_empty(), &part_rows, |entry| kind_catalog_item(PARTS_SECTION, entry, Some("addPartKind")), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, GRIPS_SECTION, Some(ui_label(labels.grips.as_str())?), !grip_rows.is_empty(), &grip_rows, |entry| kind_catalog_item(GRIPS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, FASTENERS_SECTION, Some(ui_label(labels.fasteners.as_str())?), !fastener_rows.is_empty(), &fastener_rows, |entry| kind_catalog_item(FASTENERS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, ROPES_SECTION, Some(ui_label(labels.ropes.as_str())?), !rope_rows.is_empty(), &rope_rows, |entry| kind_catalog_item(ROPES_SECTION, entry, None), ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

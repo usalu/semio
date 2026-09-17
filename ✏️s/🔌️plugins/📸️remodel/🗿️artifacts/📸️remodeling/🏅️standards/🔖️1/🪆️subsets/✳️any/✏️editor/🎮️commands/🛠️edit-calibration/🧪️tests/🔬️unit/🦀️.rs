@@ -19,9 +19,13 @@ async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
 #[semio_framework_async_macros::async_test]
 async fn gcps_are_added_observed_and_removed() {
     let mut app = app().await;
+    // 🎯️ An observation names a stream of the document (`add-gcp-observation` is FATAL for an unknown
+    // one), so the observed stream exists first — uncalibrated, the boot document carries no camera.
+    dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
+    let stream_id = app.snapshot().expect("projection").streams[0].id.clone();
     dispatch(&mut app, RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 })).await;
     let gcp_id = app.snapshot().expect("projection").gcps[0].id.clone();
-    dispatch(&mut app, RemodelingCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 })).await;
+    dispatch(&mut app, RemodelingCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id, frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 })).await;
     assert_eq!(app.snapshot().expect("projection").gcps[0].observations.len(), 1);
     dispatch(&mut app, RemodelingCommand::RemoveGcp(remove_gcp::RemoveGcp { gcp_id })).await;
     assert!(app.snapshot().expect("projection").gcps.is_empty());
@@ -32,7 +36,7 @@ async fn gcps_are_added_observed_and_removed() {
 #[semio_framework_async_macros::async_test]
 async fn calibrate_cameras_skips_streams_without_frames() {
     let mut app = app().await;
-    dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() })).await;
+    dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     dispatch(&mut app, RemodelingCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {})).await;
     assert!(app.snapshot().expect("projection").calibration.cameras.is_empty());
 }

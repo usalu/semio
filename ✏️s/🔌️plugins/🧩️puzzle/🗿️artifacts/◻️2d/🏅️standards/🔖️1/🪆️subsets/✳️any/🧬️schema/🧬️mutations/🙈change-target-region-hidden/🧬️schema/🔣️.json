@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutation/change-target-region-hidden/schema.json",
+  "title": "ChangeTargetRegionHidden",
+  "description": "The `change-target-region-hidden` mutation record — internally tagged `\"mutation\": \"changeTargetRegionHidden\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHidden"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTargetRegionHidden"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newHidden": {
+      "type": "boolean"
+    }
+  }
+}

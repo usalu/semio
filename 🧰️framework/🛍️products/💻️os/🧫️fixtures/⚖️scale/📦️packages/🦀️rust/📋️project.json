@@ -33,7 +33,6 @@
         "cwd": "{projectRoot}"
       },
       "cache": true,
-      "parallelism": false,
       "inputs": [
         "production",
         "^production"

@@ -1,0 +1,23 @@
+{
+  "mutation": "createTargetVolume",
+  "targetVolume": {
+    "id": "seed-bay",
+    "origin": [
+      5.4,
+      2.338269,
+      1.5
+    ],
+    "orientation": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scale": [
+      8.1,
+      4.676537,
+      3.0
+    ]
+  },
+  "index": null
+}

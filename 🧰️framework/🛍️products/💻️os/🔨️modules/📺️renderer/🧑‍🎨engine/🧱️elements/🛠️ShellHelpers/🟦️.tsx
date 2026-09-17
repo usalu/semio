@@ -97,7 +97,8 @@ import {
     type WindowLayoutStackNode,
     type WindowLayoutWindowNode,
     type WindowMeasure,
-    type WindowStackCorner
+    type WindowStackCorner,
+    type ViewTreeWindowRequest,
 } from "@semio-tech/framework";
 import {
     type ArtifactSyncStatus,
@@ -140,7 +141,6 @@ import {
     type TreeDataSection,
     type TreePanelConfig,
     UI_RIBBON_PARENT_CATEGORIES,
-    type ViewTreeWindowRequest,
     UI_TERMINOLOGY_NATIVE,
     type UiChromeLayout,
     type UiChromeTerminologyId,
@@ -2072,7 +2072,17 @@ export const TREE_WINDOW_DEFAULT_ROWS = 48;
 
 /** 🪟️ One panel body's host-owned tree state. Keyed by AUTHORED node key throughout, so it survives a
  * body refresh, a `UiDocumentStore` re-mint and the DFS renumbering both of those cause. */
-type TreeWindowBodyState = { readonly open: Map<string, boolean>; readonly windows: Map<string, { readonly offset: number; readonly rows: number }> };
+type TreeWindowBodyState = {
+  readonly open: Map<string, boolean>;
+  readonly windows: Map<string, { readonly offset: number; readonly rows: number }>;
+  /** 🪟️ Every node key the observer has ever reported for this body. What it separates is "opened, not in
+   * the body yet" — which asks for one viewport of rows so the chevron's promise is kept — from "was in the
+   * body, is not now" (a folded ancestor, a document switch), which asks for nothing at all. Without it a
+   * container that has left the body keeps claiming a viewport's worth of the guest's node ledger from the
+   * containers the reader is actually looking at (📓️s3-review-streaming-loop.md §3). An explicit re-open
+   * takes a key back out: that gesture IS "give me rows". */
+  readonly measured: Set<string>;
+};
 
 export type TreeWindowSchedulerOptionsV1 = {
   /** 🔁️ Fires ONE `refreshUi(session, { kind: "partial", panelBodies: [bodyKey] })`. The caller owns
@@ -2119,7 +2129,7 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
   const bodyState = (bodyKey: string): TreeWindowBodyState => {
     const existing = bodies.get(bodyKey);
     if (existing) return existing;
-    const created: TreeWindowBodyState = { open: new Map(), windows: new Map() };
+    const created: TreeWindowBodyState = { open: new Map(), windows: new Map(), measured: new Set() };
     bodies.set(bodyKey, created);
     return created;
   };
@@ -2150,15 +2160,36 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
       const state = bodyState(bodyKey);
       if (state.open.get(nodeKey) === open) return;
       state.open.set(nodeKey, open);
+      // 🪟️ Opening is a request for rows: forget what the observer last measured for this container, so
+      // the first-paint fallback speaks for it again until the tree it is about to render is measured.
+      if (open) {
+        state.measured.delete(nodeKey);
+        state.windows.delete(nodeKey);
+      }
       pending.add(bodyKey);
       flush();
     },
     reportWindows: (bodyKey, requests, rows) => {
       const state = bodyState(bodyKey);
       const next = new Map(requests.map((request) => [request.nodeKey, { offset: Math.max(0, Math.floor(request.offset)), rows: Math.max(0, Math.floor(request.rows)) }] as const));
+      // 🪟️ The report is the WHOLE body: every windowed container the tree currently renders, the
+      // off-screen ones as spacer-only windows. So replacing the map wholesale is also how state for
+      // containers that left the body (a document switch, a folded ancestor) is pruned, and an unreported
+      // key is by definition one that has never been rendered — the only case the first-paint row
+      // fallback in `viewStateFields` may speak for.
       const sameWindows = next.size === state.windows.size && [...next].every(([nodeKey, window]) => state.windows.get(nodeKey)?.offset === window.offset && state.windows.get(nodeKey)?.rows === window.rows);
+      // 🪟️ A measured container is a RENDERED container, so it is open — record that unless the host has
+      // been told otherwise, and an explicit fold always wins (a report in flight when the user folds
+      // must never re-open what they just closed).
+      let openedAny = false;
+      for (const nodeKey of next.keys()) {
+        state.measured.add(nodeKey);
+        if (state.open.has(nodeKey)) continue;
+        state.open.set(nodeKey, true);
+        openedAny = true;
+      }
       const sameRows = viewportRows === Math.max(viewportRows ?? 0, rows);
-      if (sameWindows && sameRows) return;
+      if (sameWindows && sameRows && !openedAny) return;
       state.windows.clear();
       for (const [nodeKey, window] of next) state.windows.set(nodeKey, window);
       viewportRows = Math.max(viewportRows ?? 0, rows) || undefined;
@@ -2174,10 +2205,13 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
         for (const nodeKey of nodeKeys) {
           const open = state.open.get(nodeKey);
           const window = state.windows.get(nodeKey);
-          // 🪟️ A container the user just opened has no measurement yet: ask for one viewport's worth,
-          // which the observer's first real report then narrows. `rows: 0` would materialise nothing at
-          // all and the row the chevron promised would never appear.
-          const rows = window?.rows ?? (open === false ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
+          // 🪟️ A container the user just opened has no measurement yet — it was not in the body when the
+          // observer last looked — so it asks for one viewport's worth, which the observer's first real
+          // report then narrows. `rows: 0` would materialise nothing at all and the row the chevron
+          // promised would never appear. This fallback speaks ONLY for a never-measured container: an
+          // open one that is merely scrolled off screen is in every report, at `rows: 0`, and must not be
+          // handed a viewport's worth of the body's budget for rows nobody is looking at.
+          const rows = window?.rows ?? (open === false || state.measured.has(nodeKey) ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
           flattened.push({ bodyKey, nodeKey, ...(open === undefined ? {} : { open }), offset: window?.offset ?? 0, rows });
         }
       }

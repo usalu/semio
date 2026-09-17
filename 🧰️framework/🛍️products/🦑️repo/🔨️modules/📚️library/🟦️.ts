@@ -4,13 +4,14 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { devToolingEnv, repoToolCacheEnv } from "./🏃️process/🌿️environment/🟦️.ts";
-export { devToolingEnv, repoToolCacheEnv };
+import { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag } from "./🏃️process/🌿️environment/🟦️.ts";
+export { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag };
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { preparedBinaryen } from "./⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
@@ -2659,7 +2660,9 @@ export function runViteDev(bundleRoot: string, segments: string[], opts: { confi
 
 /** ▶️Vite production build. */
 export function runViteBuild(bundleRoot: string, segments: string[], config: string): void {
-  runBun(["run", "vite", "build", "--config", config, ...segments], bundleRoot, devToolingEnv());
+  const workspace = findRepoRoot(bundleRoot);
+  const cli = join(dirname(createRequire(join(workspace, "package.json")).resolve("vite/package.json")), "bin/vite.js");
+  runCmd(process.execPath, [cli, "build", "--config", config, "--configLoader", "bundle", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 /**
@@ -6561,4 +6564,5 @@ export * from "./🏃️process/🟦️.ts";
  * `📚️library/🎮️playground/🟦️.ts` so port consumers need no taxonomy walk. */
 export * from "./🎮️playground/🟦️.ts";
 export { loadFrameworkOsPlaygroundSelections } from "./🎮️playground/🧭️selection/🟦️.ts";
+export { playgroundVariantsFromCrateManifest, registerPlaygroundSiteBuildCommands } from "./🎮️playground/🌐️site/🟦️.ts";
 //#endregion 🎮️Playground

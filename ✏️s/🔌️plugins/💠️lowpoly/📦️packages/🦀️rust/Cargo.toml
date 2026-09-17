@@ -16,6 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "lowpoly"
+app = "s.lowpoly.lowpoly@1/*#editor"
 ports = { react = 6078, wgpu = 6178 }
 
 [lib]

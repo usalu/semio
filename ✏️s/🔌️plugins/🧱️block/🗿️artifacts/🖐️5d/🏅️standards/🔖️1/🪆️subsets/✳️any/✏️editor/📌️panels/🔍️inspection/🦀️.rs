@@ -5,14 +5,18 @@ use crate::editor::block5d::terminology::Block5dLabels;
 use crate::editor::block5d::{block5d_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{
-    BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-// 🚧️ SDK GAP: the block crate has no direct `semio-framework-ui-contract` dependency (unlike puzzle/
-// lowpoly), so the contract's node builders are reached through the plugin SDK's own re-export.
-use semio_framework_plugin::plugin_app_close_prelude as ui;
+// 🏗️ The contract's own node BUILDERS, reached directly rather than through
+// `plugin_app_close_prelude`: that prelude re-exports the SDK's `tree_item(id, label) -> BuiltNode`
+// explicitly, which shadows the contract's `tree_item(label) -> TreeItemBuilder` glob — the builder
+// is what a field row needs, since it nests its control as a child.
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BLOCK5D_BODY_INSPECTOR: &str = "block5d.play.inspector";
+pub const BLOCK5D_INSPECTOR_SUMMARY: &str = "block5d-play-inspector.summary";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -69,13 +73,34 @@ fn readonly_field(id: &str, label: &str, value: &str) -> UiAssemblyResult<BuiltN
     field_row(id, label, input.try_build().map_err(|_| inspector_error("readonly-build"))?)
 }
 
-pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiAssemblyResult<BuiltNode> {
-    let rows = semio_framework_plugin::ui_node_list([
-        text_field("block5d-play-inspector.name", labels.name.as_str(), &definition.part_kind.name, "name"),
-        text_field("block5d-play-inspector.label", labels.label.as_str(), &definition.part_kind.label, "label"),
-        readonly_field("block5d-play-inspector.grip-count", labels.grips.as_str(), &definition.grips.len().to_string()),
-    ])?;
-    PanelTreeBuilder::new("block5d-play-inspector")?.section("block5d-play-inspector.summary", Some(ui_label(labels.summary.as_str())?), true, rows)?.build()
+/// 🧾️ One inspector row recorded as DATA — the summary section's window decides how many of these
+/// get built, so a field is never materialised for a viewport that will not show it
+/// (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+enum InspectorField<'a> {
+    /// ✏️ A `blur`-committed text control bound to `patchPartKind` for `document_field`.
+    Text { id: &'a str, label: &'a str, value: &'a str, document_field: &'static str },
+    /// 🔒️ A disabled text control, no binding.
+    Readonly { id: &'a str, label: &'a str, value: String },
+}
+
+fn inspector_row(field: &InspectorField<'_>) -> UiAssemblyResult<BuiltNode> {
+    match field {
+        InspectorField::Text { id, label, value, document_field } => text_field(id, label, value, *document_field),
+        InspectorField::Readonly { id, label, value } => readonly_field(id, label, value.as_str()),
+    }
+}
+
+/// 🪟️ The inspector's one summary section is WINDOWED like every other tree container: it stamps its
+/// full field count and materialises only the rows its window asks for.
+pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let fields = [
+        InspectorField::Text { id: "block5d-play-inspector.name", label: labels.name.as_str(), value: &definition.part_kind.name, document_field: "name" },
+        InspectorField::Text { id: "block5d-play-inspector.label", label: labels.label.as_str(), value: &definition.part_kind.label, document_field: "label" },
+        InspectorField::Readonly { id: "block5d-play-inspector.grip-count", label: labels.grips.as_str(), value: definition.grips.len().to_string() },
+    ];
+    PanelTreeBuilder::new("block5d-play-inspector")?
+        .window_section(windows, BLOCK5D_INSPECTOR_SUMMARY, Some(ui_label(labels.summary.as_str())?), true, &fields, inspector_row)?
+        .build()
 }
 //#endregion 🔖️Render
 

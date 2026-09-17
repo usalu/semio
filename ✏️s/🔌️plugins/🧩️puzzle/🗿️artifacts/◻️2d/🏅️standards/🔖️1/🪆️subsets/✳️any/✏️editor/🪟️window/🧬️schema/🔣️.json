@@ -5,15 +5,35 @@
     "Puzzle2dWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridSnapEnabled", "gridFactor", "suggestionOffset"],
+      "required": ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridVisible", "gridSnapEnabled", "gridFactor", "suggestionOffset", "proximityRadius", "areaBrushWidth", "areaBrushHeight", "transformMove", "transformRotate", "selectableNodes", "selectableHandles", "selectableEdges"],
       "properties": {
         "cameraX": {"type": "number", "x-semio-state": "window-config"},
         "cameraY": {"type": "number", "x-semio-state": "window-config"},
         "cameraZoom": {"type": "number", "x-semio-state": "window-config"},
         "lodMode": {"type": "string", "x-semio-state": "window-config"},
+        "gridVisible": {"type": "boolean", "default": true, "x-semio-state": "window-config"},
         "gridSnapEnabled": {"type": "boolean", "x-semio-state": "window-config"},
         "gridFactor": {"type": "number", "x-semio-state": "window-config"},
-        "suggestionOffset": {"type": "number", "x-semio-state": "window-config"}
+        "suggestionOffset": {"type": "number", "x-semio-state": "window-config"},
+        "proximityRadius": {"type": "number", "minimum": 0, "default": 12, "x-semio-state": "window-config"},
+        "areaBrushWidth": {"type": "number", "minimum": 1, "default": 1, "x-semio-state": "window-config"},
+        "areaBrushHeight": {"type": "number", "minimum": 1, "default": 1, "x-semio-state": "window-config"},
+        "transformMove": {"type": "boolean", "default": true, "x-semio-state": "window-config"},
+        "transformRotate": {"type": "boolean", "default": true, "x-semio-state": "window-config"},
+        "selectableNodes": {"type": "boolean", "default": true, "x-semio-state": "window-config"},
+        "selectableHandles": {"type": "boolean", "default": true, "x-semio-state": "window-config"},
+        "selectableEdges": {"type": "boolean", "default": true, "x-semio-state": "window-config"}
+      }
+    },
+    "Puzzle2dSuggestionMenu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "windowId", "handleId"],
+      "properties": {
+        "x": {"type": "number", "x-semio-state": "window-transient"},
+        "y": {"type": "number", "x-semio-state": "window-transient"},
+        "windowId": {"type": "string", "x-semio-state": "window-transient"},
+        "handleId": {"type": "string", "x-semio-state": "window-transient"}
       }
     },
     "Puzzle2dWindowTransient": {
@@ -24,7 +44,8 @@
         "engagementInput": {"type": "string", "x-semio-state": "window-transient"},
         "brushCandidateIndex": {"type": "integer", "minimum": 0, "x-semio-state": "window-transient"},
         "brushCandidates": {"type": "array", "items": {}, "x-semio-state": "window-transient"},
-        "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"}
+        "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"},
+        "suggestionMenu": {"oneOf": [{"$ref": "#/definitions/Puzzle2dSuggestionMenu"}, {"type": "null"}], "x-semio-state": "window-transient"}
       }
     }
   },

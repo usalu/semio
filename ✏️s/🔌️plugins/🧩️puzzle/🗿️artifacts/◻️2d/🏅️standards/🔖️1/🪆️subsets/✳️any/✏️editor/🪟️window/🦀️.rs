@@ -1,5 +1,6 @@
 //! 🪟️ Exact-instance persisted and ephemeral ownership for Puzzle 2D panes.
 
+use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use std::collections::BTreeMap;
 
@@ -16,9 +17,18 @@ pub struct Puzzle2dWindowConfig {
     pub camera_y: f64,
     pub camera_zoom: f64,
     pub lod_mode: String,
+    pub grid_visible: bool,
     pub grid_snap_enabled: bool,
     pub grid_factor: f64,
     pub suggestion_offset: f64,
+    pub proximity_radius: f64,
+    pub area_brush_width: f64,
+    pub area_brush_height: f64,
+    pub transform_move: bool,
+    pub transform_rotate: bool,
+    pub selectable_nodes: bool,
+    pub selectable_handles: bool,
+    pub selectable_edges: bool,
 }
 
 impl Default for Puzzle2dWindowConfig {
@@ -28,9 +38,18 @@ impl Default for Puzzle2dWindowConfig {
             camera_y: 0.0,
             camera_zoom: 1.0,
             lod_mode: crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
+            grid_visible: true,
             grid_snap_enabled: false,
             grid_factor: 1.0,
             suggestion_offset: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET,
+            proximity_radius: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_PROXIMITY_RADIUS,
+            area_brush_width: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_AREA_BRUSH_EXTENT,
+            area_brush_height: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_AREA_BRUSH_EXTENT,
+            transform_move: true,
+            transform_rotate: true,
+            selectable_nodes: true,
+            selectable_handles: true,
+            selectable_edges: true,
         }
     }
 }
@@ -165,6 +184,9 @@ pub struct Puzzle2dWindowTransient {
     pub brush_candidate_index: usize,
     pub brush_candidates: Vec<dsl::DslValue>,
     pub brush_candidate_source_handle_id: String,
+    /// 💡️ The one-shot handle-suggestions popup this exact window has open — per-gesture scratch,
+    /// never a persisted option, and never shared with a sibling pane.
+    pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -212,7 +234,8 @@ impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient
     }
 }
 
-store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id });
+store::artifact_retire_struct!(Puzzle2dSuggestionMenu { x, y, window_id, handle_id });
+store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, suggestion_menu });
 
 impl store::retirement::RetireOwned for Puzzle2dWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
@@ -232,6 +255,10 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
     charge(&mut bytes, std::mem::size_of::<Puzzle2dWindowTransient>())?;
     charge(&mut bytes, transient.engagement_input.capacity())?;
     charge(&mut bytes, transient.brush_candidate_source_handle_id.capacity())?;
+    if let Some(menu) = transient.suggestion_menu.as_ref() {
+        charge(&mut bytes, menu.window_id.capacity())?;
+        charge(&mut bytes, menu.handle_id.capacity())?;
+    }
     charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
     let mut pending = Vec::new();
     pending.try_reserve(transient.brush_candidates.len()).ok()?;
@@ -435,10 +462,20 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
         brush_candidate_index: transient.brush_candidate_index,
         brush_candidates: transient.brush_candidates.clone(),
         brush_candidate_source_handle_id: transient.brush_candidate_source_handle_id.clone(),
+        suggestion_menu: transient.suggestion_menu.clone(),
         fill_count: config.fill_count,
         grid_snap_enabled: window.grid_snap_enabled,
         grid_factor: window.grid_factor,
         suggestion_offset: window.suggestion_offset,
+        proximity_radius: window.proximity_radius,
+        area_brush_width: window.area_brush_width,
+        area_brush_height: window.area_brush_height,
+        grid_visible: window.grid_visible,
+        transform_move: window.transform_move,
+        transform_rotate: window.transform_rotate,
+        selectable_kinds: crate::editor::puzzle2d::config::Puzzle2dSelectableKinds { nodes: window.selectable_nodes, handles: window.selectable_handles, edges: window.selectable_edges },
+        contact_tolerance: config.contact_tolerance,
+        brush_placement_overlap_budget: config.brush_placement_overlap_budget,
         node_kind_weights: config.node_kind_weights.clone(),
         handle_kind_weights: config.handle_kind_weights.clone(),
         ..Default::default()
@@ -447,21 +484,37 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
 
 pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, window_kind: &str) -> (crate::editor::puzzle2d::config::Puzzle2dConfig, Puzzle2dWindowConfig, Puzzle2dWindowTransient) {
     (
-        crate::editor::puzzle2d::config::Puzzle2dConfig { node_kind_weights: runtime.node_kind_weights.clone(), handle_kind_weights: runtime.handle_kind_weights.clone(), fill_count: runtime.fill_count },
+        crate::editor::puzzle2d::config::Puzzle2dConfig {
+            node_kind_weights: runtime.node_kind_weights.clone(),
+            handle_kind_weights: runtime.handle_kind_weights.clone(),
+            fill_count: runtime.fill_count,
+            contact_tolerance: runtime.contact_tolerance,
+            brush_placement_overlap_budget: runtime.brush_placement_overlap_budget,
+        },
         Puzzle2dWindowConfig {
             camera_x: runtime.camera_x,
             camera_y: runtime.camera_y,
             camera_zoom: runtime.camera_zoom,
             lod_mode: runtime.lod_mode_by_pane.get(window_kind).cloned().unwrap_or_else(|| crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into()),
+            grid_visible: runtime.grid_visible,
             grid_snap_enabled: runtime.grid_snap_enabled,
             grid_factor: runtime.grid_factor,
             suggestion_offset: runtime.suggestion_offset,
+            proximity_radius: runtime.proximity_radius,
+            area_brush_width: runtime.area_brush_width,
+            area_brush_height: runtime.area_brush_height,
+            transform_move: runtime.transform_move,
+            transform_rotate: runtime.transform_rotate,
+            selectable_nodes: runtime.selectable_kinds.nodes,
+            selectable_handles: runtime.selectable_kinds.handles,
+            selectable_edges: runtime.selectable_kinds.edges,
         },
         Puzzle2dWindowTransient {
             engagement_input: runtime.engagement_input_by_pane.get(window_kind).cloned().unwrap_or_default(),
             brush_candidate_index: runtime.brush_candidate_index,
             brush_candidates: runtime.brush_candidates.clone(),
             brush_candidate_source_handle_id: runtime.brush_candidate_source_handle_id.clone(),
+            suggestion_menu: runtime.suggestion_menu.clone(),
         },
     )
 }

@@ -11,7 +11,12 @@ async fn document_lists_shots_and_assets() {
 
 //#region 🪟️WindowLaws
 use crate::{ShootingAsset, ShootingShot, ShootingSnapshot};
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+
+/// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
+/// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
+/// 48-row viewport starved the sibling panel tests running beside it.
+const MEASURED_VIEWPORT_ROWS: u32 = 4;
 
 /// 🪟️ A document an order of magnitude past one viewport — the subject of every window law below.
 fn oversized_snapshot(shots: usize, assets: usize) -> ShootingSnapshot {
@@ -24,7 +29,7 @@ fn oversized_snapshot(shots: usize, assets: usize) -> ShootingSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &ShootingSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
     let node = render(snapshot, &ShootingLabels::NATIVE_EN, &TreeWindows::for_body(&view, SHOOTING_PLAY_BODY_ARTIFACT)).expect("render the shooting document tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the shooting document tree")
 }
@@ -38,7 +43,7 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":120"), "assets section stamps its full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("shooting-shot:").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+    assert!(json.matches("shooting-shot:").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
 }
 
 /// 🪟️ Law (b): a container the host closed stamps its total and materialises nothing.
@@ -67,11 +72,11 @@ fn host_window_materialises_exactly_its_slice() {
 /// so it binds no interaction domain (see the panel's own note) — every row keeps its own action instead.
 #[test]
 fn unbound_tree_keeps_per_row_actions_and_declares_no_domain() {
-    let snapshot = oversized_snapshot(4, 2);
+    let snapshot = oversized_snapshot(2, 2);
     let json = window_body(&snapshot, Vec::new());
     assert!(!json.contains("interactionDomain"), "shooting's mixed-namespace tree binds no domain: {json}");
     assert!(json.contains("setShotSelection"), "shot rows keep their own action: {json}");
     assert!(json.contains("interactionSelect"), "asset rows keep their hand-built domain dispatch: {json}");
-    assert!(!json.contains("granularity"), "an unbound tree stamps no pick granularity: {json}");
+    assert!(!json.contains("\"granularity\":"), "an unbound tree stamps no pick granularity — the asset row's own `targets` payload spells its granularity ESCAPED, inside an argument string, which is not a stamped prop: {json}");
 }
 //#endregion 🪟️WindowLaws

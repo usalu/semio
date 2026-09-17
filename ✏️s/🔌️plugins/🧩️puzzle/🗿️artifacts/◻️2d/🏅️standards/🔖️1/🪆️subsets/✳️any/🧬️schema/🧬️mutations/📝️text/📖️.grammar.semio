@@ -9,7 +9,9 @@ line = create-node / delete-node / move-node / replace-node-geometry / change-no
      / remove-node-handle / replace-node-handle / connect-handles / disconnect-handles
      / replace-edge-geometry / change-edge-kind / change-edge-tips / change-edge-visible
      / change-edge-locked / change-manifest-id / connect-kind-compatibility
-     / disconnect-kind-compatibility / replace-kind-catalogs
+     / disconnect-kind-compatibility / replace-kind-catalogs / create-target-region
+     / delete-target-region / move-target-region / resize-target-region
+     / edit-target-region-label / change-target-region-hidden / change-target-region-locked
 
 create-node = "create-node" SP node-block SP index-opt
 delete-node = "delete-node" SP id
@@ -37,9 +39,17 @@ change-manifest-id = "change-manifest-id" SP text-opt
 connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
 disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
 replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+create-target-region = "create-target-region" SP region-block SP index-opt
+delete-target-region = "delete-target-region" SP id
+move-target-region = "move-target-region" SP id SP number SP number
+resize-target-region = "resize-target-region" SP id SP number SP number
+edit-target-region-label = "edit-target-region-label" SP id SP text-opt
+change-target-region-hidden = "change-target-region-hidden" SP id SP boolean
+change-target-region-locked = "change-target-region-locked" SP id SP boolean
 
 node-block = "{" NL OCTET+ "}"
 handle-block = "{" NL OCTET+ "}"
+region-block = "{" NL OCTET+ "}"
 catalogs-block-opt = ( "{" NL OCTET+ "}" ) / "none"
 edge-fields = text-opt SP number SP number SP number SP number SP number SP number SP number SP number SP text-opt SP text-opt
 anchor = "fixed" / "derived"

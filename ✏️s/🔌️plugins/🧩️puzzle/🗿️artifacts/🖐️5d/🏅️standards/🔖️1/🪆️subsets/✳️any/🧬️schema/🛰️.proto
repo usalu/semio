@@ -22,6 +22,8 @@ message Puzzle5dArtifact {
   repeated Puzzle5dPart parts = 7;
   // @state artifact
   repeated Puzzle5dFastener fasteners = 8;
+  // @state artifact
+  repeated Puzzle5dTargetVolume target_volumes = 10;
   // @state config
 }
 
@@ -78,6 +80,10 @@ message Puzzle5dKindCompatibility {
 message Puzzle5dMeta { string description = 1; }
 message Puzzle5dPart {
   string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3;
+}
+message Puzzle5dTargetVolume {
+  string id = 1; repeated double origin = 2; repeated double orientation = 3; repeated double scale = 4;
+  bool hidden = 5; bool locked = 6;
 }
 message Puzzle5dFastener {
   string id = 1; string source = 2; string target = 3; optional string fastener_kind = 4;

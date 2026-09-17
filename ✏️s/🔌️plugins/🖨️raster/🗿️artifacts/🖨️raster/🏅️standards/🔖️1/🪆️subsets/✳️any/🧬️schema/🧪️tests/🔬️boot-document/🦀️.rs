@@ -11,7 +11,10 @@ async fn default_document_boots_on_the_semio_demo_carrier() {
     assert_eq!(document.title.as_deref(), Some("Semio Raster Demo"));
     assert_eq!(document.layers.len(), 2, "the Semio logo carries a backdrop pixel layer and a brighten adjustment layer");
     assert_eq!(layer_node_id(&document.layers[0]), "backdrop");
-    assert!(matches!(document.layers[1], RasterLayerNode::Adjustment { .. }), "the second layer is the brighten adjustment");
+    let RasterLayerNode::Adjustment { adjustment_kind, .. } = &document.layers[1] else {
+        panic!("the second layer is the brighten adjustment");
+    };
+    assert_eq!(adjustment_kind, "brightnessContrast");
     retire_raster_snapshot(document);
 }
 

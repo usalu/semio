@@ -14,10 +14,10 @@ fn wires_semantic_panels_match_the_json_oracle() {
             locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")),
             ..Default::default()
         });
-        let tree = project(crate::editor::wires::panels::document::render(&document, labels).expect("document"));
+        let tree = project(crate::editor::wires::panels::document::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);
-        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_fixture, labels).expect("catalogue"));
+        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identityKinds"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationshipKinds"]);
         let tree = project(render(&document, labels).expect("inspection"));

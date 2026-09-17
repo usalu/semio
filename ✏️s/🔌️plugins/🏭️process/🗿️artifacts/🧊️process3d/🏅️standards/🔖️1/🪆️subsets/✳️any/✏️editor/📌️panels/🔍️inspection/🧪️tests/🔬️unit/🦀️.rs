@@ -98,25 +98,65 @@ async fn selected_machine_id_renders_its_capabilities() {
     assert!(!rendered.contains("Kerf: 0.05"), "a closed capability section materialises no parameter rows: {rendered}");
 }
 
-/// ⚖️ LAW (b)/(c): opening the cut capability's window materialises exactly its parameter rows —
-/// the same fields the section stated the extent of while it was closed.
+/// ⚖️ LAW (b)/(c): a capability section states its parameter count while closed and materialises
+/// exactly those rows once the host opens its window. Driven through `render` with an explicit
+/// selection rather than the live `interactionSelect` path, so the law pins the PANEL's windowing and
+/// not the framework's selection admission (which its four neighbours above already exercise).
 #[semio_framework_async_macros::async_test]
-async fn opening_a_capability_section_materialises_its_parameters() {
-    use semio_framework_plugin::{TreeWindowRequest, ViewModel};
-    let mut app = context::app_with_registry();
-    select(&mut app, "machine:saw");
-    let view = ViewModel {
-        tree_windows: vec![TreeWindowRequest {
-            body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(),
-            node_key: "process3d-play-inspector.capability.cut".into(),
-            open: Some(true),
-            offset: 0,
-            rows: 32,
+async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open() {
+    use crate::{Capability, CapabilityParameter, MeasureRecipe, Workshop, WorkshopMachine};
+    use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+    let mut fixture = crate::empty_process3d_snapshot();
+    fixture.workshop = Workshop {
+        machines: vec![WorkshopMachine {
+            id: "saw".into(),
+            label: "Generic Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "cut".into(),
+                label: "Cut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                parameters: vec![
+                    CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 },
+                    CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.05 },
+                ],
+                rules: Vec::new(),
+            }],
         }],
+    };
+    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::default());
+    let section = "process3d-play-inspector.capability.cut";
+    let project = |windows: &TreeWindows<'_>| {
+        let node = render(&fixture, &["machine:saw".to_string()], labels, windows).expect("inspector renders");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector projection")
+    };
+
+    let closed = project(&TreeWindows::unhosted());
+    assert!(closed.contains("Generic Saw"), "the open machine summary carries its fields: {closed}");
+    assert!(closed.contains(section), "the capability section is a row even while closed: {closed}");
+    assert!(!closed.contains("Kerf: 0.05"), "a closed capability section materialises no parameter rows: {closed}");
+    let projection: serde_json::Value = serde_json::from_str(&closed).expect("inspector projection json");
+    let total = find_window_total(&projection, section).unwrap_or_else(|| panic!("{section} stamps no window: {closed}"));
+    assert_eq!(total, 2, "a closed capability section still states its two parameters: {closed}");
+
+    let view = ViewModel {
+        tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(), node_key: section.into(), open: Some(true), offset: 0, rows: 32 }],
         ..Default::default()
     };
-    let rendered = context::render_with_view(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION, &view);
-    assert!(rendered.contains("Kerf: 0.05"), "expected the cut capability's own kerf parameter once opened: {rendered}");
-    assert!(!rendered.contains(".more\""), "a windowed inspector has no continuation row: {rendered}");
+    let opened = project(&TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_INSPECTION));
+    assert!(opened.contains("Kerf: 0.05"), "opening the section materialises its parameters: {opened}");
+    assert!(opened.contains("Blade Diameter: 0.4"), "…all of them: {opened}");
+    assert!(!opened.contains(".more\""), "a windowed inspector has no continuation row: {opened}");
 }
+
+/// 🔎️ The `window.total` one container stamped, found by key anywhere in a projected body.
+fn find_window_total(node: &serde_json::Value, key: &str) -> Option<u64> {
+    if node["key"].as_str() == Some(key) {
+        return node["component"]["window"]["total"].as_u64();
+    }
+    node["children"].as_array().and_then(|children| children.iter().find_map(|child| find_window_total(child, key)))
+}
+
 //#endregion 🔖️SelectionInspector

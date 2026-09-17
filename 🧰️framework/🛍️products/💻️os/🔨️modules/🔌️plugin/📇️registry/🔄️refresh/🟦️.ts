@@ -40,7 +40,7 @@ import { generatePluginRegistry, type PluginRegistryEntry } from "../🔎️disc
 
 const repoRoot = getWorkspaceRoot();
 
-import { createConcurrencyLimiter, materializeConcurrencyLimit } from "../../🏗️build/🏃️execution/🟦️.ts";
+import { createConcurrencyLimiter, cargoConcurrencyLimit, materializeConcurrencyLimit } from "../../🏗️build/🏃️execution/🟦️.ts";
 
 import { resolveCatalogFilterPluginId } from "../../🏗️build/📋️plan/🟦️.ts";
 
@@ -50,40 +50,35 @@ import { syncBuiltPluginDescriptors } from "../../🏗️build/🛂️descriptor
 
 
 
-/** @emoji 🚰️ Builds a whole catalog of `orderedTargets`: the CARGO stage runs strictly serially, one
- * `cargo build` at a time, in `orderedTargets`' own order — never two overlapping, exactly as before
- * this packet, since parallel `cargo` is the repeatedly-machine-saturating failure mode
- * `📌️important.md` records. The MATERIALIZE stage for each target that finished its cargo build is
- * enqueued into a bounded pool (`materializeConcurrencyLimit()`, default 4) WITHOUT the cargo loop
- * waiting for it — so target N+1's `cargo build` runs concurrently with target N's (and N-1's, up to the
- * cap) jco/wasm-opt/file-emission pass, instead of the old fully-interleaved `buildPlugin` forcing every
- * cargo build to wait out the previous target's ENTIRE materialize pass first. This is the actual fix
- * for the serialized-materialize-stage finding: overlap, not just "run materialize in parallel with
- * itself". `publishShardWorker()` (identical content for every target) is written once at the end
- * rather than once per target. Injectable `cargoFn`/`materializeFn`/`publishShardWorkerFn` so this can
- * be exercised in tests without a real `cargo`/`jco`/`wasm-opt` toolchain or filesystem writes. */
+/** @emoji 🚰️ Builds a whole catalog of `orderedTargets`: cargo and materialize each run in bounded pools
+ * sized by `cargoConcurrencyLimit()` / `materializeConcurrencyLimit()` (default `semioNxParallel()`), with
+ * materialize work enqueued as each target's cargo build finishes so both stages overlap across the catalog.
+ * `publishShardWorker()` (identical content for every target) is written once at the end rather than once
+ * per target. Injectable fakes support tests without a real toolchain. */
 async function buildPluginCatalog(
   orderedTargets: readonly PluginRegistryEntry[],
   cargoFn: (target: PluginRegistryEntry) => Promise<{ readonly artifact: string }> = buildPluginCargo,
   materializeFn: (target: PluginRegistryEntry, artifact: string) => Promise<void> = materializePlugin,
   concurrencyLimit: number = materializeConcurrencyLimit(),
   publishShardWorkerFn: () => void = publishShardWorker,
+  cargoLimit: number = cargoConcurrencyLimit(),
 ): Promise<{ readonly failedPluginIds: readonly string[] }> {
-  const limiter = createConcurrencyLimiter(concurrencyLimit);
+  const cargoLimiter = createConcurrencyLimiter(cargoLimit);
+  const materializeLimiter = createConcurrencyLimiter(concurrencyLimit);
   const failed: string[] = [];
   const materializeTasks: Promise<void>[] = [];
-  for (const target of orderedTargets) {
+  await Promise.all(orderedTargets.map((target) => cargoLimiter.run(async () => {
     let cargoResult: { readonly artifact: string };
     try {
       cargoResult = await cargoFn(target);
     } catch (error) {
       failed.push(target.pluginId);
       console.error(`plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
-      continue;
+      return;
     }
     const { artifact } = cargoResult;
     materializeTasks.push(
-      limiter.run(async () => {
+      materializeLimiter.run(async () => {
         try {
           await materializeFn(target, artifact);
         } catch (error) {
@@ -92,7 +87,7 @@ async function buildPluginCatalog(
         }
       }),
     );
-  }
+  })));
   await Promise.all(materializeTasks);
   publishShardWorkerFn();
   return { failedPluginIds: failed };

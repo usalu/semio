@@ -102,8 +102,9 @@
     "activate-dev": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
-      "outputs": [],
+      "outputs": [
+        "{projectRoot}/dist/♻️activation/dev"
+      ],
       "inputs": [
         { "dependentTasksOutputFiles": "**/*", "transitive": true }
       ],

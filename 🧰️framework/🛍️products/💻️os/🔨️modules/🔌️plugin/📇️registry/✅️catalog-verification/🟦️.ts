@@ -8,6 +8,41 @@ import { APP_CHANNEL_VERSION, clonePackValue, decodePackValue, encodePackValue, 
 import type { PackValue } from "../../../../🟦️.ts";
 import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, PluginDescriptorHashes, PluginRegistryEntry, findPluginCargoFiles, parsePluginCargo } from "../🔎️discovery/🟦️.ts";
 import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
+import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+
+/** 🎛️ Playground owners that legitimately ship without a navbar example picker (library shells, aggregators, flow hosts). */
+export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "flow", "norm", "stdio"]);
+
+/** 📚️ Every editor/viewer dialect in a published manifest must offer at least one example row for `NavbarExampleSelect`. */
+export function auditNavbarExamplePickerCoverage(manifest: PluginManifest): readonly string[] {
+  if (NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.has(manifest.pluginId)) return [];
+  const admitted = normalizeManifestExamples(manifest);
+  const problems: string[] = [];
+  for (const app of admitted.apps ?? []) {
+    const row = app as { readonly id?: string; readonly dialect?: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
+    if (!row.dialect) continue;
+    if (examplesForApp(admitted.examples ?? [], { dialect: row.dialect }).length === 0) {
+      problems.push(`${manifest.pluginId}: app ${row.id ?? "?"} (${dialectCoordinate(row.dialect)}) has no manifest examples`);
+    }
+  }
+  return problems;
+}
+
+/** 📦️ Every manifest example row the navbar picker can load must ship non-empty `artifactJson`. */
+export function auditNavbarExampleArtifactPayload(manifest: PluginManifest): readonly string[] {
+  if (NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.has(manifest.pluginId)) return [];
+  const admitted = normalizeManifestExamples(manifest);
+  const problems: string[] = [];
+  for (const example of admitted.examples ?? []) {
+    const row = example as { readonly id?: string; readonly artifactJson?: string };
+    const payload = row.artifactJson;
+    if (typeof payload !== "string" || payload.trim().length === 0) {
+      problems.push(`${manifest.pluginId}: example ${String(row.id ?? "?")} is missing artifactJson`);
+    }
+  }
+  return problems;
+}
 
 export class RegistryTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

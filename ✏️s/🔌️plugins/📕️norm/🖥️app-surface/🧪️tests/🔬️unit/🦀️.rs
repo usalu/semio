@@ -50,28 +50,15 @@ async fn the_artifact_kind_spec_is_a_data_value_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&CheckReport::default()).expect("node assembly") }).expect("json");
+    let json = report_body(&CheckReport::default(), Vec::new());
     assert!(json.contains("No checks computed."), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
-    let mut report = CheckReport::default();
-    for _ in 0..2 {
-        report.push(crate::document::CheckResult::from_utilization(
-            crate::document::ClauseId::new("demo", "§1", "1.1"),
-            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.5),
-            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
-            "same check",
-            crate::document::AnnexChoice::De,
-        ));
-    }
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&report).expect("node assembly") }).expect("distinct row identities");
-    let projected: serde_json::Value = serde_json::from_str(&json).expect("third-party projection oracle");
-    let rows = projected["children"].as_array().expect("report rows");
-    assert_eq!(rows.len(), 2);
-    assert_eq!(rows[0]["key"], "norm-report-check-0");
-    assert_eq!(rows[1]["key"], "norm-report-check-1");
+    let json = report_body(&oversized_report(2), Vec::new());
+    assert!(json.contains("\"norm-report-check-0\""), "the first row keeps its own identity: {json}");
+    assert!(json.contains("\"norm-report-check-1\""), "the second row keeps its own identity: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -139,3 +126,73 @@ async fn selected_check_index_arg_reads_the_shell_wire_shape() {
     assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({})))), None);
     assert_eq!(selected_check_index_arg(None), None);
 }
+
+//#region 🪟️WindowLaws
+use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+
+/// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
+/// real `UiValue` argument-arena credit, shared process-wide, so a law that materialised a full
+/// 48-row viewport would starve the sibling panel tests running beside it.
+const MEASURED_VIEWPORT_ROWS: u32 = 4;
+
+/// 🪟️ A compliance run with far more clause checks than the 32 siblings a plain column admitted.
+fn oversized_report(checks: usize) -> CheckReport {
+    let mut report = CheckReport::default();
+    for index in 0..checks {
+        report.push(crate::document::CheckResult::from_utilization(
+            crate::document::ClauseId::new("demo", "§1", format!("1.{index}")),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.5),
+            crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
+            "demo check",
+            crate::document::AnnexChoice::De,
+        ));
+    }
+    report
+}
+
+/// 🪟️ The results body exactly as the host reads it, for the host-known windows in `requests`.
+fn report_body(report: &CheckReport, requests: Vec<TreeWindowRequest>) -> String {
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    let node = render_report(report, &TreeWindows::for_body(&view, "norm.x.play.results")).expect("report tree");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the report tree")
+}
+
+/// 🪟️ Law (a): a 300-check report renders — the section stamps its full extent and no `+N` appears.
+#[test]
+fn an_oversized_report_stamps_its_total_and_never_a_continuation_row() {
+    let json = report_body(&oversized_report(300), Vec::new());
+    assert!(json.contains("\"total\":300"), "the check section stamps its full extent: {json}");
+    assert!(!json.contains(".more"), "no continuation row survives: {json}");
+    assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
+    assert!(json.matches("norm-report-check-").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
+}
+
+/// 🪟️ Law (b): a section the host closed stamps its total and materialises nothing.
+#[test]
+fn a_closed_report_section_stamps_its_total_and_materialises_no_rows() {
+    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_REPORT_SECTION_ID.into(), open: Some(false), offset: 0, rows: 0 }]);
+    assert!(json.contains("\"total\":300"), "a closed section still stamps its extent: {json}");
+    assert!(!json.contains("norm-report-check-"), "a closed section materialises no rows: {json}");
+}
+
+/// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the row id.
+#[test]
+fn a_host_window_materialises_exactly_its_report_slice() {
+    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_REPORT_SECTION_ID.into(), open: Some(true), offset: 100, rows: 10 }]);
+    assert!(json.contains("\"offset\":100"), "the section reports its offset: {json}");
+    for index in 100..110 {
+        assert!(json.contains(&format!("\"norm-report-check-{index}\"")), "check {index} is inside the window: {json}");
+    }
+    assert!(!json.contains("\"norm-report-check-99\""), "the check before the window stays out: {json}");
+    assert!(!json.contains("\"norm-report-check-110\""), "the check after the window stays out: {json}");
+}
+
+/// 🪟️ Law (d) for a read-only report: no interaction domain, no pick granularity, no row binding.
+#[test]
+fn the_report_tree_binds_no_interaction_domain() {
+    let json = report_body(&oversized_report(4), Vec::new());
+    assert!(!json.contains("interactionDomain"), "the report tree binds no domain: {json}");
+    assert!(!json.contains("granularity"), "the report tree stamps no pick granularity: {json}");
+    assert!(!json.contains("\"bindings\":[{"), "a report row carries no action of its own: {json}");
+}
+//#endregion 🪟️WindowLaws

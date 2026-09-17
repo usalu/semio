@@ -951,51 +951,6 @@
                 }
               },
               {
-                "id": "setPanelPage",
-                "label": {
-                  "native": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "setReferenceSelection",
                 "label": {
                   "native": {
@@ -4162,51 +4117,6 @@
                   "reuse": {
                     "en": "Set Node Selection",
                     "de": "Knotenauswahl festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setPanelPage",
-                "label": {
-                  "native": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
                   }
                 },
                 "kind": "view",
@@ -7445,51 +7355,6 @@
                 }
               },
               {
-                "id": "setPanelPage",
-                "label": {
-                  "native": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "setReferenceSelection",
                 "label": {
                   "native": {
@@ -10656,51 +10521,6 @@
                   "reuse": {
                     "en": "Set Node Selection",
                     "de": "Knotenauswahl festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setPanelPage",
-                "label": {
-                  "native": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Panel Page",
-                    "de": "Panel-Seite festlegen"
                   }
                 },
                 "kind": "view",
@@ -14505,7 +14325,28 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio cad.cad.dsl v1\nschema=6361642e646f63756d656e74\nid=636164\nshapeModel=[]\nbuildingModel=[]\nenergyModel=[]\nstructureClassicModel=[]\ndrawings=[]\nreferencesByModelDefinitionId=7b227370617469616c2e7368617065223a5b7b226964223a227265662d31222c22736f7572636555726c223a2268747470733a2f2f6578616d706c652e746573742f706c616e2e706e67222c226d656469614b696e64223a22696d616765222c226f726967696e223a5b302e302c302e302c302e305d2c226f7269656e746174696f6e223a6e756c6c2c227363616c65223a312e352c227769647468576f726c64223a382e302c2268696464656e223a66616c73652c226c6f636b6564223a747275652c226f706163697479223a302e387d5d7d\nnodes=5b7b226964223a226e6f64652d31222c226c6162656c223a22526f6f74222c226b696e64223a2267726f7570227d5d\n",
+        "dialect": {
+          "artifactKind": "s.cad.cad",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -14817,8 +14658,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "f2ae56addcaef63bbb5bd95b404415038cb06f8e78e7b47969f736cb2db66a36",
-    "coreWasmSha256": "14c1caf2a29119ea8abd22486c3db443c93cddddb61b07c5cf3a63c27505e29f",
-    "descriptorSha256": "8bec7ea7eb19b6688cb400a88119d3f4499ae3b8085903f354197f490985c38a"
+    "wasmSha256": "2d31893147fbde8e42b6052889345e1204a980b75386e889ebc3b58d4719d075",
+    "coreWasmSha256": "5615e8c4b569c7464629f1a9fff544736918e2ba944cf2c16acc2ae05f4f0e50",
+    "descriptorSha256": "5931e64f75d815618644c765190518f143b7c826a44ffaa3cdd0d6821a2e7ab3"
   }
 }

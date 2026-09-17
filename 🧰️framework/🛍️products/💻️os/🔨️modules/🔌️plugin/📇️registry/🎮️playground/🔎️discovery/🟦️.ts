@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { discoverCatalogPackages, getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { withResolvedPlaygroundDistDir } from "../../../../🧑‍💻dev/🚚️distribution/📍️output/🟦️.ts";
 import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
 
 
@@ -30,6 +31,8 @@ export type PlaygroundEntry = {
   readonly app?: string;
   /** @emoji 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
+  /** @emoji 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
+  readonly distDir?: string;
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
   /** @emoji 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
@@ -58,6 +61,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   if (!variant) return undefined;
   const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
   const brand = block.match(/^brand\s*=\s*"([^"]+)"/m)?.[1];
+  const distDir = block.match(/^distDir\s*=\s*"([^"]+)"/m)?.[1];
   const aliases = parseTomlStringArray(block, "aliases");
   const portsBlock = block.match(/^ports\s*=\s*\{([^}]*)\}/m)?.[1];
   const react = portsBlock?.match(/react\s*=\s*(\d+)/)?.[1];
@@ -68,7 +72,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const userPortsWgpu = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "wgpu") : [];
   const userPorts = userPortsReact.length > 0 && userPortsWgpu.length > 0 ? { react: userPortsReact, wgpu: userPortsWgpu } : undefined;
   const engines = parseTomlStringArray(block, "engines");
-  return { variant, pluginId, cratePath, app, brand, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
+  return { variant, pluginId, cratePath, app, brand, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
 }
 
 
@@ -177,7 +181,7 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
     if (donor) playgrounds[i] = { ...row, examples: donor.examples, engines: row.engines.length > 0 ? row.engines : donor.engines };
   }
   playgrounds.sort((a, b) => a.variant.localeCompare(b.variant));
-  return playgrounds;
+  return playgrounds.map((row) => withResolvedPlaygroundDistDir(row, playgrounds));
 }
 
 

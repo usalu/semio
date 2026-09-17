@@ -120,6 +120,14 @@ async fn grid_scale_normalizes_to_cell_size() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn preview_kind_bounds_wraps_box_stock_at_the_origin() {
+    let kind = demo_stock().into_iter().find(|kind| kind.id == "beam-glulam-gl24h").expect("demo glulam beam");
+    let (minimum, maximum) = preview_kind_bounds(&kind).expect("box-built preview bounds");
+    assert!(minimum[0] < 0.0 && maximum[0] > 0.0);
+    assert!(maximum[2] - minimum[2] > 5.0, "the glulam beam's depth should dominate the preview envelope");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn curation_document_dsl_round_trips_sample_and_empty() {
     store::os_store::test_support::assert_dsl_round_trip(&sample_document());
     store::os_store::test_support::assert_dsl_round_trip(&CurationSnapshot::default());

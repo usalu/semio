@@ -18,7 +18,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let json = render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN).await;
     close(app);
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
-    assert!(scene.fixture_json.as_deref().is_some_and(|fixture| fixture.contains("flow.host_snapshot")));
+    assert!(scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.host_snapshot")));
     assert!(scene.capabilities_json.as_deref().is_some_and(|capabilities| capabilities.contains("flow")));
     assert!(scene.operators.is_empty(), "a flow-backed scene must carry no operator records, carries {}", scene.operators.len());
 }

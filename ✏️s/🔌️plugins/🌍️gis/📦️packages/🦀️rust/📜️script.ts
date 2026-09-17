@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🌍️ GIS plugin package command router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 import { DurableThreeStoreAssemblyCheckScript, DurableThreeStoreAssemblyNativeCheckScript } from "../../🧪️tests/🗄️durable-three-store-assembly/🟦️.ts";
@@ -32,4 +32,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("durable-three-store-assembly-native-check", DurableThreeStoreAssemblyNativeCheckScript)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
   .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript);
+registerPlaygroundSiteBuildCommands(router);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

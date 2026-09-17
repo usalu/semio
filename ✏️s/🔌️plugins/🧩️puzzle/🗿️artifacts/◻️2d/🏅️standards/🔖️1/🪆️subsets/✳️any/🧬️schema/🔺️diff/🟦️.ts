@@ -12,6 +12,8 @@ export interface Puzzle2dDiff {
   /** @state artifact */
   edges?: Puzzle2dEdgesDelta;
   /** @state artifact */
+  targetRegions?: Puzzle2dTargetRegionsDelta;
+  /** @state artifact */
   meta?: Puzzle2dMeta;
 }
 
@@ -22,6 +24,9 @@ export interface Puzzle2dNodePatch { replacement?: Puzzle2dNode; }
 export interface Puzzle2dEdgesDelta { added: Puzzle2dEdge[]; removed: string[]; patched: Puzzle2dEdgePatchEntry[]; reordered?: string[]; }
 export interface Puzzle2dEdgePatchEntry { id: string; patch: Puzzle2dEdgePatch; }
 export interface Puzzle2dEdgePatch { replacement?: Puzzle2dEdge; }
+export interface Puzzle2dTargetRegionsDelta { added: Puzzle2dTargetRegion[]; removed: string[]; patched: Puzzle2dTargetRegionPatchEntry[]; reordered?: string[]; }
+export interface Puzzle2dTargetRegionPatchEntry { id: string; patch: Puzzle2dTargetRegionPatch; }
+export interface Puzzle2dTargetRegionPatch { replacement?: Puzzle2dTargetRegion; }
 export interface Puzzle2dArtifact { schema: string; [key: string]: unknown; }
 
 export type Puzzle2dNodeAnchor = "fixed" | "derived";
@@ -182,6 +187,17 @@ export interface Puzzle2dKindCatalogs {
   handles: Puzzle2dCatalogHandleKind[];
   edges: Puzzle2dCatalogEdgeKind[];
   wires: Puzzle2dCatalogWireKind[];
+}
+
+export interface Puzzle2dTargetRegion {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+  hidden: boolean;
+  locked: boolean;
 }
 
 export interface Puzzle2dMeta {

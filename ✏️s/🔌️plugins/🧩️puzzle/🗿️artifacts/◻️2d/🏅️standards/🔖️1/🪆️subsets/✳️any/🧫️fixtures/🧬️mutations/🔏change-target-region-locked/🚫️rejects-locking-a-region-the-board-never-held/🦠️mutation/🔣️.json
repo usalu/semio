@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetRegionLocked",
+  "id": "region-the-board-never-held",
+  "newLocked": true
+}

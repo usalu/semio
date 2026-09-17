@@ -5,13 +5,14 @@ use crate::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::{block3d_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::{
-    Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, Trigger, UiAssemblyResult, UiText,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_ui_contract::{self as ui, InputKind};
 
 //#region 🔖️Constants
 pub const BLOCK3D_BODY_INSPECTOR: &str = "block3d.play.inspector";
+pub const BLOCK3D_INSPECTOR_SUMMARY: &str = "block3d-play-inspector.summary";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -84,14 +85,34 @@ fn representation_field(definition: &Block3dSnapshot, active_representation_id: 
     field_row("block3d-play-inspector.representation-field", label, select.try_build().map_err(|_| inspector_error("select-build"))?)
 }
 
-pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let rows = semio_framework_plugin::ui_node_list([
-        text_field("block3d-play-inspector.name", labels.name.as_str(), &definition.object_kind.name, "name"),
-        text_field("block3d-play-inspector.label", labels.label.as_str(), &definition.object_kind.label, "label"),
-        representation_field(definition, active_representation_id, labels.representation.as_str()),
-        readonly_field("block3d-play-inspector.vortex-count", labels.vortices.as_str(), &definition.vortices.len().to_string()),
-    ])?;
-    PanelTreeBuilder::new("block3d-play-inspector")?.section("block3d-play-inspector.summary", Some(ui_label(labels.summary.as_str())?), true, rows)?.build()
+/// 🧾️ One inspector row recorded as DATA — the summary section's window decides how many of these
+/// get built, so a field is never materialised for a viewport that will not show it
+/// (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+enum InspectorField<'a> {
+    /// ✏️ A `blur`-committed text control bound to `patchObjectKind` for `document_field`.
+    Text { id: &'a str, label: &'a str, value: &'a str, document_field: &'static str },
+    /// 🧱️ The active-representation picker, built from the live document.
+    Representation { label: &'a str },
+    /// 🔒️ A disabled text control, no binding.
+    Readonly { id: &'a str, label: &'a str, value: String },
+}
+
+/// 🪟️ The inspector's one summary section is WINDOWED like every other tree container: it stamps its
+/// full field count and materialises only the rows its window asks for.
+pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let fields = [
+        InspectorField::Text { id: "block3d-play-inspector.name", label: labels.name.as_str(), value: &definition.object_kind.name, document_field: "name" },
+        InspectorField::Text { id: "block3d-play-inspector.label", label: labels.label.as_str(), value: &definition.object_kind.label, document_field: "label" },
+        InspectorField::Representation { label: labels.representation.as_str() },
+        InspectorField::Readonly { id: "block3d-play-inspector.vortex-count", label: labels.vortices.as_str(), value: definition.vortices.len().to_string() },
+    ];
+    PanelTreeBuilder::new("block3d-play-inspector")?
+        .window_section(windows, BLOCK3D_INSPECTOR_SUMMARY, Some(ui_label(labels.summary.as_str())?), true, &fields, |field| match field {
+            InspectorField::Text { id, label, value, document_field } => text_field(id, label, value, *document_field),
+            InspectorField::Representation { label } => representation_field(definition, active_representation_id, label),
+            InspectorField::Readonly { id, label, value } => readonly_field(id, label, value.as_str()),
+        })?
+        .build()
 }
 //#endregion 🔖️Render
 

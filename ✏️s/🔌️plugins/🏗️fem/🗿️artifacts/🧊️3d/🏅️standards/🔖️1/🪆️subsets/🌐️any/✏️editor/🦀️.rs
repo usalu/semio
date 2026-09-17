@@ -1355,7 +1355,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Default", "Standard")), ActionArgOption::new(crate::examples::concrete_forest::ID, crate::examples::concrete_forest::label()), ActionArgOption::new(crate::examples::house::ID, crate::examples::house::label())]).default_value(&crate::examples::demo::ID),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::concrete_forest::ID, crate::examples::concrete_forest::label()), ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Default", "Standard")), ActionArgOption::new(crate::examples::house::ID, crate::examples::house::label())]).default_value(&crate::examples::concrete_forest::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())

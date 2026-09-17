@@ -6,69 +6,337 @@
     "Puzzle5dCamera2d": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "Puzzle5dCamera3d": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["position", "target", "zoom"],
+      "required": [
+        "position",
+        "target",
+        "zoom",
+        "up",
+        "projection"
+      ],
       "properties": {
-        "position": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
-        "target": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
-        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "up": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          ]
+        },
+        "projection": {
+          "$ref": "#/definitions/Puzzle5dWorldProjectionConfig"
+        }
       }
     },
     "WorldSunConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["enabled", "azimuth", "elevation", "intensity", "color"],
+      "required": [
+        "enabled",
+        "azimuth",
+        "elevation",
+        "intensity",
+        "color"
+      ],
       "properties": {
-        "enabled": { "type": "boolean" },
-        "azimuth": { "type": "number" },
-        "elevation": { "type": "number" },
-        "intensity": { "type": "number" },
-        "color": { "type": "string" }
+        "enabled": {
+          "type": "boolean"
+        },
+        "azimuth": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        }
       }
     },
     "Puzzle5dBoardWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["camera2d", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"],
+      "required": [
+        "camera2d",
+        "lodMode",
+        "suggestionOffset",
+        "gridSnapEnabled",
+        "gridFactor",
+        "gridVisible",
+        "selectableKinds"
+      ],
       "properties": {
-        "camera2d": { "$ref": "#/definitions/Puzzle5dCamera2d" },
-        "lodMode": { "type": "string" },
-        "suggestionOffset": { "type": "number" },
-        "gridSnapEnabled": { "type": "boolean" },
-        "gridFactor": { "type": "number", "exclusiveMinimum": 0 }
+        "camera2d": {
+          "$ref": "#/definitions/Puzzle5dCamera2d"
+        },
+        "lodMode": {
+          "type": "string"
+        },
+        "suggestionOffset": {
+          "type": "number"
+        },
+        "gridSnapEnabled": {
+          "type": "boolean"
+        },
+        "gridFactor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "gridVisible": {
+          "type": "boolean"
+        },
+        "selectableKinds": {
+          "$ref": "#/definitions/Puzzle5dSelectableKinds"
+        }
       }
     },
     "Puzzle5dWorldWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["camera3d", "sun"],
+      "required": [
+        "camera3d",
+        "sun",
+        "gridVisible",
+        "gridSnapEnabled",
+        "gridSpacing",
+        "lodAutomatic",
+        "lodDepthVariable",
+        "lodManual",
+        "selectableKinds",
+        "gripShow",
+        "gripDirection",
+        "transformMove",
+        "transformRotate",
+        "voxelDims"
+      ],
       "properties": {
-        "camera3d": { "$ref": "#/definitions/Puzzle5dCamera3d" },
-        "sun": { "$ref": "#/definitions/WorldSunConfig" }
+        "camera3d": {
+          "$ref": "#/definitions/Puzzle5dCamera3d"
+        },
+        "sun": {
+          "$ref": "#/definitions/WorldSunConfig"
+        },
+        "gridVisible": {
+          "type": "boolean"
+        },
+        "gridSnapEnabled": {
+          "type": "boolean"
+        },
+        "gridSpacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lodAutomatic": {
+          "type": "boolean"
+        },
+        "lodDepthVariable": {
+          "type": "boolean"
+        },
+        "lodManual": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "selectableKinds": {
+          "$ref": "#/definitions/Puzzle5dSelectableKinds"
+        },
+        "gripShow": {
+          "type": "string",
+          "enum": [
+            "always",
+            "selected"
+          ]
+        },
+        "gripDirection": {
+          "type": "string",
+          "enum": [
+            "outwards",
+            "inwards"
+          ]
+        },
+        "transformMove": {
+          "type": "boolean"
+        },
+        "transformRotate": {
+          "type": "boolean"
+        },
+        "voxelDims": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
       }
     },
     "Puzzle5dWindowTransient": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["engagementInput", "brushCandidateIndex"],
+      "required": [
+        "engagementInput",
+        "brushCandidateIndex"
+      ],
       "properties": {
-        "engagementInput": { "type": "string" },
-        "brushCandidateIndex": { "type": "integer", "minimum": 0 }
+        "engagementInput": {
+          "type": "string"
+        },
+        "brushCandidateIndex": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Puzzle5dWorldProjectionConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "orthographicView",
+        "axonometricVariant",
+        "axonometricAngleA",
+        "axonometricAngleB",
+        "axonometricQuadrant",
+        "obliqueVariant",
+        "obliqueAngle",
+        "obliqueDepth",
+        "onePointAxis",
+        "fov",
+        "twoPointShift",
+        "curvilinearFov",
+        "curvilinearStrength",
+        "curvilinearMapping"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "orthographicView": {
+          "type": "string"
+        },
+        "axonometricVariant": {
+          "type": "string"
+        },
+        "axonometricAngleA": {
+          "type": "number"
+        },
+        "axonometricAngleB": {
+          "type": "number"
+        },
+        "axonometricQuadrant": {
+          "type": "string"
+        },
+        "obliqueVariant": {
+          "type": "string"
+        },
+        "obliqueAngle": {
+          "type": "number"
+        },
+        "obliqueDepth": {
+          "type": "number"
+        },
+        "onePointAxis": {
+          "type": "string"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "twoPointShift": {
+          "type": "number"
+        },
+        "curvilinearFov": {
+          "type": "number"
+        },
+        "curvilinearStrength": {
+          "type": "number"
+        },
+        "curvilinearMapping": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dSelectableKinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parts",
+        "grips",
+        "fasteners"
+      ],
+      "properties": {
+        "parts": {
+          "type": "boolean"
+        },
+        "grips": {
+          "type": "boolean"
+        },
+        "fasteners": {
+          "type": "boolean"
+        }
       }
     }
   },
   "oneOf": [
-    { "$ref": "#/definitions/Puzzle5dBoardWindowConfig" },
-    { "$ref": "#/definitions/Puzzle5dWorldWindowConfig" },
-    { "$ref": "#/definitions/Puzzle5dWindowTransient" }
+    {
+      "$ref": "#/definitions/Puzzle5dBoardWindowConfig"
+    },
+    {
+      "$ref": "#/definitions/Puzzle5dWorldWindowConfig"
+    },
+    {
+      "$ref": "#/definitions/Puzzle5dWindowTransient"
+    }
   ]
 }

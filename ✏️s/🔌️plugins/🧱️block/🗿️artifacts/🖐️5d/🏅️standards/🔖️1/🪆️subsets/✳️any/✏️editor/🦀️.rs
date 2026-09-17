@@ -497,7 +497,7 @@ impl ArtifactEditor for Block5dPlayApp {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels)?,
             world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels)?,
             document_panel::BLOCK5D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK5D_BODY_ARTIFACT))?,
-            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels)?,
+            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK5D_BODY_INSPECTOR))?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d unknown-body label admission failed"))?,
         };

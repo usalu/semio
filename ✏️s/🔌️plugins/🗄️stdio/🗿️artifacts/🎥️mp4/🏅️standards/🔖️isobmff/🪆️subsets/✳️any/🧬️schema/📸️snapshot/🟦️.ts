@@ -5,7 +5,15 @@ export interface Mp4Ftyp {
   compatibleBrands: string[];
 }
 export interface Mp4AvcExtension { chromaFormat: number; bitDepthLumaMinus8: number; bitDepthChromaMinus8: number; spsExt: number[][]; }
-export interface Mp4Codec { sps: number[][]; pps: number[][]; nalLengthSize: number; extension?: Mp4AvcExtension; }
+export type Mp4CodecFormat = "avc1" | "avc3" | "hvc1" | "hev1" | "jpeg" | "mjpa";
+export interface Mp4HevcNalArray { arrayCompleteness: boolean; nalUnitType: number; nalUnits: number[][]; }
+export interface Mp4HevcConfig {
+  generalProfileSpace: number; generalTierFlag: boolean; generalProfileIdc: number; generalProfileCompatibilityFlags: number; generalConstraintIndicatorFlags: number; generalLevelIdc: number;
+  minSpatialSegmentationIdc: number; parallelismType: number; chromaFormatIdc: number; bitDepthLumaMinus8: number; bitDepthChromaMinus8: number;
+  avgFrameRate: number; constantFrameRate: number; numTemporalLayers: number; temporalIdNested: boolean; arrays: Mp4HevcNalArray[];
+}
+/** 🎥️ Sample entry `format` (absent ⇒ `avc1`) plus its typed configuration: `avcC` fields for AVC, `hevc` for HEVC, none for JPEG. */
+export interface Mp4Codec { format?: Mp4CodecFormat; sps: number[][]; pps: number[][]; nalLengthSize: number; extension?: Mp4AvcExtension; hevc?: Mp4HevcConfig; }
 export interface Mp4Sample {
   data: number[];
   duration: number;

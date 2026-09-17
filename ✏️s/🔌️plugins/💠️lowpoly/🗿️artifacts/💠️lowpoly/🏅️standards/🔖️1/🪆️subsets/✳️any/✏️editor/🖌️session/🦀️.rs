@@ -130,6 +130,7 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
         smooth_shading: (before.smooth_shading != after.smooth_shading).then_some(after.smooth_shading),
         transform: (before.transform != after.transform).then(|| after.transform.clone()),
         mesh: (before.mesh != after.mesh).then(|| after.mesh.clone()),
+        mesh_content: (before.mesh_content != after.mesh_content).then(|| after.mesh_content.clone()),
     }
 }
 
@@ -259,6 +260,9 @@ pub struct LowpolyScratch {
     /// framework-owned selection without every one of them threading a fifth argument. Never persisted,
     /// never read outside the dispatch that set it.
     current_selection: LowpolySelection,
+    /// 🎯️ The object THIS dispatch's mesh-domain selection addresses (`view::selection_object_id`);
+    /// `build_doc` edits it instead of the config's active object. Never persisted.
+    selection_object_id: Option<String>,
 }
 
 impl Default for LowpolyScratch {
@@ -273,6 +277,7 @@ impl Default for LowpolyScratch {
             preview_seq: 0,
             mesh_workspace: crate::schema::default_mesh_workspace(),
             current_selection: LowpolySelection::default(),
+            selection_object_id: None,
         }
     }
 }
@@ -287,6 +292,14 @@ impl LowpolyScratch {
     /// e.g. `render`).
     pub fn current_selection(&self) -> &LowpolySelection {
         &self.current_selection
+    }
+
+    pub fn set_selection_object_id(&mut self, object_id: Option<String>) {
+        self.selection_object_id = object_id;
+    }
+
+    pub fn selection_object_id(&self) -> Option<&str> {
+        self.selection_object_id.as_deref()
     }
 
     /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no
@@ -999,6 +1012,7 @@ impl LowpolyScratch {
             preview_seq: state.preview_seq,
             mesh_workspace: state.mesh_workspace.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
             current_selection,
+            selection_object_id: None,
         })
     }
 

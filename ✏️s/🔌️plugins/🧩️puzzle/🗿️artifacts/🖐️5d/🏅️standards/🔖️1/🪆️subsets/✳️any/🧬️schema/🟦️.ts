@@ -19,6 +19,8 @@ export interface Puzzle5dArtifact {
   parts: Puzzle5dPart[];
   /** @state artifact */
   fasteners: Puzzle5dFastener[];
+  /** @state artifact */
+  targetVolumes: Puzzle5dTargetVolume[];
 }
 
 
@@ -172,6 +174,16 @@ export interface Puzzle5dFastener {
   y?: number;
 }
 
+/** 🧊️ Oriented box constraining fill placement in the 3D projection. */
+export interface Puzzle5dTargetVolume {
+  id: string;
+  origin?: [number, number, number];
+  orientation?: [number, number, number, number];
+  scale?: number | [number, number, number];
+  hidden?: boolean;
+  locked?: boolean;
+}
+
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class puzzlePuzzle5dArtifactGuardRefusal extends Error {
@@ -231,8 +243,23 @@ export function parsePuzzle5dArtifact(value: unknown, at = "$"): Puzzle5dArtifac
     kindCompatibility: puzzlePuzzle5dArtifactGuardArray(row["kindCompatibility"], `${at}.kindCompatibility`).map((item, index) => parsePuzzle5dKindCompatibility(item, `${at}.kindCompatibility[${index}]`)),
     parts: puzzlePuzzle5dArtifactGuardArray(row["parts"], `${at}.parts`).map((item, index) => parsePuzzle5dPart(item, `${at}.parts[${index}]`)),
     fasteners: puzzlePuzzle5dArtifactGuardArray(row["fasteners"], `${at}.fasteners`).map((item, index) => parsePuzzle5dFastener(item, `${at}.fasteners[${index}]`)),
+    targetVolumes: puzzlePuzzle5dArtifactGuardArray(row["targetVolumes"], `${at}.targetVolumes`).map((item, index) => parsePuzzle5dTargetVolume(item, `${at}.targetVolumes[${index}]`)),
   };
 }
+export function parsePuzzle5dTargetVolume(value: unknown, at = "$"): Puzzle5dTargetVolume {
+  const row = puzzlePuzzle5dArtifactGuardObject(value, at);
+  const axes = (key: string, count: number): number[] | undefined =>
+    row[key] === undefined ? undefined : puzzlePuzzle5dArtifactGuardArray(row[key], `${at}.${key}`, { minItems: count, maxItems: count }).map((item, index) => puzzlePuzzle5dArtifactGuardNumber(item, `${at}.${key}[${index}]`));
+  return {
+    id: puzzlePuzzle5dArtifactGuardString(row["id"], `${at}.id`),
+    origin: axes("origin", 3) as [number, number, number] | undefined,
+    orientation: axes("orientation", 4) as [number, number, number, number] | undefined,
+    scale: row["scale"] === undefined ? undefined : typeof row["scale"] === "number" ? puzzlePuzzle5dArtifactGuardNumber(row["scale"], `${at}.scale`) : (axes("scale", 3) as [number, number, number]),
+    hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
+    locked: row["locked"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardBoolean(row["locked"], `${at}.locked`),
+  };
+}
+
 
 export function parsePuzzle5dMeta(value: unknown, at = "$"): Puzzle5dMeta {
   const row = puzzlePuzzle5dArtifactGuardObject(value, at);

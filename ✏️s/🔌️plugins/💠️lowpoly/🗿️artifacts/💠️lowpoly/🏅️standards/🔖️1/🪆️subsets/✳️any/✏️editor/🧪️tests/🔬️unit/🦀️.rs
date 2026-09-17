@@ -37,7 +37,7 @@ pub(crate) mod context {
     /// against). `object_id`/`face_id` address the same row id the Document panel tree renders (see
     /// `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region).
     pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
-        let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
+        let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, "face", face_id);
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
         app.handle_action("interactionSelect", Some(&protocol::DslValue::from(&serde_json::json!({ "domainId": MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &meta("test")).await.expect("interactionSelect");
     }

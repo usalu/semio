@@ -76,23 +76,18 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
     assert_eq!(row["curated"]["action"]["args"]["objectId"], kind.id.as_str());
 }
 
-/// 🧺️ LAW: every pool row offers a one-click curate button, and the uncurate twin only appears once
-/// the kind is actually curated — never more than the two row actions the table budget allows.
+/// 🧺️ LAW: the pool row exposes curated count only through the bounded stepper — no duplicate row buttons.
 #[semio_framework_async_macros::async_test]
-async fn pool_rows_offer_curate_and_only_offer_uncurate_once_curated() {
+async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
     let mut document = crate::schema::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default());
     let uncurated: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
-    assert_eq!(uncurated["actions"]["kind"], "buttons");
-    assert_eq!(uncurated["actions"]["buttons"].as_array().unwrap().len(), 1, "an uncurated kind offers curate only");
-    assert_eq!(uncurated["actions"]["buttons"][0]["action"]["action"], "curationAdd");
-    assert_eq!(uncurated["actions"]["buttons"][0]["action"]["args"]["objectId"], kind.id.as_str());
+    assert!(uncurated.get("actions").is_none(), "the pool must not render a second +/- column");
+    assert_eq!(uncurated["curated"]["kind"], "stepper");
     crate::schema::curation_delta(&mut document, &kind.id, 1);
     let curated: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
-    let buttons = curated["actions"]["buttons"].as_array().unwrap();
-    assert_eq!(buttons.len(), 2, "at most two row actions");
-    assert_eq!(buttons[1]["action"]["action"], "curationRemove");
+    assert_eq!(curated["curated"]["value"].as_f64().unwrap(), 1.0);
 }
 
 /// ↕️ LAW: `Filters::sort` is shared with the curated table, so a sort naming a column the pool does
@@ -121,7 +116,8 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     assert_eq!(columns[0]["id"], "name");
     assert_eq!(columns[0]["sortable"], true, "the name header is clickable to sort");
-    assert_eq!(columns[5]["id"], "actions");
+    assert_eq!(columns[4]["id"], "curated");
+    assert_eq!(columns.as_array().expect("column records").len(), 5, "pool columns end at curated — no duplicate actions column");
     assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::SOURCING_DRAG_MIME));
     assert!(scene.drop_action_json.expect("drop action").contains("dropOnPool"));
 }
@@ -180,9 +176,9 @@ async fn dispatching_a_column_header_reorders_the_rendered_pool() {
     assert_eq!(sorted, roundtrip, "sorting reorders rows, it never adds or drops any");
 }
 
-/// ⚖️ LAW: the pool's curate button moves the row into the curated table, through the real command.
+/// ⚖️ LAW: changing curated count through `curationAdd` updates the pool stepper and the curated table.
 #[semio_framework_async_macros::async_test]
-async fn the_curate_row_action_moves_a_row_into_the_curated_table() {
+async fn curation_add_updates_the_pool_stepper_and_curated_table() {
     let mut app = new_app().await;
     let object_id = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await.remove(0);
     assert!(row_ids(&mut app, SOURCING_CURATION_BODY_CURATED).await.is_empty(), "the demo stock starts uncurated");
@@ -191,7 +187,7 @@ async fn the_curate_row_action_moves_a_row_into_the_curated_table() {
     let pool = table_of(&mut app, SOURCING_CURATION_BODY_POOL).await.1;
     let row = pool.iter().find(|row| row["id"] == object_id.as_str()).expect("the curated kind stays in the pool");
     assert_eq!(row["curated"]["value"].as_f64().unwrap(), 1.0);
-    assert_eq!(row["actions"]["buttons"].as_array().unwrap().len(), 2, "the uncurate twin appears once curated");
+    assert!(row.get("actions").is_none(), "the pool stepper is the sole curated control");
 }
 
 /// ⚖️ LAW: a host `sourcing.module` contribution reaches the pool — immediately as a module filter

@@ -117,7 +117,21 @@ fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &s
 /// (`removeGeneration{id}`) painted ON the row rather than folded into its right-click menu, which is
 /// what `RowActionPlacement::Menu` meant (`🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`'s
 /// `mergeTreeRowContextMenu`).
-pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
+///
+/// 🪟️ The roster is WINDOWED, not paged: the generations container states its full `total` and
+/// materialises only the rows the host's viewport asked for, so a document with hundreds of saved
+/// generations scrolls instead of refusing at the fixed-list ceiling — and, because every row costs
+/// three `UiValue` argument maps (select + rename + remove), the window is also what keeps the shared
+/// argument arena affordable (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+pub(crate) fn generation_tree(
+    controller_id: &'static str,
+    surface_prefix: &str,
+    generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState,
+    selected_id: Option<&str>,
+    locale: Locale,
+    terminology: Terminology,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
     let _ = terminology;
     let label = |key: &str| {
         match (key, locale) {
@@ -138,8 +152,7 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
         .to_string()
     };
     let factory = ActionFactory::new(controller_id);
-    let mut items = UiFixedList::default();
-    for entry in &generation.generations {
+    let generation_row = |entry: &semio_framework_artifact_playbook_playbook::FormGeneration| -> UiAssemblyResult<BuiltNode> {
         let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
         let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
@@ -160,10 +173,11 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
         if selected_id == Some(entry.id.as_str()) {
             item = item.try_with_children([generation_rename_field(&factory, surface_prefix, &entry.id, &entry.name, &label("rename"))?]).map_err(|_| ui_assembly_error("ui.generation.rename"))?;
         }
-        items.try_push(item).map_err(|_| ui_assembly_error("ui.generation.items"))?;
-    }
+        Ok(item)
+    };
+    let generations_id = format!("{surface_prefix}.generations");
     PanelTreeBuilder::new(surface_prefix)?
-        .section_or_placeholder(format!("{surface_prefix}.generations"), Some(ui_label(label("generations"))?), true, items, label("empty"))?
+        .window_section_or_placeholder(windows, &generations_id, Some(ui_label(label("generations"))?), true, &generation.generations, generation_row, ui_label(label("empty"))?)?
         .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, semio_framework_plugin::ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
         .build()
 }

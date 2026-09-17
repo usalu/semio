@@ -7,7 +7,6 @@
   "targets": {
     "deps": {
       "cache": false,
-      "parallelism": false,
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts deps"
@@ -15,7 +14,6 @@
     },
     "build": {
       "cache": true,
-      "parallelism": false,
       "dependsOn": [
         "deps"
       ],

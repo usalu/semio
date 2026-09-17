@@ -1,7 +1,10 @@
 //! 🖌️ `add-brush-part` command, and the brush placement `add-part-kind` and board events share with it.
 
 use crate::editor::puzzle5d::precompute::brush::puzzle5d_brush_placement;
-use crate::editor::puzzle5d::{find_part_by_grip_full_id, grips_from_templates, puzzle5d_grip_full_id, resolve_part_kind_mesh_url, set_part_2d_position, world_grip_direction, world_grip_position, Puzzle5dActionCtx, Puzzle5dFastener, Puzzle5dFreshIds, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_DEFAULT_PART_RADIUS};
+use crate::editor::puzzle5d::{
+    find_part_by_grip_full_id, grips_from_templates, puzzle5d_grip_full_id, puzzle5d_next_part_label, resolve_part_kind_mesh_url, set_part_2d_position, world_grip_direction, world_grip_position, Puzzle5dActionCtx, Puzzle5dFastener,
+    Puzzle5dFreshIds, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_DEFAULT_PART_RADIUS,
+};
 use dsl::os_pack::json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
@@ -14,7 +17,7 @@ pub fn puzzle5d_brush_source_grip(ctx: &Puzzle5dActionCtx<'_>, explicit: Option<
     explicit.map(str::to_string).or_else(|| ctx.selected_grip_ids().first().cloned()).or_else(|| ctx.brush_suggestions(|link| link.target().map(str::to_string)).flatten())
 }
 
-/// 🧱️ `addBrushPart`/`addBrushObject`: places `partKind` on the brush target grip.
+/// 🧱️ `addBrushPart`: places `partKind` on the brush target grip.
 pub fn add_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let part_kind = arg_str(args, "partKind").or_else(|| arg_str(args, "objectKindId")).unwrap_or("Part").to_string();
     let source = arg_str(args, "targetVortexFullId").or_else(|| arg_str(args, "targetGripFullId"));
@@ -61,7 +64,15 @@ pub fn puzzle5d_place_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, part_kind: &st
         anchor: Default::default(),
         part_kind: part_kind.to_string(),
         part_2d: Puzzle5dPart2d { x: at[0].unwrap_or(120.0), y: at[1].unwrap_or(120.0), shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.to_string(), icon_kind: None, hidden: None, locked: None },
-        part_3d: Puzzle5dPart3d { origin, mesh_url: resolve_part_kind_mesh_url(part_kind, document.kind_catalogs.as_ref()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
+        // 🏷️ A brushed part gets its authored, peer-numbered label stamped at creation, so the
+        // outliner names it the same way the catalogue row the operator painted from does.
+        part_3d: Puzzle5dPart3d {
+            origin,
+            mesh_url: resolve_part_kind_mesh_url(part_kind, document.kind_catalogs.as_ref()),
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            label: Some(puzzle5d_next_part_label(&document.parts, document, part_kind)),
+        },
         grips: grips_from_templates(document, part_kind),
     };
     let target = part.grips.first().map(|grip| puzzle5d_grip_full_id(&part.id, &grip.id));

@@ -1,0 +1,6 @@
+{
+  "mutation": "moveTargetRegion",
+  "id": "region-1",
+  "newX": 4.5,
+  "newY": -6.5
+}

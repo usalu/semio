@@ -35,6 +35,7 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-ui-contract.workspace = true
 
 [dev-dependencies]
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }

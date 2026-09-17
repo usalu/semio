@@ -2,15 +2,15 @@
 //! Owns the board scene payload (nodes/🐙️handles/edges plus the glyph catalogs and placement
 //! compatibility the board host reads), binds the pointer utilities (`🪛️utilities/*`) and scopes the
 //! board-event/2D-camera actions (`🎬️actions`). Its only genuinely 2D-specific chrome measure is the
-//! LOD select in `☑️options/🔭️lod`; the brush/fill Utility Options it shares with the 3D window come
-//! from the mode's own `☑️options/*`.
+//! LOD select in `☑️options/🔭️lod`; the brush Utility Options it shares with the 3D window come from the
+//! mode's own `☑️options/*`, and fill's from the mode-level tool `🛠️tools/🪣️fill`.
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
+use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
 use semio_framework_plugin::{Board2dScene, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
@@ -33,9 +33,9 @@ pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKi
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels, None), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
-        utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
+        utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -45,10 +45,17 @@ pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKi
     }
 }
 
-/// 🎚️ The live chrome measures for this window: its own LOD select plus the mode-level brush/fill
-/// Utility Options groups it shares with the 3D window.
-pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> Vec<WindowMeasure> {
-    vec![options::lod::measure(&envelope.runtime, labels), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
+/// 🎚️ The live chrome measures for this window: its own LOD select, grid group and selection group
+/// plus the mode-level brush Utility Options group it shares with the 3D window. Fill is a mode-level
+/// TOOL, so its count and distribution measures are the tool options rail's (`🛠️tools/🪣️fill`), never
+/// this window's.
+pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+    vec![
+        options::lod::measure(&envelope.runtime, labels),
+        options::grid::measure(&envelope.runtime, labels),
+        options::select::measure(&envelope.runtime, labels),
+        mode_options::brush::measure(envelope, labels),
+    ]
 }
 
 pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
@@ -113,6 +120,23 @@ pub fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
     })
 }
 
+/// 📐️ The flat rectangles the board paints for the document's target volumes — the projection of the
+/// 3d-pose boxes through the ONE board↔world map (`target_volume_flat_rect`), under the same
+/// `targetRegions` key the board engine reads in the 2d artifact. A hidden volume is dropped here
+/// rather than painted transparent, so the board never hit-tests a constraint the operator hid.
+fn board_target_regions_value(document: &Puzzle5dDocument) -> Value {
+    let regions: Vec<Value> = document
+        .target_volumes
+        .iter()
+        .filter(|volume| !volume.hidden)
+        .map(|volume| {
+            let [x, y, width, height] = target_volume_flat_rect(volume);
+            json!({ "id": volume.id, "x": x, "y": y, "width": width, "height": height, "hidden": volume.hidden, "locked": volume.locked })
+        })
+        .collect();
+    Value::Array(regions)
+}
+
 fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
     let nodes: Vec<Value> = document.parts.iter().map(board_node_value).collect();
     let edges: Vec<Value> = document
@@ -133,6 +157,7 @@ fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d)
         "nodes": nodes,
         "edges": edges,
         "wires": [],
+        "targetRegions": board_target_regions_value(document),
         "meta": {
             "kindCatalogs": board_kind_catalogs_value(document),
             "kindCompatibility": document.kind_compatibility.clone().unwrap_or(json!([])),
@@ -144,27 +169,36 @@ fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
     json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
 }
 
-fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
+/// 🎬️ The board host's whole scene payload for one render — `pub` so the cross-pane interaction law
+/// can assert the board and world projections of ONE snapshot against each other.
+pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
     Board2dScene {
         fixture_json: board_fixture_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
         camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
         glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids
-        // and method used to come from `runtime.selection`/`hovered_part_id`/`selection_method`, now
-        // dissolved into the framework-owned `vortex` interaction domain; `render` has no
-        // `InteractionView` to read it from (see `puzzle5d_gumball_active`'s doc comment) — this
-        // payload carries no live ids until that framework gap closes.
-        selection_json: "[]".into(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection and hover both come
+        // from the framework-owned `vortex` domain the ONE 5d interaction snapshot reads — the same
+        // domain the world pane projects, so a part picked or hovered in either pane paints in both.
+        selection_json: envelope.interaction.selection_json(),
         interactive: true,
-        hovered_id: None,
+        hovered_id: envelope.interaction.hovered_id().map(str::to_string),
         active_utility: Some(puzzle5d_scene_mode(&envelope.active_utility).to_string()),
         selection_method: "rectangle".into(),
+        grid_visible: envelope.runtime.grid_visible,
         grid_snap_enabled: envelope.runtime.grid_snap_enabled,
         grid_factor: envelope.runtime.grid_factor,
+        // 🎯️ The board's own pick filter, projected from this pane's `selectable_kinds` record in the
+        // engine's node/edge/handle vocabulary (part/fastener/grip).
+        selectable_nodes: envelope.runtime.selectable_kinds.parts,
+        selectable_edges: envelope.runtime.selectable_kinds.fasteners,
+        selectable_handles: envelope.runtime.selectable_kinds.grips,
         suggestion_offset: envelope.runtime.suggestion_offset,
         brush_weights_json: board_brush_weights_json(&envelope.runtime),
         placement_compatibility_json: envelope.document.kind_compatibility.clone().unwrap_or(json!([])).to_string(),
         lod_mode: envelope.runtime.lod_mode.clone(),
+        transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
+        domain_id: Some(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN.into()),
+        suggestion_menu_json: None,
         tool_run_trace: None,
         lanes: Vec::new(),
     }

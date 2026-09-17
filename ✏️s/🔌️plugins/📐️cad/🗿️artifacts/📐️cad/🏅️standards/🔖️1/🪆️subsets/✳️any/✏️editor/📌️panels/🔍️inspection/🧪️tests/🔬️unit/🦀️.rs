@@ -81,6 +81,41 @@ async fn selected_node_renders_read_only_rows() {
     assert!(json.contains("cad-play-inspector.node.id"));
 }
 
+//#region 🪟️WindowLaws
+/// 🪟️ The selected-id list is a windowed section of its OWN, keyed by the RAW object id: a wide
+/// selection stamps its whole extent, materialises exactly the host's slice, and never pushes the
+/// object's own (author-fixed) field group out of the panel.
+#[semio_framework_async_macros::async_test]
+async fn a_wide_selection_windows_its_ids_by_raw_id_without_starving_the_field_group() {
+    let working = forest_working_scene();
+    let ids: Vec<&str> = working.building_objects.iter().map(|object| object.id.as_str()).collect();
+    assert!(ids.len() >= 4, "this law needs a multi-object pane, found {}", ids.len());
+    let (offset, rows) = (1u32, 2u32);
+    let view_state = ViewModel {
+        tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: CAD_PLAY_BODY_PROPERTIES.into(), node_key: IDS_SECTION.into(), open: Some(true), offset, rows }],
+        ..ViewModel::default()
+    };
+    let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), selecting(&ids));
+    let panel = build_properties_panel(&view, cad_labels(&ViewModel::default()), None, &TreeWindows::for_body(&view_state, CAD_PLAY_BODY_PROPERTIES)).expect("CAD properties panel assembly");
+
+    let section = panel.children.iter().find(|child| child.key.as_str() == IDS_SECTION).expect("the ids section");
+    let semio_framework_plugin::Component::TreeSection(props) = &section.component else { panic!("the ids block is a tree section") };
+    let window = props.window.expect("the ids section stamps its window");
+    assert_eq!(window.total as usize, ids.len(), "the ids section reports the WHOLE selection");
+    assert_eq!(window.offset, offset, "and where the materialised slice starts");
+    let keys: Vec<String> = section.children.iter().map(|row| row.key.as_str().to_string()).collect();
+    let expected: Vec<String> = ids[offset as usize..(offset + rows) as usize].iter().map(|id| format!("cad-play-inspector.ids.{id}")).collect();
+    assert_eq!(keys, expected, "exactly the requested slice, keyed by the RAW object id — never renumbered by the offset");
+
+    // 🧾️ The object's own nine fields are an author-fixed group beside the window, not its tail.
+    let fields = panel.children.iter().find(|child| child.key.as_str() == "cad-play-inspector.object").expect("the object field group");
+    assert_eq!(fields.children.len(), 9, "the field group is complete however wide the selection is");
+    let json = projected(panel);
+    assert!(!json.contains(".more"), "no continuation row: {json}");
+    assert!(!json.contains("\"+"), "no `+N` label: {json}");
+}
+//#endregion 🪟️WindowLaws
+
 #[semio_framework_async_macros::async_test]
 async fn cad_labels_resolve_native_by_default() {
     let working = forest_working_scene();

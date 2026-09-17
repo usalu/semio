@@ -12,8 +12,10 @@
             "host-only"
           ],
           "routes": [
+            "copy",
             "exportFixture",
             "lodScaleJson",
+            "openAddNodeDialog",
             "openImportFixture",
             "setBrushNodeSize"
           ]
@@ -25,16 +27,23 @@
           ],
           "routes": [
             "addNode",
+            "addTargetRegion",
+            "createEdge",
+            "deleteEdge",
+            "deleteTargetRegion",
             "forceLayout",
             "import-media",
             "importFixture",
             "patchInspectorNodes",
+            "proximityConnect",
             "redrawHandles",
+            "relocateTargetRegion",
             "reorganize",
             "rotateSelection",
             "scaleSelection",
             "setActiveExample",
             "setSelectionFlag",
+            "setTargetRegionFlag",
             "translateSelection"
           ]
         },
@@ -45,6 +54,8 @@
           ],
           "routes": [
             "setBrushKindWeights",
+            "setBrushPlacementContactTolerance",
+            "setBrushPlacementOverlapBudget",
             "setFillCount"
           ]
         },
@@ -55,11 +66,16 @@
           ],
           "routes": [
             "focusSelection",
+            "setAreaBrushSize",
             "setCamera",
             "setGridFactor",
             "setGridSnapEnabled",
+            "setGridVisible",
             "setLodModeForPane",
-            "setSuggestionOffset"
+            "setProximityRadius",
+            "setSelectableKind",
+            "setSuggestionOffset",
+            "setTransformGumballFlag"
           ]
         },
         {
@@ -68,23 +84,27 @@
             "window-transient"
           ],
           "routes": [
-            "brushCancelSlot",
-            "brushCycleCandidate",
-            "brushOpenSlot",
-            "brushSetCandidateIndex",
+            "closeHandleSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
             "engagementAbort",
             "engagementControlSelect",
-            "engagementInput"
+            "engagementInput",
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openHandleSuggestions",
+            "targetBrushSuggestions"
           ]
         },
         {
           "status": "migrated",
           "lanes": [
             "artifact",
-            "window-transient"
+            "window-transient",
+            "interaction"
           ],
           "routes": [
-            "brushCommitSlot"
+            "acceptSuggestion"
           ]
         },
         {
@@ -103,8 +123,10 @@
             "interaction"
           ],
           "routes": [
+            "cut",
             "deleteSelection",
-            "duplicateSelection"
+            "duplicateSelection",
+            "paste"
           ]
         },
         {
@@ -169,10 +191,20 @@
           "status": "migrated",
           "lanes": [
             "artifact",
+            "config",
+            "interaction"
+          ],
+          "routes": [
+            "addObjectKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
             "config"
           ],
           "routes": [
-            "addObjectKind",
             "setActiveExample"
           ]
         },
@@ -295,86 +327,18 @@
         {
           "status": "migrated",
           "lanes": [
-            "host-only"
-          ],
-          "routes": [
-            "canvasPointerDown",
-            "copy",
-            "importComposeKit",
-            "selectSameKindSelection",
-            "targetBrushSuggestions",
-            "worldPointerDown"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
             "artifact"
           ],
           "routes": [
+            "createFastener",
             "cut",
+            "deleteFastener",
             "deleteSelection",
             "duplicateSelection",
-            "import-media",
-            "paste",
-            "setFixtureJson",
-            "setSelectionFlag"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "config"
-          ],
-          "routes": [
-            "setFillCount"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "window-config"
-          ],
-          "routes": [
-            "zoomToSelection"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "window-transient"
-          ],
-          "routes": [
-            "cycleBrushCandidate",
-            "engagementAbort",
-            "engagementControlSelect",
-            "engagementInput"
-          ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "window-transient"
-          ],
-          "routes": [
-            "engagementSubmit"
-          ]
-        },
-        {
-          "status": "batch-only-pending-rewrite",
-          "lanes": [
-            "artifact"
-          ],
-          "routes": [
-            "addBrushObject",
-            "addBrushPart",
-            "addNode",
-            "addPartKind",
-            "applyBoardEvents",
-            "createFastener",
-            "deleteFastener",
             "editFastener",
+            "import-media",
+            "importFixture",
+            "paste",
             "patchFastener",
             "patchGrip",
             "patchPart",
@@ -382,26 +346,98 @@
             "retargetFastener",
             "rotateSelection",
             "scaleSelection",
-            "setActiveExample",
+            "setSelectionFlag",
             "translateSelection",
             "worldRelocate"
-          ],
-          "blocker": "artifact-lane completion has no app-owned retained preparation and root-retirement factory"
+          ]
         },
         {
-          "status": "batch-only-pending-rewrite",
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "interaction"
+          ],
+          "routes": [
+            "setActiveExample"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "addBrushPart",
+            "addNode",
+            "addPartKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "interaction"
+          ],
+          "routes": [
+            "applyBoardEvents"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
+          ]
+        },
+        {
+          "status": "migrated",
           "lanes": [
             "config"
           ],
           "routes": [
             "setBrushPlacementContactTolerance",
-            "setObjectKindWeight",
-            "setVortexKindWeight"
-          ],
-          "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
+            "setChunkSize",
+            "setFillCount",
+            "setGripKindWeight",
+            "setPartKindWeight",
+            "setProximityRadius"
+          ]
         },
         {
-          "status": "batch-only-pending-rewrite",
+          "status": "migrated",
+          "lanes": [
+            "host-only"
+          ],
+          "routes": [
+            "canvasPointerDown",
+            "copy",
+            "exportFixture",
+            "openAddPartDialog",
+            "openImportFixture",
+            "registerBrushMesh",
+            "targetBrushSuggestions",
+            "worldPointerDown"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKindSelection"
+          ]
+        },
+        {
+          "status": "migrated",
           "lanes": [
             "window-config"
           ],
@@ -412,25 +448,38 @@
             "setCamera3d",
             "setGridFactor",
             "setGridSnapEnabled",
+            "setGridSpacing",
+            "setGridVisible",
+            "setGripDirection",
+            "setGripShow",
+            "setLodAutomatic",
+            "setLodDepthVariable",
+            "setLodManual",
             "setLodMode",
+            "setProjection",
+            "setProjectionParam",
+            "setSelectableKind",
             "setSuggestionOffset",
             "setSunAzimuth",
             "setSunElevation",
             "setSunIntensity",
+            "setTransformGumballFlag",
             "toggleSun"
-          ],
-          "blocker": "window-config completion has no app-owned retained preparation and root-retirement factory"
+          ]
         },
         {
-          "status": "batch-only-pending-rewrite",
+          "status": "migrated",
           "lanes": [
-            "host-only"
+            "window-transient"
           ],
           "routes": [
-            "registerBrushMesh",
-            "selectSameKind"
-          ],
-          "blocker": "the current empty completion does not reproduce the route's semantic runtime or selection transition"
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast"
+          ]
         }
       ]
     }

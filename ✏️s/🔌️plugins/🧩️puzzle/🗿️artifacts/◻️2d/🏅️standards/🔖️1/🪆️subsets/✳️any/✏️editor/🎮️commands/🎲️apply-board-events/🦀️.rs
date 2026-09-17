@@ -1,5 +1,6 @@
 //! 🎲️ `apply-board-events` command.
 
+use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_connect;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, inspection};
 use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, puzzle2d_selection_write, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
@@ -36,6 +37,12 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
                 engagements = true;
             }
             "nodeMove" | "nodeDragEnd" => {
+                window_bodies = true;
+                panel_properties = true;
+            }
+            // 🔄️ A whole rotate gesture arrives as ONE row: positions AND handle angles change, so the
+            // inspector rows and every pane repaint, but no catalogue/engagement state moves.
+            "nodeRotate" => {
                 window_bodies = true;
                 panel_properties = true;
             }
@@ -83,7 +90,12 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             // 🕹️ Selection is framework-owned: `apply_board_events` turns the engine's `select` rows into
             // `Emit::interaction_writes` (see [`board_selection_write`]); nothing to fold into the scene here.
             "select" => {}
+            // 🧲️ A drop is where the auto-connect fires: the moved nodes land first, then their open
+            // handles attract whatever compatible open handle the window's `proximityRadius` reaches.
+            // Both halves ride this one `applyBoardEvents` edit, so one undo takes the drop and its
+            // new edges back together.
             "nodeDragEnd" => {
+                let mut dropped: Vec<String> = Vec::new();
                 if let Some(moves) = payload.get("moves").and_then(|value| value.as_array()) {
                     for entry in moves {
                         let Some(id) = entry.get("id").and_then(|value| value.as_str()) else {
@@ -95,8 +107,24 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
                         if let Some(y) = entry.get("y").and_then(|value| value.as_f64()) {
                             patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "y", Some(&json!(y)), None);
                         }
+                        dropped.push(id.to_string());
                     }
                 }
+                let radius = envelope.runtime.proximity_radius;
+                puzzle2d_proximity_connect(&mut envelope.fixture, &dropped, radius);
+            }
+            // 🔄️ The board's rotate ring committed on release: one absolute delta about the pivot the
+            // engine drew, replayed through the SAME `rotateSelection` reducer so the in-canvas
+            // preview and the document agree exactly, as a single history edit.
+            "nodeRotate" => {
+                let Some(radians) = payload.get("radians").and_then(Value::as_f64).filter(|value| value.is_finite() && *value != 0.0) else {
+                    continue;
+                };
+                let ids: Vec<String> = payload.get("ids").and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
+                if ids.is_empty() {
+                    continue;
+                }
+                crate::editor::puzzle2d::puzzle2d_transform_selection(&mut envelope.fixture, &ids, crate::editor::puzzle2d::Puzzle2dTransform::Rotate { radians });
             }
             "nodeMove" => {
                 let Some(id) = payload.get("id").and_then(|value| value.as_str()) else {

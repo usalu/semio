@@ -14,7 +14,9 @@ pub const NOTE_RETAINED_PAYLOAD_SCHEMA: &str = "semio.note.retained-command.v1";
 pub const NOTE_RETAINED_RAW_BYTES: usize = 65_536;
 pub const NOTE_RETAINED_MAXIMUM_UNITS: usize = 4_096;
 
-pub const NOTE_AUDITED_TOOL_IDS: &[&str] = &[
+/// 🧵️ Every note verb is a retained tool (ticket 26/09/17/NOTE-PLUGIN-END-TO-END): the framework refuses UI
+/// dispatch of any command not classified `Migrated`, which left every document verb dead in the shell.
+pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &[
     "setGridVisible",
     "setGridSpacing",
     "setGridSubdivisions",
@@ -51,9 +53,7 @@ pub const NOTE_AUDITED_TOOL_IDS: &[&str] = &[
     "loadRequest",
 ];
 
-pub const NOTE_RETAINED_TOOL_IDS: &[&str] = &["setGridVisible", "setGridSpacing", "setCamera", "setCameraZoom", "engagementInput", "engagementSubmit", "navigatorEngagementInput", "loadRequest"];
-
-pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setGridSubdivisions", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -87,17 +87,6 @@ pub const NOTE_AUDITED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-];
-
-pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "navigatorEngagementInput", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 

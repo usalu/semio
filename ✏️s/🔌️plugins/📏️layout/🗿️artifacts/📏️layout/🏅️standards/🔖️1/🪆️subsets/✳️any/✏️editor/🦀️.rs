@@ -319,6 +319,7 @@ const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
     "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "engagementSubmit", "canvasDrop",
 ];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
+const LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
 const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
 
@@ -670,6 +671,14 @@ impl ArtifactEditor for LayoutPlayApp {
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every
+    /// document verb at dispatch (`declares the unsupported artifact publication lane`). One retained
+    /// mutation is bounded by `LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES` (`CreatePage` carries a whole
+    /// page with its layers; `ChangeDataFields` a `fields:in` dictionary).
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

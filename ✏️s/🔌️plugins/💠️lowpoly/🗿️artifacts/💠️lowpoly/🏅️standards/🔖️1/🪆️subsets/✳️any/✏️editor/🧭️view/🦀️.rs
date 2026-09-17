@@ -49,11 +49,11 @@ pub fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
 /// (see `🔖️MeshDomain` below) — render call sites never populate it, which is harmless: geometry/
 /// texture rendering never reads `LowpolyDocument::selection()`.
 pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
-    let active = resolve_active_object_id(snapshot, config);
+    let active = ctx.selection_object_id().filter(|id| snapshot.objects.iter().any(|object| object.id == *id)).map_or_else(|| resolve_active_object_id(snapshot, config), str::to_string);
     LowpolyDocument::with_context(snapshot.clone(), active, ctx.current_selection().clone(), ctx.mesh_workspace_map()).ok()
 }
 
-pub fn document_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
+pub fn document_target_row_id(object_id: &str, mode: &str, id: u32) -> String {
     format!("lowpoly-document.{object_id}.{mode}.{id}")
 }
 
@@ -112,16 +112,44 @@ pub fn selection_from_state(active_object_id: &str, selected: &protocol::DomainS
     LowpolySelection { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode, ids }
 }
 
-/// 🕹️ Builds an `interactionSelect` dispatch for one mesh-domain target — the Document panel tree's row
-/// click replaces the deleted `toggleSelectionTarget`. Hover has no per-row action to build any more:
-/// `UiTreeItemNode.hoverAction`/`.unhoverAction` are DELETED (per `📋️master.md`'s UI section) — a
-/// domain-bound tree's hover is translated generically by the renderer now, like its selection click
-/// modifiers, never by an app-built per-row action.
-pub fn mesh_select_action(granularity: &str, target_id: &str, merge: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    let targets = dsl::json::to_json_string(&[semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: target_id.into() }]);
-    let args =
-        crate::editor::lowpoly::ui_value_map([("domainId", crate::editor::lowpoly::ui_value_text(MESH_INTERACTION_DOMAIN)?), ("targets", crate::editor::lowpoly::ui_value_text(targets)?), ("merge", crate::editor::lowpoly::ui_value_text(merge)?)])?;
-    crate::editor::lowpoly::lowpoly_action("interactionSelect", Some(args))
+/// 🎯️ The object the live mesh-domain selection addresses — the LAST selected target's object, so a
+/// pick on another object's face makes that object the edit target. `None` for an empty selection.
+pub fn selection_object_id(snapshot: &LowpolySnapshot, selected: &protocol::DomainSelection) -> Option<String> {
+    selected.ids.iter().rev().filter_map(|raw| parse_mesh_target_id(raw)).map(|(object_id, _)| object_id).find(|object_id| snapshot.objects.iter().any(|object| &object.id == object_id))
+}
+
+/// 🎯️ The object every command and the Model window edit: the selection's object, else the config's.
+pub fn active_object_for_selection(snapshot: &LowpolySnapshot, config: &LowpolyConfig, selected: &protocol::DomainSelection) -> String {
+    selection_object_id(snapshot, selected).unwrap_or_else(|| resolve_active_object_id(snapshot, config))
+}
+
+/// 🕹️ What the Model window's World3d scene needs of the live mesh domain: the granularity the next
+/// pick targets, the selected object ids and the selected component ids on the active object.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LowpolyWorldSelection {
+    pub granularity: String,
+    pub active_object_id: String,
+    pub object_ids: Vec<String>,
+    pub component_ids: Vec<u32>,
+}
+
+pub fn world_selection_from_state(snapshot: &LowpolySnapshot, config: &LowpolyConfig, selected: &protocol::DomainSelection, active_granularity: Option<&str>) -> LowpolyWorldSelection {
+    let active_object_id = active_object_for_selection(snapshot, config, selected);
+    let granularity = active_granularity.filter(|granularity| !granularity.is_empty()).or((!selected.granularity.is_empty()).then_some(selected.granularity.as_str())).unwrap_or(MESH_GRANULARITY_OBJECT).to_string();
+    let mut object_ids = Vec::new();
+    let mut component_ids = Vec::new();
+    for (object_id, component) in selected.ids.iter().filter_map(|raw| parse_mesh_target_id(raw)) {
+        match component {
+            None => {
+                if !object_ids.contains(&object_id) {
+                    object_ids.push(object_id);
+                }
+            }
+            Some((mode, id)) if object_id == active_object_id && mode == granularity => component_ids.push(id),
+            Some(_) => {}
+        }
+    }
+    LowpolyWorldSelection { granularity, active_object_id, object_ids, component_ids }
 }
 //#endregion 🔖️MeshDomain
 

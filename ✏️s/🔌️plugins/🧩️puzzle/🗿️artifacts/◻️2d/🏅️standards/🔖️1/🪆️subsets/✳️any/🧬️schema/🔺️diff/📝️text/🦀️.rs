@@ -1,8 +1,8 @@
 //! 🔺️ Puzzle 2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta, Puzzle2dTargetRegionsDelta};
 use crate::standards::v1::subsets::any::schema::Puzzle2dArtifact;
-use crate::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
+use crate::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot, Puzzle2dTargetRegion};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -31,6 +31,9 @@ impl Puzzle2dDiff {
             }
             if let Some(delta) = &self.edges {
                 next.edges = apply_edges_delta(&next.edges, delta).map_err(|error| error.under(["edges"]))?;
+            }
+            if let Some(delta) = &self.target_regions {
+                next.target_regions = apply_target_regions_delta(&next.target_regions, delta).map_err(|error| error.under(["targetRegions"]))?;
             }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
@@ -100,6 +103,12 @@ pub fn apply_nodes_delta(nodes: &[Puzzle2dNode], delta: &Puzzle2dNodesDelta) -> 
     apply_identified_delta(nodes, &delta.removed, &delta.added, &patched, &delta.reordered, |n| &n.id)
 }
 
+/// 🧩 Applies an identified-collection delta to target regions.
+pub fn apply_target_regions_delta(regions: &[Puzzle2dTargetRegion], delta: &Puzzle2dTargetRegionsDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dTargetRegion>> {
+    let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
+    apply_identified_delta(regions, &delta.removed, &delta.added, &patched, &delta.reordered, |r| &r.id)
+}
+
 /// 🧩 Applies an identified-collection delta to edges.
 pub fn apply_edges_delta(edges: &[Puzzle2dEdge], delta: &Puzzle2dEdgesDelta) -> protocol::MutationApplyResult<Vec<Puzzle2dEdge>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
@@ -124,6 +133,9 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
             }
             if let Some(delta) = &self.edges {
                 next.edges = apply_edges_delta(&next.edges, delta).map_err(|error| error.under(["edges"]))?;
+            }
+            if let Some(delta) = &self.target_regions {
+                next.target_regions = apply_target_regions_delta(&next.target_regions, delta).map_err(|error| error.under(["targetRegions"]))?;
             }
             if let Some(meta) = &self.meta {
                 next.meta = meta.clone();
@@ -182,6 +194,25 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
                     }
                 }
                 None => self.edges = Some(delta),
+            }
+        }
+        if let Some(delta) = other.target_regions {
+            match &mut self.target_regions {
+                Some(existing) => {
+                    existing.removed.extend(delta.removed);
+                    existing.added.extend(delta.added);
+                    for patch in delta.patched {
+                        if let Some(previous) = existing.patched.iter_mut().find(|entry| entry.id == patch.id) {
+                            *previous = patch;
+                        } else {
+                            existing.patched.push(patch);
+                        }
+                    }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
+                }
+                None => self.target_regions = Some(delta),
             }
         }
     }

@@ -47,7 +47,7 @@ pub(crate) mod context {
         } else {
             ViewModel::default()
         };
-        serde_json::to_string(&app.render(body_key, None, &view).await.expect("render").root).expect("rendered component JSON")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &view).await.expect("render")).expect("rendered component JSON")
     }
     
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered

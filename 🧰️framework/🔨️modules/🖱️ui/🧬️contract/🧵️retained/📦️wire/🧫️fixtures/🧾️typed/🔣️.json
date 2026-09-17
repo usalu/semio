@@ -16,8 +16,8 @@
     { "wire": { "type": "iconSelect", "value": "cube", "uniform": true, "classifierKind": "shape" }, "expected": { "type": "iconSelect", "value": "cube", "uniform": true, "classifierKind": "shape" } },
     { "wire": { "type": "progress", "completed": 3, "valueText": "Vorbereiten (1/3)" }, "expected": { "type": "progress", "completed": 3, "total": null, "valueText": "Vorbereiten (1/3)" } },
     { "wire": { "type": "tree" }, "expected": { "type": "tree", "interactionDomain": null } },
-    { "wire": { "type": "treeSection" }, "expected": { "type": "treeSection", "label": null, "defaultOpen": null } },
-    { "wire": { "type": "treeItem", "label": "Item" }, "expected": { "type": "treeItem", "label": "Item", "description": null, "icon": null, "defaultOpen": null, "draggable": null, "dragData": null, "dimmed": null, "rowActions": [] } },
+    { "wire": { "type": "treeSection" }, "expected": { "type": "treeSection", "label": null, "defaultOpen": null, "window": null } },
+    { "wire": { "type": "treeItem", "label": "Item" }, "expected": { "type": "treeItem", "label": "Item", "description": null, "icon": null, "defaultOpen": null, "draggable": null, "dragData": null, "dimmed": null, "rowActions": [], "window": null, "granularity": null } },
     { "wire": { "type": "image", "src": "image.png" }, "expected": { "type": "image", "src": "image.png", "alt": null } },
     { "wire": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] } }, "expected": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] }, "bindings": [] } },
     { "wire": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } }, "expected": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } } }

@@ -1,17 +1,17 @@
 //! lowpoly -> ply
 //!
-//! 🐛️ See the obj export leaf's doc comment for the shared pre-fix defect class (pack-envelope
-//! mismatch, always-erroring at runtime) and why real mesh geometry cannot be produced here either
-//! (`LowpolyObject.mesh` is only a content-addressed handle, never embedded geometry).
+//! Real ASCII PLY export through `engine::encode_ply`: a `vertex` element (`float x/y/z`, world
+//! space — scale → Euler-degree rotation → translation) and a `face` element
+//! (`list uchar int vertex_indices`, widened to a `uint` count past 255 corners) holding every
+//! object's original n-gons, concatenated. Objects with empty `mesh_content` contribute nothing.
 //!
-//! Fix: reuse lowpoly's own canonical `.lowpoly` DSL text as a real, valid, geometry-empty PLY
-//! document -- hex-encoded into ONE `comment` line (PLY's real position-retained comment slot, see
-//! `PlySnapshot.comments`' doc comment), so the bytes really are valid PLY text
-//! (`engine::encode_ply`/`decode_ply`, never a second bespoke grammar) that also carries the full
-//! lowpoly document losslessly.
+//! The canonical `.lowpoly` DSL text is also kept, hex-encoded into ONE `comment` line
+//! (`LOWPOLY_DSL_COMMENT_PREFIX`), so lowpoly → ply → lowpoly stays lossless.
+use crate::io::mesh_geometry::world_parts;
 use crate::schema::snapshot::text::print_dsl;
 use crate::schema::snapshot::{enc_str, LowpolySnapshot};
 use semio_s_artifact_stdio_ply::engine::encode_ply;
+use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use semio_s_artifact_stdio_ply::PlySnapshot;
 
 pub(crate) const LOWPOLY_DSL_COMMENT_PREFIX: &str = "semio-lowpoly-dsl ";
@@ -20,7 +20,29 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextError> {
     let hex = enc_str(&print_dsl(snapshot));
-    Ok(PlySnapshot { comments: vec![format!("{LOWPOLY_DSL_COMMENT_PREFIX}{hex}")], ..Default::default() })
+    let mut vertex_rows = Vec::new();
+    let mut face_rows = Vec::new();
+    let mut max_corners = 0usize;
+    for part in world_parts("ply", snapshot)? {
+        let offset = vertex_rows.len() as u32;
+        vertex_rows.extend(part.positions.iter().map(|p| PlyRow { values: vec![PlyValue::Float(p[0] as f32), PlyValue::Float(p[1] as f32), PlyValue::Float(p[2] as f32)] }));
+        for face in &part.faces {
+            max_corners = max_corners.max(face.len());
+            face_rows.push(PlyRow { values: vec![PlyValue::List(face.iter().map(|&v| PlyValue::Int((v + offset) as i32)).collect())] });
+        }
+    }
+    let mut ply = PlySnapshot { comments: vec![format!("{LOWPOLY_DSL_COMMENT_PREFIX}{hex}")], ..Default::default() };
+    if !vertex_rows.is_empty() {
+        let count_kind = if max_corners > 255 { PlyScalarType::UInt } else { PlyScalarType::UChar };
+        ply.elements.push(PlyElement {
+            name: "vertex".into(),
+            count: vertex_rows.len(),
+            properties: ["x", "y", "z"].iter().map(|n| PlyProperty::Scalar { name: (*n).into(), kind: PlyScalarType::Float }).collect(),
+            rows: vertex_rows,
+        });
+        ply.elements.push(PlyElement { name: "face".into(), count: face_rows.len(), properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind, value_kind: PlyScalarType::Int }], rows: face_rows });
+    }
+    Ok(ply)
 }
 
 pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {

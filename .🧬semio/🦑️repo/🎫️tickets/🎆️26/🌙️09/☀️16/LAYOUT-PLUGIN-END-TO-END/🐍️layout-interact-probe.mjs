@@ -39,7 +39,7 @@ const state = () => page.evaluate(() => {
     error: document.documentElement.getAttribute("data-semio-os-error"),
     hosts,
     treeItems: rows.length,
-    frameRows: rows.filter((r) => /^frame-\d+/.test(r)).length,
+    frameRows: rows.filter((r) => /^frame-/.test(r)).length,
     pageRows: rows.filter((r) => /^Page \d+|^Seite \d+/.test(r)).length,
     rowsHead: rows.slice(0, 24),
     engagements: [...document.querySelectorAll('[id$=".engagement"]')].map((el) => el.id),
@@ -61,7 +61,9 @@ const submitAction = async (actionId, args) => {
   const opened = await state();
   const rowId = `action.${actionId}`;
   let clicked = "absent";
-  if (opened.actionRows.includes(rowId)) clicked = await page.locator(`[id="${rowId}"]`).first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
+  const expanded = await page.locator(`[id$=".action.${actionId}.execute"]`).count();
+  if (expanded) clicked = "already-expanded";
+  else if (opened.actionRows.includes(rowId)) clicked = await page.locator(`[id="${rowId}"]`).first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
   await page.waitForTimeout(1500);
   const filled = [];
   for (const [key, value] of Object.entries(args)) {
@@ -79,31 +81,53 @@ let s = null;
 for (let i = 0; i < 180; i++) { await page.waitForTimeout(1000); s = await state(); if (s.ready && s.hosts.length && s.treeItems > 0 && i > 8) break; if (s.error) break; }
 await note("boot", s, 0);
 
-{
-  const a = await submitAction("addFrame", {});
-  const after = await settle((x) => x.frameRows === a.before.frameRows + 1);
-  await note("add-frame", { ...a, before: undefined, framesBefore: a.before.frameRows, added: after.frameRows === a.before.frameRows + 1, ...after }, a.from);
-}
+// 🧭️ The Artifact panel overlays the Blueprint window's tab bar (Actions toggle included), so the
+// panel is opened only to COUNT rows and closed again before any Actions-pane gesture.
+const togglePanel = async () => { const tab = page.locator('button:has-text("Artifact"), [role="button"]:has-text("Artifact")').first(); return (await tab.count()) ? tab.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent"; };
+const countWithPanel = async (predicate) => { const opened = await togglePanel(); const after = await settle(predicate); const closed = await togglePanel(); await page.waitForTimeout(500); return { opened, closed, ...after }; };
+
+let baseline = null;
 {
   const from = lines.length;
-  const before = await state();
-  await page.mouse.click(700, 500).catch(() => {});
+  baseline = await countWithPanel((x) => x.frameRows > 0);
+  await note("artifact-panel-baseline", baseline, from);
+}
+{
+  const a = await submitAction("addFrame", {});
+  await page.waitForTimeout(3000);
+  const after = await countWithPanel((x) => x.frameRows === baseline.frameRows + 1);
+  await note("add-frame", { ...a, before: undefined, framesBefore: baseline.frameRows, added: after.frameRows === baseline.frameRows + 1, ...after }, a.from);
+  baseline = after;
+}
+{
+  // ⏪️ Undo must follow the mutation directly — every panel toggle lands its own ledger entry
+  // (`noteShellCommand` "Toggle Panel") on the shared history and would be what mod+z pops.
+  const a = await submitAction("addFrame", {});
+  await page.waitForTimeout(3000);
+  const created = lines.slice(a.from).filter((l) => /CreateFrame/.test(l)).length;
   await page.keyboard.press(process.platform === "darwin" ? "Meta+z" : "Control+z");
-  const after = await settle((x) => x.frameRows === before.frameRows - 1);
-  await note("undo", { framesBefore: before.frameRows, undone: after.frameRows === before.frameRows - 1, ...after }, from);
+  await page.waitForTimeout(3000);
+  const undoLines = lines.slice(a.from).filter((l) => /undo handleAction resolved|labels":\["Undo/.test(l)).map((l) => l.slice(0, 260));
+  const after = await countWithPanel((x) => x.frameRows === baseline.frameRows);
+  await note("add-frame-then-undo", { submitted: a.submitted, created, undoLines, framesBefore: baseline.frameRows, undone: after.frameRows === baseline.frameRows, ...after }, a.from);
+  baseline = after;
 }
 {
   const a = await submitAction("addPage", {});
-  const after = await settle((x) => x.pageRows === a.before.pageRows + 1);
-  await note("add-page", { ...a, before: undefined, pagesBefore: a.before.pageRows, added: after.pageRows === a.before.pageRows + 1, ...after }, a.from);
+  await page.waitForTimeout(3000);
+  const after = await countWithPanel((x) => x.pageRows === baseline.pageRows + 1);
+  await note("add-page", { ...a, before: undefined, pagesBefore: baseline.pageRows, added: after.pageRows === baseline.pageRows + 1, ...after }, a.from);
+  baseline = after;
 }
 {
   const from = lines.length;
-  const row = page.locator('[role="treeitem"]', { hasText: /^frame-1/ }).first();
+  await togglePanel();
+  await settle((x) => x.frameRows > 0);
+  const row = page.locator('[role="treeitem"]', { hasText: "frame-1 Page 1" }).first();
   const clicked = (await row.count()) ? await row.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
   await page.waitForTimeout(3000);
   const selected = await page.evaluate(() => [...document.querySelectorAll('[role="treeitem"][aria-selected="true"]')].map((el) => el.innerText.replace(/\s+/g, " ").trim().slice(0, 40)));
-  await note("select-frame", { clicked, selected, interactionLines: lines.slice(from).filter((l) => /interactionSelect|selection/.test(l)).slice(0, 6).map((l) => l.slice(0, 200)) }, from);
+  await note("select-frame", { clicked, selected, interactionLines: lines.slice(from).filter((l) => /interactionSelect|selection|Select/.test(l)).slice(0, 6).map((l) => l.slice(0, 200)) }, from);
 }
 
 writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));

@@ -1,14 +1,39 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
+    use semio_framework_plugin::{App, Effect, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+
     /// ✏️ `RemodelingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<RemodelingPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<RemodelingPlayApp>` builds it.
-    pub type RemodelingApp = VcsArtifactApp<EditorApp<RemodelingPlayApp>>;
-    
+    /// `PluginBuilder::editor::<RemodelingPlayApp>` builds it. The newtype is self-closing: every
+    /// registry-backed app owns Stores that must retire through the bounded close protocol before drop
+    /// (`store drop witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
+    /// early — a test that panics leaves the witness alone so the first failure stays the one reported.
+    pub struct RemodelingApp(VcsArtifactApp<EditorApp<RemodelingPlayApp>>);
+
+    impl std::ops::Deref for RemodelingApp {
+        type Target = VcsArtifactApp<EditorApp<RemodelingPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for RemodelingApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for RemodelingApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
     /// ✏️ Adapts `create_remodeling_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `artifact_app_laws::assert_declared_actions_bridge_to_commands`/
     /// `context::new_app_with_registry` still expect — framework test context gap, not modifiable here
@@ -16,40 +41,97 @@ pub(crate) mod context {
     pub fn remodeling_app_manifest_for_tests() -> App {
         App { definition: create_remodeling_app(), examples: Vec::new() }
     }
-    
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+
+    /// 🧪️ The ONE app shape every test uses: wired to the real manifest registry with a bound instance
+    /// id, exactly what the plugin host mounts. A registry-less `new_app` cannot admit the bounded tool
+    /// proofs any more (`interactive-job.catalog-authority … migrated={}`), so there is no "bare" variant.
     /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
     /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
     pub async fn app() -> RemodelingApp {
-        new_app::<EditorApp<RemodelingPlayApp>>().await
-    }
-    
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn app_with_registry() -> RemodelingApp {
         let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        app
+        RemodelingApp(app)
     }
-    
-    pub async fn dispatch(app: &mut RemodelingApp, command: RemodelingCommand) -> InvocationResult {
+
+    /// 🧪️ Same as [`app`] — kept as the name the older tests spell.
+    pub async fn app_with_registry() -> RemodelingApp {
+        app().await
+    }
+
+    /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
+    /// actually wrote (a mounted app publishes AFTER answering, so `result.mutations` is always empty —
+    /// read `edited_document()`/`lanes` and the snapshot instead).
+    pub struct Dispatched {
+        pub result: InvocationResult,
+        pub lanes: Vec<TypedOperationResultLane>,
+    }
+
+    impl Dispatched {
+        /// 📝️ Whether the settled publication wrote the document lane.
+        pub fn edited_document(&self) -> bool {
+            self.lanes.contains(&TypedOperationResultLane::Artifact)
+        }
+
+        /// 👁️ Whether the settled publication wrote exactly one window-config lane and no document lane.
+        pub fn edited_only_window_config(&self) -> bool {
+            self.lanes.iter().filter(|lane| **lane == TypedOperationResultLane::WindowConfig).count() == 1 && !self.edited_document()
+        }
+    }
+
+    impl std::ops::Deref for Dispatched {
+        type Target = InvocationResult;
+        fn deref(&self) -> &Self::Target {
+            &self.result
+        }
+    }
+
+    /// 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
+    /// way the plugin host's continuation does, fold the settled receipt's effects into the answer and
+    /// apply any `LoadDocument` the way the host would. A faulted publication is a test failure.
+    /// 🪟️ The one window instance every view verb dispatches from and every window body renders in —
+    /// window configs are keyed per instance, so a `SetReportTable` dispatched here is only visible to a
+    /// render addressed at the same instance.
+    pub fn test_window(window_kind_id: &str) -> ViewModel {
+        ViewModel {
+            window_id: Some("remodeling-test-window".into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "remodeling-test-window".into(), window_kind_id: window_kind_id.into() }],
+            ..Default::default()
+        }
+    }
+
+    pub async fn dispatch(app: &mut RemodelingApp, command: RemodelingCommand) -> Dispatched {
         let window_kind = match &command {
             RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) => Some(model::windows::model::REMODELING_PLAY_WINDOW_MAIN),
             RemodelingCommand::SetFrameCursor(_) => Some(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES),
             RemodelingCommand::SetReportTable(_) => Some(analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT),
             _ => None,
         };
-        let view_state = window_kind.map(|window_kind_id| ViewModel {
-            window_id: Some("remodeling-test-window".into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "remodeling-test-window".into(), window_kind_id: window_kind_id.into() }],
-            ..Default::default()
-        });
-        app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }).await.expect("dispatch")
+        let view_state = window_kind.map(test_window);
+        let command_id = command.command_id();
+        let mut result = app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
+        result.requested_effects.extend(settled.effects);
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        Dispatched { result, lanes: settled.lanes }
     }
-    
-    /// 🖼️ The rendered tree as text — `ComponentTree` is neither `Serialize` nor `ToValue`, so its own
-    /// `Debug` projection is what body assertions match against.
+
+    /// 🖼️ The rendered tree as its JSON projection text (every label, description and surface field) —
+    /// `ComponentTree`'s own `Debug` prints a `BuiltChildren` as its LENGTH only, so a body assertion
+    /// against it never sees a nested row (every windowed section's rows are nested).
     pub async fn render(app: &mut RemodelingApp, body_key: &str) -> String {
-        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+        render_json(app, body_key).await.to_string()
+    }
+
+    /// 🪟️ [`render`] addressed at the test window instance of `window_kind_id` — the render that sees the
+    /// window config a view verb dispatched through [`dispatch`] wrote.
+    pub async fn render_in_window(app: &mut RemodelingApp, body_key: &str, window_kind_id: &str) -> String {
+        let tree = app.render(body_key, None, &test_window(window_kind_id)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
     }
 
     /// 🪧️ The rendered tree as its JSON projection, with the projected tree retired.
@@ -100,7 +182,7 @@ pub(crate) mod context {
         app.maintenance_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
         app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
-            assert!(page.lane != semio_framework_plugin::app::TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
+            assert!(page.lane != TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
             assert!(app.acknowledge_typed_operation_result(page.token).expect("result ACK"), "the exact result ACK is admitted");
         }
         let mut effects = app.pending_effects(None).await;
@@ -112,7 +194,7 @@ pub(crate) mod context {
         while app.take_typed_operation_completion().await.expect("completion").is_some() {}
         while app.take_local_interaction_query_reply().is_some() {}
         for effect in effects {
-            if let semio_framework_plugin::Effect::DispatchAction { action, args, .. } = effect {
+            if let Effect::DispatchAction { action, args, .. } = effect {
                 if semio_framework_plugin::is_tool_run_action_id(&action) {
                     Box::pin(app.handle_action(&action, args.as_ref(), &meta)).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
                 }
@@ -144,9 +226,10 @@ pub(crate) mod context {
         panic!("{what} never settled; run {:?}", run_presence(app));
     }
 
-    /// 🚪️ Closes a registry-backed fixture app through its bounded close protocol.
-    pub fn close(mut app: RemodelingApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    /// 🚪️ Closes a registry-backed fixture app through its bounded close protocol — `Drop` does the same,
+    /// this only names the moment a test closes on purpose.
+    pub fn close(app: RemodelingApp) {
+        drop(app);
     }
 
     /// 🧾️ Everything durable a run may only change by finalizing: document pack and history.
@@ -330,7 +413,9 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     }
 
     assert!(<RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
-    assert!(<RemodelingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the Config lane is rejected outright without a config one-item preparation factory");
+    // 👁️ No route declares the `Config` lane (the four view verbs publish to their exact `WindowConfig`
+    // owners, and `Config` is `NoConfig`), so no config one-item preparation factory is owed.
+    assert!(!contracts.iter().any(|contract| contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::Config)), "a Config-lane route would need a config one-item preparation factory");
 
     // 🧭️ `try_build_definition` fans every declared action into every window kind, so the built
     // definition's per-window action lists are where a declaration is observable after the fact.
@@ -348,8 +433,7 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
     document.install_document_store_owners_exact(
         <RemodelingPlayApp as ArtifactEditor>::build_document_store_owners().expect("Remodel document Store owners"),
     );
-    let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, RemodelingMutation>> =
-        std::sync::Arc::new(RemodelingStorePreparationFactory);
+    let factory = <RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("Remodel document one-item preparation factory");
     let mutation = RemodelingMutation::ReplaceQc(crate::mutations::replace_qc::ReplaceQc { qc: None });
     let mut publication = document
         .begin_apply_batch(
@@ -568,6 +652,8 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
     };
     let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
     app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).await.expect("view dispatch");
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id).await.expect("view publication settles");
+    assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) && !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row publishes its window-config lane and never the document lane: {:?}", receipt.lanes);
 }
 //#endregion 🔖️ManifestSanity
 
@@ -577,8 +663,11 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
 /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_instances_converge::<EditorApp<RemodelingPlayApp>, _>(
+    // 🧹️ The REGISTERED pair: remodel publishes bounded tool proofs, so a registry-less `paired_apps`
+    // instance faults in the `interactive-job.catalog-authority` proof join before any edit lands.
+    artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<RemodelingPlayApp>, _, _, _>(
         "mem://remodeling-convergence",
+        || async { remodeling_app_manifest_for_tests() },
         RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "akaze".into(), target_count: 1000, octaves: 4, edge_threshold: 10.0 }),
         RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }),
         |app| {

@@ -5,6 +5,9 @@
   "description": "Get the 📸️remodel plugin (✏️s/🔌️plugins/📸️remodel) working end to end: the crate builds natively and for wasm32-wasip2, every mutation of the 📸️remodeling artifact has an exhaustive real-world fixture test (Rust + third-party oracle), the descriptor is regenerated, and the remodel playground boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
   "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
   "sessions": [
-    "⚪0b03f376-5325-4732-a1fa-4765f6959f2a"
-  ]
+    "⚪0b03f376-5325-4732-a1fa-4765f6959f2a",
+    "⚪7a79fe18-09fa-4547-9fd9-cb45f83e70f6"
+  ],
+  "reopenedAt": "2026-09-16",
+  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-06, 2026-09-16). Reopened 2026-09-16 by session ⚪7a79fe18; the mistaken duplicate folder 26/09/16/REMODEL-PLUGIN-END-TO-END was merged into this one."
 }

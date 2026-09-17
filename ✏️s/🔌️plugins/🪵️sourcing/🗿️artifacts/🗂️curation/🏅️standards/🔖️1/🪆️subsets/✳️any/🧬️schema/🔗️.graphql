@@ -6,6 +6,7 @@ union GeometryRecipe =
   | GeometryRecipeFrame
   | GeometryRecipeSlab
   | GeometryRecipeMesh
+  | GeometryRecipeGlb
 
 type GeometryRecipeBox {
   kind: String!
@@ -34,6 +35,12 @@ type GeometryRecipeMesh {
   positions: [Float!]!
   normals: [Float!]!
   indices: [Int!]!
+}
+
+type GeometryRecipeGlb {
+  kind: String!
+  url: String!
+  extent: Float!
 }
 
 type ObjectKind {

@@ -316,7 +316,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.imperative.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
         ("s.imperative.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),
         ("s.imperative.procedure.grammar.spr", "grammar", "procedure.spr", &[("grammar", "procedure.spr")], None),
-        ("s.imperative.procedure.codec.document.v1", "codec", "procedure.document/v1:procedure", &[("codec", "procedure.document/v1"), ("codec-extension", "21:procedure.document/v1:procedure")], None),
+        ("s.imperative.procedure.codec.document.v1", "codec", "procedure.document/v1:imperative", &[("codec", "procedure.document/v1"), ("codec-extension", "21:procedure.document/v1:imperative")], None),
         ("s.imperative.procedure.localization.en", "localization", "Procedure", &[], Some(("en", "Procedure"))),
         ("s.imperative.procedure.localization.de", "localization", "Prozedur", &[], Some(("de", "Prozedur"))),
     ];

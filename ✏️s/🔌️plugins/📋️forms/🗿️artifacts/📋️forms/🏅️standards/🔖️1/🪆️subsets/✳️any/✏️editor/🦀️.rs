@@ -97,16 +97,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 //#endregion 🔖️Constants
 
 //#region 🔖️Interaction
@@ -1204,8 +1194,8 @@ impl ArtifactEditor for FormsPlayApp {
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
-            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
@@ -1227,8 +1217,8 @@ impl ArtifactEditor for FormsPlayApp {
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
-            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;

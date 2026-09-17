@@ -1,0 +1,13 @@
+{
+  "mutation": "createTargetRegion",
+  "targetRegion": {
+    "id": "region-seed-left",
+    "x": 206.5,
+    "y": 69.5,
+    "width": 48.5,
+    "height": 48.5,
+    "hidden": false,
+    "locked": false
+  },
+  "index": null
+}

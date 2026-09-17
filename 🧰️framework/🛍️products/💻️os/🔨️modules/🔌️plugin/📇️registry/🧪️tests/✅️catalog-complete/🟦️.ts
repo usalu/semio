@@ -1,5 +1,5 @@
 import { createHash, webcrypto } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
@@ -8,9 +8,12 @@ import { pluginModuleUrl, extensionModuleUrl } from "../../🤖️generated/🧩
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
 import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
-import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { auditInteractiveJobClassificationDrift } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
+import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
@@ -478,4 +481,66 @@ describe("strict plugin catalog completion", () => {
       "block", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio", "trinity",
     ]);
   }, 120_000);
+
+  it("checked-in manifest examples carry dialect so the navbar picker can resolve them", () => {
+    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const legacy: string[] = [];
+    for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const descriptorPath = join(pluginsRoot, entry.name, "🔣️.json");
+      if (!existsSync(descriptorPath)) continue;
+      const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest & { examples?: readonly Record<string, unknown>[] } };
+      const manifest = descriptor.manifest;
+      if (!manifest?.pluginId || !Array.isArray(manifest.examples)) continue;
+      for (const example of manifest.examples) {
+        if (example && typeof example === "object" && "appId" in example && !("dialect" in example)) {
+          legacy.push(`${manifest.pluginId}: example ${String(example.id ?? "?")} is legacy appId-only`);
+        }
+      }
+    }
+    expect(legacy, legacy.join("\n")).toEqual([]);
+  });
+
+  it("every playground editor dialect has at least one manifest example for NavbarExampleSelect", () => {
+    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const coverage: string[] = [];
+    for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const descriptorPath = join(pluginsRoot, entry.name, "🔣️.json");
+      if (!existsSync(descriptorPath)) continue;
+      const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
+      const manifest = descriptor.manifest;
+      if (!manifest?.pluginId) continue;
+      coverage.push(...auditNavbarExamplePickerCoverage(manifest));
+    }
+    expect(coverage, coverage.join("\n")).toEqual([]);
+  });
+
+  it("every manifest example row carries artifactJson so setActiveExample can load a document", () => {
+    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const payload: string[] = [];
+    for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const descriptorPath = join(pluginsRoot, entry.name, "🔣️.json");
+      if (!existsSync(descriptorPath)) continue;
+      const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
+      const manifest = descriptor.manifest;
+      if (!manifest?.pluginId) continue;
+      payload.push(...auditNavbarExampleArtifactPayload(manifest));
+    }
+    expect(payload, payload.join("\n")).toEqual([]);
+  });
+
+  it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
+    const descriptorPath = join(getWorkspaceRoot(), "✏️s/🔌️plugins/🪵️sourcing/🔣️.json");
+    const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
+    const manifest = descriptor.manifest;
+    expect(manifest?.pluginId).toBe("sourcing");
+    const admitted = normalizeManifestExamples(manifest!);
+    const editor = admitted.apps?.find((app) => (app as { id?: string }).id === "s.sourcing.curation@1/*#editor");
+    expect(editor).toBeTruthy();
+    const options = examplesForApp(admitted.examples ?? [], editor as { dialect?: { artifactKind: string; standard: string; subset: string } });
+    expect(options.map((row) => row.id)).toEqual(["demo"]);
+    expect(options[0]?.artifactJson?.includes("curation.curation.dsl")).toBe(true);
+  });
 });

@@ -5,7 +5,8 @@
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
+use crate::editor::lowpoly::view::{document_object_row_id, euler_degrees_to_quaternion, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -42,6 +43,7 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
+    "transformBegin",
     "transformEnd",
     "addPaintLayer",
     "paintStrokeEnd",
@@ -96,16 +98,91 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 /// renders every peer's (and the local) selection/hover generically off the SAME "mesh" domain this
 /// window declares via `.window_kind_interactions` — see `📋️master.md`'s UI section ("scene payloads
 /// fed from InteractionView") — so this app never needs to re-embed it.
-fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -> String {
+///
+/// 🕹️ 2026-09-17 (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS): `render_with_request_context`
+/// now threads the live `InteractionView`, so the scene carries what `World3dHost` needs to pick and
+/// paint the mesh domain — `targets`/`selectionMode` (the granularity the next pick addresses),
+/// `componentIds` on the active object, the selected object `ids`, and the gumball anchor.
+fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, active_utility: &str, selection: &LowpolyWorldSelection) -> String {
     let config = view.config;
-    let active = resolve_active_object_id(view.snapshot, config);
-    let interaction_mode = if crate::editor::lowpoly::view::is_paint_utility(active_utility) { "paint" } else { "model" };
-    dsl::json::to_json_string(&dsl::DslValue::object([
+    let paint = is_paint_utility(active_utility);
+    let interaction_mode = if paint { "paint" } else { "model" };
+    let granularity = selection.granularity.as_str();
+    let object_level = granularity == MESH_GRANULARITY_OBJECT;
+    let host_mode = if object_level { "mesh" } else { granularity };
+    let targets = dsl::DslValue::object([
+        ("mesh".to_string(), dsl::DslValue::Bool(object_level)),
+        ("vertex".to_string(), dsl::DslValue::Bool(granularity == "vertex")),
+        ("edge".to_string(), dsl::DslValue::Bool(granularity == "edge")),
+        ("face".to_string(), dsl::DslValue::Bool(granularity == "face")),
+    ]);
+    let pivot = gumball_pivot(view, loaded, selection);
+    let mut entries = vec![
         ("transformMode".to_string(), dsl::DslValue::String(active_utility.to_string())),
         ("interactionMode".to_string(), dsl::DslValue::String(interaction_mode.to_string())),
-        ("activeObjectId".to_string(), dsl::DslValue::String(active)),
+        ("activeObjectId".to_string(), dsl::DslValue::String(selection.active_object_id.clone())),
         ("showEdges".to_string(), dsl::DslValue::Bool(config.show_edges)),
-    ]))
+        ("targets".to_string(), targets),
+        ("selectionMode".to_string(), dsl::DslValue::String(host_mode.to_string())),
+        ("granularity".to_string(), dsl::DslValue::String(host_mode.to_string())),
+        ("ids".to_string(), dsl::DslValue::Array(selection.object_ids.iter().cloned().map(dsl::DslValue::String).collect())),
+        ("componentIds".to_string(), dsl::DslValue::Array(selection.component_ids.iter().map(|id| dsl::DslValue::Number(dsl::Number::UInt(u64::from(*id)))).collect())),
+        ("gumballActive".to_string(), dsl::DslValue::Bool(!paint && pivot.is_some())),
+    ];
+    if let Some(pivot) = pivot {
+        entries.push(("gumballTarget".to_string(), dsl::ToValue::to_value(&pivot)));
+    }
+    dsl::json::to_json_string(&dsl::DslValue::Object(entries))
+}
+
+/// 🧲️ World-space centroid of the current selection (selected components on the active object, else
+/// the selected objects' vertices), `None` when nothing is selected — the gumball's anchor.
+fn gumball_pivot(view: LowpolyView<'_>, loaded: &LowpolyDocument, selection: &LowpolyWorldSelection) -> Option<[f64; 3]> {
+    let mut sum = [0.0_f64; 3];
+    let mut count = 0_usize;
+    let mut add = |object_index: usize, vertices: &[VertexId]| {
+        let (Some(object), Some(mesh)) = (view.snapshot.objects.get(object_index), loaded.mesh_at(object_index)) else { return };
+        let rotation = euler_degrees_to_quaternion(object.transform.rotation);
+        for vertex in vertices {
+            let Ok(position) = mesh.vertex_position(*vertex) else { continue };
+            let scaled = [f64::from(position.0[0] * object.transform.scale[0]), f64::from(position.0[1] * object.transform.scale[1]), f64::from(position.0[2] * object.transform.scale[2])];
+            let rotated = rotate(rotation, scaled);
+            for axis in 0..3 {
+                sum[axis] += rotated[axis] + f64::from(object.transform.position[axis]);
+            }
+            count += 1;
+        }
+    };
+    if selection.granularity == MESH_GRANULARITY_OBJECT {
+        for object_id in &selection.object_ids {
+            let Some(index) = view.snapshot.objects.iter().position(|object| &object.id == object_id) else { continue };
+            let Some(mesh) = loaded.mesh_at(index) else { continue };
+            let vertices: Vec<VertexId> = (0..mesh.vertex_count()).map(|vertex| VertexId(vertex as u32)).collect();
+            add(index, &vertices);
+        }
+    } else if let Some(index) = view.snapshot.objects.iter().position(|object| object.id == selection.active_object_id) {
+        if let Some(mesh) = loaded.mesh_at(index) {
+            let mut vertices = Vec::new();
+            for id in &selection.component_ids {
+                match selection.granularity.as_str() {
+                    "vertex" => vertices.push(VertexId(*id)),
+                    "edge" => vertices.extend(mesh.edge_endpoints(EdgeId(*id)).ok().map(|(a, b)| [a, b]).into_iter().flatten()),
+                    "face" => vertices.extend(mesh.face_vertex_ids(FaceId(*id)).unwrap_or_default()),
+                    _ => {}
+                }
+            }
+            vertices.sort_by_key(|vertex| vertex.0);
+            vertices.dedup_by_key(|vertex| vertex.0);
+            add(index, &vertices);
+        }
+    }
+    (count > 0).then(|| sum.map(|value| value / count as f64))
+}
+
+fn rotate(q: [f64; 4], v: [f64; 3]) -> [f64; 3] {
+    let [x, y, z, w] = q;
+    let t = [2.0 * (y * v[2] - z * v[1]), 2.0 * (z * v[0] - x * v[2]), 2.0 * (x * v[1] - y * v[0])];
+    [v[0] + w * t[0] + (y * t[2] - z * t[1]), v[1] + w * t[1] + (z * t[0] - x * t[2]), v[2] + w * t[2] + (x * t[1] - y * t[0])]
 }
 
 fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
@@ -136,6 +213,8 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
             dsl::DslValue::object([
                 ("id".to_string(), dsl::DslValue::String(object.id.clone())),
                 ("meshId".to_string(), dsl::DslValue::String(object.id.clone())),
+                ("interactionId".to_string(), dsl::DslValue::String(document_object_row_id(&object.id))),
+                ("interactionGranularityId".to_string(), dsl::DslValue::String(MESH_GRANULARITY_OBJECT.to_string())),
                 ("position".to_string(), dsl::ToValue::to_value(&position)),
                 ("rotation".to_string(), dsl::ToValue::to_value(&rotation)),
                 ("scale".to_string(), dsl::ToValue::to_value(&scale)),
@@ -147,20 +226,23 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
     dsl::json::to_json_string(&instances)
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let config = view.config;
     match loaded {
-        Some(loaded) => scene_surface(
-            LOWPOLY_PLAY_SURFACE_MAIN,
-            semio_framework_ui_contract::SurfaceKind::World3d,
-            &world3d_scene(
+        Some(loaded) => {
+            let mut scene = world3d_scene(
                 world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov),
                 world_meshes_json(loaded, texture_cache),
                 world_instances_json(view),
-                world_selection_json_for(view, active_utility),
+                world_selection_json_for(view, loaded, active_utility, selection),
                 &crate::editor::lowpoly::config::lowpoly_sun_config(config),
-            ),
-        ),
+            );
+            // 🕹️ Bound to the "mesh" domain: object hits resolve through each instance's `interactionId`,
+            // component hits through `<interactionId>.<granularity>.<id>` (`World3dHost`).
+            scene.domain_id = Some(MESH_INTERACTION_DOMAIN.into());
+            scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
+            scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
+        }
         None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }
 }

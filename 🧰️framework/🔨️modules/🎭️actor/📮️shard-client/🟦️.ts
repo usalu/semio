@@ -642,7 +642,6 @@ export async function settleFailedInstanceOpen(error: unknown, cleanup: () => Pr
   try {
     await cleanup();
   } catch (cleanupError) {
-    console.error(`[DEBUG] shard-client: cleanup after a failed instance open faulted: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`);
   }
   throw error;
 }
@@ -713,7 +712,6 @@ function graftWorkerStack(actorId: string, reason: string, stack: string | undef
   const error = new Error(reason);
   if (stack) error.stack = `${stack}\n    \u21b3 main: ${error.stack ?? ""}`;
   if (retryableLifecycle === true) Object.defineProperty(error, RETRYABLE_LIFECYCLE_TURN, { value: true });
-  console.log(`[DEBUG] program worker ${actorId || "unknown"} error type=${kind ?? "unknown"} framesBytes=${framesBytes ?? "n/a"}`);
   return error;
 }
 
@@ -1449,13 +1447,11 @@ export class ShardClient {
     worker.onerror = (error) => {
       if (this.shards[index] !== slot) return;
       const detail = describeShardWorkerError(error);
-      console.error(`[DEBUG] shard ${index} worker error: ${detail}`, error);
       this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
     worker.onmessageerror = (event) => {
       if (this.shards[index] !== slot) return;
       const detail = describeShardMessageError(index, event);
-      console.error(`[DEBUG] ${detail}`, event);
       this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
     if (this.heartbeatSabView) worker.postMessage({ kind: "attachHeartbeatSab", shardIndex: index, sab: this.heartbeatSabView.buffer });
@@ -1480,7 +1476,6 @@ export class ShardClient {
     if (message.kind === "result" && message.beat && typeof message.beat.turnSeq === "number") this.recordHeartbeat(slot, message.beat.turnSeq, this.now(), message.beat.phase ?? null);
     if (message.kind === "worker-fault") {
       const detail = formatShardWorkerFault(slot.index, message);
-      console.error(`[DEBUG] ${detail}`, message.stack ?? "");
       this.onActorTrap?.(message.actorId ?? "*", detail);
       return;
     }
@@ -2004,7 +1999,6 @@ export class ShardClient {
           break;
         } catch (error) {
           if (!isRetryableLifecycleTurn(error) || attempt + 1 >= RETRYABLE_LIFECYCLE_TURN_ATTEMPTS) throw error;
-          console.log(`[DEBUG] shard client: replaying retryable lifecycle turn attempt=${attempt + 1} actor=${activation.actorId} events=${events.length}`);
           posted = false;
           if (!activation.available || !slot.available || this.shards[slot.index] !== slot) { owner.failure = "worker-lost"; throw new Error("actor-lifecycle.worker-lost"); }
         }
@@ -2483,7 +2477,6 @@ export class ShardClient {
         lastHeartbeatPhase: slot.heartbeat.lastHeartbeatPhase,
         inFlight: outstanding.map((entry) => ({ kind: entry.kind, actorId: entry.actorId, startedAtMs: entry.startedAtMs, firstTurn: entry.firstTurn })),
       });
-      console.error(`[DEBUG] ${detail}`);
       this.terminate(slot.index, detail);
       this.rebuild(slot.index);
       this.onShardLost?.(slot.index, actorIds);

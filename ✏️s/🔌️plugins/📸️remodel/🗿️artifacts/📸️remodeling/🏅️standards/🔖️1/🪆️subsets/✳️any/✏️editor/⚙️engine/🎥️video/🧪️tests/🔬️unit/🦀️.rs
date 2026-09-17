@@ -220,7 +220,7 @@ fn extract_frames_applies_max_long_edge_downscale() {
 #[test]
 fn extract_frames_rejects_unsupported_codec_with_provenance() {
     let track =
-        Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::default(), width: 4, height: 4, metadata: Default::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }] };
+        Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::hevc(Mp4CodecFormat::Hvc1, Default::default(), 4), width: 4, height: 4, metadata: Default::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }] };
     let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![track] };
     let bytes = mp4_engine::encode_mp4(&snapshot);
     let info = probe_mp4(&bytes).expect("hvc1 still probes for provenance");

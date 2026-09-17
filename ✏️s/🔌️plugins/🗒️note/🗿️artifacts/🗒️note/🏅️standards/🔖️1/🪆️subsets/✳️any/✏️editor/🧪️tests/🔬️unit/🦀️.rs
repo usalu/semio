@@ -201,6 +201,85 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 }
 //#endregion 🔖️CommandSurface
 
+//#region 🔖️ActionBridge
+/// 🎯️ Every command row, spelled the way the shell sends it (camelCase keys, bare payload object),
+/// must round-trip — the boundary that was missing entirely before ticket
+/// 26/09/17/NOTE-PLUGIN-END-TO-END (every shell action was refused as "not framework-reserved").
+#[semio_framework_async_macros::async_test]
+async fn command_from_action_round_trips_every_command_id() {
+    for command in every_command() {
+        let id = command.command_id();
+        let payload = match dsl::ToValue::to_value(&command) {
+            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            other => other,
+        };
+        let bridged = NotePlayApp::command_from_action(id, Some(&camel_case_keys(&payload))).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        assert_eq!(bridged, command, "payload drifted through the bridge for action {id}");
+    }
+    assert!(NotePlayApp::command_from_action("nonsense", None).is_err());
+}
+
+/// 🐫️ The shell's spelling of the payload keys.
+fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+    match value {
+        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    let mut camel = String::new();
+                    let mut upper = false;
+                    for ch in key.chars() {
+                        if ch == '_' {
+                            upper = true;
+                        } else if upper {
+                            camel.push(ch.to_ascii_uppercase());
+                            upper = false;
+                        } else {
+                            camel.push(ch);
+                        }
+                    }
+                    (camel, value.clone())
+                })
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
+/// 🧱️ The host's control contracts (JSON integers, text `value`s, panel quick-add rows, the ink canvas
+/// gesture payload, flat camera poses, shell window keys) reach the same rows.
+#[semio_framework_async_macros::async_test]
+async fn command_from_action_bridges_host_control_contracts() {
+    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("fixture JSON"));
+    assert_eq!(
+        NotePlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "kind": "math" })))).expect("panel quick-add"),
+        NoteCommand::AddBlock(add_block::AddBlock { kind: "math".into(), x: 0.0, y: 0.0 })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "kind": "text", "x": 12, "y": "24.5", "windowId": "note-composite" })))).expect("palette form"),
+        NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 12.0, y: 24.5 })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "eventsJson": "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]", "phase": "atomic", "selectIds": ["b1"] })))).expect("ink canvas gesture"),
+        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]".into(), phase: "atomic".into(), select_ids: Some(vec!["b1".into()]) })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("patchBlocks", Some(&args(serde_json::json!({ "blockId": "b1", "field": "x", "value": 120 })))).expect("inspector patch"),
+        NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into()], field: "x".into(), value: "120".into() })
+    );
+    assert_eq!(NotePlayApp::command_from_action("setGridSpacing", Some(&args(serde_json::json!({ "value": "24" })))).expect("text slider"), NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 24.0 }));
+    assert_eq!(NotePlayApp::command_from_action("setSnapEnabled", Some(&args(serde_json::json!({ "checked": true })))).expect("toggle"), NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: Some(true) }));
+    assert_eq!(NotePlayApp::command_from_action("setGridVisible", None).expect("toggle without value"), NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
+    assert_eq!(
+        NotePlayApp::command_from_action("setCamera", Some(&args(serde_json::json!({ "x": 1, "y": 2, "zoom": 1.5 })))).expect("flat camera"),
+        NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
+    );
+    assert_eq!(NotePlayApp::command_from_action("engagementSubmit", Some(&args(serde_json::json!({ "value": null })))).expect("submit without value"), NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+    assert_eq!(NotePlayApp::command_from_action("deleteSelection", Some(&args(serde_json::json!({ "windowId": "note-composite" })))).expect("keybound verb"), NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+    assert!(NotePlayApp::command_from_action("deleteBlock", None).is_err(), "a required field must not be defaulted silently");
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {

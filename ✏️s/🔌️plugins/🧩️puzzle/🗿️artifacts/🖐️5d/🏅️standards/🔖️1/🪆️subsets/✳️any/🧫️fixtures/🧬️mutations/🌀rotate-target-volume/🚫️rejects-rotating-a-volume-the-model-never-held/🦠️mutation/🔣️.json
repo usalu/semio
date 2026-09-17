@@ -1,0 +1,10 @@
+{
+  "mutation": "rotateTargetVolume",
+  "id": "volume-the-model-never-held",
+  "newOrientation": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ]
+}

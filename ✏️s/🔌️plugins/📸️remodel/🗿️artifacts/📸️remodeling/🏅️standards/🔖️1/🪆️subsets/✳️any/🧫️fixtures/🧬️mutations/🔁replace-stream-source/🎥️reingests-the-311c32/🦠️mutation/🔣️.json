@@ -5,7 +5,7 @@
     "name": "orbit-primary-master.mov",
     "container": "mov",
     "codec": "hevc",
-    "durationMs": 6000,
+    "durationMs": 6000.0,
     "frameCount": 12,
     "width": 320,
     "height": 240

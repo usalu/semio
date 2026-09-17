@@ -2,7 +2,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, treeRowHeightPx, treeWindowRequestsForViewport, type TreeDataSection, type TreeWindowContainerMeasure } from "../../🟦️.tsx";
+import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌳️BranchDisclosure
@@ -314,6 +314,29 @@ describe("Tree windowed containers", () => {
     expect(container.querySelectorAll('[data-slot="tree-item-row"]')).toHaveLength(0);
   });
 
+  it("stamps every materialised row with its own entry index, direct children only", () => {
+    const { container } = render(
+      <Tree
+        sections={[
+          windowedSection({
+            window: { total: 100, offset: 20 },
+            items: [
+              { id: "entry-20", label: "Entry 20" },
+              { id: "entry-21", label: "Entry 21", defaultOpen: true, windowKey: "entry-21", window: { total: 9, offset: 4 }, items: [{ id: "child-4", label: "Child 4" }] },
+            ],
+          }),
+        ]}
+      />,
+    );
+
+    const section = container.querySelector('[data-slot="tree-section-content"]') as HTMLDivElement;
+    expect(Array.from(section.querySelectorAll(":scope > [data-tree-window-row]")).map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["20", "21"]);
+    const nested = container.querySelector('[data-slot="tree-item-content"]') as HTMLDivElement;
+    expect(Array.from(nested.querySelectorAll(":scope > [data-tree-window-row]")).map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["4"]);
+    // 🎯️ An UNWINDOWED container's rows carry no index — they are never measured as a window's rows.
+    expect(container.querySelectorAll('[data-slot="tree-window-spacer"][data-tree-window-row]')).toHaveLength(0);
+  });
+
   it("windows a nested group row the same way it windows a section", () => {
     const { container } = render(
       <Tree
@@ -391,9 +414,124 @@ describe("treeWindowRequestsForViewport", () => {
     expect(requests).toEqual([{ key: "entries", offset: 500 - 26, rows: 26 }]);
   });
 
+  /** 🧯️ 📓️s3-review-streaming-loop.md §2: a materialised row can itself be an OPEN windowed group and be
+   * many rows tall, so "pixels ÷ one row height" resolves the viewport to a row far below the one actually
+   * under it — and the window that follows evicts the subtree the reader just opened. The rows' own measured
+   * tops are the only thing that answers this, and the spacers keep the uniform pitch they are built from. */
+  it("reads the row under the viewport off the rows' real tops, not off a uniform pitch", () => {
+    // 20 rows of 1000, rows 0..2 plain, row 3 an open nested group 16 rows tall, rows 4..19 plain again.
+    const rows = [] as { index: number; top: number }[];
+    let top = 0;
+    for (let index = 0; index < 20; index += 1) {
+      rows.push({ index, top });
+      top += (index === 3 ? 16 : 1) * rowHeight;
+    }
+    const nested = measure({ total: 1000, offset: 0, length: 20, height: (top + 980 * rowHeight), rows });
+    // The viewport sits 20 row-heights down — past the tall row 3, at this container's own row 5.
+    const requests = treeWindowRequestsForViewport([nested], 20 * rowHeight, 4 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+
+    // 🎯️ The viewport covers this container's own rows 5…8, so its window still starts at row 0.
+    expect(requests).toEqual([{ key: "entries", offset: 0, rows: 20 }]);
+    // 🎯️ The flat rule reads the same pixels as rows 20…23 and answers a window that materialises NONE of
+    // what is on screen — the expanded row 3 among it.
+    expect(treeWindowRequestsForViewport([{ ...nested, rows: undefined }], 20 * rowHeight, 4 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS)).toEqual([{ key: "entries", offset: 12, rows: 20 }]);
+  });
+
   it("drops containers with nothing to stream and rejects a degenerate row pitch", () => {
     expect(treeWindowRequestsForViewport([measure({ total: 0, height: 0 })], 0, 400, rowHeight, 4)).toEqual([]);
     expect(treeWindowRequestsForViewport([measure({})], 0, 400, 0, 4)).toEqual([]);
   });
 });
 // #endregion 📐️WindowRequests
+
+// #region 🧮️BodyNodeBudget
+/** 🧮️ The body-wide ceiling, in the guest's own currency: every windowed container of one panel body costs
+ * `1 + rows` out of one `TREE_WINDOW_BODY_NODE_BUDGET` ledger, so a request that fits here is one the guest can
+ * answer in full (📓️s3-review-streaming-loop.md §1, 📓️w3-browser-verification.md §6.2). */
+describe("capTreeWindowRequests", () => {
+  const rowHeight = 20;
+  const metrics = (overrides: Partial<TreeWindowVisibleRows> = {}): TreeWindowVisibleRows => ({ total: 1000, visibleRows: 20, firstVisibleRow: 30, distancePx: 0, ...overrides });
+  const visible = (entries: readonly (readonly [string, TreeWindowVisibleRows])[]) => new Map<string, TreeWindowVisibleRows>(entries);
+  const nodeCost = (requests: readonly { readonly rows: number }[]) => requests.length + requests.reduce((sum, request) => sum + request.rows, 0);
+
+  it("leaves a body that already fits exactly as it was", () => {
+    const requests = [{ key: "a", offset: 10, rows: 40 }, { key: "b", offset: 0, rows: 30 }];
+    const capped = capTreeWindowRequests(requests, visible([["a", metrics()], ["b", metrics()]]));
+
+    expect(capped).toBe(requests);
+    expect(nodeCost(capped)).toBe(72);
+  });
+
+  it("shrinks the overscan uniformly before any container loses a row the viewport shows", () => {
+    // 4 containers × (20 visible + 2 × 8 overscan) + 4 container nodes = 148; overscan 3 is the first fit.
+    const keys = ["a", "b", "c", "d"];
+    const requests = keys.map((key) => ({ key, offset: 30 - TREE_WINDOW_OVERSCAN_ROWS, rows: 20 + 2 * TREE_WINDOW_OVERSCAN_ROWS }));
+    const capped = capTreeWindowRequests(requests, visible(keys.map((key) => [key, metrics()] as const)));
+
+    expect(capped).toEqual(keys.map((key) => ({ key, offset: 30 - 3, rows: 26 })));
+    expect(nodeCost(capped)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
+  });
+
+  it("trims the container furthest from the viewport centre once there is no overscan left to give", () => {
+    // Zero overscan still costs 3 + 50 + 40 + 30 = 123; the 12 over budget come off the furthest one.
+    const requests = [
+      { key: "far", offset: 0, rows: 50 },
+      { key: "mid", offset: 0, rows: 40 },
+      { key: "near", offset: 0, rows: 30 },
+    ];
+    const capped = capTreeWindowRequests(requests, visible([
+      ["far", metrics({ visibleRows: 50, firstVisibleRow: 0, distancePx: 900 })],
+      ["mid", metrics({ visibleRows: 40, firstVisibleRow: 0, distancePx: 100 })],
+      ["near", metrics({ visibleRows: 30, firstVisibleRow: 0, distancePx: 10 })],
+    ]));
+
+    expect(capped).toEqual([{ key: "far", offset: 0, rows: 38 }, { key: "mid", offset: 0, rows: 40 }, { key: "near", offset: 0, rows: 30 }]);
+    expect(nodeCost(capped)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
+  });
+
+  it("degrades the furthest container to a spacer-only window rather than dropping it off the wire", () => {
+    // 🧯️ A container the host stops asking for rows is still IN the body and still costs its own node, so it
+    // stays in the answer at `rows: 0` — dropping it would only hand the guest back its own default window.
+    const requests = ["far", "mid", "near"].map((key) => ({ key, offset: 0, rows: 3 }));
+    const capped = capTreeWindowRequests(requests, visible([
+      ["far", metrics({ total: 9, visibleRows: 3, firstVisibleRow: 0, distancePx: 900 })],
+      ["mid", metrics({ total: 9, visibleRows: 3, firstVisibleRow: 0, distancePx: 100 })],
+      ["near", metrics({ total: 9, visibleRows: 3, firstVisibleRow: 0, distancePx: 10 })],
+    ]), 5);
+
+    expect(capped).toEqual([{ key: "far", offset: 0, rows: 0 }, { key: "mid", offset: 0, rows: 1 }, { key: "near", offset: 0, rows: 1 }]);
+    expect(nodeCost(capped)).toBe(5);
+  });
+
+  it("keeps every capped window inside its own container", () => {
+    const requests = [{ key: "a", offset: 0, rows: 90 }, { key: "b", offset: 60, rows: 40 }];
+    const capped = capTreeWindowRequests(requests, visible([
+      ["a", metrics({ total: 90, visibleRows: 90, firstVisibleRow: 0, distancePx: 400 })],
+      ["b", metrics({ total: 100, visibleRows: 40, firstVisibleRow: 60, distancePx: 10 })],
+    ]));
+
+    expect(nodeCost(capped)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
+    for (const request of capped) {
+      const total = request.key === "a" ? 90 : 100;
+      expect(request.offset).toBeGreaterThanOrEqual(0);
+      expect(request.offset + request.rows).toBeLessThanOrEqual(total);
+    }
+  });
+
+  it("holds the ceiling for a whole measured body of twelve open containers", () => {
+    // The fem3d House shape: a dozen open windowed containers of a few rows each, all on screen at once,
+    // costing 156 nodes between them — more than one guest body can present.
+    const containers: TreeWindowContainerMeasure[] = Array.from({ length: 12 }, (_, index) => ({ key: `c${index}`, total: 12, offset: 0, length: 12, top: index * 12 * rowHeight, height: 12 * rowHeight }));
+    const viewportHeight = 12 * 12 * rowHeight;
+    const uncapped = treeWindowRequestsForViewport(containers, 0, viewportHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+    const capped = capTreeWindowRequests(uncapped, treeWindowVisibleRowsForViewport(containers, 0, viewportHeight, rowHeight));
+
+    expect(nodeCost(uncapped)).toBe(156);
+    expect(nodeCost(capped)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
+    // 🎯️ The rows come off the far ends of the body, never off the containers around the viewport centre.
+    expect(capped.find((request) => request.key === "c5")?.rows).toBe(12);
+    expect(capped.find((request) => request.key === "c6")?.rows).toBe(12);
+    for (const request of capped) expect(request.offset + request.rows).toBeLessThanOrEqual(12);
+  });
+});
+// #endregion 🧮️BodyNodeBudget

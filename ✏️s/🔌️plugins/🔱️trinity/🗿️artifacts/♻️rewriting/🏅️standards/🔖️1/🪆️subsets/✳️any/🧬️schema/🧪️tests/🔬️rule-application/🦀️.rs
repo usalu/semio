@@ -72,7 +72,7 @@ async fn rewriting_labeled_fixture_reloads() {
         rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
     apply_rule(&mut g, &rule, &BTreeMap::new()).unwrap();
-    let fixture_json = g.fixture_json().unwrap();
+    let fixture_json = g.host_snapshot_json().unwrap();
     let reloaded = Graph::load_json(&fixture_json).unwrap();
     let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));

@@ -22,7 +22,7 @@ async fn document_lists_widgets() {
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["fixture"].to_string()).expect("law fixture parses");
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&ViewModel::default());
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("document tree builds");

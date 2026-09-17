@@ -3,11 +3,12 @@
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_value_map, ui_value_text, wires_action};
 use dsl::DslValue;
-use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_CATALOGUE: &str = "reasoning.wires.catalogue";
 const WIRES_PLAY_CATALOGUE_TAB_ID: &str = "framework.panel.catalogue";
+const WIRES_PLAY_KINDS_NAMESPACE: &str = "wires-play-kinds";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -37,30 +38,40 @@ fn catalog_kind_label(entry: &DslValue) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut items = UiFixedList::default();
-    for (index, entry) in entries.iter().enumerate() {
-        let kind_id = entry.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "wires catalogue kind id missing"))?;
-        let args = ui_value_map([("kind", ui_value_text(kind_id)?)])?;
-        let action = match kind {
-            "relationship-kinds" => wires_action("addRelationship", Some(args))?,
-            _ => wires_action("addNode", Some(args))?,
-        };
-        let item = tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}"))?, crate::editor::wires::ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "wires catalogue item admission failed"))?;
-    }
-    Ok(items)
+/// 🛍️ One kind row: it keeps its own `addNode`/`addRelationship` binding — a catalogue row creates
+/// graph elements, it never picks any, so this tree binds no interaction domain.
+fn kind_catalog_row(kind: &str, index: usize, entry: &DslValue) -> UiAssemblyResult<BuiltNode> {
+    let kind_id = entry.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "wires catalogue kind id missing"))?;
+    let args = ui_value_map([("kind", ui_value_text(kind_id)?)])?;
+    let action = match kind {
+        "relationship-kinds" => wires_action("addRelationship", Some(args))?,
+        _ => wires_action("addNode", Some(args))?,
+    };
+    tree_item_with_action(format!("{WIRES_PLAY_KINDS_NAMESPACE}.{kind}.{index}.{kind_id}"), crate::editor::wires::ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)
 }
 
-pub fn render(wires: &DslValue, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let namespace = PanelTreeBuilder::new("wires-play-kinds")?;
-    let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
-    let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");
-    let identity_items = kind_catalog_items(&namespace, "identity-kinds", &identity_entries)?;
-    let relationship_items = kind_catalog_items(&namespace, "relationship-kinds", &relationship_entries)?;
-    namespace
-        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(crate::editor::wires::ui_label(labels.identity_kinds.as_str())?), true, identity_items, crate::editor::wires::ui_label("(none)")?)?
-        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(crate::editor::wires::ui_label(labels.relationship_kinds.as_str())?), true, relationship_items, crate::editor::wires::ui_label("(none)")?)?
+pub fn render(wires: &DslValue, labels: &WiresLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let identity_entries: Vec<_> = wires_kind_catalog_entries(wires, "identityKinds").into_iter().enumerate().collect();
+    let relationship_entries: Vec<_> = wires_kind_catalog_entries(wires, "relationshipKinds").into_iter().enumerate().collect();
+    PanelTreeBuilder::new(WIRES_PLAY_KINDS_NAMESPACE)?
+        .window_section_or_placeholder(
+            windows,
+            "wires-play-kinds.identity-kinds",
+            Some(crate::editor::wires::ui_label(labels.identity_kinds.as_str())?),
+            true,
+            &identity_entries,
+            |(index, entry)| kind_catalog_row("identity-kinds", *index, entry),
+            crate::editor::wires::ui_label("(none)")?,
+        )?
+        .window_section_or_placeholder(
+            windows,
+            "wires-play-kinds.relationship-kinds",
+            Some(crate::editor::wires::ui_label(labels.relationship_kinds.as_str())?),
+            true,
+            &relationship_entries,
+            |(index, entry)| kind_catalog_row("relationship-kinds", *index, entry),
+            crate::editor::wires::ui_label("(none)")?,
+        )?
         .build()
 }
 //#endregion 🔖️Render

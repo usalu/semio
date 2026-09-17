@@ -1800,8 +1800,7 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo"
-      },
-      "parallelism": false
+      }
     },
     "deps-go": {
       "executor": "nx:run-commands",
@@ -1849,7 +1848,6 @@
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync wasm"
       },
-      "parallelism": false,
       "dependsOn": [
         "deps-wasm-opt",
         "deps-trunk"
@@ -1878,8 +1876,7 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync tools"
-      },
-      "parallelism": false
+      }
     },
     "prepare": {
       "executor": "nx:run-commands",

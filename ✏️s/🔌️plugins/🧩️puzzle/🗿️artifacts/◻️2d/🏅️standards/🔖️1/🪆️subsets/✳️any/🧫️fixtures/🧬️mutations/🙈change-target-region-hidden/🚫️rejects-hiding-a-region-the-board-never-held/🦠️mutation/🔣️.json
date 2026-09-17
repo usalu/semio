@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetRegionHidden",
+  "id": "region-the-board-never-held",
+  "newHidden": true
+}

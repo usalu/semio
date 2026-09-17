@@ -125,6 +125,13 @@ pub struct LowpolyObject {
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[value(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
+    /// 🕸️ The half-edge-mesh JSON the `mesh` handle hashes (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS,
+    /// 2026-09-17): no WASM guest can resolve a child document, so a handle-only object lost its
+    /// geometry on every undo/redo (the session cache went stale), page reload and document import.
+    /// Persisted by both codecs; `""` for a legacy handle-only document, which then falls back to
+    /// the session `mesh_workspace` cache.
+    #[value(default)]
+    pub mesh_content: String,
 }
 
 impl Identified<String> for LowpolyObject {
@@ -188,6 +195,9 @@ pub struct LowpolyObjectPatch {
     /// from this struct (unused in practice — nothing calls its derived DSL machinery, confirmed by
     /// grep — and `store::ArtifactChild<S>` has no `DslField` impl to derive against anyway).
     pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
+    /// 🕸️ New `LowpolyObject::mesh_content`, set together with `mesh`.
+    #[value(default)]
+    pub mesh_content: Option<String>,
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
@@ -204,6 +214,9 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         if let Some(value) = &patch.mesh {
             self.mesh = value.clone();
         }
+        if let Some(value) = &patch.mesh_content {
+            self.mesh_content = value.clone();
+        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
@@ -212,6 +225,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
             transform: (self.transform != other.transform).then(|| other.transform.clone()),
             mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
+            mesh_content: (self.mesh_content != other.mesh_content).then(|| other.mesh_content.clone()),
         };
         (patch != LowpolyObjectPatch::default()).then_some(patch)
     }

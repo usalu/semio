@@ -44,6 +44,8 @@ export interface LowpolyObject {
   /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
   mesh: ArtifactChild | null;
   paintLayers: LowpolyPaintLayer[];
+  /** Half-edge-mesh JSON the `mesh` handle hashes; `""` in legacy handle-only documents. */
+  meshContent: string;
 }
 
 //#region 🚪️Parsers
@@ -110,6 +112,7 @@ export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
     smoothShading: lowpolyLowpolyArtifactGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
     mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
     paintLayers: lowpolyLowpolyArtifactGuardArray(row["paintLayers"], `${at}.paintLayers`).map((item, index) => parseLowpolyPaintLayer(item, `${at}.paintLayers[${index}]`)),
+    meshContent: row["meshContent"] === undefined ? "" : lowpolyLowpolyArtifactGuardString(row["meshContent"], `${at}.meshContent`),
   };
 }
 

@@ -5,8 +5,8 @@ use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::FormGeneration;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{
-    tree_item_with_action, ActionBinding, Buildable, BuiltNode, HasBase, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, RowAction, RowActionPlacement, SurfaceKind, Terminology, Trigger, UiAssemblyResult, UiFixedList, UiText,
-    WindowKindDefinition, WindowOptions,
+    tree_item_with_action, ActionBinding, Buildable, BuiltNode, HasBase, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, RowAction, RowActionPlacement, SurfaceKind, Terminology, TreeWindows, Trigger, UiAssemblyResult,
+    UiFixedList, UiText, WindowKindDefinition, WindowOptions,
 };
 use semio_framework_ui_contract as ui;
 
@@ -96,18 +96,16 @@ fn generation_item(generation: &FormGeneration, surface_prefix: &str, locale: Lo
     builder.try_build().map_err(|_| generation_error("item-build"))
 }
 
-pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
+pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let generation = transient.generation();
     let surface_prefix = "flow-play-generate";
-    let mut items = UiFixedList::default();
-    for entry in &generation.generations {
-        items.try_push(generation_item(entry, surface_prefix, locale, terminology)?).map_err(|_| generation_error("items"))?;
-    }
-    let mut builder = PanelTreeBuilder::new(surface_prefix)?.section_or_placeholder(
-        format!("{surface_prefix}.generations"),
+    let mut builder = PanelTreeBuilder::new(surface_prefix)?.window_section_or_placeholder(
+        windows,
+        &format!("{surface_prefix}.generations"),
         Some(ui_label(generation_tree_label("generations", locale, terminology))?),
         true,
-        items,
+        &generation.generations,
+        |entry| generation_item(entry, surface_prefix, locale, terminology),
         generation_tree_label("empty", locale, terminology),
     )?;
     let mut add_items = UiFixedList::default();

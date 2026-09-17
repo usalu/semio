@@ -797,7 +797,7 @@ function DemonstratorLanding() {
                       <div className="ui-veil absolute inset-0" style={{ opacity: veilOpacity }} />
                     </div>
                     <div className="pointer-events-none absolute inset-0 z-[31] flex items-center justify-center px-double pb-[5.5rem]">
-                      <DemonstratorCard pane={pane} className="max-w-[18rem]" onClick={() => focusPane(pane.id)} />
+                      <DemonstratorCard pane={pane} onClick={() => focusPane(pane.id)} />
                     </div>
                   </>
                 )}

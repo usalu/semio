@@ -1,0 +1,5 @@
+{
+  "mutation": "scaleTargetVolume",
+  "id": "volume-1",
+  "newScale": 2.0
+}

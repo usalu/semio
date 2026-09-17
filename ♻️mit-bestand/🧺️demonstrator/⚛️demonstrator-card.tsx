@@ -1,7 +1,7 @@
 /** @emoji 🃏️ Window-silhouette overview card for one demonstrator pane — icon title chip, no drag handle. */
 
 import { cn, Icon, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
-import type { DemonstratorPaneSpec } from "./🪧️brand.ts";
+import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneSpec } from "./🪧️brand.ts";
 
 export function DemonstratorCard({
   pane,
@@ -19,6 +19,8 @@ export function DemonstratorCard({
   readonly onMouseLeave?: () => void;
   readonly className?: string;
 }) {
+  const bodyParagraphs = demonstratorPaneDescriptionParagraphs(pane.description);
+
   return (
     <button
       type="button"
@@ -29,7 +31,7 @@ export function DemonstratorCard({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "pointer-events-auto group w-full max-w-[15rem] cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
+        "pointer-events-auto group w-full max-w-sm cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
         "transition-transform duration-200",
         "hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         lifted && "-translate-y-0.5",
@@ -40,7 +42,7 @@ export function DemonstratorCard({
         level="dialog"
         active={false}
         stackSlot="demonstrator-pane-card-stack"
-        stackClassName="w-full min-w-0 min-h-[8.5rem]"
+        stackClassName="w-full min-w-0"
         titleChips={
           <div data-slot="demonstrator-pane-card-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single px-single")}>
             <Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" title={pane.label} />
@@ -48,9 +50,24 @@ export function DemonstratorCard({
           </div>
         }
         body={
-          <div data-slot="demonstrator-pane-card-body" className="flex flex-col items-center gap-double text-center">
-            <span className="text-sm text-muted-foreground">{pane.tagline}</span>
-            <span className="inline-flex items-center gap-single text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+          <div data-slot="demonstrator-pane-card-content" className="w-full min-w-0 max-w-sm">
+            <p data-slot="demonstrator-pane-card-tagline" className="mb-double text-xs font-medium leading-normal text-foreground">
+              {pane.tagline}
+            </p>
+            {bodyParagraphs.length > 0 && (
+              <div data-slot="introduction-body" className="flex flex-col gap-double">
+                {bodyParagraphs.map((paragraph, index) => (
+                  <p key={index} data-slot="introduction-body-paragraph" className="whitespace-pre-line text-xs leading-normal text-muted-foreground">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        }
+        footerRightChips={
+          <div data-slot="demonstrator-pane-card-open-chip" className={windowChromeTitleChipClass}>
+            <span className="inline-flex items-center gap-single px-single text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
               Demonstrator öffnen
               <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5" />
             </span>

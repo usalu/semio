@@ -1,29 +1,31 @@
 //! lowpoly -> stl
 //!
-//! 🐛️ Pre-fix content round-tripped `LowpolySnapshot::encode_pack` bytes (envelope id
-//! `lowpoly.lowpoly`) straight into `StlSnapshot::decode_pack`, which unconditionally rejects any
-//! envelope id other than its own `stdio.stl` (see that type's `decode_pack_with`) -- this always
-//! threw `PackError::Schema("pack envelope mismatch: ...")` at runtime despite compiling and
-//! looking real (same defect class fixed for real on the txt/obj/png/ply lowpoly IO leaves --
-//! see `../../🗿️obj/🔖️3.0/✳️any/🦀️.rs`'s doc comment for the shared root cause).
-//!
-//! Unlike obj/ply, real ASCII STL (`solid … facet … endsolid`) has no per-line "unknown statement"
-//! or comment retention slot in `StlSnapshot` to smuggle a carrier payload through, so this cannot
-//! be fixed the same way without inventing a second bespoke grammar (explicitly against this
-//! ticket's rules) or resolving real mesh geometry -- which needs a store/session handle to follow
-//! `LowpolyObject.mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>` to its content, not
-//! available to a synchronous `&LowpolySnapshot -> …` function. Left as an HONEST stub (never a
-//! silent pack-envelope lie) pending that architecture work -- see this ticket's
-//! `📝️io-implementation-result.md` handoff section.
+//! Real ASCII STL export through `engine::encode_stl_ascii`: every object whose persisted
+//! `mesh_content` is non-empty is transformed into world space (scale → Euler-degree rotation →
+//! translation) and each n-gon is fan-triangulated, one facet per triangle with its computed unit
+//! face normal. STL has no comment slot, so this direction is geometry-only (lossy by format).
+use crate::io::mesh_geometry::{triangle_normal, world_parts};
 use crate::schema::snapshot::LowpolySnapshot;
+use semio_s_artifact_stdio_stl::engine::encode_stl_ascii;
+use semio_s_artifact_stdio_stl::schema::snapshot::StlTriangle;
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(_snapshot: &LowpolySnapshot) -> Result<StlSnapshot, store::TextError> {
-    Err(store::TextError::new("lowpoly->stl: real mesh geometry is unavailable at the LowpolySnapshot layer (mesh is a content-addressed handle, not embedded geometry) -- not implemented", dsl::TextSpan::at(1, 1)))
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<StlSnapshot, store::TextError> {
+    let mut stl = StlSnapshot { solid_name: "lowpoly".into(), ..Default::default() };
+    for part in world_parts("stl", snapshot)? {
+        for face in &part.faces {
+            let corner = |i: usize| part.positions[face[i] as usize];
+            for i in 1..face.len() - 1 {
+                let vertices = [corner(0), corner(i), corner(i + 1)];
+                stl.triangles.push(StlTriangle { normal: triangle_normal(vertices[0], vertices[1], vertices[2]), vertices });
+            }
+        }
+    }
+    Ok(stl)
 }
 
 pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
-    serialize(snapshot).map(|_| Vec::new())
+    Ok(encode_stl_ascii(&serialize(snapshot)?).into_bytes())
 }

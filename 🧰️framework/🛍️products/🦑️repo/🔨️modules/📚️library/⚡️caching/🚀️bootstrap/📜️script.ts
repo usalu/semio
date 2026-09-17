@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
-import { devToolingEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
+import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
@@ -188,7 +188,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     for (const id of ids) if (!catalog.documents.some(document => document.id === id)) throw new Error(`Unknown Print document: ${id}`);
     if (print[1] === "watch" && ids.length > 1) throw new Error("Select one Print document or a complete collection to watch");
     const targets = ids.length ? [...new Set(ids)].map(id => `${print[1]}-${id}`) : [`${print[1]}${viz ? "-viz" : ""}`];
-    const args = targets.length === 1 ? ["run", `@semio-tech/print:${targets[0]}`, ...options] : ["run-many", "--projects=@semio-tech/print", `--targets=${targets.join(",")}`, ...options];
+    const args = targets.length === 1 ? ["run", `@semio-tech/print:${targets[0]}`, ...options] : ["run-many", "--projects=@semio-tech/print", `--targets=${targets.join(",")}`, ...semioNxParallelFlag(), ...options];
     return { args, env: {}, ...(print[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/print:${targets[0]!.replace(/^watch/, "build")}` } : {}) };
   }
   const report = target?.match(/^@semio-tech\/mit-bestand-bericht:(build|watch)(?:-(.*))?$/);

@@ -353,6 +353,40 @@ pub struct Puzzle5dFastener {
     pub y: f64,
 }
 
+/// 🧊️ A persisted oriented box constraining fill placement in the 3D projection (Volume Brush voxels
+/// or Transform-gumball edited volumes). Same shape as `puzzle_3d::Puzzle3dTargetVolume` — the 5d fill
+/// planner IS puzzle 3d's, so a 5d volume is handed to it unchanged; the board projection is derived,
+/// never persisted (`💡️inferences/🎛️flat-position`'s `target_volume_flat_rect`).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle5dTargetVolume {
+    pub id: String,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    #[dsl(coord)]
+    pub origin: [f64; 3],
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<[f64; 4]>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<Puzzle5dScale>,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub hidden: bool,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub locked: bool,
+}
+
+impl Default for Puzzle5dTargetVolume {
+    fn default() -> Self {
+        Self { id: String::new(), origin: [0.0; 3], orientation: None, scale: None, hidden: false, locked: false }
+    }
+}
+
 /// 🔗️ How specifically two grip/rope kinds are allowed to fasten.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -1648,6 +1682,139 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️null-catalogs-is-noop/🦀️.rs"]
                                     mod tests_null_catalogs_is_noop;
                                 }
+                                #[path = "."]
+                                pub mod create_target_volume {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🧊️appends-volume-2/🦀️.rs"]
+                                    mod tests_appends_volume_2;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🌲️paints-the-seed-bay/🦀️.rs"]
+                                    mod tests_paints_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🚫️rejects-a-volume-id-the-model-already-holds/🦀️.rs"]
+                                    mod tests_rejects_a_volume_id_the_model_already_holds;
+                                }
+                                #[path = "."]
+                                pub mod delete_target_volume {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
+                                    mod tests_removes_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🌲️clears-the-seed-bay/🦀️.rs"]
+                                    mod tests_clears_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️rejects-deleting-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_volume_the_model_never_held;
+                                }
+                                #[path = "."]
+                                pub mod move_target_volume {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/⬆️lifts-volume-1/🦀️.rs"]
+                                    mod tests_lifts_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🌲️shifts-the-seed-bay-north/🦀️.rs"]
+                                    mod tests_shifts_the_seed_bay_north;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🚫️rejects-moving-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_moving_a_volume_the_model_never_held;
+                                }
+                                #[path = "."]
+                                pub mod rotate_target_volume {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
+                                    mod tests_half_turn_about_z;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🌲️squares-the-seed-bay/🦀️.rs"]
+                                    mod tests_squares_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🚫️rejects-rotating-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_rotating_a_volume_the_model_never_held;
+                                }
+                                #[path = "."]
+                                pub mod scale_target_volume {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/📏️per-axis-to-uniform/🦀️.rs"]
+                                    mod tests_per_axis_to_uniform;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/🌲️widens-the-seed-bay/🦀️.rs"]
+                                    mod tests_widens_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/🚫️rejects-scaling-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_scaling_a_volume_the_model_never_held;
+                                }
+                                #[path = "."]
+                                pub mod change_target_volume_hidden {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides-volume-1/🦀️.rs"]
+                                    mod tests_hides_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🌲️hides-the-seed-bay/🦀️.rs"]
+                                    mod tests_hides_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🚫️rejects-hiding-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_hiding_a_volume_the_model_never_held;
+                                }
+                                #[path = "."]
+                                pub mod change_target_volume_locked {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks-volume-1/🦀️.rs"]
+                                    mod tests_locks_volume_1;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🌲️locks-the-seed-bay/🦀️.rs"]
+                                    mod tests_locks_the_seed_bay;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects-locking-a-volume-the-model-never-held/🦀️.rs"]
+                                    mod tests_rejects_locking_a_volume_the_model_never_held;
+                                }
                             }
                             #[path = "."]
                             pub mod transfer {
@@ -1950,6 +2117,8 @@ pub mod editor {
             pub mod engagement_control_select;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
             pub mod engagement_input;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔂️engagement-repeat-last/🦀️.rs"]
+            pub mod engagement_repeat_last;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪛️patch-fastener/🦀️.rs"]
@@ -1982,16 +2151,46 @@ pub mod editor {
             pub mod set_camera_3d;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-fixture-json/🦀️.rs"]
-            pub mod set_fixture_json;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-fixture/🦀️.rs"]
+            pub mod export_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-fixture/🦀️.rs"]
+            pub mod import_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-fixture/🦀️.rs"]
+            pub mod open_import_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗨️open-add-part-dialog/🦀️.rs"]
+            pub mod open_add_part_dialog;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-grid-factor/🦀️.rs"]
             pub mod set_grid_factor;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-grid-snap-enabled/🦀️.rs"]
             pub mod set_grid_snap_enabled;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️set-grid-spacing/🦀️.rs"]
+            pub mod set_grid_spacing;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
+            pub mod set_grid_visible;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-grip-direction/🦀️.rs"]
+            pub mod set_grip_direction;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤏️set-grip-show/🦀️.rs"]
+            pub mod set_grip_show;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤖️set-lod-automatic/🦀️.rs"]
+            pub mod set_lod_automatic;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️set-lod-depth-variable/🦀️.rs"]
+            pub mod set_lod_depth_variable;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✋️set-lod-manual/🦀️.rs"]
+            pub mod set_lod_manual;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📽️set-projection/🦀️.rs"]
+            pub mod set_projection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️set-selectable-kind/🦀️.rs"]
+            pub mod set_selectable_kind;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️set-transform-gumball-flag/🦀️.rs"]
+            pub mod set_transform_gumball_flag;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚖️set-kind-weight/🦀️.rs"]
             pub mod set_kind_weight;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-lod-mode/🦀️.rs"]
             pub mod set_lod_mode;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️set-proximity-radius/🦀️.rs"]
+            pub mod set_proximity_radius;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️set-chunk-size/🦀️.rs"]
+            pub mod set_chunk_size;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-selection-flag/🦀️.rs"]
             pub mod set_selection_flag;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-suggestion-offset/🦀️.rs"]
@@ -2000,8 +2199,18 @@ pub mod editor {
             pub mod translate_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world-relocate/🦀️.rs"]
             pub mod world_relocate;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️zoom-to-selection/🦀️.rs"]
-            pub mod zoom_to_selection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️focus-selection/🦀️.rs"]
+            pub mod focus_selection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-target-volume/🦀️.rs"]
+            pub mod add_target_volume;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪦️delete-target-volume/🦀️.rs"]
+            pub mod delete_target_volume;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️relocate-target-volume/🦀️.rs"]
+            pub mod relocate_target_volume;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-target-volume-flag/🦀️.rs"]
+            pub mod set_target_volume_flag;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-voxel-dims/🦀️.rs"]
+            pub mod set_voxel_dims;
         }
 
         #[path = "."]
@@ -2012,6 +2221,8 @@ pub mod editor {
             pub mod artifact;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/⚙️settings/🦀️.rs"]
+            pub mod settings;
         }
 
         #[path = "."]
@@ -2026,7 +2237,11 @@ pub mod editor {
                 pub mod options {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🖌️brush/🦀️.rs"]
                     pub mod brush;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill/🦀️.rs"]
+                }
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️.rs"]
                     pub mod fill;
                 }
 
@@ -2048,16 +2263,18 @@ pub mod editor {
 
                         #[path = "."]
                         pub mod options {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/☑️options/🌐️grid/🦀️.rs"]
+                            pub mod grid;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/☑️options/🔭️lod/🦀️.rs"]
                             pub mod lod;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/☑️options/🎯️select/🦀️.rs"]
+                            pub mod select;
                         }
 
                         #[path = "."]
                         pub mod utilities {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🖌️brush/🦀️.rs"]
                             pub mod brush;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill/🦀️.rs"]
-                            pub mod fill;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🖱️select/🦀️.rs"]
                             pub mod select;
                         }
@@ -2085,6 +2302,16 @@ pub mod editor {
 
                         #[path = "."]
                         pub mod options {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/🌐️grid/🦀️.rs"]
+                            pub mod grid;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/🤏️grip/🦀️.rs"]
+                            pub mod grip;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/🔭️lod/🦀️.rs"]
+                            pub mod lod;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/🎥️projection/🦀️.rs"]
+                            pub mod projection;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/🎯️select/🦀️.rs"]
+                            pub mod select;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/☑️options/☀️sun/🦀️.rs"]
                             pub mod sun;
                         }
@@ -2095,6 +2322,8 @@ pub mod editor {
                             pub mod transform;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🚚️world-relocate/🦀️.rs"]
                             pub mod world_relocate;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🧊️volume-brush/🦀️.rs"]
+                            pub mod volume_brush;
                         }
                     }
                 }
@@ -2122,6 +2351,13 @@ pub mod viewer {
 
                 #[path = "."]
                 pub mod windows {
+                    #[path = "."]
+                    pub mod board2d {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/◻️2d/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+
                     #[path = "."]
                     pub mod world3d {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️.rs"]

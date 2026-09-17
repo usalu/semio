@@ -4,7 +4,7 @@
 use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
 use crate::editor::block2d::ui_label;
-use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasChildren};
+use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -35,16 +35,24 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn line(value: String) -> UiAssemblyResult<BuiltNode> {
-    text(ui_label(value)?).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board line admission failed"))
+/// 🪧️ One board summary line. The id is NOT decoration: two sibling nodes without one project to the
+/// same key and the whole body is refused with `duplicate-key` before it ever reaches a renderer.
+fn line(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
+    text(ui_label(value)?)
+        .try_id(id)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board line id admission failed"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board line admission failed"))
 }
 
 pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssemblyResult<BuiltNode> {
     let lines = semio_framework_plugin::ui_node_list([
-        line(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
-        line(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str())),
+        line("block2d-play-board.summary", format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
+        line("block2d-play-board.counts", format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str())),
     ])?;
     column()
+        .try_id("block2d-play-board.body")
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board id admission failed"))?
         .try_children(lines)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board children admission failed"))?
         .try_build()

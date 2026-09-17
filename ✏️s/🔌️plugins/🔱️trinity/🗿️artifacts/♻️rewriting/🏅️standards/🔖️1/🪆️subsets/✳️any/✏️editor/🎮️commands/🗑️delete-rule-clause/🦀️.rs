@@ -184,7 +184,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
         }
     }
     let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
-    Graph::from_snapshot(fixture).ok()?.fixture_json().ok()
+    Graph::from_snapshot(fixture).ok()?.host_snapshot_json().ok()
 }
 
 pub(crate) fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -> bool {

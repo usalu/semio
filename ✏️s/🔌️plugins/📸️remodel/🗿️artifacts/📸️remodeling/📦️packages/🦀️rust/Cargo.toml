@@ -24,7 +24,10 @@ semio-s-artifact-stdio-mp4 = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+# 🖼️ `conversion-image` carries the `s.stdio.semio/v1/image` <-> `s.stdio.png` composers the texture/DSM
+# asset bridge (`🚪️io` `semio_image_from_png_bytes`/`png_bytes_from_semio_image`) dispatches through;
+# without it `io_dispatch` answers `no composer registered for s.stdio.semio/v1/image … s.stdio.png`.
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-image", "conversion-mesh"] }
 semio-s-artifact-stdio-stl = { workspace = true }
 # 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d moved
 # `algebra`/`optimize`/`lie`/`signal`/`spatial` wholesale into this crate's own artifact schema as

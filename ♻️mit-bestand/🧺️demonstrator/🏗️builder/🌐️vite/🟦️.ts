@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { demonstratorGisMapTileServeMode } from "../../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
@@ -43,6 +44,7 @@ export default defineConfig(({ command }) => {
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   return {
   root: playDir,
+  base: "./",
   cacheDir: repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
@@ -96,7 +98,7 @@ export default defineConfig(({ command }) => {
       ...extensionModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(installedExtensionsDir, name)) })),
     ]),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
-    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
+    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, demonstratorGisMapTileServeMode(command === "build" ? "build" : "serve")),
     react(),
     tailwindcss(),
   ],

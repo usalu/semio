@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
-use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
+use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE_5D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -50,6 +50,12 @@ pub struct Puzzle5dSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,
+    /// 🧊️ Oriented boxes constraining where the fill planner may place — the 3d-projection half of
+    /// the document; the board pane paints their derived flat rectangles.
+    #[value(default)]
+    #[dsl(table)]
+    #[state(artifact)]
+    pub target_volumes: Vec<Puzzle5dTargetVolume>,
 }
 //#endregion 🔖️Snapshot
 
@@ -97,7 +103,7 @@ impl store::ArtifactPack for Puzzle5dSnapshot {
 
 impl Default for Puzzle5dSnapshot {
     fn default() -> Self {
-        Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Default::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: Vec::new(), fasteners: Vec::new() }
+        Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Default::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: Vec::new(), fasteners: Vec::new(), target_volumes: Vec::new() }
     }
 }
 

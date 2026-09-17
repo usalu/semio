@@ -11,6 +11,7 @@ type Puzzle5dDiff {
   kindCompatibility: Puzzle5dKindCompatibilityList @state(class: ARTIFACT)
   parts: Puzzle5dPartsDelta @state(class: ARTIFACT)
   fasteners: Puzzle5dFastenersDelta @state(class: ARTIFACT)
+  targetVolumes: Puzzle5dTargetVolumesDelta @state(class: ARTIFACT)
 }
 
 type Puzzle5dStringList { values: [String!]! }
@@ -22,6 +23,10 @@ type Puzzle5dFastenersDelta { added: [Puzzle5dFastener!]! removed: [String!]! pa
 type Puzzle5dFastenerPatchEntry { id: String! patch: Puzzle5dFastenerPatch! }
 type Puzzle5dFastenerPatch { replacement: Puzzle5dFastener }
 type Puzzle5dFastener { id: String! source: String target: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
+type Puzzle5dTargetVolumesDelta { added: [Puzzle5dTargetVolume!]! removed: [String!]! patched: [Puzzle5dTargetVolumePatchEntry!]! reordered: [String!] }
+type Puzzle5dTargetVolumePatchEntry { id: String! patch: Puzzle5dTargetVolumePatch! }
+type Puzzle5dTargetVolumePatch { replacement: Puzzle5dTargetVolume }
+type Puzzle5dTargetVolume { id: String! origin: [Float!] orientation: [Float!] scale: [Float!] hidden: Boolean locked: Boolean }
 type Puzzle5dKindCompatibility { source: String target: String bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
 type Puzzle5dArtifact { schema: String! }
 type Puzzle5dMeta { _placeholder: Boolean }

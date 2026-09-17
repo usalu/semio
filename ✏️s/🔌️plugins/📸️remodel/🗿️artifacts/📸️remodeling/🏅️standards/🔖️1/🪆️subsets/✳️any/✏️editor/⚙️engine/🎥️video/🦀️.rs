@@ -32,7 +32,7 @@ use semio_s_artifact_stdio_avi::{
 use semio_s_artifact_stdio_mp4::{
     standards::isobmff::{
         subsets::any::io as mp4_engine,
-        subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
+        subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
     },
     STDIO_MP4_DOCUMENT_SCHEMA,
 };
@@ -134,14 +134,14 @@ fn fourcc_from_str(s: &str) -> FourCc {
 }
 
 /// 🏷️ Classifies a container-reported fourcc string into [`VideoCodec`] — shared by both container
-/// families (stdio's `Mp4Codec::Other::fourcc` and `AviStreamFormat::BitmapInfo::compression`).
+/// families (stdio's `Mp4CodecFormat::fourcc` sample entry and `AviStreamFormat::BitmapInfo::compression`).
 fn codec_from_fourcc_str(fourcc: &str) -> VideoCodec {
     match fourcc.to_ascii_lowercase().as_str() {
         "avc1" | "avc3" => VideoCodec::Avc,
         "hvc1" | "hev1" => VideoCodec::Hevc,
         "vp09" => VideoCodec::Vp9,
         "av01" => VideoCodec::Av1,
-        "mjpg" | "jpeg" => VideoCodec::Mjpeg,
+        "mjpg" | "jpeg" | "mjpa" => VideoCodec::Mjpeg,
         _ => VideoCodec::Unknown(fourcc_from_str(fourcc)),
     }
 }
@@ -187,12 +187,13 @@ pub struct AviInfo {
 /// its first (stdio only surfaces video-handler, `vide`, tracks) track into this crate's own
 /// `Mp4Info` shape: per-sample presentation timestamps recovered from `duration`/`cts_offset`
 /// (same DTS-accumulate-then-add-CTS-offset formula this file's pre-extraction `probe_mp4` used),
-/// and the real `avcC` SPS/PPS lists when the track is AVC.
+/// the codec classified from the track's sample entry, and the real `avcC` SPS/PPS lists when the
+/// track is AVC.
 fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
     let snapshot = mp4_engine::decode_mp4(bytes).map_err(VideoError::Container)?;
     let track = snapshot.tracks.first().ok_or(VideoError::NoVideoTrack)?;
-    let codec = VideoCodec::Avc;
-    let avc_config = Some((track.codec.sps.clone(), track.codec.pps.clone(), track.codec.nal_length_size));
+    let codec = codec_from_fourcc_str(track.codec.format.fourcc());
+    let avc_config = track.codec.format.is_avc().then(|| (track.codec.sps.clone(), track.codec.pps.clone(), track.codec.nal_length_size));
     let timescale = track.timescale.max(1);
     let mut dts_accum: u64 = 0;
     let mut samples = Vec::with_capacity(track.samples.len());
@@ -2902,14 +2903,15 @@ pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
 // #endregion 🔖️H264Enc
 
 // #region 🔖️Mux
-/// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4 via stdio's real
-/// `mp4::engine::encode_mp4`, fixture-synthesis only (no `avcC`, timescale fixed at milliseconds).
+/// ✍️ Muxes pre-encoded JPEG frames into a minimal Motion-JPEG (`jpeg` sample entry) MP4 via stdio's
+/// real `mp4::engine::encode_mp4`, fixture-synthesis only (no configuration record, timescale fixed
+/// at milliseconds).
 /// Dimensions come from decoding `frames[0]`.
 pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (width, height) = frames.first().and_then(|f| remodeling_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples: Vec<_> = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::default(), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
+    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::jpeg(Mp4CodecFormat::Jpeg), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
     let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] }, movie: Default::default(), tracks: vec![track] };
     mp4_engine::encode_mp4(&snapshot)
 }
@@ -2931,7 +2933,7 @@ pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fp
     let track = Mp4Track {
         track_id: 1,
         timescale: 1000,
-        codec: Mp4Codec { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4, extension: None },
+        codec: Mp4Codec::avc(vec![sps_nal.to_vec()], vec![pps_nal.to_vec()], 4, None),
         width,
         height,
         metadata: Default::default(),

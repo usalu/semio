@@ -1,11 +1,29 @@
 {
   "title": "Layout Plugin End To End",
   "emoji": "📏️",
-  "status": "open",
+  "status": "done",
   "description": "Get the 📏️layout plugin working end to end: native check + tests, guest wasm restage (activate-layout-react-dev), react dev serve on 6079 (?plugin=layout), proven boot (editor windows + panels) and at least one persisted document mutation via the shell.",
   "goal": "LAYOUT",
   "sessions": [
     "⚪88a59fa7-6895-41a0-ab94-127ac33b4a44"
   ],
-  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Pattern follows 26/09/16/FORMS-PLUGIN-END-TO-END (activate/serve scripts + console-dump/interact probes)."
+  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Pattern follows 26/09/16/FORMS-PLUGIN-END-TO-END (activate/serve scripts + console-dump/interact probes).",
+  "summary": "Layout react playground boots on 6079 and persists document mutations through the shell: playground app pin, args_bridge command_from_action, six BatchOnly verbs migrated to bounded retained tools (addFrame/addPage/patchPage/patchFrame/canvasPointerDown/canvasPointerMove) with publication contracts, artifact-lane one-item preparation factory, compile fixes for the peer's A8 panel migration, descriptor regenerated. Proof: boot + addFrame (+1) + undo + addPage (+1) + tree interactionSelect, zero faults.",
+  "files": [
+    "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👇️canvas-pointer-down/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🚦️preflight/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🔣️.json",
+    "✏️s/🔌️plugins/📏️layout/🛂️.descriptor.semio",
+    ".claude/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/📓️status.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/📜️activate-layout-react.sh",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/📜️serve-layout-react.sh",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🐍️layout-console-dump-probe.mjs",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🐍️layout-interact-probe.mjs"
+  ]
 }

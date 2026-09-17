@@ -22,7 +22,12 @@ async fn render_walks_element_children() {
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+
+/// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
+/// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
+/// 48-row viewport starved the sibling panel tests running beside it.
+const MEASURED_VIEWPORT_ROWS: u32 = 4;
 
 /// 🪟️ An everyday document: one element with far more than the 32 children this window used to refuse
 /// outright.
@@ -40,7 +45,7 @@ fn oversized_document(children: usize) -> XmlSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &XmlSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
     let node = render(document, &TreeWindows::for_body(&view, BODY_KEY)).expect("render the xml tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the xml tree")
 }
@@ -52,7 +57,7 @@ fn oversized_element_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":300"), "the root element stamps its full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("child-").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+    assert!(json.matches("child-").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
 }
 
 /// 🪟️ Law (b): an element the host closed stamps its total and materialises nothing.

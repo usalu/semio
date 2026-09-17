@@ -5,6 +5,7 @@ import type {
   Puzzle2dKindCatalogs,
   Puzzle2dNode,
   Puzzle2dNodeAnchor,
+  Puzzle2dTargetRegion,
 } from "../📸️snapshot/🟦️.ts";
 
 /** 🌱 `create-node` payload. */
@@ -188,6 +189,49 @@ export interface ReplaceKindCatalogs {
   newCatalogs: Puzzle2dKindCatalogs | null;
 }
 
+/** 🌍 `create-target-region` payload. */
+export interface CreateTargetRegion {
+  targetRegion: Puzzle2dTargetRegion;
+  index: number | null;
+}
+
+/** 🪦 `delete-target-region` payload. */
+export interface DeleteTargetRegion {
+  id: string;
+}
+
+/** 🚀 `move-target-region` payload. */
+export interface MoveTargetRegion {
+  id: string;
+  newX: number;
+  newY: number;
+}
+
+/** 📐 `resize-target-region` payload. */
+export interface ResizeTargetRegion {
+  id: string;
+  newWidth: number;
+  newHeight: number;
+}
+
+/** 🖋️ `edit-target-region-label` payload. */
+export interface EditTargetRegionLabel {
+  id: string;
+  newLabel: string | null;
+}
+
+/** 🙈 `change-target-region-hidden` payload. */
+export interface ChangeTargetRegionHidden {
+  id: string;
+  newHidden: boolean;
+}
+
+/** 🔏 `change-target-region-locked` payload. */
+export interface ChangeTargetRegionLocked {
+  id: string;
+  newLocked: boolean;
+}
+
 export type Puzzle2dMutation =
   | ({ mutation: "createNode" } & CreateNode)
   | ({ mutation: "deleteNode" } & DeleteNode)
@@ -214,4 +258,11 @@ export type Puzzle2dMutation =
   | ({ mutation: "changeManifestId" } & ChangeManifestId)
   | ({ mutation: "connectKindCompatibility" } & ConnectKindCompatibility)
   | ({ mutation: "disconnectKindCompatibility" } & DisconnectKindCompatibility)
-  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs);
+  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs)
+  | ({ mutation: "createTargetRegion" } & CreateTargetRegion)
+  | ({ mutation: "deleteTargetRegion" } & DeleteTargetRegion)
+  | ({ mutation: "moveTargetRegion" } & MoveTargetRegion)
+  | ({ mutation: "resizeTargetRegion" } & ResizeTargetRegion)
+  | ({ mutation: "editTargetRegionLabel" } & EditTargetRegionLabel)
+  | ({ mutation: "changeTargetRegionHidden" } & ChangeTargetRegionHidden)
+  | ({ mutation: "changeTargetRegionLocked" } & ChangeTargetRegionLocked);

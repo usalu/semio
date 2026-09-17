@@ -34,7 +34,7 @@ fn scaled_scene(kinds: usize) -> Puzzle2dScene {
     }
 }
 
-fn window_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework_ui_contract::TreeWindow> {
+fn window_of(node: &BuiltNode) -> Option<semio_framework_ui_contract::TreeWindow> {
     match &node.component {
         semio_framework_ui_contract::Component::TreeSection(props) => props.window,
         semio_framework_ui_contract::Component::TreeItem(props) => props.window,
@@ -42,7 +42,13 @@ fn window_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework
     }
 }
 
-fn child_of<'a>(node: &'a semio_framework_plugin::BuiltNode, key: &str) -> &'a semio_framework_plugin::BuiltNode {
+/// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
+/// not `serde_json` on the root — is what walks and retires them.
+fn body_json(tree: BuiltNode) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+}
+
+fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
 
@@ -56,7 +62,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_
 fn the_catalogue_stamps_every_section_and_never_pages() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
-    let windows = semio_framework_plugin::TreeWindows::unhosted();
+    let windows = TreeWindows::unhosted();
     let tree = render(&scene, labels(), &windows).expect("an oversized catalogue must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);
     assert_eq!(window_of(nodes).expect("the nodes section must stamp its window").total as usize, SCALE_KINDS);
@@ -66,10 +72,9 @@ fn the_catalogue_stamps_every_section_and_never_pages() {
         let container = child_of(&tree, section);
         assert_eq!(container.children.len(), 1, "an empty section shows exactly its placeholder row");
     }
-    let body = serde_json::to_string(&tree).expect("serialize the catalogue body");
+    let body = body_json(tree);
     assert!(!body.contains(".more"), "a windowed catalogue carries no continuation key");
     assert!(!body.contains("\"+"), "a windowed catalogue carries no `+N` label");
-    drop(tree);
     drain_retired_ui_owners();
 }
 
@@ -81,7 +86,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_bindings_intact() {
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (40u32, 9u32);
     let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(NODES_SECTION, Some(true), offset, rows)], ..Default::default() };
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_CATALOGUE);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_CATALOGUE);
     let tree = render(&scene, labels(), &windows).expect("a windowed catalogue must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);
     assert_eq!(window_of(nodes).expect("stamped window").offset, offset);

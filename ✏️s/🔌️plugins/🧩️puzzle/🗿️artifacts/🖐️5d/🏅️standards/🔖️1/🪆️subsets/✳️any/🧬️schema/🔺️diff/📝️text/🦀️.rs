@@ -1,8 +1,8 @@
 //! 🔺️ Puzzle 5d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta, Puzzle5dTargetVolumesDelta};
 use crate::standards::v1::subsets::any::schema::Puzzle5dArtifact;
-use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot, Puzzle5dTargetVolume};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -76,6 +76,11 @@ pub fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFas
     apply_identified_delta(fasteners, &delta.removed, &delta.added, &patched, &delta.reordered, |f| &f.id)
 }
 
+pub fn apply_target_volumes_delta(target_volumes: &[Puzzle5dTargetVolume], delta: &Puzzle5dTargetVolumesDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dTargetVolume>> {
+    let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
+    apply_identified_delta(target_volumes, &delta.removed, &delta.added, &patched, &delta.reordered, |v| &v.id)
+}
+
 impl Puzzle5dDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
@@ -110,6 +115,9 @@ impl Puzzle5dDiff {
             }
             if let Some(delta) = &self.fasteners {
                 next.fasteners = apply_fasteners_delta(&next.fasteners, delta).map_err(|error| error.under(["fasteners"]))?;
+            }
+            if let Some(delta) = &self.target_volumes {
+                next.target_volumes = apply_target_volumes_delta(&next.target_volumes, delta).map_err(|error| error.under(["targetVolumes"]))?;
             }
             next
         })
@@ -149,6 +157,9 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
             }
             if let Some(delta) = &self.fasteners {
                 next.fasteners = apply_fasteners_delta(&next.fasteners, delta).map_err(|error| error.under(["fasteners"]))?;
+            }
+            if let Some(delta) = &self.target_volumes {
+                next.target_volumes = apply_target_volumes_delta(&next.target_volumes, delta).map_err(|error| error.under(["targetVolumes"]))?;
             }
             next
         })
@@ -197,6 +208,7 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
         }
         merge_delta!(parts);
         merge_delta!(fasteners);
+        merge_delta!(target_volumes);
     }
 }
 //#endregion 🔖️Apply

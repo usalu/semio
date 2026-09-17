@@ -10,16 +10,18 @@ use crate::op::SourcingMutation;
 use crate::{CurationSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATION_SCHEMA};
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit;
+use crate::editor::sourcing::modes::edit::windows::grid::config::{self as grid_config, GridWindowConfigMutation};
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
 use crate::editor::sourcing::presence::{self, SourcingCurationPresence, SourcingCurationPresenceMutation};
 use crate::editor::sourcing::terminology::sourcing_curation_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, WindowMeasure,
 };
+use std::collections::HashMap;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use store::ArtifactPack;
@@ -70,6 +72,11 @@ pub const EMPTY_EXAMPLE_ID: &str = "";
 /// builds its `on_change`/drop actions with.
 pub fn sourcing_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
+}
+
+/// 🪟️ Bridges semantic app actions into the retained window-measure transport.
+pub fn sourcing_window_action(action: &str, args: Option<protocol::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🎯️ The table-scene action descriptor a stepper, row button or drop target dispatches to this app.
@@ -171,6 +178,7 @@ semio_framework_plugin::app_commands! {
         "setFilterMinAvailability" as "filter-min-availability" => set_filter_min_availability::SetFilterMinAvailability,
         "sortTable" as "sort-table" => sort_table::SortTable,
         "setContributions" as "contributions" => set_contributions::SetContributions,
+        "setGridInstanceDisplay" as "grid-instance-display" => set_grid_instance_display::SetGridInstanceDisplay,
     }
 }
 
@@ -179,7 +187,7 @@ semio_framework_plugin::app_commands! {
 use crate::editor::sourcing::commands::set_contributions;
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool};
 use crate::editor::sourcing::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
-use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
+use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, set_grid_instance_display, sort_table};
 
 /// 🎯️ Host action id + JSON args → the closed `SourcingCurationCommand` vocabulary — the production
 /// bridge between the manifest's *declared* action surface (`🔖️Manifest`, camelCase arg names) and
@@ -231,6 +239,7 @@ fn sourcing_curation_command_from_action(action: &str, args: Option<&protocol::D
         "setFilterMinAvailability" => SourcingCurationCommand::SetFilterMinAvailability(set_filter_min_availability::SetFilterMinAvailability { delta: f64_field("delta"), value: f64_field("value") }),
         "sortTable" => SourcingCurationCommand::SortTable(sort_table::SortTable { column_id: str_field("columnId").unwrap_or_default(), direction: str_field("direction").unwrap_or_default() }),
         "setContributions" => SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: json_field("json") }),
+        "setGridInstanceDisplay" => SourcingCurationCommand::SetGridInstanceDisplay(set_grid_instance_display::SetGridInstanceDisplay { value: str_field("value").or_else(|| text_of("value")).unwrap_or_default() }),
         other => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not a sourcing curation command"))),
     })
 }
@@ -264,6 +273,7 @@ const SOURCING_CURATION_BOUNDED_TOOL_IDS: &[&str] = &[
     "setFilterMinAvailability",
     "sortTable",
     "setContributions",
+    "setGridInstanceDisplay",
 ];
 const SOURCING_CURATION_RETAINED_SCHEMA: &str = "sourcing.curation/v1.tool-command.v1";
 const SOURCING_CURATION_RETAINED_RAW_BYTES: usize = 8_192;
@@ -306,9 +316,12 @@ fn sourcing_curation_retained_reduce(
     operation: &AppOperationContext,
 ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
     if !SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("sourcing-curation-retained-route-mismatch")); }
+    let window = _context.and_then(|context| context.window_config.as_ref());
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let cfg = ConfigView { snapshot: config, window: None };
-    command.dispatch(&doc, &cfg)
+    let cfg = ConfigView { snapshot: config, window };
+    let emit = command.dispatch(&doc, &cfg)?;
+    let view = _context.and_then(|context| context.view_state.as_ref());
+    sourcing_curation_finish_emit(command, emit, window, view)
 }
 
 struct SourcingCurationBoundedCommandJobFactory {
@@ -382,7 +395,30 @@ impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "setFilterMinAvailability", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "sortTable", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setGridInstanceDisplay", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ];
+}
+
+fn sourcing_grid_window_mutation(command: &SourcingCurationCommand, config: &grid_config::GridWindowConfig) -> Option<GridWindowConfigMutation> {
+    match command {
+        SourcingCurationCommand::SetGridInstanceDisplay(payload) if !payload.value.is_empty() => {
+            Some(GridWindowConfigMutation::Snapshot { config: grid_config::next_config(config, &payload.value) })
+        }
+        _ => None,
+    }
+}
+
+fn sourcing_curation_finish_emit(
+    command: &SourcingCurationCommand,
+    mut emit: Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>,
+    window: Option<&semio_framework_plugin::WindowConfigSnapshot>,
+    view_state: Option<&semio_framework_plugin::ViewModel>,
+) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
+    let grid_cfg = grid_config::from_snapshot(window);
+    if let (Some(view), Some(mutation)) = (view_state, sourcing_grid_window_mutation(command, &grid_cfg)) {
+        emit.window_config_mutations.push(grid_config::addressed(view, mutation)?);
+    }
+    Ok(emit)
 }
 
 //#endregion 🧵️RetainedCommands
@@ -954,7 +990,12 @@ impl ArtifactEditor for SourcingCurationApp {
             "setFilterMinAvailability" => sourcing_curation_bounded_contract(),
             "sortTable" => sourcing_curation_bounded_contract(),
             "setContributions" => sourcing_curation_bounded_contract(),
+            "setGridInstanceDisplay" => sourcing_curation_bounded_contract(),
         }
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        grid_config::register(registry)
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -1060,22 +1101,30 @@ impl ArtifactEditor for SourcingCurationApp {
         command: &SourcingCurationCommand,
         doc: &ArtifactView<'_, CurationSnapshot>,
         cfg: &ConfigView<'_, SourcingCurationConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+        let emit = command.dispatch(doc, cfg)?;
+        sourcing_curation_finish_emit(command, emit, cfg.window, view_state)
+    }
+
+    fn window_measures(_doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let grid_cfg = grid_config::current(cfg);
+        HashMap::from([(grid::SOURCING_CURATION_WINDOW_GRID.into(), grid::window_measures(&grid_cfg, sourcing_curation_labels(view_state)))])
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sourcing_curation_labels(view_state);
+        let grid_window = grid_config::current(cfg);
         match body_key {
             pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
             curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
             preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_framework_plugin::built_to_component_tree),
-            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config).map(semio_framework_plugin::built_to_component_tree),
+            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data("")),
         }
     }
@@ -1229,6 +1278,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_with(hidden_view_action("setFilterTypology", LocalizedLabel::native("Set Filter Typology", "Filtertypologie festlegen")))
             .action_with(hidden_view_action("setFilterMinAvailability", LocalizedLabel::native("Set Filter Min Availability", "Mindestverfügbarkeit festlegen")))
             .action_with(hidden_view_action("sortTable", LocalizedLabel::native("Sort Table", "Tabelle sortieren")))
+            .view_action("setGridInstanceDisplay", LocalizedLabel::native("Set Grid Instance Display", "Raster-Instanzdarstellung festlegen"))
             // 📝️ Staged argument form for the panel-visible example switch.
             .action_args(
                 "setActiveExample",
@@ -1256,6 +1306,19 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_interactive_job("setFilterTypology", InteractiveJobClassification::Migrated)
             .action_interactive_job("setFilterMinAvailability", InteractiveJobClassification::Migrated)
             .action_interactive_job("sortTable", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridInstanceDisplay", InteractiveJobClassification::Migrated)
+            .action_args(
+                "setGridInstanceDisplay",
+                vec![ActionArgDef::select(
+                    "value",
+                    LocalizedLabel::native("Instance display", "Instanzdarstellung"),
+                    vec![
+                        ActionArgOption::new("line-behind", LocalizedLabel::native("Line behind grid", "Linie hinter Raster")),
+                        ActionArgOption::new("representative", LocalizedLabel::native("Representative only", "Nur Vertreter")),
+                        ActionArgOption::new("representative-with-count", LocalizedLabel::native("Representative and count", "Vertreter und Anzahl")),
+                    ],
+                )],
+            )
             .build_definition()
 }
 //#endregion 🔖️Manifest

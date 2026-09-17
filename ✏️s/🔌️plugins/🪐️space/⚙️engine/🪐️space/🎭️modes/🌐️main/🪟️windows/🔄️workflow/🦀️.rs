@@ -4,7 +4,8 @@
 use crate::demo_space_projection;
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
-use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, OsWorkflowCamera, Viewport2d, WorkflowSnapshot};
+use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene};
 

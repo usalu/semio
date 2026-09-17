@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region",
+  "semanticKind": "delete-target-region",
+  "displayName": "Delete Target Region",
+  "emoji": "🪦",
+  "aggregateVariant": "DeleteTargetRegion",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "delete-target-region",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -2108,3 +2108,31 @@ async fn cad_interaction_scope_keeps_hover_to_the_world_bodies() {
     assert_eq!(cad_interaction_scope(InteractionVerb::Hover, &[]), None);
 }
 //#endregion 🔖️InteractionScope
+
+//#region 🔖️RenderCostProbe
+/// 🩺️ Where a warm window render spends its time (a probe, printed with `--nocapture`; the only
+/// assertion is that a warm render is cheaper than a cold one).
+#[semio_framework_async_macros::async_test]
+async fn world_scene_render_cost_probe() {
+    let view = forest_view();
+    let options = CadDislocateOptions::default();
+    let cold = std::time::Instant::now();
+    let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options).expect("scene");
+    let cold = cold.elapsed();
+    let warm = std::time::Instant::now();
+    for _ in 0..10 {
+        let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options).expect("scene");
+    }
+    let warm = warm.elapsed() / 10;
+    let scene = crate::cad_pane_local_scene(&view.document, CadPaneId::Building).expect("scene");
+    let (objects, geometry) = edit::cad_pane_working_objects(&scene, CadPaneId::Building);
+    let lane = std::time::Instant::now();
+    let meshes = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), objects, geometry);
+    let lane = lane.elapsed();
+    let carrier = std::time::Instant::now();
+    let _ = semio_framework_plugin::paged_text_carrier("meshes", &meshes);
+    let carrier = carrier.elapsed();
+    eprintln!("[DEBUG] world scene render: cold {cold:?} warm {warm:?} (meshes lane {} bytes: cached lookup {lane:?}, paged carrier {carrier:?})", meshes.len());
+    assert!(warm < cold);
+}
+//#endregion 🔖️RenderCostProbe

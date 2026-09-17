@@ -1273,6 +1273,16 @@ export type ToolRunTraceKind = "instance3d" | "placement2d" | "entity" | "none";
 export type ToolRunVerdict = "testing" | "success" | "warning" | "danger";"####,
         },
         SchemaMetadata {
+            name: "TreeWindowRequest",
+            version: 1,
+            typescript: r####"/**
+ * 🪟️ One tree container's host-known state: whether the user opened or closed it (absent = the
+ * author's own default still stands) and the row window on screen, overscan included. `bodyKey`
+ * names the panel body the container lives in, `nodeKey` the authored container key within it.
+ */
+export type TreeWindowRequest = { bodyKey: string, nodeKey: string, open?: boolean, offset: number, rows: number, };"####,
+        },
+        SchemaMetadata {
             name: "TutorialArtifactEvent",
             version: 1,
             typescript: r####"/**
@@ -1850,7 +1860,19 @@ windowId?: string,
  * 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
  * `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
  */
-windowInstances: Array<ViewWindowInstance>, };"####,
+windowInstances: Array<ViewWindowInstance>,
+/**
+ * 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+ * source of truth for which containers are open and which rows are on screen. A guest reads them
+ * per body and materialises exactly the named windows; it keeps no expansion state of its own,
+ * which is what lets an open container survive a refresh.
+ */
+treeWindows: Array<TreeWindowRequest>,
+/**
+ * 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+ * document order over containers the host has not yet seen.
+ */
+treeViewportRows?: number, };"####,
         },
         SchemaMetadata {
             name: "ViewWindowInstance",

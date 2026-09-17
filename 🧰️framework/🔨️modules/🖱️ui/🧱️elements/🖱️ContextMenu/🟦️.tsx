@@ -368,16 +368,23 @@ export function contextMenuPathKey(path: readonly number[]): string {
   return path.join(".");
 }
 
-function contextMenuFusionOffsetsEqual(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): boolean {
+function contextMenuFusionOffsetsEqual(a: ReadonlyMap<string, ContextMenuFusionPlacement>, b: ReadonlyMap<string, ContextMenuFusionPlacement>): boolean {
   if (a.size !== b.size) {
     return false;
   }
   for (const [key, value] of a) {
-    if (b.get(key) !== value) {
+    const other = b.get(key);
+    if (!other || other.left !== value.left || other.top !== value.top) {
       return false;
     }
   }
   return true;
+}
+
+/** @emoji 📐️ Absolute placement of a fused submenu column inside {@link ContextMenuController}'s fusion body. */
+export interface ContextMenuFusionPlacement {
+  readonly left: number;
+  readonly top: number;
 }
 
 function contextMenuPathsEqual(a: readonly number[], b: readonly number[]): boolean {
@@ -624,7 +631,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const fusionBodyRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const [fusionOffsets, setFusionOffsets] = reactHostPort.useState<ReadonlyMap<string, number>>(() => new Map());
+  const [fusionOffsets, setFusionOffsets] = reactHostPort.useState<ReadonlyMap<string, ContextMenuFusionPlacement>>(() => new Map());
   const itemsRef = reactHostPort.useRef(items);
   itemsRef.current = items;
   const [activePath, setActivePath] = reactHostPort.useState<number[]>([]);
@@ -803,19 +810,67 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     const body = fusionBodyRef.current;
     if (!open || !body || fusionPanels.length === 0) {
       setFusionOffsets((previous) => (previous.size === 0 ? previous : new Map()));
+      if (body) {
+        body.style.removeProperty("padding-right");
+        body.style.removeProperty("padding-bottom");
+      }
       return;
     }
-    const bodyTop = body.getBoundingClientRect().top;
-    const next = new Map<string, number>();
-    for (const panel of fusionPanels) {
-      const anchor = rowNodesRef.current.get(contextMenuPathKey(panel.parentPath));
+    const primary = body.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
+    if (!primary) {
+      return;
+    }
+    const bodyRect = body.getBoundingClientRect();
+    const primaryRect = primary.getBoundingClientRect();
+    const next = new Map<string, ContextMenuFusionPlacement>();
+    for (let index = 0; index < fusionPanels.length; index += 1) {
+      const panel = fusionPanels[index]!;
+      const panelKey = contextMenuPathKey(panel.parentPath);
+      const anchor = rowNodesRef.current.get(panelKey);
       if (!anchor) {
         continue;
       }
-      next.set(contextMenuPathKey(panel.parentPath), anchor.getBoundingClientRect().top - bodyTop);
+      const anchorRect = anchor.getBoundingClientRect();
+      let attachRight = primaryRect.right;
+      if (index > 0) {
+        const previousKey = contextMenuPathKey(fusionPanels[index - 1]!.parentPath);
+        const previousWing = body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${previousKey}"]`);
+        if (previousWing) {
+          attachRight = previousWing.getBoundingClientRect().right;
+        }
+      }
+      next.set(panelKey, { left: attachRight - bodyRect.left, top: anchorRect.top - bodyRect.top });
     }
     setFusionOffsets((previous) => (contextMenuFusionOffsetsEqual(previous, next) ? previous : next));
   }, [fusionPanels, open]);
+  reactHostPort.useLayoutEffect(() => {
+    const body = fusionBodyRef.current;
+    if (!open || !body || fusionPanels.length === 0) {
+      return;
+    }
+    const primary = body.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
+    if (!primary) {
+      return;
+    }
+    const primaryRect = primary.getBoundingClientRect();
+    let maxRight = primaryRect.right;
+    let maxBottom = primaryRect.bottom;
+    for (const panel of fusionPanels) {
+      const wing = body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${contextMenuPathKey(panel.parentPath)}"]`);
+      if (!wing) {
+        continue;
+      }
+      const wingRect = wing.getBoundingClientRect();
+      maxRight = Math.max(maxRight, wingRect.right);
+      maxBottom = Math.max(maxBottom, wingRect.bottom);
+    }
+    body.style.paddingRight = `${Math.max(0, maxRight - primaryRect.right)}px`;
+    body.style.paddingBottom = `${Math.max(0, maxBottom - primaryRect.bottom)}px`;
+    const chrome = chromeRef.current;
+    if (chrome) {
+      chrome.setAttribute("data-silhouette-remeasure", String(performance.now()));
+    }
+  }, [fusionOffsets, fusionPanels, open]);
   if (!items.length) {
     return null;
   }
@@ -837,9 +892,9 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         onContextMenu={(event) => event.preventDefault()}
         ref={fusionBodyRef}
-        className="flex flex-row items-start gap-0"
+        className="relative w-fit max-w-none"
       >
-        <div aria-label={title} ref={menuRef} role="menu" tabIndex={-1}>
+        <div aria-label={title} data-slot="context-menu-fusion-primary" ref={menuRef} role="menu" tabIndex={-1} className="w-max shrink-0">
           {renderFixedContextMenuItems(items, [], renderOptions)}
         </div>
         {fusionPanels.map((panel) => {
@@ -851,8 +906,8 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
               data-context-menu-submenu-of={panelKey}
               data-slot="context-menu-submenu"
               role="menu"
-              className="flex min-w-0 flex-col"
-              style={{ marginTop: fusionOffsets.get(panelKey) ?? 0 }}
+              className="absolute top-0 flex w-max min-w-0 flex-col"
+              style={{ left: fusionOffsets.get(panelKey)?.left ?? 0, top: fusionOffsets.get(panelKey)?.top ?? 0 }}
             >
               {renderFixedContextMenuItems(panel.items, panel.parentPath, renderOptions)}
             </div>

@@ -3,7 +3,7 @@
 use crate::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
 use crate::editor::block5d::ui_label;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasChildren};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 // 🚧️ SDK GAP: the block crate has no direct `semio-framework-ui-contract` dependency (unlike puzzle/
 // lowpoly), so the contract's node builders are reached through the plugin SDK's own re-export.
@@ -41,14 +41,16 @@ fn board_error(stage: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", format!("block5d board admission failed at {stage}"))
 }
 
-fn line(value: &str, stage: &'static str) -> UiAssemblyResult<BuiltNode> {
-    ui::text(ui_label(value)?).try_build().map_err(|_| board_error(stage))
+/// 🪧️ One summary line. The id is NOT decoration: two sibling nodes without one project to the same
+/// key and the whole body is refused with `duplicate-key` before it reaches a renderer.
+fn line(id: &str, value: &str, stage: &'static str) -> UiAssemblyResult<BuiltNode> {
+    ui::text(ui_label(value)?).try_id(id).map_err(|_| board_error(stage))?.try_build().map_err(|_| board_error(stage))
 }
 
 pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiAssemblyResult<BuiltNode> {
-    let summary = line(&format!("{}: {}", labels.summary.as_str(), if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label }), "summary")?;
-    let grips = line(&format!("2d grips: {}", definition.grips.len()), "grips")?;
-    ui::column().try_children([summary, grips]).map_err(|_| board_error("children"))?.try_build().map_err(|_| board_error("build"))
+    let summary = line("block5d-play-board.summary", &format!("{}: {}", labels.summary.as_str(), if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label }), "summary")?;
+    let grips = line("block5d-play-board.grips", &format!("2d grips: {}", definition.grips.len()), "grips")?;
+    ui::column().try_id("block5d-play-board.body").map_err(|_| board_error("id"))?.try_children([summary, grips]).map_err(|_| board_error("children"))?.try_build().map_err(|_| board_error("build"))
 }
 //#endregion 🔖️Render
 

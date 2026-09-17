@@ -12,7 +12,7 @@
 use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{ui_value_list, ui_value_map, ui_value_text, S_PLAY_INSPECTOR_TAB_ID};
-use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
+use semio_framework_os::{os_app_registration, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
     tree_item, tree_item_desc, ui_inspector_all_equal, ActionId, Buildable, HasBase, HasChildren, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
@@ -93,6 +93,15 @@ enum InspectorParameterRow<'a> {
     Bound { field_path: &'a str, value: String },
 }
 
+fn workflow_parameter_display_value(parameter: &WorkflowParameter) -> String {
+    match parameter {
+        WorkflowParameter::Numeric { value, .. } => value.to_string(),
+        WorkflowParameter::Categorical { value, .. } => value.clone(),
+        WorkflowParameter::Toggle { value, .. } => value.to_string(),
+        WorkflowParameter::Text { value, .. } => value.clone(),
+    }
+}
+
 /// 🪟️ The flat row list the parameter-binding section windows: one `Binding` row per declared field,
 /// each followed by a `Bound` row when that field currently resolves to a workflow parameter. Cheap to
 /// build whole (string lookups only) — the expensive per-row `select` assembly happens only for the
@@ -103,7 +112,7 @@ fn inspector_parameter_rows<'a>(projection: &'a WorkflowSnapshot, node: &Workflo
         rows.push(InspectorParameterRow::Binding(field_spec));
         let Some(binding) = projection.parameter_bindings.iter().find(|entry| entry.node_id == node.id && entry.field_path == field_spec.field_path) else { continue };
         let Some(parameter) = projection.parameters.iter().find(|entry| entity_id(entry) == binding.parameter_id) else { continue };
-        rows.push(InspectorParameterRow::Bound { field_path: field_spec.field_path.as_str(), value: os_parameter_value(&crate::engine::space::engine::resolve_future(workflow_parameter_to_os(parameter))) });
+        rows.push(InspectorParameterRow::Bound { field_path: field_spec.field_path.as_str(), value: workflow_parameter_display_value(parameter) });
     }
     rows
 }

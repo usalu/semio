@@ -91,7 +91,6 @@ pub fn reset_results_cache() {
 
 fn note_solve() {
     RESULTS_SOLVES.with(|count| count.set(count.get().saturating_add(1)));
-    eprintln!("[DEBUG] fem3d results solve #{}", results_solve_count());
 }
 
 fn entry_for(cache: &mut Option<Fem3dResultsCache>, key: ResultsCacheKey) -> &mut Fem3dResultsCache {

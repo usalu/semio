@@ -1,11 +1,12 @@
 use super::*;
-use crate::mint_and_stash_mesh;
+use crate::standards::v1::subsets::any::io::seed_remodeling_mesh;
 use protocol::Inference;
 use semio_framework::MeshData;
 
 fn triangle_snapshot() -> RemodelingSnapshot {
+    // 🧱️ Durable content, the only mesh source `bounds` resolves in production (see its doc comment).
     let mut snapshot = RemodelingSnapshot::default();
-    snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
+    seed_remodeling_mesh(&mut snapshot, &MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() }).expect("a single triangle is inside the bounded envelope");
     snapshot
 }
 

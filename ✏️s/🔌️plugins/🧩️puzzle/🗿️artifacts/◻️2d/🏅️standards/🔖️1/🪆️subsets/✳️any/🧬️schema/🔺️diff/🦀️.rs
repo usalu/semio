@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle2d diff schema — sparse field delta over the artifact.
 
 use crate::standards::v1::subsets::any::schema::Puzzle2dArtifact;
-use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode};
+use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTargetRegion};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -20,6 +20,8 @@ pub struct Puzzle2dDiff {
     pub nodes: Option<Puzzle2dNodesDelta>,
     #[state(artifact)]
     pub edges: Option<Puzzle2dEdgesDelta>,
+    #[state(artifact)]
+    pub target_regions: Option<Puzzle2dTargetRegionsDelta>,
     #[state(artifact)]
     pub meta: Option<Puzzle2dMeta>,
 }
@@ -81,6 +83,31 @@ pub struct Puzzle2dEdgePatchEntry {
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle2dEdgePatch {
     pub replacement: Option<Puzzle2dEdge>,
+}
+
+/// 🧩 Identified-collection delta for `targetRegions`.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle2dTargetRegionsDelta {
+    pub added: Vec<Puzzle2dTargetRegion>,
+    pub removed: Vec<String>,
+    pub patched: Vec<Puzzle2dTargetRegionPatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `Puzzle2dTargetRegion` entry.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle2dTargetRegionPatchEntry {
+    pub id: String,
+    pub patch: Puzzle2dTargetRegionPatch,
+}
+
+/// 🩹 Sparse patch over `Puzzle2dTargetRegion` — whole-item replacement via `replacement`.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle2dTargetRegionPatch {
+    pub replacement: Option<Puzzle2dTargetRegion>,
 }
 
 //#endregion 🔖️DeltaHelpers

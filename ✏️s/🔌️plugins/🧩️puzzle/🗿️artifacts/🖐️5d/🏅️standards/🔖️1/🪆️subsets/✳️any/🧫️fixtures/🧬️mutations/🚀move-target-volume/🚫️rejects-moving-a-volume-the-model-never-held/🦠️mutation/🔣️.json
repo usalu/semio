@@ -1,0 +1,9 @@
+{
+  "mutation": "moveTargetVolume",
+  "id": "volume-the-model-never-held",
+  "newOrigin": [
+    1.0,
+    2.0,
+    3.0
+  ]
+}

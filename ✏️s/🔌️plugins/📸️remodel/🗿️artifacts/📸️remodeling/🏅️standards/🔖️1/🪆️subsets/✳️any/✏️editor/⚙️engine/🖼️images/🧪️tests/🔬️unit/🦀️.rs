@@ -456,7 +456,7 @@ fn production_png_decoder_worker_steps_are_scanline_bounded() {
         loop {
             let started = std::time::Instant::now();
             let progress = decoder.advance();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded PNG worker step exceeded 8 ms");
+            { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded PNG worker step exceeded 8 ms");
             match progress {
                 BoundedDecodeProgress::Working => {}
                 BoundedDecodeProgress::Complete(image) => break image,
@@ -496,7 +496,7 @@ fn maximum_admitted_png_scanline_stays_below_the_worker_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let progress = decoder.advance();
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum PNG scanline worker step exceeded 8 ms");
+        { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum PNG scanline worker step exceeded 8 ms");
         match progress {
             BoundedDecodeProgress::Working => {}
             BoundedDecodeProgress::Complete(image) => {
@@ -513,7 +513,7 @@ fn maximum_admitted_png_scanline_stays_below_the_worker_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let progress = decoder.advance();
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "oversized PNG admission step exceeded 8 ms");
+        { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "oversized PNG admission step exceeded 8 ms");
         match progress {
             BoundedDecodeProgress::Working => {}
             BoundedDecodeProgress::Failed(_) => break,
@@ -529,7 +529,7 @@ fn oversized_jpeg_is_rejected_without_an_unbounded_codec_step() {
     loop {
         let started = std::time::Instant::now();
         let progress = decoder.advance();
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded JPEG admission step exceeded 8 ms");
+        { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded JPEG admission step exceeded 8 ms");
         match progress {
             BoundedDecodeProgress::Working => {}
             BoundedDecodeProgress::Failed(_) => break,
@@ -594,7 +594,7 @@ fn accepted_worst_envelope_jpeg_and_malformed_entropy_steps_are_timed() {
         loop {
             let started = std::time::Instant::now();
             let progress = decoder.advance();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "accepted JPEG worker step exceeded 8 ms in this build profile");
+            { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "accepted JPEG worker step exceeded 8 ms in this build profile");
             match progress {
                 BoundedDecodeProgress::Working => {}
                 BoundedDecodeProgress::Complete(image) => {
@@ -615,7 +615,7 @@ fn accepted_worst_envelope_jpeg_and_malformed_entropy_steps_are_timed() {
     loop {
         let started = std::time::Instant::now();
         let progress = decoder.advance();
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "malformed JPEG worker step exceeded 8 ms in this build profile");
+        { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "malformed JPEG worker step exceeded 8 ms in this build profile");
         match progress {
             BoundedDecodeProgress::Working => {}
             BoundedDecodeProgress::Failed(_) => break,

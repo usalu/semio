@@ -11,9 +11,9 @@ fn imperative_semantic_panels_match_the_json_oracle() {
     let document = ProcedureSnapshot::default();
     for row in vectors["cases"].as_array().expect("locales") {
         let labels = semio_framework_plugin::resolve_labels::<ImperativeLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() });
-        let tree = project(crate::editor::procedure::panels::document::render(&document, labels).expect("document"));
+        let tree = project(crate::editor::procedure::panels::document::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["document"]);
-        let catalogue = crate::editor::procedure::panels::catalogue::render(labels).expect("catalogue");
+        let catalogue = crate::editor::procedure::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue");
         let actions = catalogue.children[0].children.iter().map(|node| serde_json::to_value(&node.bindings[0].args).expect("independent action oracle")).collect::<Vec<_>>();
         let tree = project(catalogue);
         assert_eq!(tree["children"][0]["component"]["label"], row["catalogue"]);

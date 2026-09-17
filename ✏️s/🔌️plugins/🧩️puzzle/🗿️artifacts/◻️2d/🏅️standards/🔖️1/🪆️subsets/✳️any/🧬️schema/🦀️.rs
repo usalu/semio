@@ -18,6 +18,8 @@ pub struct Puzzle2dArtifact {
     #[state(artifact)]
     pub edges: Vec<Puzzle2dEdge>,
     #[state(artifact)]
+    pub target_regions: Vec<Puzzle2dTargetRegion>,
+    #[state(artifact)]
     pub meta: Puzzle2dMeta,
 }
 //#endregion 🔖️Artifact
@@ -32,12 +34,12 @@ impl Default for Puzzle2dArtifact {
 impl Puzzle2dArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> Puzzle2dSnapshot {
-        Puzzle2dSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), nodes: self.nodes.clone(), edges: self.edges.clone(), meta: self.meta.clone() }
+        Puzzle2dSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), nodes: self.nodes.clone(), edges: self.edges.clone(), target_regions: self.target_regions.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Puzzle2dSnapshot) -> Self {
-        Self { schema: snapshot.schema, camera: snapshot.camera, nodes: snapshot.nodes, edges: snapshot.edges, meta: snapshot.meta }
+        Self { schema: snapshot.schema, camera: snapshot.camera, nodes: snapshot.nodes, edges: snapshot.edges, target_regions: snapshot.target_regions, meta: snapshot.meta }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -46,6 +48,7 @@ impl Puzzle2dArtifact {
         self.camera = snapshot.camera;
         self.nodes = snapshot.nodes;
         self.edges = snapshot.edges;
+        self.target_regions = snapshot.target_regions;
         self.meta = snapshot.meta;
     }
 }
@@ -211,4 +214,5 @@ pub use crate::Puzzle2dCamera;
 pub use crate::Puzzle2dEdge;
 pub use crate::Puzzle2dMeta;
 pub use crate::Puzzle2dNode;
+pub use crate::Puzzle2dTargetRegion;
 //#endregion 🔁️Re-exports

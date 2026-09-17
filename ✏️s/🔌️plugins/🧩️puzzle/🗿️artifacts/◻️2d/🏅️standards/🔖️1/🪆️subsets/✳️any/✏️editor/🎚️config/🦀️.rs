@@ -11,8 +11,42 @@ use std::collections::BTreeMap;
 /// 📶️ Defines the artifact-local board suggestion offset without a styling dependency.
 pub const PUZZLE2D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
 
+/// 🚧️ World units a brush/fill placement footprint is GROWN by before it is tested against the head —
+/// the 2d twin of puzzle3d's `contact_tolerance`, so a placement that merely grazes a neighbour is
+/// refused instead of drawn overlapping by a hairline.
+pub const PUZZLE2D_DEFAULT_CONTACT_TOLERANCE: f64 = 0.0;
+/// 🫂️ World units of footprint overlap a brush/fill placement may SPEND before it counts as a
+/// collision. It is the inverse of the tolerance and the two net out (`tolerance - budget`), so a
+/// dense board can be packed deliberately without disabling collision testing.
+pub const PUZZLE2D_DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET: f64 = 0.0;
+
+/// 🧲️ Board units within which a dropped node's open handle auto-connects to a compatible open
+/// handle — the 2d twin of puzzle3d's `proximity_radius`. Half a default node radius (24), so a drop
+/// that visually touches snaps and a drop a node-width away does not.
+pub const PUZZLE2D_DEFAULT_PROXIMITY_RADIUS: f64 = 12.0;
+
+fn default_proximity_radius() -> f64 {
+    PUZZLE2D_DEFAULT_PROXIMITY_RADIUS
+}
+
+fn default_contact_tolerance() -> f64 {
+    PUZZLE2D_DEFAULT_CONTACT_TOLERANCE
+}
+
+fn default_brush_placement_overlap_budget() -> f64 {
+    PUZZLE2D_DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET
+}
+
 fn default_grid_factor() -> f64 {
     1.0
+}
+
+/// 🖍️ The Area Brush paints a one-by-one grid cell until the utility's own steppers widen it — the
+/// 2d twin of puzzle3d's `default_voxel_dims`.
+pub const PUZZLE2D_DEFAULT_AREA_BRUSH_EXTENT: f64 = 1.0;
+
+fn default_area_brush_extent() -> f64 {
+    PUZZLE2D_DEFAULT_AREA_BRUSH_EXTENT
 }
 
 fn default_suggestion_offset() -> f64 {
@@ -60,6 +94,8 @@ pub struct Puzzle2dPlayRuntime {
     pub brush_candidates: Vec<dsl::DslValue>,
     #[value(default)]
     pub brush_candidate_source_handle_id: String,
+    #[value(default)]
+    pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
@@ -68,10 +104,77 @@ pub struct Puzzle2dPlayRuntime {
     pub grid_factor: f64,
     #[value(default = "default_suggestion_offset")]
     pub suggestion_offset: f64,
+    #[value(default = "default_proximity_radius")]
+    pub proximity_radius: f64,
+    #[value(default)]
+    pub grid_visible: bool,
+    /// 🖍️ Area Brush extent in grid cells — the 2d twin of puzzle3d's `voxel_dims`, one stepper per
+    /// board axis. Alt+click paints a region this many grid cells wide and high.
+    #[value(default = "default_area_brush_extent")]
+    pub area_brush_width: f64,
+    #[value(default = "default_area_brush_extent")]
+    pub area_brush_height: f64,
+    /// 🕹️ Gumball move handle — the board's native node drag. Composed by `setTransformGumballFlag`.
+    #[value(default = "transform_flag_default")]
+    pub transform_move: bool,
+    /// 🔄️ Gumball rotate ring. Scale is deliberately absent: a node's size comes from its kind catalog.
+    #[value(default = "transform_flag_default")]
+    pub transform_rotate: bool,
+    #[value(default)]
+    pub selectable_kinds: Puzzle2dSelectableKinds,
+    #[value(default = "default_contact_tolerance")]
+    pub contact_tolerance: f64,
+    #[value(default = "default_brush_placement_overlap_budget")]
+    pub brush_placement_overlap_budget: f64,
     #[value(default)]
     pub node_kind_weights: BTreeMap<String, f64>,
     #[value(default)]
     pub handle_kind_weights: BTreeMap<String, f64>,
+}
+
+/// 💡️ The one-shot handle-suggestions popup this window has open: where it hangs (viewport pixels),
+/// which exact window instance owns it, and the handle whose candidate page it lists. `None` is the
+/// closed state — the 2d twin of puzzle3d's `Puzzle3dSuggestionMenu`. Per-gesture scratch, so it
+/// lives on the window transient and never on a persisted config.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle2dSuggestionMenu {
+    #[value(default)]
+    pub x: f64,
+    #[value(default)]
+    pub y: f64,
+    #[value(default)]
+    pub window_id: String,
+    #[value(default)]
+    pub handle_id: String,
+}
+
+/// 🎯️ Which granularity a pick may even reach — the 2d twin of puzzle3d's
+/// `selectable_kinds{objects,vortices,attractions}`, one flag per `vortex`-domain granularity.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle2dSelectableKinds {
+    #[value(default = "selectable_default")]
+    pub nodes: bool,
+    #[value(default = "selectable_default")]
+    pub handles: bool,
+    #[value(default = "selectable_default")]
+    pub edges: bool,
+}
+
+fn selectable_default() -> bool {
+    true
+}
+
+/// 🕹️ Both gumball handles start composed, matching puzzle-3d's `transform_move`/`transform_rotate`.
+fn transform_flag_default() -> bool {
+    true
+}
+
+impl Default for Puzzle2dSelectableKinds {
+    fn default() -> Self {
+        Self { nodes: true, handles: true, edges: true }
+    }
 }
 
 impl Default for Puzzle2dPlayRuntime {
@@ -85,10 +188,20 @@ impl Default for Puzzle2dPlayRuntime {
             brush_candidate_index: 0,
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
+            suggestion_menu: None,
             fill_count: default_fill_count(),
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),
             suggestion_offset: default_suggestion_offset(),
+            proximity_radius: default_proximity_radius(),
+            area_brush_width: default_area_brush_extent(),
+            area_brush_height: default_area_brush_extent(),
+            grid_visible: true,
+            transform_move: transform_flag_default(),
+            transform_rotate: transform_flag_default(),
+            selectable_kinds: Puzzle2dSelectableKinds::default(),
+            contact_tolerance: default_contact_tolerance(),
+            brush_placement_overlap_budget: default_brush_placement_overlap_budget(),
             node_kind_weights: BTreeMap::new(),
             handle_kind_weights: BTreeMap::new(),
         }
@@ -104,11 +217,21 @@ pub struct Puzzle2dConfig {
     pub handle_kind_weights: BTreeMap<String, f64>,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
+    #[value(default = "default_contact_tolerance")]
+    pub contact_tolerance: f64,
+    #[value(default = "default_brush_placement_overlap_budget")]
+    pub brush_placement_overlap_budget: f64,
 }
 
 impl Default for Puzzle2dConfig {
     fn default() -> Self {
-        Self { node_kind_weights: BTreeMap::new(), handle_kind_weights: BTreeMap::new(), fill_count: default_fill_count() }
+        Self {
+            node_kind_weights: BTreeMap::new(),
+            handle_kind_weights: BTreeMap::new(),
+            fill_count: default_fill_count(),
+            contact_tolerance: default_contact_tolerance(),
+            brush_placement_overlap_budget: default_brush_placement_overlap_budget(),
+        }
     }
 }
 

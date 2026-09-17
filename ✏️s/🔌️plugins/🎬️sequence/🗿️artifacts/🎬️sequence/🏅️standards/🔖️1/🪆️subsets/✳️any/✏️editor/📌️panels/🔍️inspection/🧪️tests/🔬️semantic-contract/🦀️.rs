@@ -13,10 +13,10 @@ fn sequence_semantic_panels_match_the_json_oracle() {
     for row in vectors["cases"].as_array().expect("locales") {
         let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() };
         let labels = crate::editor::sequence::terminology::sequence_play_labels(&view_state);
-        let document = project(crate::editor::sequence::panels::document::render(&fixture, labels).expect("document tree"));
+        let document = project(crate::editor::sequence::panels::document::render(&fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document tree"));
         assert_eq!(document["children"][0]["component"]["label"], row["steps"]);
         assert_eq!(document["children"][1]["component"]["label"], row["edges"]);
-        let catalogue = project(crate::editor::sequence::panels::catalogue::render(&fixture, labels).expect("catalogue"));
+        let catalogue = project(crate::editor::sequence::panels::catalogue::render(&fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
         assert_eq!(catalogue["children"][0]["children"][0]["component"]["label"], row["firstAction"]);
         let inspector = project(render(&fixture, &["step-2".into()], labels).expect("selected inspector"));
         assert_eq!(inspector["children"][0]["component"]["label"], row["selectedHeading"]);

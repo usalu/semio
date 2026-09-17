@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { contributionIsCapabilityPack, exampleArtifactSources, resolveDocumentOperatorKinds, reachableKindsFromUnknown, scopeContributionsJson } from "../../🟦️.ts";
-import type { PluginManifest } from "../../../🛂️manifest/🟦️.ts";
+import { dialectFromLegacyExampleAppId, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples, type PluginManifest } from "../../../🛂️manifest/🟦️.ts";
+
+describe("normalizeManifestExamples", () => {
+  it("stamps dialect from a legacy appId so the navbar picker can resolve the row", () => {
+    const legacy = { id: "demo", appId: "s.sourcing.curation@1/*#editor", artifactJson: "semio …" };
+    const normalized = normalizeManifestExampleRow(legacy);
+    expect(normalized.appId).toBeUndefined();
+    expect(examplesForApp([normalized], { dialect: dialectFromLegacyExampleAppId("s.sourcing.curation@1/*#editor") }).map((row) => row.id)).toEqual(["demo"]);
+  });
+  it("leaves rows that already carry dialect unchanged", () => {
+    const dialect = { artifactKind: "s.draw.drawing", standard: "1", subset: "*" };
+    const row = { id: "demo", dialect, artifactJson: "…" };
+    expect(normalizeManifestExamples({ examples: [row] }).examples?.[0]).toEqual(row);
+  });
+});
 
 describe("exampleArtifactSources", () => {
   const generation3d = { artifactKind: "s.procedural.generation3d", standard: "1", subset: "*" } as const;

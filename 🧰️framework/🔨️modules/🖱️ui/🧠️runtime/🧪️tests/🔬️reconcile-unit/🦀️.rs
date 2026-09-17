@@ -854,25 +854,28 @@ fn resident_aggregate_admits_every_reconcile_slot() {
 
 //#endregion 🔖️ResidentAdmissionArithmetic
 
+
 //#region 🪟️TreeWindowReconcileSizeLaw
 
 /// 🪟️ Sections one virtualised panel tree declares (objects / references / target volumes /
-/// attractions — the puzzle3d artifact panel this law was derived from).
+/// attractions — the puzzle3d artifact panel whose stale `PANEL_RECONCILE_NODE_BUDGET = 16` this law
+/// replaces).
 const TREE_WINDOW_LAW_SECTIONS: usize = 4;
 
 /// 🪟️ Rows one section's `TreeWindow.total` declares: one full built child list
 /// ([`ui_contract::UI_BUILT_CHILDREN_MAX`]).
 const TREE_WINDOW_LAW_SECTION_TOTAL: usize = ui_contract::UI_BUILT_CHILDREN_MAX;
 
-/// 🪟️ Rows per section ONE presented document can actually carry. A surface document is
-/// [`ui_contract::UI_DOCUMENT_NODES`] records wide *in total* (`UiSnapshotNodes`), and the tree root
-/// plus one record per section are spent before a single row is materialised — so the per-section
-/// slice is `(128 − 1 − 4) / 4 = 30`, NOT the 128 a `BuiltChildren` list can hold.
+/// 🪟️ The per-section slice one presented document could carry if the RECORD arena were the only
+/// bound: a surface document is [`ui_contract::UI_DOCUMENT_NODES`] records wide IN TOTAL
+/// (`UiSnapshotNodes`), and the tree root plus one record per section are spent before a single row
+/// is materialised, so `(128 − 1 − 4) / 4 = 30` — never the 128 a `BuiltChildren` list can hold. The
+/// law below starts here and walks DOWN until admission actually accepts the page.
 const TREE_WINDOW_LAW_PAGE_ROWS: usize = (ui_contract::UI_DOCUMENT_NODES - 1 - TREE_WINDOW_LAW_SECTIONS) / TREE_WINDOW_LAW_SECTIONS;
 
-/// 🕹️ Rows that carry their own `Activate` binding with a four-entry argument map, mirroring an app
-/// row that still owns an action (catalogue `addWidget`, workshop install …) rather than picking
-/// through the tree-level interaction domain.
+/// 🕹️ Rows per section that carry their own `Activate` binding with a four-entry argument map,
+/// mirroring an app row that still owns an action (catalogue `addWidget`, workshop install …) rather
+/// than picking through the tree-level interaction domain. Pick rows cost no arena at all.
 const TREE_WINDOW_LAW_BOUND_ROWS: usize = 31;
 
 fn tree_window_law_row(section: usize, index: usize) -> crate::TreeNode {
@@ -901,7 +904,7 @@ fn tree_window_law_row(section: usize, index: usize) -> crate::TreeNode {
 }
 
 /// 🌱️ A four-entry argument map, or `None` when the shared `UiValue` arena refuses one — a refused
-/// row shortens the window, it never faults, so the law measures whatever admission actually allowed.
+/// row shortens the window, it never faults, so this law measures whatever admission actually allowed.
 fn tree_window_law_args(key: &str) -> Option<ui_contract::UiValue> {
     let mut builder = ui_contract::UiMapBuilder::try_new()?;
     for (name, value) in [("id", key), ("kind", "assembly"), ("mode", "insert"), ("origin", "panel")] {
@@ -912,10 +915,10 @@ fn tree_window_law_args(key: &str) -> Option<ui_contract::UiValue> {
 
 /// 🪟️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
 /// only `[offset, offset + rows)`, and never mints a continuation row.
-fn tree_window_law_document(offset: usize) -> crate::ComponentTree {
+fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::ComponentTree {
     let mut sections = Vec::with_capacity(TREE_WINDOW_LAW_SECTIONS);
     for section in 0..TREE_WINDOW_LAW_SECTIONS {
-        let rows: Vec<crate::TreeNode> = (offset..TREE_WINDOW_LAW_SECTION_TOTAL.min(offset + TREE_WINDOW_LAW_PAGE_ROWS)).map(|index| tree_window_law_row(section, index)).collect();
+        let rows: Vec<crate::TreeNode> = (offset..TREE_WINDOW_LAW_SECTION_TOTAL.min(offset + rows_per_section)).map(|index| tree_window_law_row(section, index)).collect();
         let props = ui_contract::TreeSectionProps {
             label: Some(ui_contract::Label::try_from(format!("Section {section}").as_str()).expect("bounded fixture label")),
             default_open: Some(true),
@@ -928,8 +931,9 @@ fn tree_window_law_document(offset: usize) -> crate::ComponentTree {
     tree(root.try_with_children(sections).unwrap_or_else(|_| panic!("bounded fixture tree children")))
 }
 
-/// 📏️ Drives one whole resumable reconciliation and hands back the credits it actually consumed.
-fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> (SurfaceReconciler, SurfaceReconcileUsage) {
+/// 📏️ Drives one whole resumable reconciliation and hands back either the credits it consumed or the
+/// exact refusal, releasing the cursor's own reservations either way.
+fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> Result<(SurfaceReconciler, SurfaceReconcileUsage), SurfaceReconcileFault> {
     let mut cursor = SurfaceReconcileCursor::new(component_tree, current);
     loop {
         match cursor.step(current) {
@@ -941,33 +945,39 @@ fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate:
                 if let Some(patch) = patch {
                     let mut ready = SurfaceReconcileReadyPatch { generation: cursor.assembly_generation, patch: pending_surface_patch(Some(patch)), credit: output, handback: reserve_surface_reconcile_handback(cursor.assembly_generation) };
                     while !ready.close_step() {}
-                } else {
-                    drop(output);
                 }
                 while !cursor.retire_one() {}
-                return (reconciler, usage);
+                return Ok((reconciler, usage));
             }
-            SurfaceReconcileStep::Fault(fault) => panic!("unexpected reconcile fault: {fault:?}"),
+            SurfaceReconcileStep::Fault(fault) => {
+                while !cursor.retire_one() {}
+                drop(cursor);
+                super::drain_surface_reconcile_registry_until_idle();
+                return Err(fault);
+            }
         }
     }
 }
 
-/// 📏️ The reconcile SIZE law, replacing the stale `PANEL_RECONCILE_NODE_BUDGET = 16` and its
-/// inherited "~0.46 MiB per presented node" docstring (puzzle3d artifact panel, 2026-09-10) — a
+/// 📏️ The reconcile SIZE law, replacing `PANEL_RECONCILE_NODE_BUDGET = 16` and the inherited
+/// "~0.46 MiB per presented node" docstring it carried (puzzle3d artifact panel, 2026-09-10) — a
 /// number 📓️audit-surface-budgets.md §3 showed was never a measured host-side
-/// `size_of::<FlatPresentedNode>()` at all, and which predates the page-exact `UiFixedList`
-/// reservation fix of 2026-09-13.
+/// `size_of::<FlatPresentedNode>()`, and which predates the page-exact `UiFixedList` reservation fix
+/// of 2026-09-13.
 ///
 /// What this pins, for ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §7:
 /// 1. The real per-node host cost is `size_of::<FlatPresentedNode>()` plus that node's measured
-///    semantic bytes — printed here so no one has to inherit a number again.
+///    semantic bytes, both printed, so nobody has to inherit a number again.
 /// 2. A four-section tree whose sections each declare a full
 ///    [`ui_contract::UI_BUILT_CHILDREN_MAX`]-row `TreeWindow` reconciles far under
-///    [`SURFACE_RECONCILE_SURFACE_BYTES`] — bytes are NOT what bounds a virtualised panel.
-/// 3. What DOES bound it is [`ui_contract::UI_DOCUMENT_NODES`]: one surface document is 128 records
-///    wide in total (`UiSnapshotNodes`/`SurfaceReconcileLimits::max_nodes`), so a 4 × 128 window is
-///    presented as [`TREE_WINDOW_LAW_PAGE_ROWS`]-row pages, reconciled in sequence exactly the way
-///    scrolling streams them. Every page is measured, not just the first.
+///    [`SURFACE_RECONCILE_SURFACE_BYTES`]. **Bytes are not what bounds a virtualised panel.**
+/// 3. What bounds it is the ITEM ledger (`SurfaceReconcileLimits::max_items`), reached long before
+///    either the byte ceiling or the [`ui_contract::UI_DOCUMENT_NODES`] record arena whenever rows
+///    carry their own argument maps — which is exactly why §5's `.interaction_domain()` moves pick
+///    rows off per-row bindings. Every refusal is asserted to be an item/node refusal, never a byte
+///    one, and the window is shortened rather than faulted — the `ui.fixed-capacity` rule of §5.
+/// 4. The whole 4 × [`TREE_WINDOW_LAW_SECTION_TOTAL`] document streams as a sequence of pages, every
+///    one of them measured, the way scrolling actually requests them.
 #[test]
 fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
     let _guard = crate::surface_reconcile_registry_test_guard();
@@ -976,18 +986,37 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
     let mut current = SurfaceReconciler::new("panel:artifact-tree");
     let mut peak = SurfaceReconcileUsage::default();
     let mut total_bytes = 0usize;
+    let mut materialised = 0usize;
     let mut pages = 0usize;
+    let mut rows_per_section = TREE_WINDOW_LAW_PAGE_ROWS;
     let mut offset = 0usize;
     while offset < TREE_WINDOW_LAW_SECTION_TOTAL {
-        let (reconciled, usage) = tree_window_law_reconcile(&current, tree_window_law_document(offset));
+        let (reconciled, usage) = loop {
+            match tree_window_law_reconcile(&current, tree_window_law_document(offset, rows_per_section)) {
+                Ok(admitted) => break admitted,
+                Err(SurfaceReconcileFault::Credits { usage, limits }) => {
+                    eprintln!("[DEBUG] flat-presented-node bytes={flat} refused rows_per_section={rows_per_section} nodes={}/{} items={}/{} surface_bytes={}/{}", usage.nodes, limits.max_nodes, usage.items, limits.max_items, usage.bytes, limits.max_bytes);
+                    assert!(
+                        usage.bytes <= limits.max_bytes,
+                        "no window page may ever be refused for BYTES — the 8 MiB surface ceiling is not the binding constraint: {} of {}B",
+                        usage.bytes,
+                        limits.max_bytes,
+                    );
+                    rows_per_section = rows_per_section.checked_sub(1).expect("admission must accept some non-empty window");
+                    assert!(rows_per_section > 0, "admission must accept at least one row per section");
+                }
+                Err(fault) => panic!("unexpected reconcile fault: {fault:?}"),
+            }
+        };
         let rows = usage.nodes.saturating_sub(1 + TREE_WINDOW_LAW_SECTIONS);
         eprintln!(
-            "[DEBUG] flat-presented-node bytes={flat} rows={rows} nodes={} offset={offset} surface_bytes={} per_node_bytes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}",
+            "[DEBUG] flat-presented-node bytes={flat} rows={rows} nodes={} offset={offset} rows_per_section={rows_per_section} items={} surface_bytes={} per_node_bytes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}",
             usage.nodes,
+            usage.items,
             usage.bytes,
-            usage.bytes.checked_div(usage.nodes.max(1)).unwrap_or(0),
+            usage.bytes / usage.nodes.max(1),
         );
-        assert!(usage.nodes <= limits.max_nodes, "one presented document must stay inside the {} record document arena: {} nodes", limits.max_nodes, usage.nodes);
+        assert!(usage.nodes <= limits.max_nodes, "one presented document must stay inside the {}-record document arena: {} nodes", limits.max_nodes, usage.nodes);
         assert!(
             usage.bytes < SURFACE_RECONCILE_SURFACE_BYTES,
             "a {TREE_WINDOW_LAW_SECTIONS}-section window page must reconcile under the per-surface ceiling: {} of {SURFACE_RECONCILE_SURFACE_BYTES}B",
@@ -997,19 +1026,23 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
             peak = usage;
         }
         total_bytes = total_bytes.saturating_add(usage.bytes);
+        materialised = materialised.saturating_add(rows);
         pages += 1;
-        offset += TREE_WINDOW_LAW_PAGE_ROWS;
+        offset += rows_per_section;
         let mut retired = reconciled;
         while !retired.retire_one() {}
         current = retired;
     }
     eprintln!(
-        "[DEBUG] flat-presented-node bytes={flat} rows={} pages={pages} peak_surface_bytes={} total_surface_bytes={total_bytes} ceiling={SURFACE_RECONCILE_SURFACE_BYTES} document_nodes={}",
+        "[DEBUG] flat-presented-node bytes={flat} rows={materialised} pages={pages} declared_rows={} peak_surface_bytes={} peak_nodes={} peak_items={} total_surface_bytes={total_bytes} ceiling={SURFACE_RECONCILE_SURFACE_BYTES} document_nodes={} max_items={}",
         TREE_WINDOW_LAW_SECTIONS * TREE_WINDOW_LAW_SECTION_TOTAL,
         peak.bytes,
+        peak.nodes,
+        peak.items,
         ui_contract::UI_DOCUMENT_NODES,
+        limits.max_items,
     );
-    assert_eq!(pages, TREE_WINDOW_LAW_SECTION_TOTAL.div_ceil(TREE_WINDOW_LAW_PAGE_ROWS), "every row of every section must be materialised by some page");
+    assert_eq!(materialised, TREE_WINDOW_LAW_SECTIONS * TREE_WINDOW_LAW_SECTION_TOTAL, "every declared row of every section must be materialised by exactly one page");
     assert!(peak.bytes < SURFACE_RECONCILE_SURFACE_BYTES, "the heaviest window page must still fit one surface: {} of {SURFACE_RECONCILE_SURFACE_BYTES}B", peak.bytes);
     assert!(
         peak.bytes / peak.nodes.max(1) < SURFACE_RECONCILE_SURFACE_BYTES / ui_contract::UI_DOCUMENT_NODES,

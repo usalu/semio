@@ -28,7 +28,6 @@
         "deps",
         "@semio-tech/ui-styling-tokens:generate"
       ],
-      "parallelism": false,
       "inputs": [
         "production",
         "^production",
@@ -124,8 +123,7 @@
       "outputs": [],
       "options": {
         "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps"
-      },
-      "parallelism": false
+      }
     }
   }
 }

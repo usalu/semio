@@ -16,7 +16,7 @@ fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     assert_eq!(size_of::<ValueFrame>(), frame["bytes"].as_u64().unwrap() as usize);
     assert!(size_of::<UiComponentComparisonCursor>() <= frame["maximumCursorBytes"].as_u64().unwrap() as usize);
     assert_eq!(ValueFrame::checked_page(UI_VALUE_NONE).unwrap(), u16::MAX);
-    assert_eq!(ValueFrame::checked_page(UI_VALUE_AGGREGATE_ITEMS - 1).unwrap(), 433);
+    assert_eq!(ValueFrame::checked_page(UI_VALUE_AGGREGATE_ITEMS - 1).unwrap(), 1791);
     for index in [UI_VALUE_AGGREGATE_ITEMS, usize::from(u16::MAX), usize::from(u16::MAX) + 1] {
         assert!(ValueFrame::checked_page(index).is_err());
     }

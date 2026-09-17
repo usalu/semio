@@ -205,7 +205,7 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
         panic!("expected CreateArtifact");
     };
     assert_eq!(command.kind_choice, kind_choice);
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::artifact_app_laws::meta("dialog")).await.expect("dialog submission");
     assert!(app.snapshot().expect("projection").artifacts.is_empty());
     let [Effect::ReplayShellCommand { action_id, args }] = result.requested_effects.as_slice() else {

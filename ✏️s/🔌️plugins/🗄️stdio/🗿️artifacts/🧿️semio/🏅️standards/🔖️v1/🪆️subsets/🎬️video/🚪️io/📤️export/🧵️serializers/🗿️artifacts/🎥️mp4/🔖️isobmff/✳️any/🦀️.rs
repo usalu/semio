@@ -7,11 +7,12 @@
 //! encode would need, matching the master plan's "direct reshape of typed metadata" framing, not a
 //! byte-identical codec round trip).
 //!
-//! The bridge emits the supported logical AVC variant and never retains an opaque sample-entry box.
+//! The bridge emits a Motion-JPEG sample entry for `jpeg`/`mjpa` streams (JPEG needs no configuration
+//! record) and the logical AVC variant otherwise; it never retains an opaque sample-entry box.
 
 use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Track};
 use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
@@ -31,7 +32,7 @@ impl ArtifactSerializer for SemioVideoToMp4 {
             .iter()
             .enumerate()
             .map(|(i, stream)| {
-                let codec = Mp4Codec::default();
+                let codec = Mp4CodecFormat::from_fourcc(stream.codec.as_bytes()).filter(|format| format.is_jpeg()).map_or_else(Mp4Codec::default, Mp4Codec::jpeg);
                 let fallback_duration = stream.rate.den.max(1) as u32;
                 let samples: Vec<Mp4Sample> = stream
                     .samples

@@ -5,11 +5,12 @@ type TestSource = { readonly url: string };
  * `window`/`windowKey` reaching the `🌳️Tree` element unchanged, and a `granularity` row synthesising
  * the tree-level `interactionSelect` pick that replaces the per-row action maps. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1 } = dependencies;
+  const { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowViewportMetrics } = dependencies;
   const { describe, expect, it, afterEach } = vitest;
   void source;
 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
+  const { Scrollable, TREE_WINDOW_BODY_NODE_BUDGET } = await import("@semio-tech/ui-react");
   const { createElement } = await import("react");
 
   type AnyRecord = Record<string, any>;
@@ -33,6 +34,77 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     store.loadSnapshot({ surface: SURFACE, revision: 1, root, nodes: [...nodes] });
     return render(createElement(UiNodeView, { store, id: root, context: { store, onAction: () => {}, onIntent } }));
   }
+
+  const rowHeightPx = treeWindowRowHeightPx();
+  const frame = () => new Promise((resolve) => setTimeout(resolve, 40));
+
+  /** 📐️ jsdom measures every box as zero, so a layout law has to state the layout it is testing. */
+  function stubExtent(element: HTMLElement, clientHeight: number, scrollHeight: number): void {
+    Object.defineProperty(element, "clientHeight", { value: clientHeight, configurable: true });
+    Object.defineProperty(element, "scrollHeight", { value: scrollHeight, configurable: true });
+  }
+
+  function stubRect(element: HTMLElement, topRows: number, heightRows: number): void {
+    const top = topRows * rowHeightPx;
+    const height = heightRows * rowHeightPx;
+    element.getBoundingClientRect = () => ({ top, bottom: top + height, left: 0, right: 0, width: 0, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+  }
+
+  function scrollTo(area: HTMLElement, scrollTopRows: number, viewportRows: number): void {
+    Object.defineProperty(area, "scrollTop", { value: scrollTopRows * rowHeightPx, configurable: true });
+    stubRect(area, 0, viewportRows);
+  }
+
+  /** 📐️ The container's own materialised rows, laid out at one row pitch each starting `firstRowTopRows`
+   * below the viewport origin — the geometry a container none of whose rows is expanded really has. */
+  function ownRows(container: HTMLElement): HTMLElement[] {
+    return (Array.from(container.querySelectorAll("[data-tree-window-row]")) as HTMLElement[]).filter((row) => row.closest("[data-tree-window-key]") === container);
+  }
+
+  function stubRows(container: HTMLElement, firstRowTopRows: number): void {
+    ownRows(container).forEach((row, index) => stubRect(row, firstRowTopRows + index, 1));
+  }
+
+  const nodeCost = (requests: readonly AnyRecord[]) => requests.length + requests.reduce((sum: number, request: AnyRecord) => sum + request.rows, 0);
+
+  /** 🪟️ The real `📜️Scrollable` around a windowed guest tree — the exact chain a panel body renders. */
+  function mountScrollable(containers: readonly { readonly key: string; readonly total: number }[], reportWindows: (requests: readonly AnyRecord[], viewportRows: number) => void) {
+    const nodes: AnyRecord[] = [node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, containers.map((_, index) => 2 + index * 2))];
+    containers.forEach((container, index) => {
+      const sectionId = 2 + index * 2;
+      nodes.push(node(sectionId, container.key, { type: "treeSection", label: container.key, defaultOpen: true, window: { total: container.total, offset: 0 } }, [sectionId + 1]));
+      nodes.push(treeItem(sectionId + 1, `${container.key}.0`, `${container.key} row`));
+    });
+    return renderWindowedTree(nodes, reportWindows, (tree) => createElement(Scrollable, null, tree));
+  }
+
+  /** 🪟️ The same guest tree under an arbitrary host chain, so the scroll-container rule can be stated
+   * against a `📜️Scrollable`, a plain `overflow-y: auto` ancestor and no scroller at all. */
+  function renderWindowedTree(nodes: readonly AnyRecord[], reportWindows: (requests: readonly AnyRecord[], viewportRows: number) => void, wrap: (tree: any) => any) {
+    const store = new UiDocumentStore(SURFACE);
+    store.loadSnapshot({ surface: SURFACE, revision: 1, root: 1, nodes: [...nodes] });
+    const channel = { bodyKey: SURFACE, openStates: {}, setOpen: () => {}, reportWindows };
+    return render(wrap(createElement(TreeWindowContext.Provider, { value: channel }, createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: () => {} } }))));
+  }
+
+  /** 🪟️ A section of `total` rows whose materialised row `objects.1` is itself an OPEN windowed group —
+   * the "item inside section" shape every app panel builds once a branch is expanded. */
+  function nestedNodes(sectionTotal: number, sectionLength: number, childTotal: number, childLength: number): AnyRecord[] {
+    const childRows = Array.from({ length: childLength }, (_, index) => treeItem(100 + index, `objects.1.${index}`, `Child ${index}`));
+    const sectionRows: AnyRecord[] = [
+      treeItem(10, "objects.0", "Row 0"),
+      treeItem(11, "objects.1", "Row 1", { defaultOpen: true, window: { total: childTotal, offset: 0 } }, childRows.map((_, index) => 100 + index)),
+      ...Array.from({ length: Math.max(0, sectionLength - 2) }, (_, index) => treeItem(12 + index, `objects.${2 + index}`, `Row ${2 + index}`)),
+    ];
+    return [
+      node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
+      node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { total: sectionTotal, offset: 0 } }, sectionRows.map((row) => row.id)),
+      ...sectionRows,
+      ...childRows,
+    ];
+  }
+
+  const windowedByKey = (container: HTMLElement): Map<string, HTMLElement> => new Map(Array.from(container.querySelectorAll("[data-tree-window-key]")).map((element) => [(element as HTMLElement).getAttribute("data-tree-window-key")!, element as HTMLElement]));
 
   describe("🪟️ interpreted tree windows", () => {
     afterEach(() => cleanup());
@@ -94,6 +166,221 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(intents.length).toBe(1);
       expect(intents[0].action.name).toBe("addObjectKind");
       expect(intents[0].input).toBeNull();
+    });
+
+    /** 🧯️ The defect 📓️w3-browser-verification.md §5 measured in three browser lanes: the observer bound
+     * to `📜️Scrollable`'s INNER content div, whose height is its content's, so `scrollTop` was
+     * permanently 0 and no scroll ever produced a new window request. The numbers below are the ones
+     * read off the fem3d House panel (466/3722 against 3720/3720). */
+    it("resolves the scroll container to the element that actually scrolls, never the unbounded Scrollable viewport", () => {
+      const rendered = mountScrollable([{ key: "objects", total: 200 }], () => {});
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const viewport = rendered.container.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement;
+      stubExtent(area, 466, 3722);
+      stubExtent(viewport, 3720, 3720);
+      const windowed = rendered.container.querySelector("[data-tree-window-key]") as HTMLElement;
+      expect(windowed).toBeTruthy();
+
+      const resolved = treeWindowScrollViewport(windowed) as HTMLElement;
+
+      expect(resolved).toBe(area);
+      expect(resolved.scrollHeight).toBeGreaterThan(resolved.clientHeight);
+      expect(viewport.scrollHeight - viewport.clientHeight).toBe(0);
+    });
+
+    it("falls back to a plain overflow ancestor, and to the page itself, for a tree outside any Scrollable", () => {
+      const nodes = [
+        node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
+        node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { total: 200, offset: 0 } }, [3]),
+        treeItem(3, "objects.0", "Row 0"),
+      ];
+      const overflowing = renderWindowedTree(nodes, () => {}, (tree) => createElement("div", { "data-testid": "plain", style: { overflowY: "auto" } }, tree));
+      const plain = overflowing.container.querySelector('[data-testid="plain"]') as HTMLElement;
+      const contents = overflowing.container.querySelector("div.contents") as HTMLElement;
+      expect(treeWindowScrollViewport(contents)).toBe(plain);
+      cleanup();
+
+      const bare = renderWindowedTree(nodes, () => {}, (tree) => tree);
+      const bareContents = bare.container.querySelector("div.contents") as HTMLElement;
+      // 🧯️ No scrolling ancestor at all is still a scrolling document: the page scrolls, so the observer
+      // measures against it rather than returning `null` and never streaming a row.
+      // 📐️ jsdom leaves `document.scrollingElement` unimplemented; the resolver falls through to
+      // `documentElement`, which is what a browser's `scrollingElement` is in standards mode anyway.
+      expect(treeWindowScrollViewport(bareContents)).toBe(document.scrollingElement ?? document.documentElement);
+    });
+
+    it("prefers whichever candidate actually overflows, even when it is the guest tree's own root", () => {
+      const rendered = mountScrollable([{ key: "objects", total: 200 }], () => {});
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const contents = rendered.container.querySelector("div.contents") as HTMLElement;
+      const treeRoot = contents.firstElementChild as HTMLElement;
+      treeRoot.style.overflowY = "auto";
+      stubExtent(area, 500, 500);
+      stubExtent(treeRoot, 400, 3000);
+
+      expect(treeWindowScrollViewport(contents)).toBe(treeRoot);
+    });
+
+    it("measures the viewport by its client box, never by the border box a scrollbar and a border inflate", () => {
+      const rendered = mountScrollable([{ key: "objects", total: 200 }], () => {});
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      stubRect(area, 0, 10);
+      Object.defineProperty(area, "clientHeight", { value: 7 * rowHeightPx, configurable: true });
+      Object.defineProperty(area, "clientTop", { value: 2, configurable: true });
+      const windowed = windowedByKey(rendered.container).get("objects")!;
+      stubRect(windowed, 0, 200);
+
+      expect(treeWindowViewportMetrics(area)).toEqual({ originTop: 2, height: 7 * rowHeightPx });
+      // 🎯️ The container's own top is relative to the viewport's CONTENT origin, so the border is gone.
+      expect(treeWindowContainersUnder(rendered.container, area)).toEqual([{ key: "objects", total: 200, offset: 0, length: 1, top: -2, height: 200 * rowHeightPx, rows: [{ index: 0, top: -2 }] }]);
+    });
+
+    it("turns a scroll of that container into a window request anchored on the rows the viewport shows", async () => {
+      const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
+      const rendered = mountScrollable([{ key: "objects", total: 200 }], (requests, viewportRows) => reports.push({ requests, viewportRows }));
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const windowed = windowedByKey(rendered.container).get("objects")!;
+      scrollTo(area, 40, 10);
+      stubRect(windowed, -40, 200);
+      stubRows(windowed, -40);
+
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+
+      const last = reports[reports.length - 1];
+      expect(last.viewportRows).toBe(10);
+      // 🎯️ 40 rows scrolled away, 10 on screen, 8 rows of overscan per edge: rows 32…57 of 200.
+      expect(last.requests).toEqual([{ nodeKey: "objects", offset: 32, rows: 26 }]);
+    });
+
+    /** 🧯️ The loop this whole mechanism dies of: the observer re-measures on every store revision, so a
+     * window the guest has just SETTLED — the rows now on screen, already covered with overscan — must
+     * recompute to byte-identical numbers and report nothing. Otherwise every answer asks another
+     * question and the body refreshes forever. */
+    it("asks for exactly the window it already has once the guest has answered", () => {
+      const rows = (offset: number, length: number, firstTopRows: number) => Array.from({ length }, (_, index) => ({ index: offset + index, top: (firstTopRows + index) * rowHeightPx }));
+      // 📐️ Before: 200 rows announced, one materialised, the viewport 40 rows down its extent.
+      const before = [{ key: "objects", total: 200, offset: 0, length: 1, top: -40 * rowHeightPx, height: 200 * rowHeightPx, rows: rows(0, 1, -40) }];
+      const asked = treeWindowBodyRequestsV1(before, 10 * rowHeightPx, rowHeightPx);
+      expect(asked).toEqual([{ key: "objects", offset: 32, rows: 26 }]);
+
+      // 📐️ After: the guest materialised rows 32…57, so the leading spacer is 32 rows and the slice starts
+      // 8 rows above the viewport top. Same total, same extent, same scroll position.
+      const after = [{ ...before[0], offset: 32, length: 26, rows: rows(32, 26, -8) }];
+
+      expect(treeWindowBodyRequestsV1(after, 10 * rowHeightPx, rowHeightPx)).toEqual(asked);
+    });
+
+    it("reports nothing when an idle re-measure recomputes the same answer", async () => {
+      const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
+      const rendered = mountScrollable([{ key: "objects", total: 200 }], (requests, viewportRows) => reports.push({ requests, viewportRows }));
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const windowed = windowedByKey(rendered.container).get("objects")!;
+      scrollTo(area, 40, 10);
+      stubRect(windowed, -40, 200);
+      stubRows(windowed, -40);
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+      const settled = reports.length;
+      expect(reports[settled - 1].requests).toEqual([{ nodeKey: "objects", offset: 32, rows: 26 }]);
+
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+
+      expect(reports.length).toBe(settled);
+    });
+
+    /** 🪟️ An OPEN windowed group inside a windowed section. The section's content element is now TALLER
+     * than `total × rowHeight` — the expanded child's own rows and spacers live inside it — so a flat
+     * `pixels ÷ rowHeight` reading of the section resolves the viewport to a row far below the child and
+     * the section's next window would evict the subtree the reader just opened. */
+    it("resolves a nested open container against its own rows, and never evicts it from its parent's window", async () => {
+      const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
+      const rendered = renderWindowedTree(nestedNodes(100, 3, 50, 20), (requests, viewportRows) => reports.push({ requests, viewportRows }), (tree) => createElement(Scrollable, null, tree));
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      const windowed = windowedByKey(rendered.container);
+      expect([...windowed.keys()]).toEqual(["objects", "objects.1"]);
+
+      scrollTo(area, 30, 20);
+      // 📐️ Section: 0 leading + (row 0, then row 1 = a 50-row subtree, then row 2) + 97 trailing = 150 rows.
+      const section = windowed.get("objects")!;
+      stubRect(section, -30, 150);
+      const sectionRows = ownRows(section);
+      expect(sectionRows.map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["0", "1", "2"]);
+      stubRect(sectionRows[0]!, -30, 1);
+      stubRect(sectionRows[1]!, -29, 1);
+      stubRect(sectionRows[2]!, 22, 1);
+      // 📐️ Child: its own 20 materialised rows + a 30-row trailing spacer, starting 28 rows up.
+      const child = windowed.get("objects.1")!;
+      stubRect(child, -28, 50);
+      stubRows(child, -28);
+
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+
+      const last = reports[reports.length - 1];
+      const sectionRequest = last.requests.find((request) => request.nodeKey === "objects")!;
+      const childRequest = last.requests.find((request) => request.nodeKey === "objects.1")!;
+      // 🎯️ The viewport sits inside the section's SECOND row, not its thirtieth.
+      expect(sectionRequest).toEqual({ nodeKey: "objects", offset: 0, rows: 17 });
+      expect(sectionRequest.offset).toBeLessThanOrEqual(1);
+      expect(sectionRequest.offset + sectionRequest.rows).toBeGreaterThan(1);
+      // 🎯️ The child is a windowed container in its own right and streams on its own row index.
+      expect(childRequest).toEqual({ nodeKey: "objects.1", offset: 14, rows: 36 });
+      expect(childRequest.offset + childRequest.rows).toBeLessThanOrEqual(50);
+      expect(nodeCost(last.requests)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
+    });
+
+    /** 🔑️ Two containers under one key share one open state and one window on both sides of the wire, and
+     * each other's measurement silently overwrites the other's. The host cannot repair it — it says so. */
+    it("says so, once, when two windowed containers in one body share a node key", async () => {
+      const errors: string[] = [];
+      const original = console.error;
+      console.error = (...args: unknown[]) => void errors.push(String(args[0]));
+      try {
+        const rendered = mountScrollable([{ key: "objects", total: 20 }, { key: "shadow", total: 20 }], () => {});
+        const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+        const windowed = windowedByKey(rendered.container);
+        windowed.get("shadow")!.setAttribute("data-tree-window-key", "objects");
+        scrollTo(area, 0, 20);
+        stubRect(windowed.get("objects")!, 0, 20);
+        stubRect(windowed.get("shadow")!, 20, 20);
+
+        area.dispatchEvent(new Event("scroll"));
+        await frame();
+        area.dispatchEvent(new Event("scroll"));
+        await frame();
+
+        expect(errors.filter((message) => message.includes("[tree-window] duplicate key")).length).toBe(1);
+        expect(errors.some((message) => message.includes('"objects"'))).toBe(true);
+      } finally {
+        console.error = original;
+      }
+    });
+
+    it("never asks one body for more rows than the guest can present, however many containers are on screen", async () => {
+      const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
+      const containers = Array.from({ length: 12 }, (_, index) => ({ key: `c${index}`, total: 12 }));
+      const rendered = mountScrollable(containers, (requests, viewportRows) => reports.push({ requests, viewportRows }));
+      const area = rendered.container.querySelector('[data-slot="scroll-area"]') as HTMLElement;
+      scrollTo(area, 0, 144);
+      const elements = Array.from(rendered.container.querySelectorAll("[data-tree-window-key]")) as HTMLElement[];
+      expect(elements.length).toBe(12);
+      elements.forEach((element, index) => {
+        stubRect(element, index * 12, 12);
+        stubRows(element, index * 12);
+      });
+
+      area.dispatchEvent(new Event("scroll"));
+      await frame();
+
+      const last = reports[reports.length - 1];
+      // 🧮️ Every container costs its own node plus its rows — the guest's ledger, priced here.
+      expect(last.requests.length).toBe(12);
+      expect(nodeCost(last.requests)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
+      for (const request of last.requests) expect(request.offset + request.rows).toBeLessThanOrEqual(12);
     });
 
     it("resolves a range pick into the whole selection under replace, deduplicated per (granularity, id)", () => {

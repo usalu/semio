@@ -22,7 +22,7 @@
       "isWatertight": true
     },
     "meanTrackLength": 7.25,
-    "registeredFrameRatio": 1,
+    "registeredFrameRatio": 1.0,
     "denseCoverageRatio": 0.8125,
     "warnings": []
   }

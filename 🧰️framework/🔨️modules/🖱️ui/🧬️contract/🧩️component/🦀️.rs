@@ -437,6 +437,29 @@ pub struct TreeWindow {
     pub offset: u32,
 }
 
+/// 🧾️ Node records a presented panel body may spend OUTSIDE its windowed containers: the fixed rows a
+/// panel still builds without a [`TreeWindow`] (an Actions section, a properties block, a nested
+/// control child) carry no node key, so neither side can address or budget them per container. The
+/// body budget holds this many records back for them.
+///
+/// 🧾️ The value is the framework's own worst case, not a guess: the history panel is the widest
+/// un-windowed block in the fleet — one Actions section wrapping undo, redo and three filter rows,
+/// plus its own section node — and the fem/cad/puzzle outliners add none at all. 16 doubles that.
+pub const TREE_WINDOW_FIXED_NODE_HEADROOM: usize = 16;
+
+/// 🧾️ The ONE body-wide node budget both sides of the streaming loop spend, in node records:
+/// `UI_DOCUMENT_NODES` (the reconciler's per-surface record arena,
+/// `SurfaceReconcileLimits::max_nodes`) less the tree root, less
+/// [`TREE_WINDOW_FIXED_NODE_HEADROOM`].
+///
+/// 🧾️ **Cost model, identical on host and guest**: one windowed container costs
+/// `1 (its own node) + its materialised rows`, nested containers included, and every node is charged
+/// exactly ONCE — a nested container is one row of its parent, so its own `1` is the row its parent
+/// already paid for. The host caps what it requests so `Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`
+/// (`🌳️Tree/🟦️.tsx`), and the guest's `semio_framework_plugin::TreeWindows` ledger spends the same
+/// number, so a request the host is allowed to make is a request the guest can always honour in full.
+pub const TREE_WINDOW_BODY_NODE_BUDGET: usize = crate::UI_DOCUMENT_NODES - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM;
+
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]

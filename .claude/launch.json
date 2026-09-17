@@ -99,6 +99,47 @@
       }
     },
     {
+      "name": "puzzle5d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-puzzle5d-react-dev"
+      ],
+      "port": 6014,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6014"
+      }
+    },
+    {
+      "name": "puzzle5d-wgpu",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:dev",
+        "--",
+        "puzzle5d"
+      ],
+      "port": 6114,
+      "env": {
+        "SEMIO_RENDERER": "wgpu",
+        "S_OS_PORT": "6114"
+      }
+    },
+    {
+      "name": "puzzle5d-native",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:native",
+        "--",
+        "puzzle5d"
+      ]
+    },
+    {
       "name": "dag-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -225,6 +266,60 @@
       "name": "puzzle3d-react-release-e2e-attach",
       "url": "http://localhost:6014",
       "port": 6014
+    },
+    {
+      "name": "puzzle5d-react-attach",
+      "url": "http://localhost:6014",
+      "port": 6014
+    },
+    {
+      "name": "puzzle5d-react-supervised",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔁️serve-supervisor.sh",
+        "puzzle5d",
+        "6014"
+      ],
+      "port": 6014
+    },
+    {
+      "name": "puzzle3d-react-supervised",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔁️serve-supervisor.sh",
+        "puzzle3d",
+        "6013"
+      ],
+      "port": 6013
+    },
+    {
+      "name": "puzzle5d-battery",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔍️browser-probe-5d.ts",
+        "--battery",
+        "--reload-between-groups",
+        "--port=6014"
+      ]
+    },
+    {
+      "name": "puzzle5d-battery-explore",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔍️browser-probe-5d.ts",
+        "--explore",
+        "--port=6014"
+      ]
+    },
+    {
+      "name": "puzzle2d-react-supervised",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔁️serve-supervisor.sh",
+        "puzzle2d",
+        "6012"
+      ],
+      "port": 6012
     },
     {
       "name": "procedural3d-react-attach",

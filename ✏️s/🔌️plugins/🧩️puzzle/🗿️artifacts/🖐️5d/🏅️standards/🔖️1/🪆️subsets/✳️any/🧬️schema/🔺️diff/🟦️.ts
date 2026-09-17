@@ -29,6 +29,8 @@ export interface Puzzle5dDiff {
   parts?: Puzzle5dPartsDelta;
   /** @state artifact */
   fasteners?: Puzzle5dFastenersDelta;
+  /** @state artifact */
+  targetVolumes?: Puzzle5dTargetVolumesDelta;
 }
 
 export interface Puzzle5dStringList { values: string[]; }
@@ -40,6 +42,10 @@ export interface Puzzle5dFastenersDelta { added: Puzzle5dFastener[]; removed: st
 export interface Puzzle5dFastenerPatchEntry { id: string; patch: Puzzle5dFastenerPatch; }
 export interface Puzzle5dFastenerPatch { replacement?: Puzzle5dFastener; }
 export interface Puzzle5dFastener { id: string; source?: string; target?: string; gap?: number; shift?: number; rise?: number; rotation?: number; turn?: number; tilt?: number; x?: number; y?: number; [key: string]: unknown; }
+export interface Puzzle5dTargetVolumesDelta { added: Puzzle5dTargetVolume[]; removed: string[]; patched: Puzzle5dTargetVolumePatchEntry[]; reordered?: string[]; }
+export interface Puzzle5dTargetVolumePatchEntry { id: string; patch: Puzzle5dTargetVolumePatch; }
+export interface Puzzle5dTargetVolumePatch { replacement?: Puzzle5dTargetVolume; }
+export interface Puzzle5dTargetVolume { id: string; origin?: [number, number, number]; orientation?: [number, number, number, number]; scale?: number | [number, number, number]; hidden?: boolean; locked?: boolean; }
 export interface Puzzle5dKindCompatibility { source?: string; target?: string; bidirectional?: boolean; important?: boolean; specificity?: Puzzle5dCompatSpecificity; [key: string]: unknown; }
 export interface Puzzle5dArtifact { [key: string]: unknown; }
 export interface Puzzle5dMeta { [key: string]: unknown; }

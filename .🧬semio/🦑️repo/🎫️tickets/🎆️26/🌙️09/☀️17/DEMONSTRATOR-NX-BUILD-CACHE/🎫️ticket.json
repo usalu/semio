@@ -1,0 +1,5 @@
+{
+  "title": "Demonstrator Nx Build Cache",
+  "description": "Stop unnecessary plugin wasm rebuilds when re-running demonstrator prepare/activate by fixing Nx native input churn and activation outputs.",
+  "status": "open"
+}

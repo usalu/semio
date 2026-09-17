@@ -41,6 +41,12 @@ fn window_of(node: &BuiltNode) -> Option<semio_framework_ui_contract::TreeWindow
     }
 }
 
+/// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
+/// not `serde_json` on the root — is what walks and retires them.
+fn body_json(tree: BuiltNode) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+}
+
 fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
@@ -55,15 +61,14 @@ fn request(open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin
 fn the_inspector_ids_section_stamps_the_whole_selection() {
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
-    let windows = semio_framework_plugin::TreeWindows::unhosted();
+    let windows = TreeWindows::unhosted();
     let tree = render(&scene, labels(), &windows).expect("a whole-board selection must be admitted");
     let ids = child_of(&tree, IDS_SECTION);
     assert_eq!(window_of(ids).expect("the ids section must stamp its window").total as usize, SCALE_IDS);
     assert!(!ids.children.is_empty() && ids.children.len() <= SCALE_IDS);
-    let body = serde_json::to_string(&tree).expect("serialize the inspector body");
+    let body = body_json(tree);
     assert!(!body.contains(".more"), "a windowed inspector carries no continuation key");
     assert!(!body.contains("\"+"), "a windowed inspector carries no `+N` label");
-    drop(tree);
     drain_retired_ui_owners();
 }
 
@@ -73,7 +78,7 @@ fn a_closed_inspector_ids_section_builds_no_row() {
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
     let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(false), 0, 16)], ..Default::default() };
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
     let tree = render(&scene, labels(), &windows).expect("a closed ids section must be admitted");
     let ids = child_of(&tree, IDS_SECTION);
     assert_eq!(window_of(ids).expect("a closed container still stamps its window").total as usize, SCALE_IDS);
@@ -89,7 +94,7 @@ fn an_inspector_ids_window_materialises_exactly_its_slice() {
     let scene = selected_scene(SCALE_IDS);
     let (offset, rows) = (33u32, 7u32);
     let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(true), offset, rows)], ..Default::default() };
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
     let tree = render(&scene, labels(), &windows).expect("a windowed ids section must be admitted");
     let ids = child_of(&tree, IDS_SECTION);
     assert_eq!(window_of(ids).expect("stamped window").offset, offset);

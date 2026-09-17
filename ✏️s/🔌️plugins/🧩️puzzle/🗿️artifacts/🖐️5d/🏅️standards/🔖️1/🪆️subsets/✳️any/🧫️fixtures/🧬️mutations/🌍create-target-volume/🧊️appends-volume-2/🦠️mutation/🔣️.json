@@ -1,0 +1,12 @@
+{
+  "mutation": "createTargetVolume",
+  "targetVolume": {
+    "id": "volume-2",
+    "origin": [
+      6.0,
+      0.0,
+      0.0
+    ]
+  },
+  "index": null
+}

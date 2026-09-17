@@ -65,13 +65,9 @@ function renderTableCell(cell: TableCellRecord, id: string, onAction: (action: A
     case "stepper":
       return (
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          <Button icon="minus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline">
-            −
-          </Button>
+          <Button icon="minus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline" />
           <Input id={id} className="h-medium w-14 min-w-0 text-center font-mono text-xs" readOnly value={String(cell.value)} />
-          <Button icon="plus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline">
-            +
-          </Button>
+          <Button icon="plus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline" />
         </div>
       );
     case "buttons":

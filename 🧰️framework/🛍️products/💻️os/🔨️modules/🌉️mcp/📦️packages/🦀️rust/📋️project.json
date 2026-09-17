@@ -19,7 +19,6 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
       },
-      "parallelism": false,
       "inputs": [
         "production",
         "^production"

@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle5d diff schema — sparse field delta over the artifact.
 
 use crate::standards::v1::subsets::any::schema::Puzzle5dArtifact;
-use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart};
+use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -32,6 +32,8 @@ pub struct Puzzle5dDiff {
     pub parts: Option<Puzzle5dPartsDelta>,
     #[state(artifact)]
     pub fasteners: Option<Puzzle5dFastenersDelta>,
+    #[state(artifact)]
+    pub target_volumes: Option<Puzzle5dTargetVolumesDelta>,
 }
 //#endregion 🔖️Diff
 
@@ -99,6 +101,31 @@ pub struct Puzzle5dFastenerPatchEntry {
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dFastenerPatch {
     pub replacement: Option<Puzzle5dFastener>,
+}
+
+/// 🧩 Identified-collection delta for `target_volumes`.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle5dTargetVolumesDelta {
+    pub added: Vec<Puzzle5dTargetVolume>,
+    pub removed: Vec<String>,
+    pub patched: Vec<Puzzle5dTargetVolumePatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `Puzzle5dTargetVolume` entry.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle5dTargetVolumePatchEntry {
+    pub id: String,
+    pub patch: Puzzle5dTargetVolumePatch,
+}
+
+/// 🩹 Sparse patch over `Puzzle5dTargetVolume` — whole-item replacement via `replacement`.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle5dTargetVolumePatch {
+    pub replacement: Option<Puzzle5dTargetVolume>,
 }
 
 //#endregion 🔖️DeltaHelpers

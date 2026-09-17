@@ -369,7 +369,6 @@
     "wasm": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
       "inputs": [
         "nativeSources",
         "^nativeSources"
@@ -442,7 +441,6 @@
     "native-build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
       "inputs": [
         "production",
         "^production"
@@ -459,7 +457,6 @@
     "native-build-release": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
       "inputs": [
         "production",
         "^production"
@@ -497,7 +494,6 @@
     "wasm-release": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
       "inputs": [
         "nativeSources",
         "^nativeSources"

@@ -124,6 +124,7 @@ import {
   spawnDaemon,
   summarizeCoverage,
   semioShipEnv,
+  semioNxParallelFlag,
   installMicroCommitGitHooks,
   runCommit,
   runMicroCommit,
@@ -7958,7 +7959,7 @@ export class VerifyScript extends Script {
     }
     await this.runGate();
     if (segments[0] === "gate") return;
-    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🚦️ Reports findings without failing, or enforces the identical structured result. */
@@ -8567,7 +8568,7 @@ export class VerifyScript extends Script {
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs"], {
+    runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs", ...semioNxParallelFlag()], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
@@ -14321,12 +14322,12 @@ export class StdioScript extends Script {
     }
     if (gate === "long") {
       for (const structuralGate of ["quick", "schema-parity", "standards-coverage", "codec", "mutation-law", "inference"] as const) stdioRunStructuralGate(this.root, structuralGate);
-      runCmd("bun", ["nx", "run-many", "-t", "test-long", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "test-long", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "exhaustive") {
       this.run(["long"]);
-      runCmd("bun", ["nx", "run-many", "-t", "test-exhaustive", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "test-exhaustive", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "runtime") {

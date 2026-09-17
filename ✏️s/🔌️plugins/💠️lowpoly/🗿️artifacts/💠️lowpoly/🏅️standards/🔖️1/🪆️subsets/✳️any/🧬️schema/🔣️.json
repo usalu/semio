@@ -63,6 +63,10 @@
           "items": {
             "$ref": "#/$defs/LowpolyPaintLayer"
           }
+        },
+        "meshContent": {
+          "type": "string",
+          "description": "Half-edge-mesh JSON the mesh handle hashes; empty in legacy handle-only documents."
         }
       }
     },

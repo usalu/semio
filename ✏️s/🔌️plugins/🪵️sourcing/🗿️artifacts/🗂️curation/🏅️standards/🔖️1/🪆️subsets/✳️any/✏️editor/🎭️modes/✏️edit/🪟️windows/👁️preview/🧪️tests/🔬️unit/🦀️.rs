@@ -17,6 +17,7 @@ async fn preview_renders_selected_mesh_id() {
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID), "the selected box-built kind draws from the unit box mesh");
     assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced");
+    assert!(scene.fit_json.as_deref().is_some_and(|fit| fit.contains("\"enabled\":true") && fit.contains("boundsMin")), "catalogue selection must stage a one-shot camera fit");
 }
 
 #[semio_framework_async_macros::async_test]

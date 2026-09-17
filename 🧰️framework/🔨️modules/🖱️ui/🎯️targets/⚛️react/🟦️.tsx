@@ -7523,6 +7523,30 @@ function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): bool
   return owner === null || owner === stack;
 }
 
+/** @emoji 🖱️ Reads fused submenu wing rects for a context menu stack. */
+function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: WindowSilhouetteMetrics): WindowSilhouetteMetrics {
+  const fusionBody = stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
+  if (!fusionBody) return base;
+  const primary = fusionBody.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
+  if (!primary) return base;
+  const wings = [...fusionBody.querySelectorAll<HTMLElement>('[data-slot="context-menu-submenu"]')];
+  if (wings.length === 0) return base;
+  const toLocal = (rect: DOMRect) => ({
+    left: rect.left - stackRect.left,
+    top: rect.top - stackRect.top,
+    right: rect.right - stackRect.left,
+    bottom: rect.bottom - stackRect.top,
+  });
+  const fusion = { primary: toLocal(primary.getBoundingClientRect()), wings: wings.map((wing) => toLocal(wing.getBoundingClientRect())) };
+  let width = base.width;
+  let height = base.height;
+  for (const wing of fusion.wings) {
+    width = Math.max(width, wing.right);
+    height = Math.max(height, wing.bottom);
+  }
+  return { ...base, width, height, contextMenuFusion: fusion };
+}
+
 /** @emoji 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
@@ -7551,7 +7575,8 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
     }
     return { depth, chips: normalizeWindowSilhouetteChips(chips, 0, width) };
   };
-  return { width, height, top: measureEdge("top"), bottom: measureEdge("bottom") };
+  const base = { width, height, top: measureEdge("top"), bottom: measureEdge("bottom") };
+  return measureContextMenuFusion(stack, stackRect, base);
 }
 
 /** @emoji 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
@@ -7574,7 +7599,7 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
       if (typeof requestAnimationFrame === "function") frame = requestAnimationFrame(commit);
       else commit();
     };
-    const targetSelector = '[data-window-silhouette-chip], [data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
+    const targetSelector = '[data-window-silhouette-chip], [data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"], [data-slot="context-menu-fusion-body"], [data-slot="context-menu-submenu"]';
     const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
     const refreshResizeTargets = () => {
       resizeObserver?.disconnect();
@@ -7746,6 +7771,8 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowSilhouetteBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
+  /** @emoji 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
+  readonly capFitContent?: boolean;
   /** @emoji 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
   /** @emoji ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
@@ -7877,6 +7904,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       borderKind,
       stackBindProps,
       stackDataAttrs,
+      capFitContent = false,
       capDock = "top",
       capRowStyle,
       capSlot = "window-chrome-cap",
@@ -7955,7 +7983,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {...stackDataAttrs}
       >
         <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} introduceTarget={introduceTarget} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
-        <div ref={capRef} data-slot={capSlot} data-ui-reveal-region="window-cap" data-dim className="relative flex w-full min-w-0 shrink-0 items-stretch bg-transparent" style={{ ...capRowStyle, ...WINDOW_CHROME_CHIP_ROW_STYLE }}>
+        <div ref={capRef} data-slot={capSlot} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-w-0 shrink-0 items-stretch bg-transparent", capFitContent ? "w-fit max-w-full" : "w-full")} style={{ ...capRowStyle, ...WINDOW_CHROME_CHIP_ROW_STYLE }}>
           {titleChips ? (
             <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
               {titleChips}
@@ -8072,9 +8100,10 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
       <WindowChrome
         ref={ref}
         active={true}
+        capFitContent={true}
         level="menu"
         stackSlot="context-menu-content"
-        className={cn("z-menu w-auto min-w-[10rem] max-h-layout-command overflow-y-auto", className)}
+        className={cn("z-menu w-fit min-w-[10rem] max-h-layout-command overflow-y-auto", className)}
         style={style}
         titleChips={
           <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>
@@ -8083,7 +8112,7 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
           </div>
         }
         body={children}
-        bodyClassName="pointer-events-auto p-single"
+        bodyClassName="pointer-events-auto w-fit overflow-visible p-single"
       />
     );
   },
@@ -9494,6 +9523,7 @@ import {
   WindowMeasuresTree,
   WindowPaneChromeToggle,
   buildControlTree,
+  capTreeWindowRequests,
   catalogueTreeDragController,
   createTreeHighlightStore,
   createTreeSelectionStore,
@@ -9534,10 +9564,13 @@ import {
   treeRowHeightPx,
   treeWindowDomAttributes,
   treeWindowRequestsForViewport,
+  treeWindowRowIndexOf,
   treeWindowSpacerRows,
+  treeWindowVisibleRowsForViewport,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
+  TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,
   TREE_WINDOW_ROWS_MAX,
   type CatalogueItem,
@@ -9565,8 +9598,10 @@ import {
   type TreeSelectionMode,
   type TreeDataWindow,
   type TreeWindowContainerMeasure,
+  type TreeWindowRowMeasure,
   type TreeWindowDomAttributes,
   type TreeWindowRequest,
+  type TreeWindowVisibleRows,
   type UseTreeReorderResult,
   type WindowMeasureTreeGroupProps,
   type WindowMeasureTreeLeafProps,
@@ -9598,6 +9633,7 @@ export {
   WindowMeasuresTree,
   WindowPaneChromeToggle,
   buildControlTree,
+  capTreeWindowRequests,
   catalogueTreeDragController,
   createTreeHighlightStore,
   createTreeSelectionStore,
@@ -9638,10 +9674,13 @@ export {
   treeRowHeightPx,
   treeWindowDomAttributes,
   treeWindowRequestsForViewport,
+  treeWindowRowIndexOf,
   treeWindowSpacerRows,
+  treeWindowVisibleRowsForViewport,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
+  TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,
   TREE_WINDOW_ROWS_MAX,
 };
@@ -9671,8 +9710,10 @@ export type {
   TreeSelectionMode,
   TreeDataWindow,
   TreeWindowContainerMeasure,
+  TreeWindowRowMeasure,
   TreeWindowDomAttributes,
   TreeWindowRequest,
+  TreeWindowVisibleRows,
   UseTreeReorderResult,
   WindowMeasureTreeGroupProps,
   WindowMeasureTreeLeafProps,
@@ -10177,7 +10218,7 @@ export const WINDOW_SEARCH_USER = {
   noMatches: "No matches",
 } as const;
 
-/** @emoji ⌨️ Normalizes engagement action text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
+/** @emoji ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
 export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
   const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
@@ -10455,13 +10496,23 @@ export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossibl
   return showPossiblesList || Boolean(draft.trim());
 }
 
+/**
+ * @emoji ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
+ * An empty line confirms (repeat-last when idle, step submit during a session) and a live engagement
+ * session keeps the step-value grammar where each Space commits the typed number. A typed line with no
+ * session is prose the program tokenizes itself (`move 50 25`), so Space belongs in the text.
+ */
+export function searchSpaceConfirmsLine(draft: string, sessionActive: boolean): boolean {
+  return !draft.trim() || sessionActive;
+}
+
 /** @emoji ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
 export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
     if (sessionActive) {
       if (!input.onSubmit) return false;
-      input.onSubmit(draft);
+      input.onSubmit(draft.trim());
       return true;
     }
     if (!input.onRepeatLast) return false;
@@ -10469,7 +10520,7 @@ export function applySearchSpaceAction(input: SearchInput, draft: string, sessio
     return true;
   }
   if (!input.onSubmit) return false;
-  input.onSubmit(draft);
+  input.onSubmit(draft.trim());
   return true;
 }
 
@@ -10480,7 +10531,7 @@ export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pi
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (!shouldRouteKeysToWindowSearch(event.target)) return false;
   const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  const draft = normalizeEngagementActionText(input.value ?? field?.value ?? "");
+  const draft = input.value ?? field?.value ?? "";
   return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
 }
 
@@ -10493,7 +10544,7 @@ export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: 
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
   const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  const next = normalizeEngagementActionText(`${input.value ?? field?.value ?? ""}${event.key}`);
+  const next = `${input.value ?? field?.value ?? ""}${event.key}`;
   input.onChange?.(next);
   return true;
 }
@@ -10710,8 +10761,8 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const [controlledEdit, setControlledEdit] = reactHostPort.useState<SearchLineEdit | null>(null);
   const isControlledInput = !!input?.onChange;
-  const publishedLine = normalizeEngagementActionText(input?.value ?? "");
-  const draft = isControlledInput ? searchControlledLineV1(publishedLine, controlledEdit) : normalizeEngagementActionText(uncontrolledDraft);
+  const publishedLine = input?.value ?? "";
+  const draft = isControlledInput ? searchControlledLineV1(publishedLine, controlledEdit) : uncontrolledDraft;
   const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel : actionPlaceholderLabel);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
@@ -10731,15 +10782,18 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
   const inlineCompletion = reactHostPort.useMemo(() => (showPossiblesList ? null : searchActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)), [activePossibleIndex, draft, filteredPossibles, showPossiblesList]);
 
+  /** ⌨️ The typed line reaches the program VERBATIM: an app whose grammar carries arguments
+   * (`move 50 25`, `fill 12`) owns its own tokenization, and a name-token grammar normalizes in its
+   * own `onChange` (the cad repl PascalCases there). Squashing separators here made every argument
+   * collapse into the verb (`move 50 25` → `Move5025`). */
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
-      const normalized = normalizeEngagementActionText(value);
       if (!isControlledInput) {
-        setUncontrolledDraft(normalized);
+        setUncontrolledDraft(value);
         return;
       }
-      setControlledEdit((previous) => ({ text: normalized, base: previous?.base ?? publishedLine, sent: [...(previous?.sent ?? []).slice(-(SEARCH_LINE_EDIT_SENT_LIMIT - 1)), normalized] }));
-      input?.onChange?.(normalized);
+      setControlledEdit((previous) => ({ text: value, base: previous?.base ?? publishedLine, sent: [...(previous?.sent ?? []).slice(-(SEARCH_LINE_EDIT_SENT_LIMIT - 1)), value] }));
+      input?.onChange?.(value);
     },
     [input, isControlledInput, publishedLine],
   );
@@ -10843,15 +10897,19 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                       return;
                     }
                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) {
+                        event.preventDefault();
+                        return;
+                      }
+                      if (!searchSpaceConfirmsLine(draft, sessionActive)) return;
                       event.preventDefault();
-                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
                       if (applySearchSpaceAction(input!, draft, sessionActive)) releaseDraft();
                       return;
                     }
                     if (event.key === "Enter") {
                       event.preventDefault();
                       if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                      input!.onSubmit?.(draft);
+                      input!.onSubmit?.(draft.trim());
                       releaseDraft();
                     }
                   }}
@@ -11407,7 +11465,7 @@ if (import.meta.vitest) {
     });
   });
   const { registerTests1 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
 }
 
 // #endregion 🔍️Window Components

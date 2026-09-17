@@ -6,7 +6,7 @@
 //! are rejected by the native MP4 deserializer before this reshape).
 //!
 //! Honest, documented lossy fields (real, unavoidable — never fabricated):
-//! - `Mp4Codec{sps,pps,nal_length_size}` collapses to the plain codec name string `"avc1"` —
+//! - `Mp4Codec` collapses to its sample entry name (`"avc1"`, `"hvc1"`, `"jpeg"`, ...) —
 //!   `SemioVideoStream.codec` has no slot for structured codec-config bytes.
 //! - `Mp4Sample.cts_offset` (composition-time offset) is folded into the derived `pts` (`pts = dts
 //!   + cts_offset`, `dts` = running sum of prior `duration`s) rather than kept as its own field —
@@ -33,7 +33,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
             .tracks
             .iter()
             .map(|track| {
-                let codec = "avc1".to_string();
+                let codec = track.codec.format.fourcc().to_string();
                 let mut dts: i64 = 0;
                 let samples = track
                     .samples

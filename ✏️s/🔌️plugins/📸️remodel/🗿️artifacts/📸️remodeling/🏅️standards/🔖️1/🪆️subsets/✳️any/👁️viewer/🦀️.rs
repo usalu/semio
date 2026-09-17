@@ -49,8 +49,12 @@ impl ArtifactViewer for RemodelingViewer {
     const DIALECT: Dialect = REMODELING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
 
+    /// 🚀️ Boots on the subset's committed `demo` example — the same document the editor boots on — so
+    /// the two surfaces of one dialect open the same scene. A viewer has no `setActiveExample` action (its
+    /// sole command is `Noop`), so the artifact's own `default_remodeling_scene()` is only the fallback for
+    /// example text that no longer parses, never the ordinary boot.
     fn initial_snapshot() -> RemodelingSnapshot {
-        default_remodeling_scene()
+        crate::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
     }
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config

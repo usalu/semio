@@ -30,6 +30,8 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 # ⏯️ Tool run contract: the fill run job translates the 3d planner's `ToolRunTick` pages into 5d ones.
 semio-framework-tool-run = { workspace = true }
+# 🧊️ The guest's per-request contiguous ceiling — the derived budget the export/import lanes measure against.
+semio-framework-trace = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

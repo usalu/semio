@@ -6,7 +6,7 @@ use semio_framework_job::{InteractiveJob, RetainedJobPayload, StepOutcome, JOB_P
 use semio_framework_tool_run::{ToolRunTick, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
 use std::collections::HashMap;
-use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::fill::run_definition;
+use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
 use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
@@ -46,7 +46,7 @@ fn never() -> Option<u64> {
 fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, provisional: &[Puzzle5dMutation]) -> Puzzle5dPlannerToolRunJob {
     let definition = run_definition();
     let request = ToolRunJobRequest::<EditorApp<Puzzle5dPlayApp>> {
-        tool_id: UTILITY_ID,
+        tool_id: TOOL_ID,
         definition: &definition,
         purpose,
         identity: identity(),
@@ -61,7 +61,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         trace_keys: ToolRunTraceKeys::default(),
         entity_marks: &[],
     };
-    fill_run_job(request).expect("the fill job builds").expect("the fill utility has a run job")
+    fill_run_job(request).expect("the fill job builds").expect("the fill tool has a run job")
 }
 
 fn close(mut payload: RetainedJobPayload) {
@@ -412,7 +412,7 @@ pub(crate) fn tool_run_action(app: &mut Puzzle5dApp, action: &str, args: serde_j
 }
 
 fn start(app: &mut Puzzle5dApp) -> serde_json::Value {
-    tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: UTILITY_ID }))
+    tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID }))
 }
 
 fn pump(app: &mut Puzzle5dApp, what: &str, until: impl Fn(&protocol::PresenceToolRun) -> bool) -> usize {
@@ -447,7 +447,7 @@ fn set_fill_count(app: &mut Puzzle5dApp, count: u64) {
     dispatch(app, "setFillCount", Some(&dsl::json!({ "value": count })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
 }
 
-/// ⏯️ LAW (start → complete → finalize = one undo entry): the utility declares its run through the manifest; a
+/// ⏯️ LAW (start → complete → finalize = one undo entry): the tool declares its run through the manifest; a
 /// complete run has committed nothing while the world window renders committed ⊕ provisional parts stamped
 /// `provisional`; finalize publishes every placement as ONE edit that one undo removes and one redo restores.
 #[test]
@@ -520,6 +520,52 @@ fn raising_the_fill_count_during_a_run_reconfigures_the_same_run() {
     assert!(second["generation"].as_u64() > first["generation"].as_u64(), "under a newer generation");
     assert_eq!(committed(&app), before, "a reconfigured run still committed nothing");
     close_app(&mut app);
+}
+
+/// 🪜️ LAW: lowering the count during a run retracts the TAIL of the SAME run — the placements below the new
+/// count stay exactly as they were, so a lower is a retraction, never a restart.
+#[test]
+fn lowering_the_fill_count_during_a_run_retracts_the_tail_of_the_same_run() {
+    let law = &fixture()["laws"]["reconfigure"];
+    let mut app = app_with_registry();
+    let requested = law["raised"].as_u64().expect("raised");
+    let lowered = law["lowered"].as_u64().expect("lowered");
+    set_fill_count(&mut app, requested);
+    let before = committed(&app);
+    start(&mut app);
+    pump(&mut app, "the first run completes", |presence| presence.state == protocol::PresenceToolRunState::Complete);
+    let first = escape_identity(&mut app).expect("a live run");
+    assert_eq!(provisional_instances(&mut app).1, requested as usize, "the run holds what was requested");
+    set_fill_count(&mut app, lowered);
+    pump(&mut app, "the lowered run settles", |presence| presence.state == protocol::PresenceToolRunState::Complete && presence.completed == lowered);
+    let second = escape_identity(&mut app).expect("the same run is still live");
+    assert_eq!(second["runId"], first["runId"], "a lower retracts within the SAME run");
+    assert_eq!(provisional_instances(&mut app).1, lowered as usize, "only the tail above the new count is retracted");
+    assert_eq!(committed(&app), before, "a retracted run still committed nothing");
+    close_app(&mut app);
+}
+
+/// 🧱️ LAW: a document past the planner's fixed object capacity (capsule-dream, 2 880 parts against the 3d
+/// planner's `DOCUMENT_OBJECT_SLOTS` = 2 048) REFUSES visibly — a `danger` step carrying the artifact-capacity
+/// reason before the declared preparation-capacity fault — instead of silently truncating the plan.
+#[test]
+fn a_document_past_the_planner_capacity_refuses_with_a_visible_danger_step() {
+    let law = &fixture()["laws"]["interactive"];
+    let refusal = law["capacityRefusals"]["capsule-dream"].as_str().expect("the capsule dream refusal");
+    let mut mirror = Mirror::default();
+    let mut job = job(&example("capsule-dream"), law["requested"].as_u64().expect("requested") as u32, ToolRunJobPurpose::Run, &[]);
+    let mut sequence = 0;
+    for _ in 0..FILL_RUN_TURNS {
+        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX), never, &mut sequence) {
+            break;
+        }
+    }
+    assert_eq!(mirror.fault.as_deref(), Some(refusal), "the run refuses the oversized document by its declared capacity code");
+    assert!(
+        mirror.steps.iter().any(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Danger && step.reason == FillRunReason::ArtifactCapacity.code()),
+        "the refusal is a visible danger step before the fault"
+    );
+    assert!(mirror.ops.is_empty(), "a refused run places nothing");
 }
 //#endregion ⏯️App
 

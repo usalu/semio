@@ -257,6 +257,17 @@
       }
     },
     {
+      "name": "🚦️ci baseline",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:ci-baseline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -39
+      }
+    },
+    {
       "name": "🦑️mcp dev",
       "type": "node-terminal",
       "request": "launch",
@@ -3442,6 +3453,116 @@
       "presentation": {
         "group": "0_dev",
         "order": 392.002
+      }
+    },
+    {
+      "name": "📦️build✏️s",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 9
+      }
+    },
+    {
+      "name": "📦️build📐️cad",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-cad-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 10
+      }
+    },
+    {
+      "name": "📦️build🧩️puzzle🏙️3d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 140
+      }
+    },
+    {
+      "name": "📦️build🧩️puzzle👯️5d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle5d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 150
+      }
+    },
+    {
+      "name": "📦️build📸️shooting",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-shooting-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 180
+      }
+    },
+    {
+      "name": "📦️check🧊️wgpu🔒️lockfile",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:lockfile-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.145
+      }
+    },
+    {
+      "name": "📦️generate🧊️wgpu🚀️boot",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:generate-browser-boot",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.146
+      }
+    },
+    {
+      "name": "📦️check🧊️wgpu🌐️browser",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:check-browser-worker",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.147
+      }
+    },
+    {
+      "name": "📦️wasm🧊️wgpu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 500.81
+      }
+    },
+    {
+      "name": "📦️wasm-release🧊️wgpu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:wasm-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 500.811
       }
     }
     ,

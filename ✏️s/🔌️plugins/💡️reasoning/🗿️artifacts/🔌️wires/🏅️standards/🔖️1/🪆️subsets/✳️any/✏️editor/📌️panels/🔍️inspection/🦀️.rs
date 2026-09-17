@@ -5,7 +5,7 @@ use crate::schema::{fixture_json_string, fixture_nodes};
 use crate::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
@@ -41,15 +41,13 @@ pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminolo
         format!("{}: {}", labels.relationships.as_str(), extension.as_ref().map_or(0, |ext| ext.relationships.len())),
         format!("{}: {}", labels.board_nodes.as_str(), fixture_nodes(&board).len()),
     ];
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for (index, row) in rows.iter().enumerate() {
-        let node = semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?)
+    let nodes = ui_node_list(rows.iter().enumerate().map(|(index, row)| {
+        semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?)
             .try_id(format!("wires-inspection.summary-{index}"))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary id admission failed"))?
             .try_build()
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary text admission failed"))?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary admission failed"))?;
-    }
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary text admission failed"))
+    }))?;
     namespace.section("wires-inspection.summary", None, true, nodes)?.build()
 }
 //#endregion 🔖️Render

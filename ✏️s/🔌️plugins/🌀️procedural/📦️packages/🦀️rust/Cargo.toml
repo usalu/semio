@@ -13,7 +13,17 @@ package = "semio:procedural"
 
 [package.metadata.semio]
 role = "plugin"
-consumes = ["forms.questionKind", "flow.extension"]
+consumes = ["forms.questionKind"]
+depends-on = [
+  "flow-extension-bim",
+  "flow-extension-brep",
+  "flow-extension-dictionary",
+  "flow-extension-list",
+  "flow-extension-logic",
+  "flow-extension-math",
+  "flow-extension-primitive",
+  "flow-extension-text",
+]
 
 [[package.metadata.semio.playground]]
 variant = "generation2d"

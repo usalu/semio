@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
+import { devToolingEnv } from "./🌿️environment/🟦️.ts";
 
 /** 🏗️Default build budget (ms): zero leaves compilation and Cargo lock waits unlimited. Opt in via `SEMIO_BUILD_BUDGET_MS`. */
 export const BUILD_BUDGET_MS = 0;
@@ -114,14 +115,14 @@ export function terminateOwnedProcessTree(rootPid: number): void {
   }
 }
 
-/** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]]. */
-export function orchestratorBudgetOpts(): RunCmdOpts {
-  return { budgetMs: orchestratorBudgetMs() };
+/** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */
+export function orchestratorBudgetOpts(extra: NodeJS.ProcessEnv = {}): RunCmdOpts {
+  return { budgetMs: orchestratorBudgetMs(), env: devToolingEnv(extra) };
 }
 
-/** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]]. */
-export function daemonBudgetOpts(): RunCmdOpts {
-  return { budgetMs: daemonBudgetMs() };
+/** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]] and [[devToolingEnv]]. */
+export function daemonBudgetOpts(extra: NodeJS.ProcessEnv = {}): RunCmdOpts {
+  return { budgetMs: daemonBudgetMs(), env: devToolingEnv(extra) };
 }
 
 /** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */

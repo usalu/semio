@@ -250,3 +250,16 @@ diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/
                  resolve();
              });
          }));
+diff --git a/dist/src/tasks-runner/run-command.js b/dist/src/tasks-runner/run-command.js
+--- a/dist/src/tasks-runner/run-command.js
++++ b/dist/src/tasks-runner/run-command.js
+@@ -882,6 +882,9 @@ function getRunnerOptions(runner, nxJson, nxArgs, isCloudDefault) {
+     if (nxJson.parallel) {
+         result.parallel ??= nxJson.parallel;
+     }
++    else {
++        result.parallel ??= (require('os').availableParallelism?.() ?? require('os').cpus().length);
++    }
+     if (nxJson.cacheDirectory) {
+         result.cacheDirectory ??= nxJson.cacheDirectory;
+     }

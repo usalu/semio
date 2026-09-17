@@ -333,6 +333,24 @@ impl BoardSession {
         self.state.borrow_mut().host.set_active_utility(label);
     }
 
+    /// 🕹️ Composes the select utility's gumball handles (`setTransformGumballFlag` on the guest).
+    #[wasm_bindgen(js_name = setTransformFlags)]
+    pub fn set_transform_flags_wasm(&mut self, move_enabled: bool, rotate_enabled: bool) {
+        self.state.borrow_mut().host.set_transform_flags(move_enabled, rotate_enabled);
+    }
+
+    /// 🩺️ The gumball's probe vitals — published as `data-board-transform-json`.
+    #[wasm_bindgen(js_name = transformGumballJson)]
+    pub fn transform_gumball_json_wasm(&self) -> String {
+        self.state.borrow().host.transform_gumball_json()
+    }
+
+    /// 🩺️ The live gesture/utility/hover snapshot — published as `data-board-interaction-json`.
+    #[wasm_bindgen(js_name = interactionJson)]
+    pub fn interaction_json_wasm(&self) -> String {
+        self.state.borrow().host.interaction_json()
+    }
+
     #[wasm_bindgen(js_name = setSuggestionOffset)]
     pub fn set_suggestion_offset_wasm(&mut self, distance: f64) {
         self.state.borrow_mut().host.set_suggestion_offset(distance);

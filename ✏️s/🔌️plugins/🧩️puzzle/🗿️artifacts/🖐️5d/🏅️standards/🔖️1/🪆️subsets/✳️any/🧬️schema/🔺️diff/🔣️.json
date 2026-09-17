@@ -67,6 +67,10 @@
     "fasteners": {
       "$ref": "#/$defs/Puzzle5dFastenersDelta",
       "x-semio-state": "artifact"
+    },
+    "targetVolumes": {
+      "$ref": "#/$defs/Puzzle5dTargetVolumesDelta",
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -227,6 +231,70 @@
           "items": {
             "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
           }
+        }
+      }
+    },
+    "Puzzle5dTargetVolumesDelta": {
+      "title": "Puzzle5dTargetVolumesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dTargetVolumePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle5dTargetVolumePatchEntry": {
+      "title": "Puzzle5dTargetVolumePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle5dTargetVolumePatch"
+        }
+      }
+    },
+    "Puzzle5dTargetVolumePatch": {
+      "title": "Puzzle5dTargetVolumePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
         }
       }
     }

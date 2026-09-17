@@ -107,7 +107,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectAdjacencyWindowC
             let group = semio_framework_ui_contract::tree_item(ui_label(element_label(program, &matrix.element_ids[*row]))?)
                 .try_id(&id)
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency row admission failed"))?;
-            tree_window_item(windows, group, &id, true, cells, |cell| matrix_cell_row(*row, cell))
+            tree_window_item(windows, group, &id, true, cells.as_slice(), |cell| matrix_cell_row(*row, cell))
         })?;
     if !conflicts.is_empty() {
         tree = tree.window_section(windows, "architect-adjacency.conflicts", Some(ui_label(format!("Conflicts ({})", conflicts.len()))?), true, &conflicts, |conflict| {

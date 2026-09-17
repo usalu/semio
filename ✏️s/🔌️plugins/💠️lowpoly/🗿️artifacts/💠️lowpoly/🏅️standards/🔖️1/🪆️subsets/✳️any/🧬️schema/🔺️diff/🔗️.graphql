@@ -26,6 +26,7 @@ type LowpolyObjectPatch {
   smoothShading: Boolean
   transform: LowpolyTransform
   mesh: ArtifactChild
+  meshContent: String
 }
 
 type LowpolyPaintLayersDelta {

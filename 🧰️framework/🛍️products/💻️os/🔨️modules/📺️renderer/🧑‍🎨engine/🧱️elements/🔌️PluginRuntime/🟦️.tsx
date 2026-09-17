@@ -377,7 +377,6 @@ function poolConcurrency(): number {
  * directly against a monkey-patched {@link sharedActivationRegistry} without constructing a real
  * `ShardClient`/`Worker`. */
 function handlePluginShardLost(shardIndex: number, actorIds: readonly string[]): void {
-  console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
   // 🚑️ Restoring the ACTOR is not restoring the APP. `ActivationRegistry.restoreActor` re-activates
   // the program on a rebuilt shard and restores whatever checkpoint it has — and a watchdog kill
   // takes no checkpoint, so the guest comes back EMPTY: no `createApp` instance, no open document,
@@ -477,7 +476,6 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
   readonly onShardLost: (shardIndex: number, actorIds: readonly string[]) => void;
   readonly onLiveness: (shardIndex: number, phase: string | null) => void;
 } {
-  console.error("[DEBUG] buildShardClientOptions heartbeatTimeoutMs=120000");
   return {
     residentLedger: rendererResidentLedger(),
     shardCount: poolConcurrency(),
@@ -489,7 +487,7 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
     // [DEBUG] temporary watchdog widening — measures whether the setContributions turn is a HANG or a
     // long-but-finite install. REMOVE with the measurement (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     heartbeatTimeoutMs: 120_000,
-    onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
+    onActorTrap: (actorId, message) => undefined,
     onShardLost: handlePluginShardLost,
     // 🫀️ Every proof a shard is alive is also proof for the loads queued behind its module fetch —
     // see `notePluginLoadProgressForInFlightV1`.
@@ -1016,7 +1014,6 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
           multiple: Boolean(optionValue(params.multiple) ?? params.multiple),
         },
       };
-      console.warn(`[DEBUG] request-file-open mapped ${JSON.stringify({ keys: Object.keys(params), mapped: mapped.requestFileOpen })}`);
       return mapped;
     }
     case "set-active-utility":
@@ -1033,7 +1030,6 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
       // the boundary that decoded it rather than letting `makeEffectDispatchOne` turn it into an
       // unhandled `plugin.internal` rejection with an empty action id in its message.
       if (!action) {
-        console.warn(`[DEBUG] wireEffectToFriendly: dispatch-action req=${num("req")} dropped — empty action id (${JSON.stringify(Object.keys(params))})`);
         return null;
       }
       return { dispatchAction: { req: num("req"), action, args: paramPack("args"), delayMs: paramNum("delayMs") } };
@@ -1063,7 +1059,6 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return null;
     }
     default:
-      console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion (this file's 🔖️ActorAdapter doc)`);
       return null;
   }
 }
@@ -1426,7 +1421,7 @@ function getPluginTurnScheduler(): TurnScheduler<PendingPluginTurn, ShardBudget>
         if (!tearingDownPluginActors.has(actorId)) throw error;
       }
     },
-    onTurnError: (actorId, error) => console.error(`[DEBUG] PluginRuntime: turn failed for actor ${actorId}`, error),
+    onTurnError: (actorId, error) => undefined,
   });
   return sharedPluginTurnScheduler;
 }
@@ -2304,7 +2299,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         try {
           listener(instanceId, announced);
         } catch (error) {
-          console.error("[DEBUG] surface publication listener failed", error);
         }
       }
     }, 0);
@@ -2552,7 +2546,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (fault) throw new Error(fault);
       if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
     }
-    console.debug(`[DEBUG] plugin-ui close ladder instance=${instanceId} surfaces=${retainedSurfaces} turns=${ladder.turns} steps=${steps} ceiling=${ladder.ceiling} phases=${[...phaseCensus].map(([phase, count]) => `${phase}:${count}`).join(",")}`);
     const witness = owner.takeRetirementWitness();
     if (!witness) throw new Error("plugin-ui.retirement-witness-missing");
     uiRetirementByInstance.set(instanceId, witness);
@@ -2701,7 +2694,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const leftover = pendingTurnEffects.get(instanceId) ?? [];
     for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) leftover.push(effect);
     pendingTurnEffects.set(instanceId, leftover);
-    console.warn(`[DEBUG] job-completed leftover job=${job} effects=${leftover.map((effect) => effect.tag).join(",") || "none"}`);
   };
   const deliverJobCompletion = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
     await serializeCommandIngressForActor(actorId, () => deliverJobCompletionTurn(instanceId, actorId, job, outcome));
@@ -2745,7 +2737,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     lastJobProgressRefreshMs.set(key, now);
     for (const listener of [...(spawnedJobProgressListeners.get(instanceId) ?? [])]) {
       try { listener(); }
-      catch (error) { console.error("[DEBUG] spawned job progress subscriber failed", error); }
+      catch (error) {  }
     }
   };
 
@@ -2772,7 +2764,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           return last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
         });
         if (outcome.status !== "running") {
-          console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
           if (live()) await deliverJobCompletion(instanceId, actorId, job, outcome);
           return;
         }
@@ -2781,7 +2772,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         await yieldPluginUiContinuation();
       }
     } catch (error) {
-      console.warn(`[DEBUG] job drive failed kind=${kind} job=${job}`, error);
       turnOutcomes.push({ instanceId, error });
     } finally {
       endIsolatedJobDrive();
@@ -2811,7 +2801,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       }
       const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
       if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
-      console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
       await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
     } finally {
       endIsolatedJobDrive();
@@ -2824,7 +2813,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (effect.tag !== "spawn-job") continue;
       const value = effect.val as { job?: unknown; kind?: unknown; input?: unknown } | undefined;
       if (typeof value?.job !== "bigint" || value.kind !== "framework.reserved.tool") continue;
-      console.warn(`[DEBUG] spawn-job routed kind=${value.kind} job=${value.job} inline=1`);
       await commitReservedToolJobWhileSerialized(instanceId, actorId, value.job, value.kind, coerceWireBytes(value.input));
     }
   };
@@ -2848,11 +2836,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         }
         const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
         if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
-        console.warn(`[DEBUG] job done kind=${kind} job=${job} status=${outcome.status} steps=${step}`);
         if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
       });
     } catch (error) {
-      console.warn(`[DEBUG] job drive failed kind=${kind} job=${job}`, error);
       turnOutcomes.push({ instanceId, error });
     } finally {
       endIsolatedJobDrive();
@@ -2870,7 +2856,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (typeof value?.job !== "bigint" || typeof value.kind !== "string") throw new Error("plugin.spawn-job-authority-invalid");
       const actorId = requireActorId(instanceId);
       if (drivingJobs.has(`${actorId}#${value.job}`) || finishedReservedJobs.has(`${actorId}#${value.job}`)) return false;
-      console.warn(`[DEBUG] spawn-job routed kind=${value.kind} job=${value.job}`);
       const input = coerceWireBytes(value.input);
       const drive = value.kind === "framework.reserved.tool"
         ? driveReservedToolJob(instanceId, actorId, value.job, value.kind, input)
@@ -2909,7 +2894,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
       const inspected = inspectEncodedAppCommand(events);
-      console.warn("[DEBUG] command ingress lane", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, lane: inspected.lane, order: dispatch?.order ?? null }));
       const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         const results: WireTurnResult[] = [];
@@ -2951,7 +2935,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             const pageTurn = await submitTurn(actorId, acknowledgements, { commandPage, activation });
             await acceptTurn(pageTurn);
           }
-          console.warn("[DEBUG] command ingress crossed", JSON.stringify({ actionId: inspected.actionId, bytes: events[commandIndex]!.length, pages: pages.length, ms: Math.round(performance.now() - crossingStartedMs) }));
           const ceiling = commandIngressContinuationCeilingV1(pages.length);
           let terminal = foldIngress();
           let lastTurnStatus = wireTurnStatusTag(results.at(-1)?.status);
@@ -2964,9 +2947,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             await acceptTurn(continued);
             terminal = foldIngress();
             lastTurnStatus = wireTurnStatusTag(continued.status);
-            if (continuations % 32 === 31) console.warn(`[DEBUG] command ingress continuation ${continuations + 1}/${ceiling} status=${terminal ?? "missing"} turn=${lastTurnStatus}`);
           }
-          console.warn(`[DEBUG] command ingress settled status=${terminal ?? "missing"} continuations=${continuations}/${ceiling} observed=${[...observedStatuses].join(",")}`);
           if (terminal !== "command-complete") {
             const cause = commandIngressUnownedV1(terminal, lastTurnStatus) ? "plugin.command-ingress-unowned: the reactor retains no ingress owner for this command" : `plugin.command-ingress-stalled: the reactor still owns this command and never completed it (last status ${terminal ?? "missing"}, actor ${lastTurnStatus})`;
             throw new Error(`[DEBUG] plugin ${pluginId}: command ingress ${cause} (action=${inspected.actionId ?? "none"}, seq=${inspected.seq ?? "none"}, pages=${pages.length}, continuations=${continuations}/${ceiling}, observed statuses: ${[...observedStatuses].join(", ")})`);
@@ -2990,7 +2971,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       await flushReservedJobDrives();
       if (commandIngressNeedsReplyStampV1(outFrames.map(encodedFrameReplySequence), inspected.seq)) {
         outFrames.push(encodeAppFrame({ Done: { in_reply_to: inspected.seq! } }));
-        console.warn("[DEBUG] command ingress stamped Done", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, leftover: leftover.length, frames: outFrames.length }));
       }
       turnOutcomes.push({ instanceId, frames: outFrames });
       if (wireTurnStatusTag(result.status) === "more-work") void drainTypedOperations(instanceId);
@@ -3037,7 +3017,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
         return { status: settled.status, nextWake: settled.nextWake };
       });
-      if (outcome.stopped === "budget") console.warn(`[DEBUG] typed-operation drain for instance ${instanceId} exhausted its ${PLUGIN_OPERATION_DRAIN_BUDGET}-poll budget`);
       if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
         // 🪃️ The guest's own requested wake. `nextWake: 0` means "immediately" and MUST cost one
         // event-loop turn, not a throttled timer tick — this is the same continuation lane the
@@ -3243,7 +3222,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         ...prologue.map((page) => ({ kind: "http-chunk" as const, payload: { req, params: { bytes: Array.from(page), done: false } } })),
         { kind: "completed" as const, payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(terminal) } : { tag: "fault", val: Array.from(terminal) } } },
       ];
-      console.debug("[DEBUG] extension completion submitted", { instanceId, req, status: "ok" in outcome ? "ok" : "fault", bytes: answer.byteLength, pages: events.length });
       noteGuestIngressV1(instanceId);
       return withTypedOperationCall(actorId, `extension-completion#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
         assertActive();
@@ -3407,13 +3385,11 @@ function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiP
     const ops = decodeWirePatchOps(patch.ops ?? []);
     const surfaceId = wirePatchSurfaceId(patch);
     if (!surfaceId) {
-      console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} published a patch naming no surface body — refused`);
       continue;
     }
     const previous = retained.get(surfaceId) ?? null;
     const { surface, desynced } = applyUiPatchToRetained(previous, { surface: surfaceId, revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
     if (desynced) {
-      console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
       continue;
     }
     if (surface) {
@@ -3493,9 +3469,6 @@ function leftoverShellInvocationFrames(leftover: readonly WireVariant[]): Extrac
  * `📓️selection-dedupe-2026-09-12.md`). Nothing in the leftover list declares that a clipboard write was
  * expected, so the check had no predicate to test and is gone rather than silenced. */
 function promoteShellSendMessages(instanceId: number, leftover: readonly WireVariant[], _outFrames: Uint8Array[]): WireVariant[] {
-  for (const frame of leftoverShellInvocationFrames(leftover)) {
-    console.warn(`[DEBUG] job-completed leftover frame instance=${instanceId} kind=Invocation history=${frame.Invocation.history_patch.length}`);
-  }
   return [...leftover];
 }
 
@@ -3553,16 +3526,9 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   const invocationRecord = invocation as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown }; readonly arguments?: Record<string, unknown> } | null;
   const address = invocationRecord?.address;
   const actionId = address?.actionId ?? address?.commandId ?? null;
-  console.warn("[DEBUG] performInvocation", JSON.stringify({ invocationKind, instanceId, actionId }));
   if (actionId === "importFixture") {
     const args = invocationRecord?.arguments;
     const payload = args?.payload;
-    console.warn("[DEBUG] importFixture ingress", JSON.stringify({
-      name: typeof args?.name === "string" ? args.name : null,
-      payloadType: payload === undefined ? "missing" : typeof payload,
-      payloadLen: typeof payload === "string" ? payload.length : payload && typeof payload === "object" ? Object.keys(payload as object).length : null,
-      argKeys: args ? Object.keys(args) : [],
-    }));
   }
   noteGuestIngressV1(instanceId);
   const hopDetail = { instanceId, actionId: String(actionId), invocationKind };
@@ -3580,7 +3546,6 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
     throw error;
   }
   closeInvoke({ frames: frames.length, effects: (response.requestedEffects ?? []).length });
-  console.warn("[DEBUG] performInvocation settled", JSON.stringify({ invocationKind, instanceId, actionId, frames: frames.length, frameKinds: frames.map((frame) => Object.keys(frame)[0] ?? "?"), historyCursor: response.historyPatch?.cursor ?? null, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null, effects: (response.requestedEffects ?? []).length }));
   return response;
 }
 
@@ -4186,7 +4151,6 @@ export class TransactionCoordinator {
         try {
           await handle.transactionRollback(member.instanceId, txnId);
         } catch (error) {
-          console.warn(`[DEBUG] TransactionCoordinator rollback(${member.pluginId}#${member.instanceId}) failed`, error);
         }
       }),
     );
@@ -4200,7 +4164,6 @@ export class TransactionCoordinator {
         try {
           await handle.transactionUndo(member.instanceId, groupId);
         } catch (error) {
-          console.warn(`[DEBUG] TransactionCoordinator undo(${member.pluginId}#${member.instanceId}) failed`, error);
         }
       }),
     );
@@ -4227,7 +4190,6 @@ export class TransactionCoordinator {
         try {
           await handle.transactionRedo(member.instanceId, groupId);
         } catch (error) {
-          console.warn(`[DEBUG] TransactionCoordinator redo(${member.pluginId}#${member.instanceId}) failed`, error);
         }
       }),
     );

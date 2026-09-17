@@ -30,7 +30,7 @@ pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:lowpoly")
         .artifact(crate::artifacts::lowpoly::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::lowpoly::LowpolyPlayApp>(crate::editor::lowpoly::create_lowpoly_app())
+        .editor_with_examples::<crate::editor::lowpoly::LowpolyPlayApp>(crate::editor::lowpoly::create_lowpoly_app(), vec![semio_s_artifact_lowpoly_lowpoly::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::lowpoly::LowpolyPlayApp>()
         .viewer::<crate::viewer::lowpoly::LowpolyViewer>(crate::viewer::lowpoly::create_lowpoly_viewer())
         .viewer_mutation_roster::<crate::viewer::lowpoly::LowpolyViewer>()

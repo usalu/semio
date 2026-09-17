@@ -77,18 +77,18 @@ impl ArtifactInferrer for CurationInferrer {
 /// shape (`objectKinds`/`vortexKinds`/`cableKinds`/`attractionKinds`/`kindCompatibility` — see
 /// `block_3d::puzzle3d_catalog_fragment`, the sibling producer this mirrors byte-for-byte in shape), the
 /// seam puzzle imports through its `Kit×Type` `kit:in` media port. Sourcing's `ObjectKind` carries no
-/// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
-/// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
-/// mesh as "no visual representation yet", not an error.
+/// `GeometryRecipe::Glb` rows carry the same `/mesh/…` routes as puzzle 3d and cad; procedural recipes
+/// leave `meshUrl` null. Sourcing has no vortex templates, so `vortices` stays empty.
 pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> dsl::DslValue {
     let object_kinds: Vec<dsl::DslValue> = crate::stock_of(document)
         .iter()
         .map(|kind| {
+            let mesh_url = crate::schema::geometry_mesh_url(&kind.geometry).map(|url| dsl::DslValue::String(url.to_string())).unwrap_or(dsl::DslValue::Null);
             dsl::DslValue::object([
                 ("id".to_string(), dsl::DslValue::String(kind.id.clone())),
                 ("name".to_string(), dsl::DslValue::String(kind.name.clone())),
                 ("label".to_string(), dsl::DslValue::String(kind.name.clone())),
-                ("meshUrl".to_string(), dsl::DslValue::Null),
+                ("meshUrl".to_string(), mesh_url),
                 ("vortices".to_string(), dsl::DslValue::Array(Vec::new())),
             ])
         })

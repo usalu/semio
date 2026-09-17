@@ -21,7 +21,7 @@ async fn request_delete_opens_the_confirm_dialog_without_mutating() {
 
 #[semio_framework_async_macros::async_test]
 async fn request_delete_of_a_missing_row_faults() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let error = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect_err("missing row must fault");
     assert_eq!(error.code.0, "s.space.mutation.target-missing");
 }

@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::fixture_nodes;
+use crate::editor::puzzle2d::{fixture_nodes, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
 use geo::{coord, Intersects, Rect};
 use semio_framework_job::{drive_step, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_plugin::{DslValue, PluginApp};
@@ -236,6 +236,67 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
 }
 
 /// 🧮️ The checkpoint codec is exact: a round trip is lossless and any length but header + 12·placements is refused.
+/// 🎯️ Every node this run places lies fully inside the one visible target region the board declares,
+/// the same run without that region provably leaves it, at least one candidate is refused
+/// `outside-target-region`, and HIDING the region takes the constraint away again — the four halves
+/// of puzzle3d's target-volume rule, stated by `🎞️fill-run.json`'s own `targetRegion` vector.
+#[test]
+fn fill_run_job_places_only_inside_visible_target_regions() {
+    let fixture = fixture();
+    let vector = &fixture["targetRegion"];
+    let expected = &vector["expected"];
+    let base = example(&vector["document"]);
+    let seed = fixture_nodes(&base.0).first().cloned().expect("the reduced board keeps its seed node");
+    let (cx, cy) = (seed["x"].as_f64().expect("seed x"), seed["y"].as_f64().expect("seed y"));
+    let half = vector["halfSpan"].as_f64().expect("half span");
+    let bounds = [cx - half, cy - half, cx + half, cy + half];
+    let painted = |hidden: bool| {
+        let mut document = base.0.clone();
+        document["targetRegions"] = json!([{ "id": "region-1", "x": bounds[0], "y": bounds[1], "width": half * 2.0, "height": half * 2.0, "hidden": hidden, "locked": false }]);
+        Arc::new(Puzzle2dPlaySnapshot(document))
+    };
+    let (run_id, requested) = (number(&vector["run"]), number(&vector["requested"]));
+    let inside = |log: &RunLog| {
+        decoded(&log.ops)
+            .into_iter()
+            .filter_map(|mutation| match mutation {
+                Puzzle2dMutation::CreateNode(payload) => Some(payload.node),
+                _ => None,
+            })
+            .map(|node| {
+                let rectangle = node.shape.as_deref() == Some("rectangle");
+                fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height)
+            })
+            .collect::<Vec<_>>()
+    };
+
+    let constrained = run(&painted(false), run_id, requested);
+    let placed = inside(&constrained);
+    assert!(!placed.is_empty(), "a region-constrained run must still place something, or this vector proves nothing");
+    if expected["everyPlacementInsideRegion"].as_bool() == Some(true) {
+        for placement in &placed {
+            assert!(fill_regions_admit(&[bounds], *placement), "a region-constrained run placed {placement:?} outside the only visible target region {bounds:?}");
+        }
+    }
+    if expected["atLeastOneOutsideRejection"].as_bool() == Some(true) {
+        let reason = text(&expected["reasonId"]);
+        let verdict = text(&expected["reasonVerdict"]);
+        let refusals: Vec<&(u64, ToolRunVerdict, u16, ToolRunTraceSubject)> = constrained.finals.iter().filter(|(_, _, code, _)| reason_id(*code) == reason).collect();
+        assert!(!refusals.is_empty(), "the constrained run refused nothing as {reason}, so the constraint never bit");
+        for (_, produced, ..) in &refusals {
+            assert_eq!(verdict_id(*produced), verdict, "an {reason} refusal carries the verdict the fixture declares");
+        }
+    }
+    if expected["unconstrainedRunLeavesTheRegion"].as_bool() == Some(true) {
+        let unconstrained = run(&base, run_id, requested);
+        assert!(inside(&unconstrained).iter().any(|placement| !fill_regions_admit(&[bounds], *placement)), "the same run without a region stayed inside it anyway, so this vector cannot tell a constraint from a coincidence");
+    }
+    if expected["hiddenRegionConstrainsNothing"].as_bool() == Some(true) {
+        let hidden = run(&painted(true), run_id, requested);
+        assert_eq!(inside(&hidden), inside(&run(&base, run_id, requested)), "a hidden region must constrain exactly nothing");
+    }
+}
+
 #[test]
 fn fill_run_checkpoint_codec_round_trips_and_refuses_malformed_lengths() {
     let checkpoint = FillRunCheckpoint { requested: 45, tested: 310, collisions: 201, rejected: 79, next_key: 311, placements: vec![FillRunPlacementKey { key: 3, shape: 2 }, FillRunPlacementKey { key: 17, shape: u32::MAX }] };
@@ -545,6 +606,33 @@ fn fill_run_start_complete_finalize_is_one_undo_entry() {
     close_app(&mut app);
 }
 
+/// 🪣️ The browser battery's own fill: 100 requested placements on concrete-forest. However far the
+/// plan reaches, the finalize is exactly ONE history entry — one of the 64 edit-ledger slots — one
+/// undo restores the pre-fill document byte-for-byte and one redo re-applies the whole run
+/// (2026-09-17 battery: `20-history/undo-changes-document` never moved the document after a fill).
+#[test]
+fn a_hundred_placement_fill_is_one_history_entry_that_undoes_and_redoes() {
+    let mut app = app_with_registry();
+    load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
+    dispatch(&mut app, "setFillCount", Some(&json!({ "count": 100 })), None).expect("set fill count");
+    let before = fixture_of(&app);
+    let (nodes, history) = (fixture_nodes(&before).len(), history_len(&mut app));
+    tool_run_action(&mut app, "toolRunStart", &[("toolId", DslValue::String(fill::TOOL_ID.into()))]);
+    pump_until(&mut app, "hundred-placement fill run completes", |app| run_state(app) == Some("complete"));
+    let run = [("runId", DslValue::String("1".into())), ("generation", DslValue::String("0".into()))];
+    tool_run_action(&mut app, "toolRunFinalize", &run);
+    pump_until(&mut app, "hundred-placement fill run finalizes", |app| run_state(app) == Some("finalized"));
+    let filled = fixture_of(&app);
+    let placed = fixture_nodes(&filled).len();
+    assert!(placed > nodes, "the run must place at least one node, placed {placed} from {nodes}");
+    assert_eq!(history_len(&mut app) - history, 1, "a whole fill run costs the history exactly one entry");
+    dispatch(&mut app, "undo", None, None).expect("undo the finalized fill run");
+    assert_eq!(fixture_of(&app), before, "one undo restores the pre-fill document");
+    dispatch(&mut app, "redo", None, None).expect("redo the finalized fill run");
+    assert_eq!(fixture_of(&app), filled, "one redo re-applies the whole run");
+    close_app(&mut app);
+}
+
 /// 🛑️ Abort after provisional placements exist leaves the document pack byte-identical and the history untouched.
 #[test]
 fn fill_run_abort_leaves_the_document_byte_identical() {
@@ -562,3 +650,21 @@ fn fill_run_abort_leaves_the_document_byte_identical() {
     assert_eq!(history_len(&mut app), history);
     close_app(&mut app);
 }
+
+//#region 🚧️PlacementSlack
+/// 🚧️ LAW: the collision test is widened by the net of the two placement-tuning settings. Two
+/// footprints one world unit apart do NOT collide at zero slack; a contact tolerance of one unit per
+/// side closes the gap and they do; an overlap budget of one unit re-opens it. A budget can never
+/// shrink a footprint past its own centre, so genuinely coincident footprints always collide.
+#[test]
+fn the_fill_collision_test_reads_the_placement_tuning_slack() {
+    let left = fill_node_bounds(0.0, 0.0, Some(1.0), true, Some(2.0), Some(2.0));
+    let right = fill_node_bounds(3.0, 0.0, Some(1.0), true, Some(2.0), Some(2.0));
+    assert!(!fill_bounds_overlap_with(left, right, 0.0), "a one-unit gap is clear at zero slack");
+    assert!(fill_bounds_overlap_with(left, right, 0.5), "a contact tolerance of half a unit per side closes a one-unit gap");
+    assert!(!fill_bounds_overlap_with(left, right, -1.0), "an overlap budget re-opens the gap");
+    let coincident = fill_node_bounds(0.0, 0.0, Some(1.0), true, Some(2.0), Some(2.0));
+    assert!(fill_bounds_overlap_with(left, coincident, -1_000.0), "no budget may shrink a footprint past its centre");
+    assert_eq!(fill_bounds_overlap(left, right), fill_bounds_overlap_with(left, right, 0.0), "the untuned test is the zero-slack test");
+}
+//#endregion 🚧️PlacementSlack

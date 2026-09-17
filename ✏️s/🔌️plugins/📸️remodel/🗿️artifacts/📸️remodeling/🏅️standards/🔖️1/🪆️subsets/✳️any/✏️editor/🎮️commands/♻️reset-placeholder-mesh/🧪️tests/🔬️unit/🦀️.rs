@@ -14,7 +14,9 @@ fn mesh_vertex_count(snapshot: &RemodelingSnapshot) -> usize {
 async fn clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box() {
     let mut app = app().await;
     let result = dispatch(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {})).await;
-    assert_eq!(result.mutations.len(), 7, "clearResult resets all 7 ReconstructionResults fields");
+    assert!(result.edited_document(), "clearResult publishes one document edit: {:?}", result.lanes);
+    let cleared = app.snapshot().expect("materialize projection").results;
+    assert_eq!((cleared.sparse.is_none(), cleared.dense.is_none(), cleared.trajectory.is_none(), cleared.tracks.is_empty(), cleared.qc.is_none(), cleared.geo.is_none()), (true, true, true, true, true, true), "clearResult resets every ReconstructionResults field");
     assert_eq!(mesh_vertex_count(&app.snapshot().expect("materialize projection")), 0);
     dispatch(&mut app, RemodelingCommand::ResetPlaceholderMesh(ResetPlaceholderMesh {})).await;
     assert_eq!(app.snapshot().expect("materialize projection").results.mesh.source, MeshSource::Placeholder);
@@ -26,7 +28,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = app().await;
     let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
     assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut *app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -39,6 +41,7 @@ async fn each_narrow_clear_touches_exactly_one_result_field() {
         RemodelingCommand::ClearTracks(clear_tracks::ClearTracks {}),
         RemodelingCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
     ] {
-        assert_eq!(dispatch(&mut app, command).await.mutations.len(), 1);
+        let dispatched = dispatch(&mut app, command).await;
+        assert!(dispatched.edited_document(), "{:?}", dispatched.lanes);
     }
 }

@@ -265,7 +265,6 @@ export class TurnLedger {
 
   private trace(site: string, verdict: TurnVerdict, executingMs: number): void {
     if (!turnDiagnosticsEnabled()) return;
-    console.debug(`[DEBUG] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive}/${SUSTAINED_TURN_OVERRUN_TURNS}`);
   }
 }
 // #endregion 📒️Ledger

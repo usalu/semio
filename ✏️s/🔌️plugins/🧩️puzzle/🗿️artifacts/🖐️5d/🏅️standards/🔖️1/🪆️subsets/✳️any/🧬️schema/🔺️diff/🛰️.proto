@@ -24,6 +24,8 @@ message Puzzle5dDiff {
   optional Puzzle5dPartsDelta parts = 8;
   // @state artifact
   optional Puzzle5dFastenersDelta fasteners = 9;
+  // @state artifact
+  optional Puzzle5dTargetVolumesDelta target_volumes = 11;
   // @state config
 }
 
@@ -37,6 +39,10 @@ message Puzzle5dFastenersDelta { repeated Puzzle5dFastener added = 1; repeated s
 message Puzzle5dFastenerPatchEntry { string id = 1; Puzzle5dFastenerPatch patch = 2; }
 message Puzzle5dFastenerPatch { optional Puzzle5dFastener replacement = 1; }
 message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; double gap = 4; double shift = 5; double rise = 6; double rotation = 7; double turn = 8; double tilt = 9; double x = 10; double y = 11; }
+message Puzzle5dTargetVolumesDelta { repeated Puzzle5dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle5dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle5dTargetVolumePatchEntry { string id = 1; Puzzle5dTargetVolumePatch patch = 2; }
+message Puzzle5dTargetVolumePatch { optional Puzzle5dTargetVolume replacement = 1; }
+message Puzzle5dTargetVolume { string id = 1; repeated double origin = 2; repeated double orientation = 3; repeated double scale = 4; bool hidden = 5; bool locked = 6; }
 message Puzzle5dKindCompatibility { string source = 1; string target = 2; bool bidirectional = 3; bool important = 4; Puzzle5dCompatSpecificity specificity = 5; }
 message Puzzle5dMeta { bool _placeholder = 1; }
 message Puzzle5dKindCatalogs { bool _placeholder = 1; }

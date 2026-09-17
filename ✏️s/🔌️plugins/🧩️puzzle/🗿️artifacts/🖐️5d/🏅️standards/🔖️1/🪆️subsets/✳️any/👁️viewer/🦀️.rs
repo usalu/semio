@@ -12,7 +12,7 @@
 
 use crate::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};
 use crate::viewer::puzzle5d::modes::view;
-use crate::viewer::puzzle5d::modes::view::windows::world3d;
+use crate::viewer::puzzle5d::modes::view::windows::{board2d, world3d};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
@@ -78,6 +78,7 @@ impl ArtifactViewer for Puzzle5dViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             world3d::BODY_KEY => world3d::render(doc.snapshot)?,
+            board2d::BODY_KEY => board2d::render(doc.snapshot)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d viewer unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -93,6 +94,7 @@ pub fn create_puzzle5d_viewer() -> semio_framework_plugin::AppDefinition {
         .mode_def(view::definition())
         .default_mode_id(view::PUZZLE5D_VIEW_MODE_VIEW)
         .window_kind_def(world3d::definition())
+        .window_kind_def(board2d::definition())
         .default_layout(view::layout())
         .build_definition()
 }

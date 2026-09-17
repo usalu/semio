@@ -168,6 +168,16 @@
               "x-semio-child-kind": "s.stdio.semio.mesh"
             }
           ]
+        },
+        "meshContent": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       }
     },

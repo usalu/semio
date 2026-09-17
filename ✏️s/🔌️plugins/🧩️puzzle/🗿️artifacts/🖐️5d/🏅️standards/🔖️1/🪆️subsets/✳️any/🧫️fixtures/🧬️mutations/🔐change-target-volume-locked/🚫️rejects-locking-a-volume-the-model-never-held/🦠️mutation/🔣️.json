@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetVolumeLocked",
+  "id": "volume-the-model-never-held",
+  "newLocked": true
+}

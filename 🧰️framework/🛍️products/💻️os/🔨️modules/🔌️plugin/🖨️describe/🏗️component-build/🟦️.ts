@@ -10,8 +10,8 @@ export const DESCRIPTOR_JSON_FILENAME = "🔣️.json";
  * `wasm32-wasip2` component and jco's extracted core. {@link buildPluginComponent} builds the
  * UNOPTIMIZED `wasm-dev` profile, so this bounds a build-time input and is deliberately NOT the
  * runtime bound on a shipped component (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`, which
- * applies to the optimized artifact). The procedural plugin's dev component is ~80 MB. */
-export const FRESH_COMPONENT_MAX_BYTES = 128 * 1024 * 1024;
+ * applies to the optimized artifact). The GIS plugin's dev component is ~193 MiB; procedural ~80 MiB. */
+export const FRESH_COMPONENT_MAX_BYTES = 256 * 1024 * 1024;
 export const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 

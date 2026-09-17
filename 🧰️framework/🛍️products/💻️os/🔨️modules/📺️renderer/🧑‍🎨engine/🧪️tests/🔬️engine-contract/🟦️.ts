@@ -1745,7 +1745,15 @@ import {
   board2dCameraActionArgs,
   beginPuzzle2dPeerGesture,
   collectPuzzle2dLiveMirrorMutations,
+  board2dGranularityById,
+  board2dHoverActionArgs,
+  latestBoard2dHoverId,
+  parseBoard2dSuggestionMenu,
+  board2dSuggestionMenuOwnsWindow,
+  board2dSuggestionMenuItems,
   coalesceBoard2dEvents,
+  parseBoard2dTransformFlags,
+  board2dStatusJson,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
   surfaceContextMenuTitleKey,
@@ -5043,6 +5051,55 @@ describe("framework renderer hosts", () => {
     expect(alphaMoves[0]?.payload).toEqual({ id: "alpha", x: 20, y: 20 });
   });
 
+  it("keeps hover out of the board-events batch — it travels on the framework interactionHover lane instead", () => {
+    const { eventsJson, flushNow } = coalesceBoard2dEvents([
+      { name: "hover", payload: { id: "alpha", kind: null } },
+      { name: "camera", payload: { x: 0, y: 0, zoom: 1 } },
+    ]);
+    expect(JSON.parse(eventsJson) as { name: string }[]).not.toContainEqual(expect.objectContaining({ name: "hover" }));
+    expect(flushNow).toBe(false);
+  });
+
+  it("reads the LAST hover row of a batch — a string id hovers, an empty/absent id clears, no row leaves it alone", () => {
+    expect(latestBoard2dHoverId([{ name: "hover", payload: { id: "alpha" } }, { name: "hover", payload: { id: "beta" } }])).toBe("beta");
+    expect(latestBoard2dHoverId([{ name: "hover", payload: { id: "alpha" } }, { name: "hover", payload: { id: null } }])).toBeNull();
+    expect(latestBoard2dHoverId([{ name: "camera", payload: {} }])).toBeUndefined();
+  });
+
+  it("classifies every board id into its vortex-domain granularity and publishes it on the interactionHover wire", () => {
+    const fixture = JSON.stringify({ nodes: [{ id: "n1", handles: [{ id: "n1:h0" }] }], edges: [{ id: "e1" }] });
+    const byId = board2dGranularityById(fixture);
+    expect([byId.get("n1"), byId.get("n1:h0"), byId.get("e1"), byId.get("ghost")]).toEqual(["node", "handle", "edge", undefined]);
+    expect(board2dHoverActionArgs("vortex", "handle", "n1:h0")).toEqual({ domainId: "vortex", channel: "pointer", targets: JSON.stringify([{ granularity: "handle", id: "n1:h0" }]) });
+    expect(JSON.parse(board2dHoverActionArgs("vortex", "node", null).targets)).toEqual([]);
+  });
+
+  it("parses the handle-suggestions popup, scopes it to its own window, and renders hover-preview rows distinct from the commit", () => {
+    const encoded = JSON.stringify({ open: true, x: 12, y: 34, windowId: "w1", handleId: "n1:h0", hoveredIndex: 1, pending: false, candidates: [
+      { index: 0, nodeLabel: "beam", handleLabel: "handle 0" },
+      { index: 1, nodeLabel: "slab", handleLabel: "handle 1", icon: "square" },
+    ] });
+    const menu = parseBoard2dSuggestionMenu(encoded)!;
+    expect(menu).toMatchObject({ open: true, x: 12, y: 34, windowId: "w1", handleId: "n1:h0", hoveredIndex: 1 });
+    expect(board2dSuggestionMenuOwnsWindow(menu, "w1")).toBe(true);
+    expect(board2dSuggestionMenuOwnsWindow(menu, "w2")).toBe(false);
+    expect(parseBoard2dSuggestionMenu(undefined)).toBeNull();
+    expect(parseBoard2dSuggestionMenu(JSON.stringify({ open: false }))).toBeNull();
+    const rows = board2dSuggestionMenuItems(menu, { checkingPlacement: "checking", noPlacement: "none" });
+    expect(rows.map((row) => row.action)).toEqual(["acceptSuggestion", "acceptSuggestion"]);
+    expect(rows.map((row) => row.hoverAction)).toEqual(["hoverSuggestion", "hoverSuggestion"]);
+    expect(rows.map((row) => row.checked)).toEqual([false, true]);
+    expect(rows[1]?.args).toEqual({ index: 1, handleId: "n1:h0" });
+  });
+
+  it("refuses politely: a pending slot shows one disabled checking row, a resolved empty slot one disabled no-placement row", () => {
+    const labels = { checkingPlacement: "checking", noPlacement: "none" };
+    const pending = board2dSuggestionMenuItems(parseBoard2dSuggestionMenu(JSON.stringify({ open: true, x: 0, y: 0, hoveredIndex: 0, pending: true, candidates: [] }))!, labels);
+    expect(pending).toEqual([{ id: "pending", label: "checking", disabled: true }]);
+    const empty = board2dSuggestionMenuItems(parseBoard2dSuggestionMenu(JSON.stringify({ open: true, x: 0, y: 0, hoveredIndex: 0, pending: false, candidates: [] }))!, labels);
+    expect(empty).toEqual([{ id: "empty", label: "none", disabled: true }]);
+  });
+
   it("coalesces puzzle 2d board events: drops nodeMove rows once a nodeDragEnd follows", () => {
     const rows = [
       { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
@@ -5096,6 +5153,52 @@ describe("framework renderer hosts", () => {
       { id: "alpha", x: 20, y: 20 },
       { id: "beta", x: 5, y: 5 },
     ]);
+  });
+
+  it("board 2d gumball: a rotate commit flushes at once and its live preview frames never reach the guest", () => {
+    // 🔄️ `transformPreview` is the peer-pane mirror's food ONLY — forwarding it would spend one of the
+    // store's 64 applied edits per drag frame, when a whole rotate gesture must be a single edit.
+    const { flushNow, eventsJson } = coalesceBoard2dEvents([
+      { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 1, y: 1 }] } },
+      { name: "nodeRotate", payload: { ids: ["alpha"], radians: 0.5, pivot: { x: 0, y: 0 } } },
+    ]);
+    expect(flushNow).toBe(true);
+    const events = JSON.parse(eventsJson) as { name: string }[];
+    expect(events.map((event) => event.name)).toEqual(["nodeRotate"]);
+    expect(coalesceBoard2dEvents([{ name: "transformPreview", payload: { moves: [] } }]).flushNow).toBe(false);
+  });
+
+  it("board 2d gumball: transformPreview frames mirror into sibling panes exactly like a drag's final moves", () => {
+    const mutations = collectPuzzle2dLiveMirrorMutations([
+      { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 3, y: 4 }] } },
+      { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 0, y: 5 }, { id: "beta", x: -5, y: 0 }] } },
+    ]);
+    expect(mutations.positions).toEqual([
+      { id: "alpha", x: 0, y: 5 },
+      { id: "beta", x: -5, y: 0 },
+    ]);
+    expect(mutations.selectionIds).toBeNull();
+  });
+
+  it("board 2d gumball: transformFlags default to move+rotate and never disarm on malformed input", () => {
+    expect(parseBoard2dTransformFlags(JSON.stringify({ move: false, rotate: true }))).toEqual({ move: false, rotate: true });
+    expect(parseBoard2dTransformFlags(JSON.stringify({ rotate: false }))).toEqual({ move: true, rotate: false });
+    for (const encoded of [undefined, null, "", "not json", "{}", JSON.stringify({ move: "yes" })]) {
+      expect(parseBoard2dTransformFlags(encoded)).toEqual({ move: true, rotate: true });
+    }
+  });
+
+  it("board 2d vitals: the status row names the fixture verdict, its size, the refusal and the pending flush", () => {
+    expect(JSON.parse(board2dStatusJson({ fixtureParsed: true, fixtureChars: 128, refusalReason: "", pendingEvents: 0, guestRevision: 3 }))).toEqual({
+      fixtureParsed: true,
+      fixtureChars: 128,
+      refusalReason: "",
+      pendingEvents: 0,
+      guestRevision: 3,
+    });
+    const refused = JSON.parse(board2dStatusJson({ fixtureParsed: false, fixtureChars: 9, refusalReason: "engine refused the fixture", pendingEvents: 2, guestRevision: 1 })) as { fixtureParsed: boolean; refusalReason: string };
+    expect(refused.fixtureParsed).toBe(false);
+    expect(refused.refusalReason).toBe("engine refused the fixture");
   });
 
   it("collects live mirror mutations: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
@@ -9516,8 +9619,10 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
     const fundedByDeMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByDe", "de")] }));
     expect(fundedByDeMarkup).toContain("Gefördert durch");
+    expect(fundedByDeMarkup).toContain("hover:text-foreground");
     const projectOfMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem()] }));
     expect(projectOfMarkup).toContain("Ein Projekt von");
+    expect(projectOfMarkup).toContain("hover:text-foreground");
     expect(projectOfMarkup).toContain("und");
     expect(projectOfMarkup).toContain(LUH_LOGO_URL);
     expect(projectOfMarkup).toContain(UDK_LOGO_URL);

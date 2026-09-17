@@ -210,7 +210,7 @@ fn a_tree_window_request_materialises_exactly_its_slice() {
 #[test]
 fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
     let mut fixture = scaled_fixture(2, 2);
-    fixture.references.push(crate::editor::puzzle3d::Puzzle3dReference {
+    fixture.references.push(Puzzle3dReference {
         id: "reference-1".into(),
         source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
         ..Default::default()
@@ -271,11 +271,64 @@ fn the_first_paint_draws_one_viewport_and_still_reports_the_whole_document() {
     assert!(!json.contains(".more"), "the cold paint invents no continuation row: {json}");
     assert!(!json.contains("\"+"), "and no `+N` label: {json}");
 }
+
+/// 🧾️ Every node record one projected body spends — the tree root, every section, every group row and
+/// every leaf row counts once, exactly as `SurfaceReconcileLimits::max_nodes` counts them.
+fn node_records(node: &serde_json::Value) -> usize {
+    1 + node["children"].as_array().map_or(0, |children| children.iter().map(node_records).sum::<usize>())
+}
+
+/// 🧾️ THE whole-document law: one container holds more than a whole `UI_DOCUMENT_NODES` arena of
+/// entries AND every other container is open at once, each asking for more rows than the arena could
+/// ever hold. Per-container clamps alone do not save this body — only the body-wide node ledger does
+/// (`TreeWindows::nodes_remaining`, SDK `🔖️PanelWindowing`). Every container must still stamp its FULL
+/// total, the whole projected body must fit inside `UI_DOCUMENT_NODES` records, and nothing may be
+/// closed off with a `+N`.
+#[test]
+fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
+    let mut fixture = scaled_fixture(ui::UI_DOCUMENT_NODES + 72, 6);
+    for index in 0..40 {
+        fixture.references.push(Puzzle3dReference {
+            id: format!("reference-{index}"),
+            source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: format!("/reference/plan-{index}.png"), media_kind: Some("image".into()) },
+            ..Default::default()
+        });
+        fixture.target_volumes.push(Puzzle3dTargetVolume { id: format!("volume-{index}"), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
+        fixture.attractions.push(Puzzle3dAttraction { id: format!("attraction-{index}"), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
+    }
+    assert!(fixture.objects.len() > ui::UI_DOCUMENT_NODES, "one container must hold more than the whole node arena: {}", fixture.objects.len());
+
+    // 🪟️ Everything the host could possibly have open at once, each asking for far more than fits.
+    let mut requests = vec![
+        request(&section_key("objects"), Some(true), 0, 512),
+        request(&section_key("references"), Some(true), 0, 512),
+        request(&section_key("target-volumes"), Some(true), 0, 512),
+        request(&section_key("attractions"), Some(true), 0, 512),
+    ];
+    requests.extend((0..24).map(|index| request(&format!("object-{index}"), Some(true), 0, 512)));
+    let json = panel(&fixture, &hosted(requests));
+    let tree = tree_of(&json);
+
+    for (suffix, total) in [
+        ("objects", fixture.objects.len()),
+        ("references", fixture.references.len()),
+        ("target-volumes", fixture.target_volumes.len()),
+        ("attractions", fixture.attractions.len()),
+    ] {
+        let section = node_at(&tree, &section_key(suffix)).unwrap_or_else(|| panic!("section {suffix} is assembled: {tree}"));
+        assert_eq!(window_of(section).0, total, "section {suffix} stamps its FULL total however few rows it could afford: {section}");
+    }
+
+    let records = node_records(&tree);
+    assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
+    assert!(!json.contains(".more"), "no continuation row closes an exhausted container: {json}");
+    assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
+}
 //#endregion 🪟️WindowLaws
 
 /// 🔁️ One row action's `setSelectionFlag` args, flattened to `(flag, value)` — the two entries the
 /// reducer reads (`🎮️commands/🔖️set-selection-flag/🦀️.rs`).
-fn flag_binding(row_action: &ui::RowAction) -> (String, bool) {
+fn flag_binding(row_action: &RowAction) -> (String, bool) {
     let Some(UiValue::Map(map)) = row_action.action.args.as_ref() else {
         panic!("a hide/lock row action must carry setSelectionFlag args");
     };
@@ -335,7 +388,7 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
             hidden: flagged,
             locked: flagged,
         });
-        fixture.references.push(crate::editor::puzzle3d::Puzzle3dReference {
+        fixture.references.push(Puzzle3dReference {
             id: "reference-1".into(),
             source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
             hidden: flagged,

@@ -703,6 +703,11 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
       exclusions.push(`!{projectRoot}/${local}`, `!{projectRoot}/${local}/**/*`);
     }
   }
+  if (owner !== root && tools.includes("cargo")) {
+    for (const glob of POLICY.ephemeralOwnerGlobs ?? []) {
+      exclusions.push(`!{workspaceRoot}/${owner}/${glob}`, `!{workspaceRoot}/${owner}/${glob}/**/*`);
+    }
+  }
   const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
@@ -777,11 +782,11 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
-      policy.parallelism ??= false;
       policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
     }
     if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts)];
+    if (POLICY.nxSerialTargets?.includes(name)) policy.parallelism = false;
     normalized[name] = policy;
   }
   for (const contract of Object.values(contracts)) {
@@ -882,6 +887,66 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   }]]));
 }
 
+/** @emoji 🧭️ Repo-root-relative plugin owner directory for a playground crate path. */
+function pluginOwnerRootFromCratePath(cratePath) {
+  const parts = nxPath(cratePath).split("/");
+  const pluginsIdx = parts.indexOf("🔌️plugins");
+  if (pluginsIdx < 1 || parts[pluginsIdx - 1] !== "✏️s" || pluginsIdx + 1 >= parts.length) return undefined;
+  return parts.slice(0, pluginsIdx + 2).join("/");
+}
+
+/** @emoji 📦️ CDN dist directory for one playground row when `distDir` is not authored in Cargo.toml. */
+function resolvePlaygroundDistDir(entry, catalog) {
+  if (entry.distDir) return entry.distDir;
+  const owner = pluginOwnerRootFromCratePath(entry.cratePath);
+  if (!owner || !entry.pluginId) return undefined;
+  const variantsForPlugin = catalog.filter((row) => row.pluginId === entry.pluginId);
+  return variantsForPlugin.length <= 1 ? `${owner}/dist` : `${owner}/dist/${entry.variant}`;
+}
+
+/** @emoji 🎮️ Flattens every plugin playground row from Cargo manifests (with resolved `distDir`). */
+function collectPlaygroundCatalog(configFiles, workspaceRoot) {
+  const components = new Map(), playgrounds = [];
+  for (const path of configFiles) {
+    if (!path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
+    const manifest = readToml(join(workspaceRoot, path)), metadata = manifest.package?.metadata;
+    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role)) continue;
+    const id = metadata.component.package.slice(6), root = nxPath(dirname(path));
+    if (components.has(id)) throw new Error(`Duplicate component identity: ${id}`);
+    components.set(id, metadata.semio);
+    for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id, cratePath: root });
+  }
+  return playgrounds.map((row) => {
+    const distDir = resolvePlaygroundDistDir(row, playgrounds);
+    return distDir === undefined || distDir === row.distDir ? row : { ...row, distDir };
+  });
+}
+
+/** @emoji 🌐️ Per-plugin `build` / `build-<variant>-site` targets that publish CDN trees under each plugin's `dist/`. */
+function pluginSiteTargetsForCrate(root, allPlaygrounds) {
+  const rows = allPlaygrounds.filter((row) => row.cratePath === root);
+  if (rows.length === 0) return {};
+  const targets = {};
+  for (const row of rows) {
+    const site = `build-${row.variant}-site`;
+    const release = `build-${row.variant}-react-release`;
+    targets[site] = {
+      cache: true,
+      outputs: row.distDir ? [`{workspaceRoot}/${row.distDir}`] : [`{projectRoot}/dist/${release}`],
+      dependsOn: [`@semio-tech/framework-os-dev:${release}`],
+      options: { cwd: root, command: `bun ./📜️script.ts build ${row.variant}`, forwardAllArgs: false },
+    };
+  }
+  const siteTargets = rows.map((row) => `build-${row.variant}-site`);
+  targets.build = {
+    cache: true,
+    dependsOn: siteTargets,
+    outputs: rows.map((row) => (row.distDir ? `{workspaceRoot}/${row.distDir}` : `{projectRoot}/dist/build-${row.variant}-react-release`)),
+    options: { cwd: root, command: rows.length === 1 ? "bun ./📜️script.ts build" : "bun ./📜️script.ts build all", forwardAllArgs: false },
+  };
+  return targets;
+}
+
 /** 🎮️ Gives each Cargo-declared playground session an independent generated artifact. */
 function playgroundSessionTargets(configFiles, workspaceRoot) {
   const variants = new Set();
@@ -920,7 +985,11 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
     const id = metadata.component.package.slice(6), root = nxPath(dirname(path));
     if (components.has(id)) throw new Error(`Duplicate component identity: ${id}`);
     components.set(id, { ...metadata.semio, project: projectAt(root)?.name ?? manifest.package.name });
-    for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id });
+    for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id, cratePath: root });
+  }
+  for (let i = 0; i < playgrounds.length; i++) {
+    const distDir = resolvePlaygroundDistDir(playgrounds[i], playgrounds);
+    if (distDir !== undefined && distDir !== playgrounds[i].distDir) playgrounds[i] = { ...playgrounds[i], distDir };
   }
   const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
@@ -965,7 +1034,6 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile}` } };
       result[`activate-${playground.variant}-wgpu-${profile}`] = {
       cache: false,
-      parallelism: false,
       outputs: [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
@@ -980,12 +1048,22 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       };
     }
     const name = `build-${playground.variant}-react-release`;
+    const buildOutput = playground.distDir ? `{workspaceRoot}/${playground.distDir}` : `{projectRoot}/dist/${name}`;
     result[name] = {
       cache: true,
-      outputs: [`{projectRoot}/dist/${name}`],
+      outputs: [buildOutput],
       inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
       dependsOn: [...result[`prepare-${playground.variant}-react-release`].dependsOn, "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
+    };
+  }
+  const pluginSiteReleases = playgrounds.filter((row) => row.distDir?.startsWith("✏️s/🔌️plugins/")).map((row) => `build-${row.variant}-react-release`);
+  if (pluginSiteReleases.length > 0) {
+    result["build-all-playground-cdn-sites"] = {
+      cache: true,
+      dependsOn: pluginSiteReleases,
+      outputs: [...new Set(playgrounds.filter((row) => row.distDir?.startsWith("✏️s/🔌️plugins/")).map((row) => `{workspaceRoot}/${row.distDir}`))],
+      options: { command: "node -e \"process.exit(0)\"", forwardAllArgs: false },
     };
   }
   return result;
@@ -1021,6 +1099,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
   const commandInputs = configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? nativeCommandInputs(workspaceRoot, scripts) : undefined;
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const contracts = existsSync(contractPath) ? JSON.parse(readFileSync(contractPath, "utf8")).generatorContracts ?? {} : {};
+  const playgroundCatalog = collectPlaygroundCatalog(configFiles, workspaceRoot);
 
   const results = configFiles
     .filter((file) => file.endsWith(PROJECT_BASENAME))
@@ -1050,6 +1129,9 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       if (prior === undefined) rootsByName.set(name, root);
       if (name === "@semio-tech/plugin-registry") json.targets = { ...json.targets, ...playgroundSessionTargets(configFiles, workspaceRoot) };
       if (name === "@semio-tech/framework-os-dev") json.targets = { ...json.targets, ...playgroundPreparationTargets(configFiles, workspaceRoot, root) };
+      if (root.includes("✏️s/🔌️plugins/") && existsSync(join(workspaceRoot, root, "Cargo.toml"))) {
+        json.targets = { ...json.targets, ...pluginSiteTargetsForCrate(root, playgroundCatalog) };
+      }
       return [configFile, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs, scripts) } }];
     })
     .filter(Boolean);
@@ -1190,4 +1272,6 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets };
+export { libraryBootstrap };
+
+export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets };

@@ -93,16 +93,14 @@ function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenc
       if (!scopeCase) return;
       if (message.kind === "socket-actor") {
         setRows((current) => ({ ...current, [scopeCase.id]: { ...current[scopeCase.id], ready: true } }));
-        console.log(`[DEBUG] scoped-presence socket-ready ${scopeCase.id} ${runtimeKey}`);
         heartbeat(scopeCase);
         return;
       }
       if (message.event.kind !== "presence") return;
       const peers = scopedPresencePeersV1(message, scopeCase.scope);
       setRows((current) => ({ ...current, [scopeCase.id]: { ...current[scopeCase.id], peers, presenceEvents: current[scopeCase.id].presenceEvents + 1 } }));
-      console.log(`[DEBUG] scoped-presence roster ${scopeCase.id} peers=${peers.map((peer) => peer.actor).join(",") || "empty"}`);
     };
-    worker.onerror = (event) => console.error(`[DEBUG] scoped-presence worker-error ${event.message}`);
+    worker.onerror = (event) => undefined;
     return () => {
       channel.port1.close();
       worker.terminate();
@@ -121,7 +119,6 @@ function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenc
     const row = config.cases[0];
     post({ kind: "close", documentId: row.scope.documentId, spaceId: row.scope.spaceId });
     setRows((current) => ({ ...current, a: { ...current.a, closed: true } }));
-    console.log("[DEBUG] scoped-presence close a");
   }, [config.cases, post]);
 
   return (

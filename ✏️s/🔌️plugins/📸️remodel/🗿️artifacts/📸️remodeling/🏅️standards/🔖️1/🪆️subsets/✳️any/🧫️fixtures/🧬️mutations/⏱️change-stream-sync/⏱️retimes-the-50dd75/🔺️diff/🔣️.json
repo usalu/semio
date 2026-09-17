@@ -9,57 +9,57 @@
         "name": "Orbit Primary",
         "kind": "video",
         "cameraId": "orbit-cam-primary",
-        "syncOffsetMs": 0,
-        "fpsHint": 2,
+        "syncOffsetMs": 0.0,
+        "fpsHint": 2.0,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 0,
+            "timestampMs": 0.0,
             "assetId": "orbit-frame-00"
           },
           {
             "index": 1,
-            "timestampMs": 500,
+            "timestampMs": 500.0,
             "assetId": "orbit-frame-01"
           },
           {
             "index": 2,
-            "timestampMs": 1000,
+            "timestampMs": 1000.0,
             "assetId": "orbit-frame-02"
           },
           {
             "index": 3,
-            "timestampMs": 1500,
+            "timestampMs": 1500.0,
             "assetId": "orbit-frame-03"
           },
           {
             "index": 4,
-            "timestampMs": 2000,
+            "timestampMs": 2000.0,
             "assetId": "orbit-frame-04"
           },
           {
             "index": 5,
-            "timestampMs": 2500,
+            "timestampMs": 2500.0,
             "assetId": "orbit-frame-05"
           },
           {
             "index": 6,
-            "timestampMs": 3000,
+            "timestampMs": 3000.0,
             "assetId": "orbit-frame-06"
           },
           {
             "index": 7,
-            "timestampMs": 3500,
+            "timestampMs": 3500.0,
             "assetId": "orbit-frame-07"
           },
           {
             "index": 8,
-            "timestampMs": 4000,
+            "timestampMs": 4000.0,
             "assetId": "orbit-frame-08"
           },
           {
             "index": 9,
-            "timestampMs": 4500,
+            "timestampMs": 4500.0,
             "assetId": "orbit-frame-09"
           }
         ],
@@ -67,7 +67,7 @@
           "name": "orbit-primary.mp4",
           "container": "mp4",
           "codec": "avc",
-          "durationMs": 5000,
+          "durationMs": 5000.0,
           "frameCount": 10,
           "width": 320,
           "height": 240
@@ -79,56 +79,56 @@
         "kind": "image-sequence",
         "cameraId": "orbit-cam-secondary",
         "syncOffsetMs": -16.5,
-        "fpsHint": 2,
+        "fpsHint": 2.0,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 40,
+            "timestampMs": 40.0,
             "assetId": "orbit-frame-00"
           },
           {
             "index": 1,
-            "timestampMs": 540,
+            "timestampMs": 540.0,
             "assetId": "orbit-frame-01"
           },
           {
             "index": 2,
-            "timestampMs": 1040,
+            "timestampMs": 1040.0,
             "assetId": "orbit-frame-02"
           },
           {
             "index": 3,
-            "timestampMs": 1540,
+            "timestampMs": 1540.0,
             "assetId": "orbit-frame-03"
           },
           {
             "index": 4,
-            "timestampMs": 2040,
+            "timestampMs": 2040.0,
             "assetId": "orbit-frame-04"
           },
           {
             "index": 5,
-            "timestampMs": 2540,
+            "timestampMs": 2540.0,
             "assetId": "orbit-frame-05"
           },
           {
             "index": 6,
-            "timestampMs": 3040,
+            "timestampMs": 3040.0,
             "assetId": "orbit-frame-06"
           },
           {
             "index": 7,
-            "timestampMs": 3540,
+            "timestampMs": 3540.0,
             "assetId": "orbit-frame-07"
           },
           {
             "index": 8,
-            "timestampMs": 4040,
+            "timestampMs": 4040.0,
             "assetId": "orbit-frame-08"
           },
           {
             "index": 9,
-            "timestampMs": 4540,
+            "timestampMs": 4540.0,
             "assetId": "orbit-frame-09"
           }
         ],
@@ -139,17 +139,17 @@
         "name": "Orbit Spare Pass",
         "kind": "image-sequence",
         "cameraId": null,
-        "syncOffsetMs": 0,
-        "fpsHint": 1,
+        "syncOffsetMs": 0.0,
+        "fpsHint": 1.0,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 0,
+            "timestampMs": 0.0,
             "assetId": "orbit-frame-00"
           },
           {
             "index": 1,
-            "timestampMs": 500,
+            "timestampMs": 500.0,
             "assetId": "orbit-frame-01"
           }
         ],

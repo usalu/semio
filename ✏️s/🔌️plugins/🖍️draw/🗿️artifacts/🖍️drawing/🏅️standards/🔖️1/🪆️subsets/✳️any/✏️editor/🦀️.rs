@@ -41,6 +41,23 @@ pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
 pub const DRAWING_DEFAULT_UTILITY: &str = "selectDirect";
+
+/// 🧰️ The utility armed for THIS window. The React host keeps utilities per window
+/// (`ViewModel::active_utility_by_window_id`, keyed by window instance id) and only mirrors the
+/// ACTIVE window's utility into the flat `active_utility_id`; a gesture dispatched into a pane that
+/// is not the shell's active window therefore carried `None` and every rectangle drag ran as a
+/// marquee select (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). Resolution order: the
+/// addressed window's entry, the focused window's entry, the flat field, the default.
+fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
+    view.window_id
+        .as_deref()
+        .and_then(|window| view.active_utility_by_window_id.get(window))
+        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
+        .map(String::as_str)
+        .filter(|utility| !utility.is_empty())
+        .or(view.active_utility_id.as_deref())
+        .unwrap_or(DRAWING_DEFAULT_UTILITY)
+}
 /// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
 /// (granularity `stroke`, `HierarchyProvider::Flat`, methods Pick/Rectangle/Lasso).
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
@@ -309,11 +326,18 @@ const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
 struct DrawingGestureOperationOwner {
     session: Option<DrawingSession>,
     closing: bool,
+    /// 🧾️ The declared `DRAWING_GESTURE_RETAINED_BYTES` budget still to be handed back to the
+    /// registry. The session itself is dropped on the first granted close step; its budget is
+    /// released one grant-sized page per step, because every framework close/maintenance pump grants
+    /// at most `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` (4 KiB) — demanding the whole 32 KiB in one step
+    /// meant no gesture owner ever closed outside a hand-rolled test (ticket
+    /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17).
+    unreleased_bytes: usize,
 }
 
 impl DrawingGestureOperationOwner {
     fn new(active_utility_id: &str) -> Self {
-        Self { session: Some(DrawingSession::with_active_utility(active_utility_id)), closing: false }
+        Self { session: Some(DrawingSession::with_active_utility(active_utility_id)), closing: false, unreleased_bytes: DRAWING_GESTURE_RETAINED_BYTES }
     }
 }
 
@@ -331,29 +355,40 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes < DRAWING_GESTURE_RETAINED_BYTES {
+        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if self.session.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAWING_GESTURE_RETAINED_BYTES };
+        let released_items = usize::from(self.session.take().is_some());
+        let released_bytes = self.unreleased_bytes.min(maximum_bytes);
+        self.unreleased_bytes -= released_bytes;
+        if released_items == 0 && released_bytes == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Complete;
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.session.is_none()
+        self.closing && self.session.is_none() && self.unreleased_bytes == 0
     }
 }
 
+const DRAWING_GESTURE_OPERATION_SLOTS: usize = 64;
+
 struct DrawingInstanceOperationOwner {
-    operations: semio_framework_job::FixedOperationRegistry<DrawingGestureOperationOwner, 64>,
+    operations: semio_framework_job::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
     active: Option<(semio_framework_job::FixedOperationKey, [u8; 32])>,
     closing: bool,
+    /// 🚪️ Every slot has been marked closing. `FixedOperationRegistry::begin_close_step` and
+    /// `close_step` share one cursor and each advance it by one, so a close that calls both per step
+    /// only ever begins the close of every OTHER slot — an owner on the wrong parity was never marked
+    /// and its close spun `Pending { 0, 0 }` until the app's Drop witness fired (ticket
+    /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). The first close step now sweeps all slots once.
+    close_begun: bool,
 }
 
 impl DrawingInstanceOperationOwner {
     fn new() -> Self {
-        Self { operations: semio_framework_job::FixedOperationRegistry::new(64 * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false }
+        Self { operations: semio_framework_job::FixedOperationRegistry::new(DRAWING_GESTURE_OPERATION_SLOTS * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false, close_begun: false }
     }
 
     fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
@@ -377,6 +412,20 @@ impl DrawingInstanceOperationOwner {
         }
         let live_key = self.active.map_or(key, |(active, _)| active);
         if self.operations.get(live_key).is_none() {
+            // 🧹️ The registry is direct-mapped by `operation_id % slots` and the framework mints every
+            // tool operation id INTO the first vacant residue class of its own 64-slot table — so the
+            // next gesture reuses residue 0 the moment the previous one settled, and lands on the slot
+            // still held by that gesture's cancelled-but-not-yet-retired owner. Retire the retiring
+            // owners now (bounded: one cursor sweep, each owner closes within its declared grant)
+            // instead of answering `saturated` (every browser gesture failed so, 2026-09-17).
+            if !self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
+                for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS * 2 {
+                    if self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
+                        break;
+                    }
+                    let _ = self.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+                }
+            }
             self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id)).map_err(|mut rejected| {
                 rejected.owner.cancel();
                 rejected.owner.begin_close();
@@ -535,17 +584,27 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
     }
 
     fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(match self.operations.close_step(maximum_items, maximum_bytes) {
-            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Drawing gesture close owner awaits its exact grant" },
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
-        })
+        // 🔁️ The registry's close cursor visits one slot per call; an idle (live or vacant) slot answers
+        // `Pending { 0, 0 }`. Skip past those within one bounded sweep so a retiring owner gets a page
+        // every maintenance step rather than every 64th — 9 steps to retire a gesture, not 576.
+        for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
+            match self.operations.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } if !self.operations.is_empty() => continue,
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }),
+                semio_framework_job::InteractiveJobCloseStep::Complete => return Ok(semio_framework_plugin::PluginCloseStep::Complete),
+            }
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
         self.closing = true;
-        if !self.operations.is_empty() {
-            self.operations.begin_close_step();
+        if !self.close_begun {
+            for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
+                self.operations.begin_close_step();
+            }
+            self.close_begun = true;
         }
         self.maintenance_step(maximum_items, maximum_bytes)
     }
@@ -569,129 +628,40 @@ struct DrawingGestureOperationPayload {
     completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<DrawingPlayApp>>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum DrawingRetainedDecodePhase {
-    Open,
-    VerbOpen,
-    Verb,
-    Comma,
-    Value,
-    Close,
-    Complete,
-    Fault,
-}
-
+/// 📦️ Validates the retained wire pages of one gesture against the typed command the host already
+/// decoded: the pages are the command's OWN binary op encoding (`app_commands!` `OpBinary`, the same
+/// bytes `ArtifactRetainedCommandJob` decodes for the bounded lane — since 09-15 the host crosses a
+/// pack, not `["verb", {...}]` JSON text). Fail-closed exactly like the framework lane: the bytes
+/// must decode to a command whose id is the registered verb, so truncation and a variant swap reject
+/// before dispatch. No byte-equal re-encode: the host's pack encoder is not obliged to emit the
+/// Rust encoder's canonical layout (float/int spelling, defaulted fields).
 struct DrawingRetainedCommandDecoder {
-    expected_verb: &'static [u8],
-    phase: DrawingRetainedDecodePhase,
-    verb_cursor: usize,
-    nested_depth: usize,
-    string: bool,
-    escaped: bool,
-    scalar: bool,
-    value_complete: bool,
+    expected_verb: &'static str,
+    raw: Vec<u8>,
+    overflow: bool,
 }
 
 impl DrawingRetainedCommandDecoder {
     fn new(expected_verb: &'static str) -> Self {
-        Self { expected_verb: expected_verb.as_bytes(), phase: DrawingRetainedDecodePhase::Open, verb_cursor: 0, nested_depth: 0, string: false, escaped: false, scalar: false, value_complete: false }
+        Self { expected_verb, raw: Vec::new(), overflow: false }
     }
 
-    fn feed(&mut self, byte: u8) {
-        if matches!(self.phase, DrawingRetainedDecodePhase::Fault | DrawingRetainedDecodePhase::Complete) {
-            if !byte.is_ascii_whitespace() {
-                self.phase = DrawingRetainedDecodePhase::Fault;
-            }
-            return;
+    /// 📄️ Appends one wire page within `DRAWING_GESTURE_RAW_BYTES`; an oversized owner fails closed.
+    fn feed_page(&mut self, page: &[u8]) -> bool {
+        if self.overflow || self.raw.len().checked_add(page.len()).is_none_or(|end| end > DRAWING_GESTURE_RAW_BYTES) || self.raw.try_reserve_exact(page.len()).is_err() {
+            self.overflow = true;
+            return false;
         }
-        match self.phase {
-            DrawingRetainedDecodePhase::Open => {
-                if byte.is_ascii_whitespace() {
-                    return;
-                }
-                self.phase = if byte == b'[' { DrawingRetainedDecodePhase::VerbOpen } else { DrawingRetainedDecodePhase::Fault };
-            }
-            DrawingRetainedDecodePhase::VerbOpen => {
-                if byte.is_ascii_whitespace() {
-                    return;
-                }
-                self.phase = if byte == b'"' { DrawingRetainedDecodePhase::Verb } else { DrawingRetainedDecodePhase::Fault };
-            }
-            DrawingRetainedDecodePhase::Verb => {
-                if self.verb_cursor == self.expected_verb.len() {
-                    self.phase = if byte == b'"' { DrawingRetainedDecodePhase::Comma } else { DrawingRetainedDecodePhase::Fault };
-                } else if self.expected_verb.get(self.verb_cursor) == Some(&byte) {
-                    self.verb_cursor += 1;
-                } else {
-                    self.phase = DrawingRetainedDecodePhase::Fault;
-                }
-            }
-            DrawingRetainedDecodePhase::Comma => {
-                if byte.is_ascii_whitespace() {
-                    return;
-                }
-                self.phase = if byte == b',' { DrawingRetainedDecodePhase::Value } else { DrawingRetainedDecodePhase::Fault };
-            }
-            DrawingRetainedDecodePhase::Value => self.feed_value(byte),
-            DrawingRetainedDecodePhase::Close => {
-                if byte.is_ascii_whitespace() {
-                    return;
-                }
-                self.phase = if byte == b']' { DrawingRetainedDecodePhase::Complete } else { DrawingRetainedDecodePhase::Fault };
-            }
-            DrawingRetainedDecodePhase::Complete | DrawingRetainedDecodePhase::Fault => {}
-        }
+        self.raw.extend_from_slice(page);
+        true
     }
 
-    fn feed_value(&mut self, byte: u8) {
-        if self.value_complete {
-            if byte.is_ascii_whitespace() {
-                return;
-            }
-            self.phase = if byte == b']' { DrawingRetainedDecodePhase::Complete } else { DrawingRetainedDecodePhase::Fault };
-            return;
+    fn finish(&self) -> bool {
+        if self.overflow {
+            return false;
         }
-        if self.string {
-            if self.escaped {
-                self.escaped = false;
-            } else if byte == b'\\' {
-                self.escaped = true;
-            } else if byte == b'"' {
-                self.string = false;
-                if self.nested_depth == 0 {
-                    self.value_complete = true;
-                }
-            }
-            return;
-        }
-        if byte.is_ascii_whitespace() && !self.scalar && self.nested_depth == 0 {
-            return;
-        }
-        match byte {
-            b'"' => self.string = true,
-            b'{' | b'[' => self.nested_depth += 1,
-            b'}' | b']' if self.nested_depth != 0 => {
-                self.nested_depth -= 1;
-                if self.nested_depth == 0 {
-                    self.value_complete = true;
-                }
-            }
-            b']' if self.scalar => self.phase = DrawingRetainedDecodePhase::Complete,
-            b']' => self.phase = DrawingRetainedDecodePhase::Fault,
-            byte if byte.is_ascii_whitespace() && self.scalar => {
-                self.scalar = false;
-                self.value_complete = true;
-            }
-            _ => self.scalar = true,
-        }
-    }
-
-    fn finish(&mut self) -> bool {
-        if self.phase == DrawingRetainedDecodePhase::Value && self.scalar {
-            self.value_complete = true;
-            self.phase = DrawingRetainedDecodePhase::Close;
-        }
-        self.phase == DrawingRetainedDecodePhase::Complete && self.verb_cursor == self.expected_verb.len() && self.nested_depth == 0 && !self.string && !self.escaped
+        let Ok(decoded) = <DrawingCommand as ::protocol::OpBinary>::decode_op(&self.raw) else { return false };
+        decoded.command_id() == self.expected_verb
     }
 }
 
@@ -718,23 +688,18 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         if !self.raw_validated {
             let Some(input) = self.raw_input.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
             if let Some(page) = input.page(self.raw_page_cursor) {
-                if let Some(byte) = page.get(self.raw_byte_cursor) {
-                    let Some(decoder) = self.decoder.as_mut() else {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-                    };
-                    decoder.feed(*byte);
-                    if decoder.phase == DrawingRetainedDecodePhase::Fault {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-                    }
-                    self.raw_byte_cursor += 1;
-                    context.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                let Some(decoder) = self.decoder.as_mut() else {
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                };
+                if !decoder.feed_page(page) {
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
                 }
                 self.raw_page_cursor += 1;
                 self.raw_byte_cursor = 0;
+                context.consume_fuel(page.len().max(1) as u64);
                 return semio_framework_job::StepOutcome::Yield;
             }
-            let exact = self.decoder.as_mut().is_some_and(DrawingRetainedCommandDecoder::finish);
+            let exact = self.decoder.as_ref().is_some_and(DrawingRetainedCommandDecoder::finish);
             if !exact {
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
@@ -1016,7 +981,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
-        let active_utility = input.context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY);
+        let active_utility = input.context.and_then(|context| context.view_state.as_ref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
         let mut session = DrawingSession::with_active_utility(active_utility);
         session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.window_config = canvas_window::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref()));
@@ -1358,7 +1323,7 @@ fn render_drawing_body(
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
-    let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAWING_DEFAULT_UTILITY);
+    let active_utility = drawing_active_utility(view_state);
     // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the containers
     // that body owns, plus the shared first-paint budget the panel spends in document order.
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
@@ -1511,7 +1476,7 @@ impl ArtifactEditor for DrawingPlayApp {
             history: request.history,
             instance_owner: request.instance_operation_owner,
             operation_context,
-            active_utility_id: request.context.view_state.as_ref().and_then(|view| view.active_utility_id.clone()).unwrap_or_else(|| DRAWING_DEFAULT_UTILITY.into()),
+            active_utility_id: request.context.view_state.as_ref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
             completion: request.completion,
         };
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -1574,7 +1539,7 @@ impl ArtifactEditor for DrawingPlayApp {
         if DRAWING_GESTURE_TOOL_IDS.contains(&command.command_id()) {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.retained-route"), "Drawing gesture commands are reachable only through their exact retained factory owner"));
         }
-        let mut session = DrawingSession::with_active_utility(view_state.and_then(|view| view.active_utility_id.as_deref()).unwrap_or(DRAWING_DEFAULT_UTILITY));
+        let mut session = DrawingSession::with_active_utility(view_state.map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility));
         session.interaction.ids = interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.clone();
         session.window_config = canvas_window::config::current(cfg);
         command.dispatch(doc, cfg, &mut session)
@@ -1593,7 +1558,7 @@ impl ArtifactEditor for DrawingPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
-                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, view_state.active_utility_id.as_deref().unwrap_or(DRAWING_DEFAULT_UTILITY))))
+                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, drawing_active_utility(view_state))))
                 .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner", error.message))?
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
@@ -1601,8 +1566,12 @@ impl ArtifactEditor for DrawingPlayApp {
         render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, view_state)
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
+        // 🧮️ The status row reports the LIVE top-level layer count (selection is framework-owned and not
+        // visible from this view, so it stays at the framework's interaction domain); it used to be a
+        // hard-coded "0 layers · 0 selected" that no load or edit ever moved.
+        let layer_count = doc.snapshot.layers.len();
         let engagement = WindowEngagement {
             session_active: Some(false),
             options: None,
@@ -1618,7 +1587,7 @@ impl ArtifactEditor for DrawingPlayApp {
             }),
             control: None,
             controls: None,
-            status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: "0 layers · 0 selected".into() }]),
+            status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: format!("{layer_count} layer{} · 0 selected", if layer_count == 1 { "" } else { "s" }) }]),
             possible_engagements: None,
         };
         HashMap::from([(window_id, engagement)])

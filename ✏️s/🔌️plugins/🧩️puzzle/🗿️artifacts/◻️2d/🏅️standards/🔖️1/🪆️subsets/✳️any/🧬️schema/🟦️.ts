@@ -10,6 +10,8 @@ export interface Puzzle2dArtifact {
   /** @state artifact */
   edges: Puzzle2dEdge[];
   /** @state artifact */
+  targetRegions: Puzzle2dTargetRegion[];
+  /** @state artifact */
   meta: Puzzle2dMeta;
 }
 
@@ -171,6 +173,17 @@ export interface Puzzle2dKindCatalogs {
   handles: Puzzle2dCatalogHandleKind[];
   edges: Puzzle2dCatalogEdgeKind[];
   wires: Puzzle2dCatalogWireKind[];
+}
+
+export interface Puzzle2dTargetRegion {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+  hidden: boolean;
+  locked: boolean;
 }
 
 export interface Puzzle2dMeta {

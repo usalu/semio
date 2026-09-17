@@ -81,6 +81,13 @@ const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-region",
+    "delete-target-region",
+    "move-target-region",
+    "resize-target-region",
+    "edit-target-region-label",
+    "change-target-region-hidden",
+    "change-target-region-locked",
 ];
 
 /// 🧾️ The row ids of the third Examples table, in its own order. They are NOT kinds: the completeness
@@ -138,6 +145,14 @@ const SPEC_VECTORS: &[&str] = &[
     "disconnect-kind-compatibility-refused",
     "replace-kind-catalogs-alpha",
     "replace-kind-catalogs-cleared",
+    "create-target-region-alpha",
+    "create-target-region-refused",
+    "delete-target-region-refused",
+    "move-target-region-refused",
+    "resize-target-region-refused",
+    "edit-target-region-label-refused",
+    "change-target-region-hidden-refused",
+    "change-target-region-locked-refused",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle2dDiff` mirrors `Puzzle2dSnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🧩️assembly` and `🧱️block` subsets, whose diffs split, rename or fold their fields, carry real rows here.
@@ -328,7 +343,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// 🧾️ Every vector the two exhaustive tables do NOT carry: the synthetic alpha-board vectors kept
-/// from before this corpus was rebuilt on the shipped examples, the twenty-two refusals, and the two
+/// from before this corpus was rebuilt on the shipped examples, the twenty-nine refusals, and the two
 /// warning-level branches. They cannot ride the `mutate`/`inverse` tables because the completeness
 /// gate reads a `mutate-<kind>` id as a claim about the KIND, so a second row per kind would report
 /// an undeclared kind; and because a refusal has no diff to measure a footprint against.

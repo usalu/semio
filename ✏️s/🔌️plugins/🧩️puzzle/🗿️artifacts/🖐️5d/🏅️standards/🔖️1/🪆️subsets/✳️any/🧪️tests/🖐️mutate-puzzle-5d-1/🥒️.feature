@@ -4,11 +4,11 @@
 @mutations-puzzle-5d-1-any
 Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.puzzle.5d` assembly document and its twenty-eight typed mutations,
+  second implementation of the `s.puzzle.5d` assembly document and its thirty-five typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 1, 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
-  from the twenty-eight committed quintets. It imports nothing from this repository's Rust.
+  from the thirty-five committed quintets. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library, and why the previous answer was
   wrong. This case used to argue that its five-dimensional shape — every element placed in TWO spaces
@@ -21,7 +21,7 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
   in ONE space, none of them carries a part placed in a diagram and in a model at the same time with
   a joint addressed as `"<partId>:<gripId>"`, and none of them reads this carrier.
 
-  ✅️ ALL TWENTY-EIGHT KINDS ARE ADJUDICATED AND NONE IS REFUSED — and this subset is the one that
+  ✅️ ALL THIRTY-FIVE KINDS ARE ADJUDICATED AND NONE IS REFUSED — and this subset is the one that
   settles a question its siblings leave open. `◻️mutate-puzzle-2d-1` and `🧊️mutate-puzzle-3d-1` each
   commit exactly one `replace-<container>-<port>` vector (`replace-node-handle`,
   `replace-object-vortex`) and each declares it `mutation.no-op` with an unchanged after-snapshot,
@@ -112,6 +112,13 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
+      | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2               |
+      | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1               |
+      | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                   |
+      | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z              |
+      | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
 
   @id-inverse
   @level-exhaustive
@@ -160,6 +167,13 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
+      | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2               |
+      | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1               |
+      | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                   |
+      | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z              |
+      | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
 
   @id-identity-round-trip
   @level-long

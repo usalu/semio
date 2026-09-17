@@ -1,5 +1,7 @@
 /** 🧩️ Runtime membership is closed over dependencies and every selected component's consumed topics.
- * @param {readonly {pluginId: string, dependsOn?: readonly string[], consumes?: readonly string[], contributes?: readonly string[], host?: unknown}[]} components
+ * Host plugins reached only because an extension `extends` them are linked shallowly: the host is
+ * materialized, but its own `depends-on` / `consumes` closure is not expanded from that edge.
+ * @param {readonly {pluginId: string, dependsOn?: readonly string[], consumes?: readonly string[], contributes?: readonly string[], extends?: string, host?: unknown}[]} components
  * @param {readonly string[]} roots
  * @returns {string[]}
  */
@@ -14,16 +16,17 @@ export function runtimeComponentClosure(components, roots) {
       contributors.set(topic, ids);
     }
   }
-  const selected = new Set(), pending = [...roots];
+  const selected = new Set(), pending = roots.map(id => ({ id, shallow: false }));
   while (pending.length) {
-    const id = pending.pop();
+    const { id, shallow } = pending.pop();
     if (selected.has(id)) continue;
     const component = byId.get(id);
     if (!component) throw new Error(`Unknown runtime component ${id}`);
     selected.add(id);
-    pending.push(...(component.dependsOn ?? []));
-    for (const topic of component.consumes ?? []) pending.push(...(contributors.get(topic) ?? []));
-    if (component.host) pending.push(...byId.keys());
+    if (shallow) continue;
+    for (const dep of component.dependsOn ?? []) pending.push({ id: dep, shallow: component.extends === dep });
+    for (const topic of component.consumes ?? []) for (const contributor of contributors.get(topic) ?? []) pending.push({ id: contributor, shallow: false });
+    if (component.host) for (const hostId of byId.keys()) pending.push({ id: hostId, shallow: false });
   }
   return [...selected].sort();
 }

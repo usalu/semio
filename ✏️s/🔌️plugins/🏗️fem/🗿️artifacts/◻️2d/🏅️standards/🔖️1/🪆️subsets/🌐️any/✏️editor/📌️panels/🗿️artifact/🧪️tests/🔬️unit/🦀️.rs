@@ -17,10 +17,12 @@ fn german() -> &'static Fem2dLabels {
     fem2d_labels(&ViewModel { locale: Locale::De, ..Default::default() })
 }
 
-/// 🪟️ A host viewport tall enough to hold the demo whole — the label, nesting and keying laws read
-/// the tree itself, so they ask for every row rather than one screenful.
+/// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
+/// COLLAPSED opened explicitly — the label, nesting and keying laws read the tree itself, so they ask
+/// for every row rather than one screenful, and a closed container is correctly empty.
 fn wide_view() -> ViewModel {
-    ViewModel { tree_viewport_rows: Some(512), ..Default::default() }
+    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 128)).collect();
+    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..Default::default() }
 }
 
 fn build_for(document: &Fem2dSnapshot, labels: &Fem2dLabels, view: &ViewModel) -> BuiltNode {
@@ -253,7 +255,7 @@ async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction
 
     let binding = tree.bindings.iter().next().expect("the tree binds the domain select");
     assert_eq!(binding.action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
-    assert_eq!(binding.action.scope.as_str(), crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID);
+    assert_eq!(binding.action.scope.as_str(), FEM2D_PLAY_CONTROLLER_ID);
     assert_eq!(tree.bindings.iter().count(), 1, "exactly one tree-level select, never one per row");
 
     let json = projection(build(&document, english()));

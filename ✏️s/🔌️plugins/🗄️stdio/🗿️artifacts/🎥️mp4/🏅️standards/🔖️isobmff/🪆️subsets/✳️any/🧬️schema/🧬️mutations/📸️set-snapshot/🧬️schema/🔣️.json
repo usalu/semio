@@ -205,6 +205,18 @@
         "nalLengthSize"
       ],
       "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "avc1",
+            "avc3",
+            "hvc1",
+            "hev1",
+            "jpeg",
+            "mjpa"
+          ],
+          "default": "avc1"
+        },
         "sps": {
           "type": "array",
           "items": {
@@ -236,6 +248,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/Mp4AvcExtension"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hevc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4HevcConfig"
             },
             {
               "type": "null"
@@ -629,6 +651,135 @@
         },
         "sync": {
           "type": "boolean"
+        }
+      }
+    },
+    "Mp4HevcConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generalProfileSpace",
+        "generalTierFlag",
+        "generalProfileIdc",
+        "generalProfileCompatibilityFlags",
+        "generalConstraintIndicatorFlags",
+        "generalLevelIdc",
+        "minSpatialSegmentationIdc",
+        "parallelismType",
+        "chromaFormatIdc",
+        "bitDepthLumaMinus8",
+        "bitDepthChromaMinus8",
+        "avgFrameRate",
+        "constantFrameRate",
+        "numTemporalLayers",
+        "temporalIdNested"
+      ],
+      "properties": {
+        "generalProfileSpace": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "generalTierFlag": {
+          "type": "boolean"
+        },
+        "generalProfileIdc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "generalProfileCompatibilityFlags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "generalConstraintIndicatorFlags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+        },
+        "generalLevelIdc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "minSpatialSegmentationIdc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "parallelismType": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "chromaFormatIdc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthLumaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthChromaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "avgFrameRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "constantFrameRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "numTemporalLayers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "temporalIdNested": {
+          "type": "boolean"
+        },
+        "arrays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mp4HevcNalArray"
+          }
+        }
+      }
+    },
+    "Mp4HevcNalArray": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrayCompleteness",
+        "nalUnitType"
+      ],
+      "properties": {
+        "arrayCompleteness": {
+          "type": "boolean"
+        },
+        "nalUnitType": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "nalUnits": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
         }
       }
     }

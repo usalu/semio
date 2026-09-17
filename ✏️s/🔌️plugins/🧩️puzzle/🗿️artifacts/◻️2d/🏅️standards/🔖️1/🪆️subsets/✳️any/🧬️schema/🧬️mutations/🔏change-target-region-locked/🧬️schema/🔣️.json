@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutation/change-target-region-locked/schema.json",
+  "title": "ChangeTargetRegionLocked",
+  "description": "The `change-target-region-locked` mutation record — internally tagged `\"mutation\": \"changeTargetRegionLocked\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newLocked"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTargetRegionLocked"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newLocked": {
+      "type": "boolean"
+    }
+  }
+}

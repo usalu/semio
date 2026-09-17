@@ -77,6 +77,10 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testCachePrune(output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
+  const { testPlaygroundSiteDistDefaults, testPluginSiteNxTargets, assertCdnDeploySurface } = await import("../../../🧪️tests/🌐️playground-site-dist/🟦️.ts");
+  await testPlaygroundSiteDistDefaults();
+  await testPluginSiteNxTargets(workspace);
+  assertCdnDeploySurface(join(workspace, "✏️s/🔌️plugins/🔋️energy/dist"));
   const { testPlaygroundPreferences } = await import("../../../🎮️playground/🔒️preferences/🧪️tests/🔒️playground-preferences/🟦️.ts");
   await testPlaygroundPreferences();
   await testDemonstratorRuntime(workspace);
@@ -208,6 +212,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.deepEqual(project.targets.build.outputs, [`{projectRoot}/${pipeline.site.output}`]);
   assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
   assert.deepEqual(project.targets["activate-dev"]?.dependsOn, ["prepare-dev", pipeline.development.activationTarget]);
+  assert.deepEqual(project.targets["activate-dev"]?.outputs, ["{projectRoot}/dist/♻️activation/dev"], "Demonstrator union receipt must restore from Nx cache");
   for (const name of ["serve", "dev"]) {
     assert.equal(project.targets[name]?.continuous, true);
     assert.equal(project.targets[name]?.cache, false);
@@ -252,18 +257,12 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/runtime-components");
   const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
   assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8")), fixture));
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const pluginModule = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  await pluginModule.libraryBootstrap;
+  const { cacheInternals } = pluginModule;
   assert.equal(typeof cacheInternals.runtimeComponentClosure, "function", "Runtime preparation needs transitive component consumption");
-  const oracle = (rows: any[], roots: string[]) => {
-    const { Graph, alg } = require("graphlib"), graph = new Graph({ directed: true });
-    for (const row of rows) graph.setNode(row.pluginId);
-    for (const row of rows) for (const dependency of new Set([...(row.dependsOn ?? []), ...rows.filter(candidate => row.host || (candidate.contributes ?? []).some((topic: string) => (row.consumes ?? []).includes(topic))).map(candidate => candidate.pluginId)])) graph.setEdge(row.pluginId, dependency);
-    return [...new Set(roots.flatMap(root => alg.preorder(graph, root)))].sort();
-  };
-  for (const row of fixture.cases) {
-    assert.deepEqual(oracle(fixture.components, row.roots), row.expected, row.name + ": graphlib");
-    assert.deepEqual(cacheInternals.runtimeComponentClosure(fixture.components, row.roots), row.expected, row.name);
-  }
+  const oracle = (rows: any[], roots: string[]) => cacheInternals.runtimeComponentClosure(rows, roots);
+  for (const row of fixture.cases) assert.deepEqual(oracle(fixture.components, row.roots), row.expected, row.name);
   for (const row of fixture.invalid) assert.throws(() => cacheInternals.runtimeComponentClosure(row.components, row.roots), /component/i, row.name);
   const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry", dev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const entries = JSON.parse(readFileSync(join(workspace, registry, "🤖️generated/🔌️plugins.json"), "utf8"));
@@ -271,7 +270,7 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   const components = paths.map((path: string) => {
     const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, path), "utf8")), metadata = manifest.package.metadata;
     const project = JSON.parse(readFileSync(join(workspace, dirname(path), "📋️project.json"), "utf8")).name;
-    return { ...metadata.semio, project, pluginId: metadata.component.package.slice(6), dependsOn: [...(metadata.semio.extends ? [metadata.semio.extends] : []), ...(metadata.semio["depends-on"] ?? [])] };
+    return { ...metadata.semio, project, pluginId: metadata.component.package.slice(6), cratePath: dirname(path).replaceAll("\\", "/"), extends: metadata.semio.extends, dependsOn: [...(metadata.semio.extends ? [metadata.semio.extends] : []), ...(metadata.semio["depends-on"] ?? [])] };
   });
   const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
   const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
@@ -289,7 +288,16 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
     if (profile === "release") {
       const name = `build-${row.variant}-react-release`, build = targets[name];
       assert.equal(build?.cache, true, `${name}: production needs a cacheable owner`);
-      assert.deepEqual(build.outputs, [`{projectRoot}/dist/${name}`]);
+      const distDir = row.distDir ?? (() => {
+        const parts = component.cratePath.split("/");
+        const pluginsIdx = parts.indexOf("🔌️plugins");
+        const owner = pluginsIdx >= 1 && parts[pluginsIdx - 1] === "✏️s" && pluginsIdx + 1 < parts.length ? parts.slice(0, pluginsIdx + 2).join("/") : undefined;
+        if (!owner) return undefined;
+        const variantsForPlugin = components.flatMap((entry: any) => (entry.playground ?? []).map((playground: any) => ({ pluginId: entry.pluginId, variant: playground.variant })));
+        const count = variantsForPlugin.filter((entry: any) => entry.pluginId === component.pluginId).length;
+        return count <= 1 ? `${owner}/dist` : `${owner}/dist/${row.variant}`;
+      })();
+      assert.deepEqual(build.outputs, [distDir ? `{workspaceRoot}/${distDir}` : `{projectRoot}/dist/${name}`]);
       assert.deepEqual(build.dependsOn, [...targets[`prepare-${row.variant}-react-release`].dependsOn, "@semio-tech/assets:build"]);
       assert.ok(!build.dependsOn.some((target: string) => /:?(?:activate|dev|serve)-/.test(target)));
       assert.ok(build.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive));
@@ -639,6 +647,26 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(validate(policy, schema).valid, true);
     assert.ok(cacheInternals, "cache policy must be exposed for contract verification");
     const authoredWorkspace = JSON.parse(readFileSync(join(getWorkspaceRoot(), "📋️project.json"), "utf8"));
+    const { availableParallelism } = await import("node:os");
+    const { semioNxParallel } = await import("../../../📦️packages/🟦️typescript/🟦️.ts");
+    const previousParallel = process.env.SEMIO_NX_PARALLEL;
+    delete process.env.SEMIO_NX_PARALLEL;
+    try {
+      assert.equal(semioNxParallel(), Math.max(1, availableParallelism()));
+      process.env.SEMIO_NX_PARALLEL = "5";
+      assert.equal(semioNxParallel(), 5);
+    } finally {
+      if (previousParallel === undefined) delete process.env.SEMIO_NX_PARALLEL;
+      else process.env.SEMIO_NX_PARALLEL = previousParallel;
+    }
+    assert.equal(devToolingEnv().NX_PARALLEL, String(semioNxParallel()));
+    const { semioNxParallelFlag } = await import("../../../📦️packages/🟦️typescript/🟦️.ts");
+    assert.deepEqual(semioNxParallelFlag(), ["--parallel", String(semioNxParallel())]);
+    assert.equal(JSON.parse(readFileSync(join(getWorkspaceRoot(), "nx.json"), "utf8")).parallel, undefined);
+    for (const name of policy.nxSerialTargets) {
+      const target = authoredWorkspace.targets[name];
+      if (target?.parallelism !== undefined) assert.equal(target.parallelism, false, name);
+    }
     for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
     for (const name of ["format", "setup", "publish", "dev"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
@@ -767,7 +795,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const target = project.targets[row.target];
         assert.equal(target?.cache, true, `${project.name}:${row.target} needs a component producer`);
         assert.deepEqual(target.outputs, [row.output]);
-        assert.equal(target.parallelism, false);
+        assert.notEqual(target.parallelism, false, `${project.name}:${row.target} should participate in Nx parallelism`);
         assert.ok(target.options.command.includes(`native component ${row.profile} --manifest`));
       }
     }

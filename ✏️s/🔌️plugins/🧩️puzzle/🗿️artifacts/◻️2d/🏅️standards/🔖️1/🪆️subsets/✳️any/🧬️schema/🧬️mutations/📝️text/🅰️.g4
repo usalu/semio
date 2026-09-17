@@ -7,7 +7,7 @@ grammar Puzzle_puzzle2d_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'puzzle.puzzle2d.mutations' ;
 
-line: createNode | deleteNode | moveNode | replaceNodeGeometry | changeNodeKind | editNodeText | changeNodeIcon | scaleNode | changeNodeVisible | changeNodeLocked | changeNodeRoot | changeNodeAnchor | addNodeHandle | removeNodeHandle | replaceNodeHandle | connectHandles | disconnectHandles | replaceEdgeGeometry | changeEdgeKind | changeEdgeTips | changeEdgeVisible | changeEdgeLocked | changeManifestId | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs ;
+line: createNode | deleteNode | moveNode | replaceNodeGeometry | changeNodeKind | editNodeText | changeNodeIcon | scaleNode | changeNodeVisible | changeNodeLocked | changeNodeRoot | changeNodeAnchor | addNodeHandle | removeNodeHandle | replaceNodeHandle | connectHandles | disconnectHandles | replaceEdgeGeometry | changeEdgeKind | changeEdgeTips | changeEdgeVisible | changeEdgeLocked | changeManifestId | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs | createTargetRegion | deleteTargetRegion | moveTargetRegion | resizeTargetRegion | editTargetRegionLabel | changeTargetRegionHidden | changeTargetRegionLocked ;
 createNode: 'create-node' SP nodeBlock SP indexOpt ;
 deleteNode: 'delete-node' SP id ;
 moveNode: 'move-node' SP id SP number SP number ;
@@ -34,8 +34,16 @@ changeManifestId: 'change-manifest-id' SP textOpt ;
 connectKindCompatibility: 'connect-kind-compatibility' SP id SP id SP boolean SP boolean SP specificity ;
 disconnectKindCompatibility: 'disconnect-kind-compatibility' SP id SP id ;
 replaceKindCatalogs: 'replace-kind-catalogs' SP catalogsBlockOpt ;
+createTargetRegion: 'create-target-region' SP regionBlock SP indexOpt ;
+deleteTargetRegion: 'delete-target-region' SP id ;
+moveTargetRegion: 'move-target-region' SP id SP number SP number ;
+resizeTargetRegion: 'resize-target-region' SP id SP number SP number ;
+editTargetRegionLabel: 'edit-target-region-label' SP id SP textOpt ;
+changeTargetRegionHidden: 'change-target-region-hidden' SP id SP boolean ;
+changeTargetRegionLocked: 'change-target-region-locked' SP id SP boolean ;
 nodeBlock: '{' NL OCTET+ '}' ;
 handleBlock: '{' NL OCTET+ '}' ;
+regionBlock: '{' NL OCTET+ '}' ;
 catalogsBlockOpt: ('{' NL OCTET+ '}') | 'none' ;
 edgeFields: textOpt SP number SP number SP number SP number SP number SP number SP number SP number SP textOpt SP textOpt ;
 anchor: 'fixed' | 'derived' ;

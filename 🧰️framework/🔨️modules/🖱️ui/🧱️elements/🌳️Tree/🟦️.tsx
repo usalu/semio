@@ -725,7 +725,31 @@ export const TREE_WINDOW_OVERSCAN_ROWS = 8;
 /** @emoji 🪟️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
 export const TREE_WINDOW_ROWS_MAX = 128;
 
-/** @emoji 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content). */
+/**
+ * 🪟️ The nodes ALL windowed containers of one panel body may spend together, and the ONE cost model both
+ * sides price a body with: **every container costs `1 + rows`** — its own container node plus the rows it
+ * materialises — summed over every windowed container in the body, nested ones included, each counted once.
+ *
+ * 🧯️ This is the guest's own ledger, not an independently chosen number: `TreeWindows`
+ * (`🔨️modules/🔌️plugin/🦀️.rs`, region `🔖️PanelWindowing`) runs
+ * `UI_DOCUMENT_NODES - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM` records and `debit(1)`s each container before
+ * `grant()`ing its rows out of the same pool. The previous host number (112 "rows") priced only the rows
+ * and only the visible containers, so a body with one open section asked 112 and was answered 110 on every
+ * single render — a permanent, silent under-materialisation with no fault to notice it by
+ * (📓️s3-review-streaming-loop.md §1). Two magic numbers across a wasm boundary cannot be kept in step by
+ * hand, so this line is the parity anchor: the Rust side greps this file for
+ * `TREE_WINDOW_BODY_NODE_BUDGET = <n>` and fails if it disagrees. Keep the spelling on one line.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §7
+ **/
+export const TREE_WINDOW_BODY_NODE_BUDGET = 111;
+
+/** @emoji 📐️ One MATERIALISED row of a windowed container as the DOM measured it: which entry of the child list it is, and where its own top edge sits — in the same space as the container's `top`. */
+export interface TreeWindowRowMeasure {
+  readonly index: number;
+  readonly top: number;
+}
+
+/** @emoji 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content); `rows` are its own materialised rows' real tops, ascending, when the observer could read them. */
 export interface TreeWindowContainerMeasure {
   readonly key: string;
   readonly total: number;
@@ -733,6 +757,7 @@ export interface TreeWindowContainerMeasure {
   readonly length: number;
   readonly top: number;
   readonly height: number;
+  readonly rows?: readonly TreeWindowRowMeasure[];
 }
 
 /** @emoji 🪟️ One container's next window: materialise `rows` entries starting at `offset`. */
@@ -742,12 +767,92 @@ export interface TreeWindowRequest {
   readonly rows: number;
 }
 
+/** @emoji 📐️ What one on-screen container contributes to the viewport rule: the rows of it the viewport actually covers, where inside its child list they start, and how far its centre sits from the viewport's — the order a body-wide budget trims in. */
+export interface TreeWindowVisibleRows {
+  readonly total: number;
+  readonly visibleRows: number;
+  readonly firstVisibleRow: number;
+  readonly distancePx: number;
+}
+
+/**
+ * 📐️ Maps a pixel position onto the index of the child row of `container` drawn there.
+ *
+ * 🧯️ Not `floor(y / rowHeightPx)`: a container's own rows are NOT all one row tall. A materialised row can
+ * itself be an open windowed group rendering its whole subtree, so every row after it sits at a pixel offset
+ * no uniform pitch can predict — and a parent asked for a window computed that way is asked for rows that are
+ * nowhere near the viewport, which evicts the very subtree the user just opened and then oscillates as the
+ * eviction changes the geometry again (📓️s3-review-streaming-loop.md §2).
+ *
+ * So the materialised band is read from the rows' REAL tops (`data-tree-window-row`, direct children only,
+ * ascending — the observer measures them exactly as it measures the containers). Only the two spacer bands
+ * use the uniform pitch, and there it is exact by construction: a spacer IS `rows × rowHeightPx` of nothing.
+ * Without row measurements (a test's stubbed rect, a target that cannot read them) the whole container falls
+ * back to the flat pitch, which is correct for a container none of whose rows is expanded.
+ **/
+function treeWindowRowIndexAt(container: TreeWindowContainerMeasure, y: number, total: number, offset: number, length: number, rowHeightPx: number): number {
+  const clamp = (index: number) => Math.min(total - 1, Math.max(0, index));
+  const localPx = y - container.top;
+  const rows = container.rows;
+  if (!rows || rows.length === 0) return clamp(Math.floor(localPx / rowHeightPx));
+  if (y < rows[0]!.top) return Math.min(offset, clamp(Math.floor(localPx / rowHeightPx)));
+  const trailingPx = (total - offset - length) * rowHeightPx;
+  const rowsEnd = container.top + Math.max(0, container.height) - trailingPx;
+  if (y >= rowsEnd) return clamp(offset + length + Math.floor((y - rowsEnd) / rowHeightPx));
+  let low = 0;
+  let high = rows.length - 1;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (rows[middle]!.top <= y) low = middle;
+    else high = middle - 1;
+  }
+  return clamp(rows[low]!.index);
+}
+
+/**
+ * 📐️ Measures every container against the viewport once, so the request rule and the body-wide cap read the
+ * SAME geometry instead of each deriving its own. A container that does not overlap the viewport at all is
+ * absent from the map — it is dropped entirely (no request, so a scrolled-away branch keeps whatever it last
+ * materialised instead of churning). `visibleRows` is counted in the container's OWN child rows
+ * ({@link treeWindowRowIndexAt}), never in viewport pixels: a section whose whole visible extent is one
+ * expanded child needs one row of itself, not a viewport's worth, and the body-wide budget is spent where the
+ * rows actually are.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1
+ **/
+export function treeWindowVisibleRowsForViewport(containers: readonly TreeWindowContainerMeasure[], viewportTop: number, viewportHeight: number, rowHeightPx: number): ReadonlyMap<string, TreeWindowVisibleRows> {
+  const visible = new Map<string, TreeWindowVisibleRows>();
+  if (!(rowHeightPx > 0)) return visible;
+  const height = Math.max(0, viewportHeight);
+  const viewportBottom = viewportTop + height;
+  const viewportCentre = viewportTop + height / 2;
+  for (const container of containers) {
+    const total = Math.max(0, Math.floor(container.total));
+    if (total === 0) continue;
+    const containerHeight = Math.max(0, container.height);
+    const overlapPx = Math.min(container.top + containerHeight, viewportBottom) - Math.max(container.top, viewportTop);
+    if (overlapPx <= 0) continue;
+    const offset = Math.min(Math.max(0, Math.floor(container.offset)), total);
+    const length = Math.min(Math.max(0, Math.floor(container.length)), total - offset);
+    const firstVisibleRow = treeWindowRowIndexAt(container, Math.max(container.top, viewportTop), total, offset, length, rowHeightPx);
+    const lastVisibleRow = treeWindowRowIndexAt(container, Math.min(container.top + containerHeight, viewportBottom) - 1, total, offset, length, rowHeightPx);
+    visible.set(container.key, { total, visibleRows: Math.max(1, lastVisibleRow - firstVisibleRow + 1), firstVisibleRow, distancePx: Math.abs(container.top + containerHeight / 2 - viewportCentre) });
+  }
+  return visible;
+}
+
+/** @emoji 🪟️ One container's window at an EXACT row count: the slice starts `overscan` rows before the first visible one and always ends inside `total`. */
+function treeWindowRequestAtRows(key: string, metrics: TreeWindowVisibleRows, rows: number, overscan: number): TreeWindowRequest {
+  const bounded = Math.max(1, Math.min(Math.floor(rows), metrics.total));
+  return { key, offset: Math.min(Math.max(0, metrics.firstVisibleRow - Math.max(0, overscan)), metrics.total - bounded), rows: bounded };
+}
+
 /**
  * 🪟️ The windows the given viewport wants, for every container that intersects it — the ONE pure rule both the
  * React observer and its tests read. Off-screen containers are dropped entirely (no request, so a scrolled-away
  * branch keeps whatever it last materialised instead of churning). `offset` is the first visible row less the
  * overscan, clamped so the window always ends inside `total`; `rows` is the visible run plus one overscan per
- * edge, clamped to `[1, min(total, TREE_WINDOW_ROWS_MAX)]`.
+ * edge, clamped to `[1, min(total, TREE_WINDOW_ROWS_MAX)]`. Per-container only — a body asking several
+ * containers at once must run the answer through {@link capTreeWindowRequests}.
  * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1
  **/
 export function treeWindowRequestsForViewport(
@@ -757,25 +862,79 @@ export function treeWindowRequestsForViewport(
   rowHeightPx: number,
   overscanRows: number,
 ): readonly TreeWindowRequest[] {
-  if (!(rowHeightPx > 0)) return [];
-  const viewportBottom = viewportTop + Math.max(0, viewportHeight);
+  const visible = treeWindowVisibleRowsForViewport(containers, viewportTop, viewportHeight, rowHeightPx);
   const overscan = Math.max(0, Math.floor(overscanRows));
   const requests: TreeWindowRequest[] = [];
   for (const container of containers) {
-    const total = Math.max(0, Math.floor(container.total));
-    if (total === 0) continue;
-    const containerBottom = container.top + Math.max(0, container.height);
-    const overlapPx = Math.min(containerBottom, viewportBottom) - Math.max(container.top, viewportTop);
-    if (overlapPx <= 0) continue;
-    const visibleRows = Math.ceil(overlapPx / rowHeightPx);
-    if (visibleRows <= 0) continue;
-    const firstVisibleRow = Math.floor(Math.max(0, viewportTop - container.top) / rowHeightPx);
-    const maxRows = Math.min(total, TREE_WINDOW_ROWS_MAX);
-    const rows = Math.min(Math.max(visibleRows + 2 * overscan, 1), maxRows);
-    const offset = Math.min(Math.max(0, firstVisibleRow - overscan), total - rows);
-    requests.push({ key: container.key, offset, rows });
+    const metrics = visible.get(container.key);
+    if (!metrics) continue;
+    requests.push(treeWindowRequestAtRows(container.key, metrics, Math.min(metrics.visibleRows + 2 * overscan, TREE_WINDOW_ROWS_MAX), overscan));
   }
   return requests;
+}
+
+/**
+ * 🪟️ Fits the WHOLE body's request inside {@link TREE_WINDOW_BODY_NODE_BUDGET}, in the guest's own cost model:
+ * every container in the request costs `1 + rows` — its own node plus the rows it materialises — so a request
+ * that fits here is a request the guest can answer in full, and the host never asks for rows it will silently
+ * not be given (📓️s3-review-streaming-loop.md §1).
+ *
+ * Overscan goes first — uniformly, down to zero, so every container keeps its whole visible run before any of
+ * them loses a row the user can see — and only then are rows trimmed, hardest from the containers whose centre
+ * sits furthest from the viewport's, down to one row and finally to none. A container trimmed to zero rows stays
+ * in the answer as a spacer-only window (it exists in the body either way and still costs its one node; dropping
+ * it from the wire would only hand the guest back its own default). Requests keep their input order (the report
+ * signature must not churn on a re-sort) and every answer still satisfies `offset + rows ≤ total`.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §7
+ **/
+export function capTreeWindowRequests(requests: readonly TreeWindowRequest[], containersVisibleRows: ReadonlyMap<string, TreeWindowVisibleRows>, bodyNodeBudget: number = TREE_WINDOW_BODY_NODE_BUDGET): readonly TreeWindowRequest[] {
+  const budget = Math.max(0, Math.floor(bodyNodeBudget));
+  const cost = (entries: readonly { readonly rows: number }[]) => entries.length + entries.reduce((carry, entry) => carry + entry.rows, 0);
+  if (cost(requests) <= budget) return requests;
+  const entries = requests.map((request, index) => ({
+    index,
+    key: request.key,
+    ceiling: request.rows,
+    rows: request.rows,
+    overscan: TREE_WINDOW_OVERSCAN_ROWS,
+    metrics: containersVisibleRows.get(request.key) ?? { total: request.offset + request.rows, visibleRows: request.rows, firstVisibleRow: request.offset, distancePx: Number.POSITIVE_INFINITY },
+  }));
+  for (let overscan = TREE_WINDOW_OVERSCAN_ROWS - 1; overscan >= 0; overscan -= 1) {
+    for (const entry of entries) {
+      const shrunk = Math.max(1, entry.metrics.visibleRows + 2 * overscan);
+      entry.rows = Math.min(entry.ceiling, shrunk);
+      entry.overscan = shrunk < entry.ceiling ? overscan : TREE_WINDOW_OVERSCAN_ROWS;
+    }
+    if (cost(entries) <= budget) break;
+  }
+  let excess = cost(entries) - budget;
+  const furthestFirst = [...entries].sort((left, right) => right.metrics.distancePx - left.metrics.distancePx || right.index - left.index);
+  for (const entry of furthestFirst) {
+    if (excess <= 0) break;
+    const given = Math.min(excess, entry.rows - 1);
+    if (given <= 0) continue;
+    entry.rows -= given;
+    entry.overscan = 0;
+    excess -= given;
+  }
+  for (const entry of furthestFirst) {
+    if (excess <= 0) break;
+    if (entry.rows <= 0) continue;
+    entry.rows = 0;
+    excess -= 1;
+  }
+  return entries.map((entry) => (entry.rows > 0 ? treeWindowRequestAtRows(entry.key, entry.metrics, entry.rows, entry.overscan) : { key: entry.key, offset: Math.min(entry.metrics.firstVisibleRow, Math.max(0, entry.metrics.total - 1)), rows: 0 }));
+}
+
+/**
+ * 🪟️ Which entry of the child list the `position`-th RENDERED row of a windowed container is —
+ * `undefined` for an unwindowed container, whose rows carry no index and are never measured as rows.
+ * A `direction === "up"` tree renders the slice reversed, so the indices count back from its end.
+ **/
+export function treeWindowRowIndexOf(childWindow: TreeDataWindow | undefined, materialisedCount: number, position: number, direction: "down" | "up"): number | undefined {
+  if (!childWindow) return undefined;
+  const { leading } = treeWindowSpacerRows(childWindow, materialisedCount);
+  return leading + (direction === "up" ? materialisedCount - 1 - position : position);
 }
 
 /** @emoji 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
@@ -1303,6 +1462,10 @@ interface TreeItemProps {
   isDropReady?: boolean;
   /** @emoji 🪟️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
+  /** @emoji 📐️ This row's own entry index inside its PARENT's window, stamped as `data-tree-window-row` so the
+   * host observer can read the real top of every materialised row instead of assuming a uniform row pitch
+   * (a row that is itself an open windowed group is many rows tall). Build it with {@link treeWindowRowIndexOf}. */
+  windowRowIndex?: number;
 }
 
 /**
@@ -2252,6 +2415,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   dragData,
   isDropReady = false,
   windowAttributes,
+  windowRowIndex,
 }) => {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -2353,6 +2517,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-dim
         data-slot="tree-property-item"
         data-hover-scope
+        data-tree-window-row={windowRowIndex}
         data-tree-row-kind={isExpandable ? "group" : "property"}
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
@@ -2486,6 +2651,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-dim
               data-slot="tree-item-row"
               data-hover-scope
+              data-tree-window-row={windowRowIndex}
               data-tree-row-kind="group"
               data-tree-group
               data-activatable={activatable ? "true" : undefined}
@@ -2618,6 +2784,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-dim
         data-slot="tree-item-row"
         data-hover-scope
+        data-tree-window-row={windowRowIndex}
         data-tree-row-kind="leaf"
         data-activatable={activatable ? "true" : undefined}
         data-draggable={draggable ? "true" : undefined}
@@ -3083,8 +3250,8 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 //#endregion 🎃️TreeHoverPath
 
 /** @emoji 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
-const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean }): React.ReactElement {
-  const { item, section, path, isLastItem } = props;
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number }): React.ReactElement {
+  const { item, section, path, isLastItem, windowRowIndex } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
   const { itemItemsById, loadingById, dragAndDropController, loadItemItems, handleSelectItem, handleDoubleClickItem, handleDragStart, handleDragEnd, handleDragOverItem, handleDropOnItem, buildPalettePointerProps, draggedIds } =
     useTreeDataRendering();
@@ -3167,11 +3334,12 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
       windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey)}
+      windowRowIndex={windowRowIndex}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
       {childItems.map((childItem, index) => (
-        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
       {!isLoading && childItems.length === 0 && item.emptyState && (
@@ -3262,7 +3430,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
     >
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
       {items.map((item, index) => (
-        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
       {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}

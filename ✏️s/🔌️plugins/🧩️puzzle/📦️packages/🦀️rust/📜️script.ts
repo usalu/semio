@@ -2,7 +2,7 @@
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 process.env.RUST_MIN_STACK ??= String(8 * 1024 * 1024);
@@ -297,5 +297,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("describe", DescribeScript)
   .register("fixtures", FixturesScript);
+registerPlaygroundSiteBuildCommands(router);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

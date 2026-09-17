@@ -10,7 +10,8 @@
     "meta",
     "kindCompatibility",
     "parts",
-    "fasteners"
+    "fasteners",
+    "targetVolumes"
   ],
   "properties": {
     "schema": {
@@ -56,6 +57,13 @@
       "type": "array",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
+      },
+      "x-semio-state": "artifact"
+    },
+    "targetVolumes": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
       },
       "x-semio-state": "artifact"
     }

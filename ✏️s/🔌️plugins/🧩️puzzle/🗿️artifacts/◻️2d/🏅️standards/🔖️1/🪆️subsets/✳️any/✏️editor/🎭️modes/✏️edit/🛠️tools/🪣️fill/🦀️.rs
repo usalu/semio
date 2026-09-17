@@ -20,8 +20,9 @@ pub const PUZZLE2D_FILL_RUN_JOB: &str = "puzzle2d.fill.run";
 /// 🔍️ Job kind of the fill revalidation job (`ToolRunDefinition.revalidateJob`).
 pub const PUZZLE2D_FILL_REVALIDATE_JOB: &str = "puzzle2d.fill.revalidate";
 /// 🎚️ `ToolRunDefinition.settings.config`: the `Puzzle2dConfig` fields a fill run reads — the count it
-/// plans toward and the kind weights its candidate order digests.
-pub const RUN_SETTINGS_CONFIG: [&str; 3] = ["/fillCount", "/nodeKindWeights", "/handleKindWeights"];
+/// plans toward, the kind weights its candidate order digests, and the two placement-tuning measures
+/// its collision test is widened by (`contactTolerance - brushPlacementOverlapBudget`).
+pub const RUN_SETTINGS_CONFIG: [&str; 5] = ["/fillCount", "/nodeKindWeights", "/handleKindWeights", "/contactTolerance", "/brushPlacementOverlapBudget"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

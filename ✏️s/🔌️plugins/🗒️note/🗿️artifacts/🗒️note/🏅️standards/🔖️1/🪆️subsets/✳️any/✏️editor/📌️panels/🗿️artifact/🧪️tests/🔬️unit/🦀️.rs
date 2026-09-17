@@ -47,7 +47,7 @@ use crate::editor::note::terminology::note_play_labels;
 use crate::NoteBlockNode;
 use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
-const BLOCKS_SECTION: &str = "note-play-blocks";
+const BLOCKS_SECTION: &str = "note-play-blocks.blocks";
 const ADD_SECTION: &str = "note-play-blocks.add";
 const OVERSIZED: usize = 200;
 

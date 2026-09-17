@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Sample, Mp4Snapshot, Mp4Track};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -11,7 +11,7 @@ async fn synthetic_snapshot() -> Mp4Snapshot {
         tracks: vec![Mp4Track {
             track_id: 1,
             timescale: 90000,
-            codec: Mp4Codec { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
+            codec: Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None),
             width: 64,
             height: 64,
             metadata: Mp4TrackMetadata::default(),
@@ -170,7 +170,7 @@ fn a_stale_chunk_grouping_is_reconciled_against_the_sample_list() {
     let track = |counts: Vec<u32>, samples: Vec<Mp4Sample>| Mp4Track {
         track_id: 1,
         timescale: 1000,
-        codec: Mp4Codec { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
+        codec: Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None),
         width: 16,
         height: 16,
         metadata: Mp4TrackMetadata::default(),
@@ -192,3 +192,67 @@ fn a_stale_chunk_grouping_is_reconciled_against_the_sample_list() {
     assert!(sniff_real_bytes(&bytes), "a snapshot whose retained grouping is stale still encodes to a real MP4");
 }
 //#endregion chunk_grouping_reconciliation
+
+//#region sample_entry_formats
+/// 🔬 Every modelled sample entry survives decode∘encode with its own box type and typed
+/// configuration record: `avc3` keeps `avc3` (not normalized to `avc1`), HEVC keeps every `hvcC`
+/// field including the 48-bit constraint flags and NAL arrays, and Motion-JPEG writes no record.
+#[test]
+fn every_sample_entry_format_round_trips_with_its_configuration_record() {
+    let hevc = Mp4HevcConfig {
+        general_profile_space: 1,
+        general_tier_flag: true,
+        general_profile_idc: 2,
+        general_profile_compatibility_flags: 0x2000_0001,
+        general_constraint_indicator_flags: 0x9000_0000_0001,
+        general_level_idc: 120,
+        min_spatial_segmentation_idc: 0x0ABC,
+        parallelism_type: 3,
+        chroma_format_idc: 2,
+        bit_depth_luma_minus8: 2,
+        bit_depth_chroma_minus8: 1,
+        avg_frame_rate: 7500,
+        constant_frame_rate: 1,
+        num_temporal_layers: 3,
+        temporal_id_nested: false,
+        arrays: vec![Mp4HevcNalArray { array_completeness: true, nal_unit_type: 32, nal_units: vec![vec![0x40, 0x01, 0x0C]] }, Mp4HevcNalArray { array_completeness: false, nal_unit_type: 33, nal_units: vec![vec![0x42, 0x01], vec![0x42, 0x01, 0x01]] }],
+    };
+    let codecs = [
+        Mp4Codec { format: Mp4CodecFormat::Avc3, ..Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None) },
+        Mp4Codec::hevc(Mp4CodecFormat::Hvc1, hevc.clone(), 2),
+        Mp4Codec::hevc(Mp4CodecFormat::Hev1, Mp4HevcConfig::default(), 4),
+        Mp4Codec::jpeg(Mp4CodecFormat::Jpeg),
+        Mp4Codec::jpeg(Mp4CodecFormat::Mjpa),
+    ];
+    for codec in codecs {
+        let format = codec.format;
+        let snapshot = Mp4Snapshot {
+            schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+            ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
+            movie: Mp4Movie::default(),
+            tracks: vec![Mp4Track { track_id: 1, timescale: 1000, codec, width: 8, height: 8, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0xFF, 0xD8, 0xFF, 0xD9], duration: 40, cts_offset: 0, sync: true }] }],
+        };
+        let bytes = encode_mp4(&snapshot);
+        assert!(bytes.windows(4).any(|w| w == format.fourcc().as_bytes()), "{format:?} writes its own sample entry box type");
+        assert_eq!(bytes.windows(4).any(|w| w == b"hvcC"), format.is_hevc(), "{format:?} writes hvcC exactly when HEVC");
+        assert_eq!(bytes.windows(4).any(|w| w == b"avcC"), format.is_avc(), "{format:?} writes avcC exactly when AVC");
+        let decoded = decode_mp4(&bytes).expect("decodes");
+        assert_eq!(decoded, snapshot, "{format:?} round trips exactly");
+        assert_eq!(encode_mp4(&decoded), bytes, "{format:?} re-encodes byte-for-byte");
+    }
+}
+
+#[test]
+fn an_unmodelled_sample_entry_is_rejected_by_name() {
+    let snapshot = Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
+        movie: Mp4Movie::default(),
+        tracks: vec![Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::jpeg(Mp4CodecFormat::Mjpa), width: 8, height: 8, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![1, 2, 3], duration: 40, cts_offset: 0, sync: true }] }],
+    };
+    let mut bytes = encode_mp4(&snapshot);
+    let at = bytes.windows(4).position(|w| w == b"mjpa").expect("sample entry present");
+    bytes[at..at + 4].copy_from_slice(b"vp09");
+    assert_eq!(decode_mp4(&bytes).expect_err("vp09 is not modelled"), "unsupported MP4 sample entry vp09");
+}
+//#endregion sample_entry_formats

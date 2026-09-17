@@ -1596,7 +1596,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     });
   });
 
-  describe("buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel)", () => {
+  describe("buildPluginCatalog (T-P8: bounded-parallel cargo and materialize stages)", () => {
     it("rejects incomplete explicit builds instead of accepting stale plugin artifacts", () => {
       expect(() => assertPluginCatalogComplete([])).not.toThrow();
       expect(() => assertPluginCatalogComplete(["cargo-fails", "materialize-fails"])).toThrow("plugin catalog build failed: cargo-fails, materialize-fails");
@@ -1616,7 +1616,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       extensionPoints: [],
     });
 
-    it("never overlaps two cargo calls, overlaps materialize up to the cap, and emits every plugin", async () => {
+    it("overlaps cargo and materialize up to the cap, and emits every plugin", async () => {
       const targets = Array.from({ length: 6 }, (_, i) => fakeTarget(`p${i}`));
       let cargoActive = 0;
       let maxCargoActive = 0;
@@ -1640,11 +1640,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       let shardWorkerPublishCount = 0;
       const { failedPluginIds } = await buildPluginCatalog(targets, cargoFn, materializeFn, 3, () => {
         shardWorkerPublishCount++;
-      });
+      }, 3);
       expect(failedPluginIds).toEqual([]);
       expect(materialized.slice().sort()).toEqual(targets.map((t) => t.pluginId).sort());
-      expect(maxCargoActive).toBe(1); // cargo NEVER overlaps itself
-      expect(maxMaterializeActive).toBeGreaterThan(1); // materialize DOES overlap
+      expect(maxCargoActive).toBeGreaterThan(1);
+      expect(maxCargoActive).toBeLessThanOrEqual(3);
+      expect(maxMaterializeActive).toBeGreaterThan(1);
       expect(maxMaterializeActive).toBeLessThanOrEqual(3); // never past the cap
       expect(shardWorkerPublishCount).toBe(1); // once per catalog build, not once per plugin
     });

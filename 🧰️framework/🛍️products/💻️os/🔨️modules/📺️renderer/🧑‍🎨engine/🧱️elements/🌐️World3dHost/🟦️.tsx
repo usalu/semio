@@ -1842,7 +1842,7 @@ export function mapContextMenuSpecs(
         ? (event) => {
             const clientX = event && "clientX" in event && typeof event.clientX === "number" ? event.clientX : undefined;
             const clientY = event && "clientY" in event && typeof event.clientY === "number" ? event.clientY : undefined;
-            const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
+            const pointArgs = (spec.action === "openVortexSuggestions" || spec.action === "openHandleSuggestions") && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
             dispatch(spec.action!, { ...spec.args, ...pointArgs });
           }
         : undefined,
@@ -5279,7 +5279,6 @@ function world3dSuggestionsEventOverHost(node: HTMLElement | null, clientX: numb
 
 function world3dSuggestionsDispatchWindowRightDown(event: PointerEvent): void {
   if (event.button !== 2) return;
-  console.warn(`[DEBUG] suggestions-rightdown capture button=2 routes=${world3dSuggestionsRightDownRoutes.size} x=${event.clientX} y=${event.clientY}`);
   for (const route of world3dSuggestionsRightDownRoutes) {
     const overHost = world3dSuggestionsEventOverHost(route.host(), event.clientX, event.clientY);
     if (!world3dSuggestionsRightDownRoutesOnWindowCapture(event.button, overHost)) continue;
@@ -5291,7 +5290,6 @@ function world3dSuggestionsDispatchWindowRightDown(event: PointerEvent): void {
 }
 
 function world3dSuggestionsDispatchWindowContextMenu(event: MouseEvent): void {
-  console.warn(`[DEBUG] suggestions-contextmenu capture routes=${world3dSuggestionsRightDownRoutes.size} x=${event.clientX} y=${event.clientY}`);
   for (const route of world3dSuggestionsRightDownRoutes) {
     if (!world3dSuggestionsEventOverHost(route.host(), event.clientX, event.clientY)) continue;
     const asPointer = event as unknown as PointerEvent;
@@ -5367,8 +5365,16 @@ export function world3dInstanceInteractionTargets(instances: readonly WorldInsta
   return targets;
 }
 
+/** 🎯️ The interaction target of one mesh COMPONENT (face/edge/vertex) of a rendered instance under a
+ * domain: `<objectInteractionId>.<granularity>.<componentId>`, the object's own target id extended by the
+ * component address (the lowpoly "mesh" domain's `lowpoly-document.<objectId>.<granularity>.<id>` rows). */
+export function world3dComponentInteractionTarget(instances: readonly WorldInstanceRecord[], objectId: string, granularity: string, componentId: number): { readonly granularity: string; readonly id: string } {
+  const record = instances.find((entry) => entry.id === objectId);
+  return { granularity, id: `${record?.interactionId ?? objectId}.${granularity}.${componentId}` };
+}
+
 /** 🎯️ `interactionSelect` args over already-resolved `{ granularity, id }` targets. */
-export function world3dSelectionTargetsActionArgs(domainId: string, targets: readonly { readonly granularity: string; readonly id: string }[], merge: MergeMode, method: "pick" | "rectangle" = "pick") {
+export function world3dSelectionTargetsActionArgs(domainId: string, targets: readonly { readonly granularity: string; readonly id: string }[], merge: MergeMode, method: "pick" | "rectangle" | "lasso" = "pick") {
   return { domainId, targets: JSON.stringify(targets), merge, method };
 }
 
@@ -6255,7 +6261,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           if (!fullId && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
           const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
           const args = world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id);
-          console.warn(`[DEBUG] interactionHover dispatch domain=${interactionDomainId} gran=${target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex} id=${target?.id ?? "null"}`);
           return dispatchSettled("interactionHover", args);
         }
         if (!fullId) return dispatchSettled("worldVortexHover", {});
@@ -6303,10 +6308,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // (measured on the generation3d edit preview, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The
   // instance dispatcher already carries the domain, the window's declared granularity and the
   // coalescing gate, so a component hit publishes through it on the id it names.
+  const dispatchComponentHover = useMemo(
+    () =>
+      createCoalescingActionDispatcher<{ objectId: string; mode: string; id: number }>((args) => {
+        const target = world3dComponentInteractionTarget(instancesRef.current, args.objectId, args.mode, args.id);
+        return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId ?? "", target.granularity, target.id));
+      }),
+    [dispatchSettled, interactionDomainId],
+  );
   const handleComponentHover = useCallback(
     (args: { objectId: string; mode: string; id: number } | null) => {
       if (interactionDomainId) {
-        dispatchInstanceHover(args?.objectId ?? null);
+        if (args && args.mode !== "mesh" && args.mode !== "object") dispatchComponentHover(args);
+        else dispatchInstanceHover(args?.objectId ?? null);
         return;
       }
       if (!args) {
@@ -6315,7 +6329,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       }
       dispatch("setHover", args);
     },
-    [dispatch, dispatchInstanceHover, interactionDomainId],
+    [dispatch, dispatchComponentHover, dispatchInstanceHover, interactionDomainId],
   );
 
   const handleVortexHover = useCallback(
@@ -6447,11 +6461,18 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (fullId) dispatch("acceptSuggestion", { fullId });
   }, [dispatch]);
 
+  // 🎯️ A component (face/edge/vertex) hit under a declared domain selects through `interactionSelect`
+  // like an instance hit does; the plugin-private `worldPick` lane is for domainless scenes only.
   const handleWorldPick = useCallback(
     (args: { granularity: string; id: number; merge: string; objectId?: string }) => {
+      if (interactionDomainId && args.objectId != null && args.id != null) {
+        const target = world3dComponentInteractionTarget(instancesRef.current, args.objectId, args.granularity, args.id);
+        dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [target], args.merge as MergeMode));
+        return;
+      }
       dispatch("worldPick", args);
     },
-    [dispatch],
+    [dispatch, interactionDomainId],
   );
 
   const paintMode = selection.interactionMode === "paint";
@@ -6638,7 +6659,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         });
         return Promise.resolve();
       }
-      console.info("[DEBUG] gumball pose delta", { action: payload.action, ids: payload.args.ids, mode: payload.args.mode });
       return Promise.resolve(dispatch(payload.action, payload.args));
     },
     [dispatch, selection.transformMode, selectionArgs],
@@ -6652,7 +6672,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleGumballDragStart = useCallback(
     (_kind: GumballHandleKind, before: GumballPose) => {
       (globalThis as { __gumballDragEntered?: boolean }).__gumballDragEntered = true;
-      console.info("[DEBUG] gumball drag entered", { kind: _kind, ids: selectionArgs().ids });
       gumballDragStartPoseRef.current = before;
       gumballLiveCommittedPoseRef.current = before;
       gumballLiveLatestPoseRef.current = before;
@@ -6874,27 +6893,38 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
       const domainTargets = world3dInstanceInteractionTargets(instancesRef.current, preview.mergedInstanceIds, interactionGranularity);
       const marqueeSelect = interactionDomainId
-        ? dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, domainTargets, "replace", "rectangle"))
+        ? dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, domainTargets, "replace", method === "lasso" ? "lasso" : "rectangle"))
         : dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" });
       void Promise.resolve(marqueeSelect).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
       });
     } else if (preview.mergedComponentIds?.length) {
       setMarqueeCommitHold({ mergedComponentIds: preview.mergedComponentIds, mergedInstanceIds: null });
+      const activeObjectId = selection.activeObjectId;
       void Promise.resolve(
-        dispatch("setSelection", {
-          mode: selectionMode,
-          ids: preview.mergedComponentIds,
-          objectId: selection.activeObjectId,
-          merge: "replace",
-        }),
+        interactionDomainId && activeObjectId
+          ? dispatch(
+              "interactionSelect",
+              world3dSelectionTargetsActionArgs(
+                interactionDomainId,
+                preview.mergedComponentIds.map((componentId) => world3dComponentInteractionTarget(instancesRef.current, activeObjectId, selectionMode, componentId)),
+                "replace",
+                method === "lasso" ? "lasso" : "rectangle",
+              ),
+            )
+          : dispatch("setSelection", {
+              mode: selectionMode,
+              ids: preview.mergedComponentIds,
+              objectId: activeObjectId,
+              merge: "replace",
+            }),
       ).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedComponentIds === preview.mergedComponentIds ? null : hold)), 250);
       });
     }
     wasMarqueeDragRef.current = true;
     setMarqueePath([]);
-  }, [dispatch, interactionDomainId, interactionGranularity, selection.activeObjectId, selectionMode]);
+  }, [dispatch, interactionDomainId, interactionGranularity, method, selection.activeObjectId, selectionMode]);
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -7197,7 +7227,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         if (world3dSuggestionsGestureConsumesContextMenu(alt) || brushArmed) {
           event.preventDefault();
           event.stopPropagation();
-          console.warn(`[DEBUG] suggestions-contextmenu hop alt=${event.altKey} held=${altHeldRef.current} brush=${brushMode} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
           if (performance.now() - suggestionsRightDownDispatchedAtRef.current < 80) return;
           if (world3dSuggestionsGestureArmed(alt, hoveredVortexFullIdRef.current) || brushArmed) {
             dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY, windowId: windowInstanceId ?? undefined });

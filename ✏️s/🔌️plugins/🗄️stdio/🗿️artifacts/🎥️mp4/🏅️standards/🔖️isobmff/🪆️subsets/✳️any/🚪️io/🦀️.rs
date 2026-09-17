@@ -75,7 +75,7 @@ pub use derived_composition::*;
 // The schema retains named ISO-BMFF concepts and semantic encoded sample payloads only. Native
 // box syntax is parsed at import and deterministically rebuilt at export.
 
-use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4CodecFormat, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
 
 #[path = "📦️boxes/🦀️.rs"]
 pub mod boxes;
@@ -462,6 +462,87 @@ fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), String>
 }
 //#endregion 🔖️Tkhd
 
+//#region 🔖️HvcC
+/// 📥️ `hvcC` (HEVCDecoderConfigurationRecord, ISO/IEC 14496-15 §8.3.3.1) → typed record plus
+/// `lengthSizeMinusOne + 1`. Reserved bits are not retained; the writer emits them as all ones.
+fn parse_hvcc(payload: &[u8]) -> Result<(Mp4HevcConfig, u8), String> {
+    let mut r = ByteReader::new(payload);
+    let err = |e: boxes::BoxError| e.to_string();
+    let version = r.u8().map_err(err)?;
+    if version != 1 {
+        return Err(format!("unsupported hvcC configurationVersion {version}"));
+    }
+    let profile = r.u8().map_err(err)?;
+    let general_profile_compatibility_flags = r.u32_be().map_err(err)?;
+    let constraint_high = u64::from(r.u32_be().map_err(err)?);
+    let constraint_low = u64::from(r.u16_be().map_err(err)?);
+    let general_level_idc = r.u8().map_err(err)?;
+    let min_spatial_segmentation_idc = r.u16_be().map_err(err)? & 0x0FFF;
+    let parallelism_type = r.u8().map_err(err)? & 0x03;
+    let chroma_format_idc = r.u8().map_err(err)? & 0x03;
+    let bit_depth_luma_minus8 = r.u8().map_err(err)? & 0x07;
+    let bit_depth_chroma_minus8 = r.u8().map_err(err)? & 0x07;
+    let avg_frame_rate = r.u16_be().map_err(err)?;
+    let packed = r.u8().map_err(err)?;
+    let num_of_arrays = r.u8().map_err(err)?;
+    let mut arrays = Vec::with_capacity(num_of_arrays as usize);
+    for _ in 0..num_of_arrays {
+        let head = r.u8().map_err(err)?;
+        let num_nalus = r.u16_be().map_err(err)?;
+        let mut nal_units = Vec::with_capacity(num_nalus as usize);
+        for _ in 0..num_nalus {
+            let length = r.u16_be().map_err(err)? as usize;
+            nal_units.push(r.take(length).map_err(err)?.to_vec());
+        }
+        arrays.push(Mp4HevcNalArray { array_completeness: head & 0x80 != 0, nal_unit_type: head & 0x3F, nal_units });
+    }
+    let config = Mp4HevcConfig {
+        general_profile_space: profile >> 6,
+        general_tier_flag: profile & 0x20 != 0,
+        general_profile_idc: profile & 0x1F,
+        general_profile_compatibility_flags,
+        general_constraint_indicator_flags: (constraint_high << 16) | constraint_low,
+        general_level_idc,
+        min_spatial_segmentation_idc,
+        parallelism_type,
+        chroma_format_idc,
+        bit_depth_luma_minus8,
+        bit_depth_chroma_minus8,
+        avg_frame_rate,
+        constant_frame_rate: packed >> 6,
+        num_temporal_layers: (packed >> 3) & 0x07,
+        temporal_id_nested: packed & 0x04 != 0,
+        arrays,
+    };
+    Ok((config, (packed & 0x03) + 1))
+}
+
+/// ✍️ Builds an `hvcC` box from the typed record (reserved bits all ones, per §8.3.3.1).
+fn build_hvcc(config: &Mp4HevcConfig, nal_length_size: u8) -> Vec<u8> {
+    let mut out = vec![1u8, ((config.general_profile_space & 0x03) << 6) | (u8::from(config.general_tier_flag) << 5) | (config.general_profile_idc & 0x1F)];
+    out.extend_from_slice(&config.general_profile_compatibility_flags.to_be_bytes());
+    out.extend_from_slice(&config.general_constraint_indicator_flags.to_be_bytes()[2..8]);
+    out.push(config.general_level_idc);
+    out.extend_from_slice(&(0xF000 | (config.min_spatial_segmentation_idc & 0x0FFF)).to_be_bytes());
+    out.push(0xFC | (config.parallelism_type & 0x03));
+    out.push(0xFC | (config.chroma_format_idc & 0x03));
+    out.push(0xF8 | (config.bit_depth_luma_minus8 & 0x07));
+    out.push(0xF8 | (config.bit_depth_chroma_minus8 & 0x07));
+    out.extend_from_slice(&config.avg_frame_rate.to_be_bytes());
+    out.push(((config.constant_frame_rate & 0x03) << 6) | ((config.num_temporal_layers & 0x07) << 3) | (u8::from(config.temporal_id_nested) << 2) | (nal_length_size.saturating_sub(1) & 0x03));
+    out.push(config.arrays.len() as u8);
+    for array in &config.arrays {
+        out.push((u8::from(array.array_completeness) << 7) | (array.nal_unit_type & 0x3F));
+        out.extend_from_slice(&(array.nal_units.len() as u16).to_be_bytes());
+        for nal in &array.nal_units {
+            out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
+            out.extend_from_slice(nal);
+        }
+    }
+    write_box(b"hvcC", &out)
+}
+//#endregion 🔖️HvcC
+
 //#region 🔖️Decode
 /// 📥️ Decodes real ISO-BMFF bytes into an `Mp4Snapshot` — walks `ftyp`/`moov`/`trak`(s)/`mdat`,
 /// resolving the full per-sample table for every video-handler track. Adapted from remodel's
@@ -530,12 +611,17 @@ fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String> {
     let (width, height, visual, children) = parse_visual_sample_entry(first.payload)?;
     metadata.visual = visual;
     parse_codec_extensions(children, &mut metadata)?;
-    let codec = if first.kind.0 == *b"avc1" || first.kind.0 == *b"avc3" {
+    let format = Mp4CodecFormat::from_fourcc(&first.kind.0).ok_or_else(|| format!("unsupported MP4 sample entry {}", first.kind.as_str()))?;
+    let codec = if format.is_avc() {
         let avcc = require_box(children, b"avcC", "avc sample entry missing avcC").map_err(|e| e.to_string())?;
         let (sps, pps, nal_length_size, extension) = h264::parse_avcc_extended(avcc).map_err(|e| e.to_string())?;
-        Mp4Codec { sps, pps, nal_length_size, extension }
+        Mp4Codec { format, ..Mp4Codec::avc(sps, pps, nal_length_size, extension) }
+    } else if format.is_hevc() {
+        let hvcc = require_box(children, b"hvcC", "hevc sample entry missing hvcC").map_err(|e| e.to_string())?;
+        let (config, nal_length_size) = parse_hvcc(hvcc)?;
+        Mp4Codec::hevc(format, config, nal_length_size)
     } else {
-        return Err(format!("unsupported MP4 sample entry {}", first.kind.as_str()));
+        Mp4Codec::jpeg(format)
     };
 
     let stts = require_box(stbl, b"stts", "stbl missing stts").map_err(|e| e.to_string())?;
@@ -635,11 +721,24 @@ fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
     result
 }
 
+/// ✍️ The configuration record box the sample entry `format` names: `avcC` for AVC, `hvcC` for
+/// HEVC (a missing `hevc` record is written as the default Main-profile record), nothing for JPEG.
+fn build_codec_configuration(codec: &Mp4Codec) -> Vec<u8> {
+    let format = codec.format;
+    if format.is_avc() {
+        h264::build_avcc_extended(&codec.sps, &codec.pps, codec.nal_length_size, codec.extension.as_ref())
+    } else if format.is_hevc() {
+        build_hvcc(&codec.hevc.clone().unwrap_or_default(), codec.nal_length_size)
+    } else {
+        Vec::new()
+    }
+}
+
 fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
-    let Mp4Codec { sps, pps, nal_length_size, extension } = &track.codec;
-    let mut extra = h264::build_avcc_extended(sps, pps, *nal_length_size, extension.as_ref());
+    let mut extra = build_codec_configuration(&track.codec);
     extra.extend(build_codec_extensions(track));
-    let codec_fourcc = *b"avc1";
+    let mut codec_fourcc = [0u8; 4];
+    codec_fourcc.copy_from_slice(track.codec.format.fourcc().as_bytes());
     let mut stsd_payload = vec![0u8; 4];
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
     stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));

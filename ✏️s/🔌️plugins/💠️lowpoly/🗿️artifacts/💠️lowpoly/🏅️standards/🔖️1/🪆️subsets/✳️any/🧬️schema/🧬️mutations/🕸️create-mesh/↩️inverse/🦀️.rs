@@ -21,7 +21,7 @@ pub fn inverse(payload: &CreateMesh, base: &LowpolySnapshot) -> Vec<LowpolyMutat
         return Vec::new();
     };
     match &object.mesh {
-        Some(existing) => vec![LowpolyMutation::CreateMesh(CreateMesh { id: payload.id.clone(), child_id: existing.child_id.clone(), target: existing.target.clone(), mesh_workspace: String::new() })],
+        Some(existing) => vec![LowpolyMutation::CreateMesh(CreateMesh { id: payload.id.clone(), child_id: existing.child_id.clone(), target: existing.target.clone(), mesh_workspace: object.mesh_content.clone() })],
         None => vec![LowpolyMutation::DeleteMesh(delete_mesh::DeleteMesh { id: payload.id.clone() })],
     }
 }

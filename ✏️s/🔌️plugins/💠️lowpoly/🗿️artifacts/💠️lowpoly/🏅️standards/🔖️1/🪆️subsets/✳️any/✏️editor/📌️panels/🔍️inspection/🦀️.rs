@@ -3,10 +3,10 @@
 
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyView};
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use crate::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -56,11 +56,11 @@ fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelT
     control_row(&format!("{ROOT}.{id}"), label, number_input.try_build().map_err(|_| inspector_error("param-input-build"))?)
 }
 
-pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels, windows: &semio_framework_plugin::TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(object) = active_object(view) else {
         let rows = ui_node_list([
-            tree_item_desc(format!("{ROOT}.empty.schema"), ui_label(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))?, None)?,
-            tree_item_desc(format!("{ROOT}.empty.hint"), ui_label("No active object")?, None)?,
+            tree_item_desc(format!("{ROOT}.empty.schema"), ui_label(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))?, None),
+            tree_item_desc(format!("{ROOT}.empty.hint"), ui_label("No active object")?, None),
         ])?;
         return PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.empty"), Some(ui_label(labels.object.as_str())?), true, rows)?.build();
     };
@@ -77,7 +77,7 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
         None => name_input.try_on(Trigger::Change, name_action),
     }
     .map_err(|_| inspector_error("name-binding"))?;
-    let name_row = control_row(&format!("{ROOT}.object.name"), labels.name, name_input.try_build().map_err(|_| inspector_error("name-input-build"))?)?;
+    let name_row = control_row(&format!("{ROOT}.object.name"), labels.name, name_input.try_build().map_err(|_| inspector_error("name-input-build"))?);
 
     let (smooth_action, smooth_args) = lowpoly_action("patchObject", Some(ui_value_map([("objectId", ui_value_text(&object.id)?), ("field", ui_value_text("smoothShading")?)])?))?;
     let mut smooth_toggle = ui::toggle(object.smooth_shading)
@@ -89,31 +89,33 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
         None => smooth_toggle.try_on(Trigger::Change, smooth_action),
     }
     .map_err(|_| inspector_error("smooth-binding"))?;
-    let smooth_row = control_row(&format!("{ROOT}.object.smooth"), labels.smooth_shading, smooth_toggle.try_build().map_err(|_| inspector_error("smooth-input-build"))?)?;
+    let smooth_row = control_row(&format!("{ROOT}.object.smooth"), labels.smooth_shading, smooth_toggle.try_build().map_err(|_| inspector_error("smooth-input-build"))?);
 
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the selection summary/mode
     // rows used to read `LowpolyConfig`; the mesh domain's selection is framework-owned
     // `InteractionState` now, and `ArtifactApp::render` is not threaded an `InteractionView`
     // this wave — dropped rather than shown stale. Peer/self selection surfaces generically.
     let object_rows = ui_node_list([name_row, smooth_row])?;
-    let transform_rows = ui_node_list([tree_item_desc(format!("{ROOT}.transform.utility"), ui_label(labels.utility.as_str())?, Some(active_utility.to_string()))?])?;
-    let utility_param_rows = ui_node_list([
-        inspector_utility_param_field("extrude", labels.extrude_distance, "extrudeDistance", &params)?,
-        inspector_utility_param_field("inset", labels.inset_amount, "insetAmount", &params)?,
-        inspector_utility_param_field("bevel", labels.bevel_amount, "bevelAmount", &params)?,
-        inspector_utility_param_field("bevel-segments", labels.bevel_segments, "bevelSegments", &params)?,
-        inspector_utility_param_field("loop-cuts", labels.loop_cuts, "loopCuts", &params)?,
-        inspector_utility_param_field("decimate", labels.decimate_ratio, "decimateRatio", &params)?,
-        inspector_utility_param_field("snap", labels.snap_grid, "snapGrid", &params)?,
-        inspector_utility_param_field("mirror", labels.mirror_axis, "mirrorAxis", &params)?,
-        inspector_utility_param_field("brush-size", labels.brush_size, "brushSize", &params)?,
-        inspector_utility_param_field("brush-opacity", labels.brush_opacity, "brushOpacity", &params)?,
-        inspector_utility_param_field("brush-hardness", labels.brush_hardness, "brushHardness", &params)?,
-    ])?;
+    let transform_rows = ui_node_list([tree_item_desc(format!("{ROOT}.transform.utility"), ui_label(labels.utility.as_str())?, Some(active_utility.to_string()))])?;
+    let utility_params: [(&str, semio_framework_plugin::LabelText, &str); 11] = [
+        ("extrude", labels.extrude_distance, "extrudeDistance"),
+        ("inset", labels.inset_amount, "insetAmount"),
+        ("bevel", labels.bevel_amount, "bevelAmount"),
+        ("bevel-segments", labels.bevel_segments, "bevelSegments"),
+        ("loop-cuts", labels.loop_cuts, "loopCuts"),
+        ("decimate", labels.decimate_ratio, "decimateRatio"),
+        ("snap", labels.snap_grid, "snapGrid"),
+        ("mirror", labels.mirror_axis, "mirrorAxis"),
+        ("brush-size", labels.brush_size, "brushSize"),
+        ("brush-opacity", labels.brush_opacity, "brushOpacity"),
+        ("brush-hardness", labels.brush_hardness, "brushHardness"),
+    ];
     PanelTreeBuilder::new(ROOT)?
         .section(format!("{ROOT}.object"), Some(ui_label(labels.object.as_str())?), true, object_rows)?
         .section(format!("{ROOT}.transform"), Some(ui_label(labels.transform.as_str())?), true, transform_rows)?
-        .section(format!("{ROOT}.utility-params"), Some(ui_label(labels.utility_params.as_str())?), true, utility_param_rows)?
+        .window_section(windows, &format!("{ROOT}.utility-params"), Some(ui_label(labels.utility_params.as_str())?), true, &utility_params, |(id, label, key)| {
+            inspector_utility_param_field(id, *label, key, &params)
+        })?
         .build()
 }
 //#endregion 🔖️Render

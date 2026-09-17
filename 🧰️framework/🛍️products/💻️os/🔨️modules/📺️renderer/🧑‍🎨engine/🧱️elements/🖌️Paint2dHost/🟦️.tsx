@@ -245,7 +245,6 @@ function Paint2dCanvasSurface({
         session.syncDocumentJson(scene.documentSyncJson);
         documentSyncRef.current = scene.documentSyncJson;
       } catch (error) {
-        console.error("[DEBUG] paint2d syncDocumentJson failed", error);
         return;
       }
     }
@@ -255,7 +254,6 @@ function Paint2dCanvasSurface({
         try {
           session.uploadRasterImageKey(key, base64ToBytes(asset.data));
         } catch (error) {
-          console.error("[DEBUG] paint2d uploadRasterImageKey failed", key, error);
         }
       }
       assetsRef.current = scene.assetsJson;

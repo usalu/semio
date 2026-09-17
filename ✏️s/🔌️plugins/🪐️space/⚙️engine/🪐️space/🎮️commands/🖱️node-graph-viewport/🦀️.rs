@@ -1,7 +1,8 @@
 //! 🖱️ 🖱️ S Studio app command — `node-graph-viewport`.
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, SpaceWindowCamera};
-use semio_framework_os::{Viewport2d, WorkflowMutation, WorkflowSnapshot};
+use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 

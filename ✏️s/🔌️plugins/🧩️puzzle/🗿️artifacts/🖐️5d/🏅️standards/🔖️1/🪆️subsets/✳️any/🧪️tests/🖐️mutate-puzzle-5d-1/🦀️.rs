@@ -79,6 +79,13 @@ const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-volume",
+    "delete-target-volume",
+    "move-target-volume",
+    "rotate-target-volume",
+    "scale-target-volume",
+    "change-target-volume-hidden",
+    "change-target-volume-locked",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle5dDiff` mirrors `Puzzle5dSnapshot` name for name — including the `parts`/`fasteners` pair — so the table is empty; the sibling `🖐️5d` BLOCK subset, whose diff renames the same two facets to `part2d`/`part3d`, carries real rows here.

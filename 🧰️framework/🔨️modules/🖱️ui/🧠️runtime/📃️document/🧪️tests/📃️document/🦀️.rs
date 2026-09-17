@@ -82,6 +82,23 @@ fn surface_canonical_document_old_reader_keeps_original_credit_during_replacemen
     }
 }
 
+/// 📏️ The most a SINGLE lease-close turn may release. `close_document_owner` widens its own grant to
+/// the retired document's node-page allocation
+/// (`retire_exact`: `grant = maximum_bytes.max(slot.nodes.entries.allocated_bytes())`), so a close
+/// turn is never a partial slice borrowed from the child's budget — it is at least one whole
+/// [`SURFACE_COMPONENT_COPY_WORK_BYTES`] page, and at most the one page a `PageBytes` fault admits.
+///
+/// 🐛️ ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING packet P5: this law used to pin the frozen
+/// literal `4096`. `TreeItemProps` gaining `window`/`granularity` (§3) grew
+/// `size_of::<ui_contract::Component>()` 2568 → 3096 and with it
+/// `size_of::<ui_contract::UiNodeRecord>()` to 6416, which pushed one node page past the 4 KiB work
+/// grant — the measured close turns became `7568, 7568, 7568, 7568, 2496` (32768 B of surface payload)
+/// and the frozen equality could never hold again. The law is therefore a RANGE derived from the two
+/// constants the implementation itself uses, so it holds for any `Component` size.
+fn document_close_turn_ceiling() -> usize {
+    SURFACE_RECONCILE_PAGE_BYTES
+}
+
 #[test]
 fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant() {
     let _guard = crate::surface_reconcile_registry_test_guard();
@@ -129,16 +146,17 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
             };
             assert!(owner.changed.is_none() && owner.lease.is_some());
             if owner.cursor.result().is_some() {
-                assert_eq!(bytes, 4096);
+                assert_eq!(bytes, SURFACE_COMPONENT_COPY_WORK_BYTES);
                 comparison_completed = true;
             }
         }
-        if closing && bytes == 4096 {
+        if closing && bytes >= SURFACE_COMPONENT_COPY_WORK_BYTES {
+            assert!(bytes <= document_close_turn_ceiling(), "one lease-close turn must stay inside the page a `PageBytes` fault enforces: {bytes} of {}B", document_close_turn_ceiling());
             full_close_grant = true;
             assert!(matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(_))));
         }
         if copying && matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_some()) {
-            assert!(bytes <= 4096 && cursor.pending_op.get().is_none());
+            assert!(bytes <= SURFACE_COMPONENT_COPY_WORK_BYTES && cursor.pending_op.get().is_none());
             copy_completed = true;
         }
         if returning_source {
@@ -158,9 +176,13 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
     while !cursor.retire_one() {}
     while !current.retire_one() {}
     assert!(comparison_completed && copy_completed && source_returned && candidate_returned && full_close_grant);
-    assert!(size_of::<ExistingComponentComparison>() <= 4096);
+    assert!(size_of::<ExistingComponentComparison>() <= SURFACE_COMPONENT_COPY_WORK_BYTES);
     eprintln!(
-        "[DEBUG] parent-child-grants compare-final=4096 lease-close=4096 comparison-owner={} source-return={} candidate-physical={} separate-turns=true",
+        "[DEBUG] parent-child-grants compare-final={} lease-close=[{}, {}] node-record={} comparison-owner={} source-return={} candidate-physical={} separate-turns=true",
+        SURFACE_COMPONENT_COPY_WORK_BYTES,
+        SURFACE_COMPONENT_COPY_WORK_BYTES,
+        document_close_turn_ceiling(),
+        size_of::<ui_contract::UiNodeRecord>(),
         size_of::<ExistingComponentComparison>(),
         size_of::<ui_contract::Component>(),
         size_of::<ui_contract::UiPatchOp>()

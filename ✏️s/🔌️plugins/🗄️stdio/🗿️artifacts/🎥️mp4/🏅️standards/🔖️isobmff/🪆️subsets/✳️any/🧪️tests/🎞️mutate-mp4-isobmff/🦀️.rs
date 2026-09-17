@@ -185,7 +185,7 @@ mod subject {
             "set-track-codec" => {
                 let track_index = usize_field(&params, "trackIndex");
                 let fallback_nal = base.tracks.get(track_index).map(|track| track.codec.nal_length_size).unwrap_or(4);
-                Ok(Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, codec: Mp4Codec { sps: vec![bytes(&params, "sps")], pps: vec![bytes(&params, "pps")], nal_length_size: fallback_nal, extension: None } }))
+                Ok(Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, codec: Mp4Codec::avc(vec![bytes(&params, "sps")], vec![bytes(&params, "pps")], fallback_nal, None) }))
             }
             "insert-sample" => Ok(Mp4Mutation::InsertSample(mutations::insert_sample::InsertSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sample: sample_from_json(&params.get("sample").cloned().unwrap_or(Json::Object(Vec::new()))) })),
             "remove-sample" => Ok(Mp4Mutation::RemoveSample(mutations::remove_sample::RemoveSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index") })),

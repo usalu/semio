@@ -155,6 +155,27 @@
               }
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "url",
+            "extent"
+          ],
+          "properties": {
+            "kind": {
+              "const": "glb"
+            },
+            "url": {
+              "type": "string"
+            },
+            "extent": {
+              "type": "number",
+              "format": "double"
+            }
+          }
         }
       ]
     },

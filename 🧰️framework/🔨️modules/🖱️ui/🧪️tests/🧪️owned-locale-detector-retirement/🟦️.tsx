@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
-  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
+  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type Anchor = any;
   type Camera = any;
   type CanvasPickTarget = any;
@@ -23,7 +23,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type WindowSilhouetteMetrics = any;
 
   const { describe, expect, it, vi } = vitest;
-  const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
+  const { render, screen, fireEvent, createEvent, waitFor, act } = await import("@testing-library/react");
   const { calculateDiagramLayoutForBatchTest } = await import("../../🧱️elements/🕸️Diagram/📐️layout/🟦️.ts");
 
   describe("owned locale detector retirement", () => {
@@ -6253,19 +6253,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const field = screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement;
       fireEvent.change(field, { target: { value: "brush" } });
       rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
-      // ⌨️ `normalizeEngagementActionText` PascalCases the line (`fill 5` → `Fill5`), and the guest's
-      // `strip_engagement_prefix` matches alphanumerics case-insensitively, so `Brush` is the verb.
-      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("Brush"));
-      expect(sent).toEqual(["Brush"]);
+      // ⌨️ The line reaches the program verbatim; the guest's `strip_engagement_prefix` matches
+      // alphanumerics case-insensitively, so `brush` is the verb.
+      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("brush"));
+      expect(sent).toEqual(["brush"]);
       fireEvent.keyDown(field, { key: "Enter" });
-      await waitFor(() => expect(submitted).toEqual(["Brush"]));
+      await waitFor(() => expect(submitted).toEqual(["brush"]));
       // 🧹️ The confirm RELEASES the line — the guest's own `engagement_submit` empties
       // `engagement_input`, and its published "" leads again from here.
       await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe(""));
       // 📢️ A program that DOES author the line wins it back: a published value other than the one that
       // stood when the edit began replaces the draft.
       rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "fill 3", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
-      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("Fill3"));
+      await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("fill 3"));
     });
 
     it("Search Space and Enter activate inline suggestion without opening possibles list", async () => {
@@ -6457,14 +6457,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(submitted).toEqual(["Box"]);
     });
 
-    it("Search Space with draft calls onSubmit instead of onRepeatLast", async () => {
+    it("Search Space with a draft submits the step during a session and types a separator when idle", async () => {
       const submitted: string[] = [];
       const repeated: string[] = [];
-      const Harness = () => {
+      const Harness = ({ sessionActive }: { readonly sessionActive: boolean }) => {
         const [value, setValue] = reactHostPort.useState("");
         return (
           <Search
             active
+            sessionActive={sessionActive}
             input={{
               value,
               placeholder: uiDataLabel("Action"),
@@ -6475,12 +6476,31 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           />
         );
       };
-      render(<Harness />);
+      const { unmount } = render(<Harness sessionActive />);
       const field = await screen.findByPlaceholderText("Action");
-      fireEvent.change(field, { target: { value: "box" } });
+      fireEvent.change(field, { target: { value: "5" } });
       fireEvent.keyDown(field, { key: " " });
-      expect(submitted).toEqual(["Box"]);
+      expect(submitted).toEqual(["5"]);
       expect(repeated).toEqual([]);
+      unmount();
+      // ␣️ Idle with a typed line the program tokenizes itself (`move 50 25`): Space belongs in the
+      // text, so the field never consumes it and nothing is submitted.
+      render(<Harness sessionActive={false} />);
+      const idle = await screen.findByPlaceholderText("Action");
+      fireEvent.change(idle, { target: { value: "move" } });
+      const spaceEvent = createEvent.keyDown(idle, { key: " " });
+      fireEvent(idle, spaceEvent);
+      expect(spaceEvent.defaultPrevented).toBe(false);
+      expect(submitted).toEqual(["5"]);
+      expect(repeated).toEqual([]);
+    });
+
+    it("searchSpaceConfirmsLine confirms an empty line or a live session and types a separator otherwise", () => {
+      expect(searchSpaceConfirmsLine("", false)).toBe(true);
+      expect(searchSpaceConfirmsLine("", true)).toBe(true);
+      expect(searchSpaceConfirmsLine("5", true)).toBe(true);
+      expect(searchSpaceConfirmsLine("move", false)).toBe(false);
+      expect(searchSpaceConfirmsLine("move 50", false)).toBe(false);
     });
 
     it("Search Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
@@ -6533,7 +6553,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
         const typedField = screen.getByPlaceholderText("Action") as HTMLInputElement;
-        expect(typedField.value).toBe("B");
+        expect(typedField.value).toBe("b");
         expect(typedField.tabIndex).toBe(0);
         expect(document.querySelector('[data-slot="search"]')?.getAttribute("data-active")).toBe("true");
       });
@@ -6831,18 +6851,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(document.querySelector('[data-slot="search"]')?.getAttribute("data-active")).toBe("true");
       fireEvent.change(activeField, { target: { value: "b" } });
       await waitFor(() => {
-        expect(activeField.value).toBe("B");
+        expect(activeField.value).toBe("b");
       });
     });
 
-    it("Search onChange PascalCases spaced action without window routing", () => {
+    it("Search onChange carries the typed line verbatim, spaces and arguments included", () => {
       const changed: string[] = [];
       render(<Search input={{ value: "", onChange: (next) => changed.push(next), placeholder: uiDataLabel("Action") }} />);
-      fireEvent.change(screen.getByPlaceholderText("Action"), { target: { value: "set height" } });
-      expect(changed).toEqual(["SetHeight"]);
+      const field = screen.getByPlaceholderText("Action");
+      fireEvent.change(field, { target: { value: "set height" } });
+      fireEvent.change(field, { target: { value: "move 50 25" } });
+      expect(changed).toEqual(["set height", "move 50 25"]);
     });
 
-    it("normalizeEngagementActionText strips separators and PascalCases tokens", () => {
+    it("normalizeEngagementActionText strips separators and PascalCases action NAMES (never the typed line)", () => {
       expect(normalizeEngagementActionText("set height 5")).toBe("SetHeight5");
       expect(normalizeEngagementActionText("b ")).toBe("B");
       expect(normalizeEngagementActionText("box")).toBe("Box");
@@ -6862,13 +6884,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(engagementActionTokenEquals("box", "sphere")).toBe(false);
     });
 
-    it("Search input PascalCases action text and space confirms like enter", async () => {
+    it("Search keeps an argument line verbatim through change, Enter, and a session Space", async () => {
       const submitted: string[] = [];
-      const Harness = () => {
-        const [value, setValue] = reactHostPort.useState("SetHeight");
+      const Harness = ({ sessionActive }: { readonly sessionActive: boolean }) => {
+        const [value, setValue] = reactHostPort.useState("");
         return (
           <Search
             active
+            sessionActive={sessionActive}
             input={{
               id: "search-input",
               value,
@@ -6879,13 +6902,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           />
         );
       };
-      render(<Harness />);
+      const { unmount } = render(<Harness sessionActive={false} />);
       const field = screen.getByPlaceholderText("Action") as HTMLInputElement;
-      expect(field.value).toBe("SetHeight");
-      fireEvent.keyDown(field, { key: " " });
-      await waitFor(() => expect(submitted).toEqual(["SetHeight"]));
+      fireEvent.change(field, { target: { value: "move 50 25" } });
+      await waitFor(() => expect(field.value).toBe("move 50 25"));
       fireEvent.keyDown(field, { key: "Enter" });
-      await waitFor(() => expect(submitted).toEqual(["SetHeight", "SetHeight"]));
+      await waitFor(() => expect(submitted).toEqual(["move 50 25"]));
+      unmount();
+      render(<Harness sessionActive />);
+      const stepField = screen.getByPlaceholderText("Action") as HTMLInputElement;
+      fireEvent.change(stepField, { target: { value: "rotate 45 " } });
+      fireEvent.keyDown(stepField, { key: " " });
+      await waitFor(() => expect(submitted).toEqual(["move 50 25", "rotate 45"]));
     });
 
     it("Window anchors engagement in a top overlay when active", () => {

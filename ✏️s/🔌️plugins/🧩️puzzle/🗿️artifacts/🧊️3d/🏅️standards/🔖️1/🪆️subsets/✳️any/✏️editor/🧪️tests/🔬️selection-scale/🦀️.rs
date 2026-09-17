@@ -104,13 +104,26 @@ async fn one_pick_builds_the_interaction_topology_once_whatever_the_document_siz
     assert_eq!(large_builds, 1, "one pick builds the app interaction topology exactly once");
 }
 
-/// 🌳️ Wave B46 LAW: the outliner PANEL BODY of the flagship document carries selectable rows, paged.
+/// 🪟️ Whether any container under `node` stamps a tree window whose `total` is `expected` — the
+/// contract field the host reads to size the scrollbar over the WHOLE document.
+fn stamps_window_total(node: &Value, expected: u64) -> bool {
+    match node {
+        Value::Array(items) => items.iter().any(|item| stamps_window_total(item, expected)),
+        Value::Object(fields) => fields.iter().any(|(key, value)| (key == "window" && value.get("total").and_then(Value::as_u64) == Some(expected)) || stamps_window_total(value, expected)),
+        _ => false,
+    }
+}
+
+/// 🌳️ Wave B46 LAW, rewritten for the virtualised tree: the outliner PANEL BODY of the flagship
+/// document carries selectable rows AND publishes the document's full extent — never a `+N`.
 ///
-/// 🧾️ The panel module's own law measures `artifact::render` directly; this one measures the route the
-/// host actually asks for (`render_panel_body`, no `window_id`, over the live session), because wave
-/// B44 §6.2 read zero entity rows in the browser while the builder was green in isolation.
+/// 🧾️ The panel module's own laws measure `artifact::render` directly; this one measures the route the
+/// host actually asks for (`render_panel_body`, over the live session), because wave B44 §6.2 read zero
+/// entity rows in the browser while the builder was green in isolation. Since
+/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING the objects section stamps `window.total` and the host
+/// streams the rest in as the reader scrolls, so a continuation row is now a REGRESSION, not the law.
 #[semio_framework_async_macros::async_test]
-async fn the_flagship_outliner_panel_body_carries_paged_object_rows() {
+async fn the_flagship_outliner_panel_body_windows_its_object_rows() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let objects = object_count(&app);
@@ -119,7 +132,9 @@ async fn the_flagship_outliner_panel_body_carries_paged_object_rows() {
     let body = render_panel_body(&mut app, artifact::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
     let rows = mentions(&body, &first);
     let paged = mentions(&body, ".objects.more");
-    eprintln!("[DEBUG] b46.panelBody objects={objects} firstRowPresent={rows} continuation={paged} bytes={}", to_json_string(&body).len());
+    let stamped = stamps_window_total(&body, objects as u64);
+    eprintln!("[DEBUG] b46.panelBody objects={objects} firstRowPresent={rows} continuation={paged} stampsTotal={stamped} bytes={}", to_json_string(&body).len());
     assert!(rows, "the outliner panel body of a {objects}-object document must present its first object row");
-    assert!(paged, "and must close the truncated objects section with a continuation row");
+    assert!(stamped, "and must stamp the objects section's full window total ({objects})");
+    assert!(!paged, "and must never close a section with a continuation row again");
 }

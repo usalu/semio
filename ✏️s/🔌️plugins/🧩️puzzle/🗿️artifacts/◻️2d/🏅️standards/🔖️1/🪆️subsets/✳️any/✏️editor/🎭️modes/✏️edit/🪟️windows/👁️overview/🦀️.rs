@@ -26,11 +26,11 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_overview),
         body_key: BODY_KEY.into(),
-        surface_kind: SurfaceKind::Canvas2d,
+        surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
         options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, host, labels)) },
         actions: Vec::new(),
-        utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
+        utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::area_brush::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -43,7 +43,7 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
 /// 🎚️ The live chrome measures for this window, collected from the mode's `☑️options/*` components.
 pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let mode = envelope.runtime.lod_mode_by_pane.get(WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
-    vec![options::lod::measure(WINDOW_KIND_ID, mode, labels), options::grid::measure(&envelope.runtime, labels), options::brush::measure(envelope, labels)]
+    vec![options::lod::measure(WINDOW_KIND_ID, mode, labels), options::grid::measure(&envelope.runtime, labels), options::select::measure(&envelope.runtime, labels), options::transform::measure(&envelope.runtime, labels), options::brush::measure(envelope, labels), utilities::area_brush::options(&envelope.runtime, labels)]
 }
 //#endregion 🔖️Definition
 

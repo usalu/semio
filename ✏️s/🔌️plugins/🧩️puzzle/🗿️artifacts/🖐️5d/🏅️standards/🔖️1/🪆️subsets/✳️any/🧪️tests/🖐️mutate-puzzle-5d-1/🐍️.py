@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🖐️ An INDEPENDENT second implementation of the `s.puzzle.5d` assembly document and its twenty-eight
+"""🖐️ An INDEPENDENT second implementation of the `s.puzzle.5d` assembly document and its thirty-five
 typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `puzzle5d` document is an ASSEMBLY
@@ -13,12 +13,12 @@ over this same carrier.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the seven members of
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the eight members of
   `Puzzle5dSnapshot`. Note that `kindCompatibility` is a TOP-LEVEL member here, where both siblings
   file it inside `meta`.
 * rules 1, 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
-* the twenty-eight committed `(before, mutation, diff, outcome, after)` quintets, for the verbs and
+* the thirty-five committed `(before, mutation, diff, outcome, after)` quintets, for the verbs and
   their argument lists and for the four things only they state: that a grip list is INSIDE the part,
   so removing a grip is a part mutation that CASCADES into the fasteners addressed to it; that
   deleting a part severs every fastener naming any of its grips; that `replace-part2d-geometry`
@@ -34,7 +34,7 @@ superseding, never replaced here.
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
-**All twenty-eight kinds are adjudicated and none is refused** — and this subset is the one that
+**All thirty-five kinds are adjudicated and none is refused** — and this subset is the one that
 settles a question its siblings leave open. `◻️mutate-puzzle-2d-1` and `🧊️mutate-puzzle-3d-1` each commit
 exactly one `replace-<container>-<port>` vector and each declares it `mutation.no-op` with an
 unchanged after-snapshot. Here the corresponding `replace-part-grip` vector really does rekind
@@ -53,8 +53,22 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-MEMBERS = ("schema", "domain", "label", "meta", "kindCompatibility", "parts", "fasteners")
-"""🗂️ The seven members `Puzzle5dSnapshot` declares — and the cross-language projection."""
+MEMBERS = ("schema", "domain", "label", "meta", "kindCompatibility", "parts", "fasteners", "targetVolumes")
+"""🗂️ The eight members `Puzzle5dSnapshot` declares — and the cross-language projection."""
+
+OMITTED_WHEN_EMPTY = ("targetVolumes",)
+"""🫥 The members a committed snapshot omits ENTIRELY when their collection is empty. `targetVolumes`
+is the fill-constraint half of the 3d projection: a document that constrains nothing writes no key at
+all, which is how every vector predating the family still reads as a valid document here."""
+
+TARGET_VOLUME_FIELDS = {"move-target-volume": "origin", "rotate-target-volume": "orientation", "scale-target-volume": "scale", "change-target-volume-hidden": "hidden", "change-target-volume-locked": "locked"}
+"""🧊 The five single-field setters that write on one target volume."""
+
+TARGET_VOLUME_ARGUMENT = {"move-target-volume": "newOrigin", "rotate-target-volume": "newOrientation", "scale-target-volume": "newScale", "change-target-volume-hidden": "newHidden", "change-target-volume-locked": "newLocked"}
+"""🔤️ What each target-volume setter calls its argument."""
+
+VOLUME_OPTIONAL = ("orientation", "scale")
+"""🫥 The two members of a target volume a committed document omits when the volume is unposed."""
 
 DEFAULTS = {"hidden": False, "locked": False, "anchor": "fixed", "scale": 1.0}
 """🫥 The four members a committed snapshot OMITS when they hold their default. No committed document
@@ -118,6 +132,13 @@ KINDS = (
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-volume",
+    "delete-target-volume",
+    "move-target-volume",
+    "rotate-target-volume",
+    "scale-target-volume",
+    "change-target-volume-hidden",
+    "change-target-volume-locked",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -133,12 +154,53 @@ TAGS = {kind: tag_of(kind) for kind in KINDS}
 
 
 # region 🔖️Document
+def volumes_of(document):
+    """🧊 The target volumes a document holds — the empty list when it writes no key at all."""
+    return document.get("targetVolumes", [])
+
+
+def volume_at(document, identity, kind, where):
+    """🔎️ The index of the target volume this kind addresses; an absent id is an error, never a no-op."""
+    for at, held in enumerate(volumes_of(document)):
+        if held["id"] == identity:
+            return at
+    raise AssertionError("%s-%s: the committed vector addresses target volume %r, which the before-snapshot does not hold" % (where, kind, identity))
+
+
+def written_volume(volume, member, value):
+    """🫥 Writes one member of a target volume, or REMOVES it when the value is the one a committed
+    document omits — `False` for the two flags, `None` for the two optional pose members."""
+    if member in VOLUME_OPTIONAL:
+        if value is None:
+            volume.pop(member, None)
+        else:
+            volume[member] = copy.deepcopy(value)
+        return
+    written(volume, member, value)
+
+
+def with_volumes(document, volumes):
+    """🧊 The document carrying exactly these target volumes — the key leaves entirely when none remain."""
+    if volumes:
+        document["targetVolumes"] = volumes
+    else:
+        document.pop("targetVolumes", None)
+    return document
+
+
 def validate(document, where):
     """✅️ Holds the document to the shape the committed vectors agree on: seven members, unique part,
     grip and fastener ids, every part placed in BOTH spaces, every fastener addressed to a
     `"<partId>:<gripId>"` pair the assembly really holds, and no member left standing at its default."""
-    if set(document) != set(MEMBERS):
+    if set(document) - set(MEMBERS) or set(MEMBERS) - set(document) - set(OMITTED_WHEN_EMPTY):
         raise AssertionError("%s: a puzzle5d document must carry exactly %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
+    volume_ids = [held["id"] for held in volumes_of(document)]
+    if len(set(volume_ids)) != len(volume_ids):
+        raise AssertionError("%s: targetVolumes carries a duplicate id in %r" % (where, volume_ids))
+    for held in volumes_of(document):
+        for member in ("hidden", "locked"):
+            if held.get(member) is False:
+                raise AssertionError("%s: target volume %r writes %s at its default False, which a committed document omits" % (where, held["id"], member))
     ports = set()
     identifiers = [part["id"] for part in document["parts"]]
     if len(set(identifiers)) != len(identifiers):
@@ -276,6 +338,25 @@ def apply_mutation(document, kind, payload):
     elif kind == "replace-kind-catalogs":
         if payload["newCatalogs"] is not None:
             document["meta"]["kindCatalogs"] = copy.deepcopy(payload["newCatalogs"])
+    elif kind == "create-target-volume":
+        held = list(volumes_of(document))
+        if any(entry["id"] == payload["targetVolume"]["id"] for entry in held):
+            return with_volumes(document, held)
+        index = payload.get("index")
+        held.insert(len(held) if index is None else index, copy.deepcopy(payload["targetVolume"]))
+        with_volumes(document, held)
+    elif kind == "delete-target-volume":
+        held = list(volumes_of(document))
+        if not any(entry["id"] == payload["id"] for entry in held):
+            return with_volumes(document, held)
+        with_volumes(document, [entry for entry in held if entry["id"] != payload["id"]])
+    elif kind in TARGET_VOLUME_FIELDS:
+        held = list(volumes_of(document))
+        addressed = next((entry for entry in held if entry["id"] == payload["id"]), None)
+        if addressed is None:
+            return with_volumes(document, held)
+        written_volume(addressed, TARGET_VOLUME_FIELDS[kind], payload[TARGET_VOLUME_ARGUMENT[kind]])
+        with_volumes(document, held)
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -341,6 +422,21 @@ def inverse_mutation(document, kind, payload):
     if kind == "disconnect-kind-compatibility":
         held = next(rule for rule in document["kindCompatibility"] if rule["source"] == payload["source"] and rule["target"] == payload["target"])
         return [("connect-kind-compatibility", copy.deepcopy(held))]
+    if kind == "create-target-volume":
+        return [("delete-target-volume", {"id": payload["targetVolume"]["id"]})]
+    if kind == "delete-target-volume":
+        at = next((index for index, held in enumerate(volumes_of(document)) if held["id"] == payload["id"]), None)
+        if at is None:
+            return []
+        return [("create-target-volume", {"targetVolume": copy.deepcopy(volumes_of(document)[at]), "index": at})]
+    if kind in TARGET_VOLUME_FIELDS:
+        at = next((index for index, held in enumerate(volumes_of(document)) if held["id"] == payload["id"]), None)
+        if at is None:
+            return []
+        member = TARGET_VOLUME_FIELDS[kind]
+        held = volumes_of(document)[at]
+        restored = copy.deepcopy(held[member]) if member in held else (None if member in VOLUME_OPTIONAL else False)
+        return [(kind, {"id": payload["id"], TARGET_VOLUME_ARGUMENT[kind]: restored})]
     if kind == "replace-kind-catalogs":
         if payload["newCatalogs"] is None:
             return []
@@ -360,8 +456,8 @@ def inverse_mutation(document, kind, payload):
 def equals_committed(kind, produced, committed):
     """🎯️ The committed after-snapshot claim, member by member, with no tolerance and no ignored key."""
     for member in MEMBERS:
-        if produced[member] != committed[member]:
-            raise AssertionError("mutate-%s: %s is %s, the committed after-snapshot says %s" % (kind, member, json.dumps(produced[member], sort_keys=True)[:400], json.dumps(committed[member], sort_keys=True)[:400]))
+        if produced.get(member) != committed.get(member):
+            raise AssertionError("mutate-%s: %s is %s, the committed after-snapshot says %s" % (kind, member, json.dumps(produced.get(member), sort_keys=True)[:400], json.dumps(committed.get(member), sort_keys=True)[:400]))
 
 
 def observable(kind, before, after, no_op):
@@ -377,8 +473,8 @@ def restores(kind, restored, original):
     """↩️ The full inverse law: applying the kind and then its OWN computed inverse must land back on
     the committed before-snapshot, member for member and index for index."""
     for member in MEMBERS:
-        if restored[member] != original[member]:
-            raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, member, json.dumps(restored[member], sort_keys=True)[:400], json.dumps(original[member], sort_keys=True)[:400]))
+        if restored.get(member) != original.get(member):
+            raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, member, json.dumps(restored.get(member), sort_keys=True)[:400], json.dumps(original.get(member), sort_keys=True)[:400]))
 # endregion 🔖️Laws
 
 

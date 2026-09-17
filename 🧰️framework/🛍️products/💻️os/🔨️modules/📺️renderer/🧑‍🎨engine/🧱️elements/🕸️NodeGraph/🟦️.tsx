@@ -740,7 +740,6 @@ function WasmGraphSurface({
       sessionRef.current?.syncFromScenePack?.(scenePack);
       paintOverlays();
     } catch (error) {
-      console.warn("[DEBUG] WasmGraphSurface sync failed", error instanceof Error ? error.message : String(error));
     }
   }, [scenePack, paintOverlays]);
 
@@ -752,7 +751,6 @@ function WasmGraphSurface({
         sessionRef.current.syncFromScenePack?.(scenePack);
         paintOverlays();
       } catch (error) {
-        console.warn("[DEBUG] WasmGraphSurface ready sync failed", error instanceof Error ? error.message : String(error));
       }
     },
     [scenePack, paintOverlays],
@@ -1166,7 +1164,6 @@ function DiagramGraphFallback({
             ? (connection) => {
                 if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
                 if (!nodeGraphConnectionIsValid(parsedNodes, connection)) {
-                  console.log("[DEBUG] node graph refused an incompatible wire %s@%s -> %s@%s", connection.source, connection.sourceHandle, connection.target, connection.targetHandle);
                   return;
                 }
                 dispatch(nodeGraphActions.edit, {
@@ -2023,7 +2020,7 @@ function useGraphSliderLanes(surfaceId: string, dispatchRef: React.RefObject<(ac
           dispatchRef.current?.(nodeGraphActions.edit, {
             operations: [{ operation: "setSlider", widgetId, value, gesture: gestureIdsRef.current.get(widgetId) ?? `${surfaceId}:${widgetId}`, commit: phase === "commit" }],
           }),
-        onFault: (error) => console.error("[DEBUG] graph slider dispatch failed", error),
+        onFault: (error) => undefined,
       });
       lanesRef.current.set(widgetId, lane);
       return lane;
@@ -2393,7 +2390,6 @@ function crossFlowPayload(session: FlowWasmSession, feature: string, parts: read
         .map((part, index) => (flowSharedPayloadDigests.has(digests[index]!) ? `${FLOW_SHARED_PAYLOAD_REFERENCE_PREFIX}${digests[index]}` : `${FLOW_SHARED_PAYLOAD_REFERENCE_PREFIX}${digests[index]}\n${part}`))
         .join(FLOW_SHARED_PAYLOAD_PART_SEPARATOR)
     : body;
-  console.log("[DEBUG] flow payload %s bytes=%d body=%d parts=%d named=%d", feature, wire.length, body.length, parts.length, named);
   observeFlowTask(session, feature, issue(wire), undefined, (landed) => {
     if (sending.get(feature) !== body) return;
     sending.delete(feature);
@@ -2992,7 +2988,6 @@ export function FlowGraphCanvasHost({
     observeFlowTask(session, "renderCanvas", task, () => {
       if (drewOnceRef.current) return;
       drewOnceRef.current = true;
-      console.log("[DEBUG] node-graph first draw surface=%s store=%sx%s", surfaceId, canvas.width, canvas.height);
     });
     void task.result
       .then((state) => {
@@ -3029,7 +3024,6 @@ export function FlowGraphCanvasHost({
     if (!retired?.presentsOnGpu) return;
     attachedSurfaceRef.current = null;
     surfaceReadyRef.current = false;
-    console.warn("[DEBUG] node-graph canvas unpresentable surface=%s retiring flow surface=%s", surfaceId, retired.surface);
     // 🚪️ `"cancelled"`, not `"device-lost"`: the latter parks the surface as recoverable and keeps it
     // occupying the session's single slot, so the successor's `attachSurface` would be refused.
     if (session) observeFlowTask(session, "surfaceStatus:unpresentable", session.surfaceStatus({ surface: retired.surface, surfaceGeneration: retired.surfaceGeneration, status: "cancelled" }));
@@ -3096,7 +3090,6 @@ export function FlowGraphCanvasHost({
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
       const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
       const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId });
-      console.log("[DEBUG] flow interaction publish select=%d hover=%d", selectionDue ? 1 : 0, hoverDue ? 1 : 0);
       if (selectionDue) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs(selection));
       if (hoverDue) dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered, portId));
     }).catch(() => {});
@@ -3105,23 +3098,19 @@ export function FlowGraphCanvasHost({
 
   useEffect(() => {
     let cancelled = false;
-    console.log("[DEBUG] node-graph host mount surface=%s hidden=%s", surfaceId, globalThis.document?.hidden);
     void createFlowSession().then((session) => {
       if (cancelled) {
         void session.free();
         return;
       }
       sessionRef.current = session;
-      console.log("[DEBUG] node-graph session ready surface=%s", surfaceId);
       setSessionReady(true);
     }, (error: unknown) => {
-      console.warn("[DEBUG] node-graph session failed surface=%s %s", surfaceId, error instanceof Error ? error.message : String(error));
     });
     return () => {
       cancelled = true;
       // 🪪️ A retained surface host unmounts exactly once, when its window closes. A second `host mount`
       // after this line means the React subtree was re-keyed — see `uiSiblingReactKeys`.
-      console.log("[DEBUG] node-graph host unmount surface=%s", surfaceId);
       // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
       // session (and everything it retains) leaked for the rest of the document's lifetime.
       if (sessionRef.current) {
@@ -3147,7 +3136,6 @@ export function FlowGraphCanvasHost({
     const dpr = globalThis.devicePixelRatio || 1;
     let cancelled = false;
     let cleanupAttached: (() => void) | undefined;
-    console.log("[DEBUG] node-graph attach called surface=%s %sx%s dpr=%s", surfaceId, Math.round(rect.width), Math.round(rect.height), dpr);
     const attachment = session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr);
     const unsubscribeAttachment = attachment.subscribe(() => schedulerRef.current?.invalidate());
     void attachment.result
@@ -3157,7 +3145,6 @@ export function FlowGraphCanvasHost({
         const handle = attached as { readonly surface?: number; readonly surfaceGeneration?: number; readonly presentsOnGpu?: boolean } | undefined;
         attachedSurfaceRef.current = typeof handle?.surface === "number" && typeof handle.surfaceGeneration === "number" ? { surface: handle.surface, surfaceGeneration: handle.surfaceGeneration, presentsOnGpu: handle.presentsOnGpu === true } : null;
         surfaceReadyRef.current = true;
-        console.log("[DEBUG] node-graph surface ready surface=%s nodes=%s edges=%s", surfaceId, sceneRef.current.nodes?.length ?? 0, sceneRef.current.edges?.length ?? 0);
         syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current);
         // 🖼️ The opening camera is decided HERE, once per surface, against the pane it actually got:
         // a stored camera that does not frame this graph loses to the fit, and the fit is persisted
@@ -3169,7 +3156,6 @@ export function FlowGraphCanvasHost({
         const opening = isGestureActive() ? { camera: { x: 0, y: 0, zoom: 1 }, fitted: false } : applyFlowStartupCamera(session, sceneRef.current, Math.round(rect.width), Math.round(rect.height));
         framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
         if (opening.fitted) {
-          console.log("[DEBUG] node-graph fit on open surface=%s %s", surfaceId, JSON.stringify(opening.camera));
           dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(opening.camera));
         }
         syncFlowCanvasTheme(session);
@@ -3195,7 +3181,6 @@ export function FlowGraphCanvasHost({
         // 🚨️ Was an anonymous swallow. A rejected attach leaves `surfaceReadyRef` false forever, so every
         // later `renderFlow()` is a silent no-op and the window stays blank with nothing in the console.
         if (cancelled) return;
-        console.warn("[DEBUG] node-graph attach failed surface=%s %s", surfaceId, error instanceof Error ? error.message : String(error));
       });
     return () => {
       cancelled = true;
@@ -3236,7 +3221,6 @@ export function FlowGraphCanvasHost({
           if (!live || isGestureActive()) return;
           const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseNodeGraphSessionViewport(value), Math.round(rect.width), Math.round(rect.height));
           if (!fitted) return;
-          console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
           dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(fitted));
           renderFlow();
           paintOverlays();
@@ -3349,7 +3333,6 @@ export function FlowGraphCanvasHost({
         paintOverlays();
         return;
       }
-      console.log("[DEBUG] flow spotlight preview", item.kind, item.neuronKind ?? item.name, open.world);
       observeFlowTask(session, "setGhostWidget", session.setGhostWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y));
       renderFlow();
       paintOverlays();
@@ -3362,7 +3345,6 @@ export function FlowGraphCanvasHost({
       const session = sessionRef.current;
       const open = spotlight;
       if (!session || !open) return;
-      console.log("[DEBUG] flow spotlight commit", item.kind, item.neuronKind ?? item.name, open.world);
       observeFlowTask(session, "addWidget", session.addWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y), () => {
         commitFixture();
         emitInteractionState();
@@ -3382,7 +3364,6 @@ export function FlowGraphCanvasHost({
       const sy = clientY - rect.top;
       const camera = parseDagOverlayCamera(labelStateJson);
       const world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
-      console.log("[DEBUG] flow spotlight open", { screen: { x: sx, y: sy }, world });
       setSpotlight({ screen: { x: sx, y: sy }, world });
       observeFlowTask(session, "worldFromScreen:spotlight", session.worldFromScreen(sx, sy), (value) => {
         try {
@@ -3697,7 +3678,6 @@ export function FlowGraphCanvasHost({
             // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
             // evaluation on a shell nobody touched.
             const { operations, hostSnapshotChanged } = graphGestureAnswer(value);
-            if (operations.length > 0) console.log("[DEBUG] node graph wire edit dispatch", JSON.stringify(operations));
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
             else if (hostSnapshotChanged) commitFixture();
           });

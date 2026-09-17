@@ -206,11 +206,16 @@ async fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
 #[semio_framework_async_macros::async_test]
 async fn png_export_round_trips_a_stored_texture_asset() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame};
-    let mut scene = default_remodeling_scene();
+    let scene = default_remodeling_scene();
     let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
     let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };
     let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
-    scene.assets.insert("tex-1".into(), crate::store_remodeling_asset("tex-1", &asset));
+    // 🧩️ Admitted through `create-asset` itself: the export reads the asset's DURABLE leaves back
+    // (`remodeling_asset`), which a bare `assets.insert` of the handle never writes.
+    let create = crate::op::create_asset("tex-1".into(), asset);
+    let outcome = <crate::RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&create, &scene);
+    assert!(!outcome.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "create-asset tex-1 rejected: {:?}", outcome.messages());
+    let mut scene = protocol::MutationDiff::apply(outcome.diff(), &scene).expect("create-asset tex-1 applies");
     scene.results.mesh.texture_asset_id = Some("tex-1".into());
     let result = remodeling_png_export(&scene).expect("png export");
     assert_eq!(result.mime_type, "image/png");

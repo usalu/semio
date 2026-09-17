@@ -2,7 +2,7 @@
 //! ground control point observations planted on it.
 
 use crate::editor::remodeling::modes::capture::windows::frames::config::{RemodelingFrameCursor, RemodelingFramesWindowConfig};
-use crate::RemodelingSnapshot;
+use crate::{MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
@@ -53,10 +53,10 @@ const GCP_MARKER_RADIUS_PX: f64 = 6.0;
 /// runtime scratch and are never distilled into durable document state.
 fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> String {
     let mut layers: Vec<JsonValue> = Vec::new();
-    let Some(stream_id) = &cursor.stream_id else { return "[]".into() };
-    let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
+    let Some((stream, frame_index)) = cursored_frame(scene, cursor) else { return "[]".into() };
+    let stream_id = &stream.id;
     let mut origin = (0.0_f64, 0.0_f64);
-    if let Some(frame) = stream.frames.iter().find(|frame| frame.index == cursor.frame_index) {
+    if let Some(frame) = stream.frames.iter().find(|frame| frame.index == frame_index) {
         if let Some(asset) = crate::remodeling_asset(scene, &frame.asset_id) {
             let width = f64::from(asset.width);
             let height = f64::from(asset.height);
@@ -75,7 +75,7 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
     }
     for gcp in &scene.gcps {
         for observation in &gcp.observations {
-            if &observation.stream_id == stream_id && observation.frame_index == cursor.frame_index {
+            if &observation.stream_id == stream_id && observation.frame_index == frame_index {
                 layers.push(pack::json_object([
                     ("kind".to_string(), JsonValue::from("circle")),
                     ("id".to_string(), JsonValue::from(format!("gcp-observation-{}-{}", gcp.id, observation.frame_index))),
@@ -90,6 +90,21 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
         }
     }
     pack::json_to_string(&pack::json_array(layers))
+}
+
+/// 🎯️ The stream and frame index this window shows. A cursor that names no stream at all — the shape a
+/// window config boots with (`RemodelingFrameCursor::default()`) — shows the document's first stream, so
+/// a document that carries frames (the committed Synthetic Orbit example, an imported sequence) is never
+/// an empty canvas until the user steps the cursor; a frame index the stream does not carry falls back to
+/// its first frame. A cursor that names a stream the document does NOT carry stays empty: that is the
+/// window-ownership law's witness that two windows' cursors are isolated (`🔬️window-ownership`).
+fn cursored_frame<'a>(scene: &'a RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> Option<(&'a MediaStream, u32)> {
+    let stream = match &cursor.stream_id {
+        Some(stream_id) => scene.streams.iter().find(|stream| &stream.id == stream_id)?,
+        None => scene.streams.first()?,
+    };
+    let frame_index = if stream.frames.iter().any(|frame| frame.index == cursor.frame_index) { cursor.frame_index } else { stream.frames.first().map_or(cursor.frame_index, |frame| frame.index) };
+    Some((stream, frame_index))
 }
 
 pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

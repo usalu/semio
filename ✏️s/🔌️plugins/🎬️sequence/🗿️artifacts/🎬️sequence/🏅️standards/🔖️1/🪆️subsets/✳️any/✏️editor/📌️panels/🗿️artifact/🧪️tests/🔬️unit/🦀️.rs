@@ -122,7 +122,6 @@ async fn a_control_step_keeps_its_collapse_toggle_beside_its_slot_rows() {
     let live = oversized_sequence_document(4);
     let tree = render(&live, sequence_play_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
     let control = window_law_node(&tree, "root-if");
-    assert_eq!(window_law_keys(&control.children.iter().next().map(|_| control).expect("the control row has children")), window_law_keys(control));
     assert_eq!(window_law_keys(control), vec!["sequence-play-document.collapse.root-if".to_string(), "sequence-play-document.slot.root-if.then".to_string(), "sequence-play-document.slot.root-if.else".to_string()]);
 }
 

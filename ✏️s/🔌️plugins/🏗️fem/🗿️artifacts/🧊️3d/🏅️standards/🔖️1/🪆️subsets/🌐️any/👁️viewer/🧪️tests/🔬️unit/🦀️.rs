@@ -15,5 +15,6 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn initial_snapshot_is_the_bundled_example_not_empty() {
     let snapshot = <Fem3dViewer as ArtifactViewer>::initial_snapshot();
-    assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");
+    let expected = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
+    assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
 }

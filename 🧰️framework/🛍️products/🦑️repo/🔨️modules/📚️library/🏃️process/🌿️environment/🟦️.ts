@@ -1,4 +1,20 @@
+import { availableParallelism } from "node:os";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
+
+/** 🧵️ Resolves how many Nx task slots and bounded worker pools should use on this machine. */
+export function semioNxParallel(): number {
+  const override = process.env.SEMIO_NX_PARALLEL?.trim();
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return Math.max(1, availableParallelism());
+}
+
+/** 🧵️ Nx `run-many`/`affected` flag pair sized for this machine. */
+export function semioNxParallelFlag(): readonly [parallel: string, count: string] {
+  return ["--parallel", String(semioNxParallel())];
+}
 
 /** 🧰️Dev tooling env without IDE-injected node options. Plugin isolation is deliberately left at Nx's
  * own default: this workspace's inference plugin
@@ -17,6 +33,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_VERBOSE_LOGGING ??= "false";
   env.NX_PERF_LOGGING ??= "false";
   env.NX_NATIVE_LOGGING ??= "nx=warn";
+  env.NX_PARALLEL ??= String(semioNxParallel());
   return env;
 }
 

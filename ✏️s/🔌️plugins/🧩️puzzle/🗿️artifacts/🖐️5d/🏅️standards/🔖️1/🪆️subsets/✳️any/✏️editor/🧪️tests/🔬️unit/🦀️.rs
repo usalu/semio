@@ -209,6 +209,72 @@ pub(crate) mod context {
         assert!(app.close_terminal_is_empty(), "Puzzle 5D registered app close did not reach terminal-empty ownership");
     }
     
+    //#region 🎚️Measures
+    /// 🎚️ Every measure id in a window's chrome, groups included — the shared reader both window
+    /// nodes' option laws assert their group/row ids against.
+    pub fn measure_ids(measures: &[WindowMeasure]) -> Vec<String> {
+        let mut ids = Vec::new();
+        let mut stack: Vec<&WindowMeasure> = measures.iter().collect();
+        while let Some(measure) = stack.pop() {
+            match measure {
+                WindowMeasure::Group { id, children, .. } => {
+                    ids.push(id.clone());
+                    stack.extend(children.iter());
+                }
+                WindowMeasure::Toggle { id, .. } | WindowMeasure::Slider { id, .. } | WindowMeasure::Select { id, .. } => ids.push(id.clone()),
+                _ => {}
+            }
+        }
+        ids
+    }
+
+    /// 🎚️ The pressed state one toggle row currently renders, at any depth.
+    pub fn toggle_pressed(measures: &[WindowMeasure], wanted: &str) -> Option<bool> {
+        let mut stack: Vec<&WindowMeasure> = measures.iter().collect();
+        while let Some(measure) = stack.pop() {
+            match measure {
+                WindowMeasure::Group { children, .. } => stack.extend(children.iter()),
+                WindowMeasure::Toggle { id, pressed, .. } if id == wanted => return Some(*pressed),
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// 🎚️ The value one slider row currently renders, at any depth.
+    pub fn slider_value(measures: &[WindowMeasure], wanted: &str) -> Option<f64> {
+        let mut stack: Vec<&WindowMeasure> = measures.iter().collect();
+        while let Some(measure) = stack.pop() {
+            match measure {
+                WindowMeasure::Group { children, .. } => stack.extend(children.iter()),
+                WindowMeasure::Slider { id, value, .. } if id == wanted => return Some(*value),
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// 🎚️ The value one select row currently renders, at any depth.
+    pub fn select_value(measures: &[WindowMeasure], wanted: &str) -> Option<String> {
+        let mut stack: Vec<&WindowMeasure> = measures.iter().collect();
+        while let Some(measure) = stack.pop() {
+            match measure {
+                WindowMeasure::Group { children, .. } => stack.extend(children.iter()),
+                WindowMeasure::Select { id, value, .. } if id == wanted => return Some(value.clone()),
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// 🎚️ The live chrome of ONE window instance, exactly as `ArtifactApp::window_measures` builds it
+    /// — the read half of every "dispatch → config changes → measure reflects it" law.
+    pub fn window_measures_of(app: &mut Puzzle5dApp, window_kind: &str) -> Vec<WindowMeasure> {
+        let view = window_view(window_kind, window_kind);
+        semio_framework::io::resolve_ready(PluginApp::window_measures(app, &view)).remove(window_kind).unwrap_or_default()
+    }
+    //#endregion 🎚️Measures
+
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
         parse(&app.snapshot().expect("projection").0.to_string()).expect("snapshot JSON")
     }
@@ -363,7 +429,7 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
 }
 
 fn add_part_kind_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#)
+    source.contains(r#""addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#)
         && source.contains("Puzzle5dAddBrushPartStage::Catalog")
         && source.contains("Puzzle5dAddBrushPartStage::Grips")
         && source.contains("Puzzle5dAddBrushPartStage::Target")
@@ -377,15 +443,15 @@ fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursor
     let source = include_str!("../../🦀️.rs");
     assert!(add_part_kind_route_is_cursorized(source));
     let direct = source.replace(
-        r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
-        r#""addBrushPart" | "addBrushObject" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
+        r#""addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
+        r#""addBrushPart" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
             "addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!add_part_kind_route_is_cursorized(&direct));
 }
 
 fn kind_weight_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#)
+    source.contains(r#""setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#)
         && source.contains("Puzzle5dKindWeightStage::Catalog")
         && source.contains("Puzzle5dKindWeightStage::InferParts")
         && source.contains("Puzzle5dKindWeightStage::InferGrips")
@@ -394,7 +460,7 @@ fn kind_weight_route_is_cursorized(source: &str) -> bool {
         && source.contains("Puzzle5dKindWeightStage::Build")
         && source.contains("Puzzle5dConfigMutation::SetObjectKindWeights")
         && source.contains("Puzzle5dConfigMutation::SetVortexKindWeights")
-        && !source.contains(r#""setObjectKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !source.contains(r#""setPartKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
 }
 
 #[test]
@@ -402,15 +468,15 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
     let source = include_str!("../../🦀️.rs");
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
-        r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
-        r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        r#""setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
+        r#""setPartKindWeight" | "setGripKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!kind_weight_route_is_cursorized(&direct));
     assert!(!source.contains("puzzle5d_normalize_kind_weight_group(self.weights"));
 }
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["cycleBrushCandidate", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "setFillCount", "targetBrushSuggestions", "zoomToSelection"]"#)
+    source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["#) && PUZZLE5D_WINDOW_TOOL_IDS.iter().all(|tool| source.contains(&format!("    \"{tool}\",\n")) || source.contains(&format!("    \"{tool}\",\r\n")))
         && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))")
         && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
         && source.contains("addressed_transient(view, transient_after)")
@@ -707,11 +773,12 @@ async fn window_engagements_cover_both_windows() {
 #[semio_framework_async_macros::async_test]
 async fn every_dispatched_action_bridges_to_a_command() {
     for action in [
-        "setFixtureJson",
+        "exportFixture",
+        "importFixture",
+        "openImportFixture",
+        "openAddPartDialog",
         "setActiveExample",
-        "importComposeKit",
         "selectSameKindSelection",
-        "selectSameKind",
         "addNode",
         "addPartKind",
         "deleteSelection",
@@ -723,7 +790,6 @@ async fn every_dispatched_action_bridges_to_a_command() {
         "setCamera",
         "setCamera2d",
         "setCamera3d",
-        "zoomToSelection",
         "focusSelection",
         "toggleSun",
         "setSunAzimuth",
@@ -733,12 +799,11 @@ async fn every_dispatched_action_bridges_to_a_command() {
         "setGridSnapEnabled",
         "setGridFactor",
         "addBrushPart",
-        "addBrushObject",
         "cycleBrushCandidate",
         "registerBrushMesh",
         "setBrushPlacementContactTolerance",
-        "setObjectKindWeight",
-        "setVortexKindWeight",
+        "setPartKindWeight",
+        "setGripKindWeight",
         "engagementControlSelect",
         "setSuggestionOffset",
         "setFillCount",
@@ -762,6 +827,10 @@ async fn every_dispatched_action_bridges_to_a_command() {
 #[semio_framework_async_macros::async_test]
 async fn add_part_kind_materializes_the_declared_kind_default() {
     // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
+    // 🗨️ The default is the FIRST LIVE catalog kind (`puzzle5d_default_part_kind`), never the literal
+    // "Part" this select used to hardcode — a literal no catalog declares could not add a real kind.
+    let expected_default = puzzle5d_default_part_kind(&puzzle5d_part_kind_options());
+    assert!(!expected_default.is_empty() && expected_default != "Part", "the declared default is a real catalog kind, got {expected_default:?}");
     let mut app = app_with_registry();
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
     let before = part_count(&app);
@@ -770,7 +839,7 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
     assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
     let projection = projection_of(&app);
     let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
-    assert_eq!(kind, Some("Part"), "the declared partKind default was materialized host-side");
+    assert_eq!(kind, Some(expected_default.as_str()), "the declared partKind default was materialized host-side");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -858,28 +927,31 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
     }
 }
 
-/// 🎯️ D-3 follow-up: the fill-count slider and brush placement picker are tagged `WindowMeasure::Group`s
-/// in each window's `window_measures` (surfaced by `partition_window_measures` only for their active
-/// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
+/// 🎯️ D-3 follow-up, re-based on the fill TOOL: the brush placement picker is a `"brush"`-tagged
+/// `WindowMeasure::Group` in each window's `window_measures` (surfaced by `partition_window_measures` only for
+/// its active utility) and the fill count is a MODE-LEVEL tool measure (`tool_measures`), never a
+/// `WindowEngagementControl` on the HUD and never a window rail group — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
-async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
+async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_controls() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
-    // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
-    // NOT the engagement HUD.
+    // 🪣️ Fill TOOL: the count entry and the distribution trees live in the tool options rail, NOT in either
+    // window's measures and NOT on the engagement HUD.
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
-    let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: "fill".into() };
+    let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: fill_tool::TOOL_ID.into(), interaction: Default::default() };
+    let tool_measures = fill_tool::measures(&fill_scene, labels, None);
+    assert!(matches!(find_measure_number(&tool_measures, "puzzle5d-fill-count"), Some(WindowMeasure::Number { value, .. }) if *value == 3.0), "the fill tool options carry the count entry");
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, labels, None) } else { world3d::window_measures(&fill_scene, labels, None) };
-        assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-fill"), Some(Some("fill".into())), "{window} fill Utility Options must be tagged for the fill utility");
-        assert!(find_measure_number(&measures, "puzzle5d-fill-count").is_some(), "{window} fill Utility Options must carry the fill-count entry");
+        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, labels) } else { world3d::window_measures(&fill_scene, labels) };
+        assert!(find_measure_number(&measures, "puzzle5d-fill-count").is_none(), "{window} must not duplicate the fill count as a window measure");
+        assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-fill"), None, "{window} must no longer carry a fill Utility Options rail group");
         let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels, None);
         assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
     }
     // 🖌️ Brush utility: with no candidates to place, the "brush"-tagged group still surfaces (matching the
     // old gate), and the engagement HUD is likewise bare.
-    let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into() };
+    let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into(), interaction: Default::default() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, labels, None) } else { world3d::window_measures(&brush_scene, labels, None) };
+        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, labels) } else { world3d::window_measures(&brush_scene, labels) };
         assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-brush"), Some(Some("brush".into())), "{window} brush Utility Options surfaces even without candidates");
         let brush_hud = edit::puzzle5d_engagement(&brush_scene, window, labels, None);
         assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
@@ -887,7 +959,7 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
 }
 
 /// ♾️ The fill count is an unbounded `Number` defaulting to 100 — the deleted `PUZZLE5D_FILL_COUNT_MAX`
-/// pin must not come back anywhere on the path from runtime default to rendered measure.
+/// pin must not come back anywhere on the path from runtime default to rendered tool measure.
 #[semio_framework_async_macros::async_test]
 async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
@@ -895,17 +967,46 @@ async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
     assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
     assert_eq!(Puzzle5dConfig::default().fill_count, 100);
 
-    let default_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "fill".into() };
-    let measures = board2d::window_measures(&default_scene, labels, None);
+    let default_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: fill_tool::TOOL_ID.into(), interaction: Default::default() };
+    let measures = fill_tool::measures(&default_scene, labels, None);
     assert!(matches!(find_measure_number(&measures, "puzzle5d-fill-count"), Some(WindowMeasure::Number { value, .. }) if *value == 100.0));
 
     let large_scene = Puzzle5dScene { runtime: Puzzle5dRuntime { fill_count: 5_000, ..Default::default() }, ..default_scene };
-    let measures = world3d::window_measures(&large_scene, labels, None);
+    let measures = fill_tool::measures(&large_scene, labels, None);
     let Some(WindowMeasure::Number { value, min, max, step, .. }) = find_measure_number(&measures, "puzzle5d-fill-count") else { panic!("fill count entry") };
     assert_eq!(*value, 5_000.0);
     assert_eq!(*min, Some(0.0));
     assert_eq!(*max, None, "the fill count must carry no ceiling");
     assert_eq!(*step, Some(1.0));
+}
+
+/// 🛠️ LAW: fill is a first-class framework TOOL in the manifest — one `.tool(...)` registration carrying its
+/// `ToolRunDefinition`, listed in the edit mode's tools, and NO fill utility rail left behind in either window.
+#[semio_framework_async_macros::async_test]
+async fn fill_is_registered_as_a_mode_tool_and_no_longer_as_a_utility() {
+    let definition = create_puzzle5d_app();
+    let tool = definition.tools.iter().find(|tool| tool.id == fill_tool::TOOL_ID).expect("the manifest registers a fill tool");
+    assert!(tool.run.is_some(), "the fill tool carries its tool run declaration");
+    assert!(!definition.utilities.iter().any(|utility| utility.id == fill_tool::TOOL_ID), "fill is no longer a utility");
+    let mode = definition.modes.iter().find(|mode| mode.id == edit::PUZZLE5D_PLAY_MODE_EDIT).expect("the edit mode");
+    assert!(mode.tools.iter().any(|tool| tool.as_str() == fill_tool::TOOL_ID), "the edit mode lists the fill tool");
+    for window in definition.window_kinds.iter() {
+        assert!(!window.utilities.iter().any(|utility| utility.as_str() == fill_tool::TOOL_ID), "{} must not bind fill as a utility", window.id);
+    }
+}
+
+/// ⌨️ LAW: the engagement placeholder advertises EXACTLY the verbs `engagement_submit` parses — an advertised
+/// verb no arm implements is a dead promise (the defect 3d still carries with `pick`/`rectangle`/`lasso`).
+#[semio_framework_async_macros::async_test]
+async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
+    for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
+        let hud = edit::puzzle5d_engagement(&scene, window, labels, None);
+        let placeholder = hud.input.as_ref().expect("engagement input").placeholder.clone().expect("placeholder");
+        assert_eq!(placeholder, crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS.join(", "), "{window} placeholder is derived from the parsed verb list");
+        assert!(hud.input.as_ref().and_then(|input| input.on_repeat_last.clone()).is_some(), "{window} offers repeat-last");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1109,3 +1210,1062 @@ fn clipboard_verbs_cover_every_part_of_the_largest_example() {
     assert_eq!(paste_operations.iter().filter(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))).count(), document.parts.len(), "the paste creates every fragment part");
 }
 //#endregion 🔖️ClipboardMaximum
+
+//#region 🎚️WindowAndConfigLaneVerbs
+/// 🪟️ The exact board pane partition `window_id` currently holds, projected typed out of the concrete
+/// window registry — the same authority the retained route publishes into.
+async fn board_window_config(app: &mut Puzzle5dApp, window_id: &str) -> window_ownership::Puzzle5dBoardWindowConfig {
+    let view = window_view(board2d::WINDOW_KIND_ID, window_id);
+    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dBoardWindowConfigOwner, _, _>(app, &view)
+        .await
+        .expect("board window config capture")
+        .expect("the addressed board pane owns a partition")
+}
+
+/// 🌍️ The exact world pane partition `window_id` currently holds.
+async fn world_window_config(app: &mut Puzzle5dApp, window_id: &str) -> window_ownership::Puzzle5dWorldWindowConfig {
+    let view = window_view(world3d::WINDOW_KIND_ID, window_id);
+    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dWorldWindowConfigOwner, _, _>(app, &view)
+        .await
+        .expect("world window config capture")
+        .expect("the addressed world pane owns a partition")
+}
+
+/// 📜️ The declared lanes of one migrated tool id.
+fn declared_lanes(tool_id: &str) -> &'static [ArtifactToolPublicationLane] {
+    <Puzzle5dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+        .iter()
+        .find(|contract| contract.tool_id == tool_id)
+        .unwrap_or_else(|| panic!("{tool_id} declares a publication contract"))
+        .lanes
+}
+
+/// 🧵️ LAW: every verb this slice migrated is a live retained tool — registered in the id list, in the
+/// bounded first-step proofs, in the publication contracts, and classified `Migrated`. A
+/// `BatchOnlyPendingRewrite` row here is the repo's known hard-dead runtime pattern: the click reaches
+/// nothing and no fault surfaces.
+#[test]
+fn window_and_config_lane_verbs_are_registered_migrated_retained_tools() {
+    let source = include_str!("../../🦀️.rs");
+    let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
+    for tool_id in MIGRATED_WINDOW_LANE_VERBS.iter().chain(MIGRATED_CONFIG_LANE_VERBS) {
+        assert!(PUZZLE5D_RETAINED_TOOL_IDS.contains(tool_id), "{tool_id} must be a retained tool id");
+        assert!(production.contains(&format!(r#".action_interactive_job("{tool_id}", InteractiveJobClassification::Migrated)"#)), "{tool_id} must be classified Migrated");
+        assert!(!production.contains(&format!(r#".action_interactive_job("{tool_id}", InteractiveJobClassification::BatchOnlyPendingRewrite)"#)), "{tool_id} must carry no BatchOnlyPendingRewrite row");
+        assert!(!declared_lanes(tool_id).is_empty(), "{tool_id} must declare its publication lanes");
+    }
+    for tool_id in MIGRATED_WINDOW_LANE_VERBS {
+        assert_eq!(declared_lanes(tool_id), &[ArtifactToolPublicationLane::WindowConfig], "{tool_id} publishes the addressed pane's window config alone");
+    }
+    for tool_id in MIGRATED_CONFIG_LANE_VERBS {
+        assert_eq!(declared_lanes(tool_id), &[ArtifactToolPublicationLane::Config], "{tool_id} publishes the shared app config alone");
+    }
+    // 🗡️ The pre-5A1 vocabulary must be gone everywhere, aliases included.
+    assert!(!production.contains("setObjectKindWeight") && !production.contains("setVortexKindWeight"), "the object/vortex weight verb ids are renamed to the 5d part/grip vocabulary");
+}
+
+/// 🪟️ The window-config-lane verbs this slice migrated.
+const MIGRATED_WINDOW_LANE_VERBS: &[&str] =
+    &["setCamera", "setCamera2d", "setCamera3d", "setGridFactor", "setGridSnapEnabled", "setLodMode", "setSuggestionOffset", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"];
+/// 🎚️ The shared-app-config-lane verbs this slice migrated.
+const MIGRATED_CONFIG_LANE_VERBS: &[&str] = &["setBrushPlacementContactTolerance", "setPartKindWeight", "setGripKindWeight"];
+
+/// 📜️ LAW: the wire band the retained factory admits is the one its bounded first-step proofs declare —
+/// a proof advertising more than the factory admits is a contract the runtime refuses, and the shared
+/// 8 KiB puzzle default is too narrow for a Nakagin-sized document's command wire.
+#[test]
+fn retained_factory_contract_matches_its_declared_proof_band() {
+    let contract = ToolJobFactory::execution_contract(&Puzzle5dRetainedCommandJobFactory::new("s.puzzle.puzzle5d@1/*#editor"));
+    assert_eq!(contract.max_raw_wire_bytes, PUZZLE5D_RETAINED_RAW_BYTES);
+    assert_eq!(PUZZLE5D_RETAINED_RAW_BYTES, 262_144);
+    assert_eq!(PUZZLE5D_RETAINED_DECODED_ITEMS, 16_384);
+    assert!(PUZZLE5D_RETAINED_RAW_BYTES > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "the retained route must admit more than the shared puzzle default it replaced");
+}
+
+/// 🎥️ LAW (camera family): `setCamera` is scoped by the ADDRESSED WINDOW, not by the payload shape —
+/// the board pane writes the flat camera, the world pane the volume camera — and each pane publishes
+/// only its own `WindowConfig`, leaving the document and the shared app config untouched.
+#[semio_framework_async_macros::async_test]
+async fn camera_verbs_publish_only_the_addressed_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let board = "puzzle5d-camera-board";
+    let world = "puzzle5d-camera-world";
+    let document_before = projection_of(&app);
+    let config_before = app.config_pack().await.expect("app config before camera publications");
+
+    let flat = dispatch(&mut app, "setCamera", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": 4.5, "y": -2.5, "zoom": 3.0 } })), Some(board)).expect("setCamera in the board pane");
+    assert!(flat.mutations.is_empty(), "a camera pose is never a document edit");
+    assert_eq!(board_window_config(&mut app, board).await.camera2d, Puzzle5dCamera2d { x: 4.5, y: -2.5, zoom: 3.0 }, "the board pane's setCamera wrote its own flat camera");
+
+    let volume = dispatch(&mut app, "setCamera", Some(&dsl::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.0 } })), Some(world)).expect("setCamera in the world pane");
+    assert!(volume.mutations.is_empty());
+    let volume_camera = world_window_config(&mut app, world).await.camera3d;
+    assert_eq!((volume_camera.position, volume_camera.target, volume_camera.zoom), ([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], 2.0), "the world pane's setCamera wrote its own volume camera");
+
+    dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": -8.0, "y": 9.0, "zoom": 0.5 } })), Some(board)).expect("setCamera2d");
+    assert_eq!(board_window_config(&mut app, board).await.camera2d, Puzzle5dCamera2d { x: -8.0, y: 9.0, zoom: 0.5 });
+    dispatch(&mut app, "setCamera3d", Some(&dsl::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [7.0, 7.0, 7.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })), Some(world)).expect("setCamera3d");
+    assert_eq!(world_window_config(&mut app, world).await.camera3d.position, [7.0, 7.0, 7.0]);
+
+    assert_eq!(projection_of(&app), document_before, "no camera verb touches the document lane");
+    let config_after = app.config_pack().await.expect("app config after camera publications");
+    assert_eq!((config_after.pack, config_after.spr), (config_before.pack, config_before.spr), "no camera verb touches the shared app config lane");
+    close_app(&mut app);
+}
+
+/// 🧲️ LAW (grid family): the snap toggle reads its `pressed` state and flips without one — reading an
+/// absent argument as `false` turned every press into an unconditional "off" — and the factor takes an
+/// absolute `value` or a `delta` nudge, clamped into the declared band the window schema states as
+/// `exclusiveMinimum: 0`.
+#[semio_framework_async_macros::async_test]
+async fn grid_verbs_publish_the_clamped_board_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let board = "puzzle5d-grid-board";
+    assert!(window_ownership::Puzzle5dBoardWindowConfig::default().grid_snap_enabled, "snap starts on");
+
+    dispatch(&mut app, "setGridSnapEnabled", Some(&dsl::json!({ "pressed": false })), Some(board)).expect("press the snap toggle off");
+    assert!(!board_window_config(&mut app, board).await.grid_snap_enabled, "the pressed state is what persists");
+    dispatch(&mut app, "setGridSnapEnabled", None, Some(board)).expect("argument-less snap toggle");
+    assert!(board_window_config(&mut app, board).await.grid_snap_enabled, "an argument-less invocation flips the current state");
+
+    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 4.0 })), Some(board)).expect("absolute grid factor");
+    assert_eq!(board_window_config(&mut app, board).await.grid_factor, 4.0);
+    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "delta": -1.0 })), Some(board)).expect("grid factor stepper nudge");
+    assert_eq!(board_window_config(&mut app, board).await.grid_factor, 3.0, "a delta nudges the current factor");
+    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 0.0 })), Some(board)).expect("grid factor below the band");
+    assert_eq!(board_window_config(&mut app, board).await.grid_factor, PUZZLE5D_GRID_FACTOR_MIN, "the schema's exclusive minimum is what the clamp protects");
+    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 1_000.0 })), Some(board)).expect("grid factor above the band");
+    assert_eq!(board_window_config(&mut app, board).await.grid_factor, PUZZLE5D_GRID_FACTOR_MAX);
+    close_app(&mut app);
+}
+
+/// 🔭️🧭️ LAW (LOD + suggestion offset): both persist into the addressed board pane's own partition, and
+/// the offset clamps into the band its slider declares whether it arrives absolute or as a nudge.
+#[semio_framework_async_macros::async_test]
+async fn lod_and_suggestion_offset_publish_the_board_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let board = "puzzle5d-lod-board";
+    dispatch(&mut app, "setLodMode", Some(&dsl::json!({ "value": "manual" })), Some(board)).expect("setLodMode");
+    assert_eq!(board_window_config(&mut app, board).await.lod_mode, "manual");
+    dispatch(&mut app, "setLodMode", Some(&dsl::json!({ "value": PUZZLE5D_LOD_MODE_AUTOMATIC })), Some(board)).expect("setLodMode back to automatic");
+    assert_eq!(board_window_config(&mut app, board).await.lod_mode, PUZZLE5D_LOD_MODE_AUTOMATIC);
+
+    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MAX + 1.0 })), Some(board)).expect("setSuggestionOffset above the band");
+    assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MAX);
+    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "delta": -1.0 })), Some(board)).expect("setSuggestionOffset stepper nudge");
+    assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MAX - 1.0, "the settings stepper's delta nudges the current offset");
+    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MIN - 1.0 })), Some(board)).expect("setSuggestionOffset below the band");
+    assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MIN);
+    close_app(&mut app);
+}
+
+/// ☀️ LAW (sun family): the four sun verbs publish the world pane's own partition and nothing else.
+#[semio_framework_async_macros::async_test]
+async fn sun_verbs_publish_the_world_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let world = "puzzle5d-sun-world";
+    let document_before = projection_of(&app);
+    let enabled_before = window_ownership::Puzzle5dWorldWindowConfig::default().sun.enabled;
+    dispatch(&mut app, "toggleSun", None, Some(world)).expect("toggleSun");
+    assert_eq!(world_window_config(&mut app, world).await.sun.enabled, !enabled_before, "toggling the sun flips the world pane's own environment");
+    dispatch(&mut app, "setSunAzimuth", Some(&dsl::json!({ "value": 123.0 })), Some(world)).expect("setSunAzimuth");
+    dispatch(&mut app, "setSunElevation", Some(&dsl::json!({ "value": 41.0 })), Some(world)).expect("setSunElevation");
+    dispatch(&mut app, "setSunIntensity", Some(&dsl::json!({ "value": 0.25 })), Some(world)).expect("setSunIntensity");
+    let sun = world_window_config(&mut app, world).await.sun;
+    assert_eq!((sun.azimuth, sun.elevation, sun.intensity), (123.0, 41.0, 0.25));
+    assert_eq!(projection_of(&app), document_before, "no sun verb touches the document lane");
+    close_app(&mut app);
+}
+
+/// ⚖️🚧️ LAW (Config-lane family): the contact tolerance and both renamed kind-weight verbs are shared
+/// app configuration, not window state — dispatched through the real retained factory they publish the
+/// `Config` lane, leave the addressed pane's window partition at generation zero and never touch the
+/// document.
+#[semio_framework_async_macros::async_test]
+async fn config_lane_verbs_publish_the_shared_app_config_only() {
+    let mut app = Box::new(app_with_registry());
+    let pane = "puzzle5d-config-pane";
+    let view = window_view(world3d::WINDOW_KIND_ID, pane);
+    let document_before = projection_of(&app);
+    let mut config_before = app.config_pack().await.expect("app config before");
+
+    let part_kind = projection_of(&app).get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("partKind")).and_then(Value::as_str).expect("the boot document carries a part kind").to_string();
+    let grip_kind = projection_of(&app)
+        .get("parts")
+        .and_then(Value::as_array)
+        .and_then(|parts| parts.iter().find_map(|part| part.get("grips").and_then(Value::as_array).and_then(|grips| grips.first()).and_then(|grip| grip.get("gripKind")).and_then(Value::as_str)))
+        .expect("the boot document carries a grip kind")
+        .to_string();
+
+    for (tool_id, args) in [
+        ("setBrushPlacementContactTolerance", dsl::json!({ "value": 0.02 })),
+        ("setPartKindWeight", dsl::json!({ "kindId": part_kind.as_str(), "value": 0.75 })),
+        ("setGripKindWeight", dsl::json!({ "kindId": grip_kind.as_str(), "value": 0.25 })),
+    ] {
+        let result = dispatch(&mut app, tool_id, Some(&args), Some(pane)).expect("Config-lane dispatch through the retained factory");
+        assert!(result.mutations.is_empty(), "{tool_id} is never a document edit");
+        let after = app.config_pack().await.expect("app config after a Config-lane publication");
+        assert_ne!((&after.pack, &after.spr), (&config_before.pack, &config_before.spr), "{tool_id} must be a real shared-app-config publication");
+        assert_eq!(app.window_config_generation(&view).await.expect("window config generation").unwrap_or(0), 0, "{tool_id} must publish no window partition");
+        config_before = after;
+    }
+
+    assert_eq!(projection_of(&app), document_before, "no Config-lane verb touches the document lane");
+    close_app(&mut app);
+}
+
+/// ⚖️ LAW: the group `setPartKindWeight`/`setGripKindWeight` re-normalize always sums to 1 and
+/// redistributes the remainder across the siblings in proportion to what they already held — the pure
+/// core both verbs share, so the retained route's law above only has to prove the lane.
+#[test]
+fn kind_weight_group_normalization_keeps_the_group_summing_to_one() {
+    let ids = ["a".to_string(), "b".to_string(), "c".to_string()];
+    let weights: HashMap<String, f64> = ids.iter().map(|id| (id.clone(), 1.0 / 3.0)).collect();
+    let normalized = puzzle5d_normalize_kind_weight_group(&weights, &ids, "a", 0.5);
+    assert!((normalized["a"] - 0.5).abs() < 1e-9, "the changed kind keeps exactly what was asked for");
+    assert!((normalized.values().sum::<f64>() - 1.0).abs() < 1e-9, "the group sums to 1");
+    assert!((normalized["b"] - normalized["c"]).abs() < 1e-9, "equal siblings stay equal");
+    let skewed: HashMap<String, f64> = [("a", 0.2), ("b", 0.6), ("c", 0.2)].into_iter().map(|(id, weight)| (id.to_string(), weight)).collect();
+    let normalized = puzzle5d_normalize_kind_weight_group(&skewed, &ids, "a", 0.5);
+    assert!((normalized.values().sum::<f64>() - 1.0).abs() < 1e-9);
+    assert!(normalized["b"] > normalized["c"], "the remainder is redistributed in proportion to what the siblings held");
+    let single = [("only".to_string(), 1.0)].into_iter().collect::<HashMap<String, f64>>();
+    let normalized = puzzle5d_normalize_kind_weight_group(&single, &["only".to_string()], "only", 0.0);
+    assert!((normalized["only"] - 1.0).abs() < 1e-9, "a one-kind group is always the whole distribution");
+}
+//#endregion 🎚️WindowAndConfigLaneVerbs
+
+//#region ☑️WindowOptionGroups
+/// 🌐️ LAW (grid group): `setGridVisible` toggles from `pressed` and flips without one, and
+/// `setGridSpacing` clamps into the band its slider declares — each in the ADDRESSED pane's own
+/// partition, never the document and never the shared app config.
+#[semio_framework_async_macros::async_test]
+async fn grid_visibility_and_spacing_publish_the_addressed_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let board = "puzzle5d-gridvis-board";
+    let world = "puzzle5d-gridvis-world";
+    let document_before = projection_of(&app);
+    let config_before = app.config_pack().await.expect("app config before the grid group");
+
+    assert!(window_ownership::Puzzle5dBoardWindowConfig::default().grid_visible, "the grid starts visible");
+    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(board)).expect("press the board grid off");
+    assert!(!board_window_config(&mut app, board).await.grid_visible, "the pressed state is what persists");
+    dispatch(&mut app, "setGridVisible", None, Some(board)).expect("argument-less grid toggle");
+    assert!(board_window_config(&mut app, board).await.grid_visible, "an argument-less invocation flips the current state");
+
+    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(world)).expect("press the world grid off");
+    assert!(!world_window_config(&mut app, world).await.grid_visible, "the world pane owns its own grid visibility");
+    assert!(board_window_config(&mut app, board).await.grid_visible, "one pane's grid toggle never reaches the other");
+
+    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 4.0 })), Some(world)).expect("absolute grid spacing");
+    assert_eq!(world_window_config(&mut app, world).await.grid_spacing, 4.0);
+    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 0.0 })), Some(world)).expect("grid spacing below the band");
+    assert_eq!(world_window_config(&mut app, world).await.grid_spacing, PUZZLE5D_GRID_SPACING_MIN);
+    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 10_000.0 })), Some(world)).expect("grid spacing above the band");
+    assert_eq!(world_window_config(&mut app, world).await.grid_spacing, PUZZLE5D_GRID_SPACING_MAX);
+
+    assert_eq!(projection_of(&app), document_before, "no grid-group verb touches the document lane");
+    let config_after = app.config_pack().await.expect("app config after the grid group");
+    assert_eq!((config_after.pack, config_after.spr), (config_before.pack, config_before.spr), "no grid-group verb touches the shared app config lane");
+    close_app(&mut app);
+}
+
+/// 🔭️ LAW (LOD trio): the two toggles read `pressed` and flip without it, and the manual slider clamps
+/// into the band `PUZZLE5D_LOD_SLIDER_MIN..=MAX` states — all three in the world pane's partition.
+#[semio_framework_async_macros::async_test]
+async fn lod_trio_publishes_the_world_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let world = "puzzle5d-lodtrio-world";
+    assert!(window_ownership::Puzzle5dWorldWindowConfig::default().lod_automatic, "automatic LOD starts on");
+
+    dispatch(&mut app, "setLodAutomatic", Some(&dsl::json!({ "pressed": false })), Some(world)).expect("press automatic LOD off");
+    assert!(!world_window_config(&mut app, world).await.lod_automatic);
+    dispatch(&mut app, "setLodAutomatic", None, Some(world)).expect("argument-less automatic LOD toggle");
+    assert!(world_window_config(&mut app, world).await.lod_automatic);
+
+    dispatch(&mut app, "setLodDepthVariable", Some(&dsl::json!({ "pressed": true })), Some(world)).expect("press depth-variable LOD on");
+    assert!(world_window_config(&mut app, world).await.lod_depth_variable);
+
+    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 250.0 })), Some(world)).expect("absolute manual LOD");
+    assert_eq!(world_window_config(&mut app, world).await.lod_manual, 250.0);
+    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": -4.0 })), Some(world)).expect("manual LOD below the band");
+    assert_eq!(world_window_config(&mut app, world).await.lod_manual, PUZZLE5D_LOD_SLIDER_MIN);
+    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 9_000.0 })), Some(world)).expect("manual LOD above the band");
+    assert_eq!(world_window_config(&mut app, world).await.lod_manual, PUZZLE5D_LOD_SLIDER_MAX);
+    close_app(&mut app);
+}
+
+/// 🎯️ LAW (selection group): `setSelectableKind` toggles exactly the named kind of the ADDRESSED pane
+/// and refuses a kind this artifact does not carry.
+#[semio_framework_async_macros::async_test]
+async fn selectable_kinds_publish_the_addressed_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let board = "puzzle5d-selectable-board";
+    let world = "puzzle5d-selectable-world";
+
+    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "grips", "pressed": false })), Some(board)).expect("press board grips off");
+    let kinds = board_window_config(&mut app, board).await.selectable_kinds;
+    assert_eq!((kinds.parts, kinds.grips, kinds.fasteners), (true, false, true), "only the named kind changed");
+    let untouched = world_window_config(&mut app, world).await.selectable_kinds;
+    assert!(untouched.grips, "the pick filter is per pane");
+
+    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "fasteners" })), Some(world)).expect("argument-less fastener toggle");
+    assert!(!world_window_config(&mut app, world).await.selectable_kinds.fasteners, "an absent `pressed` flips the current state");
+    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "vortices", "pressed": false })), Some(world)).expect("an unknown kind is a silent no-op, never a fault");
+    let after = world_window_config(&mut app, world).await.selectable_kinds;
+    assert_eq!((after.parts, after.grips), (true, true), "a kind this artifact does not carry changes nothing");
+    close_app(&mut app);
+}
+
+/// 🤏️🧭️ LAW (grip group): show/direction take only the values their select declares; anything else is a
+/// no-op, and both persist in the world pane's partition.
+#[semio_framework_async_macros::async_test]
+async fn grip_show_and_direction_publish_the_world_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let world = "puzzle5d-grip-world";
+    assert_eq!(window_ownership::Puzzle5dWorldWindowConfig::default().grip_show, PUZZLE5D_GRIP_SHOW_SELECTED);
+
+    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world)).expect("setGripShow");
+    assert_eq!(world_window_config(&mut app, world).await.grip_show, PUZZLE5D_GRIP_SHOW_ALWAYS);
+    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": "vielleicht" })), Some(world)).expect("an undeclared mode is a no-op, never a fault");
+    assert_eq!(world_window_config(&mut app, world).await.grip_show, PUZZLE5D_GRIP_SHOW_ALWAYS);
+
+    dispatch(&mut app, "setGripDirection", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_DIRECTION_INWARDS })), Some(world)).expect("setGripDirection");
+    assert_eq!(world_window_config(&mut app, world).await.grip_direction, PUZZLE5D_GRIP_DIRECTION_INWARDS);
+    dispatch(&mut app, "setGripDirection", Some(&dsl::json!({ "value": "seitwärts" })), Some(world)).expect("an undeclared direction is a no-op");
+    assert_eq!(world_window_config(&mut app, world).await.grip_direction, PUZZLE5D_GRIP_DIRECTION_INWARDS);
+    close_app(&mut app);
+}
+
+/// 🎥️ LAW (projection): `setProjection` re-derives the camera pose around the unchanged target when the
+/// change moves it, while `setProjectionParam` tunes a parameter in place and leaves the pose alone.
+#[semio_framework_async_macros::async_test]
+async fn projection_verbs_publish_the_world_window_config_and_repose_only_when_they_must() {
+    let mut app = Box::new(app_with_registry());
+    let world = "puzzle5d-projection-world";
+    let before = world_window_config(&mut app, world).await.camera3d;
+
+    dispatch(&mut app, "setProjection", Some(&dsl::json!({ "field": "orthographicView", "value": "front" })), Some(world)).expect("setProjection");
+    let reposed = world_window_config(&mut app, world).await.camera3d;
+    assert_eq!(reposed.projection.kind, "orthographic");
+    assert_eq!(reposed.projection.orthographic_view, "front");
+    assert_ne!(reposed.position, before.position, "a projection change that moves the pose re-derives position");
+    assert_eq!(reposed.target, before.target, "the target it orbits is unchanged");
+    assert!(reposed.up.is_some(), "the re-derived pose states its up vector");
+
+    dispatch(&mut app, "setProjectionParam", Some(&dsl::json!({ "param": "fov", "value": 35.0 })), Some(world)).expect("setProjectionParam");
+    let tuned = world_window_config(&mut app, world).await.camera3d;
+    assert_eq!(tuned.projection.fov, 35.0);
+    assert_eq!(tuned.position, reposed.position, "a pure parameter tweak keeps the pose");
+    close_app(&mut app);
+}
+
+/// 🎛️ LAW (transform gumball flags): each flag toggles on its own and persists in the addressed pane's
+/// partition — with both off the world pane refuses to draw a gumball nobody could grab.
+#[semio_framework_async_macros::async_test]
+async fn transform_gumball_flags_publish_the_window_config() {
+    let mut app = Box::new(app_with_registry());
+    let world = "puzzle5d-gumball-world";
+    let defaults = window_ownership::Puzzle5dWorldWindowConfig::default();
+    assert!(defaults.transform_move && defaults.transform_rotate, "both handle families start on");
+
+    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "move", "pressed": false })), Some(world)).expect("press move off");
+    let after_move = world_window_config(&mut app, world).await;
+    assert!(!after_move.transform_move && after_move.transform_rotate, "only the named flag changed");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "rotate" })), Some(world)).expect("argument-less rotate toggle");
+    let after_rotate = world_window_config(&mut app, world).await;
+    assert!(!after_rotate.transform_move && !after_rotate.transform_rotate);
+    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "scale", "pressed": false })), Some(world)).expect("an unknown flag is a no-op, never a fault");
+
+    let runtime = config::Puzzle5dRuntime { transform_move: false, transform_rotate: false, ..config::Puzzle5dRuntime::default() };
+    let marked = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new() };
+    assert!(!puzzle5d_gumball_active(&runtime, "move", &marked), "an all-off gumball never renders");
+    close_app(&mut app);
+}
+
+/// 🎚️ LAW (measure round-trip): a dispatched option change is what the pane's own chrome renders on the
+/// next frame — the "dispatch → config changes → measure reflects it" loop closed end to end.
+#[semio_framework_async_macros::async_test]
+async fn dispatched_window_options_are_what_the_next_measure_frame_renders() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setGridVisible");
+    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 6.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setGridSpacing");
+    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 320.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setLodManual");
+    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world3d::WINDOW_KIND_ID)).expect("setGripShow");
+    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "grips", "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setSelectableKind");
+    let measures = window_measures_of(&mut app, world3d::WINDOW_KIND_ID);
+    assert_eq!(toggle_pressed(&measures, "puzzle5d-play-world-grid-visible"), Some(false));
+    assert_eq!(slider_value(&measures, "puzzle5d-play-world-grid-spacing"), Some(6.0));
+    assert_eq!(slider_value(&measures, "puzzle5d-play-world-lod-value"), Some(320.0));
+    assert_eq!(select_value(&measures, "puzzle5d-play-world-grip-show").as_deref(), Some(PUZZLE5D_GRIP_SHOW_ALWAYS));
+    assert_eq!(toggle_pressed(&measures, "puzzle5d-play-world-select-grips"), Some(false));
+
+    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(board2d::WINDOW_KIND_ID)).expect("board setGridVisible");
+    let board_measures = window_measures_of(&mut app, board2d::WINDOW_KIND_ID);
+    assert_eq!(toggle_pressed(&board_measures, "puzzle5d-play-board-grid-visible"), Some(false));
+    assert_eq!(toggle_pressed(&board_measures, "puzzle5d-play-board-select-parts"), Some(true));
+    close_app(&mut app);
+}
+
+/// 🕹️ LAW (one shared interaction domain): the SAME `Puzzle5dInteractionSnapshot` feeds both panes, so a
+/// part selected or hovered from either pane is painted by the board scene AND by the world scene.
+#[test]
+fn one_interaction_snapshot_paints_both_panes() {
+    let mut app = Box::new(app_with_registry());
+    let projection = projection_of(&app);
+    let part_id = first_part_id(&app);
+    let interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec![part_id.clone()], hovered: vec![part_id.clone()] };
+    let envelope = scene_from_projection_with_interaction(&projection, config::Puzzle5dRuntime::default(), "select", interaction);
+
+    let board = board2d::puzzle5d_board_scene(&envelope);
+    assert!(board.selection_json.contains(part_id.as_str()), "the board pane paints the shared selection");
+    assert_eq!(board.hovered_id.as_deref(), Some(part_id.as_str()), "the board pane paints the shared hover");
+
+    let world_instances: Value = parse(&world3d::world_instances_json(&envelope.document, &envelope.interaction, None)).expect("instancesJson");
+    let marked = world_instances.as_array().and_then(|rows| rows.iter().find(|row| row.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).expect("the world pane carries the same part");
+    assert_eq!(marked.get("selected").and_then(Value::as_bool), Some(true), "the world pane paints the shared selection");
+    assert_eq!(marked.get("hovered").and_then(Value::as_bool), Some(true), "the world pane paints the shared hover");
+    close_app(&mut app);
+}
+//#endregion ☑️WindowOptionGroups
+
+//#region 🧩️ArtifactLaneVerbs
+/// 🧩️ Every Artifact-lane / interaction verb slice 5A2 migrated, with the lanes its retained route may
+/// publish to. An undeclared lane is a runtime fault and a `BatchOnlyPendingRewrite` row is hard-dead, so
+/// this table is the whole slice's registration contract in one place.
+const MIGRATED_ARTIFACT_LANE_VERBS: &[(&str, &[ArtifactToolPublicationLane])] = &[
+    ("addBrushPart", &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction]),
+    ("addNode", &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction]),
+    ("addPartKind", &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction]),
+    ("applyBoardEvents", &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::Interaction]),
+    ("createFastener", &[ArtifactToolPublicationLane::Artifact]),
+    ("deleteFastener", &[ArtifactToolPublicationLane::Artifact]),
+    ("editFastener", &[ArtifactToolPublicationLane::Artifact]),
+    ("focusSelection", &[ArtifactToolPublicationLane::WindowConfig]),
+    ("patchFastener", &[ArtifactToolPublicationLane::Artifact]),
+    ("patchGrip", &[ArtifactToolPublicationLane::Artifact]),
+    ("patchPart", &[ArtifactToolPublicationLane::Artifact]),
+    ("proximityConnect", &[ArtifactToolPublicationLane::Artifact]),
+    ("registerBrushMesh", &[ArtifactToolPublicationLane::HostOnly]),
+    ("retargetFastener", &[ArtifactToolPublicationLane::Artifact]),
+    ("rotateSelection", &[ArtifactToolPublicationLane::Artifact]),
+    ("scaleSelection", &[ArtifactToolPublicationLane::Artifact]),
+    ("selectSameKindSelection", &[ArtifactToolPublicationLane::Interaction]),
+    ("setActiveExample", &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction]),
+    ("translateSelection", &[ArtifactToolPublicationLane::Artifact]),
+    ("worldRelocate", &[ArtifactToolPublicationLane::Artifact]),
+];
+
+/// 🧵️ LAW: every Artifact-lane verb is a live retained tool — in the id list, in the bounded first-step
+/// proofs, in the publication contracts with EXACTLY the lanes above, and classified `Migrated`.
+#[test]
+fn artifact_lane_verbs_are_registered_migrated_retained_tools() {
+    let source = include_str!("../../🦀️.rs");
+    let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
+    let proofs = production.split_once("semio_framework_plugin::bounded_first_step_tool_proofs!").and_then(|(_, rest)| rest.split_once("fn register_tool_job_factories")).map(|(proofs, _)| proofs).expect("proof block");
+    for (tool_id, lanes) in MIGRATED_ARTIFACT_LANE_VERBS {
+        assert!(PUZZLE5D_RETAINED_TOOL_IDS.contains(tool_id), "{tool_id} must be a retained tool id");
+        assert!(proofs.contains(&format!("\"{tool_id}\"")), "{tool_id} must carry a bounded first-step proof");
+        assert!(production.contains(&format!(".action_interactive_job(\"{tool_id}\", InteractiveJobClassification::Migrated)")), "{tool_id} must be classified Migrated");
+        assert_eq!(declared_lanes(tool_id), *lanes, "{tool_id} declares exactly the lanes its retained route publishes to");
+    }
+    assert!(!production.contains("BatchOnlyPendingRewrite"), "no puzzle 5d verb may stay on the hard-dead classification");
+}
+
+/// 🗡️ LAW: the duplicate verb ids are GONE, not aliased — one real verb each for focus, select-same-kind
+/// and brush placement, so no context-menu or keybinding row can address a dead twin.
+#[test]
+fn duplicate_verb_ids_are_removed_rather_than_aliased() {
+    let source = include_str!("../../🦀️.rs");
+    let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
+    for removed in ["zoomToSelection", "\"selectSameKind\""] {
+        assert!(!production.contains(removed), "{removed} must not survive anywhere in the production source");
+    }
+    assert!(production.contains(".action(\"focusSelection\")"), "the context menu addresses the one real focus verb");
+    assert!(Puzzle5dCommand::try_from_action("zoomToSelection", None, None).is_none(), "the removed focus alias has no command variant");
+    assert!(Puzzle5dCommand::try_from_action("addBrushObject", None, None).is_none(), "the removed brush alias has no command variant");
+    assert!(Puzzle5dCommand::try_from_action("selectSameKind", None, None).is_none(), "the removed selection alias has no command variant");
+}
+
+/// 🛍️ LAW: the example switcher really switches. Each of the three shipped examples loads through the real
+/// retained factory and the DOCUMENT changes to that example's own part count; the one whose switch exceeds
+/// a single edit's fixed work capacity is REFUSED with a localized notice and leaves the document untouched,
+/// never faulting.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_loads_every_example_and_refuses_the_oversized_one() {
+    let mut app = Box::new(app_with_registry());
+    for (example_id, expected) in [("", 0usize), ("concrete-forest", concrete_forest_example_document().parts.len()), ("nakagin", nakagin_example_document().parts.len())] {
+        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id}: {error:?}"));
+        assert_eq!(part_count(&app), expected, "setActiveExample {example_id} really replaced the document");
+    }
+    let before = projection_of(&app);
+    let refusal = dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "capsule-dream" })), None).expect("an oversized example refuses, it never faults");
+    assert!(refusal.mutations.is_empty(), "a refused example switch publishes no document edit");
+    assert_eq!(projection_of(&app), before, "a refused example switch leaves the document exactly as it was");
+    let notices = refusal.requested_effects.iter().filter(|effect| matches!(effect, Effect::Notify { .. })).count();
+    assert_eq!(notices, 1, "a refusal is visible: exactly one notice, got {:?}", refusal.requested_effects);
+    close_app(&mut app);
+}
+
+/// 🎯️ LAW: `focusSelection` publishes the ADDRESSED pane's own camera — the world pane's orbit target and the
+/// board pane's flat centre — through that pane's `WindowConfig`, and never edits the document.
+#[semio_framework_async_macros::async_test]
+async fn focus_selection_publishes_the_addressed_pane_camera() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let part_id = first_part_id(&app);
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select one part");
+    let world = "puzzle5d-focus-world";
+    let before = world_window_config(&mut app, world).await.camera3d;
+    let focused = dispatch(&mut app, "focusSelection", None, Some(world)).expect("focusSelection in the world pane");
+    assert!(focused.mutations.is_empty(), "a camera focus is never a document edit");
+    let after = world_window_config(&mut app, world).await.camera3d;
+    assert_ne!(after.target, before.target, "the world pane's orbit target moved onto the selection");
+
+    let board = "puzzle5d-focus-board";
+    let board_before = board_window_config(&mut app, board).await.camera2d;
+    dispatch(&mut app, "focusSelection", None, Some(board)).expect("focusSelection in the board pane");
+    let board_after = board_window_config(&mut app, board).await.camera2d;
+    assert!(board_after != board_before, "the board pane's flat camera moved onto the selection");
+    close_app(&mut app);
+}
+
+/// 🚀️ LAW (dual pose): a world translate moves BOTH poses of every selected part — the volume origin by the
+/// world delta and the flat pin by the same delta through the one board↔world scale — so the board never
+/// falls behind the world. A LOCKED part refuses the gesture with a notice and no edit.
+#[semio_framework_async_macros::async_test]
+async fn translate_selection_moves_both_poses_and_refuses_a_locked_part() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let part_id = first_part_id(&app);
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select one part");
+    let read = |app: &Puzzle5dApp, id: &str| -> (f64, f64, [f64; 3]) {
+        let projection = projection_of(app);
+        let row = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id))).expect("part row").clone();
+        let flat = row.get("2d").expect("flat pose").clone();
+        let origin = row.get("3d").and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).expect("volume origin");
+        (flat.get("x").and_then(Value::as_f64).unwrap_or_default(), flat.get("y").and_then(Value::as_f64).unwrap_or_default(), origin)
+    };
+    let (flat_x, flat_y, origin) = read(&app, &part_id);
+    dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "dx": 0.5, "dy": -0.25, "dz": 0.0 })), Some(world3d::WINDOW_KIND_ID)).expect("translateSelection");
+    let (next_x, next_y, next_origin) = read(&app, &part_id);
+    assert!((next_origin[0] - (origin[0] + 0.5)).abs() < 1e-9 && (next_origin[1] - (origin[1] - 0.25)).abs() < 1e-9, "the volume origin moved by the world delta");
+    assert!((next_x - (flat_x + 0.5 / PUZZLE5D_FLAT_TO_WORLD)).abs() < 1e-9, "the flat pose tracked the world delta on x");
+    assert!((next_y - (flat_y + 0.25 / PUZZLE5D_FLAT_TO_WORLD)).abs() < 1e-9, "the flat pose tracked the world delta on y");
+
+    dispatch(&mut app, "setSelectionFlag", Some(&dsl::json!({ "flag": "locked", "value": true })), None).expect("lock the selection");
+    let locked = projection_of(&app);
+    let refusal = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "dx": 5.0 })), Some(world3d::WINDOW_KIND_ID)).expect("a locked transform refuses, it never faults");
+    assert!(refusal.mutations.is_empty(), "a locked part publishes no edit");
+    assert_eq!(projection_of(&app), locked, "a locked part did not move");
+    assert!(refusal.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "a locked refusal is visible: {:?}", refusal.requested_effects);
+    close_app(&mut app);
+}
+
+/// 🎲️ LAW (board fold): deleting a node from the board removes the part AND every fastener incident on it —
+/// one gesture, one edit, no dangling edge.
+#[semio_framework_async_macros::async_test]
+async fn board_node_delete_removes_the_part_and_its_fasteners() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let projection = projection_of(&app);
+    let victim = projection
+        .get("fasteners")
+        .and_then(Value::as_array)
+        .and_then(|fasteners| fasteners.first())
+        .and_then(|fastener| fastener.get("source"))
+        .and_then(Value::as_str)
+        .and_then(|grip| grip.split_once(':').map(|(part_id, _)| part_id.to_string()))
+        .expect("nakagin connects at least one part");
+    let parts_before = part_count(&app);
+    let fasteners_before = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+    let incident = projection.get("fasteners").and_then(Value::as_array).map_or(0, |fasteners| {
+        fasteners
+            .iter()
+            .filter(|fastener| [fastener.get("source"), fastener.get("target")].into_iter().flatten().filter_map(Value::as_str).any(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == victim)))
+            .count()
+    });
+    assert!(incident > 0, "the chosen node really carries fasteners");
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &victim).expect("select the victim");
+    let events = dsl::json!({ "eventsJson": format!("[{{\"name\":\"nodeDelete\",\"payload\":{{\"id\":\"{victim}\"}}}}]") });
+    dispatch(&mut app, "applyBoardEvents", Some(&events), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents nodeDelete");
+    let after = projection_of(&app);
+    assert_eq!(part_count(&app), parts_before - 1, "the node is gone from the document");
+    assert_eq!(after.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len), fasteners_before - incident, "every fastener incident on the node went with it");
+    assert!(app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).is_none_or(|selection| !selection.ids.contains(&victim)), "the deleted node is no longer selected");
+    close_app(&mut app);
+}
+
+/// 🛍️ LAW: a catalogue add really adds and re-selects — the placed part is what every follow-up verb then
+/// addresses, instead of whatever was selected before.
+#[semio_framework_async_macros::async_test]
+async fn add_part_kind_creates_a_part_and_reselects_it() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
+    let before = part_count(&app);
+    dispatch(&mut app, "addPartKind", Some(&dsl::json!({ "partKind": "Part" })), None).expect("addPartKind");
+    assert_eq!(part_count(&app), before + 1, "the catalogue add really wrote the document");
+    let created = projection_of(&app).get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("created id").to_string();
+    let selection = app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert_eq!(selection.granularity, PUZZLE5D_GRANULARITY_PART, "the placed part is selected at part granularity");
+    assert_eq!(selection.ids, vec![created], "the placed part is what the next gesture addresses");
+    close_app(&mut app);
+}
+
+/// 🧬️ LAW: `selectSameKindSelection` widens the live selection to every part of the clicked part's kind
+/// through ONE framework interaction write, and edits no document.
+#[semio_framework_async_macros::async_test]
+async fn select_same_kind_widens_the_live_selection() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let projection = projection_of(&app);
+    let rows = projection.get("parts").and_then(Value::as_array).cloned().unwrap_or_default();
+    let part_id = first_part_id(&app);
+    let kind = rows.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str())).and_then(|part| part.get("partKind")).and_then(Value::as_str).expect("a kinded part").to_string();
+    let same_kind = rows.iter().filter(|part| part.get("partKind").and_then(Value::as_str) == Some(kind.as_str())).count();
+    assert!(same_kind > 1, "nakagin ships more than one part of the first part's kind");
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select one part");
+    let widened = dispatch(&mut app, "selectSameKindSelection", None, None).expect("selectSameKindSelection");
+    assert!(widened.mutations.is_empty(), "widening the selection is never a document edit");
+    let selection = app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert_eq!(selection.ids.len(), same_kind, "every part of that kind is selected now");
+    close_app(&mut app);
+}
+
+/// 🔗️ LAW (fastener CRUD): edit and delete both reach the document through the real retained factory, and
+/// each one changes it.
+#[semio_framework_async_macros::async_test]
+async fn fastener_crud_reaches_the_document() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let projection = projection_of(&app);
+    let fastener = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.first()).cloned().expect("nakagin ships fasteners");
+    let fastener_id = fastener.get("id").and_then(Value::as_str).expect("fastener id").to_string();
+
+    dispatch(&mut app, "editFastener", Some(&dsl::json!({ "id": fastener_id, "gap": 0.75 })), None).expect("editFastener");
+    let edited = projection_of(&app);
+    let gap = edited
+        .get("fasteners")
+        .and_then(Value::as_array)
+        .and_then(|rows| rows.iter().find(|row| row.get("id").and_then(Value::as_str) == Some(fastener_id.as_str())))
+        .and_then(|row| row.get("gap"))
+        .and_then(Value::as_f64);
+    assert_eq!(gap, Some(0.75), "editFastener really wrote the fastener geometry");
+
+    let before = edited.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+    dispatch(&mut app, "deleteFastener", Some(&dsl::json!({ "id": fastener_id })), None).expect("deleteFastener");
+    assert_eq!(projection_of(&app).get("fasteners").and_then(Value::as_array).map_or(0, Vec::len), before - 1, "deleteFastener really removed it");
+    close_app(&mut app);
+}
+
+/// 🩹️ LAW (inspector write-back): `patchPart` writes the addressed field, and a patch that addresses nothing
+/// completes with ONE notice instead of the silent no-op the pre-migration arm fell through with.
+#[semio_framework_async_macros::async_test]
+async fn patch_part_writes_the_document_and_notices_an_inapplicable_edit() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "nakagin" })), None).expect("nakagin");
+    let part_id = first_part_id(&app);
+    dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id, "field": "x", "value": 42.0 })), None).expect("patchPart x");
+    let flat_x = projection_of(&app)
+        .get("parts")
+        .and_then(Value::as_array)
+        .and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str())))
+        .and_then(|part| part.get("2d"))
+        .and_then(|flat| flat.get("x"))
+        .and_then(Value::as_f64);
+    assert_eq!(flat_x, Some(42.0), "patchPart really wrote the flat pose");
+
+    let before = projection_of(&app);
+    let refusal = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": "no-such-part", "field": "x", "value": 1.0 })), None).expect("an unaddressed patch refuses, it never faults");
+    assert!(refusal.mutations.is_empty());
+    assert_eq!(projection_of(&app), before, "an unaddressed patch leaves the document alone");
+    assert!(refusal.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "an inapplicable patch is visible: {:?}", refusal.requested_effects);
+    close_app(&mut app);
+}
+//#endregion 🧩️ArtifactLaneVerbs
+
+//#region 📤️📥️DocumentIO
+/// 📤️📥️ LAW: exporting a document and importing those exact bytes back yields a BYTE-IDENTICAL
+/// document, for every shipped example — including the one above the transport budget, because the
+/// projection and the paged reassembly are the same law the transport only carries. The reassembly
+/// runs through the paged cursor (`puzzle5d_import_root_value`), never one contiguous string, so this
+/// also proves the cursor reads every member of the largest example correctly.
+#[test]
+fn export_import_round_trips_every_shipped_example_byte_for_byte() {
+    for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
+        let exported = export_fixture::puzzle5d_export_json(&document);
+        let pages = import_fixture::puzzle5d_import_chunks(&exported);
+        assert!(pages.iter().all(|page| page.len() <= import_fixture::PUZZLE5D_IMPORT_CHUNK_BYTES), "every chunk fits the wire page");
+        assert_eq!(pages.iter().map(String::len).sum::<usize>(), exported.len(), "chunking loses no byte");
+        let root = import_fixture::puzzle5d_import_root_value(&pages).expect("paged root parse");
+        let reimported: Puzzle5dDocument = serde_json::from_value(root).expect("the reassembled root is a puzzle 5d document");
+        assert_eq!(export_fixture::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
+    }
+}
+
+/// 📤️ LAW: the export lane is chosen by payload size, not by guesswork — inline under one guest wire
+/// page, segmented above it, and a NOTICE above what one segmented download may carry. The three
+/// shipped examples are deliberately one case each.
+#[test]
+fn export_publication_picks_its_lane_by_payload_size() {
+    let inline_budget = export_fixture::puzzle5d_export_inline_budget_bytes();
+    let segmented_budget = export_fixture::puzzle5d_export_segmented_budget_bytes().expect("segmented budget");
+    assert!(inline_budget < segmented_budget, "the inline page must be the narrower of the two budgets");
+    for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
+        let bytes = export_fixture::puzzle5d_export_json(&document).len();
+        let publication = export_fixture::puzzle5d_export_publication(&document).expect("publication resolves");
+        let arm = match publication {
+            export_fixture::Puzzle5dExportPublication::Inline(_) => "inline",
+            export_fixture::Puzzle5dExportPublication::Segmented(_) => "segmented",
+            export_fixture::Puzzle5dExportPublication::Refused(_) => "refused",
+        };
+        let expected = if bytes <= inline_budget {
+            "inline"
+        } else if bytes <= segmented_budget {
+            "segmented"
+        } else {
+            "refused"
+        };
+        assert_eq!(arm, expected, "{} is {bytes} B", document.label.clone().unwrap_or_default());
+    }
+    // 🗂️ Concrete Forest is the inline case and Capsule Dream the refusal case; if either stopped being
+    // so the budgets moved, and this law would otherwise pass while proving nothing.
+    assert!(export_fixture::puzzle5d_export_json(&concrete_forest_example_document()).len() <= inline_budget, "Concrete Forest is the inline case");
+    assert!(export_fixture::puzzle5d_export_json(&capsule_dream_example_document()).len() > segmented_budget, "Capsule Dream is the refusal case");
+}
+
+/// 📤️ LAW: the download filename is the document's own label as a slug, so exporting two examples
+/// never lands as two files with one name; a document with no label keeps the app-generic name.
+#[test]
+fn export_filename_follows_the_document_label() {
+    assert_eq!(export_fixture::puzzle5d_export_filename(&concrete_forest_example_document()), "concrete-forest.json");
+    assert_eq!(export_fixture::puzzle5d_export_filename(&nakagin_example_document()), "nakagin-capsule-tower.json");
+    assert_eq!(export_fixture::puzzle5d_export_filename(&capsule_dream_example_document()), "capsule-dream.json");
+    assert_eq!(export_fixture::puzzle5d_export_filename(&empty_document()), "puzzle-5d.json");
+}
+
+/// 📥️ LAW: a chunk that does not CLOSE its run stages and changes nothing — no document edit, no
+/// history row — and the closing chunk lands the whole document as ONE edit.
+#[semio_framework_async_macros::async_test]
+async fn import_stages_every_chunk_and_only_the_closing_one_edits_the_document() {
+    let mut app = app_with_registry();
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
+    assert_eq!(part_count(&app), 0);
+    let target = concrete_forest_example_document();
+    let payload = export_fixture::puzzle5d_export_json(&target);
+    let pages = import_fixture::puzzle5d_import_chunks(&payload);
+    assert!(pages.len() > 1, "the round-trip law needs a document that really chunks, got {} page(s)", pages.len());
+    let count = pages.len();
+    for (index, page) in pages.iter().enumerate() {
+        let args = dsl::json!({ "payload": page.as_str(), "name": "concrete-forest.json", "chunk": index, "chunkCount": count });
+        let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("import chunk");
+        if index + 1 < count {
+            assert!(result.mutations.is_empty(), "chunk {index} of {count} staged and must edit nothing");
+            assert_eq!(part_count(&app), 0, "chunk {index} of {count} must leave the document untouched");
+        }
+    }
+    assert_eq!(part_count(&app), target.parts.len(), "the closing chunk landed the whole document");
+    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    assert_eq!(part_count(&app), 0, "the whole import is ONE undoable edit");
+    close_app(&mut app);
+}
+
+/// 📥️ LAW: every refusal answers. A document over the import budget, a chunk that skips its cursor
+/// and a payload that is not a puzzle 5d document each publish a named notice and leave the document
+/// exactly as it was — never a silent no-op, and never a fault.
+#[semio_framework_async_macros::async_test]
+async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let cases = [
+        // 🕳️ A chunk past the cursor with no open run.
+        dsl::json!({ "payload": "{\"schema\":\"puzzle.5d\"", "name": "gap.json", "chunk": 3, "chunkCount": 4 }),
+        // 📦️ A run claiming more chunks than the whole budget admits.
+        dsl::json!({ "payload": "{}", "name": "huge.json", "chunk": 0, "chunkCount": import_fixture::PUZZLE5D_IMPORT_MAXIMUM_CHUNKS + 1 }),
+        // 🔤️ One whole chunk that is not a puzzle 5d document.
+        dsl::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json", "chunk": 0, "chunkCount": 1 }),
+    ];
+    for args in cases {
+        let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("a refused import answers, it never faults");
+        assert!(result.mutations.is_empty(), "a refused import emits no mutation: {args:?}");
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "a refused import is visible: {:?}", result.requested_effects);
+        assert_eq!(projection_of(&app), before, "a refused import leaves the document alone: {args:?}");
+    }
+    close_app(&mut app);
+}
+
+/// 📥️ LAW: the staging area is keyed by `(name, chunkCount)` — a chunk the run already admitted is a
+/// RETRANSMISSION acknowledged at the cursor it stands on, not a gap that costs the whole upload.
+#[test]
+fn a_retransmitted_import_chunk_is_acknowledged_at_the_cursor() {
+    let envelope = |chunk: usize| import_fixture::Puzzle5dImportEnvelope { name: "retransmit.json".into(), chunk, chunk_count: 3 };
+    assert_eq!(import_fixture::stage_import_chunk(&envelope(0), "{\"schema\":\"puzzle.5d\","), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 1, chunk_count: 3 }));
+    assert_eq!(import_fixture::stage_import_chunk(&envelope(1), "\"parts\":[],"), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 2, chunk_count: 3 }));
+    assert_eq!(import_fixture::stage_import_chunk(&envelope(1), "\"parts\":[],"), Ok(import_fixture::Puzzle5dImportStep::Staged { next_chunk: 2, chunk_count: 3 }), "a retransmission holds the cursor");
+    assert_eq!(import_fixture::stage_import_chunk(&envelope(2), "\"fasteners\":[]}"), Ok(import_fixture::Puzzle5dImportStep::Complete(vec!["{\"schema\":\"puzzle.5d\",".into(), "\"parts\":[],".into(), "\"fasteners\":[]}".into()])));
+    assert!(import_fixture::staged_import_runs().iter().all(|run| run.0 != "retransmit.json"), "a closed run releases its slot");
+}
+
+/// 🗂️ LAW: `openImportFixture` asks the HOST for a file and edits nothing — the picker re-dispatches
+/// `importFixture`, which is the verb that owns the edit.
+#[semio_framework_async_macros::async_test]
+async fn open_import_fixture_requests_a_file_and_edits_nothing() {
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let result = dispatch(&mut app, "openImportFixture", None, None).expect("openImportFixture");
+    assert!(result.mutations.is_empty(), "a file picker is not a document edit");
+    assert_eq!(projection_of(&app), before);
+    let requested = result
+        .requested_effects
+        .iter()
+        .find_map(|effect| match effect {
+            Effect::RequestFileOpen { import_action, accept, multiple, .. } => Some((import_action.clone(), accept.clone(), *multiple)),
+            _ => None,
+        })
+        .expect("openImportFixture requests a file open");
+    assert_eq!(requested.0, "importFixture", "the picker re-dispatches the import verb");
+    assert!(requested.1.contains("json"));
+    assert!(!requested.2, "one document at a time");
+    close_app(&mut app);
+}
+//#endregion 📤️📥️DocumentIO
+
+//#region 🗨️AddPartDialog
+/// 🗨️ LAW: `openAddPartDialog` opens the DECLARED dialog and edits nothing; the dialog submits the
+/// existing `addPartKind` operation, so the dialog is a form over a verb, never a second verb.
+#[semio_framework_async_macros::async_test]
+async fn open_add_part_dialog_opens_the_declared_dialog_and_edits_nothing() {
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let result = dispatch(&mut app, "openAddPartDialog", None, None).expect("openAddPartDialog");
+    assert!(result.mutations.is_empty(), "opening a dialog is not a document edit");
+    assert_eq!(projection_of(&app), before);
+    let opened = result.requested_effects.iter().find_map(|effect| match effect {
+        Effect::OpenDialog { dialog_id, .. } => Some(dialog_id.clone()),
+        _ => None,
+    });
+    assert_eq!(opened.as_deref(), Some(open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG));
+    let definition = create_puzzle5d_app();
+    let dialog = definition.dialogs.iter().find(|dialog| dialog.id == open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG).expect("the opened dialog is declared");
+    assert_eq!(dialog.action.as_str(), "addPartKind", "the dialog submits the existing add-part verb");
+    close_app(&mut app);
+}
+
+/// 🗨️ LAW: the dialog enumerates LIVE part kinds from the shipped documents' own `kindCatalogs` —
+/// every option is a kind some document really declares, the literal placeholder is gone, and the
+/// dialog and the standalone arg form offer the SAME select so they cannot drift.
+#[semio_framework_async_macros::async_test]
+async fn add_part_dialog_enumerates_live_part_kinds() {
+    let definition = create_puzzle5d_app();
+    let dialog = definition.dialogs.iter().find(|dialog| dialog.id == open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG).expect("addPart dialog");
+    let arg = dialog.args.iter().find(|arg| arg.id == "partKind").expect("the dialog declares the partKind select");
+    assert!(arg.required, "a kind must be picked before the dialog submits");
+    let offered: Vec<&str> = arg.options.iter().map(|option| option.value.as_str()).collect();
+    assert!(!offered.is_empty() && offered.len() <= PUZZLE5D_PART_KIND_OPTIONS_MAX);
+    assert!(!offered.contains(&"Part"), "the static placeholder kind is gone: {offered:?}");
+    let declared: std::collections::BTreeSet<String> = [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()]
+        .iter()
+        .flat_map(|document| {
+            document
+                .kind_catalogs
+                .as_ref()
+                .and_then(|catalogs| catalogs.get("parts"))
+                .and_then(serde_json::Value::as_array)
+                .map(|entries| entries.iter().filter_map(|entry| entry.get("id").and_then(serde_json::Value::as_str).map(str::to_string)).collect::<Vec<_>>())
+                .unwrap_or_default()
+        })
+        .collect();
+    assert!(offered.iter().all(|option| declared.contains(*option)), "every offered kind is declared by a shipped catalog: {offered:?}");
+    assert!(declared.iter().any(|kind| offered.contains(&kind.as_str())), "at least one real catalog kind is reachable");
+    let form = definition.actions.iter().find(|action| action.id == "addPartKind").expect("addPartKind is declared");
+    assert!(!form.in_palette, "the parametrized verb is not a second palette row beside the dialog");
+    close_app(&mut app_with_registry());
+}
+//#endregion 🗨️AddPartDialog
+
+//#region 🖱️ContextMenuRows
+/// 🖱️ Builds one context-menu request for a surface selection of `(domain, ids)` groups.
+fn context_menu_of(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    let request = ContextMenuRequest {
+        menu: UiMenuRef { id: "world3d".into(), args: None },
+        surface: Some(ContextMenuSurfaceTarget {
+            surface_id: world3d::WINDOW_KIND_ID.into(),
+            kind: "world3d".into(),
+            hits: vec![],
+            selection: groups.into_iter().map(|(domain, ids)| ContextMenuSelectionGroup { domain: domain.into(), ids }).collect(),
+            text: None,
+        }),
+        window_instance_id: None,
+        point: None,
+    };
+    semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()))
+}
+
+/// 🖱️ Every action id a menu row carries, at any depth.
+fn context_menu_actions(rows: &[semio_framework_plugin::ContextMenuItemSpec]) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut stack: Vec<&semio_framework_plugin::ContextMenuItemSpec> = rows.iter().collect();
+    while let Some(row) = stack.pop() {
+        if let Some(action) = row.action.as_deref() {
+            out.push(action.to_string());
+        }
+        if let Some(children) = row.children.as_ref() {
+            stack.extend(children.iter());
+        }
+    }
+    out
+}
+
+/// 🖱️ LAW: EVERY context-menu row resolves to something the app can really dispatch — a declared
+/// action classified `Migrated` (an unmigrated verb is hard-dead at the dispatch gate, so a row
+/// pointing at one is a visibly dead menu entry), or one of the four framework-reserved verbs this
+/// menu is allowed to name. This is the law the 3d `zoomToSelection` defect would have caught.
+#[semio_framework_async_macros::async_test]
+async fn every_context_menu_row_resolves_to_a_live_verb() {
+    let definition = create_puzzle5d_app();
+    let migrated: std::collections::BTreeSet<&str> = definition
+        .actions
+        .iter()
+        .filter(|action| definition.action_interactive_jobs.get(action.id.as_str()).copied() == Some(InteractiveJobClassification::Migrated))
+        .map(|action| action.id.as_str())
+        .collect();
+    let mut app = app_with_registry();
+    let part_id = first_part_id(&app);
+    let projection = projection_of(&app);
+    let grip_id = projection
+        .get("parts")
+        .and_then(Value::as_array)
+        .and_then(|parts| parts.iter().find_map(|part| Some(puzzle5d_grip_full_id(part.get("id")?.as_str()?, part.get("grips")?.as_array()?.first()?.get("id")?.as_str()?))))
+        .expect("a shipped part carries a grip");
+    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("a shipped fastener").to_string();
+    let surfaces = [
+        vec![],
+        vec![(PUZZLE5D_GRANULARITY_PART, vec![part_id.clone()])],
+        vec![(PUZZLE5D_GRANULARITY_GRIP, vec![grip_id.clone()])],
+        vec![(PUZZLE5D_GRANULARITY_FASTENER, vec![fastener_id.clone()])],
+    ];
+    for groups in surfaces {
+        let rows = context_menu_of(&mut app, groups.clone());
+        assert!(!rows.is_empty(), "every selection granularity offers rows, {groups:?} offered none");
+        for action in context_menu_actions(&rows) {
+            assert!(
+                migrated.contains(action.as_str()) || PUZZLE5D_CONTEXT_MENU_RESERVED_ACTIONS.contains(&action.as_str()),
+                "context-menu row {action:?} for {groups:?} is neither a Migrated app action nor a declared reserved verb"
+            );
+        }
+    }
+    close_app(&mut app);
+}
+
+/// 🖱️ LAW: the rows offered depend on WHAT is selected — an empty surface offers the no-subject
+/// verbs, a part the selection vocabulary, a grip the suggestions entry point, a fastener its own
+/// delete. Each branch names the verbs that branch exists for.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_rows_follow_the_selected_granularity() {
+    let mut app = app_with_registry();
+    let part_id = first_part_id(&app);
+    let projection = projection_of(&app);
+    let grip_id = projection
+        .get("parts")
+        .and_then(Value::as_array)
+        .and_then(|parts| parts.iter().find_map(|part| Some(puzzle5d_grip_full_id(part.get("id")?.as_str()?, part.get("grips")?.as_array()?.first()?.get("id")?.as_str()?))))
+        .expect("a shipped part carries a grip");
+    let fastener_id = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.first()).and_then(|row| row.get("id")).and_then(Value::as_str).expect("a shipped fastener").to_string();
+
+    let empty = context_menu_actions(&context_menu_of(&mut app, vec![]));
+    for expected in ["selectAll", "paste", "openAddPartDialog"] {
+        assert!(empty.contains(&expected.to_string()), "an empty surface offers {expected}, got {empty:?}");
+    }
+    assert!(!empty.contains(&"deleteSelection".to_string()), "nothing selected means nothing to delete: {empty:?}");
+
+    let part = context_menu_actions(&context_menu_of(&mut app, vec![(PUZZLE5D_GRANULARITY_PART, vec![part_id])]));
+    for expected in ["duplicateSelection", "copy", "cut", "selectSameKindSelection", "focusSelection", "setSelectionFlag", "deleteSelection"] {
+        assert!(part.contains(&expected.to_string()), "a part selection offers {expected}, got {part:?}");
+    }
+
+    let grip_rows = context_menu_of(&mut app, vec![(PUZZLE5D_GRANULARITY_GRIP, vec![grip_id.clone()])]);
+    let grip = context_menu_actions(&grip_rows);
+    assert!(grip.contains(&"targetBrushSuggestions".to_string()), "one selected grip offers the suggestions entry point, got {grip:?}");
+    let suggest = grip_rows.iter().find(|row| row.id == "suggest").expect("the suggest row");
+    assert_eq!(suggest.args.as_ref().and_then(|args| args.get("fullId")).and_then(dsl::DslValue::as_str), Some(grip_id.as_str()), "the suggest row names the grip it was opened on");
+
+    let fastener_rows = context_menu_of(&mut app, vec![(PUZZLE5D_GRANULARITY_FASTENER, vec![fastener_id.clone()])]);
+    let fastener = context_menu_actions(&fastener_rows);
+    assert_eq!(fastener, vec!["deleteFastener".to_string()], "a fastener offers exactly its own delete, got {fastener:?}");
+    let delete = fastener_rows.iter().find(|row| row.id == "delete").expect("the delete row");
+    assert_eq!(delete.args.as_ref().and_then(|args| args.get("id")).and_then(dsl::DslValue::as_str), Some(fastener_id.as_str()), "the delete row names the fastener it was opened on");
+    assert_eq!(delete.destructive, Some(true));
+    close_app(&mut app);
+}
+//#endregion 🖱️ContextMenuRows
+
+//#region 📋️ClipboardLaws
+/// 🔒️ LAW: a CUT copies a locked part but never removes it — a lock exists to refuse a destructive
+/// gesture, and the fasteners of a surviving part survive with it. The unlocked siblings still go.
+#[test]
+fn a_cut_copies_a_locked_part_but_never_removes_it() {
+    let mut document = concrete_forest_example_document();
+    assert!(document.parts.len() >= 2, "the locked-cut law needs at least two parts");
+    let locked_id = document.parts[0].id.clone();
+    let free_id = document.parts[1].id.clone();
+    document.parts[0].part_2d.locked = Some(true);
+    let snapshot = Puzzle5dPlaySnapshot(serde_json::to_value(&document).expect("document serializes"));
+    let ids = vec![locked_id.clone(), free_id.clone()];
+    let fragment = puzzle5d_copy_fragment(&snapshot, &ids, &[]).expect("copy both parts");
+    assert!(fragment.dsl_text.contains(locked_id.as_str()), "the locked part is still COPIED");
+    let operations = puzzle5d_cut_operations(&snapshot, &ids, &[]);
+    let deleted: Vec<String> = operations
+        .iter()
+        .filter_map(|operation| match operation {
+            Puzzle5dMutation::DeletePart(delete) => Some(format!("{delete:?}")),
+            _ => None,
+        })
+        .collect();
+    assert!(deleted.iter().any(|row| row.contains(free_id.as_str())), "the unlocked part is cut: {deleted:?}");
+    assert!(!deleted.iter().any(|row| row.contains(locked_id.as_str())), "the locked part is NOT cut: {deleted:?}");
+}
+
+/// 📋️ LAW: a paste preserves BOTH poses and offsets both by the same delta, keeps the fasteners
+/// between copied parts with their endpoints remapped onto the fresh ids, and lands as ONE edit.
+#[test]
+fn a_paste_preserves_both_poses_and_the_fasteners_between_copied_parts() {
+    let document = concrete_forest_example_document();
+    let with_fastener = document.fasteners.first().cloned().expect("the shipped example connects parts");
+    let endpoints = vec![owning_part_id_local(&with_fastener.source).to_string(), owning_part_id_local(&with_fastener.target).to_string()];
+    let (parts, fasteners) = copy_selection_local(&document, &endpoints, &[]);
+    assert!(fasteners.iter().any(|fastener| fastener.id == with_fastener.id), "the fastener BETWEEN two copied parts comes along");
+    let delta = (7.0, -3.0);
+    let (fresh_parts, fresh_fasteners) = paste_selection_local(&document, &parts, &fasteners, delta);
+    assert_eq!(fresh_parts.len(), parts.len());
+    for (source, pasted) in parts.iter().zip(&fresh_parts) {
+        assert_ne!(source.id, pasted.id, "a pasted part carries a FRESH id");
+        assert!(document.parts.iter().all(|existing| existing.id != pasted.id), "a fresh id collides with nothing live");
+        assert_eq!((pasted.part_2d.x, pasted.part_2d.y), (source.part_2d.x + delta.0, source.part_2d.y + delta.1), "the flat pose moved by the delta");
+        assert_eq!([pasted.part_3d.origin[0], pasted.part_3d.origin[1]], [source.part_3d.origin[0] + delta.0, source.part_3d.origin[1] + delta.1], "the volume pose moved by the SAME delta");
+        assert_eq!(pasted.part_3d.origin[2], source.part_3d.origin[2], "the delta is planar");
+        assert_eq!(pasted.grips.len(), source.grips.len(), "a pasted part keeps its grips");
+    }
+    let fresh_ids: Vec<&str> = fresh_parts.iter().map(|part| part.id.as_str()).collect();
+    for fastener in &fresh_fasteners {
+        assert!(fresh_ids.contains(&owning_part_id_local(&fastener.source)), "an endpoint was remapped onto a fresh part");
+        assert!(fresh_ids.contains(&owning_part_id_local(&fastener.target)), "an endpoint was remapped onto a fresh part");
+    }
+}
+
+/// 📋️ LAW: a default paste (no explicit position) still MOVES the fragment in both poses, so a paste
+/// never lands exactly under the original where it is invisible.
+#[test]
+fn the_default_paste_placement_offsets_the_fragment_in_both_poses() {
+    let document = concrete_forest_example_document();
+    let ids: Vec<String> = document.parts.iter().take(2).map(|part| part.id.clone()).collect();
+    let (parts, _) = copy_selection_local(&document, &ids, &[]);
+    let placement = PastePlacement { anchor: PasteAnchor::Center, position: None };
+    let delta = paste_delta_2d(&parts, &document.parts, &placement);
+    assert!(delta != (0.0, 0.0), "the default placement is a real offset, got {delta:?}");
+    let (fresh, _) = paste_selection_local(&document, &parts, &[], delta);
+    for (source, pasted) in parts.iter().zip(&fresh) {
+        assert_ne!((pasted.part_2d.x, pasted.part_2d.y), (source.part_2d.x, source.part_2d.y), "the flat pose moved");
+        assert_ne!([pasted.part_3d.origin[0], pasted.part_3d.origin[1]], [source.part_3d.origin[0], source.part_3d.origin[1]], "the volume pose moved with it");
+    }
+}
+//#endregion 📋️ClipboardLaws

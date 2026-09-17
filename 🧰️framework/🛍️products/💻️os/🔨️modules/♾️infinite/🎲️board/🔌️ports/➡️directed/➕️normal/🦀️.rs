@@ -14,9 +14,11 @@ pub mod board_host {
     use super::{
         board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease,
-        CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule,
-        NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, WireData, WireKindDef,
+        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, rotate_point_about, selection_drag_enclosing, selection_drag_shape, snap_transform_angle, transform_pivot_of,
+        transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
+        EdgeStrokePattern, EdgeTipDef, TRANSFORM_RING_HIT_TOLERANCE_PX,
+        EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson,
+        SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
     use crate::infinite::canvas::camera::Camera;
     use crate::infinite::canvas::geom_sel::{
@@ -1520,6 +1522,19 @@ pub mod board_host {
         closing: bool,
     }
 
+    /// 🔄️ One live rotate-ring gesture. The node centres and handle angles captured at grab time are
+    /// the base every frame re-derives from, so the preview never accumulates float drift and a
+    /// cancel restores the exact pre-gesture geometry.
+    #[derive(Clone, Debug)]
+    struct BoardTransformDrag {
+        pivot: Point,
+        grab: Point,
+        radius_world: f64,
+        radians: f64,
+        start_positions: BTreeMap<String, (f64, f64)>,
+        start_handle_angles: BTreeMap<String, f64>,
+    }
+
     #[derive(Clone, Debug)]
     struct FixtureDropPreviewSnapshot {
         node_kind_id: String,
@@ -1552,6 +1567,8 @@ pub mod board_host {
         Camera,
         NodeMove,
         NodeDragEnd,
+        NodeRotate,
+        TransformPreview,
         Select,
         Preselect,
         PreselectCancel,
@@ -1574,6 +1591,8 @@ pub mod board_host {
                 Self::Camera => "camera",
                 Self::NodeMove => "nodeMove",
                 Self::NodeDragEnd => "nodeDragEnd",
+                Self::NodeRotate => "nodeRotate",
+                Self::TransformPreview => "transformPreview",
                 Self::Select => "select",
                 Self::Preselect => "preselect",
                 Self::PreselectCancel => "preselectCancel",
@@ -1908,6 +1927,16 @@ pub mod board_host {
         }
 
         fn node_drag_end<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
+            Self::moves_row(BoardEventKind::NodeDragEnd, moves)
+        }
+
+        /// 🔄️ The live rotate-ring frame as resolved positions — a TRANSIENT row hosts mirror into
+        /// sibling panes and drop before dispatch, so a drag previews everywhere and still commits once.
+        fn transform_preview<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
+            Self::moves_row(BoardEventKind::TransformPreview, moves)
+        }
+
+        fn moves_row<'a>(kind: BoardEventKind, moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
             let mut payload = BoardPayloadBuilder::new();
             payload.raw("{\"moves\":[")?;
             let mut count = 0usize;
@@ -1931,7 +1960,37 @@ pub mod board_host {
                 return Err(BoardEventFault::Schema);
             }
             payload.raw("]}")?;
-            payload.finish(BoardEventKind::NodeDragEnd, None)
+            payload.finish(kind, None)
+        }
+
+        /// 🔄️ The whole rotate gesture as ONE row: every id the ring turned, the absolute delta in
+        /// radians and the pivot it turned about. A drag never streams rows — the in-canvas preview
+        /// is engine-local and only the release reaches the document, so one gesture is one edit.
+        fn node_rotate<'a>(ids: impl IntoIterator<Item = &'a str>, radians: f64, pivot: Point) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":[")?;
+            let mut count = 0usize;
+            for id in ids {
+                if count == BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(BoardEventFault::ItemCredits);
+                }
+                if count > 0 {
+                    payload.raw(",")?;
+                }
+                payload.string(id)?;
+                count += 1;
+            }
+            if count == 0 {
+                return Err(BoardEventFault::Schema);
+            }
+            payload.raw("],\"radians\":")?;
+            payload.number(radians)?;
+            payload.raw(",\"pivot\":{\"x\":")?;
+            payload.number(pivot.x)?;
+            payload.raw(",\"y\":")?;
+            payload.number(pivot.y)?;
+            payload.raw("}}")?;
+            payload.finish(BoardEventKind::NodeRotate, None)
         }
 
         fn link_compatible(source: &str, node_ids: &[String]) -> Result<Self, BoardEventFault> {
@@ -2313,6 +2372,8 @@ pub mod board_host {
         /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
         pub link_screen_preview: Option<Vec<Point>>,
         pub canvas_theme: CanvasPalette,
+        /// @emoji 👁️ When false, the LOD world grid is not stroked at all (snapping is unaffected — that is `grid_snap_enabled`).
+        pub grid_visible: bool,
         /// @emoji 📐️ Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
         pub grid_factor: f64,
         /// @emoji 🧲️ When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
@@ -2358,6 +2419,10 @@ pub mod board_host {
         brush_alt_pressed: bool,
         /// @emoji ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
         brush_slot_suggestions_active: bool,
+        /// @emoji 🕹️ Which selection-gumball handles the select utility offers (`setTransformGumballFlag`).
+        transform_flags: TransformGumballFlags,
+        /// @emoji 🔄️ The live rotate-ring gesture, `None` whenever the ring is merely drawn.
+        transform_drag: Option<BoardTransformDrag>,
         pub port_mode: GraphPortMode,
         interaction_revision: u64,
         pending_delete_planning: Option<BoardDeletePlanningOperation>,
@@ -2449,6 +2514,13 @@ pub mod board_host {
     /// 🧮️ Entity-id bytes the same payloads may carry — Nakagin's UUID ids total ~29 KiB; kept under the
     /// guest's 64 KiB contiguous-request ceiling since every owner here is one boxed array.
     pub const BOARD_POINTER_BYTE_CAPACITY: usize = 48 * 1024;
+    /// 🧮️ Entities one board DESCRIPTOR may carry — the render/hit-test census, decoupled from the
+    /// gesture payload credits above: a 100-placement puzzle 2d fill of an 11-handle kind is 1 200
+    /// entities, and a board must keep painting past what one pointer payload may name (a whole-board
+    /// selection above the pointer credits is refused by `select_set`'s own `ItemCredits` law instead).
+    pub const BOARD_DESCRIPTOR_ITEM_CAPACITY: usize = 8_192;
+    /// 🧮️ Entity-id bytes one board descriptor may carry (UUID ids: 8 192 × ~45 B).
+    pub const BOARD_DESCRIPTOR_BYTE_CAPACITY: usize = 384 * 1024;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BoardPointerPhase {
@@ -3471,6 +3543,7 @@ pub mod board_host {
                 selection_preview_crossing: false,
                 link_screen_preview: None,
                 canvas_theme: CanvasPalette::default(),
+                grid_visible: true,
                 grid_factor: GRID_FACTOR_DEFAULT,
                 grid_snap_enabled: false,
                 preserve_original_element_style: false,
@@ -3502,6 +3575,8 @@ pub mod board_host {
                 brush_handle_kind_weights: HashMap::new(),
                 brush_alt_pressed: false,
                 brush_slot_suggestions_active: false,
+                transform_flags: TransformGumballFlags::default(),
+                transform_drag: None,
                 port_mode: GraphPortMode::Ported,
                 interaction_revision: 0,
                 pending_delete_planning: None,
@@ -3864,6 +3939,12 @@ pub mod board_host {
                     } else if let Some(preview) = self.fixture_drop_preview.take() {
                         self.push_close_string(preview.node_kind_id);
                         self.push_close_optional_string(preview.icon_kind);
+                    } else if self
+                        .transform_drag
+                        .as_mut()
+                        .is_some_and(|drag| drag.start_positions.pop_first().is_some() || drag.start_handle_angles.pop_first().is_some())
+                    {
+                    } else if self.transform_drag.take().is_some() {
                     } else {
                         self.selection_screen_preview = None;
                         self.link_screen_preview = None;
@@ -3941,6 +4022,7 @@ pub mod board_host {
                 && self.selection_exit_highlight.is_empty()
                 && self.highlighted_ids.is_empty()
                 && matches!(self.interaction, Interaction::None)
+                && self.transform_drag.is_none()
                 && self.icon_paint_cache.terminal_is_empty()
                 && self.world_content_cache.borrow().is_none()
                 && self.opaque_scene_retirement.get().is_none()
@@ -4037,6 +4119,14 @@ pub mod board_host {
 
         fn snap_world_pair(&self, x: f64, y: f64) -> (f64, f64) {
             (self.snap_world_scalar(x), self.snap_world_scalar(y))
+        }
+
+        /// @emoji 👁️ Shows or hides the world grid. Hiding it never changes snapping, which reads `grid_snap_enabled`.
+        pub fn set_grid_visible(&mut self, visible: bool) {
+            if self.grid_visible != visible {
+                self.grid_visible = visible;
+                self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
+            }
         }
 
         pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
@@ -7473,6 +7563,19 @@ pub mod board_host {
             self.set_hovered_id(Some(handle_id.to_string()));
         }
 
+        /// @emoji 🎣️ Points the brush slot at a handle, or at nothing, WITHOUT opening the suggestions
+        /// popup — the armed brush's own targeting channel, so a program driving the brush headlessly
+        /// resolves the same candidate page a pointer hover would without claiming the popup's hover.
+        pub fn brush_target_slot(&mut self, handle_id: Option<&str>) {
+            match handle_id.filter(|handle_id| self.handles.contains_key(*handle_id)) {
+                Some(handle_id) => {
+                    self.brush_enter_slot(handle_id);
+                    self.brush_rebuild_preview();
+                }
+                None => self.brush_clear_slot(),
+            }
+        }
+
         /// @emoji 🖌️ Commits the active brush preview and clears the slot.
         pub fn brush_commit_slot(&mut self) {
             self.brush_commit_preview();
@@ -8565,9 +8668,58 @@ pub mod board_host {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
-        /// @emoji 🧿️ True during area select, link gestures, node drag, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
+        /// @emoji 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
-            matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. } | Interaction::DragNodes { .. } | Interaction::Pan { .. })
+            self.transform_drag.is_some()
+                || matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. } | Interaction::DragNodes { .. } | Interaction::Pan { .. })
+        }
+
+        /// @emoji 🩺️ What the engine is doing right now, as one probe-readable row: the live gesture,
+        /// the armed utility, the hovered id and the selection/preselect sizes. Published by the React
+        /// host as `data-board-interaction-json`, the board twin of `World3dHost`'s `data-interaction-json`.
+        pub fn interaction_json(&self) -> String {
+            let mode = if self.transform_drag.is_some() {
+                "transformRotate"
+            } else {
+                match self.interaction {
+                    Interaction::None => "none",
+                    Interaction::Pan { .. } => "pan",
+                    Interaction::DragNodes { .. } => "dragNodes",
+                    Interaction::SelectionPending { .. } => "selectionPending",
+                    Interaction::Selection { .. } => "selection",
+                    Interaction::LinkAtSourceHandle { .. } => "linkAtSourceHandle",
+                    Interaction::LinkDragSnap { .. } => "linkDragSnap",
+                    Interaction::LinkTargetNode { .. } => "linkTargetNode",
+                    Interaction::ExternalLinkPreview { .. } => "externalLinkPreview",
+                }
+            };
+            let utility = match self.active_utility {
+                ActiveUtility::Select => "select",
+                ActiveUtility::Brush => "brush",
+            };
+            let mut out = String::from("{\"mode\":\"");
+            out.push_str(mode);
+            out.push_str("\",\"utility\":\"");
+            out.push_str(utility);
+            out.push_str("\",\"hoveredId\":");
+            match self.hovered_id.as_deref() {
+                Some(id) => {
+                    out.push('"');
+                    out.push_str(&id.replace('\\', "\\\\").replace('"', "\\\""));
+                    out.push('"');
+                }
+                None => out.push_str("null"),
+            }
+            out.push_str(",\"selectionCount\":");
+            out.push_str(&self.selection.len().to_string());
+            out.push_str(",\"preselectCount\":");
+            out.push_str(&self.preselect.len().to_string());
+            out.push_str(",\"revision\":");
+            out.push_str(&self.interaction_revision.to_string());
+            out.push_str(",\"deferringDescriptorSync\":");
+            out.push_str(if self.defers_descriptor_sync_from_js() { "true" } else { "false" });
+            out.push('}');
+            out
         }
 
         pub fn world_to_screen(&self, p: Point) -> Point {
@@ -9449,9 +9601,18 @@ pub mod board_host {
             None
         }
 
+        /// 🔗️ Authoring sync: every edge the descriptor adds is announced as an `edgeCreate` event.
         pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
+            self.sync_descriptor_with(desc, true)
+        }
+
+        /// 🛂️ Every refusal a descriptor sync can raise BEFORE it touches the scene: the two fixed
+        /// descriptor ceilings and the handle colours it would have to parse. A sync that fails halfway
+        /// leaves a half-built board, and a fixture parse that clears first leaves an EMPTY one (three
+        /// blank panes, 2026-09-17), so both preflight through here and mutate only once it passes.
+        fn descriptor_admission(desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
             let entity_count = desc.nodes.len().checked_add(desc.handles.len()).and_then(|count| count.checked_add(desc.edges.len())).and_then(|count| count.checked_add(desc.wires.len())).ok_or(NormalPortError::EventCredits)?;
-            if entity_count > BOARD_POINTER_ITEM_CAPACITY {
+            if entity_count > BOARD_DESCRIPTOR_ITEM_CAPACITY {
                 return Err(NormalPortError::EventCredits);
             }
             let entity_id_bytes = desc
@@ -9463,21 +9624,39 @@ pub mod board_host {
                 .chain(desc.wires.iter().map(|wire| wire.id.len()))
                 .try_fold(0usize, usize::checked_add)
                 .ok_or(NormalPortError::EventCredits)?;
-            if entity_id_bytes > BOARD_POINTER_BYTE_CAPACITY {
+            if entity_id_bytes > BOARD_DESCRIPTOR_BYTE_CAPACITY {
                 return Err(NormalPortError::EventCredits);
             }
+            for handle in &desc.handles {
+                if let Some(color) = handle.color.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty()) {
+                    Self::parse_css_color(color).ok_or_else(|| NormalPortError::InvalidHandleColor(handle.id.clone(), color.to_string()))?;
+                }
+            }
+            Ok(())
+        }
+
+        /// 🚚️ One descriptor sync; `announce_new_edges` decides whether edges absent from the current
+        /// scene emit `edgeCreate`. A fixture parse passes `false`: it clears the scene first, so every
+        /// edge is "new" — announcing them echoed the WHOLE document back to the plugin as edge
+        /// creations after each re-parse (fill placements re-committing themselves) and, undrained,
+        /// they exhausted the event credits so the next parse of any edged document was refused
+        /// (three blank panes after one drag, 2026-09-17).
+        fn sync_descriptor_with(&mut self, desc: &SceneDescriptorJson, announce_new_edges: bool) -> Result<(), NormalPortError> {
+            Self::descriptor_admission(desc)?;
             if matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
                 self.interaction = Interaction::None;
                 self.clear_link_gesture_events();
             }
-            let mut created_edge_count = 0usize;
-            let mut created_edge_bytes = 0usize;
-            for edge in desc.edges.iter().filter(|edge| !self.edges.contains_key(&edge.id)) {
-                created_edge_count = created_edge_count.checked_add(1).ok_or(NormalPortError::EventCredits)?;
-                let bytes = board_edge_event_owned_bytes(&edge.id, &edge.source, &edge.target).ok_or(NormalPortError::EventCredits)?;
-                created_edge_bytes = created_edge_bytes.checked_add(bytes).ok_or(NormalPortError::EventCredits)?;
+            if announce_new_edges {
+                let mut created_edge_count = 0usize;
+                let mut created_edge_bytes = 0usize;
+                for edge in desc.edges.iter().filter(|edge| !self.edges.contains_key(&edge.id)) {
+                    created_edge_count = created_edge_count.checked_add(1).ok_or(NormalPortError::EventCredits)?;
+                    let bytes = board_edge_event_owned_bytes(&edge.id, &edge.source, &edge.target).ok_or(NormalPortError::EventCredits)?;
+                    created_edge_bytes = created_edge_bytes.checked_add(bytes).ok_or(NormalPortError::EventCredits)?;
+                }
+                self.events.reserve(created_edge_count, created_edge_bytes).map_err(|_| NormalPortError::EventCredits)?;
             }
-            self.events.reserve(created_edge_count, created_edge_bytes).map_err(|_| NormalPortError::EventCredits)?;
             let want_nodes: BTreeSet<_> = desc.nodes.iter().map(|n| n.id.clone()).collect();
             let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
             let want_edges: BTreeSet<_> = desc.edges.iter().map(|e| e.id.clone()).collect();
@@ -9567,7 +9746,7 @@ pub mod board_host {
                         properties,
                     },
                 );
-                if !existed {
+                if announce_new_edges && !existed {
                     let event = BoardOwnedEvent::edge(BoardEventKind::EdgeCreate, &e.id, &e.source, &e.target).expect("new descriptor edges were exactly preflighted");
                     self.events.push(event).expect("new descriptor edge credits were reserved before mutation");
                 }
@@ -9697,56 +9876,75 @@ pub mod board_host {
             self.selection_exit_highlight.clear();
         }
 
+        /// 🎲️ Replaces the whole board with `json`, ALL OR NOTHING: the descriptor is built and admitted
+        /// first, and only a fixture that will really paint clears the live scene. Clearing before the
+        /// refusal left the panes blank until the next parse — the refusal and "the board went empty"
+        /// were the same event (2026-09-17 battery, `16-inspection/inspector-fresh-on-open`).
         pub fn parse_fixture_json(&mut self, json: &str) -> bool {
             let f: FixtureJson = match serde_json::from_str(json) {
                 Ok(v) => v,
                 Err(_) => return false,
             };
-            self.port_mode = match f.schema.as_str() {
+            let port_mode = match f.schema.as_str() {
                 "reasoning.mindmap.fixture" => GraphPortMode::Normal,
                 "puzzle.2d.fixture" => GraphPortMode::Ported,
                 _ => return false,
             };
-            if !self.has_ports() {
+            let has_ports = port_mode.has_ports();
+            let (camera_x, camera_y, camera_zoom) = (f.camera.x, f.camera.y, f.camera.zoom);
+            let Some(desc) = Self::fixture_scene_descriptor(f, has_ports) else {
+                return false;
+            };
+            if Self::descriptor_admission(&desc).is_err() {
+                return false;
+            }
+            self.port_mode = port_mode;
+            if !has_ports {
                 self.selection_options.select_handles = false;
             }
-            self.set_camera(f.camera.x, f.camera.y, f.camera.zoom);
+            self.set_camera(camera_x, camera_y, camera_zoom);
             self.clear_scene();
+            self.sync_descriptor_with(&desc, false).is_ok()
+        }
+
+        /// 🧾️ The pure half of [`Self::parse_fixture_json`]: one fixture document into one scene
+        /// descriptor, or `None` for a document this port refuses. Touches no board state.
+        fn fixture_scene_descriptor(f: FixtureJson, has_ports: bool) -> Option<SceneDescriptorJson> {
             let mut desc = SceneDescriptorJson::default();
             for entry in f.nodes {
                 let Some(obj) = entry.as_object() else {
-                    return false;
+                    return None;
                 };
                 let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
-                    return false;
+                    return None;
                 };
                 let Some(x) = obj.get("x").and_then(|v| v.as_f64()) else {
-                    return false;
+                    return None;
                 };
                 let Some(y) = obj.get("y").and_then(|v| v.as_f64()) else {
-                    return false;
+                    return None;
                 };
                 if !x.is_finite() || !y.is_finite() {
-                    return false;
+                    return None;
                 }
                 let text = obj.get("text").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
-                if self.has_ports() {
+                if has_ports {
                     let Some(handles_arr) = obj.get("handles").and_then(|v| v.as_array()) else {
-                        return false;
+                        return None;
                     };
                     let mut handles: Vec<HandleDescJson> = Vec::new();
                     for h in handles_arr {
                         let Some(ho) = h.as_object() else {
-                            return false;
+                            return None;
                         };
                         let Some(hid) = ho.get("id").and_then(|v| v.as_str()) else {
-                            return false;
+                            return None;
                         };
                         let Some(angle) = ho.get("angle").and_then(|v| v.as_f64()) else {
-                            return false;
+                            return None;
                         };
                         if !angle.is_finite() {
-                            return false;
+                            return None;
                         }
                         let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map_or_else(|| "port".into(), String::from);
                         let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
@@ -9770,20 +9968,20 @@ pub mod board_host {
                     }
                     desc.handles.extend(handles);
                 } else if obj.get("handles").is_some() {
-                    return false;
+                    return None;
                 }
                 let shape_str = obj.get("shape").and_then(|v| v.as_str());
                 let fixture_node_kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                 let fixture_node_scale = obj.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
                 if shape_str == Some("rectangle") {
                     let Some(width) = obj.get("width").and_then(|v| v.as_f64()) else {
-                        return false;
+                        return None;
                     };
                     let Some(height) = obj.get("height").and_then(|v| v.as_f64()) else {
-                        return false;
+                        return None;
                     };
                     if width <= 0.0 || height <= 0.0 {
-                        return false;
+                        return None;
                     }
                     let root = obj.get("root").and_then(|v| v.as_bool());
                     let icon_kind = obj.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
@@ -9809,10 +10007,10 @@ pub mod board_host {
                     });
                 } else {
                     let Some(radius) = obj.get("radius").and_then(|v| v.as_f64()) else {
-                        return false;
+                        return None;
                     };
                     if radius <= 0.0 {
-                        return false;
+                        return None;
                     }
                     let root = obj.get("root").and_then(|v| v.as_bool());
                     let icon_kind = obj.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
@@ -9840,18 +10038,18 @@ pub mod board_host {
             }
             for entry in f.edges {
                 let Some(e) = entry.as_object() else {
-                    return false;
+                    return None;
                 };
                 let Some(id) = e.get("id").and_then(|v| v.as_str()) else {
-                    return false;
+                    return None;
                 };
                 let Some((source, target)) = fixture_edge_handle_ids_from_object(e) else {
-                    return false;
+                    return None;
                 };
-                if !self.has_ports() {
+                if !has_ports {
                     let node_ids: BTreeSet<&str> = desc.nodes.iter().map(|n| n.id.as_str()).collect();
                     if !node_ids.contains(source) || !node_ids.contains(target) {
-                        return false;
+                        return None;
                     }
                 }
                 let edge_kind = e.get("edgeKind").or_else(|| e.get("edge_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
@@ -9871,10 +10069,7 @@ pub mod board_host {
                     locked: board_json_locked_option(e),
                 });
             }
-            if self.sync_descriptor(&desc).is_err() {
-                return false;
-            }
-            true
+            Some(desc)
         }
 
         fn drawable_cull_pad_world(&self) -> f64 {
@@ -10398,6 +10593,7 @@ pub mod board_host {
                 if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                     self.append_brush_preview_paint(&mut preview_layer, lod, true);
                 }
+                self.append_transform_gumball_paint(&mut preview_layer, true);
                 scene.append(&preview_layer, Some(cam_aff));
             } else {
                 if self.fixture_drop_preview.is_some() {
@@ -10406,6 +10602,7 @@ pub mod board_host {
                 if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                     self.append_brush_preview_paint(scene, lod, false);
                 }
+                self.append_transform_gumball_paint(scene, false);
             }
         }
 
@@ -10422,7 +10619,7 @@ pub mod board_host {
         pub fn build_vector_scene(&self) -> Scene {
             let mut inner = Scene::new();
             let lod = self.draw_lod_for_frame();
-            if !self.wheel_zoom_active {
+            if self.grid_visible && !self.wheel_zoom_active {
                 let grid_color = self.canvas_theme.grid_minor_stroke;
                 if lod != BoardDrawLod::Minimap {
                     self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
@@ -11930,6 +12127,9 @@ pub mod board_host {
             }
             let merge_from_modifiers = ctrl_or_meta || shift;
             let pick_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+            if button == 0 && !merge_from_modifiers && self.try_begin_transform_drag_at(world) {
+                return;
+            }
             if button == 0 && !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
                 return;
             }
@@ -12015,6 +12215,10 @@ pub mod board_host {
                         self.brush_pointer_move(world);
                     }
                 }
+                return;
+            }
+            if self.transform_drag.is_some() {
+                self.update_transform_drag(world, self.grid_snap_enabled);
                 return;
             }
             match std::mem::replace(&mut self.interaction, Interaction::None) {
@@ -12163,6 +12367,10 @@ pub mod board_host {
                 self.set_hovered_id(None);
                 return;
             }
+            if self.commit_transform_drag() {
+                self.update_hover_from_world(world);
+                return;
+            }
             let grabbed = std::mem::take(&mut self.interaction);
             match grabbed {
                 Interaction::LinkDragSnap { source_id, target_id, .. } => {
@@ -12261,6 +12469,9 @@ pub mod board_host {
                 self.set_hovered_id(None);
                 return;
             }
+            if self.cancel_transform_drag() {
+                return;
+            }
             if matches!(self.interaction, Interaction::None) {
                 self.set_hovered_id(None);
             }
@@ -12268,6 +12479,9 @@ pub mod board_host {
 
         /// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
         pub fn cancel_area_select(&mut self) -> bool {
+            if self.cancel_transform_drag() {
+                return true;
+            }
             let reservation = match &self.interaction {
                 Interaction::Selection { initial_ids, .. } => {
                     let event = BoardOwnedEvent::id_list(BoardEventKind::PreselectCancel, "ids", initial_ids.iter().map(String::as_str));
@@ -12331,6 +12545,200 @@ pub mod board_host {
             }
             world_box_from_points(&corners)
         }
+
+        //#region 🕹️TransformGumball
+        /// @emoji 🕹️ Composes which gumball handles the select utility offers. `move` is the native
+        /// node drag (always available while it is on), `rotate` draws and arms the ring.
+        pub fn set_transform_flags(&mut self, move_enabled: bool, rotate_enabled: bool) {
+            let next = TransformGumballFlags { move_enabled, rotate_enabled };
+            if self.transform_flags == next {
+                return;
+            }
+            if !rotate_enabled {
+                self.cancel_transform_drag();
+            }
+            self.transform_flags = next;
+            self.bump_content_scene_generation();
+        }
+
+        pub fn transform_flags(&self) -> TransformGumballFlags {
+            self.transform_flags
+        }
+
+        /// @emoji 📐️ Every selected node id in engine order — the rotate gesture's members, pivot
+        /// contributors and event ids all come from this one list.
+        fn transform_selection_node_ids(&self) -> Vec<String> {
+            self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect()
+        }
+
+        /// @emoji ⭕️ Pivot and ring radius when the rotate gumball is live: the select utility is
+        /// active, the rotate flag is on, and at least one selected node exists to turn.
+        fn transform_gumball_geometry(&self) -> Option<(Point, f64)> {
+            if self.active_utility != ActiveUtility::Select || !self.transform_flags.rotate_enabled {
+                return None;
+            }
+            let ids = self.transform_selection_node_ids();
+            if ids.is_empty() {
+                return None;
+            }
+            let centers: Vec<Point> = ids.iter().filter_map(|id| self.nodes.get(id)).map(|n| Point::new(n.x, n.y)).collect();
+            let pivot = transform_pivot_of(&centers)?;
+            let mut corners = Vec::with_capacity(centers.len() * 2);
+            for id in &ids {
+                let Some(node) = self.nodes.get(id) else { continue };
+                let bounds = self.node_world_bounds(node, 0.0);
+                corners.push(Point::new(bounds.min_x, bounds.min_y));
+                corners.push(Point::new(bounds.max_x, bounds.max_y));
+            }
+            Some((pivot, transform_ring_radius_world(pivot, &corners, self.camera.zoom)))
+        }
+
+        /// @emoji 🩺️ The gumball's whole probe-visible state: which handles are composed, whether the
+        /// ring is drawn, and the live drag's pivot/angle. Read as `data-board-transform-json`.
+        pub fn transform_gumball_json(&self) -> String {
+            let geometry = self.transform_gumball_geometry();
+            let mut out = String::from("{\"move\":");
+            out.push_str(if self.transform_flags.move_enabled { "true" } else { "false" });
+            out.push_str(",\"rotate\":");
+            out.push_str(if self.transform_flags.rotate_enabled { "true" } else { "false" });
+            out.push_str(",\"ringVisible\":");
+            out.push_str(if geometry.is_some() { "true" } else { "false" });
+            out.push_str(",\"dragging\":");
+            out.push_str(if self.transform_drag.is_some() { "true" } else { "false" });
+            out.push_str(",\"radians\":");
+            out.push_str(&self.transform_drag.as_ref().map_or(0.0, |drag| drag.radians).to_string());
+            if let Some((pivot, radius)) = geometry {
+                out.push_str(",\"pivot\":{\"x\":");
+                out.push_str(&pivot.x.to_string());
+                out.push_str(",\"y\":");
+                out.push_str(&pivot.y.to_string());
+                out.push_str("},\"radius\":");
+                out.push_str(&radius.to_string());
+            }
+            out.push('}');
+            out
+        }
+
+        /// @emoji 🔄️ Grabs the rotate ring. Asked BEFORE any node/handle/edge hit test, so a ring that
+        /// crosses a node still rotates instead of starting a drag on whatever sits under it.
+        fn try_begin_transform_drag_at(&mut self, world: Point) -> bool {
+            let Some((pivot, radius_world)) = self.transform_gumball_geometry() else {
+                return false;
+            };
+            if !transform_ring_hit(pivot, radius_world, self.camera.zoom, world) {
+                return false;
+            }
+            let ids = self.transform_selection_node_ids();
+            let mut start_positions = BTreeMap::new();
+            for id in &ids {
+                if let Some(node) = self.nodes.get(id) {
+                    if node.draggable && !node.locked {
+                        start_positions.insert(id.clone(), (node.x, node.y));
+                    }
+                }
+            }
+            if start_positions.is_empty() {
+                return false;
+            }
+            let start_handle_angles = self.handles.iter().filter(|(_, handle)| start_positions.contains_key(&handle.node_id)).map(|(id, handle)| (id.clone(), handle.angle)).collect();
+            self.transform_drag = Some(BoardTransformDrag { pivot, grab: world, radius_world, radians: 0.0, start_positions, start_handle_angles });
+            self.set_hovered_id(None);
+            true
+        }
+
+        /// @emoji 👁️ Re-derives the whole preview from the grab-time snapshot: positions orbit the
+        /// pivot and every handle angle turns with its node, exactly like the guest reducer the
+        /// release commits to. Emits nothing — a rotate is ONE document edit, on release.
+        fn update_transform_drag(&mut self, world: Point, snap: bool) {
+            let Some(mut drag) = self.transform_drag.take() else {
+                return;
+            };
+            drag.radians = snap_transform_angle(transform_ring_angle_delta(drag.pivot, drag.grab, world), snap);
+            for (id, (x0, y0)) in &drag.start_positions {
+                let rotated = rotate_point_about(drag.pivot, Point::new(*x0, *y0), drag.radians);
+                if let Some(node) = self.nodes.get_mut(id) {
+                    node.x = rotated.x;
+                    node.y = rotated.y;
+                }
+            }
+            for (id, angle0) in &drag.start_handle_angles {
+                if let Some(handle) = self.handles.get_mut(id) {
+                    handle.angle = angle0 + drag.radians;
+                }
+            }
+            let preview = BoardOwnedEvent::transform_preview(drag.start_positions.keys().filter_map(|id| self.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
+            self.transform_drag = Some(drag);
+            self.bump_content_scene_generation();
+            // 🪞️ A preview frame is expendable: a refused reservation drops the row instead of
+            // claiming overflow credit, so a fast drag can never fault the event terminal.
+            if let Ok(event) = preview {
+                if let Ok(reservation) = self.events.reserve_event(event) {
+                    self.publish_event_reservation(reservation);
+                }
+            }
+        }
+
+        /// @emoji 🏁️ Ends the gesture with ONE `nodeRotate` row carrying the absolute delta and the
+        /// pivot. A zero-angle release (a click on the ring) commits nothing.
+        fn commit_transform_drag(&mut self) -> bool {
+            let Some(drag) = self.transform_drag.take() else {
+                return false;
+            };
+            if drag.radians == 0.0 {
+                return true;
+            }
+            let event = BoardOwnedEvent::node_rotate(drag.start_positions.keys().map(String::as_str), drag.radians, drag.pivot);
+            let Some(reservation) = self.reserve_owned_event(event) else {
+                return true;
+            };
+            self.publish_event_reservation(reservation);
+            true
+        }
+
+        /// @emoji ↩️ Restores the exact pre-gesture geometry — Escape, pointer-leave and switching the
+        /// rotate flag off all abandon a live ring drag without touching the document.
+        fn cancel_transform_drag(&mut self) -> bool {
+            let Some(drag) = self.transform_drag.take() else {
+                return false;
+            };
+            for (id, (x0, y0)) in &drag.start_positions {
+                if let Some(node) = self.nodes.get_mut(id) {
+                    node.x = *x0;
+                    node.y = *y0;
+                }
+            }
+            for (id, angle0) in &drag.start_handle_angles {
+                if let Some(handle) = self.handles.get_mut(id) {
+                    handle.angle = *angle0;
+                }
+            }
+            self.bump_content_scene_generation();
+            true
+        }
+
+        /// @emoji ⭕️ Paints the ring, its pivot dot and the live grab spoke.
+        fn append_transform_gumball_paint(&self, scene: &mut Scene, world_space: bool) {
+            let Some((pivot, radius_world)) = self.transform_gumball_geometry() else {
+                return;
+            };
+            let center = self.draw_space_point(pivot, world_space);
+            let radius = self.draw_space_len(radius_world, world_space);
+            let color = if self.transform_drag.is_some() { self.canvas_theme.node_stroke_selected } else { self.canvas_theme.node_stroke };
+            let mut ring_stroke = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
+            if self.transform_drag.is_none() {
+                ring_stroke.set_dash_pattern(vec![6.0, 5.0]);
+            }
+            scene.stroke(&ring_stroke, Affine::IDENTITY, color, None, &Circle::new(center, radius));
+            scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &Circle::new(center, self.draw_space_len(TRANSFORM_RING_HIT_TOLERANCE_PX / self.camera.zoom.max(1e-9) * 0.25, world_space)));
+            if let Some(ref drag) = self.transform_drag {
+                let spoke = rotate_point_about(drag.pivot, Point::new(drag.pivot.x + radius_world, drag.pivot.y), drag.radians);
+                let mut path = infinite::canvas::BezPath::new();
+                path.move_to(center);
+                path.line_to(self.draw_space_point(spoke, world_space));
+                scene.stroke(&Stroke::new(ui_styling::strokes::SELECTION_PREVIEW), Affine::IDENTITY, color, None, &path);
+            }
+        }
+        //#endregion 🕹️TransformGumball
 
         /// @emoji 📦️ Starts a group drag when `world` lies inside the padded union bounds of the current selection (minimap/overview LOD).
         fn try_begin_bounded_selection_drag_at(&mut self, world: Point) -> bool {

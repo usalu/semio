@@ -1200,6 +1200,12 @@ impl store::ArtifactPack for WorkflowSnapshot {
 }
 //#endregion 🔖️HandcraftedWorkflowSnapshotCodecs
 
+impl semio_framework_schema::ArtifactCompositionFields for WorkflowSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
 // sync closures; pure, no I/O (R9).
 fn workflow_parameter_entity_id(parameter: &WorkflowParameter) -> &str {

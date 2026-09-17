@@ -1,6 +1,8 @@
 type Puzzle5dConfig {
   fillCount: Int! @state(class: CONFIG)
   contactTolerance: Float! @state(class: CONFIG)
+  proximityRadius: Float! @state(class: CONFIG)
+  chunkSize: Float! @state(class: CONFIG)
   objectKindWeights: [FloatEntry!]! @state(class: CONFIG)
   vortexKindWeights: [FloatEntry!]! @state(class: CONFIG)
 }

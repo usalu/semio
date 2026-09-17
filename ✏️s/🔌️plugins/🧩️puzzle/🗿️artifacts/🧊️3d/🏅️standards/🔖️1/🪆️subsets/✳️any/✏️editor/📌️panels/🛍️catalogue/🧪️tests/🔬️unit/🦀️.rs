@@ -183,7 +183,7 @@ fn every_object_kind_row_binds_activate_to_add_object_kind_with_its_own_kind_id(
         let binding = row
             .bindings
             .iter()
-            .find(|binding| matches!(binding.trigger, ui::Trigger::Activate))
+            .find(|binding| matches!(binding.trigger, Trigger::Activate))
             .unwrap_or_else(|| panic!("object kind row {} declares no activate binding: {:?}", row.key.as_str(), row.bindings));
         assert_eq!(binding.action.name.as_str(), "addObjectKind", "the row's activate binding must address addObjectKind");
         let args = binding.args.as_ref().unwrap_or_else(|| panic!("object kind row {} binds addObjectKind with no args", row.key.as_str()));

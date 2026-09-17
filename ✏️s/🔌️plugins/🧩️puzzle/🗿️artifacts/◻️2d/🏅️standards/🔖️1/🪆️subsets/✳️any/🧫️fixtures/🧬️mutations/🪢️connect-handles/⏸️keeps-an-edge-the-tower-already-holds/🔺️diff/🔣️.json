@@ -4,5 +4,6 @@
   "camera": null,
   "nodes": null,
   "edges": null,
+  "targetRegions": null,
   "meta": null
 }

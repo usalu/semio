@@ -30,7 +30,9 @@ const report = {};
 const flush = () => { writeFileSync(join(outDir, "console.txt"), lines.join("\n")); writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2)); };
 const note = (key, value) => { report[key] = value; lines.push(`${Date.now() - t0} probe ${key} ${JSON.stringify(value).slice(0, 800)}`); console.log(`[DEBUG] ${key} ${JSON.stringify(value).slice(0, 700)}`); flush(); };
 const shot = (name) => page.screenshot({ path: join(outDir, `${name}.png`), type: "png" }).catch(() => {});
-const solves = () => lines.filter((line) => line.includes("fem3d results solve #")).length;
+// 📊 A re-solve is observed as the results scene changing (the guest prints no solve counter).
+const solves = () => lines.filter((line) => line.includes("probe results-scene ")).length;
+const resultsHash = async () => (await sceneOf(resultsSurface)).hash;
 const guest = (from) => lines.slice(from).filter((line) => /\[DEBUG\] fem3d|trapped|panicked|action failed|shell fault|faults=|pageerror/.test(line)).map((line) => line.slice(0, 300)).slice(-12);
 const state = () => page.evaluate(() => ({
   ready: document.documentElement.getAttribute("data-semio-os-ready"),
@@ -156,9 +158,15 @@ await shot("1-boot");
   const tab = (await panelTab.count()) ? await panelTab.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 80)) : "absent";
   await page.waitForTimeout(2500);
   const buttons = await page.evaluate(() => [...document.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") ?? b.textContent?.trim()).filter(Boolean).filter((t) => /play|pause|phase|loop|speed|wiedergabe/i.test(t)).slice(0, 12));
-  const play = page.getByRole("button", { name: /play/i }).first();
+  // 🪟 Focus the results pane first: the panel binds to the FOCUSED window, so its play button only
+  // reads (and tags) the results window once that pane is the active one.
+  const resultsTitle = page.locator('[data-surface-id="' + resultsSurface + '"]').first();
+  const focused = (await resultsTitle.count()) ? await resultsTitle.click({ position: { x: 20, y: 20 }, timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 80)) : "absent";
+  await page.waitForTimeout(1500);
+  const play = page.getByRole("button", { name: /^play$|^play \/ pause$|wiedergabe/i }).first();
   let played = "absent";
   if (await play.count()) played = await play.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120));
+  await page.waitForTimeout(1500);
   const caption = () => page.evaluate(() => (document.body.innerText.match(/phase [0-9.]+ · ▶ [0-9.]+ Hz/) ?? [null])[0]);
   const a = await sceneOf(resultsSurface);
   const captionA = await caption();
@@ -170,7 +178,14 @@ await shot("1-boot");
   const captionC = await caption();
   const ticks = lines.filter((line) => line.includes('"actionId":"resultAnimationTick"') && line.includes("performInvocation {")).length;
   const saturated = lines.filter((line) => line.includes("revision capacity")).length;
-  note("results-transport", { tab, buttons, played, animates: a.hash !== b.hash || b.hash !== c.hash, captions: [captionA, captionB, captionC], ticks, saturated, solves: solves(), guest: guest(from) });
+  // ⏸ Pause before leaving: the chain parks the clock (the resting phase is the frame on screen), and
+  // the house switch below is measured on a still window, the way a user switches examples.
+  const pause = page.getByRole("button", { name: /^pause$/i }).first();
+  const paused = (await pause.count()) ? await pause.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent";
+  await page.waitForTimeout(2500);
+  const ticksAfterPause = lines.filter((line) => line.includes('"actionId":"resultAnimationTick"') && line.includes("performInvocation {")).length - ticks;
+  const restingPhase = await page.evaluate(() => [...document.querySelectorAll('[role="slider"]')].map((s) => s.getAttribute("aria-valuenow")).slice(0, 1)[0] ?? null);
+  note("results-transport", { tab, buttons, focused, played, animates: a.hash !== b.hash || b.hash !== c.hash, captions: [captionA, captionB, captionC], ticks, paused, ticksAfterPause, restingPhase, saturated, solves: solves(), guest: guest(from) });
   await shot("6-results");
 }
 
@@ -189,7 +204,8 @@ await shot("1-boot");
   }
   const started = Date.now();
   let solved = false;
-  for (let i = 0; i < houseSeconds; i++) { await page.waitForTimeout(1000); if (solves() > solvesBefore) { solved = true; break; } }
+  const resultsBefore = await resultsHash();
+  for (let i = 0; i < houseSeconds; i++) { await page.waitForTimeout(1000); if ((await resultsHash()) !== resultsBefore) { solved = true; lines.push(`${Date.now() - t0} probe results-scene changed`); break; } }
   await page.waitForTimeout(4000);
   await openTab(process.env.SEMIO_PROBE_ARTIFACT_TAB ?? "Artifact");
   const tree = await rows(treeNs);

@@ -1,0 +1,23 @@
+{
+  "mutation": "createTargetVolume",
+  "targetVolume": {
+    "id": "volume-1",
+    "origin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "orientation": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scale": [
+      2.0,
+      2.0,
+      2.0
+    ]
+  },
+  "index": null
+}

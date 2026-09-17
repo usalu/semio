@@ -158,7 +158,7 @@
             0.9375,
             -0.3515625,
             -0.00048828125,
-            0
+            0.0
           ],
           "translation": [
             -0.001953125,
@@ -201,7 +201,7 @@
         "id": "orbit-track-a",
         "length": 9,
         "class": "static",
-        "meanSpeedMS": 0
+        "meanSpeedMS": 0.0
       },
       {
         "id": "orbit-track-b",

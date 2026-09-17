@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle2d snapshot schema — artifact-lane fields only.
 
-use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
+use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTargetRegion, PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -37,6 +37,13 @@ pub struct Puzzle2dSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub edges: Vec<Puzzle2dEdge>,
+    // 🎯️ Skipped when empty (unlike `nodes`/`edges`): every document written before target regions
+    // existed stays byte-identical, so the whole committed fixture corpus remains canonical.
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    #[dsl(table)]
+    #[state(artifact)]
+    pub target_regions: Vec<Puzzle2dTargetRegion>,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     #[dsl(block)]
@@ -89,6 +96,6 @@ impl store::ArtifactPack for Puzzle2dSnapshot {
 
 impl Default for Puzzle2dSnapshot {
     fn default() -> Self {
-        Self { schema: PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: Vec::new(), edges: Vec::new(), meta: Default::default() }
+        Self { schema: PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: Vec::new(), edges: Vec::new(), target_regions: Vec::new(), meta: Default::default() }
     }
 }

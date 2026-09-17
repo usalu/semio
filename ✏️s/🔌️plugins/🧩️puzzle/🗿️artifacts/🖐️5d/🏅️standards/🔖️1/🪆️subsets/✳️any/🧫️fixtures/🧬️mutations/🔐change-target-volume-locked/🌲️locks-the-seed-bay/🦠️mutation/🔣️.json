@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetVolumeLocked",
+  "id": "seed-bay",
+  "newLocked": true
+}

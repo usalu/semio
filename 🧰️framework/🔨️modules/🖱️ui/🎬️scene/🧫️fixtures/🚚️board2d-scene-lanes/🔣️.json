@@ -17,6 +17,7 @@
     "brushWeightsJson",
     "placementCompatibilityJson",
     "lodMode",
+    "transformFlags",
     "lanes"
   ],
   "lanes": [

@@ -2,11 +2,16 @@
 
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, SurfaceKind, Terminology, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, SurfaceKind, Terminology, TreeWindows, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_GENERATIONS: &str = "generation3d-generations";
 pub const GENERATION_3D_PLAY_BODY_GENERATIONS: &str = "procedural.play.generations";
+/// 🌳️ The tree-id namespace this window's roster is keyed under — also the prefix the windowed
+/// generations container's node key (`{prefix}.generations`) is built from, which is what a host
+/// `TreeWindowRequest` addresses.
+pub const GENERATION_3D_PLAY_GENERATE_PREFIX: &str = "procedural3d-play-generate";
+pub const GENERATION_3D_PLAY_GENERATIONS_SECTION: &str = "procedural3d-play-generate.generations";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -31,8 +36,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::generation_tree(GENERATION_3D_PLAY_APP_ID, "procedural3d-play-generate", generation, selected_id, locale, terminology)
+pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    crate::generation_tree(GENERATION_3D_PLAY_APP_ID, GENERATION_3D_PLAY_GENERATE_PREFIX, generation, selected_id, locale, terminology, windows)
 }
 //#endregion 🔖️Render
 

@@ -48,8 +48,12 @@ ports = { react = 6014, wgpu = 6114 }
 # 🎪️ The `aggregator` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The asset rows below stay here too
-# (copies also live on the bundle crate) since the standalone `puzzle3d` dev variant needs them
-# independently of the demonstrator.
+# (copies also live on the bundle crate) since the standalone `puzzle3d` and `puzzle5d` dev variants
+# need them independently of the demonstrator. `generatePlaygroundRegistry` keeps an asset row only
+# when `asset.app` is absent or equals the playground row's own `app`
+# (🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts), so every
+# variant whose examples reach for `/mesh/*.glb` must name itself here — puzzle5d's World3d pane is
+# built from the same mesh catalog as puzzle3d's.
 
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
@@ -61,6 +65,18 @@ catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️cata
 kind = "static-dir"
 route = "/infinite-assets"
 app = "s.puzzle.puzzle3d@1/*#editor"
+root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "s.puzzle.puzzle5d@1/*#editor"
+catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json"
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/infinite-assets"
+app = "s.puzzle.puzzle5d@1/*#editor"
 root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"
 
 [lib]

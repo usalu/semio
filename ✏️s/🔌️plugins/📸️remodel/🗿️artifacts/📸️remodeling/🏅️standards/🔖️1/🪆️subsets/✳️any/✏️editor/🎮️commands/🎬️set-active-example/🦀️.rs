@@ -63,40 +63,62 @@ fn example_media_operations(example_id: &str, current: &RemodelingSnapshot) -> V
         .collect()
 }
 
-/// 🔁️ The field-granular replace set: every declared collection is emptied and refilled, and all eight
-/// parameter groups are overwritten. `results` and `assets` are deliberately NOT
-/// transplanted — results are engine-derived (a fresh run rebuilds them) and assets are media bytes an
-/// example binds through `importFramePayload`, not document state a DSL carries.
+/// 🔁️ The field-granular diff between the open document's declared state and the example's: a
+/// collection entry is deleted when the example no longer carries its id or carries it changed, created
+/// when it is missing or changed, and a parameter group is overwritten only when it differs. A document
+/// that already equals the example (the boot document IS the boot example) answers an empty set, so the
+/// shell's boot-time `setActiveExample` and a re-selection of the current example write no edit at all.
+/// `results` and `assets` are deliberately NOT transplanted — results are engine-derived (a fresh run
+/// rebuilds them) and assets are media bytes an example binds through `importFramePayload`, not document
+/// state a DSL carries.
 pub fn replace_document_operations(current: &RemodelingSnapshot, next: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
     let mut mutations = Vec::new();
-    for gcp in &current.gcps {
+    for gcp in current.gcps.iter().filter(|gcp| !next.gcps.contains(gcp)) {
         mutations.push(delete_gcp(gcp.id.clone()));
     }
-    for stream in &current.streams {
+    for stream in current.streams.iter().filter(|stream| !next.streams.contains(stream)) {
         mutations.push(delete_stream(stream.id.clone()));
     }
-    for camera in &current.calibration.cameras {
+    for camera in current.calibration.cameras.iter().filter(|camera| !next.calibration.cameras.contains(camera)) {
         mutations.push(delete_camera_calibration(camera.id.clone()));
     }
-    for camera in &next.calibration.cameras {
+    for camera in next.calibration.cameras.iter().filter(|camera| !current.calibration.cameras.contains(camera)) {
         mutations.push(create_camera_calibration(camera.clone()));
     }
-    for stream in &next.streams {
+    for stream in next.streams.iter().filter(|stream| !current.streams.contains(stream)) {
         mutations.push(create_stream(stream.clone()));
     }
-    for gcp in &next.gcps {
+    for gcp in next.gcps.iter().filter(|gcp| !current.gcps.contains(gcp)) {
         mutations.push(create_gcp(gcp.clone()));
     }
-    mutations.push(update_ingest_params(next.params.ingest.clone()));
-    mutations.push(update_feature_params(next.params.feature.clone()));
-    mutations.push(update_match_params(next.params.matching.clone()));
-    mutations.push(update_sfm_params(next.params.sfm.clone()));
-    mutations.push(update_dense_params(next.params.dense.clone()));
-    mutations.push(update_mesh_params(next.params.mesh.clone()));
-    mutations.push(update_motion_params(next.params.motion.clone()));
-    mutations.push(update_geo_params(next.params.geo.clone()));
+    let (current, next) = (&current.params, &next.params);
+    if current.ingest != next.ingest {
+        mutations.push(update_ingest_params(next.ingest.clone()));
+    }
+    if current.feature != next.feature {
+        mutations.push(update_feature_params(next.feature.clone()));
+    }
+    if current.matching != next.matching {
+        mutations.push(update_match_params(next.matching.clone()));
+    }
+    if current.sfm != next.sfm {
+        mutations.push(update_sfm_params(next.sfm.clone()));
+    }
+    if current.dense != next.dense {
+        mutations.push(update_dense_params(next.dense.clone()));
+    }
+    if current.mesh != next.mesh {
+        mutations.push(update_mesh_params(next.mesh.clone()));
+    }
+    if current.motion != next.motion {
+        mutations.push(update_motion_params(next.motion.clone()));
+    }
+    if current.geo != next.geo {
+        mutations.push(update_geo_params(next.geo.clone()));
+    }
     mutations
 }
+
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests

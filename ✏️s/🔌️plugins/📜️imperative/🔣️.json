@@ -1,5 +1,6 @@
 {
   "descriptorVersion": 1,
+  "packageId": "semio:imperative",
   "role": "plugin",
   "manifest": {
     "pluginId": "imperative",
@@ -16,12 +17,12 @@
         },
         "label": {
           "native": {
-            "de": "Editor",
-            "en": "Editor"
+            "en": "Editor",
+            "de": "Editor"
           },
           "reuse": {
-            "de": "Editor",
-            "en": "Editor"
+            "en": "Editor",
+            "de": "Editor"
           }
         },
         "breadcrumb": [
@@ -35,12 +36,12 @@
             "id": "edit",
             "label": {
               "native": {
-                "de": "Bearbeiten",
-                "en": "Edit"
+                "en": "Edit",
+                "de": "Bearbeiten"
               },
               "reuse": {
-                "de": "Bearbeiten",
-                "en": "Edit"
+                "en": "Edit",
+                "de": "Bearbeiten"
               }
             },
             "iconId": "pencil",
@@ -54,16 +55,16 @@
             "id": "imperative-main",
             "label": {
               "native": {
-                "de": "Imperativ",
-                "en": "Imperative"
+                "en": "Imperative",
+                "de": "Imperativ"
               },
               "reuse": {
-                "de": "Imperativ",
-                "en": "Imperative"
+                "en": "Imperative",
+                "de": "Imperativ"
               }
             },
             "bodyKey": "imperative.play.main",
-            "surfaceKind": "node-graph",
+            "surfaceKind": "table",
             "iconId": "code",
             "options": {
               "engagement": {
@@ -75,12 +76,12 @@
                 "id": "addStep",
                 "label": {
                   "native": {
-                    "de": "Schritt hinzufügen",
-                    "en": "Add Step"
+                    "en": "Add Step",
+                    "de": "Schritt hinzufügen"
                   },
                   "reuse": {
-                    "de": "Schritt hinzufügen",
-                    "en": "Add Step"
+                    "en": "Add Step",
+                    "de": "Schritt hinzufügen"
                   }
                 },
                 "kind": "mutation",
@@ -90,12 +91,12 @@
                     "id": "kind",
                     "label": {
                       "native": {
-                        "de": "Art",
-                        "en": "Kind"
+                        "en": "Kind",
+                        "de": "Art"
                       },
                       "reuse": {
-                        "de": "Art",
-                        "en": "Kind"
+                        "en": "Kind",
+                        "de": "Art"
                       }
                     },
                     "schema": {
@@ -105,12 +106,12 @@
                           "value": "state.set",
                           "label": {
                             "native": {
-                              "de": "Zustand setzen",
-                              "en": "Set State"
+                              "en": "Set State",
+                              "de": "Zustand setzen"
                             },
                             "reuse": {
-                              "de": "Zustand setzen",
-                              "en": "Set State"
+                              "en": "Set State",
+                              "de": "Zustand setzen"
                             }
                           }
                         },
@@ -118,12 +119,12 @@
                           "value": "log.print",
                           "label": {
                             "native": {
-                              "de": "Log ausgeben",
-                              "en": "Print Log"
+                              "en": "Print Log",
+                              "de": "Log ausgeben"
                             },
                             "reuse": {
-                              "de": "Log ausgeben",
-                              "en": "Print Log"
+                              "en": "Print Log",
+                              "de": "Log ausgeben"
                             }
                           }
                         },
@@ -131,12 +132,12 @@
                           "value": "control.if",
                           "label": {
                             "native": {
-                              "de": "Wenn",
-                              "en": "If"
+                              "en": "If",
+                              "de": "Wenn"
                             },
                             "reuse": {
-                              "de": "Wenn",
-                              "en": "If"
+                              "en": "If",
+                              "de": "Wenn"
                             }
                           }
                         },
@@ -144,12 +145,12 @@
                           "value": "control.while",
                           "label": {
                             "native": {
-                              "de": "Solange",
-                              "en": "While"
+                              "en": "While",
+                              "de": "Solange"
                             },
                             "reuse": {
-                              "de": "Solange",
-                              "en": "While"
+                              "en": "While",
+                              "de": "Solange"
                             }
                           }
                         },
@@ -157,12 +158,12 @@
                           "value": "math.add",
                           "label": {
                             "native": {
-                              "de": "Addieren",
-                              "en": "Add"
+                              "en": "Add",
+                              "de": "Addieren"
                             },
                             "reuse": {
-                              "de": "Addieren",
-                              "en": "Add"
+                              "en": "Add",
+                              "de": "Addieren"
                             }
                           }
                         }
@@ -196,7 +197,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -204,12 +206,12 @@
                 "id": "addStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position hinzufügen",
-                    "en": "Add Step At"
+                    "en": "Add Step At",
+                    "de": "Schritt bei Position hinzufügen"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position hinzufügen",
-                    "en": "Add Step At"
+                    "en": "Add Step At",
+                    "de": "Schritt bei Position hinzufügen"
                   }
                 },
                 "kind": "mutation",
@@ -239,7 +241,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -247,12 +250,12 @@
                 "id": "removeStep",
                 "label": {
                   "native": {
-                    "de": "Schritt entfernen",
-                    "en": "Remove Step"
+                    "en": "Remove Step",
+                    "de": "Schritt entfernen"
                   },
                   "reuse": {
-                    "de": "Schritt entfernen",
-                    "en": "Remove Step"
+                    "en": "Remove Step",
+                    "de": "Schritt entfernen"
                   }
                 },
                 "kind": "mutation",
@@ -282,7 +285,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -290,12 +294,12 @@
                 "id": "removeStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position entfernen",
-                    "en": "Remove Step At"
+                    "en": "Remove Step At",
+                    "de": "Schritt bei Position entfernen"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position entfernen",
-                    "en": "Remove Step At"
+                    "en": "Remove Step At",
+                    "de": "Schritt bei Position entfernen"
                   }
                 },
                 "kind": "mutation",
@@ -325,7 +329,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -333,12 +338,12 @@
                 "id": "moveStep",
                 "label": {
                   "native": {
-                    "de": "Schritt verschieben",
-                    "en": "Move Step"
+                    "en": "Move Step",
+                    "de": "Schritt verschieben"
                   },
                   "reuse": {
-                    "de": "Schritt verschieben",
-                    "en": "Move Step"
+                    "en": "Move Step",
+                    "de": "Schritt verschieben"
                   }
                 },
                 "kind": "mutation",
@@ -368,7 +373,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -376,12 +382,12 @@
                 "id": "moveStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position verschieben",
-                    "en": "Move Step At"
+                    "en": "Move Step At",
+                    "de": "Schritt bei Position verschieben"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position verschieben",
-                    "en": "Move Step At"
+                    "en": "Move Step At",
+                    "de": "Schritt bei Position verschieben"
                   }
                 },
                 "kind": "mutation",
@@ -411,7 +417,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -419,12 +426,12 @@
                 "id": "setStepParams",
                 "label": {
                   "native": {
-                    "de": "Schrittparameter festlegen",
-                    "en": "Set Step Params"
+                    "en": "Set Step Params",
+                    "de": "Schrittparameter festlegen"
                   },
                   "reuse": {
-                    "de": "Schrittparameter festlegen",
-                    "en": "Set Step Params"
+                    "en": "Set Step Params",
+                    "de": "Schrittparameter festlegen"
                   }
                 },
                 "kind": "mutation",
@@ -454,7 +461,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -462,12 +470,12 @@
                 "id": "setStepParamsAt",
                 "label": {
                   "native": {
-                    "de": "Schrittparameter bei Position festlegen",
-                    "en": "Set Step Params At"
+                    "en": "Set Step Params At",
+                    "de": "Schrittparameter bei Position festlegen"
                   },
                   "reuse": {
-                    "de": "Schrittparameter bei Position festlegen",
-                    "en": "Set Step Params At"
+                    "en": "Set Step Params At",
+                    "de": "Schrittparameter bei Position festlegen"
                   }
                 },
                 "kind": "mutation",
@@ -497,7 +505,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -505,12 +514,12 @@
                 "id": "run",
                 "label": {
                   "native": {
-                    "de": "Ausführen",
-                    "en": "Run"
+                    "en": "Run",
+                    "de": "Ausführen"
                   },
                   "reuse": {
-                    "de": "Ausführen",
-                    "en": "Run"
+                    "en": "Run",
+                    "de": "Ausführen"
                   }
                 },
                 "kind": "view",
@@ -541,7 +550,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -549,12 +559,12 @@
                 "id": "undo",
                 "label": {
                   "native": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   },
                   "reuse": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   }
                 },
                 "kind": "history",
@@ -582,7 +592,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -590,12 +601,12 @@
                 "id": "redo",
                 "label": {
                   "native": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   },
                   "reuse": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   }
                 },
                 "kind": "history",
@@ -623,7 +634,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -631,12 +643,12 @@
                 "id": "commitCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   },
                   "reuse": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   }
                 },
                 "kind": "history",
@@ -663,7 +675,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -671,12 +684,12 @@
                 "id": "createAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   },
                   "reuse": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   }
                 },
                 "kind": "history",
@@ -703,7 +716,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -711,12 +725,12 @@
                 "id": "switchAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   },
                   "reuse": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   }
                 },
                 "kind": "history",
@@ -743,7 +757,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -751,12 +766,12 @@
                 "id": "checkoutCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   },
                   "reuse": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   }
                 },
                 "kind": "history",
@@ -783,7 +798,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -791,12 +807,12 @@
                 "id": "revertToCommand",
                 "label": {
                   "native": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   },
                   "reuse": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   }
                 },
                 "kind": "history",
@@ -806,12 +822,12 @@
                     "id": "entrySeq",
                     "label": {
                       "native": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       },
                       "reuse": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       }
                     },
                     "schema": {
@@ -842,7 +858,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -850,12 +867,12 @@
                 "id": "copy",
                 "label": {
                   "native": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   },
                   "reuse": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   }
                 },
                 "kind": "clipboard",
@@ -883,7 +900,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -891,12 +909,12 @@
                 "id": "cut",
                 "label": {
                   "native": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   },
                   "reuse": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   }
                 },
                 "kind": "clipboard",
@@ -924,7 +942,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -932,12 +951,12 @@
                 "id": "paste",
                 "label": {
                   "native": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   },
                   "reuse": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   }
                 },
                 "kind": "clipboard",
@@ -947,12 +966,12 @@
                     "id": "anchor",
                     "label": {
                       "native": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       },
                       "reuse": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       }
                     },
                     "schema": {
@@ -962,12 +981,12 @@
                           "value": "original",
                           "label": {
                             "native": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             },
                             "reuse": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             }
                           }
                         },
@@ -975,12 +994,12 @@
                           "value": "middle",
                           "label": {
                             "native": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             },
                             "reuse": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             }
                           }
                         },
@@ -988,12 +1007,12 @@
                           "value": "centroid",
                           "label": {
                             "native": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             },
                             "reuse": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             }
                           }
                         },
@@ -1001,12 +1020,12 @@
                           "value": "bottomLeft",
                           "label": {
                             "native": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             },
                             "reuse": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             }
                           }
                         },
@@ -1014,12 +1033,12 @@
                           "value": "bottomRight",
                           "label": {
                             "native": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             },
                             "reuse": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             }
                           }
                         },
@@ -1027,12 +1046,12 @@
                           "value": "topLeft",
                           "label": {
                             "native": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             },
                             "reuse": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             }
                           }
                         },
@@ -1040,12 +1059,12 @@
                           "value": "topRight",
                           "label": {
                             "native": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             },
                             "reuse": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             }
                           }
                         }
@@ -1058,12 +1077,12 @@
                     "id": "position",
                     "label": {
                       "native": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       },
                       "reuse": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       }
                     },
                     "schema": {
@@ -1094,7 +1113,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1102,12 +1122,12 @@
                 "id": "recordTutorial",
                 "label": {
                   "native": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   },
                   "reuse": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   }
                 },
                 "kind": "view",
@@ -1138,7 +1158,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1146,12 +1167,12 @@
                 "id": "setHistoryCommandFilter",
                 "label": {
                   "native": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   },
                   "reuse": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   }
                 },
                 "kind": "view",
@@ -1161,12 +1182,12 @@
                     "id": "value",
                     "label": {
                       "native": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       },
                       "reuse": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       }
                     },
                     "schema": {
@@ -1176,12 +1197,12 @@
                           "value": "all",
                           "label": {
                             "native": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             },
                             "reuse": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             }
                           }
                         },
@@ -1189,12 +1210,12 @@
                           "value": "withoutOperations",
                           "label": {
                             "native": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             },
                             "reuse": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             }
                           }
                         },
@@ -1202,12 +1223,12 @@
                           "value": "onlyOperations",
                           "label": {
                             "native": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             },
                             "reuse": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             }
                           }
                         }
@@ -1242,7 +1263,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1250,12 +1272,12 @@
                 "id": "noteShellCommand",
                 "label": {
                   "native": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   },
                   "reuse": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   }
                 },
                 "kind": "shell",
@@ -1265,12 +1287,12 @@
                     "id": "commandId",
                     "label": {
                       "native": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       },
                       "reuse": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       }
                     },
                     "schema": {
@@ -1282,12 +1304,12 @@
                     "id": "label",
                     "label": {
                       "native": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       },
                       "reuse": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       }
                     },
                     "schema": {
@@ -1299,12 +1321,12 @@
                     "id": "detail",
                     "label": {
                       "native": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       },
                       "reuse": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       }
                     },
                     "schema": {
@@ -1334,7 +1356,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1342,12 +1365,12 @@
                 "id": "interactionSelect",
                 "label": {
                   "native": {
-                    "de": "Auswählen",
-                    "en": "Select"
+                    "en": "Select",
+                    "de": "Auswählen"
                   },
                   "reuse": {
-                    "de": "Auswählen",
-                    "en": "Select"
+                    "en": "Select",
+                    "de": "Auswählen"
                   }
                 },
                 "kind": "interaction",
@@ -1357,12 +1380,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -1374,12 +1397,12 @@
                     "id": "targets",
                     "label": {
                       "native": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       },
                       "reuse": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       }
                     },
                     "schema": {
@@ -1391,12 +1414,12 @@
                     "id": "merge",
                     "label": {
                       "native": {
-                        "de": "Zusammenführen",
-                        "en": "Merge"
+                        "en": "Merge",
+                        "de": "Zusammenführen"
                       },
                       "reuse": {
-                        "de": "Zusammenführen",
-                        "en": "Merge"
+                        "en": "Merge",
+                        "de": "Zusammenführen"
                       }
                     },
                     "schema": {
@@ -1406,12 +1429,12 @@
                           "value": "replace",
                           "label": {
                             "native": {
-                              "de": "Ersetzen",
-                              "en": "Replace"
+                              "en": "Replace",
+                              "de": "Ersetzen"
                             },
                             "reuse": {
-                              "de": "Ersetzen",
-                              "en": "Replace"
+                              "en": "Replace",
+                              "de": "Ersetzen"
                             }
                           }
                         },
@@ -1419,12 +1442,12 @@
                           "value": "additive",
                           "label": {
                             "native": {
-                              "de": "Additiv",
-                              "en": "Additive"
+                              "en": "Additive",
+                              "de": "Additiv"
                             },
                             "reuse": {
-                              "de": "Additiv",
-                              "en": "Additive"
+                              "en": "Additive",
+                              "de": "Additiv"
                             }
                           }
                         },
@@ -1432,12 +1455,12 @@
                           "value": "subtractive",
                           "label": {
                             "native": {
-                              "de": "Subtraktiv",
-                              "en": "Subtractive"
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
                             },
                             "reuse": {
-                              "de": "Subtraktiv",
-                              "en": "Subtractive"
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
                             }
                           }
                         },
@@ -1445,12 +1468,12 @@
                           "value": "invertive",
                           "label": {
                             "native": {
-                              "de": "Invertierend",
-                              "en": "Invertive"
+                              "en": "Invertive",
+                              "de": "Invertierend"
                             },
                             "reuse": {
-                              "de": "Invertierend",
-                              "en": "Invertive"
+                              "en": "Invertive",
+                              "de": "Invertierend"
                             }
                           }
                         },
@@ -1458,12 +1481,12 @@
                           "value": "range",
                           "label": {
                             "native": {
-                              "de": "Bereich",
-                              "en": "Range"
+                              "en": "Range",
+                              "de": "Bereich"
                             },
                             "reuse": {
-                              "de": "Bereich",
-                              "en": "Range"
+                              "en": "Range",
+                              "de": "Bereich"
                             }
                           }
                         }
@@ -1475,12 +1498,12 @@
                     "id": "method",
                     "label": {
                       "native": {
-                        "de": "Methode",
-                        "en": "Method"
+                        "en": "Method",
+                        "de": "Methode"
                       },
                       "reuse": {
-                        "de": "Methode",
-                        "en": "Method"
+                        "en": "Method",
+                        "de": "Methode"
                       }
                     },
                     "schema": {
@@ -1490,12 +1513,12 @@
                           "value": "pick",
                           "label": {
                             "native": {
-                              "de": "Auswahl",
-                              "en": "Pick"
+                              "en": "Pick",
+                              "de": "Auswahl"
                             },
                             "reuse": {
-                              "de": "Auswahl",
-                              "en": "Pick"
+                              "en": "Pick",
+                              "de": "Auswahl"
                             }
                           }
                         },
@@ -1503,12 +1526,12 @@
                           "value": "rectangle",
                           "label": {
                             "native": {
-                              "de": "Rechteck",
-                              "en": "Rectangle"
+                              "en": "Rectangle",
+                              "de": "Rechteck"
                             },
                             "reuse": {
-                              "de": "Rechteck",
-                              "en": "Rectangle"
+                              "en": "Rectangle",
+                              "de": "Rechteck"
                             }
                           }
                         },
@@ -1516,12 +1539,12 @@
                           "value": "lasso",
                           "label": {
                             "native": {
-                              "de": "Lasso",
-                              "en": "Lasso"
+                              "en": "Lasso",
+                              "de": "Lasso"
                             },
                             "reuse": {
-                              "de": "Lasso",
-                              "en": "Lasso"
+                              "en": "Lasso",
+                              "de": "Lasso"
                             }
                           }
                         }
@@ -1555,7 +1578,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1563,12 +1587,12 @@
                 "id": "interactionHover",
                 "label": {
                   "native": {
-                    "de": "Hover",
-                    "en": "Hover"
+                    "en": "Hover",
+                    "de": "Hover"
                   },
                   "reuse": {
-                    "de": "Hover",
-                    "en": "Hover"
+                    "en": "Hover",
+                    "de": "Hover"
                   }
                 },
                 "kind": "interaction",
@@ -1578,12 +1602,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -1595,12 +1619,12 @@
                     "id": "channel",
                     "label": {
                       "native": {
-                        "de": "Kanal",
-                        "en": "Channel"
+                        "en": "Channel",
+                        "de": "Kanal"
                       },
                       "reuse": {
-                        "de": "Kanal",
-                        "en": "Channel"
+                        "en": "Channel",
+                        "de": "Kanal"
                       }
                     },
                     "schema": {
@@ -1612,12 +1636,12 @@
                     "id": "targets",
                     "label": {
                       "native": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       },
                       "reuse": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       }
                     },
                     "schema": {
@@ -1651,7 +1675,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1659,12 +1684,12 @@
                 "id": "clearSelection",
                 "label": {
                   "native": {
-                    "de": "Auswahl aufheben",
-                    "en": "Clear Selection"
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
                   },
                   "reuse": {
-                    "de": "Auswahl aufheben",
-                    "en": "Clear Selection"
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
                   }
                 },
                 "kind": "interaction",
@@ -1696,7 +1721,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1704,12 +1730,12 @@
                 "id": "selectAll",
                 "label": {
                   "native": {
-                    "de": "Alles auswählen",
-                    "en": "Select All"
+                    "en": "Select All",
+                    "de": "Alles auswählen"
                   },
                   "reuse": {
-                    "de": "Alles auswählen",
-                    "en": "Select All"
+                    "en": "Select All",
+                    "de": "Alles auswählen"
                   }
                 },
                 "kind": "interaction",
@@ -1741,7 +1767,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1749,12 +1776,12 @@
                 "id": "setSelectionMode",
                 "label": {
                   "native": {
-                    "de": "Auswahlmodus festlegen",
-                    "en": "Set Selection Mode"
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
                   },
                   "reuse": {
-                    "de": "Auswahlmodus festlegen",
-                    "en": "Set Selection Mode"
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
                   }
                 },
                 "kind": "interaction",
@@ -1764,12 +1791,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -1781,12 +1808,12 @@
                     "id": "mode",
                     "label": {
                       "native": {
-                        "de": "Modus",
-                        "en": "Mode"
+                        "en": "Mode",
+                        "de": "Modus"
                       },
                       "reuse": {
-                        "de": "Modus",
-                        "en": "Mode"
+                        "en": "Mode",
+                        "de": "Modus"
                       }
                     },
                     "schema": {
@@ -1796,12 +1823,12 @@
                           "value": "single",
                           "label": {
                             "native": {
-                              "de": "Einzeln",
-                              "en": "Single"
+                              "en": "Single",
+                              "de": "Einzeln"
                             },
                             "reuse": {
-                              "de": "Einzeln",
-                              "en": "Single"
+                              "en": "Single",
+                              "de": "Einzeln"
                             }
                           }
                         },
@@ -1809,12 +1836,12 @@
                           "value": "multiple",
                           "label": {
                             "native": {
-                              "de": "Mehrfach",
-                              "en": "Multiple"
+                              "en": "Multiple",
+                              "de": "Mehrfach"
                             },
                             "reuse": {
-                              "de": "Mehrfach",
-                              "en": "Multiple"
+                              "en": "Multiple",
+                              "de": "Mehrfach"
                             }
                           }
                         }
@@ -1848,7 +1875,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1856,12 +1884,12 @@
                 "id": "setInteractionGranularity",
                 "label": {
                   "native": {
-                    "de": "Granularität festlegen",
-                    "en": "Set Granularity"
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
                   },
                   "reuse": {
-                    "de": "Granularität festlegen",
-                    "en": "Set Granularity"
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
                   }
                 },
                 "kind": "interaction",
@@ -1871,12 +1899,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -1888,12 +1916,12 @@
                     "id": "granularityId",
                     "label": {
                       "native": {
-                        "de": "Granularität",
-                        "en": "Granularity"
+                        "en": "Granularity",
+                        "de": "Granularität"
                       },
                       "reuse": {
-                        "de": "Granularität",
-                        "en": "Granularity"
+                        "en": "Granularity",
+                        "de": "Granularität"
                       }
                     },
                     "schema": {
@@ -1927,7 +1955,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -1942,12 +1971,12 @@
             "id": "imperative-script",
             "label": {
               "native": {
-                "de": "Skript",
-                "en": "Script"
+                "en": "Script",
+                "de": "Skript"
               },
               "reuse": {
-                "de": "Skript",
-                "en": "Script"
+                "en": "Script",
+                "de": "Skript"
               }
             },
             "bodyKey": "imperative.play.script",
@@ -1963,12 +1992,12 @@
                 "id": "addStep",
                 "label": {
                   "native": {
-                    "de": "Schritt hinzufügen",
-                    "en": "Add Step"
+                    "en": "Add Step",
+                    "de": "Schritt hinzufügen"
                   },
                   "reuse": {
-                    "de": "Schritt hinzufügen",
-                    "en": "Add Step"
+                    "en": "Add Step",
+                    "de": "Schritt hinzufügen"
                   }
                 },
                 "kind": "mutation",
@@ -1978,12 +2007,12 @@
                     "id": "kind",
                     "label": {
                       "native": {
-                        "de": "Art",
-                        "en": "Kind"
+                        "en": "Kind",
+                        "de": "Art"
                       },
                       "reuse": {
-                        "de": "Art",
-                        "en": "Kind"
+                        "en": "Kind",
+                        "de": "Art"
                       }
                     },
                     "schema": {
@@ -1993,12 +2022,12 @@
                           "value": "state.set",
                           "label": {
                             "native": {
-                              "de": "Zustand setzen",
-                              "en": "Set State"
+                              "en": "Set State",
+                              "de": "Zustand setzen"
                             },
                             "reuse": {
-                              "de": "Zustand setzen",
-                              "en": "Set State"
+                              "en": "Set State",
+                              "de": "Zustand setzen"
                             }
                           }
                         },
@@ -2006,12 +2035,12 @@
                           "value": "log.print",
                           "label": {
                             "native": {
-                              "de": "Log ausgeben",
-                              "en": "Print Log"
+                              "en": "Print Log",
+                              "de": "Log ausgeben"
                             },
                             "reuse": {
-                              "de": "Log ausgeben",
-                              "en": "Print Log"
+                              "en": "Print Log",
+                              "de": "Log ausgeben"
                             }
                           }
                         },
@@ -2019,12 +2048,12 @@
                           "value": "control.if",
                           "label": {
                             "native": {
-                              "de": "Wenn",
-                              "en": "If"
+                              "en": "If",
+                              "de": "Wenn"
                             },
                             "reuse": {
-                              "de": "Wenn",
-                              "en": "If"
+                              "en": "If",
+                              "de": "Wenn"
                             }
                           }
                         },
@@ -2032,12 +2061,12 @@
                           "value": "control.while",
                           "label": {
                             "native": {
-                              "de": "Solange",
-                              "en": "While"
+                              "en": "While",
+                              "de": "Solange"
                             },
                             "reuse": {
-                              "de": "Solange",
-                              "en": "While"
+                              "en": "While",
+                              "de": "Solange"
                             }
                           }
                         },
@@ -2045,12 +2074,12 @@
                           "value": "math.add",
                           "label": {
                             "native": {
-                              "de": "Addieren",
-                              "en": "Add"
+                              "en": "Add",
+                              "de": "Addieren"
                             },
                             "reuse": {
-                              "de": "Addieren",
-                              "en": "Add"
+                              "en": "Add",
+                              "de": "Addieren"
                             }
                           }
                         }
@@ -2084,7 +2113,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2092,12 +2122,12 @@
                 "id": "addStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position hinzufügen",
-                    "en": "Add Step At"
+                    "en": "Add Step At",
+                    "de": "Schritt bei Position hinzufügen"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position hinzufügen",
-                    "en": "Add Step At"
+                    "en": "Add Step At",
+                    "de": "Schritt bei Position hinzufügen"
                   }
                 },
                 "kind": "mutation",
@@ -2127,7 +2157,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2135,12 +2166,12 @@
                 "id": "removeStep",
                 "label": {
                   "native": {
-                    "de": "Schritt entfernen",
-                    "en": "Remove Step"
+                    "en": "Remove Step",
+                    "de": "Schritt entfernen"
                   },
                   "reuse": {
-                    "de": "Schritt entfernen",
-                    "en": "Remove Step"
+                    "en": "Remove Step",
+                    "de": "Schritt entfernen"
                   }
                 },
                 "kind": "mutation",
@@ -2170,7 +2201,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2178,12 +2210,12 @@
                 "id": "removeStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position entfernen",
-                    "en": "Remove Step At"
+                    "en": "Remove Step At",
+                    "de": "Schritt bei Position entfernen"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position entfernen",
-                    "en": "Remove Step At"
+                    "en": "Remove Step At",
+                    "de": "Schritt bei Position entfernen"
                   }
                 },
                 "kind": "mutation",
@@ -2213,7 +2245,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2221,12 +2254,12 @@
                 "id": "moveStep",
                 "label": {
                   "native": {
-                    "de": "Schritt verschieben",
-                    "en": "Move Step"
+                    "en": "Move Step",
+                    "de": "Schritt verschieben"
                   },
                   "reuse": {
-                    "de": "Schritt verschieben",
-                    "en": "Move Step"
+                    "en": "Move Step",
+                    "de": "Schritt verschieben"
                   }
                 },
                 "kind": "mutation",
@@ -2256,7 +2289,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2264,12 +2298,12 @@
                 "id": "moveStepAt",
                 "label": {
                   "native": {
-                    "de": "Schritt bei Position verschieben",
-                    "en": "Move Step At"
+                    "en": "Move Step At",
+                    "de": "Schritt bei Position verschieben"
                   },
                   "reuse": {
-                    "de": "Schritt bei Position verschieben",
-                    "en": "Move Step At"
+                    "en": "Move Step At",
+                    "de": "Schritt bei Position verschieben"
                   }
                 },
                 "kind": "mutation",
@@ -2299,7 +2333,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2307,12 +2342,12 @@
                 "id": "setStepParams",
                 "label": {
                   "native": {
-                    "de": "Schrittparameter festlegen",
-                    "en": "Set Step Params"
+                    "en": "Set Step Params",
+                    "de": "Schrittparameter festlegen"
                   },
                   "reuse": {
-                    "de": "Schrittparameter festlegen",
-                    "en": "Set Step Params"
+                    "en": "Set Step Params",
+                    "de": "Schrittparameter festlegen"
                   }
                 },
                 "kind": "mutation",
@@ -2342,7 +2377,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2350,12 +2386,12 @@
                 "id": "setStepParamsAt",
                 "label": {
                   "native": {
-                    "de": "Schrittparameter bei Position festlegen",
-                    "en": "Set Step Params At"
+                    "en": "Set Step Params At",
+                    "de": "Schrittparameter bei Position festlegen"
                   },
                   "reuse": {
-                    "de": "Schrittparameter bei Position festlegen",
-                    "en": "Set Step Params At"
+                    "en": "Set Step Params At",
+                    "de": "Schrittparameter bei Position festlegen"
                   }
                 },
                 "kind": "mutation",
@@ -2385,7 +2421,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2393,12 +2430,12 @@
                 "id": "run",
                 "label": {
                   "native": {
-                    "de": "Ausführen",
-                    "en": "Run"
+                    "en": "Run",
+                    "de": "Ausführen"
                   },
                   "reuse": {
-                    "de": "Ausführen",
-                    "en": "Run"
+                    "en": "Run",
+                    "de": "Ausführen"
                   }
                 },
                 "kind": "view",
@@ -2429,7 +2466,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "batchOnlyPendingRewrite"
                   }
                 }
               },
@@ -2437,12 +2475,12 @@
                 "id": "undo",
                 "label": {
                   "native": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   },
                   "reuse": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   }
                 },
                 "kind": "history",
@@ -2470,7 +2508,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2478,12 +2517,12 @@
                 "id": "redo",
                 "label": {
                   "native": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   },
                   "reuse": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   }
                 },
                 "kind": "history",
@@ -2511,7 +2550,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2519,12 +2559,12 @@
                 "id": "commitCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   },
                   "reuse": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   }
                 },
                 "kind": "history",
@@ -2551,7 +2591,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2559,12 +2600,12 @@
                 "id": "createAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   },
                   "reuse": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   }
                 },
                 "kind": "history",
@@ -2591,7 +2632,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2599,12 +2641,12 @@
                 "id": "switchAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   },
                   "reuse": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   }
                 },
                 "kind": "history",
@@ -2631,7 +2673,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2639,12 +2682,12 @@
                 "id": "checkoutCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   },
                   "reuse": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   }
                 },
                 "kind": "history",
@@ -2671,7 +2714,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2679,12 +2723,12 @@
                 "id": "revertToCommand",
                 "label": {
                   "native": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   },
                   "reuse": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   }
                 },
                 "kind": "history",
@@ -2694,12 +2738,12 @@
                     "id": "entrySeq",
                     "label": {
                       "native": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       },
                       "reuse": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       }
                     },
                     "schema": {
@@ -2730,7 +2774,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2738,12 +2783,12 @@
                 "id": "copy",
                 "label": {
                   "native": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   },
                   "reuse": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   }
                 },
                 "kind": "clipboard",
@@ -2771,7 +2816,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2779,12 +2825,12 @@
                 "id": "cut",
                 "label": {
                   "native": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   },
                   "reuse": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   }
                 },
                 "kind": "clipboard",
@@ -2812,7 +2858,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2820,12 +2867,12 @@
                 "id": "paste",
                 "label": {
                   "native": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   },
                   "reuse": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   }
                 },
                 "kind": "clipboard",
@@ -2835,12 +2882,12 @@
                     "id": "anchor",
                     "label": {
                       "native": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       },
                       "reuse": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       }
                     },
                     "schema": {
@@ -2850,12 +2897,12 @@
                           "value": "original",
                           "label": {
                             "native": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             },
                             "reuse": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             }
                           }
                         },
@@ -2863,12 +2910,12 @@
                           "value": "middle",
                           "label": {
                             "native": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             },
                             "reuse": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             }
                           }
                         },
@@ -2876,12 +2923,12 @@
                           "value": "centroid",
                           "label": {
                             "native": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             },
                             "reuse": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             }
                           }
                         },
@@ -2889,12 +2936,12 @@
                           "value": "bottomLeft",
                           "label": {
                             "native": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             },
                             "reuse": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             }
                           }
                         },
@@ -2902,12 +2949,12 @@
                           "value": "bottomRight",
                           "label": {
                             "native": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             },
                             "reuse": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             }
                           }
                         },
@@ -2915,12 +2962,12 @@
                           "value": "topLeft",
                           "label": {
                             "native": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             },
                             "reuse": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             }
                           }
                         },
@@ -2928,12 +2975,12 @@
                           "value": "topRight",
                           "label": {
                             "native": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             },
                             "reuse": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             }
                           }
                         }
@@ -2946,12 +2993,12 @@
                     "id": "position",
                     "label": {
                       "native": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       },
                       "reuse": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       }
                     },
                     "schema": {
@@ -2982,7 +3029,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -2990,12 +3038,12 @@
                 "id": "recordTutorial",
                 "label": {
                   "native": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   },
                   "reuse": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   }
                 },
                 "kind": "view",
@@ -3026,7 +3074,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3034,12 +3083,12 @@
                 "id": "setHistoryCommandFilter",
                 "label": {
                   "native": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   },
                   "reuse": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   }
                 },
                 "kind": "view",
@@ -3049,12 +3098,12 @@
                     "id": "value",
                     "label": {
                       "native": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       },
                       "reuse": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       }
                     },
                     "schema": {
@@ -3064,12 +3113,12 @@
                           "value": "all",
                           "label": {
                             "native": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             },
                             "reuse": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             }
                           }
                         },
@@ -3077,12 +3126,12 @@
                           "value": "withoutOperations",
                           "label": {
                             "native": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             },
                             "reuse": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             }
                           }
                         },
@@ -3090,12 +3139,12 @@
                           "value": "onlyOperations",
                           "label": {
                             "native": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             },
                             "reuse": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             }
                           }
                         }
@@ -3130,7 +3179,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3138,12 +3188,12 @@
                 "id": "noteShellCommand",
                 "label": {
                   "native": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   },
                   "reuse": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   }
                 },
                 "kind": "shell",
@@ -3153,12 +3203,12 @@
                     "id": "commandId",
                     "label": {
                       "native": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       },
                       "reuse": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       }
                     },
                     "schema": {
@@ -3170,12 +3220,12 @@
                     "id": "label",
                     "label": {
                       "native": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       },
                       "reuse": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       }
                     },
                     "schema": {
@@ -3187,12 +3237,12 @@
                     "id": "detail",
                     "label": {
                       "native": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       },
                       "reuse": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       }
                     },
                     "schema": {
@@ -3222,7 +3272,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3230,12 +3281,12 @@
                 "id": "interactionSelect",
                 "label": {
                   "native": {
-                    "de": "Auswählen",
-                    "en": "Select"
+                    "en": "Select",
+                    "de": "Auswählen"
                   },
                   "reuse": {
-                    "de": "Auswählen",
-                    "en": "Select"
+                    "en": "Select",
+                    "de": "Auswählen"
                   }
                 },
                 "kind": "interaction",
@@ -3245,12 +3296,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -3262,12 +3313,12 @@
                     "id": "targets",
                     "label": {
                       "native": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       },
                       "reuse": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       }
                     },
                     "schema": {
@@ -3279,12 +3330,12 @@
                     "id": "merge",
                     "label": {
                       "native": {
-                        "de": "Zusammenführen",
-                        "en": "Merge"
+                        "en": "Merge",
+                        "de": "Zusammenführen"
                       },
                       "reuse": {
-                        "de": "Zusammenführen",
-                        "en": "Merge"
+                        "en": "Merge",
+                        "de": "Zusammenführen"
                       }
                     },
                     "schema": {
@@ -3294,12 +3345,12 @@
                           "value": "replace",
                           "label": {
                             "native": {
-                              "de": "Ersetzen",
-                              "en": "Replace"
+                              "en": "Replace",
+                              "de": "Ersetzen"
                             },
                             "reuse": {
-                              "de": "Ersetzen",
-                              "en": "Replace"
+                              "en": "Replace",
+                              "de": "Ersetzen"
                             }
                           }
                         },
@@ -3307,12 +3358,12 @@
                           "value": "additive",
                           "label": {
                             "native": {
-                              "de": "Additiv",
-                              "en": "Additive"
+                              "en": "Additive",
+                              "de": "Additiv"
                             },
                             "reuse": {
-                              "de": "Additiv",
-                              "en": "Additive"
+                              "en": "Additive",
+                              "de": "Additiv"
                             }
                           }
                         },
@@ -3320,12 +3371,12 @@
                           "value": "subtractive",
                           "label": {
                             "native": {
-                              "de": "Subtraktiv",
-                              "en": "Subtractive"
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
                             },
                             "reuse": {
-                              "de": "Subtraktiv",
-                              "en": "Subtractive"
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
                             }
                           }
                         },
@@ -3333,12 +3384,12 @@
                           "value": "invertive",
                           "label": {
                             "native": {
-                              "de": "Invertierend",
-                              "en": "Invertive"
+                              "en": "Invertive",
+                              "de": "Invertierend"
                             },
                             "reuse": {
-                              "de": "Invertierend",
-                              "en": "Invertive"
+                              "en": "Invertive",
+                              "de": "Invertierend"
                             }
                           }
                         },
@@ -3346,12 +3397,12 @@
                           "value": "range",
                           "label": {
                             "native": {
-                              "de": "Bereich",
-                              "en": "Range"
+                              "en": "Range",
+                              "de": "Bereich"
                             },
                             "reuse": {
-                              "de": "Bereich",
-                              "en": "Range"
+                              "en": "Range",
+                              "de": "Bereich"
                             }
                           }
                         }
@@ -3363,12 +3414,12 @@
                     "id": "method",
                     "label": {
                       "native": {
-                        "de": "Methode",
-                        "en": "Method"
+                        "en": "Method",
+                        "de": "Methode"
                       },
                       "reuse": {
-                        "de": "Methode",
-                        "en": "Method"
+                        "en": "Method",
+                        "de": "Methode"
                       }
                     },
                     "schema": {
@@ -3378,12 +3429,12 @@
                           "value": "pick",
                           "label": {
                             "native": {
-                              "de": "Auswahl",
-                              "en": "Pick"
+                              "en": "Pick",
+                              "de": "Auswahl"
                             },
                             "reuse": {
-                              "de": "Auswahl",
-                              "en": "Pick"
+                              "en": "Pick",
+                              "de": "Auswahl"
                             }
                           }
                         },
@@ -3391,12 +3442,12 @@
                           "value": "rectangle",
                           "label": {
                             "native": {
-                              "de": "Rechteck",
-                              "en": "Rectangle"
+                              "en": "Rectangle",
+                              "de": "Rechteck"
                             },
                             "reuse": {
-                              "de": "Rechteck",
-                              "en": "Rectangle"
+                              "en": "Rectangle",
+                              "de": "Rechteck"
                             }
                           }
                         },
@@ -3404,12 +3455,12 @@
                           "value": "lasso",
                           "label": {
                             "native": {
-                              "de": "Lasso",
-                              "en": "Lasso"
+                              "en": "Lasso",
+                              "de": "Lasso"
                             },
                             "reuse": {
-                              "de": "Lasso",
-                              "en": "Lasso"
+                              "en": "Lasso",
+                              "de": "Lasso"
                             }
                           }
                         }
@@ -3443,7 +3494,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3451,12 +3503,12 @@
                 "id": "interactionHover",
                 "label": {
                   "native": {
-                    "de": "Hover",
-                    "en": "Hover"
+                    "en": "Hover",
+                    "de": "Hover"
                   },
                   "reuse": {
-                    "de": "Hover",
-                    "en": "Hover"
+                    "en": "Hover",
+                    "de": "Hover"
                   }
                 },
                 "kind": "interaction",
@@ -3466,12 +3518,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -3483,12 +3535,12 @@
                     "id": "channel",
                     "label": {
                       "native": {
-                        "de": "Kanal",
-                        "en": "Channel"
+                        "en": "Channel",
+                        "de": "Kanal"
                       },
                       "reuse": {
-                        "de": "Kanal",
-                        "en": "Channel"
+                        "en": "Channel",
+                        "de": "Kanal"
                       }
                     },
                     "schema": {
@@ -3500,12 +3552,12 @@
                     "id": "targets",
                     "label": {
                       "native": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       },
                       "reuse": {
-                        "de": "Ziele",
-                        "en": "Targets"
+                        "en": "Targets",
+                        "de": "Ziele"
                       }
                     },
                     "schema": {
@@ -3539,7 +3591,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3547,12 +3600,12 @@
                 "id": "clearSelection",
                 "label": {
                   "native": {
-                    "de": "Auswahl aufheben",
-                    "en": "Clear Selection"
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
                   },
                   "reuse": {
-                    "de": "Auswahl aufheben",
-                    "en": "Clear Selection"
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
                   }
                 },
                 "kind": "interaction",
@@ -3584,7 +3637,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3592,12 +3646,12 @@
                 "id": "selectAll",
                 "label": {
                   "native": {
-                    "de": "Alles auswählen",
-                    "en": "Select All"
+                    "en": "Select All",
+                    "de": "Alles auswählen"
                   },
                   "reuse": {
-                    "de": "Alles auswählen",
-                    "en": "Select All"
+                    "en": "Select All",
+                    "de": "Alles auswählen"
                   }
                 },
                 "kind": "interaction",
@@ -3629,7 +3683,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3637,12 +3692,12 @@
                 "id": "setSelectionMode",
                 "label": {
                   "native": {
-                    "de": "Auswahlmodus festlegen",
-                    "en": "Set Selection Mode"
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
                   },
                   "reuse": {
-                    "de": "Auswahlmodus festlegen",
-                    "en": "Set Selection Mode"
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
                   }
                 },
                 "kind": "interaction",
@@ -3652,12 +3707,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -3669,12 +3724,12 @@
                     "id": "mode",
                     "label": {
                       "native": {
-                        "de": "Modus",
-                        "en": "Mode"
+                        "en": "Mode",
+                        "de": "Modus"
                       },
                       "reuse": {
-                        "de": "Modus",
-                        "en": "Mode"
+                        "en": "Mode",
+                        "de": "Modus"
                       }
                     },
                     "schema": {
@@ -3684,12 +3739,12 @@
                           "value": "single",
                           "label": {
                             "native": {
-                              "de": "Einzeln",
-                              "en": "Single"
+                              "en": "Single",
+                              "de": "Einzeln"
                             },
                             "reuse": {
-                              "de": "Einzeln",
-                              "en": "Single"
+                              "en": "Single",
+                              "de": "Einzeln"
                             }
                           }
                         },
@@ -3697,12 +3752,12 @@
                           "value": "multiple",
                           "label": {
                             "native": {
-                              "de": "Mehrfach",
-                              "en": "Multiple"
+                              "en": "Multiple",
+                              "de": "Mehrfach"
                             },
                             "reuse": {
-                              "de": "Mehrfach",
-                              "en": "Multiple"
+                              "en": "Multiple",
+                              "de": "Mehrfach"
                             }
                           }
                         }
@@ -3736,7 +3791,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3744,12 +3800,12 @@
                 "id": "setInteractionGranularity",
                 "label": {
                   "native": {
-                    "de": "Granularität festlegen",
-                    "en": "Set Granularity"
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
                   },
                   "reuse": {
-                    "de": "Granularität festlegen",
-                    "en": "Set Granularity"
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
                   }
                 },
                 "kind": "interaction",
@@ -3759,12 +3815,12 @@
                     "id": "domainId",
                     "label": {
                       "native": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       },
                       "reuse": {
-                        "de": "Domäne",
-                        "en": "Domain"
+                        "en": "Domain",
+                        "de": "Domäne"
                       }
                     },
                     "schema": {
@@ -3776,12 +3832,12 @@
                     "id": "granularityId",
                     "label": {
                       "native": {
-                        "de": "Granularität",
-                        "en": "Granularity"
+                        "en": "Granularity",
+                        "de": "Granularität"
                       },
                       "reuse": {
-                        "de": "Granularität",
-                        "en": "Granularity"
+                        "en": "Granularity",
+                        "de": "Granularität"
                       }
                     },
                     "schema": {
@@ -3815,7 +3871,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -3833,12 +3890,12 @@
             },
             "label": {
               "native": {
-                "de": "Artefakt",
-                "en": "Artifact"
+                "en": "Artifact",
+                "de": "Artefakt"
               },
               "reuse": {
-                "de": "Artefakt",
-                "en": "Artifact"
+                "en": "Artifact",
+                "de": "Artefakt"
               }
             },
             "group": "workbench",
@@ -3852,12 +3909,12 @@
             },
             "label": {
               "native": {
-                "de": "Katalog",
-                "en": "Catalogue"
+                "en": "Catalogue",
+                "de": "Katalog"
               },
               "reuse": {
-                "de": "Katalog",
-                "en": "Catalogue"
+                "en": "Catalogue",
+                "de": "Katalog"
               }
             },
             "group": "workbench",
@@ -3871,12 +3928,12 @@
             },
             "label": {
               "native": {
-                "de": "Inspektion",
-                "en": "Inspection"
+                "en": "Inspection",
+                "de": "Inspektion"
               },
               "reuse": {
-                "de": "Inspektion",
-                "en": "Inspection"
+                "en": "Inspection",
+                "de": "Inspektion"
               }
             },
             "group": "details",
@@ -3890,12 +3947,12 @@
             },
             "label": {
               "native": {
-                "de": "Verlauf",
-                "en": "History"
+                "en": "History",
+                "de": "Verlauf"
               },
               "reuse": {
-                "de": "Verlauf",
-                "en": "History"
+                "en": "History",
+                "de": "Verlauf"
               }
             },
             "group": "settings",
@@ -3961,28 +4018,28 @@
             "id": "setContributions",
             "label": {
               "native": {
-                "de": "Beiträge festlegen",
-                "en": "Set Contributions"
+                "en": "Set Contributions",
+                "de": "Beiträge festlegen"
               },
               "reuse": {
-                "de": "Beiträge festlegen",
-                "en": "Set Contributions"
+                "en": "Set Contributions",
+                "de": "Beiträge festlegen"
               }
             },
             "category": "host",
-            "iconId": "code",
+            "iconId": "eye",
             "kind": "view",
             "args": [
               {
                 "id": "json",
                 "label": {
                   "native": {
-                    "de": "Beiträge",
-                    "en": "Contributions"
+                    "en": "Contributions",
+                    "de": "Beiträge"
                   },
                   "reuse": {
-                    "de": "Beiträge",
-                    "en": "Contributions"
+                    "en": "Contributions",
+                    "de": "Beiträge"
                   }
                 },
                 "schema": {
@@ -4017,7 +4074,8 @@
                 "idempotency": "none",
                 "expectedRevision": false,
                 "cancellable": false,
-                "class": "interactive"
+                "class": "interactive",
+                "interactiveJob": "batchOnlyPendingRewrite"
               }
             }
           }
@@ -4027,12 +4085,12 @@
             "id": "steps",
             "label": {
               "native": {
-                "de": "Schritte",
-                "en": "Steps"
+                "en": "Steps",
+                "de": "Schritte"
               },
               "reuse": {
-                "de": "Schritte",
-                "en": "Steps"
+                "en": "Steps",
+                "de": "Schritte"
               }
             },
             "granularities": [
@@ -4040,12 +4098,12 @@
                 "id": "step",
                 "label": {
                   "native": {
-                    "de": "Schritt",
-                    "en": "Step"
+                    "en": "Step",
+                    "de": "Schritt"
                   },
                   "reuse": {
-                    "de": "Schritt",
-                    "en": "Step"
+                    "en": "Step",
+                    "de": "Schritt"
                   }
                 },
                 "iconId": "square"
@@ -4109,20 +4167,28 @@
         "artifactKinds": [
           {
             "id": "computation.procedure",
-            "name": "Imperative",
+            "name": "Procedure",
             "sourceFormat": "procedure.document",
-            "componentKind": "imperative",
+            "componentKind": "procedure",
             "dimension": "graph",
             "mediaCapability": "meshOnly",
             "mediaType": {
               "class": "computation",
-              "form": "imperative"
+              "form": "procedure"
             },
             "schema": "procedure.document",
             "exportFormats": [],
             "importFormats": [],
-            "exportStdioKinds": [],
-            "importStdioKinds": []
+            "exportStdioKinds": [
+              "stdio.csv",
+              "stdio.json",
+              "stdio.md"
+            ],
+            "importStdioKinds": [
+              "stdio.csv",
+              "stdio.json",
+              "stdio.md"
+            ]
           }
         ],
         "config": {
@@ -4132,10 +4198,10 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "procedure.document/v1",
-          "documentMediaType": {
+          "artifactSchema": "procedure.document/v1",
+          "artifactMediaType": {
             "class": "computation",
-            "form": "imperative"
+            "form": "procedure"
           },
           "ports": [
             {
@@ -4155,9 +4221,9 @@
           "importFormats": [],
           "artifact": {
             "id": "computation.procedure",
-            "name": "Imperative",
+            "name": "Procedure",
             "dimension": "graph",
-            "componentKind": "imperative"
+            "componentKind": "procedure"
           }
         }
       },
@@ -4171,12 +4237,12 @@
         },
         "label": {
           "native": {
-            "de": "Betrachter",
-            "en": "Viewer"
+            "en": "Viewer",
+            "de": "Betrachter"
           },
           "reuse": {
-            "de": "Betrachter",
-            "en": "Viewer"
+            "en": "Viewer",
+            "de": "Betrachter"
           }
         },
         "breadcrumb": [
@@ -4190,12 +4256,12 @@
             "id": "view",
             "label": {
               "native": {
-                "de": "Ansicht",
-                "en": "View"
+                "en": "View",
+                "de": "Ansicht"
               },
               "reuse": {
-                "de": "Ansicht",
-                "en": "View"
+                "en": "View",
+                "de": "Ansicht"
               }
             },
             "iconId": "eye",
@@ -4209,12 +4275,12 @@
             "id": "framework.window.table",
             "label": {
               "native": {
-                "de": "Schritte",
-                "en": "Steps"
+                "en": "Steps",
+                "de": "Schritte"
               },
               "reuse": {
-                "de": "Schritte",
-                "en": "Steps"
+                "en": "Steps",
+                "de": "Schritte"
               }
             },
             "bodyKey": "framework.window.table",
@@ -4230,12 +4296,12 @@
                 "id": "undo",
                 "label": {
                   "native": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   },
                   "reuse": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   }
                 },
                 "kind": "history",
@@ -4263,7 +4329,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4271,12 +4338,12 @@
                 "id": "redo",
                 "label": {
                   "native": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   },
                   "reuse": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   }
                 },
                 "kind": "history",
@@ -4304,7 +4371,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4312,12 +4380,12 @@
                 "id": "commitCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   },
                   "reuse": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   }
                 },
                 "kind": "history",
@@ -4344,7 +4412,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4352,12 +4421,12 @@
                 "id": "createAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   },
                   "reuse": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   }
                 },
                 "kind": "history",
@@ -4384,7 +4453,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4392,12 +4462,12 @@
                 "id": "switchAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   },
                   "reuse": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   }
                 },
                 "kind": "history",
@@ -4424,7 +4494,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4432,12 +4503,12 @@
                 "id": "checkoutCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   },
                   "reuse": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   }
                 },
                 "kind": "history",
@@ -4464,7 +4535,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4472,12 +4544,12 @@
                 "id": "revertToCommand",
                 "label": {
                   "native": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   },
                   "reuse": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   }
                 },
                 "kind": "history",
@@ -4487,12 +4559,12 @@
                     "id": "entrySeq",
                     "label": {
                       "native": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       },
                       "reuse": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       }
                     },
                     "schema": {
@@ -4523,7 +4595,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4531,12 +4604,12 @@
                 "id": "copy",
                 "label": {
                   "native": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   },
                   "reuse": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   }
                 },
                 "kind": "clipboard",
@@ -4564,7 +4637,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4572,12 +4646,12 @@
                 "id": "cut",
                 "label": {
                   "native": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   },
                   "reuse": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   }
                 },
                 "kind": "clipboard",
@@ -4605,7 +4679,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4613,12 +4688,12 @@
                 "id": "paste",
                 "label": {
                   "native": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   },
                   "reuse": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   }
                 },
                 "kind": "clipboard",
@@ -4628,12 +4703,12 @@
                     "id": "anchor",
                     "label": {
                       "native": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       },
                       "reuse": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       }
                     },
                     "schema": {
@@ -4643,12 +4718,12 @@
                           "value": "original",
                           "label": {
                             "native": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             },
                             "reuse": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             }
                           }
                         },
@@ -4656,12 +4731,12 @@
                           "value": "middle",
                           "label": {
                             "native": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             },
                             "reuse": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             }
                           }
                         },
@@ -4669,12 +4744,12 @@
                           "value": "centroid",
                           "label": {
                             "native": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             },
                             "reuse": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             }
                           }
                         },
@@ -4682,12 +4757,12 @@
                           "value": "bottomLeft",
                           "label": {
                             "native": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             },
                             "reuse": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             }
                           }
                         },
@@ -4695,12 +4770,12 @@
                           "value": "bottomRight",
                           "label": {
                             "native": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             },
                             "reuse": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             }
                           }
                         },
@@ -4708,12 +4783,12 @@
                           "value": "topLeft",
                           "label": {
                             "native": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             },
                             "reuse": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             }
                           }
                         },
@@ -4721,12 +4796,12 @@
                           "value": "topRight",
                           "label": {
                             "native": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             },
                             "reuse": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             }
                           }
                         }
@@ -4739,12 +4814,12 @@
                     "id": "position",
                     "label": {
                       "native": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       },
                       "reuse": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       }
                     },
                     "schema": {
@@ -4775,7 +4850,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4783,12 +4859,12 @@
                 "id": "recordTutorial",
                 "label": {
                   "native": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   },
                   "reuse": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   }
                 },
                 "kind": "view",
@@ -4819,7 +4895,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4827,12 +4904,12 @@
                 "id": "setHistoryCommandFilter",
                 "label": {
                   "native": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   },
                   "reuse": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   }
                 },
                 "kind": "view",
@@ -4842,12 +4919,12 @@
                     "id": "value",
                     "label": {
                       "native": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       },
                       "reuse": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       }
                     },
                     "schema": {
@@ -4857,12 +4934,12 @@
                           "value": "all",
                           "label": {
                             "native": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             },
                             "reuse": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             }
                           }
                         },
@@ -4870,12 +4947,12 @@
                           "value": "withoutOperations",
                           "label": {
                             "native": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             },
                             "reuse": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             }
                           }
                         },
@@ -4883,12 +4960,12 @@
                           "value": "onlyOperations",
                           "label": {
                             "native": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             },
                             "reuse": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             }
                           }
                         }
@@ -4923,7 +5000,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -4931,12 +5009,12 @@
                 "id": "noteShellCommand",
                 "label": {
                   "native": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   },
                   "reuse": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   }
                 },
                 "kind": "shell",
@@ -4946,12 +5024,12 @@
                     "id": "commandId",
                     "label": {
                       "native": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       },
                       "reuse": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       }
                     },
                     "schema": {
@@ -4963,12 +5041,12 @@
                     "id": "label",
                     "label": {
                       "native": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       },
                       "reuse": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       }
                     },
                     "schema": {
@@ -4980,12 +5058,12 @@
                     "id": "detail",
                     "label": {
                       "native": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       },
                       "reuse": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       }
                     },
                     "schema": {
@@ -5015,7 +5093,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -5028,12 +5107,12 @@
             "id": "framework.window.text",
             "label": {
               "native": {
-                "de": "Skript",
-                "en": "Script"
+                "en": "Script",
+                "de": "Skript"
               },
               "reuse": {
-                "de": "Skript",
-                "en": "Script"
+                "en": "Script",
+                "de": "Skript"
               }
             },
             "bodyKey": "framework.window.text",
@@ -5049,12 +5128,12 @@
                 "id": "undo",
                 "label": {
                   "native": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   },
                   "reuse": {
-                    "de": "Rückgängig",
-                    "en": "Undo"
+                    "en": "Undo",
+                    "de": "Rückgängig"
                   }
                 },
                 "kind": "history",
@@ -5082,7 +5161,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5090,12 +5170,12 @@
                 "id": "redo",
                 "label": {
                   "native": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   },
                   "reuse": {
-                    "de": "Wiederholen",
-                    "en": "Redo"
+                    "en": "Redo",
+                    "de": "Wiederholen"
                   }
                 },
                 "kind": "history",
@@ -5123,7 +5203,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5131,12 +5212,12 @@
                 "id": "commitCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   },
                   "reuse": {
-                    "de": "Checkpoint festschreiben",
-                    "en": "Commit Checkpoint"
+                    "en": "Commit Checkpoint",
+                    "de": "Checkpoint festschreiben"
                   }
                 },
                 "kind": "history",
@@ -5163,7 +5244,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5171,12 +5253,12 @@
                 "id": "createAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   },
                   "reuse": {
-                    "de": "Alternative erstellen",
-                    "en": "Create Alternative"
+                    "en": "Create Alternative",
+                    "de": "Alternative erstellen"
                   }
                 },
                 "kind": "history",
@@ -5203,7 +5285,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5211,12 +5294,12 @@
                 "id": "switchAlternative",
                 "label": {
                   "native": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   },
                   "reuse": {
-                    "de": "Alternative wechseln",
-                    "en": "Switch Alternative"
+                    "en": "Switch Alternative",
+                    "de": "Alternative wechseln"
                   }
                 },
                 "kind": "history",
@@ -5243,7 +5326,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5251,12 +5335,12 @@
                 "id": "checkoutCheckpoint",
                 "label": {
                   "native": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   },
                   "reuse": {
-                    "de": "Checkpoint auschecken",
-                    "en": "Checkout Checkpoint"
+                    "en": "Checkout Checkpoint",
+                    "de": "Checkpoint auschecken"
                   }
                 },
                 "kind": "history",
@@ -5283,7 +5367,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5291,12 +5376,12 @@
                 "id": "revertToCommand",
                 "label": {
                   "native": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   },
                   "reuse": {
-                    "de": "Auf Befehl zurücksetzen",
-                    "en": "Revert to Command"
+                    "en": "Revert to Command",
+                    "de": "Auf Befehl zurücksetzen"
                   }
                 },
                 "kind": "history",
@@ -5306,12 +5391,12 @@
                     "id": "entrySeq",
                     "label": {
                       "native": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       },
                       "reuse": {
-                        "de": "Eintrag",
-                        "en": "Entry"
+                        "en": "Entry",
+                        "de": "Eintrag"
                       }
                     },
                     "schema": {
@@ -5342,7 +5427,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5350,12 +5436,12 @@
                 "id": "copy",
                 "label": {
                   "native": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   },
                   "reuse": {
-                    "de": "Kopieren",
-                    "en": "Copy"
+                    "en": "Copy",
+                    "de": "Kopieren"
                   }
                 },
                 "kind": "clipboard",
@@ -5383,7 +5469,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5391,12 +5478,12 @@
                 "id": "cut",
                 "label": {
                   "native": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   },
                   "reuse": {
-                    "de": "Ausschneiden",
-                    "en": "Cut"
+                    "en": "Cut",
+                    "de": "Ausschneiden"
                   }
                 },
                 "kind": "clipboard",
@@ -5424,7 +5511,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5432,12 +5520,12 @@
                 "id": "paste",
                 "label": {
                   "native": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   },
                   "reuse": {
-                    "de": "Einfügen",
-                    "en": "Paste"
+                    "en": "Paste",
+                    "de": "Einfügen"
                   }
                 },
                 "kind": "clipboard",
@@ -5447,12 +5535,12 @@
                     "id": "anchor",
                     "label": {
                       "native": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       },
                       "reuse": {
-                        "de": "Verankerung",
-                        "en": "Anchoring"
+                        "en": "Anchoring",
+                        "de": "Verankerung"
                       }
                     },
                     "schema": {
@@ -5462,12 +5550,12 @@
                           "value": "original",
                           "label": {
                             "native": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             },
                             "reuse": {
-                              "de": "Original",
-                              "en": "Original"
+                              "en": "Original",
+                              "de": "Original"
                             }
                           }
                         },
@@ -5475,12 +5563,12 @@
                           "value": "middle",
                           "label": {
                             "native": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             },
                             "reuse": {
-                              "de": "Mitte",
-                              "en": "Middle"
+                              "en": "Middle",
+                              "de": "Mitte"
                             }
                           }
                         },
@@ -5488,12 +5576,12 @@
                           "value": "centroid",
                           "label": {
                             "native": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             },
                             "reuse": {
-                              "de": "Schwerpunkt",
-                              "en": "Centroid"
+                              "en": "Centroid",
+                              "de": "Schwerpunkt"
                             }
                           }
                         },
@@ -5501,12 +5589,12 @@
                           "value": "bottomLeft",
                           "label": {
                             "native": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             },
                             "reuse": {
-                              "de": "Unten links",
-                              "en": "Bottom Left"
+                              "en": "Bottom Left",
+                              "de": "Unten links"
                             }
                           }
                         },
@@ -5514,12 +5602,12 @@
                           "value": "bottomRight",
                           "label": {
                             "native": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             },
                             "reuse": {
-                              "de": "Unten rechts",
-                              "en": "Bottom Right"
+                              "en": "Bottom Right",
+                              "de": "Unten rechts"
                             }
                           }
                         },
@@ -5527,12 +5615,12 @@
                           "value": "topLeft",
                           "label": {
                             "native": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             },
                             "reuse": {
-                              "de": "Oben links",
-                              "en": "Top Left"
+                              "en": "Top Left",
+                              "de": "Oben links"
                             }
                           }
                         },
@@ -5540,12 +5628,12 @@
                           "value": "topRight",
                           "label": {
                             "native": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             },
                             "reuse": {
-                              "de": "Oben rechts",
-                              "en": "Top Right"
+                              "en": "Top Right",
+                              "de": "Oben rechts"
                             }
                           }
                         }
@@ -5558,12 +5646,12 @@
                     "id": "position",
                     "label": {
                       "native": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       },
                       "reuse": {
-                        "de": "Position",
-                        "en": "Position"
+                        "en": "Position",
+                        "de": "Position"
                       }
                     },
                     "schema": {
@@ -5594,7 +5682,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5602,12 +5691,12 @@
                 "id": "recordTutorial",
                 "label": {
                   "native": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   },
                   "reuse": {
-                    "de": "Tutorial aufzeichnen",
-                    "en": "Record Tutorial"
+                    "en": "Record Tutorial",
+                    "de": "Tutorial aufzeichnen"
                   }
                 },
                 "kind": "view",
@@ -5638,7 +5727,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5646,12 +5736,12 @@
                 "id": "setHistoryCommandFilter",
                 "label": {
                   "native": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   },
                   "reuse": {
-                    "de": "Verlaufsfilter festlegen",
-                    "en": "Set History Filter"
+                    "en": "Set History Filter",
+                    "de": "Verlaufsfilter festlegen"
                   }
                 },
                 "kind": "view",
@@ -5661,12 +5751,12 @@
                     "id": "value",
                     "label": {
                       "native": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       },
                       "reuse": {
-                        "de": "Filter",
-                        "en": "Filter"
+                        "en": "Filter",
+                        "de": "Filter"
                       }
                     },
                     "schema": {
@@ -5676,12 +5766,12 @@
                           "value": "all",
                           "label": {
                             "native": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             },
                             "reuse": {
-                              "de": "Alle",
-                              "en": "All"
+                              "en": "All",
+                              "de": "Alle"
                             }
                           }
                         },
@@ -5689,12 +5779,12 @@
                           "value": "withoutOperations",
                           "label": {
                             "native": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             },
                             "reuse": {
-                              "de": "Ohne Operationen",
-                              "en": "Without Operations"
+                              "en": "Without Operations",
+                              "de": "Ohne Operationen"
                             }
                           }
                         },
@@ -5702,12 +5792,12 @@
                           "value": "onlyOperations",
                           "label": {
                             "native": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             },
                             "reuse": {
-                              "de": "Nur Operationen",
-                              "en": "Only Operations"
+                              "en": "Only Operations",
+                              "de": "Nur Operationen"
                             }
                           }
                         }
@@ -5742,7 +5832,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -5750,12 +5841,12 @@
                 "id": "noteShellCommand",
                 "label": {
                   "native": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   },
                   "reuse": {
-                    "de": "Shell-Befehl vermerken",
-                    "en": "Note Shell Command"
+                    "en": "Note Shell Command",
+                    "de": "Shell-Befehl vermerken"
                   }
                 },
                 "kind": "shell",
@@ -5765,12 +5856,12 @@
                     "id": "commandId",
                     "label": {
                       "native": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       },
                       "reuse": {
-                        "de": "Befehl",
-                        "en": "Command"
+                        "en": "Command",
+                        "de": "Befehl"
                       }
                     },
                     "schema": {
@@ -5782,12 +5873,12 @@
                     "id": "label",
                     "label": {
                       "native": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       },
                       "reuse": {
-                        "de": "Bezeichnung",
-                        "en": "Label"
+                        "en": "Label",
+                        "de": "Bezeichnung"
                       }
                     },
                     "schema": {
@@ -5799,12 +5890,12 @@
                     "id": "detail",
                     "label": {
                       "native": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       },
                       "reuse": {
-                        "de": "Detail",
-                        "en": "Detail"
+                        "en": "Detail",
+                        "de": "Detail"
                       }
                     },
                     "schema": {
@@ -5834,7 +5925,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -5852,12 +5944,12 @@
             },
             "label": {
               "native": {
-                "de": "Verlauf",
-                "en": "History"
+                "en": "History",
+                "de": "Verlauf"
               },
               "reuse": {
-                "de": "Verlauf",
-                "en": "History"
+                "en": "History",
+                "de": "Verlauf"
               }
             },
             "group": "settings",
@@ -5938,8 +6030,8 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "procedure.document/v1",
-          "documentMediaType": {
+          "artifactSchema": "procedure.document/v1",
+          "artifactMediaType": {
             "class": "data",
             "form": "value"
           },
@@ -5955,7 +6047,28 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio imperative.procedure.dsl v1\nschema=696d70657261746976652e646f63756d656e74\nflow=[696d70657261746976652d666c6f772d33666166396333626536643936393136,696d70657261746976652d666c6f772d3366616639633362653664393639313621732e737464696f2e73656d696f4076312f666c6f77]\ntext=[696d70657261746976652d746578742d63336535383332363137653131643861,696d70657261746976652d746578742d6333653538333236313765313164386121732e737464696f2e73656d696f4076312f74657874]\n",
+        "dialect": {
+          "artifactKind": "s.imperative.procedure",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -5988,6 +6101,9 @@
     }
   ],
   "execution": "isolated",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
   "quotas": {},
   "contributions": {
     "panels": [
@@ -5998,12 +6114,12 @@
         },
         "label": {
           "native": {
-            "de": "Artefakt",
-            "en": "Artifact"
+            "en": "Artifact",
+            "de": "Artefakt"
           },
           "reuse": {
-            "de": "Artefakt",
-            "en": "Artifact"
+            "en": "Artifact",
+            "de": "Artefakt"
           }
         },
         "group": "workbench",
@@ -6017,12 +6133,12 @@
         },
         "label": {
           "native": {
-            "de": "Katalog",
-            "en": "Catalogue"
+            "en": "Catalogue",
+            "de": "Katalog"
           },
           "reuse": {
-            "de": "Katalog",
-            "en": "Catalogue"
+            "en": "Catalogue",
+            "de": "Katalog"
           }
         },
         "group": "workbench",
@@ -6036,12 +6152,12 @@
         },
         "label": {
           "native": {
-            "de": "Inspektion",
-            "en": "Inspection"
+            "en": "Inspection",
+            "de": "Inspektion"
           },
           "reuse": {
-            "de": "Inspektion",
-            "en": "Inspection"
+            "en": "Inspection",
+            "de": "Inspektion"
           }
         },
         "group": "details",
@@ -6055,12 +6171,12 @@
         },
         "label": {
           "native": {
-            "de": "Verlauf",
-            "en": "History"
+            "en": "History",
+            "de": "Verlauf"
           },
           "reuse": {
-            "de": "Verlauf",
-            "en": "History"
+            "en": "History",
+            "de": "Verlauf"
           }
         },
         "group": "settings",
@@ -6074,12 +6190,12 @@
         },
         "label": {
           "native": {
-            "de": "Verlauf",
-            "en": "History"
+            "en": "History",
+            "de": "Verlauf"
           },
           "reuse": {
-            "de": "Verlauf",
-            "en": "History"
+            "en": "History",
+            "de": "Verlauf"
           }
         },
         "group": "settings",
@@ -6090,12 +6206,12 @@
     "ioEntries": [
       {
         "owner": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -6103,7 +6219,7 @@
       },
       {
         "owner": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -6116,7 +6232,7 @@
       },
       {
         "owner": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -6129,7 +6245,7 @@
       },
       {
         "owner": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -6142,7 +6258,7 @@
       },
       {
         "owner": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
@@ -6157,13 +6273,13 @@
     "composerEntries": [
       {
         "writes": {
-          "artifactKind": "s.imperative",
+          "artifactKind": "s.imperative.procedure",
           "standard": "1",
           "subset": "*"
         },
         "reads": [
           {
-            "artifactKind": "s.imperative",
+            "artifactKind": "s.imperative.procedure",
             "standard": "1",
             "subset": "*"
           },
@@ -6192,8 +6308,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f",
-    "coreWasmSha256": "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f",
-    "descriptorSha256": "7dc6bc0885b16f4a552ecdf5e1757da8d336efebcb81b603c87341ae25a66506"
+    "wasmSha256": "7574fff32ec8df66d742684a219549447040dff49dde2e67986b5a5f302188b1",
+    "coreWasmSha256": "9ba78373200ab8fd91927ca0bd34412f27765bbe4456fb1b8b1eb5dbed6290ad",
+    "descriptorSha256": "e5fb6771a0088ae2a51dcca7dba190dd31f4d3258dd36fc66d51b94c782f5947"
   }
 }

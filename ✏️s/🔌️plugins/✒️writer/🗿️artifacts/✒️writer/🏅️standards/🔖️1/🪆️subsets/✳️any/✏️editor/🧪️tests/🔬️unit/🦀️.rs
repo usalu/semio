@@ -367,7 +367,7 @@ fn drive_writer_live_load(app: &mut WriterApp, handle: semio_framework_plugin::A
 
 #[semio_framework_async_macros::async_test]
 async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let base_generation = app.artifact_generation_now();
     let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
     assert_eq!(handle.generation, base_generation);
@@ -379,7 +379,7 @@ async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_suc
 
 #[semio_framework_async_macros::async_test]
 async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let base_generation = app.artifact_generation_now();
     let wire = writer_envelope_wire();
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -657,7 +657,7 @@ async fn whole_document_operation_stays_the_trait_default_none() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_expose_format_lint_placeholder() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let engagements = app.window_engagements(&context::main_window_view()).await;
     let main = engagements.get(context::WRITER_TEST_WINDOW_ID).expect("main engagement");
     let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
@@ -667,7 +667,7 @@ async fn window_engagements_expose_format_lint_placeholder() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_include_format_and_lint_possible_engagements() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let engagements = app.window_engagements(&context::main_window_view()).await;
     let engagement = engagements.get(context::WRITER_TEST_WINDOW_ID).expect("writer window engagement");
     let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
@@ -680,7 +680,7 @@ async fn window_engagements_include_format_and_lint_possible_engagements() {
 /// is the integration-level guarantee that locale threads through the whole app consistently.
 #[semio_framework_async_macros::async_test]
 async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
-    let mut app = artifact_app_laws::new_app().await;
+    let mut app = context::new_app().await;
     let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
     let inspection_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(inspection).expect("render JSON");
     assert!(inspection_json.contains("\"Document\""));

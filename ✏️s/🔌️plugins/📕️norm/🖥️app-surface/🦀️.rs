@@ -21,8 +21,8 @@ use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{
     tree_item_desc, ui_node_list, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowConfigOwner,
-    WindowKindDefinition, WindowLayout,
+    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, PortMultiplicity, SurfaceKind, TreeWindows, UiAssemblyResult,
+    WindowConfigOwner, WindowKindDefinition, WindowLayout,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
 
@@ -82,6 +82,9 @@ pub const MODE_EDIT: &str = "edit";
 /// 🆔️ The single mode every norm app's viewer declares (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET).
 pub const MODE_VIEW: &str = "view";
+/// 🆔️ The report tree every norm results window renders, and its one windowed check section.
+pub const NORM_REPORT_TREE_ID: &str = "norm-report";
+pub const NORM_REPORT_SECTION_ID: &str = "norm-report.checks";
 //#endregion 🔖️Ids
 
 /// 📎️ Norm applications own no config or presence facets; Results-window config is registered separately.
@@ -155,26 +158,24 @@ fn render_text_chunks(value: &str) -> UiAssemblyResult<BuiltNode> {
     ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk build failed"))
 }
 
-/// 📑️ Renders a whole `CheckReport` as one line per computed check.
-pub fn render_report(report: &CheckReport) -> UiAssemblyResult<BuiltNode> {
-    if report.checks.is_empty() {
-        return render_text("No checks computed.");
-    }
-    let children = report
-        .checks
-        .iter()
-        .enumerate()
-        .map(|(index, check)| {
-            let label =
-                ui::Label::try_from(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message)).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row admission failed"))?;
-            ui::text(label)
-                .try_id(format!("norm-report-check-{index}"))
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row id admission failed"))?
-                .try_build()
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report row build failed"))
-        })
-        .collect::<UiAssemblyResult<Vec<_>>>()?;
-    ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report children admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report build failed"))
+/// 📑️ Renders a whole `CheckReport` as one row per computed check.
+///
+/// 🪟️ The rows are VIRTUALISED, never paged or truncated: the checks are one windowed section that
+/// stamps the report's FULL `total` and materialises only the slice the host asked for, so a norm
+/// run with hundreds of clause checks streams instead of refusing the body with `ui.fixed-capacity`.
+pub fn render_report(report: &CheckReport, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let rows: Vec<(usize, &crate::document::CheckResult)> = report.checks.iter().enumerate().collect();
+    PanelTreeBuilder::new(NORM_REPORT_TREE_ID)?
+        .window_section_or_placeholder(
+            windows,
+            NORM_REPORT_SECTION_ID,
+            Some(norm_ui_label("Checks")?),
+            true,
+            &rows,
+            |(index, check)| tree_item_desc(format!("norm-report-check-{index}"), norm_ui_label(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))?, None),
+            norm_ui_label("No checks computed.")?,
+        )?
+        .build()
 }
 
 /// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.

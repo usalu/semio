@@ -1,0 +1,6 @@
+{
+  "mutation": "moveTargetRegion",
+  "id": "region-the-board-never-held",
+  "newX": 4.5,
+  "newY": -6.5
+}

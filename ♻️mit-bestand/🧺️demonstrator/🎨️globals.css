@@ -6,3 +6,23 @@
   background: transparent !important;
   background-color: transparent !important;
 }
+
+/* 🃏️ Overview cards mirror introduction step hover: emphasized silhouette + per-paragraph emphasis. */
+[data-demonstrator-pane-card]:hover [data-window-silhouette-border][data-kind="normal"]:not([data-pending]) path {
+  stroke: var(--border-emphasized-color);
+  transition: stroke 120ms ease;
+}
+
+[data-demonstrator-pane-card] [data-slot="introduction-body-paragraph"]:hover {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}
+
+[data-demonstrator-pane-card]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="demonstrator-pane-card-title-chip"]:hover)
+) [data-slot="demonstrator-pane-card-title-chip"]:not([data-handle-hovered="true"]) {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}

@@ -147,18 +147,23 @@ impl LowpolyDocument {
     /// (`mesh_child_handle`, "the handle IS the change signal" — see that fn's own doc comment) is a
     /// stale cache (e.g. an undo/redo the session never observed, see `LowpolyCoreError::StaleMeshWorkspace`'s
     /// own doc comment) and fails closed rather than silently loading the wrong geometry.
+    ///
+    /// The persisted `LowpolyObject::mesh_content` wins whenever it matches the handle — that is what
+    /// keeps undo/redo, reload and import live; the session cache only serves legacy handle-only objects.
     pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
         for object in &self.snapshot.objects {
-            let Some(json) = self.mesh_workspace.get(&object.id) else {
-                return Err(LowpolyCoreError::StaleMeshWorkspace(object.id.clone()));
-            };
-            if let Some(handle) = &object.mesh {
-                if crate::mesh_child_handle(&object.id, json) != *handle {
-                    return Err(LowpolyCoreError::StaleMeshWorkspace(object.id.clone()));
+            let matches = |json: &str| object.mesh.as_ref().is_none_or(|handle| crate::mesh_child_handle(&object.id, json) == *handle);
+            let json = if !object.mesh_content.is_empty() && matches(&object.mesh_content) {
+                object.mesh_content.clone()
+            } else {
+                match self.mesh_workspace.get(&object.id) {
+                    Some(json) if matches(json) => json.clone(),
+                    _ => return Err(LowpolyCoreError::StaleMeshWorkspace(object.id.clone())),
                 }
-            }
-            let mesh = HalfedgeMesh::from_json(json)?;
+            };
+            let mesh = HalfedgeMesh::from_json(&json)?;
+            self.mesh_workspace.insert(object.id.clone(), json);
             self.meshes.push(mesh);
         }
         Ok(())
@@ -172,6 +177,7 @@ impl LowpolyDocument {
         for (object, mesh) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()) {
             let json = mesh.to_json()?;
             object.mesh = Some(crate::mesh_child_handle(&object.id, &json));
+            object.mesh_content.clone_from(&json);
             self.mesh_workspace.insert(object.id.clone(), json);
         }
         Ok(())
@@ -305,7 +311,7 @@ impl LowpolyDocument {
         let id = format!("obj-{}", self.next_object_serial);
         let mesh_workspace = mesh.to_json()?;
         let mesh_handle = crate::mesh_child_handle(&id, &mesh_workspace);
-        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")] });
+        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: mesh_workspace.clone() });
         self.mesh_workspace.insert(id.clone(), mesh_workspace);
         self.meshes.push(mesh);
         self.active_object_id = id.clone();

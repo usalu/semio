@@ -260,7 +260,7 @@ async fn graph_to_host_snapshot_and_fixture_json() {
     let fixture = g.to_snapshot();
     assert_eq!(fixture.nodes().len(), 2);
     assert_eq!(fixture.manifest_id.as_deref(), Some("nakagin"));
-    let json = g.fixture_json().expect("fixture json");
+    let json = g.host_snapshot_json().expect("fixture json");
     assert!(json.contains("\"schema\""));
 }
 

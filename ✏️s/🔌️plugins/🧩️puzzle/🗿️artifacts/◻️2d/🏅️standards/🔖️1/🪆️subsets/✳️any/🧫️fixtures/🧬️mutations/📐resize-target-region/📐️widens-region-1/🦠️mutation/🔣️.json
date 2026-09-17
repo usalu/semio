@@ -1,0 +1,6 @@
+{
+  "mutation": "resizeTargetRegion",
+  "id": "region-1",
+  "newWidth": 120.5,
+  "newHeight": 60.5
+}

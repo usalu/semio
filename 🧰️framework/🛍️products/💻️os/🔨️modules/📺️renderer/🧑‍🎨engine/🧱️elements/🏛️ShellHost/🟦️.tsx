@@ -58,8 +58,10 @@ import {
   scopeContributionsJson,
   type ContextMenuItemSpec,
   createBrowserStoragePort,
+  createBundledPluginSource,
   createDevPluginSource,
   createExtensionSource,
+  extensionRegistryFromCatalog,
   multiplexPluginSources,
   createMemoryStoragePort,
   createScopedStoragePort,
@@ -979,7 +981,6 @@ export function appCommandTakesPageRun(app: AppDefinition, commandId: string): b
 function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
   if (src.kind === "url") return src.url;
   if (src.kind === "dataUrl") return src.data;
-  console.warn("[DEBUG] tutorial blob asset src not resolvable in this scope", src.hash);
   return null;
 }
 
@@ -1802,12 +1803,10 @@ async function runCapturedExtensionEffect(
     // requesting guest as opaque bytes, so this line is the only place a boot log can say WHICH
     // door refused (ticket 26/09/09/PROCEDURAL-3D-END-TO-END — 154 fault bytes that turned out to
     // be `extension.invoke-unavailable` on every evaluate, for eight boots running).
-    console.warn("[DEBUG] extension invocation refused", JSON.stringify({ extensionId, capability, origin: fault.origin, code: fault.code, message: fault.message }));
   }
   completion.assertActive();
   const response = await completion.complete(outcome);
   completion.assertActive();
-  if (!("ok" in outcome)) console.warn("[DEBUG] extension invocation faulted", { extensionId, capability, instanceId, req });
   return response;
 }
 
@@ -1837,7 +1836,6 @@ export async function dispatchInvokeExtensionEffect(
   const requestingPlugin = plugins.find((entry) => entry.handle.pluginId === requester.pluginId);
   if (!requestingPlugin) throw new Error("extension.requester-unavailable");
   const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId);
-  if (!extensionEntry) console.warn("[DEBUG] invokeExtension unresolved", { extensionId, capability, req, loaded: plugins.map((entry) => entry.handle.pluginId) });
   const completion = captureExtensionCompletion(requestingPlugin, requester.instanceId, req);
   const requesterActorKey = `${requester.pluginId}:${requester.instanceId}`;
   const response = await serializePerActor(requesterActorKey, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson, requesterActorKey));
@@ -1996,11 +1994,9 @@ function FrameworkOsShellInner({
     let applied = false;
     setHistoryProjection((current) => {
       if (!historyPatchShouldApplyV1(current.cursor, patch, replace)) {
-        console.warn("[DEBUG] history patch skipped", JSON.stringify({ replace, currentCursor: current.cursor, patchCursor: patch.cursor, upserts: patch.upserts?.length ?? 0, canUndo: patch.canUndo ?? null }));
         return current;
       }
       applied = true;
-      console.warn("[DEBUG] history patch applied", JSON.stringify({ replace, currentCursor: current.cursor, patchCursor: patch.cursor, upserts: patch.upserts?.length ?? 0, labels: (patch.upserts ?? []).map((entry) => entry.label), canUndo: patch.canUndo ?? null }));
       localHistoryOrderRef.current = ++historyOrderRef.current;
       const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
       for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
@@ -2012,7 +2008,6 @@ function FrameworkOsShellInner({
     if (applied) {
       const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
       if (navbarExample !== undefined) {
-        console.warn("[DEBUG] navbar example from history", JSON.stringify({ navbarExample, remembered: lastDispatchedExampleIdRef.current }));
         dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
       }
     }
@@ -2083,12 +2078,10 @@ function FrameworkOsShellInner({
     const orderAtRequest = historyOrderRef.current;
     void plugin.readHistory(instanceId).then((snapshot) => {
       if (historyOrderRef.current > orderAtRequest) {
-        console.warn("[DEBUG] history snapshot skipped — projection newer than request", JSON.stringify({ orderAtRequest, current: historyOrderRef.current }));
         return;
       }
-      console.warn("[DEBUG] history snapshot refresh", JSON.stringify({ instanceId, cursor: snapshot.cursor, upserts: snapshot.upserts?.length ?? 0, canUndo: snapshot.canUndo ?? null }));
       applyHistoryPatch(snapshot, true);
-    }).catch((error) => console.error("[DEBUG] history snapshot failed", error));
+    }).catch((error) => undefined);
   }, [applyHistoryPatch]);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostAppsResolution = useMemo(() => {
@@ -2143,11 +2136,10 @@ function FrameworkOsShellInner({
     void plugin.readHistory(session.instanceId).then((snapshot) => {
       if (cancelled) return;
       if (historyOrderRef.current > orderAtRequest) {
-        console.warn("[DEBUG] history snapshot skipped — projection newer than request", JSON.stringify({ orderAtRequest, current: historyOrderRef.current }));
         return;
       }
       applyHistoryPatch(snapshot, true);
-    }).catch((error) => console.error("[DEBUG] history snapshot failed", error));
+    }).catch((error) => undefined);
     return () => {
       cancelled = true;
     };
@@ -2290,7 +2282,6 @@ function FrameworkOsShellInner({
    * ({@link isPluginInstanceRetiredV1}), so this reads the answer rather than keeping a second ledger. */
   const dropForRetiredInstance = useCallback((target: { readonly pluginId: string; readonly instanceId: number }, what: string, error: unknown): boolean => {
     if (!isPluginInstanceRetiredV1(error)) return false;
-    console.warn(`[DEBUG] dropped ${what} for retired instance ${target.pluginId}#${target.instanceId}`);
     return true;
   }, []);
   //#endregion 🔀️SurfaceSwitch
@@ -2606,12 +2597,10 @@ function FrameworkOsShellInner({
     if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
     const error = failure instanceof Error ? failure : new Error(String(failure));
     if (entry.replacements.pending) {
-      console.error("[DEBUG] document backbone failed during replacement — keeping owner", error);
       return;
     }
     entry.creationMount?.close(error);
     entry.rejectReady(error);
-    console.error("[DEBUG] document backbone failed", error);
     closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
   }, []);
   const receiveDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, message: Uint8Array) => {
@@ -2620,7 +2609,6 @@ function FrameworkOsShellInner({
       if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decodeBackboneMessage(message).kind !== "mutations") throw new Error("document-backbone.invalid-message");
       if (entry.port === null) {
         if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) {
-          console.warn("[DEBUG] document backbone pending overflow — dropping while rebound", JSON.stringify({ runtimeKey, clientInstanceId: entry.clientInstanceId, pending: entry.pending.length }));
           return;
         }
         entry.pending.push(message.slice());
@@ -3098,7 +3086,6 @@ function FrameworkOsShellInner({
           const active = sessionRef.current;
           if (shellDialogSessionIsCurrentV1(active, entry.session)) {
             rebootstrapDiscardedSessionsRef.current.set(runtimeKey, entry.session);
-            console.warn("[DEBUG] document rebootstrap kept session", JSON.stringify({ runtimeKey, instanceId: entry.session.instanceId }));
           }
         }
         return;
@@ -3520,9 +3507,17 @@ function FrameworkOsShellInner({
   const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
     return resolvePluginCanvasStatus(!!session, error, primaryPluginId ? pluginStatusById[primaryPluginId] : undefined, primaryPluginId ? pluginSupervisorById[primaryPluginId] : undefined);
   }, [session, error, primaryPluginId, pluginStatusById, pluginSupervisorById]);
-  /** 🔌️ The dev catalog and installed extensions share one
-   * {@link PluginSource} so the incremental runtime can load from either tree. */
-  const pluginSource: PluginSource = useMemo(() => multiplexPluginSources(createDevPluginSource(registry, `${MODULE_PLUGIN_ROUTE}/watch`), createExtensionSource(PLUGIN_CATALOG, `${MODULE_EXTENSION_ROUTE}/watch`)), [registry]);
+  /** 🔌️ Dev hosts stream availability over SSE `/watch`; shipped static bundles replay one immediate
+   * `snapshot` per tree ({@link createBundledPluginSource}) so dependency contributors install without
+   * Vite middleware. */
+  const extensionRegistry = useMemo(() => extensionRegistryFromCatalog(PLUGIN_CATALOG), []);
+  const pluginSource: PluginSource = useMemo(
+    () =>
+      import.meta.env.PROD
+        ? multiplexPluginSources(createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry))
+        : multiplexPluginSources(createDevPluginSource(registry, `${MODULE_PLUGIN_ROUTE}/watch`), createExtensionSource(PLUGIN_CATALOG, `${MODULE_EXTENSION_ROUTE}/watch`)),
+    [extensionRegistry, registry],
+  );
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
@@ -3599,7 +3594,6 @@ function FrameworkOsShellInner({
         await establishPrimarySession(handle);
       } catch (bootError) {
         if (!isShardLostError(bootError)) throw bootError;
-        console.warn(`[DEBUG] ShellHost: primary ${handle.pluginId} lost its shard while booting — retrying once on the rebuilt shard`, bootError);
         try {
           await establishPrimarySession(handle);
         } catch (retryError) {
@@ -3676,11 +3670,6 @@ function FrameworkOsShellInner({
             dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
           } catch (bootError) {
             console.error("Framework OS boot failed", bootError);
-            try {
-              const parsed = JSON.parse(bootError instanceof Error ? bootError.message : String(bootError));
-              const bytes = parsed?.val && typeof parsed.val === "object" ? Object.values(parsed.val as Record<string, number>) : undefined;
-              if (bytes) console.error("[DEBUG] boot fault text", new TextDecoder().decode(Uint8Array.from(bytes)));
-            } catch {}
             dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
             return "failed";
           }
@@ -3731,7 +3720,6 @@ function FrameworkOsShellInner({
           addedApps: [...newAppIds].filter((id) => !oldAppIds.has(id)),
           removedApps: [...oldAppIds].filter((id) => !newAppIds.has(id)),
         };
-        console.log(`[DEBUG] hot-swap ${pluginId}`, hotSwapEvent);
 
         const directoryHomeOwner = directoryHomeOwnerRef.current;
         if (directoryHomeOwner?.plugin.pluginId === pluginId) {
@@ -3769,10 +3757,6 @@ function FrameworkOsShellInner({
           const currentPanel = parsePanelState(activeSession.viewState);
           const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
           if (currentPanel && dropped.length > 0) {
-            console.log(
-              `[DEBUG] hot-swap ${pluginId} dropped ${dropped.length} spawned instance(s)`,
-              dropped.map((entry) => entry.id),
-            );
             const survivingSpawned = currentPanel.spawnedApps.filter((entry) => entry.pluginId !== pluginId);
             const activeSpawnedId = currentPanel.activeSpawnedId && dropped.some((entry) => entry.id === currentPanel.activeSpawnedId) ? undefined : currentPanel.activeSpawnedId;
             const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
@@ -3815,7 +3799,6 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
         } else {
-          console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
           await newHandle?.dispose();
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
@@ -3838,11 +3821,9 @@ function FrameworkOsShellInner({
       const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
       if (!current) return;
       if (pluginId === primaryPluginId) {
-        console.warn(`[DEBUG] refusing to uninstall the host/primary plugin: ${pluginId}`);
         return;
       }
       if (sessionRef.current?.pluginId === pluginId) {
-        console.warn(`[DEBUG] refusing to uninstall the active session's plugin: ${pluginId}`);
         return;
       }
       pluginOpInFlightRef.current.add(pluginId);
@@ -3912,9 +3893,7 @@ function FrameworkOsShellInner({
       });
       const wire = encodeWindowActionInvocation({ ...active, viewState }, { controllerId: active.app.controllerId, action, args }, extraWindowInstancesRef.current);
       await pluginEntry.handle.handleAction(active.instanceId, wire, viewState);
-      console.log("[DEBUG] space extension ledger op dispatched", { action, args });
     } catch (error) {
-      console.warn("[DEBUG] space extension ledger op skipped", action, error instanceof Error ? error.message : String(error));
     }
   }, []);
 
@@ -3942,16 +3921,13 @@ function FrameworkOsShellInner({
         version = result.version;
         moduleUrl = result.moduleUrl;
         packageHash = result.packageHash ?? "";
-        console.log("[DEBUG] extension store install ok", result);
       } catch (error) {
-        console.warn("[DEBUG] extension store unavailable or install failed; falling back to catalog id heuristic", error instanceof Error ? error.message : String(error));
         const guessedId = sourceUri.split("/").filter(Boolean).pop()?.replace(/\.sxt$/i, "") ?? "";
         if (!guessedId) return;
         extensionId = guessedId;
         try {
           moduleUrl = pluginSource.moduleUrl(extensionId);
         } catch (resolveError) {
-          console.warn("[DEBUG] installExtension could not resolve moduleUrl", resolveError);
           return;
         }
       }
@@ -4021,9 +3997,7 @@ function FrameworkOsShellInner({
         version = result.version;
         moduleUrl = result.moduleUrl;
         packageHash = result.packageHash ?? "";
-        console.log("[DEBUG] extension store install from file ok", { file: file.name, ...result });
       } catch (error) {
-        console.warn("[DEBUG] installExtensionFromFile failed", error instanceof Error ? error.message : String(error));
         return;
       }
       if (!extensionId || !moduleUrl) return;
@@ -4125,7 +4099,6 @@ function FrameworkOsShellInner({
         ];
       });
       void dispatchSpaceExtensionOp("setExtensionEnabled", { extensionId, enabled });
-      console.log("[DEBUG] setExtensionEnabled", { extensionId, enabled });
     },
     [dispatchSpaceExtensionOp, extensionTargetById],
   );
@@ -4357,7 +4330,7 @@ function FrameworkOsShellInner({
   }, []);
   const observeLocalInteraction = useMemo(
     () => createLatestAsyncDispatcher(({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => publishLocalInteraction(plugin, instanceId).catch((error) => {
-      if (!dropForRetiredInstance({ pluginId: plugin.pluginId, instanceId }, "local interaction observation", error)) console.error("[DEBUG] local interaction observation failed", error);
+      dropForRetiredInstance({ pluginId: plugin.pluginId, instanceId }, "local interaction observation", error);
     })),
     [dropForRetiredInstance, publishLocalInteraction],
   );
@@ -4562,9 +4535,7 @@ function FrameworkOsShellInner({
       }
       contributorInstancesRef.current.clear();
       const handles = loadedPluginsRef.current.map((entry) => entry.handle);
-      void Promise.allSettled(retirements).then(() => Promise.allSettled(handles.map(handle => handle.dispose()))).then(results => {
-        for (const result of results) if (result.status === "rejected") console.error("[DEBUG] shell plugin retirement failed", result.reason);
-      });
+      void Promise.allSettled(retirements).then(() => Promise.allSettled(handles.map(handle => handle.dispose()))).then(() => undefined);
     };
   }, [retireDirectoryHomeOwner]);
 
@@ -4717,19 +4688,13 @@ function FrameworkOsShellInner({
         // stalling it.
         const exampleSources = exampleArtifactSources(receiverPlugin?.manifest.examples ?? [], environment.session.app.dialect);
         const fromExamples = resolveDocumentOperatorKinds(exampleSources);
-        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) {
-          console.error("[DEBUG] contributions scoped from published examples", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, kinds: fromExamples.kinds, examples: exampleSources.length }));
-          return fromExamples;
-        }
+        if (fromExamples.status === "resolved" && fromExamples.kinds.length > 0) return fromExamples;
         if (fromDocument.status === "resolved") return fromDocument;
-        console.error("[DEBUG] contributions unresolved document operators — capability packs only", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, reason: fromDocument.reason }));
         return fromDocument;
       },
       buildPack: (session, kinds, environment) => {
         const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
         const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds, environment.consumedTopics);
-        if (scopedContributionsJson === "[]") console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, chars: 2, kinds, consumes: environment.consumedTopics }));
-        else console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds, consumes: environment.consumedTopics }));
         return scopedContributionsJson;
       },
       install: async (session, json, kinds, environment) => {
@@ -4741,9 +4706,6 @@ function FrameworkOsShellInner({
           const instanceId = targetApp ? (isActive ? session.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId)) : undefined;
           const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
           const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
-          if (runtimeDiagnosticsEnabled()) {
-            console.log("[DEBUG] contributions push", JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp?.id ?? null, active: isActive, takesPageRun, pageCount: skipped !== undefined ? 0 : 1, crossings: skipped !== undefined ? 0 : 1, chars: json.length, kinds, encoding: "pack", skipped: skipped ?? null }));
-          }
           if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
           // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
           // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
@@ -4755,7 +4717,6 @@ function FrameworkOsShellInner({
             const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
             const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);
             if (contributionResponse.requestedEffects?.length) {
-              console.error("[DEBUG] setContributions deferred effects", JSON.stringify({ plugin: pluginEntry.handle.pluginId, instanceId, effects: contributionResponse.requestedEffects }));
               environment.dispatchDeferredEffects(pluginEntry.handle.pluginId, instanceId, contributionResponse.requestedEffects);
             }
           } catch (error) {
@@ -4775,18 +4736,6 @@ function FrameworkOsShellInner({
     if (!liveDocument) return { status: "unresolved", reason: "no-document-pack" };
     const sources = documentSourcesFromPack(liveDocument.pack, liveDocument.spr, liveDocument.ops);
     const scope: ContributionsOperatorScope = liveDocument.ops == null ? { status: "unresolved", reason: "document-ops-missing" } : resolveDocumentOperatorKinds(sources);
-    console.error(
-      "[DEBUG] contributions document sources",
-      JSON.stringify({
-        packBytes: liveDocument.pack.byteLength,
-        sprBytes: liveDocument.spr.byteLength,
-        opsChars: liveDocument.ops?.length ?? null,
-        opsHead: (liveDocument.ops ?? "").slice(0, 280),
-        status: scope.status,
-        reason: scope.status === "unresolved" ? scope.reason : undefined,
-        kinds: scope.status === "resolved" ? scope.kinds : [],
-      }),
-    );
     return scope;
   }, []);
 
@@ -4815,10 +4764,9 @@ function FrameworkOsShellInner({
             }
             const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
             const owner = captureEffectOwner(target, captureDialogOrigin(target));
-            void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => console.error("[DEBUG] setContributions deferred effects failed", error));
+            void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => undefined);
           }),
       });
-      if (outcome.status === "installed" || outcome.status === "failed") console.error("[DEBUG] contributions publish", JSON.stringify({ plugin: key.pluginId, instanceId: key.instanceId, outcome }));
       return outcome;
     },
     // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
@@ -5001,7 +4949,6 @@ function FrameworkOsShellInner({
         // 🩺️ Which sections this pass ASKED for and which the guest actually re-serialized — the one
         // line that separates "the guest re-rendered the previous document" from "this pass never
         // applied" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] refreshUi sections", JSON.stringify({ scope, utilities: viewState.activeUtilityByWindowId ?? null, asked: (request.windows ?? []).map((entry) => entry.key), changed: (response.windows ?? []).filter((entry) => entry.value !== undefined).map((entry) => entry.key), hashes: Object.fromEntries((response.windows ?? []).map((entry) => [entry.key, entry.hash])) }));
         // ⏱️ pending_effects (e.g. flowEvalTick) wait until contributions are installed — an earlier
         // tick faults `flow.extension-not-contributed` and retires the window-transient authority.
         pendingRefreshEffects = response.requestedEffects ?? [];
@@ -5148,9 +5095,7 @@ function FrameworkOsShellInner({
         if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
       },
       (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies, hostInputs: owed.hostInputs || next.hostInputs }),
-      (decision, scope, passes) => {
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] refreshUi lane", JSON.stringify({ decision, scope, passes }));
-      },
+      () => {},
       (running, next) =>
         uiRefreshAlreadyAnsweredV1(
           { instanceId: running.session.instanceId, scope: running.scope, replaceBodies: running.replaceBodies, ingressAtSubmit: passIngressRef.current },
@@ -5281,7 +5226,6 @@ function FrameworkOsShellInner({
     if (!current) return;
     void refreshUi(current).catch((renderError) => {
       const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[current.pluginId]);
-      console.error(`[DEBUG] render failed [${fault.class}] ${fault.code ?? "no-code"}`, renderError);
       dispatch({ type: "SET_ERROR", value: fault.message, fault });
     });
   }, [refreshUi, sessionIdentityKey]);
@@ -5302,7 +5246,6 @@ function FrameworkOsShellInner({
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
       const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId]);
-      console.error(`[DEBUG] spawned render failed [${fault.class}] ${fault.code ?? "no-code"}`, renderError);
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null, fault });
     });
     // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
@@ -5420,7 +5363,6 @@ function FrameworkOsShellInner({
       const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState };
       await plugin.handleAction(pluginInstanceId, encodeWindowActionInvocation(targetSession, { controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
-      console.error("[DEBUG] spawned program document sync failed", syncError);
     }
   }, []);
 
@@ -5615,7 +5557,6 @@ function FrameworkOsShellInner({
           if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
-            console.log("[DEBUG] loadDocument pack/spr for instance", baseSession.instanceId, "pack", packBytes.length, "spr", sprBytes.length);
             await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner));
           } else {
             // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
@@ -5662,9 +5603,7 @@ function FrameworkOsShellInner({
         if ("requestFileOpen" in effect) {
           const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
           const resolvedImport = importAction || "importFixture";
-          console.warn(`[DEBUG] import-picker hop accept=${accept} importAction=${importAction || "<empty>"} resolved=${resolvedImport} multiple=${Boolean(multiple)}`);
           const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
-          console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
           if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
@@ -5797,7 +5736,6 @@ function FrameworkOsShellInner({
               if (raw) lastDispatchedExampleIdRef.current = raw;
               dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
             }
-            console.warn("[DEBUG] replayShellCommand dispatch", JSON.stringify({ actionId }));
             // 🔗️ A guest follow-up: `causedBy` is the input whose answer armed it, so the ledger sorts it
             // BEFORE any later input (L2) and a lost CAS race is logged, never toasted (§G). `inputSeq`
             // is re-minted by `issue`.
@@ -5867,10 +5805,8 @@ function FrameworkOsShellInner({
             // `no actor for instance 1` errors every measured hot swap left in the console were this
             // one path missing it (`📓️hot-swap-board-remount-2026-09-15.md` §1.4).
             if (isPluginInstanceRetiredV1(error)) {
-              console.warn(`[DEBUG] dropped extension answer ${extensionId}/${capability} for retired instance ${requester.pluginId}#${requester.instanceId}`);
               return;
             }
-            console.error("[DEBUG] invokeExtension dispatch failed", { extensionId, capability, req, error });
           }).finally(releaseExtensionWork);
           continue;
         }
@@ -5896,13 +5832,6 @@ function FrameworkOsShellInner({
             if (!isCurrentEffectOwner(effectOwner)) return;
             if (nextPanel) {
               nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
-              console.log("[DEBUG] openPluginInstance focused spawned app", {
-                pluginId,
-                appId,
-                osInstanceId,
-                activeSpawnedId: nextPanel.activeSpawnedId,
-                spawnedCount: nextPanel.spawnedApps.length,
-              });
             }
             if (osInstanceId && openSpaceIdRef.current) {
               openInstanceIdRef.current = osInstanceId;
@@ -5956,10 +5885,7 @@ function FrameworkOsShellInner({
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, refreshScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ declared: uiScope, scope: refreshScope, viewStateSame: nextViewState === baseSession.viewState }));
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
-      } else {
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: refreshScope }));
       }
     },
     [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
@@ -5992,12 +5918,10 @@ function FrameworkOsShellInner({
         applyHistoryPatch(completion.historyPatch);
         const refresh = typedOperationCompletionRefreshV1(completion);
         const owner = captureEffectOwner(target, captureDialogOrigin(target));
-        if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] completion apply", JSON.stringify({ operation: completion.operation, scope: completion.uiScope, refresh, historyPatch: completion.historyPatch !== undefined, ownerCurrent: isCurrentEffectOwner(owner), sessionCurrent: shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, target), targetInstance: target.instanceId, currentInstance: shellStateRef.current.pluginRuntime.session?.instanceId }));
         if (refresh === null) return;
         void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch((error) => console.error("typed-operation completion effects failed", error));
       });
     } catch (error) {
-      if (!dropForRetiredInstance(target, "typed-operation completion subscription", error)) console.error("[DEBUG] typed-operation completion subscription failed", error);
       return;
     }
   }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
@@ -6027,7 +5951,6 @@ function FrameworkOsShellInner({
         unsubscribeJobs?.();
       };
     } catch (error) {
-      if (!dropForRetiredInstance(target, "typed-operation progress subscription", error)) console.error("[DEBUG] typed-operation progress subscription failed", error);
       return;
     }
   }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, session]);
@@ -6038,7 +5961,6 @@ function FrameworkOsShellInner({
       // a bounded, logged no-op instead of a JS stack overflow, and captures a real stack for the next
       // diagnosis pass.
       if (applyShellUriDepthRef.current > 0) {
-        console.error(`[DEBUG] applyShellUri: reentrant call blocked at depth ${applyShellUriDepthRef.current}, uri=${uri}`, new Error("applyShellUri reentrancy").stack);
         return;
       }
       applyShellUriDepthRef.current += 1;
@@ -6108,7 +6030,6 @@ function FrameworkOsShellInner({
         const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
         if (studioChanged) {
           openInstanceIdRef.current = null;
-          console.log("[DEBUG] applyShellUri openSpace", spaceId);
           const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
           await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope), routeOwner);
         }
@@ -6133,7 +6054,6 @@ function FrameworkOsShellInner({
   useEffect(() => {
     if (!hostMode || loadedPlugins.length === 0) return;
     void applyShellUri(shellUri).catch((uriError) => {
-      console.error("[DEBUG] shell uri apply failed", uriError);
     });
   }, [applyShellUri, loadedPlugins.length, shellUri, hostMode]);
 
@@ -6190,7 +6110,6 @@ function FrameworkOsShellInner({
       if (predecessorActor !== undefined && predecessorActor.clientInstanceId !== clientInstanceId) {
         retireBrowserActorUi(runtimeKey, "browser-actor-action: opening parked");
       }
-      console.warn("[DEBUG] document opening parked", JSON.stringify({ runtimeKey, clientInstanceId, restored: parked.previous?.clientInstanceId ?? null, superseded: parked.superseded.length, yieldedActor: predecessorActor?.clientInstanceId ?? null }));
       const request: BackboneWorkerRequest = {
         kind: "open",
         clientInstanceId,
@@ -6228,7 +6147,6 @@ function FrameworkOsShellInner({
           if (successorActor?.clientInstanceId === clientInstanceId) {
             retireBrowserActorUi(runtimeKey, "browser-actor-action: opening aborted");
           }
-          console.warn("[DEBUG] document opening aborted — predecessor restored", JSON.stringify({ runtimeKey, clientInstanceId, restored: parked.previous?.clientInstanceId ?? null, retired: restored.length }));
         },
         detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
         attach: async () => {
@@ -6260,13 +6178,12 @@ function FrameworkOsShellInner({
         for (const [key, owner] of settleDocumentOpeningReplacementV1(openDocumentSessionsRef.current, parked, true)) {
           if (key === runtimeKey) {
             void owner.port?.retire().catch(() => {});
-            void retireDocumentAttachment(owner.plugin, owner.session.instanceId, owner.clientInstanceId).catch((error) => console.error("[DEBUG] parked predecessor attachment retirement failed", error));
+            void retireDocumentAttachment(owner.plugin, owner.session.instanceId, owner.clientInstanceId).catch((error) => undefined);
             backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: owner.documentId, clientInstanceId: owner.clientInstanceId, ...(owner.scope === undefined ? {} : { spaceId: owner.scope.spaceId }) }) });
             continue;
           }
           closeDocumentRef.current(key, owner.clientInstanceId);
         }
-        console.warn("[DEBUG] document opening committed", JSON.stringify({ runtimeKey, clientInstanceId, actor: browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.clientInstanceId ?? null }));
       }
       return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
@@ -6289,18 +6206,17 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
-    console.warn("[DEBUG] closeDocument", JSON.stringify({ runtimeKey, clientInstanceId: entry.clientInstanceId, instanceId: entry.session.instanceId }));
     entry.creationMount?.close(new Error("document closed"));
     entry.rejectReady(new Error("document closed"));
     entry.replacements.invalidate();
     const retirement = entry.port?.retire();
-    void retirement?.catch(error => console.error("[DEBUG] document backbone retirement failed", error));
+    void retirement?.catch(error => undefined);
     entry.port = null;
     entry.pending = [];
     entry.pendingBytes = 0;
     cancelSpaceArtifactCreationsForRuntime(runtimeKey, backboneWorkerRef.current);
     if (entry.scope?.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
-      void backgroundSpaceIndexSessionsRef.current.retire(entry.scope.spaceId, owned => owned.clientInstanceId === entry.clientInstanceId).catch(error => console.error("[DEBUG] background document retirement failed", error));
+      void backgroundSpaceIndexSessionsRef.current.retire(entry.scope.spaceId, owned => owned.clientInstanceId === entry.clientInstanceId).catch(error => undefined);
       setSpaceArtifactCreationCatalog((catalog) => catalog?.clientInstanceId === entry.clientInstanceId ? null : catalog);
       setSpaceArtifactCreationCatalogUi((status) => status?.clientInstanceId === entry.clientInstanceId ? null : status);
     }
@@ -6320,7 +6236,7 @@ function FrameworkOsShellInner({
       inferencePortEpochRef.current = inferenceOwner.operationEpoch + 1;
       dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
     }
-    void retireDocumentAttachment(entry.plugin, entry.session.instanceId, entry.clientInstanceId).catch(error => console.error("[DEBUG] document attachment retirement failed", error));
+    void retireDocumentAttachment(entry.plugin, entry.session.instanceId, entry.clientInstanceId).catch(error => undefined);
     openDocumentSessionsRef.current.delete(runtimeKey);
     const dialog = liveDialogRef.current;
     if (dialog?.origin.document?.runtimeKey === runtimeKey && dialog.origin.document.clientInstanceId === entry?.clientInstanceId) closeOwnedDialog(dialog.openingId);
@@ -6329,7 +6245,7 @@ function FrameworkOsShellInner({
       tutorialTransitionEpochRef.current += 1;
       tutorialDrivenRef.current.retire();
       tutorialClockRef.current?.pause();
-      void tutorial.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
+      void tutorial.stop().catch((error) => undefined);
       dispatch({ type: "SET_TUTORIAL", value: null });
     }
     retireBrowserActorUi(runtimeKey, "browser-actor-action: document retired");
@@ -6461,7 +6377,6 @@ function FrameworkOsShellInner({
             return applied();
           }
           if (action.action === "recovery.showDiagnostics") {
-            console.log("[DEBUG] recovery diagnostics", { pluginId, supervisor: pluginSupervisorById[pluginId] });
             return applied();
           }
         }
@@ -6477,7 +6392,6 @@ function FrameworkOsShellInner({
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         if (isDeclaredSurfaceCancelAction(action.action)) {
           const aborted = abortExtensionRequestsForActor(`${session.pluginId}:${session.instanceId}`, `cancelled by ${action.action}`);
-          console.warn("[DEBUG] extension requests aborted by surface cancel", JSON.stringify({ action: action.action, pluginId: session.pluginId, instanceId: session.instanceId, aborted }));
         }
         const actionOrigin = submittedOrigin ?? captureDialogOrigin(session);
         if (!isCurrentDialogOrigin(actionOrigin)) return refuse("owner-mismatch", "dialog origin is not current");
@@ -6577,7 +6491,6 @@ function FrameworkOsShellInner({
             );
             if (!viewState) return refuse("view-state-unresolved", `window=${windowId}`);
             const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
-            console.warn(`[DEBUG] setActiveUtility hop window=${windowId} next=${next ?? ""} generation=${write.register.generation}`);
             await program
               .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
               .then((response) => {
@@ -6586,7 +6499,7 @@ function FrameworkOsShellInner({
                 if (!isCurrentEffectOwner(primaryActionOwner)) return;
                 return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
               })
-              .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
+              .catch((utilityError) => undefined);
           }
           return applied();
         }
@@ -6643,7 +6556,7 @@ function FrameworkOsShellInner({
                 if (!isCurrentEffectOwner(primaryActionOwner)) return;
                 return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
               })
-              .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
+              .catch((toolError) => undefined);
           }
           return applied();
         }
@@ -6745,7 +6658,6 @@ function FrameworkOsShellInner({
           });
           const remote = mounted.length === 1 ? mounted[0] : undefined;
           const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
-          console.warn("[DEBUG] undo route", JSON.stringify({ route, canUndo: historyProjection.canUndo, localOrder: localHistoryOrderRef.current, mounted: mounted.length }));
           if (route === "blocked") return refuse("dispatch-failed", "undo route blocked: nothing to undo");
           if (route === "remote") {
             const history = remote![1];
@@ -6761,12 +6673,10 @@ function FrameworkOsShellInner({
         if (action.action === "undo" || action.action === "redo") {
           const directNow = (() => { try { return directBrowserActorForSession(targetSession) !== null ? "yes" : "null"; } catch (error) { return `throw:${String(error)}`; } })();
           const owners = [...openDocumentSessionsRef.current.values()].map((entry) => ({ pluginId: entry.session.pluginId, instanceId: entry.session.instanceId }));
-          console.warn("[DEBUG] undo remap state", JSON.stringify({ directNow, sameAsSession: targetSession === session, targetPluginId: targetSession.pluginId, targetInstanceId: targetSession.instanceId, sessionInstanceId: session?.instanceId, owners }));
           if (directNow === "null") {
             const documentOwners = [...openDocumentSessionsRef.current.values()].filter((entry) => entry.session.pluginId === targetSession.pluginId);
             if (documentOwners.length === 1) {
               targetSession = documentOwners[0]!.session;
-              console.warn("[DEBUG] undo remapped to document session", JSON.stringify({ instanceId: targetSession.instanceId }));
             }
           }
         }
@@ -6779,7 +6689,6 @@ function FrameworkOsShellInner({
         if (dropForSealedInstance(targetSession, "action", action.action)) return refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
         const actionOwner = captureEffectOwner(targetSession, actionOrigin, entry.provenance.inputSeq);
         if (!isCurrentEffectOwner(actionOwner)) {
-          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked effect-owner", JSON.stringify({ action: action.action }));
           return refuse("owner-mismatch", "effect owner is not current");
         }
 
@@ -6816,7 +6725,6 @@ function FrameworkOsShellInner({
         };
         const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
         if (!dispatchViewState) {
-          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked view-state", JSON.stringify({ action: action.action, windowId: dispatchWindowId ?? null }));
           return refuse("view-state-unresolved", `window=${dispatchWindowId ?? ""}`);
         }
         // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
@@ -6824,7 +6732,6 @@ function FrameworkOsShellInner({
         // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
         if (undeclared) {
-          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked undeclared", JSON.stringify({ action: action.action }));
           console.error(undeclared.message, undeclared);
           return refuse("undeclared-action", undeclared.message);
         }
@@ -6851,14 +6758,12 @@ function FrameworkOsShellInner({
         lastDispatchedExampleIdRef.current = rememberedExampleIdFromDispatchV1(action, lastDispatchedExampleIdRef.current);
 
         if (action.action === "openImportFixture") {
-          console.warn("[DEBUG] import-picker hop host-arm openImportFixture");
           void requestFileOpen("application/json,.json", "text", false)
             .then(async (opened) => {
-              console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
               if (!opened[0]) return;
               onAction({ controllerId: action.controllerId, action: "importFixture", args: { payload: opened[0].contents, name: opened[0].name }, provenance: { ...entry.provenance, origin: "user", causedBy: entry.provenance.inputSeq } });
             })
-            .catch((error) => console.error("[DEBUG] import-picker host-arm failed", error));
+            .catch((error) => undefined);
           return applied();
         }
         let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
@@ -6870,7 +6775,6 @@ function FrameworkOsShellInner({
           return outcome;
         }
         if (directBrowserActor !== null) {
-          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route action=" + action.action);
           // 📮️ The hub-mounted browser-actor route: a rejection (`another action pending`, `action-busy`,
           // `action-owner-mismatch`, a closed mailbox) is a typed ledger refusal now, not a `[DEBUG]` error
           // plus a "render error" toast (design §0 row 2). The mailbox names its own reasons
@@ -6891,14 +6795,12 @@ function FrameworkOsShellInner({
           }
           return applied();
         }
-        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
         // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
         // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
         // the entire chain, not just `handleAction`'s own promise.
         const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
         try {
           const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
-          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] undo handleAction resolved", JSON.stringify({ uiScope: response.uiScope, effects: (response.requestedEffects ?? []).length, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null }));
           applyHistoryPatch(response.historyPatch);
           applyLeftoverInteractionView(response.output, dispatchWindowId);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
@@ -6932,7 +6834,6 @@ function FrameworkOsShellInner({
             outcome = refuse("instance-retired", `${targetSession.pluginId}#${targetSession.instanceId}`);
           } else {
             const { reason, detail } = refusalReasonForError(actionError);
-            if (reason === "dispatch-failed") console.error("[DEBUG] action failed", action.action, action.args, actionError);
             outcome = refuse(reason, detail);
           }
           if (propagateFailure) throw actionError;
@@ -7042,12 +6943,10 @@ function FrameworkOsShellInner({
       });
     }).catch((error) => {
       if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
-      console.error("[DEBUG] authenticated browser actor intent failed", error);
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
     });
   }, [requestInferenceProposal]);
   const refuseBrowserActorActionDescriptor = useCallback(() => {
-    console.error("[DEBUG] authenticated browser actor requires the complete UI intent");
   }, []);
 
   //#region 🎥️TutorialOrchestration
@@ -7065,7 +6964,7 @@ function FrameworkOsShellInner({
     tutorialRunRef.current = null;
     tutorialTransitionEpochRef.current += 1;
     tutorialDrivenRef.current.retire();
-    void run?.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
+    void run?.stop().catch((error) => undefined);
     tutorialClockRef.current?.dispose();
   }, []);
   useEffect(() => {
@@ -7125,7 +7024,7 @@ function FrameworkOsShellInner({
       tutorialClock.pause();
       tutorialDrivenRef.current.retire();
       if (activeTutorialId !== null) dispatch({ type: "SET_TUTORIAL", value: null });
-      void run.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error)).finally(() => {
+      void run.stop().catch((error) => undefined).finally(() => {
         if (tutorialRunRef.current !== run) return;
         tutorialRunRef.current = null;
       });
@@ -7135,7 +7034,7 @@ function FrameworkOsShellInner({
     const def = activeTutorials.find((tutorial) => tutorial.id === run.tutorialId);
     if (def === undefined) {
       tutorialDrivenRef.current.retire();
-      void run.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
+      void run.stop().catch((error) => undefined);
       dispatch({ type: "SET_TUTORIAL", value: null });
       return;
     }
@@ -7150,7 +7049,6 @@ function FrameworkOsShellInner({
       tutorialClock.seek(0);
       await refreshUi(session, { kind: "full" });
     })().catch((error) => {
-      console.error("[DEBUG] tutorial sandbox start failed", error);
       if (tutorialRunRef.current === run) dispatch({ type: "SET_TUTORIAL", value: null });
     }).finally(() => {
       tutorialDrivenRef.current.release(driveToken);
@@ -7233,7 +7131,6 @@ function FrameworkOsShellInner({
         if (tutorialRunRef.current === run && run.ready && tutorialDrivenRef.current.accepts(driveToken)) tutorialLastAppliedMsRef.current = t;
       }).catch((error) => {
         tutorialClock.pause();
-        console.error("[DEBUG] tutorial director failed", error);
       });
     });
     return unsubscribe;
@@ -7285,8 +7182,7 @@ function FrameworkOsShellInner({
         tutorialClock.seek(clamped);
         if (documentTouched) await refreshUi(session, { kind: "full" });
         if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
-        console.log("[DEBUG] tutorial rebuild", { atMs: clamped });
-      }).catch((error) => console.error("[DEBUG] tutorial seek failed", error));
+      }).catch((error) => undefined);
     },
     [activeTutorial, session, loadedPlugins, tutorialClock, refreshUi],
   );
@@ -7362,7 +7258,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_TUTORIAL", value: null });
       void (async () => {
         const previous = tutorialRunRef.current;
-        await previous?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
+        await previous?.stop().catch((error) => undefined);
         if (tutorialRunRef.current === previous) tutorialRunRef.current = null;
         if (epoch !== tutorialTransitionEpochRef.current || !isCurrentEffectOwner(owner)) return;
         const run: OwnedTutorialRunV1<DocumentArchivePack> = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
@@ -7377,7 +7273,7 @@ function FrameworkOsShellInner({
         tutorialRunRef.current = run;
         tutorialInitializingRunRef.current = null;
         dispatch({ type: "SET_TUTORIAL", value: tutorialId });
-      })().catch((error) => console.error("[DEBUG] tutorial transition failed", error));
+      })().catch((error) => undefined);
     },
     [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentArchive, tutorialClock, refreshUi],
   );
@@ -7385,7 +7281,7 @@ function FrameworkOsShellInner({
     tutorialTransitionEpochRef.current += 1;
     tutorialClock.pause();
     tutorialDrivenRef.current.retire();
-    void tutorialRunRef.current?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
+    void tutorialRunRef.current?.stop().catch((error) => undefined);
     dispatch({ type: "SET_TUTORIAL", value: null });
   }, [tutorialClock]);
 
@@ -7400,9 +7296,7 @@ function FrameworkOsShellInner({
       const id = `recorded-${session.app.id}-${Date.now()}`;
       const def = recorder.build(id, `${session.app.id} recording`);
       const validationError = validateTutorial(def);
-      if (validationError) console.error("[DEBUG] tutorial recording validation failed", validationError);
       const json = JSON.stringify(def, null, 2);
-      console.log("[DEBUG] tutorial recording", json);
       downloadMediaExport(`tutorial-${session.app.id}-${Date.now()}.ops`, "text/plain", json);
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
       return;
@@ -7421,7 +7315,7 @@ function FrameworkOsShellInner({
       const observed = { ...shellStateRef.current, interaction: { ...interaction, hover: shellStateRef.current.interaction.hover } };
       tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(observed, active), null);
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
-    }).catch((captureError) => console.error("[DEBUG] tutorial interaction capture failed", captureError)).finally(() => {
+    }).catch((captureError) => undefined).finally(() => {
       tutorialRecorderStartingRef.current = false;
     });
   }, [loadedPlugins, publishLocalInteraction, session]);
@@ -7903,7 +7797,7 @@ function FrameworkOsShellInner({
       const roleNum = role === "editor" ? 1 : 0;
       void pendingAppChannelFor(app.pluginId)
         ?.setDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum, app.pluginId, app.appId)
-        ?.catch((commandError) => console.error("[DEBUG] setDefaultApp failed", commandError));
+        ?.catch((commandError) => undefined);
     },
     [pendingAppChannelFor],
   );
@@ -7914,7 +7808,7 @@ function FrameworkOsShellInner({
       const roleNum = role === "editor" ? 1 : 0;
       void pendingAppChannelFor(session?.pluginId ?? "")
         ?.clearDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum)
-        ?.catch((commandError) => console.error("[DEBUG] clearDefaultApp failed", commandError));
+        ?.catch((commandError) => undefined);
     },
     [pendingAppChannelFor, session?.pluginId],
   );
@@ -7931,7 +7825,7 @@ function FrameworkOsShellInner({
       if (!session) return;
       const plugin = pluginHandleFor(session.pluginId);
       if (!plugin) return;
-      void plugin.setMergePolicy(session.instanceId, policy).catch((commandError) => console.error("[DEBUG] setMergePolicy failed", commandError));
+      void plugin.setMergePolicy(session.instanceId, policy).catch((commandError) => undefined);
     },
     [pluginHandleFor, session],
   );
@@ -7952,7 +7846,7 @@ function FrameworkOsShellInner({
         .then((result) => {
           if (result.conflicts) dispatch({ type: "SET_CONFLICTS", value: result.conflicts });
         })
-        .catch((commandError) => console.error("[DEBUG] resolveConflict failed", commandError));
+        .catch((commandError) => undefined);
     },
     [pluginHandleFor, session],
   );
@@ -7969,9 +7863,8 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
     try {
       void (target.plugin as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, nextSession.pluginId, nextSession.app.id)
-        ?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
+        ?.catch((commandError) => undefined);
     } catch (commandError) {
-      console.error("[DEBUG] openArtifact failed", commandError);
     }
   }, [uiLocale, uiTerminology]);
 
@@ -7995,7 +7888,6 @@ function FrameworkOsShellInner({
       if (!canOpen()) return null;
       const app = plugin?.manifest.apps.find((candidate) => candidate.id === target.appId);
       if (!plugin || !app) {
-        console.error(`[DEBUG] openArtifactWithAppRef: ${target.pluginId}/${target.appId} not found after install`);
         return null;
       }
       const handle = plugin.handle;
@@ -8148,7 +8040,6 @@ function FrameworkOsShellInner({
       })
       .catch((commandError) => {
         const fault = windowFaultFromError(commandError, pluginSupervisorByIdRef.current[session.pluginId]);
-        console.error(`[DEBUG] readConflicts failed [${fault.class}] ${fault.code ?? "no-code"} origin=${fault.origin ?? "unknown"}`, commandError);
         if (!cancelled) dispatch({ type: "SET_INSTANCE_FAULT", value: fault });
       });
     return () => {
@@ -8932,7 +8823,7 @@ function FrameworkOsShellInner({
 
   useEffect(() => {
     void backgroundSpaceIndexSessionsRef.current.retain(owned => identity !== null && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPlugins.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId)
-      .catch(error => console.error("[DEBUG] background document authority retirement failed", error));
+      .catch(error => undefined);
   }, [identity?.hubBaseUrl, identity?.userId, loadedPlugins]);
 
   /** 📌️ §C5 item 6 — after a successful checkpoint, `TouchArtifact` the space's `index` document so
@@ -8986,7 +8877,6 @@ function FrameworkOsShellInner({
           visit: async owned => { if (current(owned)) await touch(owned.plugin, owned.session); },
         });
       } catch (touchError) {
-        console.error("[DEBUG] touchSpaceIndexArtifact failed", touchError);
       }
     },
     [currentDocumentId, currentDocumentRuntimeKey, retireDocumentAttachment],
@@ -9440,12 +9330,10 @@ function FrameworkOsShellInner({
       try {
         directBrowserActor = directBrowserActorForSession(session);
       } catch (error) {
-        console.error("[DEBUG] authenticated browser actor command owner failed", error);
         return;
       }
       if (directBrowserActor !== null) {
         void dispatchDirectBrowserActorCommand(directBrowserActor, invocation, dispatchViewState).catch((error) => {
-          console.error("[DEBUG] authenticated browser actor command failed", error);
           showTransientNotice(shellLabel("ui.common.renderError"), "error");
         });
         return;
@@ -9932,7 +9820,6 @@ function FrameworkOsShellInner({
       const current = panels[located.anchor]?.path ?? [];
       if (resolved && current.join("/") !== resolved.join("/")) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
       if (!panels[located.anchor]?.visible) dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
-      console.warn("[DEBUG] leftover Inspection tab", JSON.stringify({ anchor: located.anchor, path: resolved ?? [FRAMEWORK_PANEL_TAB_INSPECTION_ID] }));
     }
     const inspectionCacheKey = `panel:${FRAMEWORK_PANEL_TAB_INSPECTION_ID}`;
     const cachedInspection = uiRefreshCacheRef.current.get(inspectionCacheKey);

@@ -9,7 +9,7 @@ use semio_framework_ui_contract::SurfaceKind;
 
 pub(crate) fn render(surface_id: &str, _controller_id: &str, snapshot: &JackSnapshot, cfg: &JackEditorWindowConfig, selection: Option<&JackEditorSelection>) -> UiAssemblyResult<BuiltNode> {
     let query = &cfg.jack_query;
-    let graph = crate::editor::jack::graph_from_snapshot_or_default(fixture);
+    let graph = crate::editor::jack::graph_from_snapshot_or_default(snapshot);
     let cursor = selection.map_or(0, |selection| selection.end as usize);
     let selection_json = selection.map(|selection| pack::json!({ "start": selection.start, "end": selection.end }).to_string());
     scene_surface(

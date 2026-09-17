@@ -28,7 +28,7 @@ pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:architect")
         .artifact(crate::artifacts::program::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::architect::ArchitectPlayApp>(crate::editor::architect::create_architect_app())
+        .editor_with_examples::<crate::editor::architect::ArchitectPlayApp>(crate::editor::architect::create_architect_app(), vec![semio_s_artifact_architect_program::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::architect::ArchitectPlayApp>()
         .viewer::<crate::viewer::architect::ArchitectViewer>(crate::viewer::architect::create_architect_viewer())
         .viewer_mutation_roster::<crate::viewer::architect::ArchitectViewer>()

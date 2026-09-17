@@ -113,16 +113,13 @@ fn meshed_solids_share_their_interface_nodes_as_one_structure() {
     let roots: HashSet<usize> = (0..nodes.len()).map(|index| find(&mut union, index)).collect();
     assert_eq!(roots.len(), 1, "raft, slabs, walls and roof mesh into ONE connected structure, got {} components", roots.len());
     let tets: usize = meshes.iter().map(|mesh| mesh.tets.len()).sum();
-    eprintln!("[DEBUG] house mesh: {tets} tets over {} nodes; per solid {:?}", nodes.len(), meshes.iter().map(|mesh| (mesh.solid_id.as_str(), mesh.tets.len(), mesh.points.len())).collect::<Vec<_>>());
     assert!(tets > 4_000 && tets < 40_000, "the house is a real but tractable mesh: {tets} tets over {} nodes", nodes.len());
 }
 
 #[test]
 fn deformation_solves_balanced_and_sags_under_gravity() {
     let doc = super::build();
-    let started = std::time::Instant::now();
     let results = fem3d_solve_all(&doc).expect("the house solves");
-    eprintln!("[DEBUG] house solve: {:?} for {} cases", started.elapsed(), results.len());
     for case_id in ["dead", "live", "snow", "uls", "sls"] {
         assert!(results.contains_key(case_id), "result for {case_id}");
     }

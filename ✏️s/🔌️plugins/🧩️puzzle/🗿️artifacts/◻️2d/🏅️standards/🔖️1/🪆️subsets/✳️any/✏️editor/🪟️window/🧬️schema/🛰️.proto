@@ -8,10 +8,26 @@ message Puzzle2dWindowConfig {
   bool grid_snap_enabled = 5;
   double grid_factor = 6;
   double suggestion_offset = 7;
+  bool grid_visible = 8;
+  bool selectable_nodes = 9;
+  bool selectable_handles = 10;
+  bool selectable_edges = 11;
+  double proximity_radius = 12;
+  bool transform_move = 13;
+  bool transform_rotate = 14;
+  double area_brush_width = 15;
+  double area_brush_height = 16;
+}
+message Puzzle2dSuggestionMenu {
+  double x = 1;
+  double y = 2;
+  string window_id = 3;
+  string handle_id = 4;
 }
 message Puzzle2dWindowTransient {
   string engagement_input = 1;
   uint64 brush_candidate_index = 2;
   repeated string brush_candidates_json = 3;
   string brush_candidate_source_handle_id = 4;
+  optional Puzzle2dSuggestionMenu suggestion_menu = 5;
 }

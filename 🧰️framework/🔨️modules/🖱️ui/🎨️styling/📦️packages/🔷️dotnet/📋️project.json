@@ -9,7 +9,6 @@
     "deps": {
       "executor": "nx:run-commands",
       "cache": false,
-      "parallelism": false,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
@@ -19,7 +18,6 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "parallelism": false,
       "outputs": ["{projectRoot}/dist/build"],
       "inputs": [
         "production",

@@ -68,6 +68,11 @@ pub enum GeometryRecipe {
         normals: Vec<f32>,
         indices: Vec<u32>,
     },
+    Glb {
+        url: String,
+        #[dsl(unit = "m")]
+        extent: f64,
+    },
 }
 //#endregion 🔖️Geometry
 
@@ -865,6 +870,8 @@ pub mod editor {
             pub mod sort_table;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇️stock-from-catalogue/🦀️.rs"]
             pub mod stock_from_catalogue;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔢️set-grid-instance-display/🦀️.rs"]
+            pub mod set_grid_instance_display;
         }
 
         #[path = "."]
@@ -879,8 +886,18 @@ pub mod editor {
                 pub mod windows {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧺️curated/🦀️.rs"]
                     pub mod curated;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🦀️.rs"]
-                    pub mod grid;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid"]
+                    pub mod grid {
+                        #[path = "🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "⚙️config/🦀️.rs"]
+                        pub mod config;
+
+                        #[path = "🎚️options/🔢️instance-display/🦀️.rs"]
+                        pub mod instance_display;
+                    }
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🦀️.rs"]
                     pub mod pool;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs"]

@@ -10,6 +10,7 @@ type Puzzle5dArtifact {
   kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: ARTIFACT)
   parts: [Puzzle5dPart!]! @state(class: ARTIFACT)
   fasteners: [Puzzle5dFastener!]! @state(class: ARTIFACT)
+  targetVolumes: [Puzzle5dTargetVolume!]! @state(class: ARTIFACT)
 }
 
 
@@ -85,6 +86,14 @@ type Puzzle5dPart {
   id: String!
   partKind: String
   anchor: Puzzle5dPartAnchor
+}
+type Puzzle5dTargetVolume {
+  id: String!
+  origin: [Float!]
+  orientation: [Float!]
+  scale: [Float!]
+  hidden: Boolean
+  locked: Boolean
 }
 type Puzzle5dFastener {
   id: String!

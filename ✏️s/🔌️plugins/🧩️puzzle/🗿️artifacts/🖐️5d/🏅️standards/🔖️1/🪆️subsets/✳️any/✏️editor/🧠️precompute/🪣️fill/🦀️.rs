@@ -2,7 +2,7 @@
 //! behind the planner bridge's translation (`🧠️precompute`). The run's provisional 5d placements go to the planner
 //! as its own `create_object`/`connect_vortices` pairs.
 
-use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::fill::UTILITY_ID;
+use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
 use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d_object, puzzle3d_snapshot, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
 use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
@@ -20,7 +20,7 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>)
 
 /// 🧵️ The unboxed job behind [`build_run_job`].
 pub(crate) fn fill_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>) -> Result<Option<Puzzle5dPlannerToolRunJob>, Fault> {
-    if request.tool_id != UTILITY_ID {
+    if request.tool_id != TOOL_ID {
         return Ok(None);
     }
     let document: Puzzle5dDocument = serde_json::from_value(request.snapshot.0.clone()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;

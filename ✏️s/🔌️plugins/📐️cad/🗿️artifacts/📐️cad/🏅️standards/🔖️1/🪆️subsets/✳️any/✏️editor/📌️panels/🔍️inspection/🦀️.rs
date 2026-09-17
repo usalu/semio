@@ -14,6 +14,9 @@ use semio_framework_plugin::{
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
+/// 🪟️ The windowed section the selected object ids are listed in — the node key the host reports its
+/// open/scroll window for.
+pub const IDS_SECTION: &str = "cad-play-inspector.ids";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -78,20 +81,26 @@ fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels, windows: 
     let selected = selected_objects(envelope);
     let (pane, object) = selected.first()?;
     let build = || -> UiAssemblyResult<BuiltNode> {
-        // 🪟️ The ids block grows with the selection, so the whole group is one windowed list of
-        // `(row id, label, value)` entries rather than a fixed-capacity node list.
-        let mut rows: Vec<(String, String, String)> = selected.iter().enumerate().map(|(index, (_, selected))| (format!("ids.{index}"), labels.id.as_str().to_string(), selected.id.clone())).collect();
-        rows.push(("object.label".into(), labels.label.as_str().into(), object.label.clone()));
-        rows.push(("object.typology".into(), labels.typology.as_str().into(), typology_label(&object.typology, labels).to_string()));
-        rows.push(("object.pane".into(), labels.slot.as_str().into(), cad_pane_suffix(*pane).into()));
-        rows.push(("object.origin".into(), labels.position.as_str().into(), vec3(object.origin)));
-        rows.push(("object.orientation".into(), labels.rotation.as_str().into(), vec4(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))));
-        rows.push(("object.scale".into(), labels.scale.as_str().into(), vec3(object_scale_json(object))));
-        rows.push(("object.primitives".into(), labels.primitive.as_str().into(), object.primitives.iter().map(|primitive| format!("{} ({})", primitive.slot, primitive.kind)).collect::<Vec<_>>().join(", ")));
-        rows.push(("object.hidden".into(), labels.hidden.as_str().into(), (!object.visible).to_string()));
-        rows.push(("object.locked".into(), labels.locked.as_str().into(), object.locked.to_string()));
+        // 🪟️ The ids block grows with the selection, so it is a windowed section of its OWN, keyed by
+        // the RAW object id — an offset window must never renumber a row key, and the object's own
+        // fields must not be pushed out of the window by a wide selection (they are an author-fixed
+        // group of nine rows, paid for by `TREE_WINDOW_FIXED_NODE_HEADROOM`).
+        let ids: Vec<String> = selected.iter().map(|(_, selected)| selected.id.clone()).collect();
+        let mut fields = UiFixedList::default();
+        read_only(&mut fields, "object.label", labels.label.as_str(), &object.label)?;
+        read_only(&mut fields, "object.typology", labels.typology.as_str(), typology_label(&object.typology, labels))?;
+        read_only(&mut fields, "object.pane", labels.slot.as_str(), cad_pane_suffix(*pane))?;
+        read_only(&mut fields, "object.origin", labels.position.as_str(), vec3(object.origin))?;
+        read_only(&mut fields, "object.orientation", labels.rotation.as_str(), vec4(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
+        read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
+        read_only(&mut fields, "object.primitives", labels.primitive.as_str(), object.primitives.iter().map(|primitive| format!("{} ({})", primitive.slot, primitive.kind)).collect::<Vec<_>>().join(", "))?;
+        read_only(&mut fields, "object.hidden", labels.hidden.as_str(), !object.visible)?;
+        read_only(&mut fields, "object.locked", labels.locked.as_str(), object.locked)?;
         let title = if selected.len() == 1 { labels.object.as_str().to_string() } else { format!("{} {}", selected.len(), labels.objects.as_str()) };
-        PanelTreeBuilder::new(ROOT)?.window_section(windows, &format!("{ROOT}.object"), Some(ui_label(&title)?), true, &rows, |(id, label, value)| read_only_row(id, label, value))?.build()
+        PanelTreeBuilder::new(ROOT)?
+            .window_section(windows, IDS_SECTION, Some(ui_label(labels.id.as_str())?), true, &ids, |id| read_only_row(&format!("ids.{id}"), labels.id.as_str(), id))?
+            .section(format!("{ROOT}.object"), Some(ui_label(&title)?), true, fields)?
+            .build()
     };
     Some(build())
 }

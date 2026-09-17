@@ -334,6 +334,39 @@ async fn canvas_point_to_world_matches_host_formula() {
     assert!((world_y - 55.0).abs() < 1e-9);
 }
 
+/// 🧰️ The React host arms utilities PER WINDOW (`active_utility_by_window_id`, keyed by the window
+/// instance) and mirrors only the shell's active window into the flat `active_utility_id`; a drag
+/// whose view state carries the map alone must still draw the rectangle, not marquee-select.
+#[semio_framework_async_macros::async_test]
+async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
+    let (mut app, meta) = inline_selection_app().await;
+    let mut utility_meta = meta.clone();
+    let view = meta.view_state.clone().expect("canvas window view");
+    utility_meta.view_state = Some(ViewModel {
+        active_utility_by_window_id: std::collections::HashMap::from([("drawing-canvas".to_string(), "shapeRect".to_string())]),
+        active_utility_id: None,
+        ..view
+    });
+    let before = app.snapshot().unwrap().layers.len();
+    settled(
+        &mut app,
+        DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, generation: None, checkpoint_completed_work: None, checkpoint_pending_work: None, ..Default::default() }),
+        &utility_meta,
+    )
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
+    let (_result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    // 🛣️ The retained gesture lane publishes its commit through the store lane (the receipt), never
+    // through the invocation result's `mutations`.
+    let projection = app.snapshot().unwrap();
+    assert_eq!(projection.layers.len(), before + 1, "the per-window map arms the rectangle utility: {:?}", receipt.lanes);
+    assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
+    assert!(receipt.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "selectDirect")), "the canvas returns to select-direct: {:?}", receipt.effects);
+    assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..Default::default() }), "pen", "the flat field still resolves when no map entry addresses the window");
+    assert_eq!(drawing_active_utility(&ViewModel::default()), DRAWING_DEFAULT_UTILITY);
+    artifact_laws::close_registered_fixture_app(&mut app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
     let mut app = drawing_app().await;

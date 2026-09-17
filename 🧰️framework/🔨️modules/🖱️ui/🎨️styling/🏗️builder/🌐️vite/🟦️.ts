@@ -504,16 +504,18 @@ export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
 /** @emoji 🔖️ Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
 type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string };
 
+const STATIC_SITE_FAVICON_ALIASES = { svg: "favicon.svg", ico: "favicon.ico" } as const;
+
 function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware {
   return (req, res, next) => {
     let url: string;
     try { url = decodeURIComponent(req.url?.split(/[?#]/, 1)[0] ?? ""); } catch { next(); return; }
-    if (url === `/${faviconDelivery.svg}` && content.svgMarkup) {
+    if ((url === `/${faviconDelivery.svg}` || url === `/${STATIC_SITE_FAVICON_ALIASES.svg}`) && content.svgMarkup) {
       res.setHeader("Content-Type", "image/svg+xml");
       res.end(content.svgMarkup);
       return;
     }
-    if (url === `/${faviconDelivery.ico}` && content.icoPath && existsSync(content.icoPath)) {
+    if ((url === `/${faviconDelivery.ico}` || url === `/${STATIC_SITE_FAVICON_ALIASES.ico}`) && content.icoPath && existsSync(content.icoPath)) {
       res.setHeader("Content-Type", "image/x-icon");
       createReadStream(content.icoPath).pipe(res);
       return;
@@ -552,9 +554,11 @@ function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
         mkdirSync(dist, { recursive: true });
         if (content.svgMarkup) {
           writeFileSync(resolve(dist, faviconDelivery.svg), content.svgMarkup);
+          writeFileSync(resolve(dist, STATIC_SITE_FAVICON_ALIASES.svg), content.svgMarkup);
         }
         if (content.icoPath && existsSync(content.icoPath)) {
           cpSync(content.icoPath, resolve(dist, faviconDelivery.ico));
+          cpSync(content.icoPath, resolve(dist, STATIC_SITE_FAVICON_ALIASES.ico));
         }
       },
     },
@@ -579,7 +583,7 @@ export type ShellBrandHostChrome = {
 /** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
  * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
  * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
-function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
+export function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
   let writeOutput = true;
   return [
@@ -626,10 +630,15 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddlew
   };
 }
 
+/** @emoji 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
+export const STATIC_SITE_HTML_ALIASES = ["index.html", "404.html"] as const;
+
 /** @emoji 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   return {
     name: "semio-emoji-index-html",
     enforce: "pre",
@@ -641,6 +650,19 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
           },
         },
       };
+    },
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+      writeOutput = config.build.write !== false;
+    },
+    closeBundle() {
+      if (!writeOutput) return;
+      const source = resolve(outDir, fileName);
+      if (!existsSync(source)) return;
+      const html = readFileSync(source);
+      for (const alias of STATIC_SITE_HTML_ALIASES) {
+        writeFileSync(resolve(outDir, alias), html);
+      }
     },
     configureServer(server) {
       server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));

@@ -214,9 +214,8 @@ function getShardClient(): ShardClient {
     // 5 s ladder reads and the whole isolate logs nothing for the turn's duration (measured: 19 202 ms
     // of complete console silence, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     heartbeatTimeoutMs: 180_000,
-    onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
+    onActorTrap: (actorId, message) => undefined,
     onShardLost: (shardIndex, actorIds) => {
-      console.error(`[DEBUG] wgpu plugin-bridge: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
       getActivationRegistry().handleShardLost(shardIndex, actorIds);
     },
   });
@@ -636,8 +635,7 @@ async function settleInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease, r
   let current = initial;
   const turns: WireTurnResult[] = [];
   const settle = (): void => {
-    const stashed = stashLeftoverEffects(instanceId, turns);
-    if (stashed > 0) console.log(`[DEBUG] wgpu-bridge lifecycle deferred effects instance=${instanceId} effects=${stashed}`);
+    stashLeftoverEffects(instanceId, turns);
   };
   for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
     turns.push(current, ...await route.accept(current, execute));
@@ -709,7 +707,6 @@ function declareWgpuBootSubphase(name: string): { leave: (extra?: string) => voi
     leave(extra) {
       const elapsed = performance.now() - started;
       declare?.(name, "leave", elapsed);
-      if (elapsed > 1000) console.log(`[DEBUG] boot-phase ${name} ${elapsed.toFixed(0)} ms${extra ? ` ${extra}` : ""}`);
     },
   };
 }
@@ -977,7 +974,6 @@ export class WgpuTypedOperationDrive {
       this.#acknowledgements.push(...scan.acknowledgements);
       this.#pages += scan.pages.length;
       this.#terminal ||= scan.terminal;
-      for (const fault of scan.faults) console.error(`[DEBUG] wgpu-bridge typed-operation fault instance=${this.instanceId}: ${fault}`);
     }
   }
 
@@ -1005,9 +1001,7 @@ export class WgpuTypedOperationDrive {
     return this.#acknowledgements.length > 0 || turns.some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
   }
 
-  report(phase: string): void {
-    if (this.#pages > 0) console.log(`[DEBUG] wgpu-bridge typed-operation ${phase} instance=${this.instanceId} pages=${this.#pages} terminal=${this.#terminal}`);
-  }
+  report(_phase: string): void {}
 }
 //#endregion 📬️TypedOperationDrive
 
@@ -1211,7 +1205,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (uiRouteByInstance.get(instanceId) !== route) throw new Error("wgpu-ui.owner-replaced");
         const projected = await route.project(surfaceId);
         const effects = [...carried, ...leftoverFriendlyEffects(instanceId, turns)];
-        console.log(`[DEBUG] wgpu-bridge renderSurface surface=${surfaceId} turn=${opportunity} effects=${effects.length} carried=${carried.length} tags=${effectTags(effects).join(",") || "-"} intakeSteps=${route.intakeSteps} patched=${turns.reduce((total, turn) => total + turn.uiPatches.length, 0)} nodes=${projected?.document.nodes.length ?? -1} rev=${projected?.document.revision ?? -1}`);
         if (projected) return { ...projected, effects };
         const status = typeof current.status === "string" ? current.status : current.status && typeof current.status === "object" && "tag" in current.status ? String((current.status as { readonly tag?: unknown }).tag ?? "") : "";
         if (status.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() !== "more-work") throw new Error(`wgpu-ui.surface-not-published:${surfaceId}`);
@@ -1273,10 +1266,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         let completion: SpawnedJobCompletion;
         try {
           completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
-          console.log(`[DEBUG] wgpu-bridge spawn-job done instance=${instanceId} job=${job.job} kind=${job.kind} placement=${job.placement} input=${job.input.byteLength}B steps=${completion.steps} outcome=${"ok" in completion.outcome ? "ok" : "fault"} bytes=${("ok" in completion.outcome ? completion.outcome.ok : completion.outcome.fault).byteLength} ms=${Math.round(performance.now() - started)}`);
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
-          console.warn(`[DEBUG] wgpu-bridge spawn-job refused instance=${instanceId} job=${job.job} kind=${job.kind}: ${detail}`);
           completion = { steps: 0, outcome: { fault: new TextEncoder().encode(detail) } };
         }
         const drive = new WgpuTypedOperationDrive(instanceId);
@@ -1306,10 +1297,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         // `more-work` check reads the command turns, which ended before this job ever started — so an
         // operation the completion re-armed would sit forever and the shell's deferred action would
         // never resolve, wedging the interaction state it holds checked out.
-        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${wireTurnStatusTag(last?.status) || "-"} frames=${frames.length}`);
       }
     }
-    console.warn(`[DEBUG] wgpu-bridge spawn-job drain for instance ${instanceId} exhausted its ${WGPU_SPAWNED_JOB_ROUNDS}-round authority`);
     forgetSpawnedJobs(instanceId);
     return { frames, last };
   };
@@ -1371,7 +1360,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       outFrames.push(...jobDrain.frames);
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
       const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
-      if (leftoverFriendly.length) console.log(`[DEBUG] wgpu-bridge effects leftover ${leftoverFriendly.length} tags=${effectTags(leftoverFriendly).join(",")}`);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
       // 🔁️ The status that decides whether to keep polling is the LAST turn this call drove — a
@@ -1429,7 +1417,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         yieldWgpuUi,
       );
       drive.report(`drain polls=${outcome.polls} stopped=${outcome.stopped}`);
-      if (outcome.stopped === "budget") console.warn(`[DEBUG] wgpu-bridge typed-operation drain for instance ${instanceId} exhausted its ${WGPU_TYPED_OPERATION_DRAIN_BUDGET}-poll budget`);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     } finally {
@@ -1476,7 +1463,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         ...prologue.map((page) => ({ kind: "http-chunk" as const, payload: { req, params: { bytes: Array.from(page), done: false } } })),
         { kind: "completed" as const, payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(terminal) } : { tag: "fault", val: Array.from(terminal) } } },
       ];
-      console.log("[DEBUG] wgpu-bridge extension completion submitted", { instanceId, req: String(req), status: "ok" in outcome ? "ok" : "fault", bytes: answer.byteLength, pages: events.length });
       // 🧾️ The answer turn is a host call like any other: it must hold the actor against the standing
       // drain, acknowledge the result pages the resumed operation publishes, and hand the shell BOTH
       // its own leftovers and anything the ledger still owed.
@@ -1572,13 +1558,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);
     }
     if (answer.result.ok.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES) throw refuse("extension.answer-too-large", `extension answer of ${answer.result.ok.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`);
-    console.log("[DEBUG] wgpu-bridge extension request answered", { pluginId, capability, req: String(req), turns: answer.turns, bytes: answer.result.ok.byteLength });
     return answer.result.ok;
   };
 
   const dispatchInvokeExtension = async (instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint): Promise<InvocationResponse> => {
     const completion = captureExtensionCompletion(instanceId, req);
-    console.log("[DEBUG] wgpu-bridge invokeExtension dispatch", { pluginId, instanceId, extensionId, capability, req: String(req) });
     let outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array };
     try {
       const extension = loadedWgpuHandles.get(extensionId) as WgpuPluginHandle | undefined;
@@ -1598,7 +1582,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
       };
       outcome = { fault: encodePackValue(fault) };
-      console.warn("[DEBUG] wgpu-bridge invokeExtension faulted", { extensionId, capability, instanceId, req: String(req), code: fault.code });
     }
     return completion.complete(outcome);
   };
@@ -1619,19 +1602,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const values = Array.isArray(reachability) ? reachability : [reachability];
     const pack = wgpuBuildScopedContributionsPack(pluginId, values);
     if (!pack) {
-      console.log("[DEBUG] contributions push", { plugin: pluginId, app: appId, skipped: "empty-or-unscoped", crossings: 0, chars: 0, bytes: 0, encoding: "pack" });
       return emptyInvocation();
     }
     const command = wgpuSetContributionsCommand(pluginId, appId, pack.json);
     const slimView = wgpuSlimContributionsView(viewState);
     const ingress = wgpuContributionsIngressSize(command, slimView);
-    console.log("[DEBUG] contributions push", { plugin: pluginId, app: appId, active: true, chars: pack.chars, bytes: pack.bytes.byteLength, crossings: pack.crossings, pageCount: 1, encoding: "pack", plugins: pack.pluginIds, reachableKinds: reachableKindsFromUnknown(values).length, commandBytes: ingress.commandBytes, viewBytes: ingress.viewBytes, ingressBytes: ingress.ingressBytes, ingressPages: ingress.ingressPages });
     if (ingress.ingressPages > SHARD_COMMAND_MAXIMUM_PAGES) {
       throw new Error(`[DEBUG] contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
     }
-    console.log("[DEBUG] contributions slim view", JSON.stringify({ keys: Object.keys(slimView), windowInstances: slimView.windowInstances ?? slimView.window_instances ?? null, focusedWindowId: slimView.focusedWindowId ?? slimView.focused_window_id ?? null, activeWindowKindId: slimView.activeWindowKindId ?? slimView.active_window_kind_id ?? null }));
     const result = await performInvocation(requireChannel(instanceId), instanceId, command, slimView);
-    console.log("[DEBUG] contributions installed", { plugin: pluginId, app: appId, effects: result.requestedEffects.length, tags: effectTags(result.requestedEffects).join(",") || "-", crossings: 1 });
     const ticks: InvocationResponse[] = [];
     for (const effect of result.requestedEffects) {
       if (!effect || typeof effect !== "object" || !("dispatchAction" in effect)) continue;
@@ -1639,10 +1618,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       try {
         const addressed = hostEffectInvocationV1(wgpuEffectDispatchScope(pluginId, appId, slimView), appCommandIdsV1(manifest, appId), dispatch.action, (dispatch.args ?? {}) as Record<string, unknown>);
         const tick = await performInvocation(requireChannel(instanceId), instanceId, addressed.invocation, slimView);
-        console.log("[DEBUG] contributions rearm", { plugin: pluginId, action: dispatch.action, channel: addressed.kind, effects: tick.requestedEffects.length, tags: effectTags(tick.requestedEffects).join(",") || "-" });
         ticks.push(tick);
       } catch (error) {
-        console.warn("[DEBUG] contributions rearm failed", dispatch.action, error instanceof Error ? error.message : String(error));
       }
     }
     if (!ticks.length) return result;
@@ -1664,7 +1641,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const opening = Promise.resolve().then(async () => {
         requireOpening();
         const phase = declareWgpuBootSubphase(`shell-boot:create-app:${pluginId}`);
-        console.log(`[DEBUG] wgpu-bridge createApp open start plugin=${pluginId} instance=${instanceId} app=${appId}`);
         try {
         await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
         requireOpening();
@@ -1681,7 +1657,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         await settleInstanceLifecycle(lifecycle, route, opened, execute, instanceId);
         requireOpening();
         channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
-        console.log(`[DEBUG] wgpu-bridge createApp open leave plugin=${pluginId} instance=${instanceId} intakeSteps=${route.intakeSteps}`);
         return instanceId;
         } finally {
           phase.leave();

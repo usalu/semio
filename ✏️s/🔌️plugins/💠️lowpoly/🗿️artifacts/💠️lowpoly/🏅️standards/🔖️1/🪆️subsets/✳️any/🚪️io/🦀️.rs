@@ -272,6 +272,176 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
+//#region 🕸️MeshGeometry
+/// 🕸️ Shared real-geometry plumbing for the OBJ/STL/PLY leaves (ticket
+/// 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS): building `LowpolyObject`s from polygon
+/// soups on import, and flattening each object's persisted `mesh_content` into world-space polygons
+/// (scale → Euler-degree XYZ rotation, the editor's own quaternion convention → translation) on
+/// export.
+pub mod mesh_geometry {
+    use crate::{mesh_child_handle, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+    use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, VertexId};
+
+    /// 🧮 Document object ceiling; more imported parts than this are merged into one object.
+    pub const MAX_IMPORTED_OBJECTS: usize = 64;
+
+    /// 🧩 One named polygon soup: positions plus 0-based n-gon index lists into them.
+    #[derive(Clone, Debug, Default)]
+    pub struct PolygonPart {
+        pub name: String,
+        pub positions: Vec<[f32; 3]>,
+        pub faces: Vec<Vec<u32>>,
+    }
+
+    pub fn text_error(message: impl Into<String>) -> store::TextError {
+        store::TextError::new(message.into(), dsl::TextSpan::at(1, 1))
+    }
+
+    /// 🧹 Drops consecutive duplicate indices (incl. wrap-around); `None` when fewer than 3 remain.
+    pub fn clean_polygon(indices: &[u32]) -> Option<Vec<u32>> {
+        let mut out: Vec<u32> = Vec::with_capacity(indices.len());
+        for &index in indices {
+            if out.last() != Some(&index) {
+                out.push(index);
+            }
+        }
+        while out.len() > 1 && out.first() == out.last() {
+            out.pop();
+        }
+        (out.len() >= 3).then_some(out)
+    }
+
+    /// 🔁 Remaps a subset of global polygons (global vertex indices) into a compact local part.
+    pub fn compact_part(name: &str, global_positions: &[[f32; 3]], polygons: &[Vec<u32>]) -> Result<PolygonPart, String> {
+        let mut remap: std::collections::HashMap<u32, u32> = std::collections::HashMap::new();
+        let mut part = PolygonPart { name: name.to_string(), ..Default::default() };
+        for polygon in polygons {
+            let mut local = Vec::with_capacity(polygon.len());
+            for &global in polygon {
+                let position = *global_positions.get(global as usize).ok_or_else(|| format!("vertex index {} out of range ({} vertices)", global + 1, global_positions.len()))?;
+                let index = *remap.entry(global).or_insert_with(|| {
+                    part.positions.push(position);
+                    (part.positions.len() - 1) as u32
+                });
+                local.push(index);
+            }
+            if let Some(clean) = clean_polygon(&local) {
+                part.faces.push(clean);
+            }
+        }
+        Ok(part)
+    }
+
+    /// 🧱️ Merges every part into one (used past the 64-object ceiling).
+    pub fn merge_parts(parts: Vec<PolygonPart>, name: &str) -> PolygonPart {
+        let mut merged = PolygonPart { name: name.to_string(), ..Default::default() };
+        for part in parts {
+            let offset = merged.positions.len() as u32;
+            merged.positions.extend(part.positions);
+            merged.faces.extend(part.faces.into_iter().map(|face| face.into_iter().map(|i| i + offset).collect()));
+        }
+        merged
+    }
+
+    /// 📥 Builds a lowpoly document (`obj-1`, `obj-2`, … identity transforms) from polygon parts.
+    /// Empty parts are skipped; no faces at all is a loud error, never an empty document.
+    pub fn snapshot_from_parts(format: &str, parts: Vec<PolygonPart>) -> Result<LowpolySnapshot, store::TextError> {
+        let mut parts: Vec<PolygonPart> = parts.into_iter().filter(|part| !part.faces.is_empty()).collect();
+        if parts.is_empty() {
+            return Err(text_error(format!("{format}->lowpoly: the file contains no polygon faces to import")));
+        }
+        if parts.len() > MAX_IMPORTED_OBJECTS {
+            let name = parts[0].name.clone();
+            parts = vec![merge_parts(parts, &name)];
+        }
+        let mut objects = Vec::with_capacity(parts.len());
+        for (index, part) in parts.into_iter().enumerate() {
+            let id = format!("obj-{}", index + 1);
+            let mesh = HalfedgeMesh::from_faces(&part.positions, &part.faces).map_err(|e| text_error(format!("{format}->lowpoly: object '{}' is not a valid polygon mesh: {e:?}", part.name)))?;
+            let mesh_content = mesh.to_json().map_err(|e| text_error(format!("{format}->lowpoly: mesh json: {e:?}")))?;
+            let name = if part.name.trim().is_empty() { format!("Object {}", index + 1) } else { part.name };
+            objects.push(LowpolyObject {
+                mesh: Some(mesh_child_handle(&id, &mesh_content)),
+                id,
+                name,
+                transform: LowpolyTransform::default(),
+                smooth_shading: false,
+                paint_layers: vec![LowpolyPaintLayer::new("Base")],
+                mesh_content,
+            });
+        }
+        Ok(LowpolySnapshot { schema: LOWPOLY_DOCUMENT_SCHEMA.into(), objects })
+    }
+
+    /// 🔄 Editor convention (`✏️editor/🧭️view::euler_degrees_to_quaternion`): XYZ Euler degrees → `[x,y,z,w]`.
+    pub fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
+        let to_rad = std::f64::consts::PI / 180.0;
+        let (sx, cx) = (f64::from(rotation[0]) * to_rad * 0.5).sin_cos();
+        let (sy, cy) = (f64::from(rotation[1]) * to_rad * 0.5).sin_cos();
+        let (sz, cz) = (f64::from(rotation[2]) * to_rad * 0.5).sin_cos();
+        [sx * cy * cz + cx * sy * sz, cx * sy * cz - sx * cy * sz, cx * cy * sz + sx * sy * cz, cx * cy * cz - sx * sy * sz]
+    }
+
+    pub fn rotate(q: [f64; 4], v: [f64; 3]) -> [f64; 3] {
+        let [x, y, z, w] = q;
+        let t = [2.0 * (y * v[2] - z * v[1]), 2.0 * (z * v[0] - x * v[2]), 2.0 * (x * v[1] - y * v[0])];
+        [v[0] + w * t[0] + (y * t[2] - z * t[1]), v[1] + w * t[1] + (z * t[0] - x * t[2]), v[2] + w * t[2] + (x * t[1] - y * t[0])]
+    }
+
+    /// 🌍 Local position → world: scale, then rotation, then translation.
+    pub fn apply_transform(transform: &LowpolyTransform, local: [f32; 3]) -> [f64; 3] {
+        let scaled = [f64::from(local[0] * transform.scale[0]), f64::from(local[1] * transform.scale[1]), f64::from(local[2] * transform.scale[2])];
+        let rotated = rotate(euler_degrees_to_quaternion(transform.rotation), scaled);
+        [rotated[0] + f64::from(transform.position[0]), rotated[1] + f64::from(transform.position[1]), rotated[2] + f64::from(transform.position[2])]
+    }
+
+    /// 🧩 One exported object: world-space positions and 0-based n-gon faces.
+    #[derive(Clone, Debug, Default)]
+    pub struct WorldPart {
+        pub name: String,
+        pub positions: Vec<[f64; 3]>,
+        pub faces: Vec<Vec<u32>>,
+    }
+
+    /// 📤 Every object with non-empty `mesh_content`, transformed into world space.
+    pub fn world_parts(format: &str, snapshot: &LowpolySnapshot) -> Result<Vec<WorldPart>, store::TextError> {
+        let mut parts = Vec::new();
+        for object in &snapshot.objects {
+            if object.mesh_content.trim().is_empty() {
+                continue;
+            }
+            let mesh = HalfedgeMesh::from_json(&object.mesh_content).map_err(|e| text_error(format!("lowpoly->{format}: object '{}' has unreadable mesh content: {e:?}", object.name)))?;
+            let mut part = WorldPart { name: object.name.clone(), ..Default::default() };
+            for vertex in 0..mesh.vertex_count() {
+                let local = mesh.vertex_position(VertexId(vertex as u32)).map_err(|e| text_error(format!("lowpoly->{format}: vertex {vertex}: {e:?}")))?;
+                part.positions.push(apply_transform(&object.transform, local.0));
+            }
+            for face in 0..mesh.face_count() {
+                let ids = mesh.face_vertex_ids(FaceId(face as u32)).map_err(|e| text_error(format!("lowpoly->{format}: face {face}: {e:?}")))?;
+                if ids.len() >= 3 {
+                    part.faces.push(ids.into_iter().map(|id| id.0).collect());
+                }
+            }
+            parts.push(part);
+        }
+        Ok(parts)
+    }
+
+    /// 📐 Unit normal of triangle `(a, b, c)` (zero for a degenerate triangle).
+    pub fn triangle_normal(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> [f64; 3] {
+        let u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+        let v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+        let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        let length = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+        if length < 1e-12 {
+            [0.0; 3]
+        } else {
+            [n[0] / length, n[1] / length, n[2] / length]
+        }
+    }
+}
+//#endregion 🕸️MeshGeometry
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

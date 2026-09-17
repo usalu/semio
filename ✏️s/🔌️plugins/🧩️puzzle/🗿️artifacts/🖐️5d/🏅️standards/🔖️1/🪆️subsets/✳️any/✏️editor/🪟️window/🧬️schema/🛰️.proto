@@ -7,10 +7,36 @@ message Puzzle5dCamera2d {
   double zoom = 3;
 }
 
+message Puzzle5dWorldProjectionConfig {
+  string kind = 1;
+  string orthographic_view = 2;
+  string axonometric_variant = 3;
+  double axonometric_angle_a = 4;
+  double axonometric_angle_b = 5;
+  string axonometric_quadrant = 6;
+  string oblique_variant = 7;
+  double oblique_angle = 8;
+  double oblique_depth = 9;
+  string one_point_axis = 10;
+  double fov = 11;
+  double two_point_shift = 12;
+  double curvilinear_fov = 13;
+  double curvilinear_strength = 14;
+  string curvilinear_mapping = 15;
+}
+
 message Puzzle5dCamera3d {
   repeated double position = 1;
   repeated double target = 2;
   double zoom = 3;
+  repeated double up = 4;
+  Puzzle5dWorldProjectionConfig projection = 5;
+}
+
+message Puzzle5dSelectableKinds {
+  bool parts = 1;
+  bool grips = 2;
+  bool fasteners = 3;
 }
 
 message Puzzle5dWorldSunConfig {
@@ -27,11 +53,25 @@ message Puzzle5dBoardWindowConfig {
   double suggestion_offset = 3;
   bool grid_snap_enabled = 4;
   double grid_factor = 5;
+  bool grid_visible = 6;
+  Puzzle5dSelectableKinds selectable_kinds = 7;
 }
 
 message Puzzle5dWorldWindowConfig {
   Puzzle5dCamera3d camera3d = 1;
   Puzzle5dWorldSunConfig sun = 2;
+  bool grid_visible = 3;
+  bool grid_snap_enabled = 4;
+  double grid_spacing = 5;
+  bool lod_automatic = 6;
+  bool lod_depth_variable = 7;
+  double lod_manual = 8;
+  Puzzle5dSelectableKinds selectable_kinds = 9;
+  string grip_show = 10;
+  string grip_direction = 11;
+  bool transform_move = 12;
+  bool transform_rotate = 13;
+  repeated uint32 voxel_dims = 14;
 }
 
 message Puzzle5dWindowTransient {

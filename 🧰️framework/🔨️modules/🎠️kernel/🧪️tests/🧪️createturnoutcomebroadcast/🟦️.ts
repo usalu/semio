@@ -690,3 +690,225 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+export async function registerTests6(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<KernelTestModule, "createBundledPluginSource" | "createDevPluginSource" | "createExtensionSource">, source: TestSource): Promise<void> {
+  const { createBundledPluginSource, createDevPluginSource, createExtensionSource } = dependencies;
+  type PluginCatalog = import("../../🟦️.ts").PluginCatalog;
+  type PluginSourceEvent = import("../../🟦️.ts").PluginSourceEvent;
+
+  const { afterEach, beforeEach, describe, expect, it, vi } = vitest;
+
+  /** 📡️ Minimal `EventSource` stand-in: records every construction so a test can prove how MANY
+   * streams a page opened, and lets the test push frames the way the dev endpoint would. */
+  class FakeEventSource {
+    static instances: FakeEventSource[] = [];
+    onmessage: ((event: { readonly data: string }) => void) | null = null;
+    onerror: ((event: unknown) => void) | null = null;
+    closed = false;
+    readonly url: string;
+    constructor(url: string) {
+      this.url = url;
+      FakeEventSource.instances.push(this);
+    }
+    close(): void {
+      this.closed = true;
+    }
+    /** 📨️ Delivers one SSE frame, exactly as the browser would (JSON in `data`). */
+    emit(payload: unknown): void {
+      this.onmessage?.({ data: JSON.stringify(payload) });
+    }
+    /** 🧪️ Delivers a frame that is NOT valid JSON. */
+    emitRaw(data: string): void {
+      this.onmessage?.({ data });
+    }
+    static of(url: string): readonly FakeEventSource[] {
+      return FakeEventSource.instances.filter((instance) => instance.url === url);
+    }
+  }
+
+  const globalWithEventSource = globalThis as { EventSource?: unknown };
+  let originalEventSource: unknown;
+  let urlCounter = 0;
+  /** 🔑️ A URL unique to each case — the shared registry is module-level page state, so cases must not
+   * inherit one another's cached snapshots. */
+  const freshUrl = (label: string): string => `/🔌️plugin-modules/watch?case=${label}-${++urlCounter}`;
+
+  const registry = [{ pluginId: "alpha", moduleUrl: "/plugins/alpha.js" }] as const;
+  const extensionCatalog: PluginCatalog = {
+    plugins: [],
+    extensions: [{ pluginId: "ext-alpha", wasmOut: "", role: "extension", contributes: [], consumes: [] }],
+    hosts: [],
+    playgrounds: [],
+    moduleUrl: (pluginId: string) => `/plugins/${pluginId}.js`,
+    extensionModuleUrl: (pluginId: string) => `/extensions/${pluginId}.js`,
+  };
+
+  describe("page-shared plugin watch streams", () => {
+    beforeEach(() => {
+      originalEventSource = globalWithEventSource.EventSource;
+      globalWithEventSource.EventSource = FakeEventSource as unknown as typeof EventSource;
+      FakeEventSource.instances = [];
+    });
+    afterEach(() => {
+      globalWithEventSource.EventSource = originalEventSource;
+    });
+
+    it("opens exactly ONE EventSource for two shells subscribing to the same watch url", () => {
+      // 🧮️ The whole point: an N-shell page used to hold N streams and exhaust Chromium's six
+      // connections per origin, queueing every later descriptor/wasm fetch behind idle SSE.
+      const url = freshUrl("one-stream");
+      const shellA = createDevPluginSource(registry, url);
+      const shellB = createDevPluginSource(registry, url);
+      const unsubscribeA = shellA.subscribe(() => {});
+      const unsubscribeB = shellB.subscribe(() => {});
+      expect(FakeEventSource.of(url)).toHaveLength(1);
+      unsubscribeA();
+      unsubscribeB();
+    });
+
+    it("replays the cached snapshot to a LATE subscriber (the endpoint only sends one at connect)", async () => {
+      const url = freshUrl("late-snapshot");
+      const first = createDevPluginSource(registry, url);
+      const unsubscribeFirst = first.subscribe(() => {});
+      FakeEventSource.of(url)[0].emit({ kind: "snapshot", plugins: [{ pluginId: "alpha", rebuiltAt: 7 }] });
+
+      const late: PluginSourceEvent[] = [];
+      const unsubscribeLate = createDevPluginSource(registry, url).subscribe((event) => late.push(event));
+      expect(late).toEqual([]); // 📬️ delivered on a microtask, never re-entrantly inside subscribe
+      await Promise.resolve();
+      expect(late).toEqual([{ kind: "snapshot", plugins: [{ pluginId: "alpha", rebuiltAt: 7 }] }]);
+      expect(FakeEventSource.of(url)).toHaveLength(1);
+      unsubscribeFirst();
+      unsubscribeLate();
+    });
+
+    it("does not replay a stale snapshot to a listener that unsubscribed before the microtask ran", async () => {
+      const url = freshUrl("cancelled-replay");
+      const unsubscribeFirst = createDevPluginSource(registry, url).subscribe(() => {});
+      FakeEventSource.of(url)[0].emit({ kind: "snapshot", plugins: [] });
+      const late: PluginSourceEvent[] = [];
+      const unsubscribeLate = createDevPluginSource(registry, url).subscribe((event) => late.push(event));
+      unsubscribeLate();
+      await Promise.resolve();
+      expect(late).toEqual([]);
+      unsubscribeFirst();
+    });
+
+    it("fans LIVE events out to every listener on the shared stream", () => {
+      const url = freshUrl("fan-out");
+      const seenA: PluginSourceEvent[] = [];
+      const seenB: PluginSourceEvent[] = [];
+      const unsubscribeA = createDevPluginSource(registry, url).subscribe((event) => seenA.push(event));
+      const unsubscribeB = createDevPluginSource(registry, url).subscribe((event) => seenB.push(event));
+      FakeEventSource.of(url)[0].emit({ kind: "built", pluginId: "alpha", rebuiltAt: 11 });
+      expect(seenA).toEqual([{ kind: "built", pluginId: "alpha", rebuiltAt: 11 }]);
+      expect(seenB).toEqual(seenA);
+      // 🧹️ A listener that left stops receiving; the survivor keeps its stream.
+      unsubscribeA();
+      FakeEventSource.of(url)[0].emit({ kind: "built", pluginId: "alpha", rebuiltAt: 12 });
+      expect(seenA).toHaveLength(1);
+      expect(seenB).toHaveLength(2);
+      unsubscribeB();
+    });
+
+    it("closes the EventSource when the LAST listener leaves, and opens a new one for a later subscriber", () => {
+      const url = freshUrl("refcount");
+      const unsubscribeA = createDevPluginSource(registry, url).subscribe(() => {});
+      const unsubscribeB = createDevPluginSource(registry, url).subscribe(() => {});
+      unsubscribeA();
+      expect(FakeEventSource.of(url)[0].closed).toBe(false);
+      unsubscribeB();
+      expect(FakeEventSource.of(url)[0].closed).toBe(true);
+      unsubscribeB(); // ♻️ idempotent — a double unsubscribe must not evict a fresh stream
+      const unsubscribeC = createDevPluginSource(registry, url).subscribe(() => {});
+      expect(FakeEventSource.of(url)).toHaveLength(2);
+      expect(FakeEventSource.of(url)[1].closed).toBe(false);
+      unsubscribeC();
+    });
+
+    it("keeps DIFFERENT watch urls on different streams", () => {
+      const pluginUrl = freshUrl("plugins");
+      const extensionUrl = freshUrl("extensions");
+      const unsubscribePlugins = createDevPluginSource(registry, pluginUrl).subscribe(() => {});
+      const unsubscribeExtensions = createExtensionSource(extensionCatalog, extensionUrl).subscribe(() => {});
+      expect(FakeEventSource.of(pluginUrl)).toHaveLength(1);
+      expect(FakeEventSource.of(extensionUrl)).toHaveLength(1);
+      unsubscribePlugins();
+      unsubscribeExtensions();
+    });
+
+    it("normalizes extension wire events PER listener on one shared extension stream", async () => {
+      const url = freshUrl("extension-normalize");
+      const seenA: PluginSourceEvent[] = [];
+      const seenB: PluginSourceEvent[] = [];
+      const unsubscribeA = createExtensionSource(extensionCatalog, url).subscribe((event) => seenA.push(event));
+      const unsubscribeB = createExtensionSource(extensionCatalog, url).subscribe((event) => seenB.push(event));
+      expect(FakeEventSource.of(url)).toHaveLength(1);
+      FakeEventSource.of(url)[0].emit({ kind: "snapshot", extensions: [{ extensionId: "ext-alpha", installedAt: 3 }] });
+      FakeEventSource.of(url)[0].emit({ kind: "installed", extensionId: "ext-alpha", installedAt: 4 });
+      FakeEventSource.of(url)[0].emit({ kind: "uninstalled", extensionId: "ext-alpha" });
+      const expected: PluginSourceEvent[] = [
+        { kind: "snapshot", plugins: [{ pluginId: "ext-alpha", rebuiltAt: 3 }] },
+        { kind: "built", pluginId: "ext-alpha", rebuiltAt: 4 },
+      ];
+      expect(seenA).toEqual(expected); // 🚫️ `uninstalled` has no availability equivalent and is dropped
+      expect(seenB).toEqual(expected);
+      // 📬️ The cached snapshot replayed to a late extension subscriber is normalized too.
+      const late: PluginSourceEvent[] = [];
+      const unsubscribeLate = createExtensionSource(extensionCatalog, url).subscribe((event) => late.push(event));
+      await Promise.resolve();
+      expect(late).toEqual([{ kind: "snapshot", plugins: [{ pluginId: "ext-alpha", rebuiltAt: 3 }] }]);
+      unsubscribeA();
+      unsubscribeB();
+      unsubscribeLate();
+    });
+
+    it("warns ONCE PER LISTENER on a malformed frame and keeps the stream alive", () => {
+      const url = freshUrl("malformed");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const seen: PluginSourceEvent[] = [];
+      const unsubscribeA = createDevPluginSource(registry, url).subscribe((event) => seen.push(event));
+      const unsubscribeB = createDevPluginSource(registry, url).subscribe(() => {});
+      FakeEventSource.of(url)[0].emitRaw("{not json");
+      expect(warn).toHaveBeenCalledTimes(2);
+      FakeEventSource.of(url)[0].emit({ kind: "built", pluginId: "alpha", rebuiltAt: 13 });
+      expect(seen).toEqual([{ kind: "built", pluginId: "alpha", rebuiltAt: 13 }]);
+      warn.mockRestore();
+      unsubscribeA();
+      unsubscribeB();
+    });
+
+    it("is a harmless no-op where EventSource does not exist (plain node)", () => {
+      const url = freshUrl("no-eventsource");
+      globalWithEventSource.EventSource = undefined;
+      const unsubscribe = createDevPluginSource(registry, url).subscribe(() => {});
+      expect(FakeEventSource.of(url)).toHaveLength(0);
+      unsubscribe();
+    });
+  });
+
+  describe("createBundledPluginSource", () => {
+    beforeEach(() => {
+      FakeEventSource.instances = [];
+    });
+
+    it("replays one snapshot for every registry entry without opening EventSource", async () => {
+      const bundledRegistry = [
+        { pluginId: "alpha", moduleUrl: "/plugins/alpha.js" },
+        { pluginId: "flow-extension-brep", moduleUrl: "/extensions/brep.js" },
+      ] as const;
+      const events: PluginSourceEvent[] = [];
+      const source = createBundledPluginSource(bundledRegistry);
+      const unsubscribe = source.subscribe((event) => events.push(event));
+      expect(events).toEqual([]);
+      await Promise.resolve();
+      expect(events).toHaveLength(1);
+      expect(events[0]?.kind).toBe("snapshot");
+      if (events[0]?.kind !== "snapshot") throw new Error("expected snapshot");
+      expect(events[0].plugins.map((row) => row.pluginId).sort()).toEqual(["alpha", "flow-extension-brep"]);
+      expect(FakeEventSource.instances).toHaveLength(0);
+      unsubscribe();
+    });
+  });
+
+}

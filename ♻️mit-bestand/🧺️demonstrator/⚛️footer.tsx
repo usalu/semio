@@ -138,7 +138,7 @@ export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiL
     key,
     className: "relative z-40",
     content: (
-      <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground">
+      <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors">
         {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>}
         <a
           href={LUH_URL}

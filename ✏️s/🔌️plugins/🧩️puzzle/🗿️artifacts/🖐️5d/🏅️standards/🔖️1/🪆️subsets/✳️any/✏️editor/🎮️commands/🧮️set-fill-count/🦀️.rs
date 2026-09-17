@@ -2,6 +2,18 @@
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use dsl::os_pack::json::Value;
+use semio_framework::kernel::Effect;
+
+/// 📨️ Routes a text-entry or repeat-last request through the retained public command, so the count lands on the
+/// one lane a live run's declared settings watch instead of being written behind the driver's back.
+pub fn request(count: u32) -> Effect {
+    Effect::DispatchAction {
+        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        action: "setFillCount".into(),
+        args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "value": count }))),
+        delay_ms: 0,
+    }
+}
 
 /// 🪣️ Records the requested placement count verbatim in the document instance's configuration — there is no
 /// ceiling and a malformed count is a no-op. The document is untouched; a live fill run reads the new count

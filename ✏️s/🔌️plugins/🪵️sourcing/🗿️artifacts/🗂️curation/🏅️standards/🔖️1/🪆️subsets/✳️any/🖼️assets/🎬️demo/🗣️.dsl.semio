@@ -1,5 +1,5 @@
 semio curation.curation.dsl v1
-catalog=child_id=catalog-45b17760a5000259 target="catalog-45b17760a5000259!s.stdio.semio@v1/kit" stock-extra=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
+catalog=child_id=catalog-572920189eef168d target="catalog-572920189eef168d!s.stdio.semio@v1/kit" stock-extra=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
 box width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name="KVH C24 100×200" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]
 box width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name="Steel IPE 200" module-id=beams availability=12 typology-path=[ beams steel ipe ]
 box width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name="Steel HEA 160" module-id=beams availability=8 typology-path=[ beams steel hea ]
@@ -9,6 +9,8 @@ frame width=1.5m height=1.5m depth=0.06m profile=0.06m id=window-tilt-turn-120x1
 frame width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name="Concrete Slab 240mm" module-id=slabs availability=30 typology-path=[ slabs concrete ]
 slab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name="CLT Slab 160mm" module-id=slabs availability=20 typology-path=[ slabs clt ]
 slab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name="Hollow Core Slab 265mm" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]
-slab width=1.2m depth=6m thickness=0.265m ]
+slab width=1.2m depth=6m thickness=0.265m id=hexagonal-cut-concrete-forest-left name="Hexagonal Cut Concrete Forest Left" module-id=reuse availability=12 typology-path=[ reuse concrete forest ]
+glb url="/mesh/🧊️hexagonal-cut-concrete-forest-left.glb" extent=9.45m id=hexagonal-cut-concrete-forest-right name="Hexagonal Cut Concrete Forest Right" module-id=reuse availability=12 typology-path=[ reuse concrete forest ]
+glb url="/mesh/🧊️hexagonal-cut-concrete-forest-right.glb" extent=9.45m ]
 curated [object-id:REF count:UINT] {
 }

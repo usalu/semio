@@ -72,14 +72,46 @@ semio_framework_plugin::app_labels! {
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
         duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
         select_same_kind: native_en "Select all of same kind", native_de "Alle gleicher Art auswählen", reuse_en "Select all of same kind", reuse_de "Alle gleicher Art auswählen";
-        zoom_to_selection: native_en "Zoom to selection", native_de "Auf Auswahl zoomen", reuse_en "Zoom to selection", reuse_de "Auf Auswahl zoomen";
+        focus_selection: native_en "Focus selection", native_de "Auswahl fokussieren", reuse_en "Focus selection", reuse_de "Auswahl fokussieren";
+        nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
+        selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
+        example_too_large: native_en "This example is too large to load in one edit", native_de "Dieses Beispiel ist zu groß für eine Bearbeitung", reuse_en "This example is too large to load in one edit", reuse_de "Dieses Beispiel ist zu groß für eine Bearbeitung";
+        edit_not_applicable: native_en "Nothing changed", native_de "Nichts geändert", reuse_en "Nothing changed", reuse_de "Nichts geändert";
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
         unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
+        // 🧊️ Volume Brush / target volumes (the 3d-pane fill constraint family)
+        target_volumes: native_en "Target Volumes", native_de "Zielvolumina", reuse_en "Target Volumes", reuse_de "Zielvolumina";
+        target_volume: native_en "Target Volume", native_de "Zielvolumen", reuse_en "Target Volume", reuse_de "Zielvolumen";
+        volume_brush: native_en "Volume Brush", native_de "Volumenpinsel", reuse_en "Volume Brush", reuse_de "Volumenpinsel";
+        voxel: native_en "Voxel", native_de "Voxel", reuse_en "Voxel", reuse_de "Voxel";
+        width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        depth: native_en "Depth", native_de "Tiefe", reuse_en "Depth", reuse_de "Tiefe";
+        height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        target_volume_origin_required: native_en "Point at the ground plane to place a target volume", native_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren", reuse_en "Point at the ground plane to place a target volume", reuse_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren";
         automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
+        // window option groups (grid / lod / select / grip / transform)
+        grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
+        spacing: native_en "Spacing", native_de "Abstand", reuse_en "Spacing", reuse_de "Abstand";
+        factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
+        auto_zoom: native_en "Auto zoom", native_de "Auto-Zoom", reuse_en "Auto zoom", reuse_de "Auto-Zoom";
+        depth_variable: native_en "Depth variable", native_de "Tiefenabhängig", reuse_en "Depth variable", reuse_de "Tiefenabhängig";
+        selection: native_en "Selection", native_de "Auswahl", reuse_en "Selection", reuse_de "Auswahl";
+        grip_show: native_en "Grip markers", native_de "Griffmarken", reuse_en "Connection point markers", reuse_de "Verbindungspunktmarken";
+        grip_direction: native_en "Grip direction", native_de "Griffrichtung", reuse_en "Connection point direction", reuse_de "Verbindungspunktrichtung";
+        always: native_en "Always", native_de "Immer", reuse_en "Always", reuse_de "Immer";
+        selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
+        outwards: native_en "Outwards", native_de "Nach außen", reuse_en "Outwards", reuse_de "Nach außen";
+        inwards: native_en "Inwards", native_de "Nach innen", reuse_en "Inwards", reuse_de "Nach innen";
+        transform: native_en "Transform", native_de "Transformieren", reuse_en "Transform", reuse_de "Transformieren";
+        move_handle: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
+        rotate_handle: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
+        projection: native_en "Projection", native_de "Projektion", reuse_en "Projection", reuse_de "Projektion";
         suggestion: native_en "Suggestion", native_de "Vorschlag", reuse_en "Suggestion", reuse_de "Vorschlag";
         offset: native_en "Offset", native_de "Versatz", reuse_en "Offset", reuse_de "Versatz";
         part_weights: native_en "Part Weights", native_de "Teilgewichte", reuse_en "Part Weights", reuse_de "Teilgewichte";
@@ -112,6 +144,33 @@ semio_framework_plugin::app_labels! {
         turn: native_en "Turn", native_de "Drehung", reuse_en "Turn", reuse_de "Drehung";
         tilt: native_en "Tilt", native_de "Neigung", reuse_en "Tilt", reuse_de "Neigung";
         mixed: native_en "Mixed", native_de "Gemischt", reuse_en "Mixed", reuse_de "Gemischt";
+        // document IO, clipboard and the add-part dialog
+        export: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
+        import: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
+        export_too_large: native_en "This document is larger than one export may stream", native_de "Dieses Dokument ist größer als ein Export übertragen kann", reuse_en "This document is larger than one export may stream", reuse_de "Dieses Dokument ist größer als ein Export übertragen kann";
+        import_invalid: native_en "That file is not a puzzle 5d document", native_de "Diese Datei ist kein Puzzle-5d-Dokument", reuse_en "That file is not a puzzle 5d document", reuse_de "Diese Datei ist kein Puzzle-5d-Dokument";
+        import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
+        import_incomplete: native_en "That import arrived incomplete", native_de "Dieser Import ist unvollständig angekommen", reuse_en "That import arrived incomplete", reuse_de "Dieser Import ist unvollständig angekommen";
+        add: native_en "Add", native_de "Hinzufügen", reuse_en "Add", reuse_de "Hinzufügen";
+        add_part: native_en "Add Part", native_de "Teil hinzufügen", reuse_en "Add building component", reuse_de "Baukomponente hinzufügen";
+        add_part_prompt: native_en "Add Part…", native_de "Teil hinzufügen…", reuse_en "Add building component…", reuse_de "Baukomponente hinzufügen…";
+        add_part_body: native_en "Choose the kind of part to add.", native_de "Wählen Sie die Art des hinzuzufügenden Teils.", reuse_en "Choose the kind of building component to add.", reuse_de "Wählen Sie die Art der hinzuzufügenden Baukomponente.";
+        copy: native_en "Copy", native_de "Kopieren", reuse_en "Copy", reuse_de "Kopieren";
+        cut: native_en "Cut", native_de "Ausschneiden", reuse_en "Cut", reuse_de "Ausschneiden";
+        paste: native_en "Paste", native_de "Einfügen", reuse_en "Paste", reuse_de "Einfügen";
+        select_all: native_en "Select all", native_de "Alles auswählen", reuse_en "Select all", reuse_de "Alles auswählen";
+        suggest_parts: native_en "Suggest parts", native_de "Teile vorschlagen", reuse_en "Suggest building components", reuse_de "Baukomponenten vorschlagen";
+        retarget: native_en "Retarget", native_de "Umhängen", reuse_en "Retarget", reuse_de "Umhängen";
+        fastener: native_en "Fastener", native_de "Verbinder", reuse_en "Component connection", reuse_de "Baukomponentenverbindung";
+        orientation: native_en "Orientation", native_de "Ausrichtung", reuse_en "Orientation", reuse_de "Ausrichtung";
+        scale: native_en "Scale", native_de "Maßstab", reuse_en "Scale", reuse_de "Maßstab";
+        hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
+        locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        // settings panel labels
+        settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
+        grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
+        proximity_radius: native_en "Proximity radius (m)", native_de "Näherungsradius (m)", reuse_en "Proximity radius (m)", reuse_de "Näherungsradius (m)";
+        chunk_size: native_en "Chunk size (m)", native_de "Blockgröße (m)", reuse_en "Chunk size (m)", reuse_de "Blockgröße (m)";
     }
 }
 //#endregion 🔖️Labels

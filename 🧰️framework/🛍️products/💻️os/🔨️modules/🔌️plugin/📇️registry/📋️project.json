@@ -104,7 +104,6 @@
         "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
       },
       "cache": true,
-      "parallelism": false,
       "outputs": [
         "{projectRoot}/dist/rust-taxonomy-mounts-check"
       ]
@@ -116,7 +115,6 @@
         "command": "bun ./📜️script.ts plugin-root-ownership-check"
       },
       "cache": true,
-      "parallelism": false,
       "outputs": [
         "{projectRoot}/dist/plugin-root-ownership-check"
       ]

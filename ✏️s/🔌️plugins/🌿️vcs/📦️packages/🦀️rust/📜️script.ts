@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🌿️ VCS plugin package command router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { NativeCodecCheckScript } from "../../🧪️tests/📇️native-codecs/🟦️.ts";
 import { NativeOpenableIdentityCheckScript } from "../../🧪️tests/🪪️native-openable-identity/🟦️.ts";
@@ -24,4 +24,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("describe", DescribeScript)
   .register("native-openable-identity-check", NativeOpenableIdentityCheckScript)
   .register("native-codec-check", NativeCodecCheckScript);
+registerPlaygroundSiteBuildCommands(router);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

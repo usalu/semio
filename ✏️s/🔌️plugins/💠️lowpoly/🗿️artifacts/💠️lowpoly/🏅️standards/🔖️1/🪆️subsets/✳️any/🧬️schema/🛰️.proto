@@ -49,4 +49,6 @@ message LowpolyObject {
   // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
   semio.os.store.ArtifactChild mesh = 5;
   repeated LowpolyPaintLayer paint_layers = 6;
+  // half-edge-mesh JSON the `mesh` handle hashes; empty in legacy handle-only documents.
+  string mesh_content = 7;
 }

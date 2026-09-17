@@ -5,6 +5,7 @@ type Puzzle2dSnapshot {
   camera: Puzzle2dCamera! @state(class: ARTIFACT)
   nodes: [Puzzle2dNode!]! @state(class: ARTIFACT)
   edges: [Puzzle2dEdge!]! @state(class: ARTIFACT)
+  targetRegions: [Puzzle2dTargetRegion!]! @state(class: ARTIFACT)
   meta: Puzzle2dMeta! @state(class: ARTIFACT)
 }
 
@@ -122,6 +123,17 @@ type Puzzle2dKindCatalogs {
   edges: [Puzzle2dCatalogEdgeKind!]!
   wires: [Puzzle2dCatalogWireKind!]!
 }
+type Puzzle2dTargetRegion {
+  id: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  label: String
+  hidden: Boolean!
+  locked: Boolean!
+}
+
 type Puzzle2dMeta {
   manifestId: String
   kindCompatibility: [Puzzle2dKindCompatibility!]!

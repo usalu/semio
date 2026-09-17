@@ -1,6 +1,6 @@
 //! 🧬️ Mp4Snapshot — ISO-BMFF: `ftyp` typed, decoded per-track sample tables (`stts`/`ctts`/
-//! `stsc`/`stsz`/`stco`/`stss` flattened into per-sample records), AVC codec config typed
-//! (`avcC` SPS/PPS) and logical sample-to-chunk grouping. Native bytes are materialized only by
+//! `stsc`/`stsz`/`stco`/`stss` flattened into per-sample records), codec config typed
+//! per sample entry (`avcC`, `hvcC`, Motion-JPEG) and logical sample-to-chunk grouping. Native bytes are materialized only by
 //! the ordinary ISO-BMFF writer.
 
 use framework_schema::ArtifactSchema;
@@ -32,10 +32,133 @@ pub struct Mp4AvcExtension {
     pub sps_ext: Vec<Vec<u8>>,
 }
 
-/// 🎥️ A track's typed AVC sample description. Unsupported codecs are rejected on import.
+/// 🏷️ The visual sample entry (`stsd` child box type) a track's samples are coded with.
+/// AVC per ISO/IEC 14496-15 §5.4 (`avc1`/`avc3`), HEVC per §8.4 (`hvc1`/`hev1`), and Motion-JPEG
+/// per the QuickTime File Format sample description table (`jpeg` Photo-JPEG, `mjpa` Motion-JPEG
+/// format A) — each sample of a JPEG track is one complete JFIF/JPEG interchange image.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
+pub enum Mp4CodecFormat {
+    #[default]
+    Avc1,
+    Avc3,
+    Hvc1,
+    Hev1,
+    Jpeg,
+    Mjpa,
+}
+
+impl Mp4CodecFormat {
+    /// 🔤️ The sample entry's four-character box type.
+    pub fn fourcc(self) -> &'static str {
+        match self {
+            Self::Avc1 => "avc1",
+            Self::Avc3 => "avc3",
+            Self::Hvc1 => "hvc1",
+            Self::Hev1 => "hev1",
+            Self::Jpeg => "jpeg",
+            Self::Mjpa => "mjpa",
+        }
+    }
+
+    /// 🔍️ The format whose sample entry box type is `fourcc`, if this artifact models it.
+    pub fn from_fourcc(fourcc: &[u8]) -> Option<Self> {
+        Some(match fourcc {
+            b"avc1" => Self::Avc1,
+            b"avc3" => Self::Avc3,
+            b"hvc1" => Self::Hvc1,
+            b"hev1" => Self::Hev1,
+            b"jpeg" => Self::Jpeg,
+            b"mjpa" => Self::Mjpa,
+            _ => return None,
+        })
+    }
+
+    pub fn is_avc(self) -> bool {
+        matches!(self, Self::Avc1 | Self::Avc3)
+    }
+
+    pub fn is_hevc(self) -> bool {
+        matches!(self, Self::Hvc1 | Self::Hev1)
+    }
+
+    pub fn is_jpeg(self) -> bool {
+        matches!(self, Self::Jpeg | Self::Mjpa)
+    }
+
+    fn is_default(&self) -> bool {
+        *self == Self::Avc1
+    }
+}
+
+/// 🧱️ One `hvcC` NAL unit array (ISO/IEC 14496-15 §8.3.3.1): VPS/SPS/PPS/SEI units of one type.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct Mp4HevcNalArray {
+    pub array_completeness: bool,
+    pub nal_unit_type: u8,
+    #[value(default)]
+    pub nal_units: Vec<Vec<u8>>,
+}
+
+/// 🎥️ `hvcC` — HEVCDecoderConfigurationRecord (ISO/IEC 14496-15 §8.3.3.1), every field typed.
+/// `nal_length_size` lives on [`Mp4Codec`] and is shared with AVC.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct Mp4HevcConfig {
+    pub general_profile_space: u8,
+    pub general_tier_flag: bool,
+    pub general_profile_idc: u8,
+    pub general_profile_compatibility_flags: u32,
+    /// 🔢️ 48-bit `general_constraint_indicator_flags`.
+    pub general_constraint_indicator_flags: u64,
+    pub general_level_idc: u8,
+    pub min_spatial_segmentation_idc: u16,
+    pub parallelism_type: u8,
+    pub chroma_format_idc: u8,
+    pub bit_depth_luma_minus8: u8,
+    pub bit_depth_chroma_minus8: u8,
+    pub avg_frame_rate: u16,
+    pub constant_frame_rate: u8,
+    pub num_temporal_layers: u8,
+    pub temporal_id_nested: bool,
+    #[value(default)]
+    pub arrays: Vec<Mp4HevcNalArray>,
+}
+
+impl Default for Mp4HevcConfig {
+    /// 🌱️ Main profile, level 3.1, 4:2:0 8-bit, no parameter sets.
+    fn default() -> Self {
+        Self {
+            general_profile_space: 0,
+            general_tier_flag: false,
+            general_profile_idc: 1,
+            general_profile_compatibility_flags: 0x6000_0000,
+            general_constraint_indicator_flags: 0,
+            general_level_idc: 93,
+            min_spatial_segmentation_idc: 0,
+            parallelism_type: 0,
+            chroma_format_idc: 1,
+            bit_depth_luma_minus8: 0,
+            bit_depth_chroma_minus8: 0,
+            avg_frame_rate: 0,
+            constant_frame_rate: 0,
+            num_temporal_layers: 1,
+            temporal_id_nested: true,
+            arrays: Vec::new(),
+        }
+    }
+}
+
+/// 🎥️ A track's typed sample description: the sample entry `format` plus that format's typed
+/// decoder configuration — `avcC` (`sps`/`pps`/`nal_length_size`/`extension`) for AVC, `hvcC`
+/// (`hevc` + `nal_length_size`) for HEVC, none for JPEG. Unsupported sample entries are rejected on
+/// import. The encoder writes only the configuration record `format` names.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4Codec {
+    #[value(default, skip_serializing_if = "Mp4CodecFormat::is_default")]
+    pub format: Mp4CodecFormat,
     #[value(default)]
     pub sps: Vec<Vec<u8>>,
     #[value(default)]
@@ -43,11 +166,30 @@ pub struct Mp4Codec {
     pub nal_length_size: u8,
     #[value(default)]
     pub extension: Option<Mp4AvcExtension>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub hevc: Option<Mp4HevcConfig>,
+}
+
+impl Mp4Codec {
+    /// 🎥️ An AVC (`avc1`) description from its parameter sets.
+    pub fn avc(sps: Vec<Vec<u8>>, pps: Vec<Vec<u8>>, nal_length_size: u8, extension: Option<Mp4AvcExtension>) -> Self {
+        Self { format: Mp4CodecFormat::Avc1, sps, pps, nal_length_size, extension, hevc: None }
+    }
+
+    /// 🎥️ An HEVC description (`hvc1` or `hev1`) from its `hvcC` record.
+    pub fn hevc(format: Mp4CodecFormat, config: Mp4HevcConfig, nal_length_size: u8) -> Self {
+        Self { format, sps: Vec::new(), pps: Vec::new(), nal_length_size, extension: None, hevc: Some(config) }
+    }
+
+    /// 🖼️ A Motion-JPEG description (`jpeg` or `mjpa`); JPEG carries no configuration record.
+    pub fn jpeg(format: Mp4CodecFormat) -> Self {
+        Self { format, sps: Vec::new(), pps: Vec::new(), nal_length_size: 4, extension: None, hevc: None }
+    }
 }
 
 impl Default for Mp4Codec {
     fn default() -> Self {
-        Self { sps: Vec::new(), pps: Vec::new(), nal_length_size: 4, extension: None }
+        Self::avc(Vec::new(), Vec::new(), 4, None)
     }
 }
 //#endregion 🔖️Codec

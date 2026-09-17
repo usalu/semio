@@ -5807,7 +5807,10 @@ pub mod app {
             UiText::try_format(format_args!("{}.{kind}.{id}", self.namespace)).ok_or_else(|| ui_assembly_error("panel-tree.item-id"))
         }
 
-        /// 🌳️ Adds a section verbatim. ⚠️ Decision: a `None` label becomes an empty [`Label`] —
+        /// 🌳️ Adds a section verbatim. ⚠️ Its rows are OUTSIDE the [`TreeWindows`] node ledger — see
+        /// that type and [`TREE_WINDOW_FIXED_NODE_HEADROOM`] — so this spelling is for small fixed
+        /// lists only; an entity list belongs on [`Self::window_section`].
+        /// ⚠️ Decision: a `None` label becomes an empty [`Label`] —
         /// [`ui::tree_section`] has no optional-label constructor; [`TreeSectionProps::label`] itself
         /// stays `Option` on the record, so only this convenience path loses the "omit entirely"
         /// spelling.
@@ -5929,6 +5932,13 @@ pub mod app {
     /// measured its viewport (`ViewModel::tree_viewport_rows`).
     pub const TREE_WINDOW_DEFAULT_ROWS: u32 = 48;
 
+    /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
+    /// the React host spends the same number from the other side of the wire
+    /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
+    /// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
+    /// implement; [`TreeWindows`] is this side of it.
+    pub use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM};
+
     /// 🪟️ What one container materialises this render: `len` rows starting at `offset` out of `total`.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct TreeSlice {
@@ -5942,28 +5952,180 @@ pub mod app {
     /// Containers the host has never seen share `budget` — the first-paint allowance spent in
     /// document order, nested containers included — so a cold render draws about one viewport and
     /// stops, instead of the whole document.
+    ///
+    /// 🧾️ `nodes` is the body-wide **node ledger**, and it is the reason per-container clamps are not
+    /// enough. The reconciler admits at most [`semio_framework_ui_contract::UI_DOCUMENT_NODES`] node
+    /// records per PRESENTED BODY — the tree root, every section node, every group item, every row and
+    /// every placeholder counts once (`SurfaceReconcileLimits::max_nodes`, enforced per admitted node
+    /// in `🧠️runtime/♻️reconcile/🦀️.rs`). A body whose containers each stayed inside
+    /// `UI_BUILT_CHILDREN_MAX` could still sum past that ceiling and fault the whole refresh — fem3d
+    /// House did, at `nodes: 129 > max_nodes: 128`.
+    ///
+    /// 🧾️ **Cost model — one budget, one arithmetic, both sides of the wire.** The ledger opens on
+    /// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`], the SAME number the React host
+    /// caps its requests with, and one windowed container costs `1 + its materialised rows`. Every
+    /// node is charged EXACTLY ONCE: a nested [`tree_window_item`] built as a row of an enclosing
+    /// window is the row its parent already paid for, so it does not charge its own `1` again (the
+    /// helpers track that they are inside a parent's row closure). So a request the host is allowed to
+    /// file — it caps `Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET` — is always one this side can
+    /// honour in full.
+    ///
+    /// 🥇️ **Request priority — order independence.** A first-paint default must never eat the records
+    /// a container the user actually scrolled to needs, and the host's request order is its node keys
+    /// sorted alphabetically (wire byte-stability), NOT document order. So the ledger is split the
+    /// moment it is built, before any container exists: each host request reserves
+    /// `1 + min(rows, UI_BUILT_CHILDREN_MAX)`, in request order, until the budget is spent — a host
+    /// that over-asks is clamped there, deterministically, tail last. A container the host has NOT
+    /// addressed is then served out of the UNRESERVED remainder only, and additionally out of the
+    /// shared viewport `budget`, in document order. A container the host HAS addressed releases its
+    /// own reservation when the render reaches it and is served out of the whole remaining ledger,
+    /// wherever it sits in the body. `rows: 0` with `open: true` is a valid request — a measured but
+    /// off-screen container — and materialises nothing; it never falls back to the first-paint default.
+    /// A stale `offset` past the end clamps to the LAST window (`total - rows`), never to an empty
+    /// slice of a non-empty container.
+    ///
+    /// 🔑️ **`node_key` is unique per body, among containers that publish a window.** The host keys
+    /// open state, geometry and windows by that string alone — it is the built node's own key, which
+    /// is also the pick target id — so two windowed containers sharing one key silently steer each
+    /// other. The second container to claim a key is refused with `ui.tree-window.duplicate-key`
+    /// rather than mis-served. A container with no entries the host has never addressed publishes no
+    /// window, is not addressable, and therefore claims nothing: a tree whose leaves are built through
+    /// [`tree_window_item`] (a JSON document, an AST) is bound by this rule only at the nodes that
+    /// actually have children. App panels namespace nested ids per entity KIND
+    /// (`"{section}.{entity-id}"`) whenever two collections could share an id space.
+    ///
+    /// 🧾️ Running out is not a fault. A container the ledger cannot seat still builds and still stamps
+    /// its full `TreeWindow { total, offset }` with a shorter — possibly empty — materialised run, so
+    /// the host's scrollbar keeps spanning the whole document and the next scroll streams the rows in.
+    ///
+    /// ⚠️ Rows built any other way are OUTSIDE the ledger: [`PanelTreeBuilder::section`],
+    /// [`PanelTreeBuilder::section_or_placeholder`], bare [`tree_item`]/[`tree_section`] children and
+    /// [`ui_node_list`] admissions are invisible to it, because they carry no window and no node key
+    /// for the host to address. Those are the small fixed lists apps legitimately still build, and
+    /// [`TREE_WINDOW_FIXED_NODE_HEADROOM`] is what pays for them. A panel that builds MORE than the
+    /// headroom in fixed rows must move them onto a window. A container's own node is debited
+    /// unconditionally — it is not optional once the panel decided to build it — so an overdrawn
+    /// ledger simply grants nothing to everything after it.
     pub struct TreeWindows<'a> {
-        requests: Vec<&'a TreeWindowRequest>,
+        requests: Vec<(&'a TreeWindowRequest, std::cell::Cell<usize>)>,
         budget: std::cell::Cell<u32>,
+        nodes: std::cell::Cell<isize>,
+        reserved: std::cell::Cell<usize>,
+        claimed: std::cell::RefCell<Vec<String>>,
+        nested: std::cell::Cell<bool>,
     }
 
     impl<'a> TreeWindows<'a> {
         /// 🪟️ Every request the host filed for `body_key`, plus its measured viewport budget.
         pub fn for_body(view: &'a ViewModel, body_key: &str) -> Self {
-            Self {
-                requests: view.tree_windows.iter().filter(|request| request.body_key == body_key).collect(),
-                budget: std::cell::Cell::new(view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS)),
-            }
+            Self::seated(view.tree_windows.iter().filter(|request| request.body_key == body_key), view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS))
         }
 
         /// 🪟️ No host state at all (tests, a body the host has never rendered): author defaults and
         /// the default first-paint budget.
         pub fn unhosted() -> Self {
-            Self { requests: Vec::new(), budget: std::cell::Cell::new(TREE_WINDOW_DEFAULT_ROWS) }
+            Self::seated(std::iter::empty(), TREE_WINDOW_DEFAULT_ROWS)
+        }
+
+        /// 🥇️ Seats the host's requests on the ledger in request order — see this type's doc. A key the
+        /// host filed twice is seated once: only the first is ever read back, so reserving for the
+        /// second would hold records nothing can release.
+        fn seated(requests: impl IntoIterator<Item = &'a TreeWindowRequest>, viewport_rows: u32) -> Self {
+            let mut unreserved = TREE_WINDOW_BODY_NODE_BUDGET;
+            let mut seen: Vec<&str> = Vec::new();
+            let requests: Vec<_> = requests
+                .into_iter()
+                .map(|request| {
+                    let want = match request.open {
+                        Some(false) => 0,
+                        _ if seen.contains(&request.node_key.as_str()) => 0,
+                        _ => (1 + (request.rows as usize).min(UI_BUILT_CHILDREN_MAX)).min(unreserved),
+                    };
+                    seen.push(request.node_key.as_str());
+                    unreserved -= want;
+                    (request, std::cell::Cell::new(want))
+                })
+                .collect();
+            Self {
+                requests,
+                budget: std::cell::Cell::new(viewport_rows),
+                nodes: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET as isize),
+                reserved: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET - unreserved),
+                claimed: std::cell::RefCell::new(Vec::new()),
+                nested: std::cell::Cell::new(false),
+            }
+        }
+
+        /// 🧾️ Node records this body may still materialise — every container and every row this
+        /// [`TreeWindows`] has served has already been charged. Zero once the ledger is spent, including
+        /// when unconditional container debits drove it past zero.
+        pub fn nodes_remaining(&self) -> usize {
+            self.nodes.get().max(0) as usize
+        }
+
+        /// 🥇️ Records still held back for host requests this render has not reached yet.
+        pub fn nodes_reserved(&self) -> usize {
+            self.reserved.get()
+        }
+
+        /// 🔑️ Registers `node_key` as this body's, refusing the second container to claim it — see
+        /// this type's doc. Only a container that PUBLISHES a window claims: one with no entries the
+        /// host has never addressed stamps nothing, so it is not addressable and two of them cannot
+        /// steer each other. That is what keeps a tree of leaf rows (a JSON document, an AST) out of
+        /// the uniqueness requirement — it binds containers, not rows.
+        fn claim_window(&self, node_key: &str, entries: usize) -> UiAssemblyResult<()> {
+            if entries == 0 && self.request(node_key).is_none() {
+                return Ok(());
+            }
+            self.claim(node_key)
+        }
+
+        fn claim(&self, node_key: &str) -> UiAssemblyResult<()> {
+            let mut claimed = self.claimed.borrow_mut();
+            if claimed.iter().any(|key| key == node_key) {
+                return Err(PluginAssemblyError::new(
+                    "ui.tree-window.duplicate-key",
+                    format!("[tree-window] duplicate key {node_key:?} in this panel body — two windowed containers share one window and one open state; give every windowed container its own node key"),
+                ));
+            }
+            claimed.push(node_key.to_owned());
+            Ok(())
+        }
+
+        /// 🧾️ Takes `nodes` records off the ledger whether or not it can afford them — a container's
+        /// own node is not optional once the panel decided to build it.
+        fn debit(&self, nodes: usize) {
+            self.nodes.set(self.nodes.get() - nodes as isize);
+        }
+
+        /// 🧾️ Charges the node of a container that is about to be built — nothing when the container is
+        /// itself a row of an enclosing window, which already paid for it (charged exactly once).
+        fn debit_container(&self) {
+            if !self.nested.get() {
+                self.debit(1);
+            }
+        }
+
+        /// 🧾️ Takes up to `want` records off the ledger, returning what it could actually afford.
+        fn grant(&self, want: usize) -> usize {
+            let spent = want.min(self.nodes_remaining());
+            self.debit(spent);
+            spent
+        }
+
+        /// 🥇️ [`Self::grant`] out of the records no host request is holding — the first-paint path.
+        fn grant_unreserved(&self, want: usize) -> usize {
+            let spent = want.min(self.nodes_remaining().saturating_sub(self.reserved.get()));
+            self.debit(spent);
+            spent
+        }
+
+        fn seat(&self, node_key: &str) -> Option<&(&'a TreeWindowRequest, std::cell::Cell<usize>)> {
+            self.requests.iter().find(|(request, _)| request.node_key == node_key)
         }
 
         fn request(&self, node_key: &str) -> Option<&'a TreeWindowRequest> {
-            self.requests.iter().copied().find(|request| request.node_key == node_key)
+            self.seat(node_key).map(|(request, _)| *request)
         }
 
         /// 🔽️ Whether `node_key` is expanded — a host `open` wins over the author's default.
@@ -5971,19 +6133,29 @@ pub mod app {
             self.request(node_key).and_then(|request| request.open).unwrap_or(default_open)
         }
 
-        /// 🪟️ The slice `node_key` materialises this render out of `total` logical entries.
+        /// 🪟️ The slice `node_key` materialises this render out of `total` logical entries, charged to
+        /// the body-wide node ledger. A container the host asked for is served out of its own
+        /// reservation and cannot be starved by the containers before it, wherever it sits in the body;
+        /// a container on its first paint gets only what no request is holding, and only as much as the
+        /// shared viewport budget still allows.
         pub fn slice(&self, node_key: &str, default_open: bool, total: usize) -> TreeSlice {
-            let request = self.request(node_key);
+            let seat = self.seat(node_key);
+            if let Some((_, reservation)) = seat {
+                self.reserved.set(self.reserved.get().saturating_sub(reservation.replace(0)));
+            }
+            let request = seat.map(|(request, _)| *request);
             if !request.and_then(|request| request.open).unwrap_or(default_open) {
                 return TreeSlice { open: false, offset: 0, len: 0, total };
             }
             let Some(request) = request else {
-                let len = total.min(UI_BUILT_CHILDREN_MAX).min(self.budget.get() as usize);
+                let len = self.grant_unreserved(total.min(UI_BUILT_CHILDREN_MAX).min(self.budget.get() as usize));
                 self.budget.set(self.budget.get() - len as u32);
                 return TreeSlice { open: true, offset: 0, len, total };
             };
-            let offset = (request.offset as usize).min(total.saturating_sub(1));
-            TreeSlice { open: true, offset, len: (request.rows as usize).min(UI_BUILT_CHILDREN_MAX).min(total - offset), total }
+            let rows = (request.rows as usize).min(UI_BUILT_CHILDREN_MAX);
+            let offset = (request.offset as usize).min(total.saturating_sub(rows.max(1)));
+            let len = self.grant(rows.min(total - offset));
+            TreeSlice { open: true, offset, len, total }
         }
 
         /// 🪟️ The contract stamp a slice publishes to the host.
@@ -5999,10 +6171,14 @@ pub mod app {
     /// 🪟️ Pushes a slice's rows straight into a container builder's children. A row refused with
     /// `ui.fixed-capacity` — the process-global argument arena taken by another panel mid-build, or a
     /// full `BuiltChildren` — ends the window early with a shorter materialised run; any other error
-    /// propagates.
-    fn tree_window_rows<B: HasChildren, T>(mut builder: B, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
+    /// propagates. Rows are built with the ledger's `nested` flag raised, so a row that is itself a
+    /// windowed container does not charge its own node twice.
+    fn tree_window_rows<B: HasChildren, T>(mut builder: B, windows: &TreeWindows<'_>, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
         for entry in &entries[slice.offset..slice.offset + slice.len] {
-            let node = match row(entry) {
+            let outer = windows.nested.replace(true);
+            let built = row(entry);
+            windows.nested.set(outer);
+            let node = match built {
                 Ok(node) => node,
                 Err(error) if error.code == "ui.fixed-capacity" => break,
                 Err(error) => return Err(error),
@@ -6016,11 +6192,14 @@ pub mod app {
     }
 
     /// 🪟️ One windowed section node: only the host's slice is built, `window` carries the full extent,
-    /// never a `+N` continuation row.
+    /// never a `+N` continuation row. The section node itself is charged to the body-wide node ledger
+    /// before its rows are — see [`TreeWindows`].
     pub fn tree_window_section<T>(windows: &TreeWindows<'_>, id: &str, label: Label, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        windows.claim_window(id, entries.len())?;
+        windows.debit_container();
         let slice = windows.slice(id, default_open, entries.len());
         let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
-        let builder = tree_window_rows(builder, entries, &slice, row)?;
+        let builder = tree_window_rows(builder, windows, entries, &slice, row)?;
         let builder = match windows.stamp(id, &slice) {
             Some(window) => builder.window(window),
             None => builder,
@@ -6042,6 +6221,8 @@ pub mod app {
         if !entries.is_empty() {
             return tree_window_section(windows, id, label, default_open, entries, row);
         }
+        windows.debit_container();
+        windows.debit(1);
         let empty_id = UiText::try_format(format_args!("{id}.empty")).ok_or_else(|| ui_assembly_error("tree-window.placeholder-id"))?;
         let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
         builder
@@ -6052,10 +6233,15 @@ pub mod app {
     }
 
     /// 🪟️ A windowed group row (object › vortices, load case › loads) — `item` already carries its id,
-    /// label and icon, `id` is the node key the host addresses it by.
+    /// label and icon, `id` is the node key the host addresses it by. Built as a row of an enclosing
+    /// window, the group item's own node is the row its parent already charged; built standalone it
+    /// charges its own. Either way its rows come off the same body-wide ledger as the sections around
+    /// it — see [`TreeWindows`].
     pub fn tree_window_item<T>(windows: &TreeWindows<'_>, item: TreeItemBuilder, id: &str, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        windows.claim_window(id, entries.len())?;
+        windows.debit_container();
         let slice = windows.slice(id, default_open, entries.len());
-        let builder = tree_window_rows(item.default_open(default_open), entries, &slice, row)?;
+        let builder = tree_window_rows(item.default_open(default_open), windows, entries, &slice, row)?;
         let builder = match windows.stamp(id, &slice) {
             Some(window) => builder.window(window),
             None => builder,
@@ -6064,7 +6250,9 @@ pub mod app {
     }
 
     /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage — the fleet's one copy, replacing
-    /// the per-app duplicates.
+    /// the per-app duplicates. ⚠️ These rows are OUTSIDE the [`TreeWindows`] node ledger: they carry no
+    /// window and no node key, so only [`TREE_WINDOW_FIXED_NODE_HEADROOM`] pays for them. Use it for the
+    /// small fixed lists a panel genuinely owns, never for an entity list.
     pub fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
         let mut nodes = UiFixedList::default();
         for value in values {
@@ -20515,7 +20703,6 @@ pub mod app {
         }
 
         fn request_fault(&mut self, fault: &Fault) {
-            eprintln!("[DBGARCH] request_fault op={} {fault:?}", self.operation);
             if self.terminal_target.is_none() {
                 self.fault = dsl::encode_fault_bytes(fault);
                 self.terminal_target = Some(ActiveDocumentArchiveLoadState::Fault);
@@ -29012,6 +29199,7 @@ pub mod app {
             {
                 return self.advance_snapshot_read_returns_one(maximum_bytes);
             }
+            eprintln!("[DEBUG] maintenance idle probe config={} draft={} window={} store={} completed={}", self.config_store.maintenance_retirements_terminal_is_empty(), self.draft_store.maintenance_retirements_terminal_is_empty(), self.window_config_store.maintenance_retirements_terminal_is_empty(), self.store.maintenance_retirements_terminal_is_empty(), self.envelope_completed_records.terminal_is_empty());
             // 🌡️ Pressure beats fairness: a queue a quarter full is drained out of turn until it is
             // under the mark again, and the stage cursor does not move — the rotation resumes where
             // it stood once the burst is over.
@@ -29783,15 +29971,10 @@ pub mod app {
                     break;
                 }
             }
-            let status = self.document_archive_loads
+            self.document_archive_loads
                 .get(operation)
                 .map(ActiveDocumentArchiveLoad::status)
-                .ok_or_else(|| plugin_sdk_fault("recursive document archive authority changed before status publication"));
-            if let Ok(status) = &status {
-                let phase = self.document_archive_loads.get(operation).map(|active| format!("{:?}/{:?}/{:?}", active.phase, active.state, active.terminal_target));
-                eprintln!("[DBGARCH] poll op={} state={:?} {}/{} fault={} phase={phase:?}", status.operation, status.state, status.completed, status.total, String::from_utf8_lossy(&status.fault));
-            }
-            status
+                .ok_or_else(|| plugin_sdk_fault("recursive document archive authority changed before status publication"))
         }
 
         fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
@@ -39198,9 +39381,10 @@ pub mod world3d_host {
 
 pub mod engagement {
     // #region engagement
-    //! 🎛️ Parses engagement command-line drafts submitted by the React shell, which PascalCases every
-    //! draft and strips separators (`ui/js/react/index.tsx` `normalizeEngagementActionText`) before
-    //! dispatching — so `"fill 20"` arrives as `"Fill20"`, not `"fill 20"`.
+    //! 🎛️ Parses engagement command-line drafts. The shell submits the typed line VERBATIM (trimmed),
+    //! so an app owns its own tokenization and `"fill 20"` arrives as `"fill 20"`; these helpers stay
+    //! separator- and case-insensitive on the verb token, so a name-token grammar that normalizes its
+    //! own line (the cad repl PascalCases in its `onChange`) still matches `"Fill20"`.
 
     /** @emoji ✂️ Strips a leading `command` token from `raw`, ignoring case and separators on both
     sides, and returns the trimmed remainder (e.g. `strip_engagement_prefix("Fill20", "fill")`
@@ -39492,7 +39676,7 @@ pub use app::{
     MAINTENANCE_STAGES,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
-pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_DEFAULT_ROWS};
+pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —

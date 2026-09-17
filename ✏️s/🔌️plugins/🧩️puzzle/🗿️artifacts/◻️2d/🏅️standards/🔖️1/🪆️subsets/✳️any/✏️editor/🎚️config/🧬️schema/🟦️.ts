@@ -6,6 +6,10 @@ export interface Puzzle2dConfig {
   handleKindWeights: Record<string, number>;
   /** @state config */
   fillCount: number;
+  /** @state config */
+  contactTolerance: number;
+  /** @state config */
+  brushPlacementOverlapBudget: number;
 }
 
 export class Puzzle2dConfigGuardRefusal extends Error {
@@ -30,11 +34,18 @@ const count = (value: unknown, at: string): number => {
   return value;
 };
 
+const measure = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Puzzle2dConfigGuardRefusal(at, "value is not a finite non-negative measure");
+  return value;
+};
+
 export function parsePuzzle2dConfig(value: unknown, at = "$"): Puzzle2dConfig {
   const row = record(value, at);
   return {
     nodeKindWeights: weights(row.nodeKindWeights, `${at}.nodeKindWeights`),
     handleKindWeights: weights(row.handleKindWeights, `${at}.handleKindWeights`),
     fillCount: count(row.fillCount, `${at}.fillCount`),
+    contactTolerance: measure(row.contactTolerance, `${at}.contactTolerance`),
+    brushPlacementOverlapBudget: measure(row.brushPlacementOverlapBudget, `${at}.brushPlacementOverlapBudget`),
   };
 }

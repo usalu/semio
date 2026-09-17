@@ -3,14 +3,30 @@ type Puzzle2dWindowConfig {
   cameraY: Float!
   cameraZoom: Float!
   lodMode: String!
+  gridVisible: Boolean!
   gridSnapEnabled: Boolean!
   gridFactor: Float!
   suggestionOffset: Float!
+  proximityRadius: Float!
+  areaBrushWidth: Float!
+  areaBrushHeight: Float!
+  transformMove: Boolean!
+  transformRotate: Boolean!
+  selectableNodes: Boolean!
+  selectableHandles: Boolean!
+  selectableEdges: Boolean!
+}
+type Puzzle2dSuggestionMenu {
+  x: Float!
+  y: Float!
+  windowId: String!
+  handleId: String!
 }
 type Puzzle2dWindowTransient {
   engagementInput: String!
   brushCandidateIndex: Int!
   brushCandidates: [JsonValue!]!
   brushCandidateSourceHandleId: String!
+  suggestionMenu: Puzzle2dSuggestionMenu
 }
 scalar JsonValue

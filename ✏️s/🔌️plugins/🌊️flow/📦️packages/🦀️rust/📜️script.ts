@@ -3,7 +3,7 @@
 import { join } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 //#region 🧪️Validation
@@ -216,5 +216,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("child-edit-check", ChildEditCheckScript)
   .register("add-widget-retained-check", AddWidgetRetainedCheckScript)
   .register("describe", DescribeScript);
+registerPlaygroundSiteBuildCommands(router);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

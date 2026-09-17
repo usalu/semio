@@ -1,0 +1,20 @@
+# 🧩️ Puzzle 2d + 5d feature parity with 3d — status
+
+Opened 2026-09-17 10:05 by session ⚪a6e7ca7e (Fable 5.1 coordinator; Opus 5 executors, Sonnet 5 read-only auditors). Repo/semio MCP timed out → bookkeeping on disk.
+Predecessors: `26/09/06/PUZZLE-2D-END-TO-END` (2d probe + supervisor, battery 33/4 on 09-17 02:14), `26/09/02/PUZZLE-3D-END-TO-END` (3d checklist + battery), `26/07/10/PUZZLE-5D-REACT-PARITY` (closed, pre-crate-split).
+
+## Definition of done
+1. Every dimension-neutral 3d feature (E1 inventory) exists in 2d and 5d (fill with run panel + weights, brush + candidates, select/hover, transform, inspector, outliner hide/lock, catalogue add + drop, settings, history, clipboard, import/export, engagement bar, context menu, EN/DE).
+2. `semio-s-artifact-puzzle-{2d,3d,5d}` check green natively and as the wasm32-wasip2 component (warnings recorded as proof).
+3. Three React dev playgrounds boot (2d :6012, 3d :6013, 5d :TBD) and a Playwright battery per app runs with 0 hard faults and every parity lane PASS.
+
+## Log
+- 10:05 open. Host load 75, swap 15.2/16 GB, 71 GB disk free; :6012 (2d) is served under a supervisor, :6013 (3d) is not listening. Exploration fleet E1–E10 (Sonnet, read-only, no builds) launched; reports land here as `📓️E*.md`.
+- 10:25 Native baseline `cargo check -p semio-s-artifact-puzzle-5d --features component-app-assembly`: green in 8m03s, 2 warnings (`🗑️generated/check-native-5d-1.txt`).
+- 10:40 Reports E1–E3, E5–E10 in. Headlines: 5d has 17 Migrated / 35 `BatchOnlyPendingRewrite` verbs (camera, transform, fastener CRUD, inspector write-back, example switch, options all dead), fill is a utility fallback with no ToolRun chrome (planner already bridges to 3d), inspector static, no settings panel, no import/export/clipboard, empty catalogues (no kindCatalogs in any 5d example), no target volumes; 2d lacks hover paint, context-menu suggestions popup, outliner hide/lock, clipboard, createEdge, grid-visible, selectable kinds, rotate gumball, target regions; 2d battery reds = engagement text normalizer squashing spaces (framework), fill commits 100 edits (64-edit ledger), blank-pane descriptor sync recurrence, two probe bugs. Plan → `📋️master-plan.md`, shared rules → `📜️executor-rules.md`.
+- 10:50 Wave 1 launched: 14 Opus executors (5A1 5A2 5B 5C 5D 5E 5G · 2A 2B 2C 2D 2E 2F 2G). 5F (5d boot chain + battery) waits for E4.
+- 10:25 Native baseline `cargo check -p semio-s-artifact-puzzle-5d --features component-app-assembly`: green in 8m03s, 2 warnings (`🗑️generated/check-native-5d-1.txt`).
+- 10:40 Reports E1–E3, E5–E10 in. Headlines: 5d has 17 Migrated / 35 `BatchOnlyPendingRewrite` verbs (camera, transform, fastener CRUD, inspector write-back, example switch, options all dead), fill is a utility fallback with no ToolRun chrome (planner already bridges to 3d), inspector static, no settings panel, no import/export/clipboard, empty catalogues (no kindCatalogs in any 5d example), no target volumes; 2d lacks hover paint, context-menu suggestions popup, outliner hide/lock, clipboard, createEdge, grid-visible, selectable kinds, rotate gumball, target regions; 2d battery reds = engagement text normalizer squashing spaces (framework), fill commits 100 edits (64-edit ledger), blank-pane descriptor sync recurrence, two probe bugs. Plan → `📋️master-plan.md`, shared rules → `📜️executor-rules.md`.
+- 10:50 Wave 1 launched: 14 Opus executors (5A1 5A2 5B 5C 5D 5E 5G · 2A 2B 2C 2D 2E 2F 2G). 5F (5d boot chain + battery) waits for E4.
+- 10:40 E4 in: 5d targets are Nx-inferred from the plugin Cargo playground rows (port 6014, `?plugin=puzzle5d`), only launch entries + manifest filename drift missing. Slice 5F launched (launch entries, manifest rename 3d+5d, supervisor, 5d battery).
+- 11:35 5F landed (`📓️wave-5F-report.md`): launch entries (+8), 3d/5d manifest renamed to `🛂️manifest.json` (discovery 12→12 proven), parameterised `🔁️serve-supervisor.sh`, 53-lane `🔍️browser-probe-5d.ts` (tsc clean). Disk guard `🛟️disk-guard.sh` running (floor 30 GiB).

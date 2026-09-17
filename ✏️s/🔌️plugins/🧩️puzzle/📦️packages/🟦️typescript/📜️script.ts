@@ -25,7 +25,7 @@ type PublicationOwner = { owner: "Puzzle2dPlayApp" | "Puzzle3dPlayApp" | "Puzzle
 type PublicationFixture = { schema: string; closePageBytes: number; owners: PublicationOwner[]; laws: Record<string, boolean> };
 
 const reserved5d = new Set(["copy", "cut", "paste", "import-media"]);
-const reserved2d = new Set(["import-media"]);
+const reserved2d = new Set(["copy", "cut", "paste", "import-media"]);
 
 function quotedValues(source: string): string[] {
   return [...source.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
@@ -101,7 +101,7 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
     {
       path: "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
       cases: [
-        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80 }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridSnapEnabled", "gridFactor", "suggestionOffset"] },
+        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", gridVisible: true, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80, proximityRadius: 12, transformMove: true, transformRotate: true, selectableNodes: true, selectableHandles: true, selectableEdges: true }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridVisible", "gridSnapEnabled", "gridFactor", "suggestionOffset", "proximityRadius", "transformMove", "transformRotate", "selectableNodes", "selectableHandles", "selectableEdges"] },
         { definition: "Puzzle2dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0, brushCandidates: [], brushCandidateSourceHandleId: "" }, keys: ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId"] },
       ],
     },
@@ -119,8 +119,30 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
     {
       path: "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
       cases: [
-        { definition: "Puzzle5dBoardWindowConfig", value: { camera2d: { x: 0, y: 0, zoom: 1 }, lodMode: "automatic", suggestionOffset: 80, gridSnapEnabled: true, gridFactor: 1 }, keys: ["camera2d", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"] },
-        { definition: "Puzzle5dWorldWindowConfig", value: { camera3d: { position: [8, -8, 8], target: [0, 0, 0], zoom: 1 }, sun }, keys: ["camera3d", "sun"] },
+        {
+          definition: "Puzzle5dBoardWindowConfig",
+          value: { camera2d: { x: 0, y: 0, zoom: 1 }, lodMode: "automatic", suggestionOffset: 80, gridSnapEnabled: true, gridFactor: 1, gridVisible: true, selectableKinds: { parts: true, grips: true, fasteners: true } },
+          keys: ["camera2d", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor", "gridVisible", "selectableKinds"],
+        },
+        {
+          definition: "Puzzle5dWorldWindowConfig",
+          value: {
+            camera3d: { position: [8, -8, 8], target: [0, 0, 0], zoom: 1, up: null, projection },
+            sun,
+            gridVisible: true,
+            gridSnapEnabled: true,
+            gridSpacing: 10,
+            lodAutomatic: true,
+            lodDepthVariable: false,
+            lodManual: 100,
+            selectableKinds: { parts: true, grips: true, fasteners: true },
+            gripShow: "selected",
+            gripDirection: "outwards",
+            transformMove: true,
+            transformRotate: true,
+          },
+          keys: ["camera3d", "sun", "gridVisible", "gridSnapEnabled", "gridSpacing", "lodAutomatic", "lodDepthVariable", "lodManual", "selectableKinds", "gripShow", "gripDirection", "transformMove", "transformRotate"],
+        },
         { definition: "Puzzle5dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0 }, keys: ["engagementInput", "brushCandidateIndex"] },
       ],
     },

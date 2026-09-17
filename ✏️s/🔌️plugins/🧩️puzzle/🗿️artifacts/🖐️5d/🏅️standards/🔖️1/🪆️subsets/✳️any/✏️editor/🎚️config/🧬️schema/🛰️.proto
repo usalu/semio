@@ -5,4 +5,6 @@ message Puzzle5dConfig {
   double contact_tolerance = 2;
   map<string, double> object_kind_weights = 3;
   map<string, double> vortex_kind_weights = 4;
+  double proximity_radius = 5;
+  double chunk_size = 6;
 }

@@ -7,7 +7,8 @@ export type GeometryRecipe =
   | { kind: "box"; width: number; height: number; depth: number }
   | { kind: "frame"; width: number; height: number; depth: number; profile: number }
   | { kind: "slab"; width: number; depth: number; thickness: number }
-  | { kind: "mesh"; positions: number[]; normals: number[]; indices: number[] };
+  | { kind: "mesh"; positions: number[]; normals: number[]; indices: number[] }
+  | { kind: "glb"; url: string; extent: number };
 export interface ObjectKindExtra { id: string; name: string; moduleId: string; typologyPath: string[]; availability: number; geometry: GeometryRecipe }
 export interface ObjectKind extends ObjectKindExtra {}
 export interface CuratedItem { objectId: string; count: number }
@@ -38,10 +39,11 @@ function finite(value: unknown, at: string): number {
 }
 /** 🧱 Parses the geometry discriminant at its sourcing recipe owner. */
 export function parseGeometryRecipe(value: unknown, at = "$"): GeometryRecipe {
-  const row = parseSchemaRecord(value, ["kind", "width", "height", "depth", "profile", "thickness", "positions", "normals", "indices"], at);
-  const fields = row.kind === "box" ? ["kind", "width", "height", "depth"] : row.kind === "frame" ? ["kind", "width", "height", "depth", "profile"] : row.kind === "slab" ? ["kind", "width", "depth", "thickness"] : row.kind === "mesh" ? ["kind", "positions", "normals", "indices"] : undefined;
+  const row = parseSchemaRecord(value, ["kind", "width", "height", "depth", "profile", "thickness", "positions", "normals", "indices", "url", "extent"], at);
+  const fields = row.kind === "box" ? ["kind", "width", "height", "depth"] : row.kind === "frame" ? ["kind", "width", "height", "depth", "profile"] : row.kind === "slab" ? ["kind", "width", "depth", "thickness"] : row.kind === "mesh" ? ["kind", "positions", "normals", "indices"] : row.kind === "glb" ? ["kind", "url", "extent"] : undefined;
   if (!fields) throw new Error(at + ": unknown geometry kind");
   parseSchemaRecord(row, fields, at);
+  if (row.kind === "glb") return { kind: row.kind, url: parseCurationText(row.url, at + ".url"), extent: finite(row.extent, at + ".extent") };
   if (row.kind === "mesh") return { kind: row.kind, positions: parseCurationList(row.positions, finite, at + ".positions"), normals: parseCurationList(row.normals, finite, at + ".normals"), indices: parseCurationList(row.indices, parseCurationCount, at + ".indices") };
   const width = finite(row.width, at + ".width"), depth = finite(row.depth, at + ".depth");
   if (row.kind === "slab") return { kind: row.kind, width, depth, thickness: finite(row.thickness, at + ".thickness") };

@@ -74,7 +74,7 @@ pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels, windows: &TreeWi
     }
     PanelTreeBuilder::new("note-play-blocks")?
         .section("note-play-blocks.add", Some(ui_label(labels.artifact.as_str())?), true, add_rows)?
-        .window_section_or_placeholder(windows, "note-play-blocks", Some(ui_label(labels.artifact.as_str())?), true, &document.blocks, |block| block_tree_item(block, windows), ui_label(labels.document_empty.as_str())?)?
+        .window_section_or_placeholder(windows, "note-play-blocks.blocks", Some(ui_label(labels.artifact.as_str())?), true, &document.blocks, |block| block_tree_item(block, windows), ui_label(labels.document_empty.as_str())?)?
         .interaction_domain(NOTE_PLAY_CONTROLLER_ID, NOTE_INTERACTION_BLOCKS)?
         .build()
 }

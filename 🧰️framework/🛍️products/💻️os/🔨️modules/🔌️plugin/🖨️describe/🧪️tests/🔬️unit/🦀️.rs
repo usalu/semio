@@ -18,7 +18,7 @@ async fn raw_and_core_hashes_are_independent() {
 #[semio_framework_async_macros::async_test]
 async fn full_catalog_describe_retains_finite_wall_and_fuel_bounds() {
     assert_eq!(DESCRIBE_DEADLINE_MS, 1_800_000);
-    assert_eq!(DESCRIBE_FUEL_BUDGET, 2_000_000_000);
+    assert_eq!(DESCRIBE_FUEL_BUDGET, 8_000_000_000);
 }
 
 #[semio_framework_async_macros::async_test]

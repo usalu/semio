@@ -891,8 +891,15 @@ export type DemonstratorPaneSpec = {
   readonly brand: ShellBrand;
   readonly label: string;
   readonly tagline: string;
+  /** @emoji 📖 Overview copy — blank-line separated paragraphs (same convention as introduction steps). */
+  readonly description: string;
   readonly icon: IconName;
 };
+
+/** @emoji 📖 Splits pane overview copy into introduction-style body paragraphs. */
+export function demonstratorPaneDescriptionParagraphs(description: string): readonly string[] {
+  return description.split(/\n\n+/).map((paragraph) => paragraph.trim()).filter((paragraph) => paragraph.length > 0);
+}
 
 /** @emoji 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
  * Generator executes the standalone procedural module, but its branded `generator` row carries the
@@ -902,14 +909,86 @@ export function demonstratorPaneBootVariants(variant: string): { readonly runtim
 }
 
 export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
-  { id: "generator", variant: "generator", brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, label: "Generator", tagline: "Parametrische Abläufe", icon: "workflow" },
-  { id: "koordinator", variant: "koordinator", brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, label: "Koordinator", tagline: "Modelle koordinieren", icon: "cad-shape" },
-  { id: "aggregator", variant: "aggregator", brand: ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, label: "Aggregator", tagline: "Bestand zusammensetzen", icon: "puzzle" },
-  { id: "energie", variant: "energy", brand: ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND, label: "Energie", tagline: "Energiebilanz simulieren", icon: "sun" },
-  { id: "aussuchen", variant: "aussuchen", brand: ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, label: "Aussuchen", tagline: "Bestand sichten", icon: "library" },
-  { id: "bearbeiten", variant: "bearbeiten", brand: ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, label: "Bearbeiten", tagline: "Bauteile anpassen", icon: "hammer" },
-  { id: "verfolgen", variant: "verfolgen", brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, label: "Verfolgen", tagline: "Herkunft verfolgen", icon: "gis2d" },
-  { id: "statik", variant: "fem3d", brand: ENTWERFEN_MIT_BESTAND_STATIK_BRAND, label: "Statik", tagline: "Tragwerk berechnen", icon: "fem-app" },
+  {
+    id: "generator",
+    variant: "generator",
+    brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
+    label: "Generator",
+    tagline: "Parametrische Abläufe",
+    description:
+      "Im Generator entwerfen Sie parametrische Abläufe für wiederverwendete Baukomponenten — von Regeln und Parametern bis zu fertigen Teilen.\n\nÖffnen Sie den Demonstrator, um den Ablauf-Editor im Vollbild zu erkunden und Beispiele zu laden.",
+    icon: "workflow",
+  },
+  {
+    id: "koordinator",
+    variant: "koordinator",
+    brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+    label: "Koordinator",
+    tagline: "Modelle koordinieren",
+    description:
+      "Der Koordinator verbindet Form-, Gebäude-, Energie- und Tragwerksmodelle in gemeinsamen Ansichten.\n\nWechseln Sie in den Vollbildmodus, um mehrere CAD-Fenster nebeneinander zu vergleichen und zusammenzuführen.",
+    icon: "cad-shape",
+  },
+  {
+    id: "aggregator",
+    variant: "aggregator",
+    brand: ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+    label: "Aggregator",
+    tagline: "Bestand zusammensetzen",
+    description:
+      "Im Aggregator setzen Sie Entwürfe aus Bestandskomponenten im dreidimensionalen Raum zusammen.\n\nÖffnen Sie den Demonstrator, um Bauteile aus dem Katalog zu platzieren und den Aufbau zu prüfen.",
+    icon: "puzzle",
+  },
+  {
+    id: "energie",
+    variant: "energy",
+    brand: ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND,
+    label: "Energie",
+    tagline: "Energiebilanz simulieren",
+    description:
+      "Energie modelliert Zonen, Hüllflächen und Randbedingungen und simuliert das thermische Verhalten Ihres Entwurfs aus Bestand.\n\nIm Vollbildmodus betrachten Sie Modell und Simulationslauf nebeneinander.",
+    icon: "sun",
+  },
+  {
+    id: "aussuchen",
+    variant: "aussuchen",
+    brand: ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
+    label: "Aussuchen",
+    tagline: "Bestand sichten",
+    description:
+      "Beim Aussuchen durchsuchen Sie verfügbaren Bestand und stellen daraus eine Kuratierung für Ihr Projekt zusammen.\n\nÖffnen Sie den Pool im Vollbild, filtern Sie nach Modul und Typologie und legen Sie Komponenten in die Auswahl.",
+    icon: "library",
+  },
+  {
+    id: "bearbeiten",
+    variant: "bearbeiten",
+    brand: ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
+    label: "Bearbeiten",
+    tagline: "Bauteile anpassen",
+    description:
+      "Bearbeiten plant die Schritte, mit denen eine Bestandskomponente für ihre neue Aufgabe angepasst wird.\n\nWechseln Sie in den Demonstrator, um Bearbeitungsketten am Werkstück zu definieren und zu visualisieren.",
+    icon: "hammer",
+  },
+  {
+    id: "verfolgen",
+    variant: "verfolgen",
+    brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
+    label: "Verfolgen",
+    tagline: "Herkunft verfolgen",
+    description:
+      "Verfolgen zeigt räumlich, woher Bestandskomponenten stammen und wohin sie in späteren Nutzungsphasen gehen.\n\nÖffnen Sie die Karte im Vollbild, zoomen Sie auf Standorte und erkunden Sie die Zusammenhänge.",
+    icon: "gis2d",
+  },
+  {
+    id: "statik",
+    variant: "fem3d",
+    brand: ENTWERFEN_MIT_BESTAND_STATIK_BRAND,
+    label: "Statik",
+    tagline: "Tragwerk berechnen",
+    description:
+      "Statik berechnet Stabwerke aus wiederverwendeten Bauteilen — mit Knoten, Auflagern, Lasten und Ergebnisdarstellung.\n\nIm Vollbildmodus bearbeiten Sie das FEM-Modell und prüfen Sie die strukturelle Antwort.",
+    icon: "fem-app",
+  },
 ];
 //#endregion 🎪️DemonstratorPanes
 

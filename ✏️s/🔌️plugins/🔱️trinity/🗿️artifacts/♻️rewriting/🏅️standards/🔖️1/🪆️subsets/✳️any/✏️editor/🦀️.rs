@@ -418,7 +418,7 @@ impl protocol::OpText for TrinityRewritingCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityRewritingCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = window_config::job::TOOL_IDS;
+    const TOOL_JOB_IDS: &'static [&'static str] = &["nodeGraphViewport", "setLodMode", "addRuleClause", "resetRule", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
@@ -453,6 +453,226 @@ impl protocol::OpBinary for TrinityRewritingCommand {
 //#endregion 🔖️OpCodec
 
 //#endregion 🔖️TrinityRewritingCommand
+
+//#region 🔖️ActionBridge
+/// 🎯️ Folds the host's `{action, args}` vocabulary (camelCase keys, JSON floats, control `value`s, the
+/// node-graph host's `operations` array) into `TrinityRewritingCommand` — the trait default refuses every
+/// app action, which left every panel and window verb dead in the shell (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END).
+mod args_bridge {
+    use super::TrinityRewritingCommand;
+    use semio_framework_os_kernel::Viewport2d;
+    use semio_framework_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
+
+    fn invalid(action: &str, detail: impl std::fmt::Display) -> Fault {
+        Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("rewriting action '{action}' arguments do not decode: {detail}"))
+    }
+
+    fn field<'a>(args: Option<&'a DslValue>, keys: &[&str]) -> Option<&'a DslValue> {
+        keys.iter().find_map(|key| args.and_then(|args| args.get(key))).filter(|value| !matches!(value, DslValue::Null))
+    }
+
+    /// 📝️ Prints a host control value into the `String` field a verb carries (`"512"`, `"true"`, or the text itself).
+    fn text(args: Option<&DslValue>, keys: &[&str]) -> Option<String> {
+        field(args, keys).map(|value| match value {
+            DslValue::String(text) => text.clone(),
+            DslValue::Number(number) => {
+                let float = number.as_f64();
+                if float.is_finite() && float.fract() == 0.0 { format!("{}", float as i64) } else { format!("{float}") }
+            }
+            DslValue::Bool(flag) => flag.to_string(),
+            other => dsl::json::to_json_string(other),
+        })
+    }
+
+    fn required(action: &str, args: Option<&DslValue>, keys: &[&str]) -> Result<String, Fault> {
+        text(args, keys).ok_or_else(|| invalid(action, format!("missing {}", keys[0])))
+    }
+
+    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string (text form fields) or one bare id.
+    fn ids(args: Option<&DslValue>) -> Vec<String> {
+        match field(args, &["nodeIds", "node_ids", "ids"]) {
+            Some(DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
+            Some(DslValue::String(text)) if text.trim_start().starts_with('[') => pack::from_json_str::<Vec<String>>(text).unwrap_or_default(),
+            Some(DslValue::String(text)) if !text.trim().is_empty() => vec![text.trim().to_string()],
+            _ => Vec::new(),
+        }
+    }
+
+    /// 📷️ The node-graph host nests its pose under `viewport`; a flat `{x, y, zoom}` payload is the pose itself.
+    fn viewport(action: &str, args: Option<&DslValue>) -> Result<Viewport2d, Fault> {
+        let coordinate = |value: Option<&DslValue>, fallback: f64| value.and_then(DslValue::as_f64).unwrap_or(fallback);
+        let pose = field(args, &["viewport"]).or(args).ok_or_else(|| invalid(action, "missing viewport"))?;
+        let viewport = Viewport2d { x: coordinate(pose.get("x"), 0.0), y: coordinate(pose.get("y"), 0.0), zoom: coordinate(pose.get("zoom"), 1.0) };
+        viewport.validate().map_err(|error| invalid(action, format!("{error:?}")))?;
+        Ok(viewport)
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<TrinityRewritingCommand, Fault> {
+        const SURFACE: &[&str] = &["surfaceId", "surface_id"];
+        Ok(match action {
+            "nodeGraphEdit" => TrinityRewritingCommand::NodeGraphEdit { surface_id: text(args, SURFACE).unwrap_or_default(), operations_json: required(action, args, &["operationsJson", "operations_json", "operations"])? },
+            "setLhsJson" => TrinityRewritingCommand::SetLhsJson { value: required(action, args, &["value", "json"])? },
+            "setRhsJson" => TrinityRewritingCommand::SetRhsJson { value: required(action, args, &["value", "json"])? },
+            "setParameter" => TrinityRewritingCommand::SetParameter { name: required(action, args, &["name"])?, value: text(args, &["value"]).unwrap_or_default() },
+            "addRuleClause" => TrinityRewritingCommand::AddRuleClause { kind: required(action, args, &["kind", "value"])? },
+            "resetRule" => TrinityRewritingCommand::ResetRule,
+            "patchNodes" => TrinityRewritingCommand::PatchNodes { node_ids: ids(args), field: text(args, &["field"]).unwrap_or_else(|| "name".into()), value: required(action, args, &["value"])? },
+            "nodeGraphViewport" => TrinityRewritingCommand::SetViewport { surface_id: text(args, SURFACE), viewport: viewport(action, args)? },
+            "reorganize" => TrinityRewritingCommand::Reorganize,
+            "setLodMode" => TrinityRewritingCommand::SetLodMode { value: required(action, args, &["value", "mode"])? },
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the trinity rewriting editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
+//#region 🧵️RetainedDocumentCommands
+/// 🧾️ Document verbs as bounded first-step tools (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END): the framework
+/// refuses UI dispatch of every command not classified `Migrated`, which left every rule edit dead in the
+/// shell. Each verb publishes granular `RewriteRuleMutation`s on the artifact lane except `resetRule`, a
+/// host-applied `Effect::LoadDocument`.
+const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
+const REWRITING_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.rewriting.document-command.v1";
+const REWRITING_DOCUMENT_RAW_BYTES: usize = 32_768;
+/// 📬️ One retained rule mutation: `edit-before-fixture` carries the whole working graph JSON (the Nakagin
+/// fixture is the largest), every other body replace or map upsert stays far below one page.
+const REWRITING_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 60_000;
+
+fn rewriting_document_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::bounded_first_step(REWRITING_DOCUMENT_RAW_BYTES, 64, 1, 262_144, 7_500)
+}
+
+fn rewriting_document_extent(command: &TrinityRewritingCommand, _snapshot: &RewritingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => surface_id.len().checked_add(operations_json.len())?,
+        TrinityRewritingCommand::SetLhsJson { value } | TrinityRewritingCommand::SetRhsJson { value } => value.len(),
+        TrinityRewritingCommand::SetParameter { name, value } => name.len().checked_add(value.len())?,
+        TrinityRewritingCommand::AddRuleClause { kind } => kind.len(),
+        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => node_ids.iter().map(String::len).try_fold(field.len().checked_add(value.len())?, usize::checked_add)?,
+        TrinityRewritingCommand::ResetRule | TrinityRewritingCommand::Reorganize => 1,
+        _ => return None,
+    };
+    (bytes <= REWRITING_DOCUMENT_RAW_BYTES).then_some(1)
+}
+
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
+fn rewriting_document_reduce(
+    command: &TrinityRewritingCommand,
+    state: &RewritingSnapshot,
+    _config: &NoConfig,
+    _history: &semio_framework_plugin::HistoryView,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
+    _operation: &semio_framework_plugin::AppOperationContext,
+) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    use crate::editor::rewriting::commands;
+    Ok(match command {
+        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit(state, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), surface_id, operations_json),
+        TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs_json(state, value),
+        TrinityRewritingCommand::SetRhsJson { value } => commands::set_rhs_json(state, value),
+        TrinityRewritingCommand::SetParameter { name, value } => commands::set_parameter(state, name, value),
+        TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind),
+        TrinityRewritingCommand::ResetRule => commands::reset_rule(state),
+        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, field, value),
+        TrinityRewritingCommand::Reorganize => commands::reorganize(state),
+        _ => return Err(Fault::from("rewriting-document-command-route-mismatch")),
+    })
+}
+
+struct RewritingDocumentJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl RewritingDocumentJobFactory {
+    fn new(controller: &str) -> Self {
+        Self { keys: REWRITING_DOCUMENT_TOOL_IDS.iter().map(|tool| semio_framework::ToolFactoryKey::new(controller, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for RewritingDocumentJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<TrinityRewritingPlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<TrinityRewritingPlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        REWRITING_DOCUMENT_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        rewriting_document_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > REWRITING_DOCUMENT_RAW_BYTES || checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("Rewriting document command rejects oversized wire or a checkpoint"), input, checkpoint));
+        }
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RewritingDocumentJobFactory {
+    type Owner = EditorApp<TrinityRewritingPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = REWRITING_DOCUMENT_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addRuleClause", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "resetRule", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setRhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    ];
+}
+
+fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<TrinityRewritingPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+    use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+    let tool_id = TrinityRewritingPlayApp::command_id(&request.command);
+    if tool_id != request.tool_id || rewriting_document_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+        return Err(Fault::from("rewriting-document-command-mismatch-or-capacity"));
+    }
+    let work: Box<dyn ArtifactCommandWork<EditorApp<TrinityRewritingPlayApp>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent));
+    let operation = semio_framework_plugin::AppOperationContext {
+        app_instance_id: request.app_instance_id,
+        parent_document_id: request.parent_document_id.clone(),
+        operation_id: request.operation.operation.0,
+        generation: request.operation.generation.0,
+        canonical_base_revision: request.canonical_base_revision,
+    };
+    let payload = ArtifactRetainedCommandPayload::try_new(
+        ArtifactRetainedCommandInputs {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            context: Some(request.context),
+            operation,
+            completion: request.completion,
+        },
+        TrinityRewritingPlayApp::command_id,
+        REWRITING_DOCUMENT_RAW_BYTES,
+        1,
+        work,
+    )?;
+    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+}
+//#endregion 🧵️RetainedDocumentCommands
 
 //#region 🔖️TrinityRewritingPlayApp
 /// ♻️ Trinity Rewriting play app — a parametric-rewriting editor over a {@link RewritingSnapshot} projection.
@@ -513,6 +733,17 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        let documents = REWRITING_DOCUMENT_TOOL_IDS.iter().map(|tool| {
+            semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
+                "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+                "s.trinity.rewriting@1/*#editor",
+                "RewritingDocumentJobFactory",
+                tool,
+                REWRITE_RULE_SCHEMA,
+                semio_framework::ToolExecutionContract::bounded_first_step(32_768, 64, 1, 262_144, 7_500),
+            )
+            .with_factory_type::<EditorApp<Self>, RewritingDocumentJobFactory>()
+        });
         window_config::job::TOOL_IDS
             .iter()
             .map(|tool| {
@@ -526,15 +757,32 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                 )
                 .with_factory_type::<EditorApp<Self>, window_config::job::RewritingWindowConfigJobFactory>()
             })
+            .chain(documents)
             .collect()
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        registry.register(window_config::job::RewritingWindowConfigJobFactory::new(registry.controller_id()))
+        let controller = registry.controller_id().to_string();
+        registry.register(window_config::job::RewritingWindowConfigJobFactory::new(&controller))?;
+        registry.register(RewritingDocumentJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if REWRITING_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return rewriting_build_document_tool_job(request);
+        }
         window_config::job::build_job(request)
+    }
+
+    /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every document
+    /// verb at dispatch (`declares the unsupported artifact publication lane`).
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("trinity-rewriting-artifact-retained", REWRITING_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+    }
+
+    /// 🎯️ Host-action bridge into the closed `TrinityRewritingCommand` enum — see `args_bridge`.
+    fn command_from_action(action: &str, args: Option<&semio_framework_plugin::DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -801,14 +1049,14 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers").with_category("mode"))
             .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setParameter", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setLhsJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setRhsJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setParameter", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchNodes", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLhsJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setRhsJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
             // references, transitive over each node's first incoming connection / variable binding
             // (see `interaction_topology`). Selection/hover, modes and merges are ALL
@@ -836,6 +1084,18 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("delete", LocalizedLabel::native("Delete", "Löschen")),
                     ActionArgOption::new("parameter", LocalizedLabel::native("Parameter", "Parameter")),
                 ]).required(),
+            ])
+            .action_args("patchNodes", vec![
+                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes", "Knoten")).required(),
+                ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![
+                    ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
+                    ActionArgOption::new("kind", LocalizedLabel::native("Kind", "Art")),
+                ]).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+            ])
+            .action_args("setParameter", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Parameter", "Parameter")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
             ])
             .action_args("setLhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("LHS JSON", "LHS-JSON")).required()])
             .action_args("setRhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("RHS JSON", "RHS-JSON")).required()])

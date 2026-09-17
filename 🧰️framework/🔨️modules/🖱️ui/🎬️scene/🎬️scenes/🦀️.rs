@@ -1921,10 +1921,20 @@ pub struct Board2dScene {
     pub active_utility: Option<String>,
     #[serde(default = "board2d_default_selection_method")]
     pub selection_method: String,
+    /// 👁️ Whether the board host strokes its world grid at all — independent of snapping.
+    #[serde(default = "board2d_default_true")]
+    pub grid_visible: bool,
     #[serde(default)]
     pub grid_snap_enabled: bool,
     #[serde(default = "board2d_default_grid_factor")]
     pub grid_factor: f64,
+    /// 🎯️ Which granularity a pick may reach — the app's own selectable-kind filter.
+    #[serde(default = "board2d_default_true")]
+    pub selectable_nodes: bool,
+    #[serde(default = "board2d_default_true")]
+    pub selectable_edges: bool,
+    #[serde(default = "board2d_default_true")]
+    pub selectable_handles: bool,
     #[serde(default)]
     pub suggestion_offset: f64,
     #[serde(default = "board2d_default_brush_weights_json")]
@@ -1933,6 +1943,23 @@ pub struct Board2dScene {
     pub placement_compatibility_json: String,
     #[serde(default = "board2d_default_lod_mode")]
     pub lod_mode: String,
+    /// 🕹️ Which selection-gumball handles this board's select utility composes, as
+    /// `{"move":bool,"rotate":bool}` — `None` leaves the engine's own default (both on). Scale is
+    /// deliberately absent, same law as the puzzle-3d gumball.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transform_flags: Option<String>,
+    /// 🎯️ The framework interaction domain this board's picks and hovers belong to — the owning app's
+    /// declared `InteractionDefinition.id`. `None` means the app declares none and the host publishes
+    /// no `interactionHover` at all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub domain_id: Option<String>,
+    /// 💡️ The one-shot handle-suggestions popup this window has open, as
+    /// `{"open":true,"x":…,"y":…,"windowId":…,"handleId":…,"hoveredIndex":…,"candidates":[…]}` —
+    /// `None` is the closed state. It is a bounded page (`BOARD2D_SUGGESTION_MENU_CANDIDATE_PAGE`
+    /// rows), because the surface doc it rides is fixed-capacity and a richly catalogued handle
+    /// resolves arbitrarily many candidates.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suggestion_menu_json: Option<String>,
     /// ⏯️ The base64url `ToolRunTraceDelta` paged to this board — the board twin of
     /// [`Canvas2dScene::tool_run_trace`], carried outside the doc as [`Board2dSceneLane::ToolRunTrace`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1951,12 +1978,19 @@ scene_pack_wire!(Board2dScenePack, Board2dScene {
     hovered_id: Option<String>,
     active_utility: Option<String>,
     selection_method: String,
+    grid_visible: bool,
     grid_snap_enabled: bool,
     grid_factor: f64,
+    selectable_nodes: bool,
+    selectable_edges: bool,
+    selectable_handles: bool,
     suggestion_offset: f64,
     brush_weights_json: String,
     placement_compatibility_json: String,
     lod_mode: String,
+    transform_flags: Option<String>,
+    domain_id: Option<String>,
+    suggestion_menu_json: Option<String>,
     tool_run_trace: Option<String>,
     #[serde(default)]
     lanes: Vec<SceneLaneRef>,
@@ -2092,6 +2126,12 @@ pub fn board2d_default_selection_method() -> String {
 pub fn board2d_default_grid_factor() -> f64 {
     1.0
 }
+/// 👁️ A board scene an older producer wrote carries neither the grid-visibility nor the
+/// selectable-kind flags; both default ON so the absent field reads as the pre-filter behaviour.
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+pub fn board2d_default_true() -> bool {
+    true
+}
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
 pub fn board2d_default_brush_weights_json() -> String {
     "{}".into()
@@ -2117,12 +2157,19 @@ impl Board2dScene {
             hovered_id: None,
             active_utility: None,
             selection_method: board2d_default_selection_method(),
+            grid_visible: board2d_default_true(),
             grid_snap_enabled: false,
             grid_factor: board2d_default_grid_factor(),
+            selectable_nodes: board2d_default_true(),
+            selectable_edges: board2d_default_true(),
+            selectable_handles: board2d_default_true(),
             suggestion_offset: 0.0,
             brush_weights_json: board2d_default_brush_weights_json(),
             placement_compatibility_json: board2d_default_placement_compatibility_json(),
             lod_mode: board2d_default_lod_mode(),
+            domain_id: None,
+            transform_flags: None,
+            suggestion_menu_json: None,
             tool_run_trace: None,
             lanes: Vec::new(),
         }
@@ -2140,12 +2187,19 @@ impl ToValue for Board2dScene {
         value_push_option(&mut entries, "hoveredId", &self.hovered_id);
         value_push_option(&mut entries, "activeUtility", &self.active_utility);
         value_push(&mut entries, "selectionMethod", &self.selection_method);
+        value_push(&mut entries, "gridVisible", &self.grid_visible);
         value_push(&mut entries, "gridSnapEnabled", &self.grid_snap_enabled);
         value_push(&mut entries, "gridFactor", &self.grid_factor);
+        value_push(&mut entries, "selectableNodes", &self.selectable_nodes);
+        value_push(&mut entries, "selectableEdges", &self.selectable_edges);
+        value_push(&mut entries, "selectableHandles", &self.selectable_handles);
         value_push(&mut entries, "suggestionOffset", &self.suggestion_offset);
         value_push(&mut entries, "brushWeightsJson", &self.brush_weights_json);
         value_push(&mut entries, "placementCompatibilityJson", &self.placement_compatibility_json);
         value_push(&mut entries, "lodMode", &self.lod_mode);
+        value_push_option(&mut entries, "transformFlags", &self.transform_flags);
+        value_push_option(&mut entries, "domainId", &self.domain_id);
+        value_push_option(&mut entries, "suggestionMenuJson", &self.suggestion_menu_json);
         value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
@@ -2164,12 +2218,19 @@ impl FromValue for Board2dScene {
             hovered_id: value_decode_option(&entries, "hoveredId")?,
             active_utility: value_decode_option(&entries, "activeUtility")?,
             selection_method: value_decode_default(&entries, "selectionMethod", board2d_default_selection_method)?,
+            grid_visible: value_decode_default(&entries, "gridVisible", board2d_default_true)?,
             grid_snap_enabled: value_decode_default(&entries, "gridSnapEnabled", Default::default)?,
             grid_factor: value_decode_default(&entries, "gridFactor", board2d_default_grid_factor)?,
+            selectable_nodes: value_decode_default(&entries, "selectableNodes", board2d_default_true)?,
+            selectable_edges: value_decode_default(&entries, "selectableEdges", board2d_default_true)?,
+            selectable_handles: value_decode_default(&entries, "selectableHandles", board2d_default_true)?,
             suggestion_offset: value_decode_default(&entries, "suggestionOffset", Default::default)?,
             brush_weights_json: value_decode_default(&entries, "brushWeightsJson", board2d_default_brush_weights_json)?,
             placement_compatibility_json: value_decode_default(&entries, "placementCompatibilityJson", board2d_default_placement_compatibility_json)?,
             lod_mode: value_decode_default(&entries, "lodMode", board2d_default_lod_mode)?,
+            transform_flags: value_decode_option(&entries, "transformFlags")?,
+            domain_id: value_decode_option(&entries, "domainId")?,
+            suggestion_menu_json: value_decode_option(&entries, "suggestionMenuJson")?,
             tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })

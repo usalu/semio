@@ -17,11 +17,25 @@ export interface WindowSilhouetteEdge {
   readonly chips: readonly WindowSilhouetteChip[];
 }
 
+export interface WindowSilhouetteAxisRect {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+
+/** @emoji 🖱️ Primary column plus fused submenu wings measured in stack coordinates. */
+export interface WindowSilhouetteContextMenuFusion {
+  readonly primary: WindowSilhouetteAxisRect;
+  readonly wings: readonly WindowSilhouetteAxisRect[];
+}
+
 export interface WindowSilhouetteMetrics {
   readonly width: number;
   readonly height: number;
   readonly top: WindowSilhouetteEdge;
   readonly bottom: WindowSilhouetteEdge;
+  readonly contextMenuFusion?: WindowSilhouetteContextMenuFusion;
 }
 
 export interface WindowSilhouettePoint {
@@ -147,7 +161,69 @@ export function windowSilhouetteEdgePointsRtl(edge: WindowSilhouetteEdge, x0: nu
   return [...windowSilhouetteEdgePoints(edge, x0, x1, outer, inner)].reverse();
 }
 
+function windowSilhouetteRightEdgeAtY(rects: readonly WindowSilhouetteAxisRect[], y: number, inset: number): number {
+  let right = inset;
+  for (const rect of rects) {
+    if (y < rect.top - WINDOW_SILHOUETTE_CHIP_EPSILON || y > rect.bottom + WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
+    right = Math.max(right, rect.right - inset);
+  }
+  return right;
+}
+
+/** @emoji 🖱️ Stepped rectilinear outline for a fused context menu (primary column + wing columns). */
+export function windowSilhouetteOutlineWithContextMenuFusion(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
+  const fusion = metrics.contextMenuFusion;
+  if (!fusion?.wings.length) return windowSilhouetteOutline(metrics, inset);
+  const normalized = normalizeWindowSilhouetteMetrics(metrics);
+  const safeInset = Math.min(finiteWindowSilhouetteCoordinate(inset), normalized.width * 0.5, normalized.height * 0.5);
+  const x0 = safeInset;
+  const y0 = safeInset;
+  const y1 = normalized.height - safeInset;
+  const topInner = Math.max(y0, Math.min(y0 + normalized.top.depth, y1));
+  const capRight = Math.max(x0, fusion.primary.right - safeInset);
+  const unionRects = [fusion.primary, ...fusion.wings];
+  const top = windowSilhouetteEdgePoints(normalized.top, x0, capRight, y0, topInner);
+  const yEvents = new Set<number>([topInner, y1]);
+  for (const rect of unionRects) {
+    if (rect.bottom <= topInner + WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
+    yEvents.add(Math.max(topInner, rect.top + safeInset));
+    yEvents.add(Math.min(y1, rect.bottom - safeInset));
+  }
+  const ys = [...yEvents].sort((a, b) => a - b);
+  const rightSide: WindowSilhouettePoint[] = [];
+  let x = capRight;
+  let y = topInner;
+  rightSide.push({ x, y });
+  for (let index = 1; index < ys.length; index += 1) {
+    const yNext = ys[index]!;
+    const yMid = (ys[index - 1]! + yNext) * 0.5;
+    const xNext = windowSilhouetteRightEdgeAtY(unionRects, yMid, safeInset);
+    if (Math.abs(yNext - y) > WINDOW_SILHOUETTE_CHIP_EPSILON) {
+      rightSide.push({ x, y: yNext });
+      y = yNext;
+    }
+    if (Math.abs(xNext - x) > WINDOW_SILHOUETTE_CHIP_EPSILON) {
+      rightSide.push({ x: xNext, y });
+      x = xNext;
+    }
+  }
+  const bodyBottom = Math.min(y1, Math.max(...unionRects.map((rect) => rect.bottom)) - safeInset);
+  if (Math.abs(bodyBottom - y) > WINDOW_SILHOUETTE_CHIP_EPSILON) {
+    rightSide.push({ x, y: bodyBottom });
+    y = bodyBottom;
+  }
+  const bottomRight = windowSilhouetteRightEdgeAtY(unionRects, bodyBottom, safeInset);
+  if (Math.abs(bottomRight - x) > WINDOW_SILHOUETTE_CHIP_EPSILON) {
+    rightSide.push({ x: bottomRight, y: bodyBottom });
+    x = bottomRight;
+  }
+  const bottom: WindowSilhouettePoint[] = [{ x, y: bodyBottom }, { x: x0, y: bodyBottom }];
+  const leftUp: WindowSilhouettePoint[] = [{ x: x0, y: topInner }];
+  return simplifyWindowSilhouetteOutline([...top, ...rightSide, ...bottom, ...leftUp]);
+}
+
 export function windowSilhouetteOutline(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
+  if (metrics.contextMenuFusion?.wings.length) return windowSilhouetteOutlineWithContextMenuFusion(metrics, inset);
   const normalized = normalizeWindowSilhouetteMetrics(metrics);
   const safeInset = Math.min(finiteWindowSilhouetteCoordinate(inset), normalized.width * 0.5, normalized.height * 0.5);
   const x0 = safeInset;
@@ -234,6 +310,20 @@ export function windowSilhouetteContentClipPath(metrics: WindowSilhouetteMetrics
   return `polygon(${outline.map((point) => `${serializeWindowSilhouetteCoordinate(point.x)}px ${serializeWindowSilhouetteCoordinate(point.y)}px`).join(", ")})`;
 }
 
+export function windowSilhouetteContextMenuFusionContentRegions(fusion: WindowSilhouetteContextMenuFusion, topDepth: number): WindowSilhouetteRegion[] {
+  const regions: WindowSilhouetteRegion[] = [];
+  const pushBody = (rect: WindowSilhouetteAxisRect) => {
+    const height = Math.max(0, rect.bottom - Math.max(rect.top, topDepth));
+    const y = Math.max(rect.top, topDepth);
+    const width = Math.max(0, rect.right - rect.left);
+    if (height <= WINDOW_SILHOUETTE_CHIP_EPSILON || width <= WINDOW_SILHOUETTE_CHIP_EPSILON) return;
+    regions.push({ x: rect.left, y, width, height, kind: "body" });
+  };
+  pushBody(fusion.primary);
+  for (const wing of fusion.wings) pushBody(wing);
+  return regions;
+}
+
 export function windowSilhouetteSafeClearances(metrics: WindowSilhouetteMetrics): WindowSilhouetteSafeClearances {
   const normalized = normalizeWindowSilhouetteMetrics(metrics);
   return { top: normalized.top.depth, right: 0, bottom: normalized.bottom.depth, left: 0 };
@@ -260,6 +350,10 @@ export function windowSilhouetteGlassRegions(metrics: WindowSilhouetteMetrics): 
 }
 
 export function windowSilhouetteContentRegions(metrics: WindowSilhouetteMetrics): WindowSilhouetteRegion[] {
+  const normalized = normalizeWindowSilhouetteMetrics(metrics);
+  if (metrics.contextMenuFusion?.wings.length) {
+    return [...windowSilhouetteContextMenuFusionContentRegions(metrics.contextMenuFusion, normalized.top.depth), ...windowSilhouetteGlassRegions(normalized)];
+  }
   const body = windowSilhouetteBodyRegion(metrics);
   return body ? [body, ...windowSilhouetteGlassRegions(metrics)] : windowSilhouetteGlassRegions(metrics);
 }

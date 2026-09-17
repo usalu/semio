@@ -208,7 +208,7 @@ async fn frame_rows_declare_their_granularity_while_the_tree_binds_the_one_inter
         assert_eq!(props.granularity.as_ref().map(|text| text.as_str()), Some(LAYOUT_GRANULARITY_ELEMENT));
     }
 
-    let page = section_node(&tree, LAYOUT_DOCUMENT_SECTIONS[2]).children.first().expect("a page row");
+    let page = section_node(&tree, LAYOUT_DOCUMENT_SECTIONS[2]).children.get(0).expect("a page row");
     assert_eq!(page.bindings.iter().next().expect("a page row keeps its own action").action.name.as_str(), "setActivePage");
     let Component::TreeItem(props) = &page.component else { panic!("tree item") };
     assert!(props.granularity.is_none(), "a page is not a target of the elements domain");

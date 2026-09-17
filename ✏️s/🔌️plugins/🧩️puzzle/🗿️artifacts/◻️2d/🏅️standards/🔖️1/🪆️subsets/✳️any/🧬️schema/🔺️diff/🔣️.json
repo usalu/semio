@@ -62,6 +62,17 @@
       ],
       "x-semio-state": "artifact"
     },
+    "targetRegions": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/Puzzle2dTargetRegionsDelta"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
     "meta": {
       "oneOf": [
         {
@@ -226,6 +237,84 @@
         },
         "patch": {
           "$ref": "#/$defs/Puzzle2dEdgePatch"
+        }
+      }
+    },
+    "Puzzle2dTargetRegionsDelta": {
+      "title": "Puzzle2dTargetRegionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dTargetRegion"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dTargetRegionPatchEntry"
+          }
+        },
+        "reordered": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Puzzle2dTargetRegionPatchEntry": {
+      "title": "Puzzle2dTargetRegionPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle2dTargetRegionPatch"
+        }
+      }
+    },
+    "Puzzle2dTargetRegionPatch": {
+      "title": "Puzzle2dTargetRegionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "replacement": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dTargetRegion"
+            }
+          ]
         }
       }
     },

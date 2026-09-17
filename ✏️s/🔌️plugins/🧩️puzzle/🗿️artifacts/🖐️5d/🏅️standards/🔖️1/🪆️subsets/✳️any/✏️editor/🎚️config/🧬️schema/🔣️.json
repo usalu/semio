@@ -4,10 +4,12 @@
   "title": "Puzzle5dConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["fillCount", "contactTolerance", "objectKindWeights", "vortexKindWeights"],
+  "required": ["fillCount", "contactTolerance", "proximityRadius", "chunkSize", "objectKindWeights", "vortexKindWeights"],
   "properties": {
     "fillCount": { "type": "integer", "minimum": 0, "default": 100, "x-semio-state": "config" },
     "contactTolerance": { "type": "number", "x-semio-state": "config" },
+    "proximityRadius": { "type": "number", "minimum": 0, "default": 0.75, "x-semio-state": "config" },
+    "chunkSize": { "type": "number", "exclusiveMinimum": 0, "default": 4, "x-semio-state": "config" },
     "objectKindWeights": { "type": "object", "additionalProperties": { "type": "number" }, "x-semio-state": "config" },
     "vortexKindWeights": { "type": "object", "additionalProperties": { "type": "number" }, "x-semio-state": "config" }
   }

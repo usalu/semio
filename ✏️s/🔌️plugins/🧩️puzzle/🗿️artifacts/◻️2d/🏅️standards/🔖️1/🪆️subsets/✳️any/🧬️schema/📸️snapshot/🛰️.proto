@@ -13,7 +13,9 @@ message Puzzle2dSnapshot {
   // @state artifact
   repeated Puzzle2dEdge edges = 4;
   // @state artifact
-  Puzzle2dMeta meta = 5;
+  repeated Puzzle2dTargetRegion target_regions = 5;
+  // @state artifact
+  Puzzle2dMeta meta = 6;
 }
 
 
@@ -185,6 +187,17 @@ message Puzzle2dKindCatalogs {
   repeated Puzzle2dCatalogHandleKind handles = 2;
   repeated Puzzle2dCatalogEdgeKind edges = 3;
   repeated Puzzle2dCatalogWireKind wires = 4;
+}
+
+message Puzzle2dTargetRegion {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double width = 4;
+  double height = 5;
+  optional string label = 6;
+  bool hidden = 7;
+  bool locked = 8;
 }
 
 message Puzzle2dMeta {

@@ -40,6 +40,14 @@
     "scale-fixture",
     "semio"
   ],
+  "nxSerialTargets": [
+    "deps-cargo",
+    "deps-wasm",
+    "deps-trunk",
+    "deps-tools",
+    "deps-tectonic",
+    "deps-tex"
+  ],
   "cachedExact": [
     "hub-live-catalog-check",
     "hub-live-catalog-native-check",
@@ -52,6 +60,9 @@
     "start",
     "test-watch",
     "daemon"
+  ],
+  "ephemeralOwnerGlobs": [
+    ".🛂️descriptor-staging-*"
   ],
   "generatedDirectories": [
     "node_modules",

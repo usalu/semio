@@ -11,6 +11,10 @@ pub struct Puzzle5dConfig {
     #[state(config)]
     pub contact_tolerance: f64,
     #[state(config)]
+    pub proximity_radius: f64,
+    #[state(config)]
+    pub chunk_size: f64,
+    #[state(config)]
     pub object_kind_weights: HashMap<String, f64>,
     #[state(config)]
     pub vortex_kind_weights: HashMap<String, f64>,

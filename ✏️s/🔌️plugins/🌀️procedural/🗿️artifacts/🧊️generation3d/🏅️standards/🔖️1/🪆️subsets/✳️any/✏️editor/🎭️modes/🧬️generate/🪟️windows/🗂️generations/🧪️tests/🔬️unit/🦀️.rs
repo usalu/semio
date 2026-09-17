@@ -142,3 +142,79 @@ async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
     let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
     assert_eq!(body.matches("procedural3d-play-generate.generation.").count() >= 3, true, "all three rows must render: {body}");
 }
+
+//#region 🪟️WindowLaws
+/// 🔎️ `(total, offset, materialised row keys)` of the generations container, read off the rendered
+/// body exactly the way the host observer reads it.
+fn generations_window(json: &str) -> (u64, u64, Vec<String>) {
+    fn walk(node: &serde_json::Value, key: &str) -> Option<serde_json::Value> {
+        if node["key"].as_str() == Some(key) {
+            return Some(node.clone());
+        }
+        node["children"].as_array().and_then(|children| children.iter().find_map(|child| walk(child, key)))
+    }
+    let projection: serde_json::Value = serde_json::from_str(json).expect("generations projection json");
+    let node = walk(&projection, GENERATION_3D_PLAY_GENERATIONS_SECTION).unwrap_or_else(|| panic!("the generations container is not in the rendered body: {json}"));
+    let window = node["component"]["window"].as_object().unwrap_or_else(|| panic!("the generations container stamps no window: {json}"));
+    let rows: Vec<String> = node["children"].as_array().cloned().unwrap_or_default().iter().map(|row| row["key"].as_str().unwrap_or_default().to_string()).collect();
+    (window.get("total").and_then(serde_json::Value::as_u64).unwrap_or_default(), window.get("offset").and_then(serde_json::Value::as_u64).unwrap_or_default(), rows)
+}
+
+fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel {
+        tree_windows: vec![semio_framework_plugin::TreeWindowRequest {
+            body_key: GENERATION_3D_PLAY_BODY_GENERATIONS.into(),
+            node_key: GENERATION_3D_PLAY_GENERATIONS_SECTION.into(),
+            open,
+            offset,
+            rows,
+        }],
+        ..Default::default()
+    }
+}
+
+/// ⚖️ LAW (a)/(d): the roster container states the document's FULL extent, materialises at most that
+/// slice, and never summarises a remainder as a `+n` continuation row. Every saved generation is
+/// accounted for by `total`, not by a row the reader cannot open.
+#[semio_framework_async_macros::async_test]
+async fn the_generations_container_stamps_the_whole_roster() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 4).await;
+    let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
+    let (total, offset, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "the container stamps the whole roster: {body}");
+    assert_eq!(offset, 0, "a first paint starts at zero: {body}");
+    assert!(rows.len() <= ids.len(), "the container materialises at most its slice: {body}");
+    assert!(!body.contains(".more\""), "a windowed roster has no continuation row: {body}");
+    assert!(!body.contains(r#""label":"+"#), "a windowed roster publishes no `+n` label: {body}");
+}
+
+/// ⚖️ LAW (b): a closed container still states its extent and materialises nothing.
+#[semio_framework_async_macros::async_test]
+async fn a_closed_generations_container_stamps_its_total_with_no_rows() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 3).await;
+    let view = generations_view(Some(false), 0, 0);
+    let body = crate::editor::generation3d::unit_tests::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view).await;
+    let (total, _, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "a closed container still states its extent: {body}");
+    assert!(rows.is_empty(), "a closed container materialises nothing: {body}");
+}
+
+/// ⚖️ LAW (c): a host window request materialises exactly `[offset, offset + rows)` of the roster,
+/// keyed by the row id the window's own namespace gives each generation.
+#[semio_framework_async_macros::async_test]
+async fn a_generations_window_request_materialises_exactly_its_slice() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let ids = seed_generations(&mut app, 4).await;
+    let view = generations_view(Some(true), 2, 1);
+    let body = crate::editor::generation3d::unit_tests::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view).await;
+    let (total, offset, rows) = generations_window(&body);
+    assert_eq!(total as usize, ids.len(), "the total stays the whole roster: {body}");
+    assert_eq!(offset, 2, "the stamped offset is the requested one: {body}");
+    assert_eq!(rows, vec![format!("{GENERATION_3D_PLAY_GENERATE_PREFIX}.generation.{}", ids[2])], "exactly entry 2 is materialised: {body}");
+}
+//#endregion 🪟️WindowLaws

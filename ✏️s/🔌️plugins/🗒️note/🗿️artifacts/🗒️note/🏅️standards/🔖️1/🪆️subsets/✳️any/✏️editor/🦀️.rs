@@ -27,7 +27,7 @@ use crate::schema::empty_note_snapshot;
 use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowMeasure,
 };
@@ -64,11 +64,14 @@ fn note_app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
 //#region 🔖️ResetDocument
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
-/// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+/// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry. The spr is a
+/// fresh, edit-free op-log (`store::empty_document_spr`) — never a live `ArtifactEnvelope` minted just to
+/// print it: dropping such an envelope trapped the guest (`artifact envelope terminal shell reached Drop
+/// before its app-owned bounded retirement authority detached every nested owner`) on the react shell's
+/// boot `setActiveExample` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
 pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
     let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note", document.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("note document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -184,6 +187,212 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🔖️ActionBridge
+/// 🎯️ Folds the host's `{action, args}` vocabulary (camelCase keys, JSON floats, control `value`s) into
+/// the snake_case `FromValue` payloads of `🎮️commands/*`, one arm per `NoteCommand` row.
+mod args_bridge {
+    use super::NoteCommand;
+    use semio_framework_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    fn integral(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Snake-cases every key of `args`, applies `aliases` (snake_case source → destination, first
+    /// present source wins and never overwrites a present destination) and seeds `defaults` for keys
+    /// still absent.
+    fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> Vec<(String, DslValue)> {
+        let mut entries: Vec<(String, DslValue)> = Vec::new();
+        if let Some(DslValue::Object(object)) = args {
+            for (key, value) in object {
+                put(&mut entries, &snake(key), integral(value.clone()));
+            }
+        }
+        for (from, into) in aliases {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                put(&mut entries, into, value);
+            }
+        }
+        for (key, value) in defaults {
+            if !entries.iter().any(|(existing, _)| existing == key) {
+                entries.push(((*key).to_string(), value.clone()));
+            }
+        }
+        entries
+    }
+
+    fn only(entries: Vec<(String, DslValue)>, keys: &[&str]) -> DslValue {
+        DslValue::Object(entries.into_iter().filter(|(key, _)| keys.contains(&key.as_str())).collect())
+    }
+
+    fn map(entries: &mut [(String, DslValue)], key: &str, convert: impl Fn(DslValue) -> DslValue) {
+        if let Some(slot) = entries.iter_mut().find(|(existing, _)| existing == key) {
+            slot.1 = convert(std::mem::replace(&mut slot.1, DslValue::Null));
+        }
+    }
+
+    /// 📝️ Prints a host control value into the `String` fields the text verbs carry.
+    fn text(value: DslValue) -> DslValue {
+        match value {
+            DslValue::String(_) => value,
+            DslValue::Null => DslValue::String(String::new()),
+            other => DslValue::String(dsl::json::to_json_string(&other)),
+        }
+    }
+
+    /// 🔢️ Slider/number controls may deliver their value as text.
+    fn number(value: DslValue) -> DslValue {
+        match &value {
+            DslValue::String(raw) => raw.trim().parse::<f64>().map(|parsed| DslValue::Number(dsl::Number::Float(parsed))).unwrap_or(value),
+            _ => value,
+        }
+    }
+
+    /// ☑️ Toggle controls may deliver their value as text.
+    fn boolean(value: DslValue) -> DslValue {
+        match &value {
+            DslValue::String(raw) if raw == "true" || raw == "false" => DslValue::Bool(raw == "true"),
+            _ => value,
+        }
+    }
+
+    fn list(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Array(_) | DslValue::Null => value,
+            other => DslValue::Array(vec![other]),
+        }
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("note action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<NoteCommand, Fault> {
+        const BLOCK: &[(&str, &str)] = &[("id", "block_id"), ("value", "block_id")];
+        let string = |value: &str| DslValue::String(value.into());
+        let zero = || DslValue::Number(dsl::Number::Float(0.0));
+        let empty = || DslValue::Object(Vec::new());
+        let value_number = || {
+            let mut entries = fold(args, &[], &[]);
+            map(&mut entries, "value", number);
+            only(entries, &["value"])
+        };
+        let value_boolean = || {
+            let mut entries = fold(args, &[("checked", "value")], &[]);
+            map(&mut entries, "value", boolean);
+            only(entries, &["value"])
+        };
+        Ok(match action {
+            "setGridVisible" => NoteCommand::SetGridVisible(decode(action, value_boolean())?),
+            "setGridSpacing" => NoteCommand::SetGridSpacing(decode(action, value_number())?),
+            "setGridSubdivisions" => NoteCommand::SetGridSubdivisions(decode(action, value_number())?),
+            "setGridOpacity" => NoteCommand::SetGridOpacity(decode(action, value_number())?),
+            "setSnapEnabled" => NoteCommand::SetSnapEnabled(decode(action, value_boolean())?),
+            "setSnapGridSpacing" => NoteCommand::SetSnapGridSpacing(decode(action, value_number())?),
+            "setPencilWidth" => NoteCommand::SetPencilWidth(decode(action, value_number())?),
+            "setEraserRadius" => NoteCommand::SetEraserRadius(decode(action, value_number())?),
+            "addBlock" => {
+                let mut entries = fold(args, &[("value", "kind")], &[("kind", string("text")), ("x", zero()), ("y", zero())]);
+                map(&mut entries, "x", number);
+                map(&mut entries, "y", number);
+                NoteCommand::AddBlock(decode(action, only(entries, &["kind", "x", "y"]))?)
+            }
+            "moveBlock" => NoteCommand::MoveBlock(decode(action, only(fold(args, &[("id", "block_id"), ("target_id", "target_row_id"), ("position", "drop_position")], &[("drop_position", string("inside"))]), &["block_id", "target_row_id", "drop_position"]))?),
+            "deleteBlock" => NoteCommand::DeleteBlock(decode(action, only(fold(args, BLOCK, &[]), &["block_id"]))?),
+            "deleteSelection" => NoteCommand::DeleteSelection(decode(action, empty())?),
+            "duplicateBlock" => NoteCommand::DuplicateBlock(decode(action, only(fold(args, BLOCK, &[]), &["block_id"]))?),
+            "duplicateSelection" => NoteCommand::DuplicateSelection(decode(action, empty())?),
+            "patchBlocks" => {
+                let mut entries = fold(args, &[("ids", "block_ids"), ("block_id", "block_ids"), ("id", "block_ids")], &[("block_ids", DslValue::Array(Vec::new())), ("value", string(""))]);
+                map(&mut entries, "block_ids", list);
+                map(&mut entries, "value", text);
+                NoteCommand::PatchBlocks(decode(action, only(entries, &["block_ids", "field", "value"]))?)
+            }
+            "setActiveExample" => NoteCommand::SetActiveExample(decode(action, only(fold(args, &[("value", "example_id"), ("id", "example_id")], &[("example_id", string("semio"))]), &["example_id"]))?),
+            "setFixtureJson" => {
+                let mut entries = fold(args, &[("value", "json"), ("text", "json")], &[]);
+                map(&mut entries, "json", text);
+                NoteCommand::SetFixtureJson(decode(action, only(entries, &["json"]))?)
+            }
+            "inkApplyEvents" => {
+                let mut entries = fold(args, &[], &[("phase", string("atomic"))]);
+                if !entries.iter().any(|(key, _)| key == "events_json") {
+                    let events = entries.iter().find(|(key, _)| key == "events").map(|(_, value)| value.clone()).unwrap_or(DslValue::Array(Vec::new()));
+                    entries.push(("events_json".into(), text(events)));
+                }
+                NoteCommand::InkApplyEvents(decode(action, only(entries, &["events_json", "phase", "select_ids"]))?)
+            }
+            "engagementSubmit" => {
+                let mut entries = fold(args, &[("text", "value"), ("input", "value")], &[]);
+                entries.retain(|(key, value)| key != "value" || !matches!(value, DslValue::Null));
+                map(&mut entries, "value", text);
+                NoteCommand::EngagementSubmit(decode(action, only(entries, &["value"]))?)
+            }
+            "nudgeSelection" => {
+                let mut entries = fold(args, &[("x", "dx"), ("y", "dy")], &[("dx", zero()), ("dy", zero())]);
+                map(&mut entries, "dx", number);
+                map(&mut entries, "dy", number);
+                NoteCommand::NudgeSelection(decode(action, only(entries, &["dx", "dy"]))?)
+            }
+            "nudgeSelectionUp" => NoteCommand::NudgeSelectionUp(decode(action, empty())?),
+            "nudgeSelectionDown" => NoteCommand::NudgeSelectionDown(decode(action, empty())?),
+            "nudgeSelectionLeft" => NoteCommand::NudgeSelectionLeft(decode(action, empty())?),
+            "nudgeSelectionRight" => NoteCommand::NudgeSelectionRight(decode(action, empty())?),
+            "nudgeSelectionUpFast" => NoteCommand::NudgeSelectionUpFast(decode(action, empty())?),
+            "nudgeSelectionDownFast" => NoteCommand::NudgeSelectionDownFast(decode(action, empty())?),
+            "nudgeSelectionLeftFast" => NoteCommand::NudgeSelectionLeftFast(decode(action, empty())?),
+            "nudgeSelectionRightFast" => NoteCommand::NudgeSelectionRightFast(decode(action, empty())?),
+            "setCamera" => {
+                let entries = fold(args, &[], &[]);
+                let camera = match entries.iter().find(|(key, _)| key == "camera") {
+                    Some((_, camera)) => camera.clone(),
+                    None => only(entries, &["x", "y", "zoom"]),
+                };
+                NoteCommand::SetCamera(decode(action, DslValue::Object(vec![("camera".into(), camera)]))?)
+            }
+            "setCameraZoom" => NoteCommand::SetCameraZoom(decode(action, value_number())?),
+            "engagementInput" => {
+                let mut entries = fold(args, &[("text", "value"), ("input", "value")], &[("value", string(""))]);
+                map(&mut entries, "value", text);
+                NoteCommand::EngagementInput(decode(action, only(entries, &["value"]))?)
+            }
+            "navigatorEngagementInput" => NoteCommand::NavigatorEngagementInput(decode(action, empty())?),
+            "saveDownload" => NoteCommand::SaveDownload(decode(action, empty())?),
+            "loadRequest" => NoteCommand::LoadRequest(decode(action, empty())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the note editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🔖️NotePlayApp
 /// 🧪️ B1: unit struct — document preferences live in `NoteSnapshot`; composite camera and
 /// engagement input live in their exact WindowConfig and WindowTransient owners.
@@ -221,11 +430,37 @@ impl ArtifactEditor for NotePlayApp {
         tools: {
             "setGridVisible" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setGridSpacing" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setGridSubdivisions" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setGridOpacity" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setSnapEnabled" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setSnapGridSpacing" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setPencilWidth" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setEraserRadius" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "addBlock" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "moveBlock" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "deleteBlock" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "deleteSelection" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "duplicateBlock" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "duplicateSelection" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "patchBlocks" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setActiveExample" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setFixtureJson" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "inkApplyEvents" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelection" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionUp" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionDown" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionLeft" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionRight" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionUpFast" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionDownFast" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionLeftFast" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "nudgeSelectionRightFast" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCamera" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCameraZoom" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
-            "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "saveDownload" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
         }
     }
@@ -252,6 +487,17 @@ impl ArtifactEditor for NotePlayApp {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
+    /// (`reset_document_effect`: example switch, fixture import) — the trait default refuses the
+    /// envelope, which faults every note document swap at the archive-load boundary.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, NOTE_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -307,6 +553,12 @@ impl ArtifactEditor for NotePlayApp {
     /// View/Shell kind-discipline check.
     fn command_id(command: &NoteCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ Host-action bridge into the closed `NoteCommand` enum (ticket 26/09/17/NOTE-PLUGIN-END-TO-END):
+    /// the trait default refuses every app action, which left every panel/canvas verb dead in the shell.
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn handle(
@@ -485,37 +737,37 @@ pub fn create_note_app() -> AppDefinition {
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSubdivisions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setGridOpacity", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSnapEnabled", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSnapGridSpacing", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setPencilWidth", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setEraserRadius", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("moveBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("duplicateBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchBlocks", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSubdivisions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridOpacity", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPencilWidth", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setEraserRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchBlocks", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionLeft", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionRight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionUpFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionDownFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionLeftFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionLeft", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionRight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionUpFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionDownFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionLeftFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("loadRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))

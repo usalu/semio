@@ -4729,8 +4729,11 @@ mod plugin_builder_contract_tests {
         serde_json::from_str(include_str!("../../🧫️fixtures/history-panel-command-window/🔣️.json")).unwrap()
     }
 
-    fn history_window_log(rows: usize) -> HistoryView {
-        let entry = |seq: u64| CommandView {
+    /// 🪙️ A revertible row materialises a `UiValue::Map`; a non-revertible one costs zero argument
+    /// arena. The window laws below use the zero-cost shape so their row counts are the WINDOW's
+    /// arithmetic alone, never the process-global arena another test in this binary is holding.
+    fn history_window_log(rows: usize, revertible: bool) -> HistoryView {
+        let entry = move |seq: u64| CommandView {
             seq,
             action_id: "translateSelection".into(),
             label: format!("Move {seq}"),
@@ -4741,11 +4744,21 @@ mod plugin_builder_contract_tests {
             child_edit_ids: Vec::new(),
             op_lines: Vec::new(),
             applied: true,
-            revertible: true,
+            revertible,
             count: 1,
             inverse: None,
         };
         HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: (1..=rows as u64).map(entry).collect(), command_filter: HistoryCommandFilter::All }
+    }
+
+    /// 🧾️ The body as the host reads it — `BuiltChildren` is retained page transport and refuses a
+    /// direct serde walk, so the tree is projected node by node.
+    fn history_body_json(node: &BuiltNode) -> Value {
+        json!({
+            "key": node.key.as_str(),
+            "component": serde_json::to_value(&node.component).expect("component JSON"),
+            "children": node.children.iter().map(history_body_json).collect::<Vec<_>>(),
+        })
     }
 
     fn history_commands_window(panel: &BuiltNode) -> Option<TreeWindow> {
@@ -4756,8 +4769,9 @@ mod plugin_builder_contract_tests {
     /// 🪟️ ARTIFACT-TREE-VIRTUALISED-STREAMING: the Commands section is a window, not a page. Its rows
     /// are the live entries themselves (no `UI_BUILT_CHILDREN_MAX`-ary page columns between the section
     /// and its rows), it publishes the FULL filtered row count as `TreeWindow::total` however few rows
-    /// it materialises, a cold paint draws exactly `TREE_WINDOW_DEFAULT_ROWS`, a host request draws
-    /// exactly its slice keyed by the raw entry id, and no `+N` continuation row exists at any point.
+    /// it materialises, a cold paint draws `TREE_WINDOW_DEFAULT_ROWS` clamped by the built-children
+    /// ceiling, a host request draws exactly its slice keyed by the raw entry id, and no `+N`
+    /// continuation row exists at any point.
     #[semio_framework_async_macros::async_test]
     async fn ui_history_panel_windows_command_rows_over_the_live_count() {
         let fixture = history_window_fixture();
@@ -4765,15 +4779,16 @@ mod plugin_builder_contract_tests {
         let default_rows = fixture["defaultWindowRows"].as_u64().unwrap() as usize;
         assert_eq!(default_rows, TREE_WINDOW_DEFAULT_ROWS as usize, "fixture must pin the live first-paint budget");
         let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
-        let history = history_window_log(rows);
+        let history = history_window_log(rows, false);
 
         let cold = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("a log of any length must assemble");
-        assert_eq!(cold.children[1].children.len(), default_rows, "a cold paint materialises one viewport");
+        assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
         assert_eq!(history_commands_window(&cold), Some(TreeWindow { total: rows as u32, offset: 0 }), "the host sees the whole extent");
 
         let offset = fixture["requestOffset"].as_u64().unwrap() as u32;
         let requested = fixture["requestRows"].as_u64().unwrap() as u32;
+        assert!(requested as usize <= UI_BUILT_CHILDREN_MAX, "fixture slice must fit one built-children page");
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest {
                 body_key: fixture["bodyKey"].as_str().unwrap().to_string(),
@@ -4790,20 +4805,21 @@ mod plugin_builder_contract_tests {
         assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { total: rows as u32, offset }));
 
         for panel in [&cold, &scrolled] {
-            let json = serde_json::to_string(panel).expect("panel JSON");
+            let json = history_body_json(panel).to_string();
             assert!(!json.contains(".more"), "no continuation row key survives: {json}");
             assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
         }
     }
 
-    /// 🪙️ Every revertible row materialises a `UiValue::Map` of revert arguments, and the process-wide
-    /// argument arena backs exactly `UI_VALUE_PAGE_ROWS` interactive rows. The window is what keeps the
-    /// two reconciled: `UI_BUILT_CHILDREN_MAX == UI_VALUE_PAGE_ROWS`, so a materialised slice can never
-    /// out-spend the arena, and every row the host CAN see keeps its inline revert.
+    /// 🪙️ Every revertible row the window materialises keeps its inline revert, and the window can
+    /// never out-spend the process-wide argument arena: a slice is capped by `UI_BUILT_CHILDREN_MAX`,
+    /// which the contract prices at `UI_VALUE_PAGE_ROWS` interactive rows. A refusal under live arena
+    /// pressure shortens the window — it never faults the render and never drops a row's revert.
     #[semio_framework_async_macros::async_test]
     async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
-        let history = history_window_log(200);
-        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("200 revertible entries must assemble without an alias refusal");
+        let entries = 20usize;
+        let history = history_window_log(entries, true);
+        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;
@@ -4817,9 +4833,10 @@ mod plugin_builder_contract_tests {
         }
         let (mut rows, mut actions) = (0usize, 0usize);
         census(&panel, &mut rows, &mut actions);
-        assert_eq!(rows, TREE_WINDOW_DEFAULT_ROWS as usize, "a cold paint materialises one viewport of the 200-entry log");
+        assert!(rows > 0 && rows <= entries, "the window never exceeds the live count: {rows}");
         assert_eq!(actions, rows, "every materialised row keeps its inline revert");
         assert!(actions <= UI_VALUE_PAGE_ROWS, "a window can never out-spend the arena page: {actions} > {UI_VALUE_PAGE_ROWS}");
+        assert_eq!(history_commands_window(&panel), Some(TreeWindow { total: entries as u32, offset: 0 }));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -1,13 +1,13 @@
 {
   "format": "semio.generation3d.mode-panel-publication",
   "version": 1,
-  "note": "Panels are framework-injected tabs, not windows of a mode layout: the Artifact / Catalogue / Inspection bodies must publish identically in EVERY play mode. The wgpu shell boots straight into `generate` while its focused pane is still the edit-mode `procedural-main`, so the panel projection carried a focused window the generate roster does not list and every app panel faulted before its body key was ever matched (`wgpu-ui.surface-not-published:framework.panel.*`). Each case below is one host roster; every case must publish every panel, and every case must publish the SAME body — panels have no mode-specific projection.",
+  "note": "The Artifact panel renders the flow OUTLINE (`procedural-play-graph`, nodes + wires), not a `procedural-play-document` widget list — it has delegated to `modes/edit/windows/flow::graph_outline` since ticket 26/09/14 and the rows are windowed since 26/09/16. Panels are framework-injected tabs, not windows of a mode layout: the Artifact / Catalogue / Inspection bodies must publish identically in EVERY play mode. The wgpu shell boots straight into `generate` while its focused pane is still the edit-mode `procedural-main`, so the panel projection carried a focused window the generate roster does not list and every app panel faulted before its body key was ever matched (`wgpu-ui.surface-not-published:framework.panel.*`). Each case below is one host roster; every case must publish every panel, and every case must publish the SAME body — panels have no mode-specific projection.",
   "panels": [
     {
       "tab": "framework.panel.artifact",
       "bodyKey": "procedural.play.artifact",
-      "root": "procedural-play-document",
-      "contains": ["procedural-play-document.widgets"]
+      "root": "procedural-play-graph",
+      "contains": ["procedural-play-graph.nodes", "procedural-play-graph.wires"]
     },
     {
       "tab": "framework.panel.catalogue",

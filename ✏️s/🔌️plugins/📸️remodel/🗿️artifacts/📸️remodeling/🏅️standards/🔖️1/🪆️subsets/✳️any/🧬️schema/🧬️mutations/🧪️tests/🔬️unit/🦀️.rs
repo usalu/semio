@@ -7,6 +7,15 @@ use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 //#region 🔖️Fixture
+/// ✅️ Applies `mutation` through its own diff and REFUSES an Error/Fatal outcome — a scenario step
+/// that the ownership laws reject must fail the test loudly, never land as a silent no-op.
+fn applied(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> RemodelingSnapshot {
+    let outcome = mutation.diff(base);
+    let rejected: Vec<_> = outcome.messages().iter().filter(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)).map(|message| format!("{message:?}")).collect();
+    assert!(rejected.is_empty(), "scenario step {mutation:?} was rejected: {rejected:?}");
+    protocol::MutationDiff::apply(outcome.diff(), base).expect("valid mutation diff")
+}
+
 /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once
 /// (verbatim duplicate of the `rs`/`📝️text` crates' own private test-only builder — see that
 /// crate's `populated_scene_fixture` doc comment).
@@ -22,8 +31,10 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
         source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
     });
+    // 🧩️ Seeded through `create-asset` itself so the handle's durable leaves exist — a bare
+    // `assets.insert` leaves a handle without content, which no inverse can restore.
     let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-    scene.assets.insert("asset-1".into(), crate::store_remodeling_asset("asset-1", &asset_one));
+    let mut scene = applied(&scene, &create_asset("asset-1".into(), asset_one));
     scene.calibration.cameras.push(CameraCalibration {
         id: "cam-1".into(),
         label: "Front".into(),
@@ -37,7 +48,8 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         rms_reprojection_px: Some(0.4),
         locked: false,
     });
-    scene.calibration.rig.push(RigExtrinsic::default());
+    // 🧷️ A rig extrinsic may only name a known camera (`create-rig-extrinsic`'s invariant).
+    scene.calibration.rig.push(RigExtrinsic { camera_id: "cam-1".into(), ..RigExtrinsic::default() });
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
     scene.params.mesh.texture_size = 4096;
@@ -94,7 +106,10 @@ async fn create_delete_stream_inverse_law() {
     let base = populated_scene_fixture();
     let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
     assert_mutation_inverse_law(&base, &create_stream(stream)).await;
-    assert_mutation_inverse_law(&base, &delete_stream("stream-1".into())).await;
+    // 🔗️ `gcp-1` observes `stream-1`; the delete refuses (`mutation.referenced`) until that
+    // observation is removed.
+    let detached = applied(&base, &remove_gcp_observation("gcp-1".into(), 0));
+    assert_mutation_inverse_law(&detached, &delete_stream("stream-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -124,7 +139,9 @@ async fn create_delete_asset_inverse_law() {
     let asset = ImageAsset { mime: "image/png".into(), data: "zzzz".into(), width: 2, height: 2 };
     assert_mutation_inverse_law(&base, &create_asset("asset-1".into(), asset.clone())).await;
     assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset)).await;
-    assert_mutation_inverse_law(&base, &delete_asset("asset-1".into())).await;
+    // 🔗️ `stream-1`'s only frame addresses `asset-1`; detach it before the delete.
+    let detached = applied(&base, &remove_stream_frame("stream-1".into(), 0));
+    assert_mutation_inverse_law(&detached, &delete_asset("asset-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -134,14 +151,21 @@ async fn camera_calibration_inverse_law() {
     assert_mutation_inverse_law(&base, &create_camera_calibration(camera)).await;
     let updated = CameraCalibration { id: "cam-1".into(), fx: 2000.0, ..base.calibration.cameras[0].clone() };
     assert_mutation_inverse_law(&base, &update_camera_calibration(updated)).await;
-    assert_mutation_inverse_law(&base, &delete_camera_calibration("cam-1".into())).await;
+    // 🔗️ `stream-1` binds `cam-1` and the rig carries its extrinsic; detach both (the stream first
+    // loses its GCP observation, which would otherwise refuse the stream delete).
+    let detached = applied(&base, &remove_gcp_observation("gcp-1".into(), 0));
+    let detached = applied(&detached, &delete_stream("stream-1".into()));
+    let detached = applied(&detached, &delete_rig_extrinsic("cam-1".into()));
+    assert_mutation_inverse_law(&detached, &delete_camera_calibration("cam-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rig_extrinsic_inverse_law() {
     let base = populated_scene_fixture();
+    // 📷️ An extrinsic may only name a known camera: calibrate `cam-99` before rigging it.
+    let calibrated = applied(&base, &create_camera_calibration(CameraCalibration { id: "cam-99".into(), model: "pinhole".into(), ..CameraCalibration::default() }));
     let extrinsic = RigExtrinsic { camera_id: "cam-99".into(), ..RigExtrinsic::default() };
-    assert_mutation_inverse_law(&base, &create_rig_extrinsic(extrinsic)).await;
+    assert_mutation_inverse_law(&calibrated, &create_rig_extrinsic(extrinsic)).await;
     let updated = RigExtrinsic { translation_m: [1.0, 0.0, 0.0], ..base.calibration.rig[0].clone() };
     assert_mutation_inverse_law(&base, &update_rig_extrinsic(updated)).await;
     assert_mutation_inverse_law(&base, &delete_rig_extrinsic(base.calibration.rig[0].camera_id.clone())).await;
@@ -217,24 +241,24 @@ async fn dispatch_registers_semantic_descriptors() {
 #[semio_framework_async_macros::async_test]
 async fn concurrent_create_asset_ops_converge_regardless_of_order() {
     let base = populated_scene_fixture();
-    let asset_a = ImageAsset { mime: "image/jpeg".into(), data: "frame-one".into(), width: 8, height: 8 };
-    let asset_b = ImageAsset { mime: "image/jpeg".into(), data: "frame-two".into(), width: 8, height: 8 };
+    // 🧩️ `ImageAsset.data` is base64 — a non-base64 payload is refused (`mutation.invalid-asset-payload`).
+    let asset_a = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-one"), width: 8, height: 8 };
+    let asset_b = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-two"), width: 8, height: 8 };
     let op_a = create_asset("frame-a".into(), asset_a.clone());
     let op_b = create_asset("frame-b".into(), asset_b.clone());
 
-    let a = apply_remodeling_mutation(&base, &op_a).expect("valid mutation diff");
-    let b = apply_remodeling_mutation(&base, &op_b).expect("valid mutation diff");
-    let a_then_b = apply_remodeling_mutation(&a, &op_b).expect("valid mutation diff");
-    let b_then_a = apply_remodeling_mutation(&b, &op_a).expect("valid mutation diff");
+    let a = applied(&base, &op_a);
+    let b = applied(&base, &op_b);
+    let a_then_b = applied(&a, &op_b);
+    let b_then_a = applied(&b, &op_a);
 
     assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
-    // 🎯️ Both assets are `image/jpeg` (unsupported by the real png bridge today, see
-    // `semio_image_snapshot_from_image_asset`'s doc comment), so `store_remodeling_asset` falls back
-    // to the deterministic raw-bytes handle (`image_asset_child_handle`) — asserting on the HANDLE
-    // (content-addressed, so identical for identical `(mime,data)` regardless of who mints it) is
-    // the honest convergence check here, not a round-trip through the working-scene cache.
+    // 🎯️ The handle is content-addressed (`image_asset_child_handle`), so it is identical for identical
+    // `(mime, data)` regardless of who mints it; the durable leaves read back the exact asset.
     assert_eq!(a_then_b.assets.get("frame-a"), Some(&crate::image_asset_child_handle("frame-a", &asset_a)));
     assert_eq!(a_then_b.assets.get("frame-b"), Some(&crate::image_asset_child_handle("frame-b", &asset_b)));
+    assert_eq!(crate::remodeling_asset(&a_then_b, "frame-a"), Some(asset_a));
+    assert_eq!(crate::remodeling_asset(&a_then_b, "frame-b"), Some(asset_b));
 }
 
 /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.

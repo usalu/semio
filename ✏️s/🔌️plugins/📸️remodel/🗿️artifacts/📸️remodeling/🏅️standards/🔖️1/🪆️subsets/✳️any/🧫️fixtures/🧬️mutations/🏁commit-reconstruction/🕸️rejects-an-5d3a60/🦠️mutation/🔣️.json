@@ -1,5 +1,6 @@
 {
   "mutation": "commitReconstruction",
+  "sparse": null,
   "trajectory": null,
   "mesh": {
     "mesh": {
@@ -19,6 +20,5 @@
   },
   "geo": null,
   "qc": null,
-  "assets": [],
-  "sparse": null
+  "assets": []
 }

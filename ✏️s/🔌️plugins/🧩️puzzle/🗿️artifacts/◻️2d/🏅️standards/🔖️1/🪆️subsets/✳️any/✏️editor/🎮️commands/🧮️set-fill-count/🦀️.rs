@@ -3,7 +3,19 @@
 //! continues, a lower retracts the provisional tail); the command itself never touches the document.
 
 use crate::editor::puzzle2d::{puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use semio_framework_plugin::kernel::Effect;
+use serde_json::{json, Value};
+
+/// 📨️ Routes a programmatic count request (the engagement bar's repeat-last) through the declared
+/// public command rather than writing the config behind the tool-run driver's back.
+pub fn request(count: u32) -> Effect {
+    Effect::DispatchAction {
+        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        action: "setFillCount".into(),
+        args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "value": count }))),
+        delay_ms: 0,
+    }
+}
 
 /// 🔢️ Reads `count` or a numeric measure's `value`; a missing, non-finite, negative or out-of-`u32` count changes nothing.
 pub fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {

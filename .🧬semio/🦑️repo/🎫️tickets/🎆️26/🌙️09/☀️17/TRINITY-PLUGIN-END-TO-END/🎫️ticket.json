@@ -1,0 +1,11 @@
+{
+  "title": "Trinity Plugin End To End",
+  "emoji": "🔱️",
+  "status": "open",
+  "description": "Get the 🔱️trinity plugin (jack + rewriting apps) working end to end: native check, guest wasm restage (activate-trinity react dev), react dev serve, proven boot (editor windows + panels) and at least one persisted document mutation plus undo via the shell for each app.",
+  "goal": "R26-03",
+  "sessions": [
+    "⚪d0da02d9-63ec-41eb-872d-42fc26002257"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-17). Pattern follows 26/09/16/LAYOUT-PLUGIN-END-TO-END."
+}

@@ -27,6 +27,12 @@ fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
     }
 }
 
+/// 🪟️ A windowed tree carries `BuiltChildren`, which refuses a direct `serde` walk ("requires retained
+/// page transport"), so every assertion here reads the projected body the host actually receives.
+fn projected_body(node: semio_framework_plugin::BuiltNode) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the steps tree")
+}
+
 #[semio_framework_async_macros::async_test]
 async fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_body_key() {
     let definition = definition();
@@ -40,7 +46,7 @@ async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
     let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
     let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
     let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
-    let json = serde_json::to_string(&node).expect("serialize semantic UI fixture");
+    let json = projected_body(node);
     assert!(json.contains("Intro"), "step title must appear as a root node label: {json}");
     assert!(json.contains("Name (text)"), "block label+kind must appear as a leaf node label: {json}");
 }
@@ -50,12 +56,17 @@ async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
     let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
     let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);
     let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
-    let json = serde_json::to_string(&node).expect("serialize semantic UI fixture");
+    let json = projected_body(node);
     assert!(json.contains("\"s1\""), "an empty step title must fall back to the step id: {json}");
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+
+/// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
+/// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
+/// 48-row viewport starved the sibling panel tests running beside it.
+const MEASURED_VIEWPORT_ROWS: u32 = 4;
 
 /// 🪟️ A recipe with far more blocks in one step than the 32 siblings this window used to refuse outright.
 fn oversized_spec(blocks: usize) -> crate::PlaybookSnapshot {
@@ -65,9 +76,8 @@ fn oversized_spec(blocks: usize) -> crate::PlaybookSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(spec: &crate::PlaybookSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
-    let node = render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the steps tree")
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    projected_body(render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree"))
 }
 
 /// 🪟️ Law (a): a 300-block step renders — the step stamps its full extent and no `+N` appears.
@@ -77,7 +87,7 @@ fn oversized_step_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":300"), "the step stamps its full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("s1/b").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+    assert!(json.matches("s1/b").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
 }
 
 /// 🪟️ Law (b): a step the host closed stamps its total and materialises nothing.

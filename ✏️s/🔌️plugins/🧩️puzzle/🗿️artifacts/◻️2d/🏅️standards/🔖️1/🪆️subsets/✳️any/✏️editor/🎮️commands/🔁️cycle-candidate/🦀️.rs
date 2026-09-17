@@ -1,11 +1,14 @@
-//! 🖌️ `cycle-candidate` command.
+//! 💡️ `cycle-candidate` command.
 
-use crate::editor::puzzle2d::{puzzle2d_window_and_engagements_scope, Puzzle2dActionCtx};
-use serde_json::Value;
+use crate::editor::puzzle2d::{puzzle2d_restore_brush_slot, puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
 
-pub fn cycle_candidate(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
-    let forward = args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true);
+/// 🔁️ Walks the open slot's candidate page one step — `tab` forward, `shift+tab` back — over the
+/// SAME slot the suggestions popup and the armed brush share. The host wraps the index and re-emits
+/// the candidate page, so the scene's index follows without this arm guessing it.
+pub fn cycle_candidate(ctx: &mut Puzzle2dActionCtx<'_>, forward: bool) {
+    if puzzle2d_restore_brush_slot(ctx).is_none() {
+        return;
+    }
     ctx.host.borrow_mut().brush_cycle_candidate(forward);
-    ctx.scene.runtime.brush_candidate_index = ctx.scene.runtime.brush_candidate_index.saturating_add(1);
-    *ctx.ui_scope = puzzle2d_window_and_engagements_scope();
+    *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

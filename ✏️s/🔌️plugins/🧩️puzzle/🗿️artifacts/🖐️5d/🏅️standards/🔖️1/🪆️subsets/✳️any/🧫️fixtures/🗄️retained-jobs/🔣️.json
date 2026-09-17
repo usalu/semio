@@ -4,175 +4,2167 @@
   "documentSchema": "puzzle.5d",
   "payloadSchema": "puzzle.5d.tool-command.v1",
   "toolIds": [
-    "canvasPointerDown", "cycleBrushCandidate", "worldPointerDown", "deleteSelection", "duplicateSelection",
-    "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "importComposeKit",
-    "selectSameKindSelection", "setFillCount", "setFixtureJson", "setSelectionFlag", "targetBrushSuggestions",
-    "zoomToSelection"
+    "canvasPointerDown",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "worldPointerDown",
+    "deleteSelection",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementRepeatLast",
+    "engagementSubmit",
+    "exportFixture",
+    "importFixture",
+    "openAddPartDialog",
+    "openImportFixture",
+    "selectSameKindSelection",
+    "setFillCount",
+    "setSelectionFlag",
+    "targetBrushSuggestions",
+    "focusSelection",
+    "addBrushPart",
+    "addNode",
+    "addPartKind",
+    "applyBoardEvents",
+    "createFastener",
+    "deleteFastener",
+    "editFastener",
+    "patchFastener",
+    "patchGrip",
+    "patchPart",
+    "proximityConnect",
+    "registerBrushMesh",
+    "retargetFastener",
+    "rotateSelection",
+    "scaleSelection",
+    "setActiveExample",
+    "translateSelection",
+    "worldRelocate",
+    "setCamera",
+    "setCamera2d",
+    "setCamera3d",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setLodMode",
+    "setSuggestionOffset",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setBrushPlacementContactTolerance",
+    "setProximityRadius",
+    "setChunkSize",
+    "setPartKindWeight",
+    "setGripKindWeight",
+    "setGridVisible",
+    "setGridSpacing",
+    "setProjection",
+    "setProjectionParam",
+    "setGripShow",
+    "setGripDirection",
+    "setSelectableKind",
+    "setLodAutomatic",
+    "setLodDepthVariable",
+    "setLodManual",
+    "setTransformGumballFlag"
   ],
   "evidenceToolIds": [
-    "addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "canvasPointerDown",
-    "createFastener", "cycleBrushCandidate", "deleteFastener", "editFastener", "engagementAbort", "engagementControlSelect",
-    "engagementInput", "engagementSubmit", "focusSelection", "patchFastener", "patchGrip", "patchPart", "proximityConnect",
-    "registerBrushMesh", "retargetFastener", "rotateSelection", "scaleSelection", "selectSameKind", "setActiveExample",
-    "setBrushPlacementContactTolerance", "setCamera", "setCamera2d", "setCamera3d", "setFillCount", "setGridFactor",
-    "setGridSnapEnabled", "setLodMode", "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation",
-    "setSunIntensity", "setVortexKindWeight", "targetBrushSuggestions", "toggleSun", "translateSelection", "worldPointerDown",
+    "addBrushPart",
+    "addNode",
+    "addPartKind",
+    "applyBoardEvents",
+    "canvasPointerDown",
+    "createFastener",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "deleteFastener",
+    "deleteSelection",
+    "duplicateSelection",
+    "editFastener",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementRepeatLast",
+    "engagementSubmit",
+    "exportFixture",
+    "focusSelection",
+    "importFixture",
+    "openAddPartDialog",
+    "openImportFixture",
+    "patchFastener",
+    "patchGrip",
+    "patchPart",
+    "proximityConnect",
+    "registerBrushMesh",
+    "retargetFastener",
+    "rotateSelection",
+    "scaleSelection",
+    "selectSameKindSelection",
+    "setActiveExample",
+    "setBrushPlacementContactTolerance",
+    "setCamera",
+    "setCamera2d",
+    "setCamera3d",
+    "setChunkSize",
+    "setFillCount",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setGridSpacing",
+    "setGridVisible",
+    "setGripDirection",
+    "setGripKindWeight",
+    "setGripShow",
+    "setLodAutomatic",
+    "setLodDepthVariable",
+    "setLodManual",
+    "setLodMode",
+    "setPartKindWeight",
+    "setProjection",
+    "setProjectionParam",
+    "setProximityRadius",
+    "setSelectableKind",
+    "setSelectionFlag",
+    "setSuggestionOffset",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setTransformGumballFlag",
+    "targetBrushSuggestions",
+    "toggleSun",
+    "translateSelection",
+    "worldPointerDown",
     "worldRelocate"
   ],
-  "capacities": {"rawBytes": 8192, "decodedItems": 512, "workItems": 4096, "outputBytes": 262144, "stepMicros": 7500, "semanticUnitsPerGrant": 1, "checkpointBytes": 120},
+  "capacities": {
+    "rawBytes": 262144,
+    "decodedItems": 16384,
+    "workItems": 4096,
+    "outputBytes": 262144,
+    "stepMicros": 7500,
+    "semanticUnitsPerGrant": 1,
+    "checkpointBytes": 120
+  },
   "semanticCursors": {
-    "addBrushPart": ["catalogEntry", "gripTemplate", "targetPart", "targetGrip", "createPart", "connectGrip", "publishMutation", "closeOwner"],
-    "addBrushObject": ["catalogEntry", "gripTemplate", "targetPart", "targetGrip", "createPart", "connectGrip", "publishMutation", "closeOwner"],
-    "addPartKind": ["catalogEntry", "gripTemplate", "targetPart", "targetGrip", "createPart", "connectGrip", "publishMutation", "closeOwner"],
-    "applyBoardEvents": ["jsonByte", "eventDecode", "eventDispatch", "dragMove", "partScan", "edgeScan", "deleteEdgeScan", "brushStep", "brushMutationTransfer", "brushOwnerClose"],
-    "translateSelection": ["selectionId", "partScan", "mutation"],
-    "rotateSelection": ["selectionId", "partScan", "mutation"],
-    "scaleSelection": ["selectionId", "partScan", "mutation"],
-    "focusSelection": ["selectionId", "partScan", "cameraPublish", "closeOwner"],
-    "setCamera": ["boundedCameraDecode", "exactConfigMutation", "closeOwner"],
-    "setCamera2d": ["boundedCameraDecode", "exactConfigMutation", "closeOwner"],
-    "setCamera3d": ["boundedCameraDecode", "exactConfigMutation", "closeOwner"],
-    "setGridFactor": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
-    "setGridSnapEnabled": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
-    "setLodMode": ["boundedTextDecode", "exactConfigMutation", "closeOwner"],
-    "setSuggestionOffset": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
-    "setBrushPlacementContactTolerance": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
-    "toggleSun": ["boundedSunEdit", "exactConfigMutation", "closeOwner"],
-    "setSunAzimuth": ["boundedSunEdit", "exactConfigMutation", "closeOwner"],
-    "setSunElevation": ["boundedSunEdit", "exactConfigMutation", "closeOwner"],
-    "setSunIntensity": ["boundedSunEdit", "exactConfigMutation", "closeOwner"],
-    "engagementControlSelect": ["boundedCandidateDecode", "exactConfigMutation", "closeOwner"],
-    "engagementInput": ["boundedWindowDecode", "boundedUtf8Value", "exactConfigMutation", "closeOwner"],
-    "engagementAbort": ["inputOwner", "boardUtilityOwner", "worldUtilityOwner", "publishTransfer", "closeOwner"],
-    "engagementSubmit": ["boundedTokenDecode", "boardConfigOwner", "worldConfigOwner", "boardEffectOwner", "worldEffectOwner", "inputOwner", "publish", "closeOwner"],
-    "setObjectKindWeight": ["catalogKindOwner", "inferredPartKindOwner", "currentWeightValidation", "siblingWeightSum", "changedWeightOwner", "normalizedWeightOwner", "publish", "closeOwner"],
-    "setVortexKindWeight": ["catalogKindOwner", "inferredGripKindOwner", "currentWeightValidation", "siblingWeightSum", "changedWeightOwner", "normalizedWeightOwner", "publish", "closeOwner"],
-    "worldRelocate": ["sourcePart", "moveMutation", "existingFastener", "candidatePart", "candidateGrip", "distanceMeasure", "fastenerPublish", "closeOwner"],
-    "cycleBrushCandidate": ["decode", "part", "grip", "fastener", "partKind", "gripKind", "publish", "closeOwner"],
-    "registerBrushMesh": ["decode", "position", "index", "publish", "closeOwner"],
-    "setFillCount": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
-    "targetBrushSuggestions": ["boundedTargetDecode", "instanceLinkWrite", "closeOwner"],
-    "addNode": ["catalogKind", "gripTemplate", "partPublish", "closeOwner"],
-    "canvasPointerDown": ["boundedPointerBoundary", "publishEmpty", "closeOwner"],
-    "createFastener": ["sourcePart", "sourceGrip", "targetPart", "targetGrip", "existingFastener", "compatibility", "publish", "closeOwner"],
-    "deleteFastener": ["fastenerScan", "publish", "closeOwner"],
-    "editFastener": ["fastenerScan", "kindMutation", "geometryMutation", "closeOwner"],
-    "patchFastener": ["selectionId", "fastenerScan", "mutationPublish", "closeOwner"],
-    "patchGrip": ["selectionId", "partScan", "gripScan", "mutationPublish", "closeOwner"],
-    "patchPart": ["selectionId", "partScan", "mutationPublish", "closeOwner"],
-    "proximityConnect": ["movedPart", "candidatePart", "candidateGrip", "existingFastener", "compatibility", "publish", "closeOwner"],
-    "retargetFastener": ["fastenerScan", "sourceGrip", "targetGrip", "duplicateFastener", "compatibility", "disconnect", "connect", "closeOwner"],
-    "selectSameKind": ["boundedSelectionBoundary", "publishEmpty", "closeOwner"],
-    "setActiveExample": ["clearFastener", "clearPart", "label", "domain", "description", "clearCompatibility", "addCompatibility", "catalogs", "addPart", "addFastener", "closeOwner"],
-    "worldPointerDown": ["boundedPointerBoundary", "publishEmpty", "closeOwner"]
+    "addBrushPart": [
+      "catalogEntry",
+      "gripTemplate",
+      "targetPart",
+      "targetGrip",
+      "createPart",
+      "connectGrip",
+      "publishMutation",
+      "closeOwner"
+    ],
+    "addPartKind": [
+      "catalogEntry",
+      "gripTemplate",
+      "targetPart",
+      "targetGrip",
+      "createPart",
+      "connectGrip",
+      "publishMutation",
+      "closeOwner"
+    ],
+    "applyBoardEvents": [
+      "jsonByte",
+      "eventDecode",
+      "eventDispatch",
+      "dragMove",
+      "partScan",
+      "edgeScan",
+      "deleteEdgeScan",
+      "brushStep",
+      "brushMutationTransfer",
+      "brushOwnerClose"
+    ],
+    "translateSelection": [
+      "selectionId",
+      "partScan",
+      "mutation"
+    ],
+    "rotateSelection": [
+      "selectionId",
+      "partScan",
+      "mutation"
+    ],
+    "scaleSelection": [
+      "selectionId",
+      "partScan",
+      "mutation"
+    ],
+    "focusSelection": [
+      "selectionId",
+      "partScan",
+      "cameraPublish",
+      "closeOwner"
+    ],
+    "exportFixture": [
+      "documentRead",
+      "budgetDecision",
+      "publishDownload",
+      "closeOwner"
+    ],
+    "importFixture": [
+      "chunkEnvelope",
+      "chunkStage",
+      "pagedRootParse",
+      "documentAdmission",
+      "publishMutation",
+      "closeOwner"
+    ],
+    "openImportFixture": [
+      "boundedPickerBoundary",
+      "publishEffect",
+      "closeOwner"
+    ],
+    "openAddPartDialog": [
+      "boundedDialogBoundary",
+      "publishEffect",
+      "closeOwner"
+    ],
+    "setCamera": [
+      "boundedCameraDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setCamera2d": [
+      "boundedCameraDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setCamera3d": [
+      "boundedCameraDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setGridFactor": [
+      "boundedScalarDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setGridSnapEnabled": [
+      "boundedScalarDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setLodMode": [
+      "boundedTextDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setSuggestionOffset": [
+      "boundedScalarDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setBrushPlacementContactTolerance": [
+      "boundedScalarDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "toggleSun": [
+      "boundedSunEdit",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setSunAzimuth": [
+      "boundedSunEdit",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setSunElevation": [
+      "boundedSunEdit",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "setSunIntensity": [
+      "boundedSunEdit",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "engagementControlSelect": [
+      "boundedCandidateDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "engagementInput": [
+      "boundedWindowDecode",
+      "boundedUtf8Value",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "engagementAbort": [
+      "inputOwner",
+      "boardUtilityOwner",
+      "worldUtilityOwner",
+      "publishTransfer",
+      "closeOwner"
+    ],
+    "engagementSubmit": [
+      "boundedTokenDecode",
+      "boardConfigOwner",
+      "worldConfigOwner",
+      "boardEffectOwner",
+      "worldEffectOwner",
+      "inputOwner",
+      "publish",
+      "closeOwner"
+    ],
+    "setPartKindWeight": [
+      "catalogKindOwner",
+      "inferredPartKindOwner",
+      "currentWeightValidation",
+      "siblingWeightSum",
+      "changedWeightOwner",
+      "normalizedWeightOwner",
+      "publish",
+      "closeOwner"
+    ],
+    "setGripKindWeight": [
+      "catalogKindOwner",
+      "inferredGripKindOwner",
+      "currentWeightValidation",
+      "siblingWeightSum",
+      "changedWeightOwner",
+      "normalizedWeightOwner",
+      "publish",
+      "closeOwner"
+    ],
+    "worldRelocate": [
+      "sourcePart",
+      "moveMutation",
+      "existingFastener",
+      "candidatePart",
+      "candidateGrip",
+      "distanceMeasure",
+      "fastenerPublish",
+      "closeOwner"
+    ],
+    "cycleBrushCandidate": [
+      "decode",
+      "part",
+      "grip",
+      "fastener",
+      "partKind",
+      "gripKind",
+      "publish",
+      "closeOwner"
+    ],
+    "registerBrushMesh": [
+      "positionPage",
+      "indexPage",
+      "derive",
+      "closeOwner"
+    ],
+    "setFillCount": [
+      "boundedScalarDecode",
+      "exactConfigMutation",
+      "closeOwner"
+    ],
+    "targetBrushSuggestions": [
+      "boundedTargetDecode",
+      "instanceLinkWrite",
+      "closeOwner"
+    ],
+    "addNode": [
+      "catalogKind",
+      "gripTemplate",
+      "partPublish",
+      "closeOwner"
+    ],
+    "canvasPointerDown": [
+      "boundedPointerBoundary",
+      "publishEmpty",
+      "closeOwner"
+    ],
+    "createFastener": [
+      "sourcePart",
+      "sourceGrip",
+      "targetPart",
+      "targetGrip",
+      "existingFastener",
+      "compatibility",
+      "publish",
+      "closeOwner"
+    ],
+    "deleteFastener": [
+      "fastenerScan",
+      "publish",
+      "closeOwner"
+    ],
+    "editFastener": [
+      "fastenerScan",
+      "kindMutation",
+      "geometryMutation",
+      "closeOwner"
+    ],
+    "patchFastener": [
+      "selectionId",
+      "fastenerScan",
+      "mutationPublish",
+      "closeOwner"
+    ],
+    "patchGrip": [
+      "selectionId",
+      "partScan",
+      "gripScan",
+      "mutationPublish",
+      "closeOwner"
+    ],
+    "patchPart": [
+      "selectionId",
+      "partScan",
+      "mutationPublish",
+      "closeOwner"
+    ],
+    "proximityConnect": [
+      "movedPart",
+      "candidatePart",
+      "candidateGrip",
+      "existingFastener",
+      "compatibility",
+      "publish",
+      "closeOwner"
+    ],
+    "retargetFastener": [
+      "fastenerScan",
+      "sourceGrip",
+      "targetGrip",
+      "duplicateFastener",
+      "compatibility",
+      "disconnect",
+      "connect",
+      "closeOwner"
+    ],
+    "setActiveExample": [
+      "capacityGate",
+      "clearFastener",
+      "clearPart",
+      "label",
+      "domain",
+      "description",
+      "clearCompatibility",
+      "addCompatibility",
+      "catalogs",
+      "addPart",
+      "addFastener",
+      "closeOwner"
+    ],
+    "worldPointerDown": [
+      "boundedPointerBoundary",
+      "publishEmpty",
+      "closeOwner"
+    ],
+    "setGridVisible": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setGridSpacing": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setGripShow": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setGripDirection": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setSelectableKind": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setLodAutomatic": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setLodDepthVariable": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setLodManual": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setTransformGumballFlag": [
+      "boundedFlagDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setProjection": [
+      "boundedProjectionDecode",
+      "posePublish",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "setProjectionParam": [
+      "boundedProjectionDecode",
+      "exactWindowConfigMutation",
+      "closeOwner"
+    ],
+    "selectSameKindSelection": [
+      "boundedSelectionBoundary",
+      "interactionWrite",
+      "closeOwner"
+    ]
   },
   "hostileSourceMutations": [
-    {"id": "boardOldReducer", "replace": "Puzzle5dBoardEventsWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "boardMissingByteCursor", "remove": "self.scan_one(source)?", "expected": "rejected"},
-    {"id": "boardMissingPartCursor", "remove": "Puzzle5dBoardEventsStage::FindMovePart", "expected": "rejected"},
-    {"id": "boardMissingEdgeCursor", "remove": "Puzzle5dBoardEventsStage::ScanEdge", "expected": "rejected"},
-    {"id": "boardMissingDeleteCursor", "remove": "Puzzle5dBoardEventsStage::ScanDeleteEdges", "expected": "rejected"},
-    {"id": "boardMissingBrushClose", "remove": "Puzzle5dBoardEventsStage::CloseBrush", "expected": "rejected"},
-    {"id": "focusOldReducer", "replace": "Puzzle5dFocusSelectionWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "focusMissingSelectionCursor", "remove": "Puzzle5dFocusSelectionStage::Selection", "expected": "rejected"},
-    {"id": "focusMissingPartCursor", "remove": "Puzzle5dFocusSelectionStage::Parts", "expected": "rejected"},
-    {"id": "focusMissingPublishBoundary", "remove": "Puzzle5dFocusSelectionStage::Publish", "expected": "rejected"},
-    {"id": "scalarConfigOldReducer", "replace": "Puzzle5dScalarConfigWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "scalarConfigMissingCameraMutation", "remove": "Puzzle5dConfigMutation::SetCamera2d", "expected": "rejected"},
-    {"id": "scalarConfigMissingGridMutation", "remove": "Puzzle5dConfigMutation::SetGridFactor", "expected": "rejected"},
-    {"id": "scalarConfigMissingSunMutation", "remove": "Puzzle5dConfigMutation::SetSun", "expected": "rejected"},
-    {"id": "engagementControlMissingMutation", "remove": "Puzzle5dConfigMutation::SetBrushCandidateIndex", "expected": "rejected"},
-    {"id": "engagementInputMissingMutation", "remove": "Puzzle5dConfigMutation::SetEngagementInput", "expected": "rejected"},
-    {"id": "addPartKindOldReducer", "replace": "Puzzle5dAddBrushPartWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "overlapMissingMutation", "remove": "Puzzle5dConfigMutation::SetContactTolerance", "expected": "rejected"},
-    {"id": "kindWeightOldReducer", "replace": "Puzzle5dKindWeightWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "kindWeightCatalogCursorRemoved", "remove": "Puzzle5dKindWeightStage::Catalog", "expected": "rejected"},
-    {"id": "kindWeightPartInferenceRemoved", "remove": "Puzzle5dKindWeightStage::InferParts", "expected": "rejected"},
-    {"id": "kindWeightGripInferenceRemoved", "remove": "Puzzle5dKindWeightStage::InferGrips", "expected": "rejected"},
-    {"id": "kindWeightSiblingSumRemoved", "remove": "Puzzle5dKindWeightStage::SumOthers", "expected": "rejected"},
-    {"id": "kindWeightBuildCursorRemoved", "remove": "Puzzle5dKindWeightStage::Build", "expected": "rejected"},
-    {"id": "kindWeightObjectMutationRemoved", "remove": "Puzzle5dConfigMutation::SetObjectKindWeights", "expected": "rejected"},
-    {"id": "kindWeightVortexMutationRemoved", "remove": "Puzzle5dConfigMutation::SetVortexKindWeights", "expected": "rejected"},
-    {"id": "worldRelocateOldReducer", "replace": "Puzzle5dWorldRelocateWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
-    {"id": "worldRelocateExistingScanRemoved", "remove": "Puzzle5dWorldRelocateStage::ExistingFasteners", "expected": "rejected"},
-    {"id": "worldRelocatePartCursorRemoved", "remove": "Puzzle5dWorldRelocateStage::CandidatePart", "expected": "rejected"},
-    {"id": "worldRelocateGripCursorRemoved", "remove": "Puzzle5dWorldRelocateStage::CandidateGrip", "expected": "rejected"},
-    {"id": "worldRelocatePublishBoundaryRemoved", "remove": "Puzzle5dWorldRelocateStage::PublishFastener", "expected": "rejected"},
-    {"id": "worldRelocateGripCapRemoved", "remove": "PUZZLE5D_RELOCATE_GRIPS_PER_PART", "expected": "rejected"}
+    {
+      "id": "boardOldReducer",
+      "replace": "Puzzle5dBoardEventsWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "boardMissingByteCursor",
+      "remove": "self.scan_one(source)?",
+      "expected": "rejected"
+    },
+    {
+      "id": "boardMissingPartCursor",
+      "remove": "Puzzle5dBoardEventsStage::FindMovePart",
+      "expected": "rejected"
+    },
+    {
+      "id": "boardMissingEdgeCursor",
+      "remove": "Puzzle5dBoardEventsStage::ScanEdge",
+      "expected": "rejected"
+    },
+    {
+      "id": "boardMissingDeleteCursor",
+      "remove": "Puzzle5dBoardEventsStage::ScanDeleteEdges",
+      "expected": "rejected"
+    },
+    {
+      "id": "boardMissingBrushClose",
+      "remove": "Puzzle5dBoardEventsStage::CloseBrush",
+      "expected": "rejected"
+    },
+    {
+      "id": "focusOldReducer",
+      "replace": "Puzzle5dFocusSelectionWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "focusMissingSelectionCursor",
+      "remove": "Puzzle5dFocusSelectionStage::Selection",
+      "expected": "rejected"
+    },
+    {
+      "id": "focusMissingPartCursor",
+      "remove": "Puzzle5dFocusSelectionStage::Parts",
+      "expected": "rejected"
+    },
+    {
+      "id": "focusMissingPublishBoundary",
+      "remove": "Puzzle5dFocusSelectionStage::Publish",
+      "expected": "rejected"
+    },
+    {
+      "id": "scalarConfigOldReducer",
+      "replace": "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "scalarConfigMissingWindowPublication",
+      "remove": "window_ownership::addressed_config(view, window_after)",
+      "expected": "rejected"
+    },
+    {
+      "id": "scalarConfigMissingWindowProjection",
+      "remove": "window_ownership::config_from_runtime(&scene.runtime)",
+      "expected": "rejected"
+    },
+    {
+      "id": "scalarConfigMissingSunEdit",
+      "remove": "apply_world3d_sun_action",
+      "expected": "rejected"
+    },
+    {
+      "id": "engagementControlMissingMutation",
+      "remove": "Puzzle5dConfigMutation::SetBrushCandidateIndex",
+      "expected": "rejected"
+    },
+    {
+      "id": "engagementInputMissingMutation",
+      "remove": "Puzzle5dConfigMutation::SetEngagementInput",
+      "expected": "rejected"
+    },
+    {
+      "id": "addPartKindOldReducer",
+      "replace": "Puzzle5dAddBrushPartWork::new(tool_id)",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "overlapMissingMutation",
+      "remove": "window_ownership::shared(&scene.runtime)",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightOldReducer",
+      "replace": "Puzzle5dKindWeightWork::new(tool_id)",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightCatalogCursorRemoved",
+      "remove": "Puzzle5dKindWeightStage::Catalog",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightPartInferenceRemoved",
+      "remove": "Puzzle5dKindWeightStage::InferParts",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightGripInferenceRemoved",
+      "remove": "Puzzle5dKindWeightStage::InferGrips",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightSiblingSumRemoved",
+      "remove": "Puzzle5dKindWeightStage::SumOthers",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightBuildCursorRemoved",
+      "remove": "Puzzle5dKindWeightStage::Build",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightPartMutationRemoved",
+      "remove": "Puzzle5dConfigMutation::SetObjectKindWeights",
+      "expected": "rejected"
+    },
+    {
+      "id": "kindWeightGripMutationRemoved",
+      "remove": "Puzzle5dConfigMutation::SetVortexKindWeights",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocateOldReducer",
+      "replace": "Puzzle5dWorldRelocateWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocateExistingScanRemoved",
+      "remove": "Puzzle5dWorldRelocateStage::ExistingFasteners",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocatePartCursorRemoved",
+      "remove": "Puzzle5dWorldRelocateStage::CandidatePart",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocateGripCursorRemoved",
+      "remove": "Puzzle5dWorldRelocateStage::CandidateGrip",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocatePublishBoundaryRemoved",
+      "remove": "Puzzle5dWorldRelocateStage::PublishFastener",
+      "expected": "rejected"
+    },
+    {
+      "id": "worldRelocateGripCapRemoved",
+      "remove": "PUZZLE5D_RELOCATE_GRIPS_PER_PART",
+      "expected": "rejected"
+    }
   ],
   "locales": {
-    "en": {"progress": ["Reading command page", "Validating command capacity", "Applying command", "Publishing result"], "cancel": "Cancel command", "status": "Command status"},
-    "de": {"progress": ["Befehlsseite wird gelesen", "Befehlskapazität wird geprüft", "Befehl wird angewendet", "Ergebnis wird veröffentlicht"], "cancel": "Befehl abbrechen", "status": "Befehlsstatus"}
+    "en": {
+      "progress": [
+        "Reading command page",
+        "Validating command capacity",
+        "Applying command",
+        "Publishing result"
+      ],
+      "cancel": "Cancel command",
+      "status": "Command status"
+    },
+    "de": {
+      "progress": [
+        "Befehlsseite wird gelesen",
+        "Befehlskapazität wird geprüft",
+        "Befehl wird angewendet",
+        "Ergebnis wird veröffentlicht"
+      ],
+      "cancel": "Befehl abbrechen",
+      "status": "Befehlsstatus"
+    }
   },
   "vectors": [
-    {"id": "zero", "rawBytes": 0, "control": "poll", "expected": "malformedFault", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "max", "rawBytes": 8192, "padding": "jsonWhitespace", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "maxPlusOne", "rawBytes": 8193, "control": "admit", "expected": "rejectedUnchanged", "fingerprint": "8193:0:0:0:0:0"},
-    {"id": "malformed", "raw": "{", "control": "poll", "expected": "malformedFault", "fingerprint": "1:0:0:0:0:0"},
-    {"id": "staleGeneration", "authority": {"operation": 7, "generation": 1, "presentedGeneration": 0}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "wrongOperation", "authority": {"operation": 7, "presentedOperation": 8, "generation": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "abaGeneration", "authority": {"operation": 7, "generation": 3, "presentedGeneration": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "cancelWirePage", "boundary": "wirePage", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelWireByte", "boundary": "wireByte", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelPreflight", "boundary": "preflight", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelWork", "boundary": "work", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelPublish", "boundary": "publish", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "faultWork", "boundary": "work", "control": "faultClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
-    {"id":"checkpointEmpty", "checkpointBytes":0, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointSingle", "checkpointBytes":1, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointMax", "checkpointBytes":120, "control":"checkpointRestoreResumeAckClose", "expected":"sameSemanticDigestTerminalEmpty"},
-    {"id":"checkpointMaxPlusOne", "checkpointBytes":121, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointCorrupt", "checkpointBytes":120, "mutation":"magic", "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointInterruptedClose", "checkpointBytes":120, "boundary":"workProgress", "closeGrant":{"items":1,"bytes":16384}, "control":"checkpointRestoreCancelIncrementalClose", "expected":"terminalEmptyExactHandback"}
-    ,{"id": "boardEventOrder", "toolId": "applyBoardEvents", "input": {"eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"}, "expectedMutations": ["movePart2d:teil-ä:3:5", "disconnectGrips:kante-ß"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "boardCancelEveryBoundary", "toolId": "applyBoardEvents", "boundaries": ["jsonByte", "eventDecode", "eventDispatch", "partScan", "edgeScan", "deleteEdgeScan", "brushStep", "brushMutationTransfer", "brushOwnerClose"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "boardFaultEveryBoundary", "toolId": "applyBoardEvents", "boundaries": ["jsonByte", "eventDecode", "eventDispatch", "partScan", "edgeScan", "deleteEdgeScan", "brushStep", "brushMutationTransfer", "brushOwnerClose"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "focusSelectionOrder", "toolId": "focusSelection", "selection": ["teil-ä", "teil-ß"], "parts": [{"id": "teil-ä", "2d": {"x": 2, "y": 4}, "3d": {"origin": [1, 3, 5]}}, {"id": "teil-ß", "2d": {"x": 6, "y": 8}, "3d": {"origin": [5, 7, 9]}}], "expectedCamera": {"2d": {"x": 4, "y": 6}, "3dTarget": [3, 5, 7]}, "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "focusCancelEveryBoundary", "toolId": "focusSelection", "boundaries": ["selectionId", "partScan", "cameraPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "focusFaultEveryBoundary", "toolId": "focusSelection", "boundaries": ["selectionId", "partScan", "cameraPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setCamera2dExact", "toolId": "setCamera2d", "input": {"camera": {"x": 2.5, "y": -3.5, "zoom": 4}}, "expectedConfigMutation": {"SetCamera2d": {"camera": {"x": 2.5, "y": -3.5, "zoom": 4}}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setCamera3dExact", "toolId": "setCamera3d", "input": {"camera": {"position": [1,2,3], "target": [4,5,6], "zoom": 2}}, "expectedConfigMutation": {"SetCamera3d": {"camera": {"position": [1,2,3], "target": [4,5,6], "zoom": 2}}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setCameraSurfaceExact", "toolId": "setCamera", "input": {"surfaceId": "puzzle5d-board", "camera": {"x": 7, "y": 8, "zoom": 3}}, "expectedMutationKind": "SetCamera2d", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setGridFactorExact", "toolId": "setGridFactor", "input": {"value": 2.25}, "expectedConfigMutation": {"SetGridFactor": {"value": 2.25}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setGridSnapExact", "toolId": "setGridSnapEnabled", "input": {"enabled": true}, "expectedConfigMutation": {"SetGridSnapEnabled": {"enabled": true}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setLodModeUtf8", "toolId": "setLodMode", "input": {"mode": "präzise"}, "expectedConfigMutation": {"SetLodMode": {"mode": "präzise"}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setSuggestionOffsetClamp", "toolId": "setSuggestionOffset", "input": {"distance": 161}, "expectedConfigMutation": {"SetSuggestionOffset": {"distance": 160}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "toggleSunExact", "toolId": "toggleSun", "input": {"pressed": true}, "expectedMutationKind": "SetSun", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setSunAzimuthExact", "toolId": "setSunAzimuth", "input": {"value": 45}, "expectedMutationKind": "SetSun", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setSunElevationExact", "toolId": "setSunElevation", "input": {"value": 30}, "expectedMutationKind": "SetSun", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setSunIntensityExact", "toolId": "setSunIntensity", "input": {"value": 1.5}, "expectedMutationKind": "SetSun", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "scalarConfigCancelEveryBoundary", "toolIds": ["setCamera","setCamera2d","setCamera3d","setGridFactor","setGridSnapEnabled","setLodMode","setSuggestionOffset","toggleSun","setSunAzimuth","setSunElevation","setSunIntensity"], "boundaries": ["boundedDecode","exactConfigMutation","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "scalarConfigFaultEveryBoundary", "toolIds": ["setCamera","setCamera2d","setCamera3d","setGridFactor","setGridSnapEnabled","setLodMode","setSuggestionOffset","toggleSun","setSunAzimuth","setSunElevation","setSunIntensity"], "boundaries": ["boundedDecode","exactConfigMutation","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementControlSelectExact", "toolId": "engagementControlSelect", "input": {"id": "puzzle5d.brush.candidate.7"}, "expectedConfigMutation": {"SetBrushCandidateIndex": {"index": 7}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementInputUtf8", "toolId": "engagementInput", "input": {"window": "puzzle5d-board", "value": "wähle teil-ß"}, "expectedConfigMutation": {"SetEngagementInput": {"windowId": "puzzle5d-board", "value": "wähle teil-ß"}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementAbortBoard", "toolId": "engagementAbort", "input": {"window": "puzzle5d-board"}, "expectedConfigMutation": {"SetEngagementInput": {"windowId": "puzzle5d-board", "value": ""}}, "expectedEffects": ["puzzle5d-board:select","puzzle5d-world:select"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementAbortWorld", "toolId": "engagementAbort", "input": {"window": "puzzle5d-world"}, "expectedConfigMutation": {"SetEngagementInput": {"windowId": "puzzle5d-world", "value": ""}}, "expectedEffects": ["puzzle5d-board:move","puzzle5d-world:move"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementAbortCancelEveryBoundary", "toolId": "engagementAbort", "boundaries": ["inputOwner","boardUtilityOwner","worldUtilityOwner","publishTransfer","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementAbortFaultEveryBoundary", "toolId": "engagementAbort", "boundaries": ["inputOwner","boardUtilityOwner","worldUtilityOwner","publishTransfer","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "addPartKindUtf8", "toolId": "addPartKind", "input": {"partKind": "Stütze-ß"}, "expectedStages": ["catalogEntry","gripTemplate","createPart","publishMutation"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "addPartKindGripMax", "toolId": "addPartKind", "gripTemplates": 512, "expected": "admitted"},
-    {"id": "addPartKindGripMaxPlusOne", "toolId": "addPartKind", "gripTemplates": 513, "expected": "faultUnchanged"},
-    {"id": "addPartKindCancelEveryBoundary", "toolId": "addPartKind", "boundaries": ["catalogEntry","gripTemplate","targetPart","targetGrip","createPart","connectGrip","publishMutation","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "addPartKindFaultEveryBoundary", "toolId": "addPartKind", "boundaries": ["catalogEntry","gripTemplate","targetPart","targetGrip","createPart","connectGrip","publishMutation","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "setContactToleranceExact", "toolId": "setBrushPlacementContactTolerance", "input": {"value": 1.5}, "expectedConfigMutation": {"SetContactTolerance": {"value": 1}}, "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "objectKindWeightExact", "toolId": "setObjectKindWeight", "input": {"kindId":"teil-ä","value":0.6}, "catalogIds": ["teil-ä","teil-ß"], "initialWeights": {"teil-ä":0.5,"teil-ß":0.5}, "expectedWeights": {"teil-ä":0.6,"teil-ß":0.4}, "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "vortexKindWeightExact", "toolId": "setVortexKindWeight", "input": {"kindId":"griff-ü","value":0.3}, "catalogIds": ["griff-ü","griff-ß"], "initialWeights": {"griff-ü":0.5,"griff-ß":0.5}, "expectedWeights": {"griff-ü":0.3,"griff-ß":0.7}, "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "kindWeightCatalogMax", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "catalogKinds": 512, "expected": "admitted"},
-    {"id": "kindWeightCatalogMaxPlusOne", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "catalogKinds": 513, "expected": "faultUnchanged"},
-    {"id": "kindWeightCancelEveryBoundary", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "boundaries": ["catalogKindOwner","inferredPartKindOwner","inferredGripKindOwner","currentWeightValidation","siblingWeightSum","changedWeightOwner","normalizedWeightOwner","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "kindWeightFaultEveryBoundary", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "boundaries": ["catalogKindOwner","inferredPartKindOwner","inferredGripKindOwner","currentWeightValidation","siblingWeightSum","changedWeightOwner","normalizedWeightOwner","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementSubmitBoard", "toolId": "engagementSubmit", "input": {"window":"puzzle5d-board","value":"brush"}, "expectedMutations": ["SetEngagementInput:puzzle5d-board:"], "expectedEffects": ["puzzle5d-board:brush","puzzle5d-world:brush"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementSubmitWorldSelect", "toolId": "engagementSubmit", "input": {"window":"puzzle5d-world","value":"select"}, "expectedMutations": ["SetEngagementInput:puzzle5d-world:"], "expectedEffects": ["puzzle5d-board:move","puzzle5d-world:move"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementSubmitCancelEveryBoundary", "toolId": "engagementSubmit", "boundaries": ["boundedTokenDecode","boardEffectOwner","worldEffectOwner","inputOwner","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "engagementSubmitFaultEveryBoundary", "toolId": "engagementSubmit", "boundaries": ["boundedTokenDecode","boardEffectOwner","worldEffectOwner","inputOwner","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "worldRelocateUtf8", "toolId": "worldRelocate", "input": {"objectId": "teil-ä", "position": [1,2,3]}, "nearby": {"partId": "teil-ß", "gripId": "griff-ü"}, "expectedOrder": ["movePart3d:teil-ä:[1,2,3]", "connectGrips:teil-ß:griff-ü:teil-ä"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "worldRelocateGripMax", "toolId": "worldRelocate", "gripsPerPart": 64, "expected": "admitted"},
-    {"id": "worldRelocateGripMaxPlusOne", "toolId": "worldRelocate", "gripsPerPart": 65, "expected": "faultUnchanged"},
-    {"id": "worldRelocateCancelEveryBoundary", "toolId": "worldRelocate", "boundaries": ["sourcePart","moveMutation","existingFastener","candidatePart","candidateGrip","distanceMeasure","fastenerPublish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "worldRelocateFaultEveryBoundary", "toolId": "worldRelocate", "boundaries": ["sourcePart","moveMutation","existingFastener","candidatePart","candidateGrip","distanceMeasure","fastenerPublish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    {
+      "id": "zero",
+      "rawBytes": 0,
+      "control": "poll",
+      "expected": "malformedFault",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "max",
+      "rawBytes": 262144,
+      "padding": "jsonWhitespace",
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "maxPlusOne",
+      "rawBytes": 262145,
+      "control": "admit",
+      "expected": "rejectedUnchanged",
+      "fingerprint": "8193:0:0:0:0:0"
+    },
+    {
+      "id": "malformed",
+      "raw": "{",
+      "control": "poll",
+      "expected": "malformedFault",
+      "fingerprint": "1:0:0:0:0:0"
+    },
+    {
+      "id": "staleGeneration",
+      "authority": {
+        "operation": 7,
+        "generation": 1,
+        "presentedGeneration": 0
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "wrongOperation",
+      "authority": {
+        "operation": 7,
+        "presentedOperation": 8,
+        "generation": 1
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "abaGeneration",
+      "authority": {
+        "operation": 7,
+        "generation": 3,
+        "presentedGeneration": 1
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "cancelWirePage",
+      "boundary": "wirePage",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelWireByte",
+      "boundary": "wireByte",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelPreflight",
+      "boundary": "preflight",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelWork",
+      "boundary": "work",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelPublish",
+      "boundary": "publish",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "faultWork",
+      "boundary": "work",
+      "control": "faultClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "retry",
+      "control": "faultRetryAckClose",
+      "expected": "onePublicationTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "close",
+      "closeGrant": {
+        "items": 1,
+        "bytes": 1
+      },
+      "expected": "incrementalTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "replay",
+      "control": "runAckReplayAckClose",
+      "expected": "sameSemanticDigest",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "checkpointEmpty",
+      "checkpointBytes": 0,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointSingle",
+      "checkpointBytes": 1,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointMax",
+      "checkpointBytes": 120,
+      "control": "checkpointRestoreResumeAckClose",
+      "expected": "sameSemanticDigestTerminalEmpty"
+    },
+    {
+      "id": "checkpointMaxPlusOne",
+      "checkpointBytes": 121,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointCorrupt",
+      "checkpointBytes": 120,
+      "mutation": "magic",
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointInterruptedClose",
+      "checkpointBytes": 120,
+      "boundary": "workProgress",
+      "closeGrant": {
+        "items": 1,
+        "bytes": 16384
+      },
+      "control": "checkpointRestoreCancelIncrementalClose",
+      "expected": "terminalEmptyExactHandback"
+    },
+    {
+      "id": "boardEventOrder",
+      "toolId": "applyBoardEvents",
+      "input": {
+        "eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"
+      },
+      "expectedMutations": [
+        "movePart2d:teil-ä:3:5",
+        "disconnectGrips:kante-ß"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "boardCancelEveryBoundary",
+      "toolId": "applyBoardEvents",
+      "boundaries": [
+        "jsonByte",
+        "eventDecode",
+        "eventDispatch",
+        "partScan",
+        "edgeScan",
+        "deleteEdgeScan",
+        "brushStep",
+        "brushMutationTransfer",
+        "brushOwnerClose"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "boardFaultEveryBoundary",
+      "toolId": "applyBoardEvents",
+      "boundaries": [
+        "jsonByte",
+        "eventDecode",
+        "eventDispatch",
+        "partScan",
+        "edgeScan",
+        "deleteEdgeScan",
+        "brushStep",
+        "brushMutationTransfer",
+        "brushOwnerClose"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "focusSelectionOrder",
+      "toolId": "focusSelection",
+      "selection": [
+        "teil-ä",
+        "teil-ß"
+      ],
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 2,
+            "y": 4
+          },
+          "3d": {
+            "origin": [
+              1,
+              3,
+              5
+            ]
+          }
+        },
+        {
+          "id": "teil-ß",
+          "2d": {
+            "x": 6,
+            "y": 8
+          },
+          "3d": {
+            "origin": [
+              5,
+              7,
+              9
+            ]
+          }
+        }
+      ],
+      "expectedCamera": {
+        "2d": {
+          "x": 4,
+          "y": 6
+        },
+        "3dTarget": [
+          3,
+          5,
+          7
+        ]
+      },
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "focusCancelEveryBoundary",
+      "toolId": "focusSelection",
+      "boundaries": [
+        "selectionId",
+        "partScan",
+        "cameraPublish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "focusFaultEveryBoundary",
+      "toolId": "focusSelection",
+      "boundaries": [
+        "selectionId",
+        "partScan",
+        "cameraPublish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setCamera2dExact",
+      "toolId": "setCamera2d",
+      "input": {
+        "camera": {
+          "x": 2.5,
+          "y": -3.5,
+          "zoom": 4
+        }
+      },
+      "expectedWindowConfigField": {
+        "camera2d": {
+          "x": 2.5,
+          "y": -3.5,
+          "zoom": 4
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setCamera3dExact",
+      "toolId": "setCamera3d",
+      "input": {
+        "camera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            4,
+            5,
+            6
+          ],
+          "zoom": 2
+        }
+      },
+      "expectedWindowConfigField": {
+        "camera3d": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            4,
+            5,
+            6
+          ],
+          "zoom": 2
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setCameraSurfaceExact",
+      "toolId": "setCamera",
+      "input": {
+        "surfaceId": "puzzle.5d.play.2d",
+        "camera": {
+          "x": 7,
+          "y": 8,
+          "zoom": 3
+        }
+      },
+      "expectedWindowConfigField": {
+        "camera2d": {
+          "x": 7,
+          "y": 8,
+          "zoom": 3
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setGridFactorExact",
+      "toolId": "setGridFactor",
+      "input": {
+        "value": 2.25
+      },
+      "expectedWindowConfigField": {
+        "gridFactor": 2.25
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setGridSnapExact",
+      "toolId": "setGridSnapEnabled",
+      "input": {
+        "pressed": false
+      },
+      "expectedWindowConfigField": {
+        "gridSnapEnabled": false
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setLodModeUtf8",
+      "toolId": "setLodMode",
+      "input": {
+        "value": "präzise"
+      },
+      "expectedWindowConfigField": {
+        "lodMode": "präzise"
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setSuggestionOffsetClamp",
+      "toolId": "setSuggestionOffset",
+      "input": {
+        "value": 161
+      },
+      "expectedWindowConfigField": {
+        "suggestionOffset": 160
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "toggleSunExact",
+      "toolId": "toggleSun",
+      "input": {},
+      "expectedWindowConfigField": {
+        "sun": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setSunAzimuthExact",
+      "toolId": "setSunAzimuth",
+      "input": {
+        "value": 45
+      },
+      "expectedWindowConfigField": {
+        "sun": {
+          "azimuth": 45
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setSunElevationExact",
+      "toolId": "setSunElevation",
+      "input": {
+        "value": 30
+      },
+      "expectedWindowConfigField": {
+        "sun": {
+          "elevation": 30
+        }
+      }
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setSunIntensityExact",
+      "toolId": "setSunIntensity",
+      "input": {
+        "value": 1.5
+      },
+      "expectedWindowConfigField": {
+        "sun": {
+          "intensity": 1.5
+        }
+      }
+    },
+    {
+      "id": "scalarConfigCancelEveryBoundary",
+      "toolIds": [
+        "setCamera",
+        "setCamera2d",
+        "setCamera3d",
+        "setGridFactor",
+        "setGridSnapEnabled",
+        "setLodMode",
+        "setSuggestionOffset",
+        "toggleSun",
+        "setSunAzimuth",
+        "setSunElevation",
+        "setSunIntensity"
+      ],
+      "boundaries": [
+        "boundedDecode",
+        "exactConfigMutation",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "scalarConfigFaultEveryBoundary",
+      "toolIds": [
+        "setCamera",
+        "setCamera2d",
+        "setCamera3d",
+        "setGridFactor",
+        "setGridSnapEnabled",
+        "setLodMode",
+        "setSuggestionOffset",
+        "toggleSun",
+        "setSunAzimuth",
+        "setSunElevation",
+        "setSunIntensity"
+      ],
+      "boundaries": [
+        "boundedDecode",
+        "exactConfigMutation",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementControlSelectExact",
+      "toolId": "engagementControlSelect",
+      "input": {
+        "id": "puzzle5d.brush.candidate.7"
+      },
+      "expectedConfigMutation": {
+        "SetBrushCandidateIndex": {
+          "index": 7
+        }
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementInputUtf8",
+      "toolId": "engagementInput",
+      "input": {
+        "window": "puzzle5d-board",
+        "value": "wähle teil-ß"
+      },
+      "expectedConfigMutation": {
+        "SetEngagementInput": {
+          "windowId": "puzzle5d-board",
+          "value": "wähle teil-ß"
+        }
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementAbortBoard",
+      "toolId": "engagementAbort",
+      "input": {
+        "window": "puzzle5d-board"
+      },
+      "expectedConfigMutation": {
+        "SetEngagementInput": {
+          "windowId": "puzzle5d-board",
+          "value": ""
+        }
+      },
+      "expectedEffects": [
+        "puzzle5d-board:select",
+        "puzzle5d-world:select"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementAbortWorld",
+      "toolId": "engagementAbort",
+      "input": {
+        "window": "puzzle5d-world"
+      },
+      "expectedConfigMutation": {
+        "SetEngagementInput": {
+          "windowId": "puzzle5d-world",
+          "value": ""
+        }
+      },
+      "expectedEffects": [
+        "puzzle5d-board:move",
+        "puzzle5d-world:move"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementAbortCancelEveryBoundary",
+      "toolId": "engagementAbort",
+      "boundaries": [
+        "inputOwner",
+        "boardUtilityOwner",
+        "worldUtilityOwner",
+        "publishTransfer",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementAbortFaultEveryBoundary",
+      "toolId": "engagementAbort",
+      "boundaries": [
+        "inputOwner",
+        "boardUtilityOwner",
+        "worldUtilityOwner",
+        "publishTransfer",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addPartKindUtf8",
+      "toolId": "addPartKind",
+      "input": {
+        "partKind": "Stütze-ß"
+      },
+      "expectedStages": [
+        "catalogEntry",
+        "gripTemplate",
+        "createPart",
+        "publishMutation"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addPartKindGripMax",
+      "toolId": "addPartKind",
+      "gripTemplates": 512,
+      "expected": "admitted"
+    },
+    {
+      "id": "addPartKindGripMaxPlusOne",
+      "toolId": "addPartKind",
+      "gripTemplates": 513,
+      "expected": "faultUnchanged"
+    },
+    {
+      "id": "addPartKindCancelEveryBoundary",
+      "toolId": "addPartKind",
+      "boundaries": [
+        "catalogEntry",
+        "gripTemplate",
+        "targetPart",
+        "targetGrip",
+        "createPart",
+        "connectGrip",
+        "publishMutation",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addPartKindFaultEveryBoundary",
+      "toolId": "addPartKind",
+      "boundaries": [
+        "catalogEntry",
+        "gripTemplate",
+        "targetPart",
+        "targetGrip",
+        "createPart",
+        "connectGrip",
+        "publishMutation",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0",
+      "id": "setContactToleranceExact",
+      "toolId": "setBrushPlacementContactTolerance",
+      "input": {
+        "value": 1.5
+      },
+      "expectedAppConfigField": {
+        "contactTolerance": 1.0
+      }
+    },
+    {
+      "id": "partKindWeightExact",
+      "toolId": "setPartKindWeight",
+      "input": {
+        "kindId": "teil-ä",
+        "value": 0.6
+      },
+      "catalogIds": [
+        "teil-ä",
+        "teil-ß"
+      ],
+      "initialWeights": {
+        "teil-ä": 0.5,
+        "teil-ß": 0.5
+      },
+      "expectedWeights": {
+        "teil-ä": 0.6,
+        "teil-ß": 0.4
+      },
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "gripKindWeightExact",
+      "toolId": "setGripKindWeight",
+      "input": {
+        "kindId": "griff-ü",
+        "value": 0.3
+      },
+      "catalogIds": [
+        "griff-ü",
+        "griff-ß"
+      ],
+      "initialWeights": {
+        "griff-ü": 0.5,
+        "griff-ß": 0.5
+      },
+      "expectedWeights": {
+        "griff-ü": 0.3,
+        "griff-ß": 0.7
+      },
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "kindWeightCatalogMax",
+      "toolIds": [
+        "setPartKindWeight",
+        "setGripKindWeight"
+      ],
+      "catalogKinds": 512,
+      "expected": "admitted"
+    },
+    {
+      "id": "kindWeightCatalogMaxPlusOne",
+      "toolIds": [
+        "setPartKindWeight",
+        "setGripKindWeight"
+      ],
+      "catalogKinds": 513,
+      "expected": "faultUnchanged"
+    },
+    {
+      "id": "kindWeightCancelEveryBoundary",
+      "toolIds": [
+        "setPartKindWeight",
+        "setGripKindWeight"
+      ],
+      "boundaries": [
+        "catalogKindOwner",
+        "inferredPartKindOwner",
+        "inferredGripKindOwner",
+        "currentWeightValidation",
+        "siblingWeightSum",
+        "changedWeightOwner",
+        "normalizedWeightOwner",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "kindWeightFaultEveryBoundary",
+      "toolIds": [
+        "setPartKindWeight",
+        "setGripKindWeight"
+      ],
+      "boundaries": [
+        "catalogKindOwner",
+        "inferredPartKindOwner",
+        "inferredGripKindOwner",
+        "currentWeightValidation",
+        "siblingWeightSum",
+        "changedWeightOwner",
+        "normalizedWeightOwner",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementSubmitBoard",
+      "toolId": "engagementSubmit",
+      "input": {
+        "window": "puzzle5d-board",
+        "value": "brush"
+      },
+      "expectedMutations": [
+        "SetEngagementInput:puzzle5d-board:"
+      ],
+      "expectedEffects": [
+        "puzzle5d-board:brush",
+        "puzzle5d-world:brush"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementSubmitWorldSelect",
+      "toolId": "engagementSubmit",
+      "input": {
+        "window": "puzzle5d-world",
+        "value": "select"
+      },
+      "expectedMutations": [
+        "SetEngagementInput:puzzle5d-world:"
+      ],
+      "expectedEffects": [
+        "puzzle5d-board:move",
+        "puzzle5d-world:move"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementSubmitCancelEveryBoundary",
+      "toolId": "engagementSubmit",
+      "boundaries": [
+        "boundedTokenDecode",
+        "boardEffectOwner",
+        "worldEffectOwner",
+        "inputOwner",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "engagementSubmitFaultEveryBoundary",
+      "toolId": "engagementSubmit",
+      "boundaries": [
+        "boundedTokenDecode",
+        "boardEffectOwner",
+        "worldEffectOwner",
+        "inputOwner",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "worldRelocateUtf8",
+      "toolId": "worldRelocate",
+      "input": {
+        "objectId": "teil-ä",
+        "position": [
+          1,
+          2,
+          3
+        ]
+      },
+      "nearby": {
+        "partId": "teil-ß",
+        "gripId": "griff-ü"
+      },
+      "expectedOrder": [
+        "movePart3d:teil-ä:[1,2,3]",
+        "connectGrips:teil-ß:griff-ü:teil-ä"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "worldRelocateGripMax",
+      "toolId": "worldRelocate",
+      "gripsPerPart": 64,
+      "expected": "admitted"
+    },
+    {
+      "id": "worldRelocateGripMaxPlusOne",
+      "toolId": "worldRelocate",
+      "gripsPerPart": 65,
+      "expected": "faultUnchanged"
+    },
+    {
+      "id": "worldRelocateCancelEveryBoundary",
+      "toolId": "worldRelocate",
+      "boundaries": [
+        "sourcePart",
+        "moveMutation",
+        "existingFastener",
+        "candidatePart",
+        "candidateGrip",
+        "distanceMeasure",
+        "fastenerPublish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "worldRelocateFaultEveryBoundary",
+      "toolId": "worldRelocate",
+      "boundaries": [
+        "sourcePart",
+        "moveMutation",
+        "existingFastener",
+        "candidatePart",
+        "candidateGrip",
+        "distanceMeasure",
+        "fastenerPublish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setGridVisibleToggles",
+      "toolId": "setGridVisible",
+      "input": {
+        "pressed": false
+      },
+      "expectedWindowConfigField": {
+        "gridVisible": false
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setGridSpacingClamp",
+      "toolId": "setGridSpacing",
+      "input": {
+        "value": 999.0
+      },
+      "expectedWindowConfigField": {
+        "gridSpacing": 50.0
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setLodManualClamp",
+      "toolId": "setLodManual",
+      "input": {
+        "value": -4.0
+      },
+      "expectedWindowConfigField": {
+        "lodManual": 0.0
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setGripShowRefusesUnknown",
+      "toolId": "setGripShow",
+      "input": {
+        "value": "vielleicht"
+      },
+      "expectedWindowConfigField": {
+        "gripShow": "selected"
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setGripDirectionInwards",
+      "toolId": "setGripDirection",
+      "input": {
+        "value": "inwards"
+      },
+      "expectedWindowConfigField": {
+        "gripDirection": "inwards"
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setSelectableKindGrips",
+      "toolId": "setSelectableKind",
+      "input": {
+        "kind": "grips",
+        "pressed": false
+      },
+      "expectedWindowConfigField": {
+        "selectableKinds": {
+          "parts": true,
+          "grips": false,
+          "fasteners": true
+        }
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setProjectionMovesPose",
+      "toolId": "setProjection",
+      "input": {
+        "field": "orthographicView",
+        "value": "front"
+      },
+      "expectedWindowConfigField": {
+        "camera3d": {
+          "projection": {
+            "kind": "orthographic",
+            "orthographicView": "front"
+          }
+        }
+      },
+      "expectedPoseRederived": true,
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setProjectionParamKeepsPose",
+      "toolId": "setProjectionParam",
+      "input": {
+        "param": "fov",
+        "value": 35.0
+      },
+      "expectedWindowConfigField": {
+        "camera3d": {
+          "projection": {
+            "fov": 35.0
+          }
+        }
+      },
+      "expectedPoseRederived": false,
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setTransformGumballFlagRotate",
+      "toolId": "setTransformGumballFlag",
+      "input": {
+        "flag": "rotate",
+        "pressed": false
+      },
+      "expectedWindowConfigField": {
+        "transformRotate": false
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "windowOptionCancelEveryBoundary",
+      "toolIds": [
+        "setGridVisible",
+        "setGridSpacing",
+        "setProjection",
+        "setProjectionParam",
+        "setGripShow",
+        "setGripDirection",
+        "setSelectableKind",
+        "setLodAutomatic",
+        "setLodDepthVariable",
+        "setLodManual",
+        "setTransformGumballFlag"
+      ],
+      "boundaries": [
+        "boundedDecode",
+        "exactWindowConfigMutation",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "windowOptionFaultEveryBoundary",
+      "toolIds": [
+        "setGridVisible",
+        "setGridSpacing",
+        "setProjection",
+        "setProjectionParam",
+        "setGripShow",
+        "setGripDirection",
+        "setSelectableKind",
+        "setLodAutomatic",
+        "setLodDepthVariable",
+        "setLodManual",
+        "setTransformGumballFlag"
+      ],
+      "boundaries": [
+        "boundedDecode",
+        "exactWindowConfigMutation",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setActiveExampleNakagin",
+      "toolId": "setActiveExample",
+      "input": {
+        "exampleId": "nakagin"
+      },
+      "documentParts": 180,
+      "documentFasteners": 179,
+      "expectedStages": [
+        "clearFastener",
+        "clearPart",
+        "label",
+        "domain",
+        "description",
+        "clearCompatibility",
+        "addCompatibility",
+        "catalogs",
+        "addPart",
+        "addFastener"
+      ],
+      "expectedInteraction": "subtractiveClearSelection",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setActiveExampleConcreteForest",
+      "toolId": "setActiveExample",
+      "input": {
+        "exampleId": "concrete-forest"
+      },
+      "documentParts": 1,
+      "documentFasteners": 0,
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setActiveExampleCapsuleDreamRefused",
+      "toolId": "setActiveExample",
+      "input": {
+        "exampleId": "capsule-dream"
+      },
+      "documentParts": 2880,
+      "documentFasteners": 2865,
+      "expectedStages": [
+        "capacityGate"
+      ],
+      "expectedNotice": "exampleTooLarge",
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "focusSelectionPublishesBothCameras",
+      "toolId": "focusSelection",
+      "selection": [
+        "teil-ä"
+      ],
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 2,
+            "y": 4
+          },
+          "3d": {
+            "origin": [
+              1,
+              3,
+              5
+            ]
+          }
+        }
+      ],
+      "expectedCamera": {
+        "2d": {
+          "x": 2,
+          "y": 4
+        },
+        "3dTarget": [
+          1,
+          3,
+          5
+        ]
+      },
+      "expectedLane": "window-config",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "focusSelectionEmptyFramesDocument",
+      "toolId": "focusSelection",
+      "selection": [],
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 2,
+            "y": 4
+          },
+          "3d": {
+            "origin": [
+              1,
+              3,
+              5
+            ]
+          }
+        },
+        {
+          "id": "teil-ß",
+          "2d": {
+            "x": 6,
+            "y": 8
+          },
+          "3d": {
+            "origin": [
+              5,
+              7,
+              9
+            ]
+          }
+        }
+      ],
+      "expectedCamera": {
+        "2d": {
+          "x": 4,
+          "y": 6
+        },
+        "3dTarget": [
+          3,
+          5,
+          7
+        ]
+      },
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "boardNodeDeleteClearsSelection",
+      "toolId": "applyBoardEvents",
+      "input": {
+        "eventsJson": "[{\"name\":\"nodeDelete\",\"payload\":{\"id\":\"teil-ä\"}}]"
+      },
+      "selection": [
+        "teil-ä"
+      ],
+      "expectedMutations": [
+        "disconnectGrips:kante-ß",
+        "deletePart:teil-ä"
+      ],
+      "expectedInteraction": "subtractive:teil-ä",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "boardCameraPublishesWindowConfig",
+      "toolId": "applyBoardEvents",
+      "input": {
+        "eventsJson": "[{\"name\":\"camera\",\"payload\":{\"x\":2.5,\"y\":-3.5,\"zoom\":4}}]"
+      },
+      "expectedLane": "window-config",
+      "expectedCamera": {
+        "2d": {
+          "x": 2.5,
+          "y": -3.5,
+          "zoom": 4
+        }
+      },
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "boardNodeMoveLockedRefused",
+      "toolId": "applyBoardEvents",
+      "input": {
+        "eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}}]"
+      },
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 1,
+            "y": 1,
+            "locked": true
+          }
+        }
+      ],
+      "expectedMutations": [],
+      "expectedNotice": "selectionLocked",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "translateKeepsFlatPoseCoherent",
+      "toolId": "translateSelection",
+      "selection": [
+        "teil-ä"
+      ],
+      "input": {
+        "dx": 0.5,
+        "dy": -0.25,
+        "dz": 0
+      },
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 0,
+            "y": 0
+          },
+          "3d": {
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "expectedMutations": [
+        "movePart2d:teil-ä:24:12",
+        "movePart3d:teil-ä:[0.5,-0.25,0]"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "translateLockedRefused",
+      "toolId": "translateSelection",
+      "selection": [
+        "teil-ä"
+      ],
+      "input": {
+        "dx": 1
+      },
+      "parts": [
+        {
+          "id": "teil-ä",
+          "2d": {
+            "x": 0,
+            "y": 0,
+            "locked": true
+          },
+          "3d": {
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "expectedMutations": [],
+      "expectedNotice": "selectionLocked",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "addPartKindReselectsCreatedPart",
+      "toolId": "addPartKind",
+      "input": {
+        "partKind": "Stütze-ß"
+      },
+      "expectedInteraction": "replaceCreatedPart",
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "selectSameKindWidensSelection",
+      "toolId": "selectSameKindSelection",
+      "selection": [
+        "teil-ä"
+      ],
+      "parts": [
+        {
+          "id": "teil-ä",
+          "partKind": "Stütze"
+        },
+        {
+          "id": "teil-ß",
+          "partKind": "Stütze"
+        },
+        {
+          "id": "teil-ü",
+          "partKind": "Riegel"
+        }
+      ],
+      "expectedInteraction": "replace:teil-ä,teil-ß",
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "registerBrushMeshPages",
+      "toolId": "registerBrushMesh",
+      "input": {
+        "url": "/mesh/🧊️base.glb",
+        "positionCount": 1536,
+        "indexCount": 768
+      },
+      "expectedStages": [
+        "positionPage",
+        "positionPage",
+        "positionPage",
+        "indexPage",
+        "indexPage",
+        "derive"
+      ],
+      "control": "pollEachProgressAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    }
   ],
-  "oracle": {"interface": "PuzzleRetainedFixtureOracle", "implementation": "serde_json", "runtimeReachable": false}
+  "oracle": {
+    "interface": "PuzzleRetainedFixtureOracle",
+    "implementation": "serde_json",
+    "runtimeReachable": false
+  }
 }

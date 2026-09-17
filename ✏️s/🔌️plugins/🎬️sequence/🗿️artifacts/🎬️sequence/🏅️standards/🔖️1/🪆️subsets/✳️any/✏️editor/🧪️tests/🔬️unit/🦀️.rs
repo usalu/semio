@@ -673,7 +673,7 @@ async fn sequence_io_declares_the_steps_in_port() {
 async fn next_available_step_id_is_free_and_deterministic() {
     let fixture = default_snapshot();
     let id = next_available_step_id(&fixture);
-    assert!(!snapshot.to_host_snapshot().steps.iter().any(|step| step.id == id));
+    assert!(!fixture.to_host_snapshot().steps.iter().any(|step| step.id == id));
     assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");
 }
 //#endregion 🔖️HostTests

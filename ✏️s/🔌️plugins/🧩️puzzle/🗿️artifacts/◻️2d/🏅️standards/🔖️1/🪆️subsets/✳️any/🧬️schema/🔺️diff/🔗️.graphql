@@ -6,6 +6,7 @@ type Puzzle2dDiff {
   camera: Puzzle2dCamera @state(class: ARTIFACT)
   nodes: Puzzle2dNodesDelta @state(class: ARTIFACT)
   edges: Puzzle2dEdgesDelta @state(class: ARTIFACT)
+  targetRegions: Puzzle2dTargetRegionsDelta @state(class: ARTIFACT)
   meta: Puzzle2dMeta @state(class: ARTIFACT)
 }
 
@@ -16,6 +17,9 @@ type Puzzle2dNodePatch { replacement: Puzzle2dNode }
 type Puzzle2dEdgesDelta { added: [Puzzle2dEdge!]! removed: [String!]! patched: [Puzzle2dEdgePatchEntry!]! reordered: [String!] }
 type Puzzle2dEdgePatchEntry { id: String! patch: Puzzle2dEdgePatch! }
 type Puzzle2dEdgePatch { replacement: Puzzle2dEdge }
+type Puzzle2dTargetRegionsDelta { added: [Puzzle2dTargetRegion!]! removed: [String!]! patched: [Puzzle2dTargetRegionPatchEntry!]! reordered: [String!] }
+type Puzzle2dTargetRegionPatchEntry { id: String! patch: Puzzle2dTargetRegionPatch! }
+type Puzzle2dTargetRegionPatch { replacement: Puzzle2dTargetRegion }
 type Puzzle2dArtifact { schema: String! }
 
 
@@ -132,6 +136,17 @@ type Puzzle2dKindCatalogs {
   edges: [Puzzle2dCatalogEdgeKind!]!
   wires: [Puzzle2dCatalogWireKind!]!
 }
+type Puzzle2dTargetRegion {
+  id: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  label: String
+  hidden: Boolean!
+  locked: Boolean!
+}
+
 type Puzzle2dMeta {
   manifestId: String
   kindCompatibility: [Puzzle2dKindCompatibility!]!

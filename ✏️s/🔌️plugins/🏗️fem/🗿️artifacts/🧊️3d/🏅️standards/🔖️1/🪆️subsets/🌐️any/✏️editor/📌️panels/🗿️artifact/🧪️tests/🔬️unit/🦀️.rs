@@ -17,10 +17,20 @@ fn german() -> &'static Fem3dLabels {
     fem3d_labels(&ViewModel { locale: Locale::De, ..Default::default() })
 }
 
-/// 🪟️ A host viewport tall enough to hold the demo whole — the label, nesting and keying laws read
-/// the tree itself, so they ask for every row rather than one screenful.
+/// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
+/// COLLAPSED opened explicitly — the label, nesting and keying laws read the tree itself, so they ask
+/// for every row rather than one screenful, and a closed container is correctly empty.
+///
+/// 🧾️ The rows asked for per request are deliberately small. A host request RESERVES `1 + rows` off
+/// the body-wide node ledger (`TreeWindows`, `TREE_WINDOW_BODY_NODE_BUDGET`) before any container is
+/// built, so that a container the user scrolled to cannot be starved by the first-paint slices of the
+/// containers in front of it. A fixture asking three times for 128 rows would reserve the whole
+/// budget and starve the six sections the host has not addressed — which is exactly the cap the React
+/// host applies to its own report (`Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`). These three sections
+/// hold two materials, one section and one analysis row, so eight is generous.
 fn wide_view() -> ViewModel {
-    ViewModel { tree_viewport_rows: Some(512), ..Default::default() }
+    let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 8)).collect();
+    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..Default::default() }
 }
 
 fn build_for(document: &Fem3dSnapshot, labels: &Fem3dLabels, view: &ViewModel) -> BuiltNode {
@@ -94,6 +104,45 @@ fn oversized() -> Fem3dSnapshot {
         self_weight: false,
     });
     document
+}
+
+/// 🏠️ The document `📓️w3-browser-verification.md` §6.2 caught faulting the artifact panel surface at
+/// `nodes: 129 > max_nodes: 128`: 63 nodes, 63 supports, 8 solids and four load cases carrying twelve
+/// loads each, every one of them open at the same time. Per-container windowing bounds each
+/// CONTAINER; only the body-wide node ledger bounds the BODY.
+fn house() -> Fem3dSnapshot {
+    let mut document = demo();
+    document.nodes = (0..63).map(|index| FemNode { id: format!("h{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
+    document.supports = (0..63).map(|index| crate::FemSupport { id: format!("hs{index}"), node_id: format!("h{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect();
+    document.solids = (0..8)
+        .map(|index| FemSolid {
+            id: format!("hsol{index}"),
+            name: format!("Slab {index}"),
+            outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]],
+            holes: Vec::new(),
+            base_z: index as f64,
+            height: 0.2,
+            layers: 1,
+            mesh_size: 1.0,
+            material_id: "concrete".into(),
+            axis: crate::FemAxis::Z,
+        })
+        .collect();
+    document.load_cases = (0..4)
+        .map(|case| FemLoadCase {
+            id: format!("hc{case}"),
+            name: format!("Case {case}"),
+            loads: (0..12).map(|index| FemLoad::Nodal { id: format!("hl{case}_{index}"), node_id: "h0".into(), dof: FemDof::Tz, value: -1000.0 }).collect(),
+            self_weight: false,
+        })
+        .collect();
+    document
+}
+
+/// 🧾️ Records the reconciler charges for a presented body — every node counts once, which is exactly
+/// `SurfaceReconcileLimits::max_nodes` (`semio_framework_ui_contract::UI_DOCUMENT_NODES`).
+fn body_nodes(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(body_nodes).sum::<usize>()
 }
 
 const SECTION_SUFFIXES: [&str; SECTIONS] = ["nodes", "elements", "solids", "supports", "load-cases", "combinations", "materials", "sections", "analysis"];
@@ -249,7 +298,7 @@ async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction
 
     let binding = tree.bindings.iter().next().expect("the tree binds the domain select");
     assert_eq!(binding.action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
-    assert_eq!(binding.action.scope.as_str(), crate::editor::fem3d::FEM3D_PLAY_CONTROLLER_ID);
+    assert_eq!(binding.action.scope.as_str(), FEM3D_PLAY_CONTROLLER_ID);
     assert_eq!(tree.bindings.iter().count(), 1, "exactly one tree-level select, never one per row");
 
     let json = projection(build(&document, english()));
@@ -343,6 +392,57 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
     assert_eq!(window_of(wind), TreeWindow { total: 40, offset: 5 });
     assert_eq!(row_keys(wind), (5..9).map(|index| format!("wl{index}")).collect::<Vec<_>>(), "a nested window is the same law one level down");
+}
+
+/// 🏠️ The House regression: the whole BODY reconciles, not just each container. A first paint of a
+/// 63-node, 63-support, 8-solid document with four open load cases stays inside the reconciler's
+/// record arena — the fault `📓️w3-browser-verification.md` §6.2 recorded as
+/// `1:framework.panel.artifact — nodes: 129 vs max_nodes: 128`.
+#[semio_framework_async_macros::async_test]
+async fn a_house_sized_first_paint_keeps_the_whole_body_inside_the_record_arena() {
+    let document = house();
+    let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::unhosted()).expect("a House-sized document still assembles");
+    let nodes = body_nodes(&tree);
+    println!("[DEBUG] fem3d-house first-paint body_nodes={nodes}");
+    assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+    for (suffix, total) in SECTION_SUFFIXES.into_iter().zip(section_totals(&document)) {
+        assert_eq!(extent_of(section_node(&tree, suffix)), total, "section {suffix} still stamps its full extent, seated or starved");
+    }
+    let json = projection(tree);
+    assert!(!json.contains(".more") && !json.contains("\"+"), "no continuation row survives a starved body: {json}");
+}
+
+/// 🏠️ The same document with the host driving it: every open container addressed, `Σ(1 + rows)`
+/// inside `TREE_WINDOW_BODY_NODE_BUDGET` exactly as the React host caps its own report. Every
+/// requested window is honoured in full — a request the host is allowed to file is one the guest can
+/// always serve — and the body still fits the record arena.
+#[semio_framework_async_macros::async_test]
+async fn a_house_sized_body_honours_every_capped_host_window() {
+    let document = house();
+    let mut requests = vec![
+        request(&format!("{TREE_NAMESPACE}.nodes"), Some(true), 0, 20),
+        request(&format!("{TREE_NAMESPACE}.solids"), Some(true), 0, 8),
+        request(&format!("{TREE_NAMESPACE}.supports"), Some(true), 0, 20),
+        request(&format!("{TREE_NAMESPACE}.load-cases"), Some(true), 0, 4),
+    ];
+    requests.extend((0..4).map(|case| request(&format!("hc{case}"), Some(true), 0, 8)));
+    let cost: u32 = requests.iter().map(|entry| 1 + entry.rows).sum();
+    assert!(cost as usize <= semio_framework_plugin::TREE_WINDOW_BODY_NODE_BUDGET, "the fixture asks what the host is allowed to ask: {cost}");
+    let view = viewing(requests);
+    let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a House-sized windowed document assembles");
+    assert_eq!(section_node(&tree, "nodes").children.len(), 20, "a capped request is honoured in full, wherever it sits in the body");
+    assert_eq!(section_node(&tree, "supports").children.len(), 20);
+    assert_eq!(section_node(&tree, "solids").children.len(), 8);
+    let cases = section_node(&tree, "load-cases");
+    assert_eq!(cases.children.len(), 4, "every load case row is materialised");
+    for case in cases.children.iter() {
+        assert_eq!(case.children.len(), 8, "and every open case serves its own capped window");
+        assert_eq!(window_of(case).total, 12, "while still announcing all twelve loads");
+    }
+    assert_eq!(window_of(section_node(&tree, "nodes")), TreeWindow { total: 63, offset: 0 });
+    let nodes = body_nodes(&tree);
+    println!("[DEBUG] fem3d-house hosted body_nodes={nodes}");
+    assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles under a full host request set: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
 }
 
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.

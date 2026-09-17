@@ -172,6 +172,50 @@ async fn object_rows_are_domain_picks_without_a_row_binding() {
     assert_eq!(props.granularity.as_ref().map(|granularity| granularity.as_str()), Some(edit::CAD_WORLD_PICK_GRANULARITY), "the row names the domain granularity it picks at");
 }
 
+/// 🧾️ Every node record one body spends — the tree root, every section, every object group and every
+/// leaf row counts once, exactly as `SurfaceReconcileLimits::max_nodes` counts them.
+fn node_records(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(node_records).sum::<usize>()
+}
+
+/// 🧾️ The whole-document law: the nodes container alone holds more entries than a whole
+/// `UI_DOCUMENT_NODES` arena, AND all nine sections plus every object group are open at once, each
+/// asking for far more rows than the arena could hold. Per-container clamps do not save this body —
+/// only the SDK's body-wide node ledger does. Every non-empty container must still stamp its FULL
+/// total, the whole body must reconcile inside `UI_DOCUMENT_NODES` records, and no container may be
+/// closed off with a `+N`.
+#[semio_framework_async_macros::async_test]
+async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
+    let working = forest_working_scene();
+    let scene = oversized_scene(300);
+    let nodes = scene.nodes.len();
+    assert!(nodes > ui::UI_DOCUMENT_NODES, "one container must hold more than the whole node arena, found {nodes}");
+    let panes: [(&str, &[CadObject]); 4] =
+        [("shape", &working.objects), ("building", &working.building_objects), ("energy", &working.energy_objects), ("structure-classic", &working.structure_classic_objects)];
+
+    let mut requests = vec![request("cad-play-document.nodes", Some(true), 0, 512)];
+    for (suffix, objects) in panes {
+        requests.push(request(&format!("cad-play-document.{suffix}"), Some(true), 0, 512));
+        requests.extend(objects.iter().map(|object| request(&object.id, Some(true), 0, 512)));
+    }
+    for model_definition_id in [CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC] {
+        requests.push(request(&format!("cad-play-document.references.{model_definition_id}"), Some(true), 0, 512));
+    }
+    let tree = tree_of(scene, &windowed(requests));
+
+    assert_eq!(window_of(child(&tree, "cad-play-document.nodes")).total as usize, nodes, "the nodes section stamps its FULL total however few rows it could afford");
+    for (suffix, objects) in panes {
+        let section = child(&tree, &format!("cad-play-document.{suffix}"));
+        assert_eq!(window_of(section).total as usize, objects.len(), "pane {suffix} stamps its FULL total");
+    }
+
+    let records = node_records(&tree);
+    assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
+    let json = fixture_json(tree);
+    assert!(!json.contains(".more"), "no continuation row closes an exhausted container: {json}");
+    assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
@@ -194,17 +238,23 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Träger"));
 }
 
+/// 🪟️ An object row is an author-collapsed container: it always publishes how many primitives it
+/// holds, and it builds them only once the host opens it — law (b) at item level.
 #[semio_framework_async_macros::async_test]
-async fn object_tree_item_includes_primitive_children() {
+async fn object_tree_item_streams_its_primitive_children_on_expand() {
     let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
     let labels = cad_labels(&ViewModel::default());
-    let windows = TreeWindows::unhosted();
-    let item = object_tree_item(&windows, "shape", &object, labels).expect("object tree item");
-    assert_eq!(item.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
-    assert_eq!(window_of(&item).total, 1, "an object row reports its primitive count");
-    let json = fixture_json(item);
-    assert!(json.contains("cad-primitive:"));
+    let collapsed = object_tree_item(&TreeWindows::unhosted(), "shape", &object, labels).expect("collapsed object row");
+    assert_eq!(collapsed.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
+    assert_eq!(window_of(&collapsed).total, 1, "a collapsed object row still reports its primitive count");
+    assert!(collapsed.children.is_empty(), "a collapsed object row builds no primitive rows: {:?}", row_keys(&collapsed));
+
+    let view_state = windowed(vec![request(object.id.as_str(), Some(true), 0, 8)]);
+    let opened = object_tree_item(&TreeWindows::for_body(&view_state, CAD_PLAY_BODY_ARTIFACT), "shape", &object, labels).expect("opened object row");
+    assert_eq!(window_of(&opened).total, 1);
+    let json = fixture_json(opened);
+    assert!(json.contains("cad-primitive:"), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]

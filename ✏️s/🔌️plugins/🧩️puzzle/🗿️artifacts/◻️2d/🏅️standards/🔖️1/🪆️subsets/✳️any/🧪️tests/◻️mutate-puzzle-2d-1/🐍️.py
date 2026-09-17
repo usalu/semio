@@ -15,7 +15,7 @@ this same carrier.
 
 * ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the five members of
   `Puzzle2dSnapshot`.
-* the twenty-six committed payloads themselves, for the verbs and their argument lists. At the time
+* the thirty-three committed payloads themselves, for the verbs and their argument lists. At the time
   this reference was written ``…/🧬️schema/🧬️mutations/🔣️.json`` could not supply them: despite its
   title `Puzzle2dMutation` it was a byte copy of the SNAPSHOT schema
   (`{schema, camera, nodes, edges, meta}`) and declared no mutation at all — the pre-migration
@@ -29,7 +29,7 @@ this same carrier.
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
   id-keyed collections, `connect`/`disconnect` for the edge collection and for the compatibility
   relation, and absolute `move`/`scale`.
-* the twenty-six committed `(before, mutation, diff, outcome, after)` quintets, which are the only
+* the thirty-three committed `(before, mutation, diff, outcome, after)` quintets, which are the only
   statement of four things: that a node's handle list is INSIDE the node rather than a register of its
   own, so removing a handle is a node mutation that CASCADES into the edges attached to it; that
   deleting a node severs every edge attached to any of ITS handles; that `replace-node-geometry`
@@ -61,6 +61,16 @@ from semio_repo_test import Adapter, Outcome
 MEMBERS = ("schema", "camera", "nodes", "edges", "meta")
 """🗂️ The five members `Puzzle2dSnapshot` declares — and the cross-language projection."""
 
+OPTIONAL_MEMBERS = ("targetRegions",)
+"""🎯️ The members a board carries only when it holds any. `targetRegions` is the flat analogue of
+puzzle3d's `targetVolumes`: an empty collection is OMITTED, never written as `[]`, so a board that
+never had a region and a board whose last one was deleted have the same wire form."""
+
+REGION_MEMBERS = ("id", "x", "y", "width", "height", "hidden", "locked")
+"""🎯️ The members every committed target region states. `label` is the one optional member, and
+`hidden`/`locked` are ALWAYS written — unlike a node's, a region's flags carry no default-omission,
+which the committed `create`/`delete` vectors state from both sides."""
+
 DEFAULTS = {"visible": True, "locked": False, "root": False, "scale": 1.0}
 """🫥 The four members a committed snapshot OMITS when they hold their default. No committed document
 states these values; the vectors state them indirectly and completely — each of the four appears in an
@@ -72,6 +82,14 @@ NODE_FIELDS = {"change-node-kind": ("nodeKind", "newNodeKind"), "edit-node-text"
 
 EDGE_FIELDS = {"change-edge-kind": ("edgeKind", "newEdgeKind"), "change-edge-visible": ("visible", "newVisible"), "change-edge-locked": ("locked", "newLocked")}
 """🔗 The three single-field edge setters."""
+
+REGION_FLAGS = {"change-target-region-hidden": ("hidden", "newHidden"), "change-target-region-locked": ("locked", "newLocked")}
+"""🎯 The two single-flag target-region setters. They write their member unconditionally — a region
+states `false` where a node omits it."""
+
+REGION_GEOMETRY = {"move-target-region": (("x", "newX"), ("y", "newY")), "resize-target-region": (("width", "newWidth"), ("height", "newHeight"))}
+"""🎯 The two whole-pair target-region geometry setters: an absolute FINAL-state corner, and an
+absolute FINAL-state extent. Neither is a per-axis delta."""
 
 NODE_GEOMETRY = (("shape", "newShape"), ("radius", "newRadius"), ("width", "newWidth"), ("height", "newHeight"))
 """🧊 `replace-node-geometry` rebuilds these four members in this order, dropping every one whose
@@ -129,6 +147,13 @@ KINDS = (
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-region",
+    "delete-target-region",
+    "move-target-region",
+    "resize-target-region",
+    "edit-target-region-label",
+    "change-target-region-hidden",
+    "change-target-region-locked",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -191,6 +216,14 @@ SPEC_VECTORS = (
     "disconnect-kind-compatibility-refused",
     "replace-kind-catalogs-alpha",
     "replace-kind-catalogs-cleared",
+    "create-target-region-alpha",
+    "create-target-region-refused",
+    "delete-target-region-refused",
+    "move-target-region-refused",
+    "resize-target-region-refused",
+    "edit-target-region-label-refused",
+    "change-target-region-hidden-refused",
+    "change-target-region-locked-refused",
 )
 """🧾️ The row ids of the case's third Examples table — every committed vector the two exhaustive
 tables do not carry. A `mutate-<kind>` scenario id is a claim about that KIND, so a second row per
@@ -206,8 +239,18 @@ def validate(document, where):
     """✅️ Holds the document to the shape the committed vectors agree on: five members, unique node,
     handle and edge ids, every edge attached to handles the board really holds, and no member left
     standing at its own default."""
-    if set(document) != set(MEMBERS):
-        raise AssertionError("%s: a puzzle2d document must carry exactly %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
+    if not set(MEMBERS) <= set(document) or not set(document) <= set(MEMBERS) | set(OPTIONAL_MEMBERS):
+        raise AssertionError("%s: a puzzle2d document must carry exactly %r plus at most %r, found %r" % (where, sorted(MEMBERS), sorted(OPTIONAL_MEMBERS), sorted(document)))
+    if "targetRegions" in document:
+        if not document["targetRegions"]:
+            raise AssertionError("%s: an empty targetRegions collection is omitted, never written" % where)
+        region_ids = []
+        for region in document["targetRegions"]:
+            region_ids.append(region["id"])
+            if not set(REGION_MEMBERS) <= set(region) or not set(region) <= set(REGION_MEMBERS) | {"label"}:
+                raise AssertionError("%s: target region %r must carry exactly %r plus at most a label, found %r" % (where, region["id"], sorted(REGION_MEMBERS), sorted(region)))
+        if len(set(region_ids)) != len(region_ids):
+            raise AssertionError("%s: targetRegions carries a duplicate id in %r" % (where, region_ids))
     if set(document["camera"]) != {"x", "y", "zoom"}:
         raise AssertionError("%s: camera must carry exactly x, y and zoom, found %r" % (where, sorted(document["camera"])))
     handles = {}
@@ -251,6 +294,14 @@ def edge_at(document, identity, kind, where):
         if edge["id"] == identity:
             return at
     raise AssertionError("%s-%s: the committed vector addresses edge %r, which the before-snapshot does not hold" % (where, kind, identity))
+
+
+def region_at(document, identity, kind, where):
+    """🔎️ The index of the target region this kind addresses; an absent id is an error, never a no-op."""
+    for at, region in enumerate(document.get("targetRegions", [])):
+        if region["id"] == identity:
+            return at
+    raise AssertionError("%s-%s: the committed vector addresses target region %r, which the before-snapshot does not hold" % (where, kind, identity))
 
 
 def written(record, member, value):
@@ -348,6 +399,30 @@ def apply_mutation(document, kind, payload):
         document["meta"]["kindCompatibility"] = [rule for rule in document["meta"]["kindCompatibility"] if rule not in held]
     elif kind == "replace-kind-catalogs":
         written(document["meta"], "kindCatalogs", copy.deepcopy(payload["newCatalogs"]))
+    elif kind == "create-target-region":
+        if any(region["id"] == payload["targetRegion"]["id"] for region in document.get("targetRegions", [])):
+            raise AssertionError("mutate-%s: the board already holds target region %r, and an id-keyed entity that exists cannot be re-created" % (kind, payload["targetRegion"]["id"]))
+        held = document.setdefault("targetRegions", [])
+        index = payload.get("index")
+        held.insert(len(held) if index is None else index, copy.deepcopy(payload["targetRegion"]))
+    elif kind == "delete-target-region":
+        at = region_at(document, payload["id"], kind, "mutate")
+        document["targetRegions"].pop(at)
+        if not document["targetRegions"]:
+            document.pop("targetRegions")
+    elif kind in REGION_GEOMETRY:
+        region = document["targetRegions"][region_at(document, payload["id"], kind, "mutate")]
+        for member, argument in REGION_GEOMETRY[kind]:
+            region[member] = payload[argument]
+    elif kind == "edit-target-region-label":
+        region = document["targetRegions"][region_at(document, payload["id"], kind, "mutate")]
+        if payload["newLabel"] is None:
+            region.pop("label", None)
+        else:
+            region["label"] = payload["newLabel"]
+    elif kind in REGION_FLAGS:
+        member, argument = REGION_FLAGS[kind]
+        document["targetRegions"][region_at(document, payload["id"], kind, "mutate")][member] = payload[argument]
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -414,6 +489,21 @@ def inverse_mutation(document, kind, payload):
         return [("connect-kind-compatibility", copy.deepcopy(held))]
     if kind == "replace-kind-catalogs":
         return [(kind, {"newCatalogs": copy.deepcopy(document["meta"].get("kindCatalogs"))})]
+    if kind == "create-target-region":
+        return [("delete-target-region", {"id": payload["targetRegion"]["id"]})]
+    if kind == "delete-target-region":
+        at = region_at(document, payload["id"], kind, "inverse")
+        return [("create-target-region", {"targetRegion": copy.deepcopy(document["targetRegions"][at]), "index": at})]
+    if kind in REGION_GEOMETRY:
+        region = document["targetRegions"][region_at(document, payload["id"], kind, "inverse")]
+        return [(kind, dict({"id": payload["id"]}, **{argument: region[member] for member, argument in REGION_GEOMETRY[kind]}))]
+    if kind == "edit-target-region-label":
+        region = document["targetRegions"][region_at(document, payload["id"], kind, "inverse")]
+        return [(kind, {"id": payload["id"], "newLabel": region.get("label")})]
+    if kind in REGION_FLAGS:
+        member, argument = REGION_FLAGS[kind]
+        region = document["targetRegions"][region_at(document, payload["id"], kind, "inverse")]
+        return [(kind, {"id": payload["id"], argument: region[member]})]
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 
 
@@ -430,10 +520,12 @@ def reconnect(edge):
 
 # region 🔖️Laws
 def equals_committed(kind, produced, committed):
-    """🎯️ The committed after-snapshot claim, member by member, with no tolerance and no ignored key."""
-    for member in MEMBERS:
-        if produced[member] != committed[member]:
-            raise AssertionError("mutate-%s: %s is %s, the committed after-snapshot says %s" % (kind, member, json.dumps(produced[member], sort_keys=True)[:400], json.dumps(committed[member], sort_keys=True)[:400]))
+    """🎯️ The committed after-snapshot claim, member by member, with no tolerance and no ignored key.
+    The optional collections are compared through `.get`, so a member one side omits and the other
+    writes empty is a difference this law reports rather than skips."""
+    for member in MEMBERS + OPTIONAL_MEMBERS:
+        if produced.get(member) != committed.get(member):
+            raise AssertionError("mutate-%s: %s is %s, the committed after-snapshot says %s" % (kind, member, json.dumps(produced.get(member), sort_keys=True)[:400], json.dumps(committed.get(member), sort_keys=True)[:400]))
 
 
 def observable(kind, before, after, no_op):
@@ -449,9 +541,9 @@ def observable(kind, before, after, no_op):
 def restores(kind, restored, original):
     """↩️ The full inverse law: applying the kind and then its OWN computed inverse must land back on
     the committed before-snapshot, member for member and index for index."""
-    for member in MEMBERS:
-        if restored[member] != original[member]:
-            raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, member, json.dumps(restored[member], sort_keys=True)[:400], json.dumps(original[member], sort_keys=True)[:400]))
+    for member in MEMBERS + OPTIONAL_MEMBERS:
+        if restored.get(member) != original.get(member):
+            raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, member, json.dumps(restored.get(member), sort_keys=True)[:400], json.dumps(original.get(member), sort_keys=True)[:400]))
 # endregion 🔖️Laws
 
 

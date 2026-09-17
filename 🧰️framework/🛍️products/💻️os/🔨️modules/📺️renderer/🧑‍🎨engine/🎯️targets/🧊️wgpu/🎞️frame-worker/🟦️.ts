@@ -498,7 +498,6 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
     const plugins = await mountPluginHandles(bootPlan.plugins);
     await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
-      console.warn(`[DEBUG] contributions prime failed plugin=${target.pluginId}`, error instanceof Error ? error.message : String(error));
     })));
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
@@ -506,7 +505,6 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     while (true) {
       await macrotask();
       const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
-      console.log(`[DEBUG] renderer-bootstrap stage=${step.stage} executing=${(lastStepOutcome?.executingMs ?? 0).toFixed(3)}ms phaseUs=${step.elapsedUs}`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
         bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), suspensionLedger);
@@ -606,7 +604,6 @@ function declarePhase(phase: string, state: "enter" | "leave", elapsedMs: number
     return;
   }
   post({ kind: "boot-phase", lifecycle, phase, state, elapsedMs });
-  if (elapsedMs >= BOOT_LIVENESS_INTERVAL_MS) console.log(`[DEBUG] boot-phase ${phase} ${elapsedMs.toFixed(0)} ms`);
   const top = bootPhaseStack[bootPhaseStack.length - 1];
   if (top === phase) bootPhaseStack.pop();
   const parent = bootPhaseStack[bootPhaseStack.length - 1];

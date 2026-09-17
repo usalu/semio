@@ -54,7 +54,7 @@ KINDS = ("create-curated-item", "delete-curated-item", "change-curated-item-coun
 TAGS = {"create-curated-item": "createCuratedItem", "delete-curated-item": "deleteCuratedItem", "change-curated-item-count": "changeCuratedItemCount"}
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed schema spells it."""
 
-GEOMETRY_FIELDS = {"box": ("width", "height", "depth"), "frame": ("width", "height", "depth", "profile"), "slab": ("width", "depth", "thickness"), "mesh": ("positions", "normals", "indices")}
+GEOMETRY_FIELDS = {"box": ("width", "height", "depth"), "frame": ("width", "height", "depth", "profile"), "slab": ("width", "depth", "thickness"), "mesh": ("positions", "normals", "indices"), "glb": ("url", "extent")}
 """📐️ The members each `GeometryRecipe` variant declares, from the committed snapshot JSON Schema."""
 
 # endregion 🔖️Vocabulary

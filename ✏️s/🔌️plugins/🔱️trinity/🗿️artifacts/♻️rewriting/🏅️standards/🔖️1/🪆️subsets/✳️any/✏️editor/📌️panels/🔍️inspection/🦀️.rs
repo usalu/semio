@@ -9,11 +9,12 @@
 //! panel as an `interaction_domain`-bound tree the client filters by presence. Flagged, not silently
 //! dropped (see `editor::jack::panels::inspection` for the identical trinity-wide gap).
 
-use semio_framework_plugin::{tree_item_desc, ui_node_list, Label, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, BuiltNode};
+use crate::editor::rewriting::ui_label;
+use semio_framework_plugin::{tree_item_desc, ui_node_list, BuiltNode, PanelTreeBuilder, UiAssemblyResult};
 
 pub(crate) fn render() -> UiAssemblyResult<BuiltNode> {
-    let prompt = Label::try_from("Select one or more pieces").map_err(|_| PluginAssemblyError::new("trinity.inspection.label", "the fixed inspection label exceeds its UI bound"))?;
-    let section_label = Label::try_from("Inspection").map_err(|_| PluginAssemblyError::new("trinity.inspection.section", "the fixed inspection section label exceeds its UI bound"))?;
+    let prompt = ui_label("Select one or more pieces")?;
+    let section_label = ui_label("Inspection")?;
     let items = ui_node_list([tree_item_desc("trinity-inspector.prompt", prompt, None)])?;
     PanelTreeBuilder::new("trinity-inspector")?.section("trinity-inspector.empty", Some(section_label), true, items)?.build()
 }

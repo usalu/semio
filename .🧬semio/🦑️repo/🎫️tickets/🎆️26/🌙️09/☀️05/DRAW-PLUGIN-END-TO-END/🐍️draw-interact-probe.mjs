@@ -22,6 +22,9 @@ const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-
 const page = await (await browser.newContext({ viewport: { width: 1600, height: 1000 } })).newPage();
 page.on("console", (m) => lines.push(`${Date.now() - t0} ${m.type()} ${m.text().slice(0, m.type() === "error" ? 6000 : 600)}`));
 page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e).slice(0, 2000)}`));
+// 🧵️ Guest `eprintln!` lands on the plugin WORKER's console, never on the page's.
+page.on("worker", (worker) => { lines.push(`${Date.now() - t0} worker ${worker.url().slice(-80)}`); worker.on("console", (msg) => lines.push(`${Date.now() - t0} worker:${msg.type()} ${msg.text().slice(0, 1200)}`)); });
+if (process.env.SEMIO_PROBE_GUEST_DIAGNOSTICS === "1") await page.addInitScript(() => { try { localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"); } catch {} });
 const report = { url, steps: [] };
 const faultLines = (from) => lines.slice(from).filter((l) => /trapped|panicked|action failed|shell fault|faults=|pageerror|unreachable|Fault \{|refused/.test(l)).map((l) => l.slice(0, 400));
 const note = async (step, detail, from) => {
@@ -98,8 +101,14 @@ let before = s;
   let unfolded = "absent";
   if (await unfold.count()) unfolded = await unfold.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
   await page.waitForTimeout(1000);
-  const utilityIds = await page.evaluate(() => [...document.querySelectorAll('[id*="utility"]')].map((el) => el.id).filter(Boolean).slice(0, 60));
-  const rectUtility = page.locator('[id$="shapeRect"], [id*="shapeRect"]').first();
+  // 🧰️ The utility bar shows its GROUPS first (`ui.utilities.<window>.group.group:Drawing`); the
+  // utilities themselves (`#shapeRect`) render once their group is toggled on.
+  const drawingGroup = page.locator('[id="ui.utilities.drawing-composite.group.group:Drawing"]').first();
+  let grouped = "absent";
+  if (await drawingGroup.count()) grouped = await drawingGroup.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
+  await page.waitForTimeout(1200);
+  const utilityIds = await page.evaluate(() => [...document.querySelectorAll('[id*="utilit"], [data-toggle-value]')].map((el) => el.id || el.getAttribute("data-toggle-value")).filter(Boolean).slice(0, 60));
+  const rectUtility = page.locator('[id="shapeRect"], [data-toggle-value="shapeRect"]').first();
   let armed = "absent";
   if (await rectUtility.count()) armed = await rectUtility.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
   await page.waitForTimeout(1500);
@@ -114,7 +123,7 @@ let before = s;
   }
   let after = null;
   for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (after.layers === before.layers + 1) break; }
-  await note("canvas-rect-drag", { unfolded, utilityIds, armed, dragged, layersBefore: before.layers, committed: after.layers === before.layers + 1, ...after }, from);
+  await note("canvas-rect-drag", { unfolded, grouped, utilityIds, armed, dragged, layersBefore: before.layers, committed: after.layers === before.layers + 1, ...after }, from);
   before = after;
 }
 

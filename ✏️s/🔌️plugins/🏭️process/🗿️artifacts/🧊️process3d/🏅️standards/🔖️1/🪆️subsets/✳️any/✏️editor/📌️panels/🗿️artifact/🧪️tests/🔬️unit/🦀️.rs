@@ -31,8 +31,9 @@ async fn document_panel_lists_every_step_payload_in_order() {
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default(), None);
     let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::default());
-    let node = render(&fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document tree renders");
-    let rendered = serde_json::to_string(&node).expect("render json");
+    // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
+    // node's `BuiltChildren` only serialises through the retained page transport.
+    let rendered = project(&fixture, &semio_framework_plugin::TreeWindows::unhosted());
     let rip_index = rendered.find("step-rip").expect("step-rip present");
     let bore_index = rendered.find("step-bore").expect("step-bore present");
     let dowel_index = rendered.find("step-dowel").expect("step-dowel present");

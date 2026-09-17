@@ -4,6 +4,7 @@
   "camera": null,
   "nodes": null,
   "edges": null,
+  "targetRegions": null,
   "meta": {
     "manifestId": "manifest-alpha",
     "kindCompatibility": [

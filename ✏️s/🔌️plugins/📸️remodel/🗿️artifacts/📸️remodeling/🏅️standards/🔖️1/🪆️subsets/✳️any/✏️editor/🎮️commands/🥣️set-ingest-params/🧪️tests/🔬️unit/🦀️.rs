@@ -9,7 +9,7 @@ async fn set_sfm_params_command_materializes_typed_fields_into_operations() {
     let mut app = app().await;
     let result =
         dispatch(&mut app, RemodelingCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 })).await;
-    assert_eq!(result.mutations.len(), 1, "typed command produces one SetSfmParams operation");
+    assert!(result.edited_document(), "typed command publishes one SetSfmParams document edit: {:?}", result.lanes);
     let params = app.snapshot().expect("materialize projection").params.sfm;
     assert_eq!(params.ransac_iterations, 500);
     assert_eq!(params.min_track_length, 4);

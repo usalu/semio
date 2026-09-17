@@ -4,4 +4,6 @@ message Puzzle2dConfig {
   map<string, double> node_kind_weights = 1;
   map<string, double> handle_kind_weights = 2;
   uint32 fill_count = 3;
+  double contact_tolerance = 4;
+  double brush_placement_overlap_budget = 5;
 }

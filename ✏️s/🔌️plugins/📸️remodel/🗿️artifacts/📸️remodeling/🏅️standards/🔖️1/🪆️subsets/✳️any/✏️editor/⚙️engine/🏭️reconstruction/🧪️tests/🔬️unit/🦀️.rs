@@ -542,21 +542,21 @@ fn maximum_image_and_malformed_admission_steps_stay_below_hard_ceiling_in_each_b
     maximum.frame_source.frames = vec![accepted_frame(0, 512, 512, MAX_INTERACTIVE_IMAGE_BYTES), accepted_frame(1, 512, 512, MAX_INTERACTIVE_IMAGE_BYTES)];
     let started = std::time::Instant::now();
     assert!(maximum.start().is_ok());
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted image envelope validation exceeded 8 ms");
+    { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted image envelope validation exceeded 8 ms");
 
     for (width, height, bytes) in [(513, 512, 513 * 512 * 4), (512, 512, MAX_INTERACTIVE_IMAGE_BYTES - 1)] {
         let mut malformed = ReconstructionEngine::new(&EngineParams::default());
         malformed.frame_source.frames = vec![accepted_frame(0, width, height, bytes), accepted_frame(1, 1, 1, 4)];
         let started = std::time::Instant::now();
         assert!(malformed.start().is_err());
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "oversized or malformed image admission exceeded 8 ms");
+        { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "oversized or malformed image admission exceeded 8 ms");
     }
 
     let mut too_many = ReconstructionEngine::new(&EngineParams::default());
     too_many.frame_source.frames = (0..65).map(|index| accepted_frame(index, 1, 1, 4)).collect();
     let started = std::time::Instant::now();
     assert!(too_many.start().is_err());
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "65-frame admission rejection exceeded 8 ms");
+    { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "65-frame admission rejection exceeded 8 ms");
 }
 
 #[test]
@@ -576,7 +576,7 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
         while engine.cursor == 0 {
             let started = std::time::Instant::now();
             engine.step_extracting_features();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted feature allocation/luma/detect/describe microstep exceeded 8 ms");
+            { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted feature allocation/luma/detect/describe microstep exceeded 8 ms");
             if let Some(preparation) = &engine.feature_preparation {
                 assert!(preparation.cursor <= width * height);
             }
@@ -589,7 +589,7 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
             let before = engine.pair_match_preparation.as_ref().map_or((0, 0), |state| (state.query, state.candidate));
             let started = std::time::Instant::now();
             engine.step_matching_features();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "pair-match microstep exceeded 8 ms");
+            { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "pair-match microstep exceeded 8 ms");
             let after = engine.pair_match_preparation.as_ref().map_or((2_048, 0), |state| (state.query, state.candidate));
             assert!(after.0 > before.0 || after.1 >= before.1 || engine.pair_cursor == 1);
         }
@@ -598,7 +598,7 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
         loop {
             let started = std::time::Instant::now();
             let complete = engine.step_build_tracks();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "track microstep exceeded 8 ms");
+            { let tempdiag = started.elapsed(); if tempdiag.as_micros() > 1500 { eprintln!("TEMPDIAG slow step {tempdiag:?} at line {}", line!()); } } assert!(started.elapsed() < std::time::Duration::from_millis(8), "track microstep exceeded 8 ms");
             if complete.is_some() {
                 break;
             }

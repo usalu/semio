@@ -6,8 +6,11 @@ message Mp4Ftyp {
   uint32 minor_version = 2;
   repeated string compatible_brands = 3;
 }
-message Mp4CodecAvc { repeated bytes sps = 1; repeated bytes pps = 2; uint32 nal_length_size = 3; }
-message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; } }
+message Mp4CodecAvc { repeated bytes sps = 1; repeated bytes pps = 2; uint32 nal_length_size = 3; string format = 4; }
+message Mp4HevcNalArray { bool array_completeness = 1; uint32 nal_unit_type = 2; repeated bytes nal_units = 3; }
+message Mp4CodecHevc { string format = 1; uint32 nal_length_size = 2; uint32 general_profile_space = 3; bool general_tier_flag = 4; uint32 general_profile_idc = 5; uint32 general_profile_compatibility_flags = 6; uint64 general_constraint_indicator_flags = 7; uint32 general_level_idc = 8; uint32 min_spatial_segmentation_idc = 9; uint32 parallelism_type = 10; uint32 chroma_format_idc = 11; uint32 bit_depth_luma_minus8 = 12; uint32 bit_depth_chroma_minus8 = 13; uint32 avg_frame_rate = 14; uint32 constant_frame_rate = 15; uint32 num_temporal_layers = 16; bool temporal_id_nested = 17; repeated Mp4HevcNalArray arrays = 18; }
+message Mp4CodecJpeg { string format = 1; }
+message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; Mp4CodecHevc hevc = 2; Mp4CodecJpeg jpeg = 3; } }
 message Mp4Sample { bytes data = 1; uint32 duration = 2; int32 cts_offset = 3; bool sync = 4; }
 message Mp4Track {
   uint32 track_id = 1;

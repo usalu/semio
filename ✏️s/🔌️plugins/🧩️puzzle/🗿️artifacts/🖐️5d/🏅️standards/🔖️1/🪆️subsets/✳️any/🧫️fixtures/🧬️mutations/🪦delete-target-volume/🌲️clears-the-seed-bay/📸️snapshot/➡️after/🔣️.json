@@ -1,0 +1,101 @@
+{
+  "schema": "puzzle.5d",
+  "domain": "architecture",
+  "label": "Concrete Forest",
+  "meta": {
+    "description": "Unified puzzle 5d source for Concrete Forest play; 2d and 3d views project from this model."
+  },
+  "kindCompatibility": [
+    {
+      "source": "b-l",
+      "target": "b-l",
+      "bidirectional": true,
+      "important": false,
+      "specificity": "general"
+    },
+    {
+      "source": "c-b",
+      "target": "c-t",
+      "bidirectional": true,
+      "important": false,
+      "specificity": "general"
+    }
+  ],
+  "parts": [
+    {
+      "id": "seed-left-001",
+      "partKind": "Hexagonal Cut Concrete Forest Left",
+      "2d": {
+        "x": 230.72767272727273,
+        "y": 93.53074909090908,
+        "shape": "circle",
+        "radius": 20.0,
+        "text": "Hexagonal Cut Concrete Forest Left"
+      },
+      "3d": {
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "meshUrl": "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb",
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "label": "Hexagonal Cut Concrete Forest Left"
+      },
+      "grips": [
+        {
+          "id": "v0",
+          "gripKind": "b-l",
+          "2d": {
+            "angle": -6.123233995736766e-17,
+            "gripKind": "b-l",
+            "radius": 3.0
+          },
+          "3d": {
+            "position": [
+              4.05001,
+              4.676537,
+              3.0
+            ],
+            "direction": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "radius": 0.36,
+            "label": "b-l"
+          }
+        },
+        {
+          "id": "v7",
+          "gripKind": "c-b",
+          "2d": {
+            "angle": 2.2847946571562137,
+            "gripKind": "c-b",
+            "radius": 3.0
+          },
+          "3d": {
+            "position": [
+              2.70001,
+              2.338269,
+              0.0
+            ],
+            "direction": [
+              0.0,
+              0.0,
+              -1.0
+            ],
+            "radius": 0.36,
+            "label": "c-b"
+          }
+        }
+      ]
+    }
+  ],
+  "fasteners": []
+}

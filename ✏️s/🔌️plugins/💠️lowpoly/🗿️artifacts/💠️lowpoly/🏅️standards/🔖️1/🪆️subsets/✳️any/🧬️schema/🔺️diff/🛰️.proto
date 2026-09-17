@@ -36,6 +36,7 @@ message LowpolyObjectPatch {
   // absent = untouched; message-field presence = touched (still `null`-able via the wire's own
   // ArtifactChild-or-null convention, same as `LowpolyObject.mesh`).
   semio.os.store.ArtifactChild mesh = 4;
+  optional string mesh_content = 5;
 }
 
 message LowpolyPaintLayersDelta {

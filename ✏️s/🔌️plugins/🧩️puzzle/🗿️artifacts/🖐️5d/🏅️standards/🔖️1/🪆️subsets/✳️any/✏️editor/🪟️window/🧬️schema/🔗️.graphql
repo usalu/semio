@@ -4,10 +4,36 @@ type Puzzle5dCamera2d {
   zoom: Float!
 }
 
+type Puzzle5dWorldProjectionConfig {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
 type Puzzle5dCamera3d {
   position: [Float!]!
   target: [Float!]!
   zoom: Float!
+  up: [Float!]
+  projection: Puzzle5dWorldProjectionConfig!
+}
+
+type Puzzle5dSelectableKinds {
+  parts: Boolean!
+  grips: Boolean!
+  fasteners: Boolean!
 }
 
 type Puzzle5dWorldSunConfig {
@@ -24,11 +50,25 @@ type Puzzle5dBoardWindowConfig {
   suggestionOffset: Float!
   gridSnapEnabled: Boolean!
   gridFactor: Float!
+  gridVisible: Boolean!
+  selectableKinds: Puzzle5dSelectableKinds!
 }
 
 type Puzzle5dWorldWindowConfig {
   camera3d: Puzzle5dCamera3d!
   sun: Puzzle5dWorldSunConfig!
+  gridVisible: Boolean!
+  gridSnapEnabled: Boolean!
+  gridSpacing: Float!
+  lodAutomatic: Boolean!
+  lodDepthVariable: Boolean!
+  lodManual: Float!
+  selectableKinds: Puzzle5dSelectableKinds!
+  gripShow: String!
+  gripDirection: String!
+  transformMove: Boolean!
+  transformRotate: Boolean!
+  voxelDims: [Int!]!
 }
 
 type Puzzle5dWindowTransient {

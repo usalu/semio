@@ -461,6 +461,65 @@ pub struct Puzzle2dKindCatalogs {
     pub wires: Vec<Puzzle2dCatalogWireKind>,
 }
 
+/// 🎯️ A persisted axis-aligned board rectangle constraining fill placement (Area Brush painted or
+/// gumball relocated) — the flat analogue of puzzle3d's `Puzzle3dTargetVolume`. `width`/`height` are
+/// board units measured from `x`/`y` (the rectangle's minimum corner); a negative extent is
+/// normalized by every reader through [`Puzzle2dTargetRegion::bounds`].
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Puzzle2dTargetRegion {
+    pub id: String,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub x: f64,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub y: f64,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub width: f64,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub height: f64,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub hidden: bool,
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub locked: bool,
+}
+
+impl Puzzle2dTargetRegion {
+    /// 📐️ Normalized `[min_x, min_y, max_x, max_y]` — the one place a negative `width`/`height` is
+    /// resolved, so containment never depends on which corner the brush started from.
+    pub fn bounds(&self) -> [f64; 4] {
+        let (min_x, max_x) = if self.width < 0.0 { (self.x + self.width, self.x) } else { (self.x, self.x + self.width) };
+        let (min_y, max_y) = if self.height < 0.0 { (self.y + self.height, self.y) } else { (self.y, self.y + self.height) };
+        [min_x, min_y, max_x, max_y]
+    }
+
+    /// 🎯️ Whether the axis-aligned box `[min_x, min_y, max_x, max_y]` lies fully inside this region.
+    pub fn contains_bounds(&self, aabb: [f64; 4]) -> bool {
+        let [min_x, min_y, max_x, max_y] = self.bounds();
+        aabb[0] >= min_x && aabb[1] >= min_y && aabb[2] <= max_x && aabb[3] <= max_y
+    }
+}
+
+/// 🎯️ Whether ANY visible region contains `aabb`. An empty visible set is unconstrained — exactly
+/// puzzle3d's `world_volumes_contain_aabb` rule, flattened.
+pub fn puzzle2d_regions_contain_bounds(regions: &[Puzzle2dTargetRegion], aabb: [f64; 4]) -> bool {
+    let mut visible = regions.iter().filter(|region| !region.hidden).peekable();
+    if visible.peek().is_none() {
+        return true;
+    }
+    visible.any(|region| region.contains_bounds(aabb))
+}
+
 /// 🗂️ Fixture-carried metadata: manifest id, link-compatibility table, and typed kind catalogs.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -1233,6 +1292,121 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-the-tower-handle-catalog/🦀️.rs"]
                             mod tests_installs_the_tower_handle_catalog;
                         }
+                        #[path = "."]
+                        pub mod create_target_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️appends-region-2/🦀️.rs"]
+                            mod tests_appends_region_2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️paints-a-tower-footprint/🦀️.rs"]
+                            mod tests_paints_a_tower_footprint;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🚫️rejects-a-region-id-the-board-already-holds/🦀️.rs"]
+                            mod tests_rejects_a_region_id_the_board_already_holds;
+                        }
+                        #[path = "."]
+                        pub mod delete_target_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-region-1/🦀️.rs"]
+                            mod tests_removes_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🚫️rejects-deleting-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_deleting_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod move_target_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚀️slides-region-1/🦀️.rs"]
+                            mod tests_slides_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚫️rejects-moving-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_moving_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod resize_target_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/📐️widens-region-1/🦀️.rs"]
+                            mod tests_widens_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/🚫️rejects-resizing-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_resizing_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod edit_target_region_label {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🖋️renames-region-1/🦀️.rs"]
+                            mod tests_renames_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🚫️rejects-renaming-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_renaming_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod change_target_region_hidden {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🙈️hides-region-1/🦀️.rs"]
+                            mod tests_hides_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🚫️rejects-hiding-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_hiding_a_region_the_board_never_held;
+                        }
+                        #[path = "."]
+                        pub mod change_target_region_locked {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🔏️locks-region-1/🦀️.rs"]
+                            mod tests_locks_region_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🚫️rejects-locking-a-region-the-board-never-held/🦀️.rs"]
+                            mod tests_rejects_locking_a_region_the_board_never_held;
+                        }
                     }
                 }
                 #[path = "."]
@@ -1534,12 +1708,22 @@ pub mod editor {
             pub mod add_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎲️apply-board-events/🦀️.rs"]
             pub mod apply_board_events;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚫️cancel-slot/🦀️.rs"]
-            pub mod cancel_slot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️commit-slot/🦀️.rs"]
-            pub mod commit_slot;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔒️close-handle-suggestions/🦀️.rs"]
+            pub mod close_handle_suggestions;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️accept-suggestion/🦀️.rs"]
+            pub mod accept_suggestion;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
+            pub mod target_brush_suggestions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-candidate/🦀️.rs"]
             pub mod cycle_candidate;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💞️create-edge/🦀️.rs"]
+            pub mod create_edge;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-edge/🦀️.rs"]
+            pub mod delete_edge;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️proximity-connect/🦀️.rs"]
+            pub mod proximity_connect;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️set-proximity-radius/🦀️.rs"]
+            pub mod set_proximity_radius;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👯️duplicate-selection/🦀️.rs"]
@@ -1558,8 +1742,10 @@ pub mod editor {
             pub mod force_layout;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️lod-scale-json/🦀️.rs"]
             pub mod lod_scale_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️open-slot/🦀️.rs"]
-            pub mod open_slot;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️open-handle-suggestions/🦀️.rs"]
+            pub mod open_handle_suggestions;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️hover-suggestion/🦀️.rs"]
+            pub mod hover_suggestion;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-inspector/🦀️.rs"]
             pub mod patch_inspector;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-same-kind/🦀️.rs"]
@@ -1572,14 +1758,22 @@ pub mod editor {
             pub mod set_brush_node_size;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔢️set-candidate-index/🦀️.rs"]
-            pub mod set_candidate_index;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-grid-factor/🦀️.rs"]
             pub mod set_grid_factor;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-grid-snap-enabled/🦀️.rs"]
             pub mod set_grid_snap_enabled;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
+            pub mod set_grid_visible;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️set-selectable-kind/🦀️.rs"]
+            pub mod set_selectable_kind;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
+            pub mod set_brush_placement_contact_tolerance;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫂️set-brush-placement-overlap-budget/🦀️.rs"]
+            pub mod set_brush_placement_overlap_budget;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔂️engagement-repeat-last/🦀️.rs"]
+            pub mod engagement_repeat_last;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-lod-mode-for-pane/🦀️.rs"]
             pub mod set_lod_mode_for_pane;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️translate-selection/🦀️.rs"]
@@ -1598,6 +1792,18 @@ pub mod editor {
             pub mod set_selection_flag;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-suggestion-offset/🦀️.rs"]
             pub mod set_suggestion_offset;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️set-transform-gumball-flag/🦀️.rs"]
+            pub mod set_transform_gumball_flag;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️add-target-region/🦀️.rs"]
+            pub mod add_target_region;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪦️delete-target-region/🦀️.rs"]
+            pub mod delete_target_region;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️relocate-target-region/🦀️.rs"]
+            pub mod relocate_target_region;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-target-region-flag/🦀️.rs"]
+            pub mod set_target_region_flag;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖍️set-area-brush-size/🦀️.rs"]
+            pub mod set_area_brush_size;
         }
 
         #[path = "."]
@@ -1626,8 +1832,12 @@ pub mod editor {
                     pub mod brush;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🌐️grid/🦀️.rs"]
                     pub mod grid;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🔄️transform/🦀️.rs"]
+                    pub mod transform;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🔭️lod/🦀️.rs"]
                     pub mod lod;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🎯️select/🦀️.rs"]
+                    pub mod select;
                 }
 
                 #[path = "."]
@@ -1648,6 +1858,8 @@ pub mod editor {
                         pub mod utilities {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖌️brush/🦀️.rs"]
                             pub mod brush;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖍️area-brush/🦀️.rs"]
+                            pub mod area_brush;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖱️select/🦀️.rs"]
                             pub mod select;
                         }

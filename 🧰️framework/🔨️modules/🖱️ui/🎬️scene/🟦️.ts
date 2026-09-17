@@ -935,6 +935,27 @@ export type TiledMapScene = {
   readonly selectionMode: string;
 };
 
+/** 💡️ One placement candidate row of a board's handle-suggestions popup. */
+export type Board2dSuggestionCandidate = {
+  readonly index: number;
+  readonly nodeLabel: string;
+  readonly handleLabel: string;
+  readonly icon?: string;
+  readonly color?: string;
+};
+
+/** 💡️ The one-shot handle-suggestions popup a board window has open — the board twin of the world's suggestion menu. `pending` means the slot is still resolving; an empty `candidates` with `pending: false` is the polite refusal ("no placement available"). */
+export type Board2dSuggestionMenu = {
+  readonly open: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly windowId?: string;
+  readonly handleId?: string;
+  readonly hoveredIndex: number;
+  readonly pending: boolean;
+  readonly candidates: readonly Board2dSuggestionCandidate[];
+};
+
 /** 🧩️ A 2D board surface scene payload — mirrors the wasm `componentScene` node's `board2d` field. */
 export type Board2dScene = {
   readonly fixtureJson: string;
@@ -945,12 +966,24 @@ export type Board2dScene = {
   readonly hoveredId?: string;
   readonly activeUtility?: string;
   readonly selectionMethod: string;
+  /** 👁️ Whether the board host strokes its world grid at all — independent of snapping. */
+  readonly gridVisible?: boolean;
   readonly gridSnapEnabled: boolean;
   readonly gridFactor: number;
+  /** 🎯️ Which granularity a pick may reach — the owning app's selectable-kind filter; absent reads as on. */
+  readonly selectableNodes?: boolean;
+  readonly selectableEdges?: boolean;
+  readonly selectableHandles?: boolean;
   readonly suggestionOffset: number;
   readonly brushWeightsJson: string;
   readonly placementCompatibilityJson: string;
   readonly lodMode: string;
+  /** 🕹️ Which selection-gumball handles this board's select utility composes, as `{"move":boolean,"rotate":boolean}`; absent leaves the engine default (both on). */
+  readonly transformFlags?: string;
+  /** 🎯️ The framework interaction domain this board's picks and hovers belong to; absent means the app declares none and the host publishes no `interactionHover`. */
+  readonly domainId?: string;
+  /** 💡️ The one-shot handle-suggestions popup this window has open, as a {@link Board2dSuggestionMenu} JSON string; absent is the closed state. */
+  readonly suggestionMenuJson?: string;
   /** ⏯️ The base64url `ToolRunTraceDelta` paged to this board — carried outside the doc, see {@link BOARD2D_SCENE_LANES}. */
   readonly toolRunTrace?: string;
   /** 🚚️ The spine's lane manifest — see {@link BOARD2D_SCENE_LANES}. */

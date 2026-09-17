@@ -1,0 +1,5 @@
+{
+  "title": "Nx Full CPU Parallelization",
+  "description": "Parallelize Nx task execution and bounded worker pools to full machine width.",
+  "status": "open"
+}

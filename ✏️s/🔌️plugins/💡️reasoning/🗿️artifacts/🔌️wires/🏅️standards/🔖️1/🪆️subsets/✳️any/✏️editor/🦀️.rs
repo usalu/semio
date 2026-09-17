@@ -79,16 +79,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 /// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
@@ -585,8 +575,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
                 let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
                 edit::windows::canvas::render(&crate::wires_working_board(document), &document.wires_fixture, &window)
             }
-            WIRES_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
-            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
+            WIRES_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_ARTIFACT)),
+            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
         }

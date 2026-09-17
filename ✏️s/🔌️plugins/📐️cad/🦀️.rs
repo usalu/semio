@@ -29,7 +29,7 @@ pub fn plugin() -> Result<Plugin<CadApps>, PluginAssemblyError> {
         .package_id("semio:cad")
         .artifact(crate::artifacts::cad::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import("s.cad.host-media.mesh-import", crate::artifacts::cad::artifact_kind(), crate::artifacts::cad::CAD_DOCUMENT_SCHEMA, crate::artifacts::cad::io::cad_document_from_mesh)?)
-        .editor::<crate::editor::cad::CadPlayApp>(crate::editor::cad::create_cad_app())
+        .editor_with_examples::<crate::editor::cad::CadPlayApp>(crate::editor::cad::create_cad_app(), vec![semio_s_artifact_cad_cad::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::cad::CadPlayApp>()
         .viewer::<crate::viewer::cad::CadViewer>(crate::viewer::cad::create_cad_viewer())
         .viewer_mutation_roster::<crate::viewer::cad::CadViewer>()

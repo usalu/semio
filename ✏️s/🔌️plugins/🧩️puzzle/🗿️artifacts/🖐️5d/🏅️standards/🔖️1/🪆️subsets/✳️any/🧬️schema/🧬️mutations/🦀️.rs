@@ -56,6 +56,13 @@ pub enum Puzzle5dMutation {
     ConnectKindCompatibility(ConnectKindCompatibility),
     DisconnectKindCompatibility(DisconnectKindCompatibility),
     ReplaceKindCatalogs(ReplaceKindCatalogs),
+    CreateTargetVolume(CreateTargetVolume),
+    DeleteTargetVolume(DeleteTargetVolume),
+    MoveTargetVolume(MoveTargetVolume),
+    RotateTargetVolume(RotateTargetVolume),
+    ScaleTargetVolume(ScaleTargetVolume),
+    ChangeTargetVolumeHidden(ChangeTargetVolumeHidden),
+    ChangeTargetVolumeLocked(ChangeTargetVolumeLocked),
 }
 
 //#region 🏷️Kinds
@@ -92,6 +99,13 @@ pub const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-volume",
+    "delete-target-volume",
+    "move-target-volume",
+    "rotate-target-volume",
+    "scale-target-volume",
+    "change-target-volume-hidden",
+    "change-target-volume-locked",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -105,17 +119,22 @@ pub use super::change_part_2d_icon::{change_part_2d_icon, ChangePart2dIcon};
 pub use super::change_part_2d_locked::{change_part_2d_locked, ChangePart2dLocked};
 pub use super::change_part_3d_mesh::{change_part_3d_mesh, ChangePart3dMesh};
 pub use super::change_part_anchor::{change_part_anchor, ChangePartAnchor};
+pub use super::change_target_volume_hidden::{change_target_volume_hidden, ChangeTargetVolumeHidden};
+pub use super::change_target_volume_locked::{change_target_volume_locked, ChangeTargetVolumeLocked};
 pub use super::change_part_kind::{change_part_kind, ChangePartKind};
 pub use super::connect_grips::{connect_grips, ConnectGrips};
 pub use super::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
 pub use super::create_part::{create_part, CreatePart};
+pub use super::create_target_volume::{create_target_volume, CreateTargetVolume};
 pub use super::delete_part::{delete_part, DeletePart};
+pub use super::delete_target_volume::{delete_target_volume, DeleteTargetVolume};
 pub use super::disconnect_grips::{disconnect_grips, DisconnectGrips};
 pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
 pub use super::edit_part_2d_text::{edit_part_2d_text, EditPart2dText};
 pub use super::edit_part_3d_label::{edit_part_3d_label, EditPart3dLabel};
 pub use super::move_part_2d::{move_part_2d, MovePart2d};
 pub use super::move_part_3d::{move_part_3d, MovePart3d};
+pub use super::move_target_volume::{move_target_volume, MoveTargetVolume};
 pub use super::remove_part_grip::{remove_part_grip, RemovePartGrip};
 pub use super::rename_puzzle5d::{rename_puzzle5d, RenamePuzzle5d};
 pub use super::replace_fastener_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
@@ -123,7 +142,9 @@ pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalog
 pub use super::replace_part_2d_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
 pub use super::replace_part_grip::{replace_part_grip, ReplacePartGrip};
 pub use super::rotate_part_3d::{rotate_part_3d, RotatePart3d};
+pub use super::rotate_target_volume::{rotate_target_volume, RotateTargetVolume};
 pub use super::scale_part_3d::{scale_part_3d, ScalePart3d};
+pub use super::scale_target_volume::{scale_target_volume, ScaleTargetVolume};
 
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
@@ -245,6 +266,33 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
                 }
                 if prior.fastener_kind != fastener.fastener_kind {
                     mutations.push(change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
+                }
+            }
+        }
+    }
+    for volume in &before.target_volumes {
+        if !after.target_volumes.iter().any(|entry| entry.id == volume.id) {
+            mutations.push(delete_target_volume(volume.id.clone()));
+        }
+    }
+    for volume in &after.target_volumes {
+        match before.target_volumes.iter().find(|entry| entry.id == volume.id) {
+            None => mutations.push(create_target_volume(volume.clone(), None)),
+            Some(prior) => {
+                if prior.origin != volume.origin {
+                    mutations.push(move_target_volume(volume.id.clone(), volume.origin));
+                }
+                if prior.orientation != volume.orientation {
+                    mutations.push(rotate_target_volume(volume.id.clone(), volume.orientation));
+                }
+                if prior.scale != volume.scale {
+                    mutations.push(scale_target_volume(volume.id.clone(), volume.scale));
+                }
+                if prior.hidden != volume.hidden {
+                    mutations.push(change_target_volume_hidden(volume.id.clone(), volume.hidden));
+                }
+                if prior.locked != volume.locked {
+                    mutations.push(change_target_volume_locked(volume.id.clone(), volume.locked));
                 }
             }
         }

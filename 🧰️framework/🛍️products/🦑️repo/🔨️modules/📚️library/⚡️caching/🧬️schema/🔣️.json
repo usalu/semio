@@ -111,6 +111,22 @@
       },
       "uniqueItems": true
     },
+    "nxSerialTargets": {
+      "description": "Nx target names that must keep parallelism:false because they mutate shared toolchain stores.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "ephemeralOwnerGlobs": {
+      "description": "Glob segments under each Cargo plugin owner root excluded from nativeSources (descriptor staging temps, etc.).",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "generatedDirectories": {
       "type": "array",
       "items": {

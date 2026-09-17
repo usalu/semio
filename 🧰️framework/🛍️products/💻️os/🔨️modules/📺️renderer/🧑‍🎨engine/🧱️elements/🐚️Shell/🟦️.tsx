@@ -1258,7 +1258,6 @@ export class ShellFaultBoundary extends Component<ShellFaultBoundaryProps, Shell
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[DEBUG] shell fault", this.props.boundaryId, error, info.componentStack);
     this.props.onFault?.(error instanceof SemioFaultError ? error.fault : null, error, this.props.boundaryId);
   }
 

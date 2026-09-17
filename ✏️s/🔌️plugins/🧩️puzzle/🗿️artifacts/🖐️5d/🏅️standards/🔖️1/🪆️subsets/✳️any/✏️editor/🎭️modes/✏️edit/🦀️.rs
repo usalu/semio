@@ -4,7 +4,8 @@
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
 
-use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::fill;
+use crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS;
+use crate::editor::puzzle5d::modes::edit::tools::fill;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene};
@@ -37,31 +38,29 @@ fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> boo
     }
 }
 
-/// 🤝️ The engagement HUD for one window: the select/brush/fill switcher lives in the framework
-/// utility bar (declared via `.utility` + each window's `utilities` binding); the fill-count slider
-/// and brush placement picker live as tagged [`semio_framework_plugin::WindowMeasure::Group`]s in the
-/// dedicated "Utility Options" rail, so what is left here is a bare command input plus a status line.
-/// Escape aborts the live fill run of this document instance, and otherwise disarms the utility.
+/// 🤝️ The engagement HUD for one window: the select/brush switcher lives in the framework utility bar
+/// (declared via `.utility` + each window's `utilities` binding) and fill in the mode's tool rail; the brush
+/// placement picker lives as a tagged [`semio_framework_plugin::WindowMeasure::Group`] in the dedicated
+/// "Utility Options" rail and the fill count in the tool options rail, so what is left here is a bare command
+/// input plus a status line. The placeholder is derived from
+/// [`crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS`], so an advertised verb
+/// that no arm parses cannot exist. Escape aborts the live fill run of this document instance, and otherwise
+/// disarms the utility.
 pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> WindowEngagement {
     let part_count = envelope.document.parts.len();
     let fastener_count = envelope.document.fasteners.len();
     let active_utility = envelope.active_utility.as_str();
     let input_value = envelope.runtime.engagement_input_by_window.get(window).cloned().unwrap_or_default();
-    let placeholder = match active_utility {
-        "fill" => "Fill",
-        "brush" => "Brush",
-        _ => "select, brush, fill, clear",
-    };
     WindowEngagement {
         session_active: Some(puzzle5d_engagement_session_active(window, active_utility)),
         input: Some(WindowEngagementInput {
             id: Some(format!("puzzle5d-engagement-{window}")),
             value: Some(input_value),
-            placeholder: Some(placeholder.into()),
+            placeholder: Some(PUZZLE5D_ENGAGEMENT_VERBS.join(", ")),
             disabled: None,
             on_change: Some(puzzle5d_action("engagementInput", Some(json!({ "window": window })))),
             on_submit: Some(puzzle5d_action("engagementSubmit", Some(json!({ "window": window })))),
-            on_repeat_last: None,
+            on_repeat_last: Some(puzzle5d_action("engagementRepeatLast", Some(json!({ "window": window })))),
             on_abort: Some(fill::abort_action(tool_run).unwrap_or_else(|| puzzle5d_action("engagementAbort", Some(json!({ "window": window }))))),
         }),
         control: None,

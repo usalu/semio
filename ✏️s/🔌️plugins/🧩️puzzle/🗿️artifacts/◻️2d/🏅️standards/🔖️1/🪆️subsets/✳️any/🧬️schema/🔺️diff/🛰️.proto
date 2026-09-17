@@ -15,7 +15,9 @@ message Puzzle2dDiff {
   // @state artifact
   optional Puzzle2dEdgesDelta edges = 5;
   // @state artifact
-  optional Puzzle2dMeta meta = 6;
+  optional Puzzle2dTargetRegionsDelta target_regions = 6;
+  // @state artifact
+  optional Puzzle2dMeta meta = 7;
   // @state config
   // @state config
 }
@@ -28,6 +30,9 @@ message Puzzle2dNodePatch { optional Puzzle2dNode replacement = 1; }
 message Puzzle2dEdgesDelta { repeated Puzzle2dEdge added = 1; repeated string removed = 2; repeated Puzzle2dEdgePatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle2dEdgePatchEntry { string id = 1; Puzzle2dEdgePatch patch = 2; }
 message Puzzle2dEdgePatch { optional Puzzle2dEdge replacement = 1; }
+message Puzzle2dTargetRegionsDelta { repeated Puzzle2dTargetRegion added = 1; repeated string removed = 2; repeated Puzzle2dTargetRegionPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dTargetRegionPatchEntry { string id = 1; Puzzle2dTargetRegionPatch patch = 2; }
+message Puzzle2dTargetRegionPatch { optional Puzzle2dTargetRegion replacement = 1; }
 
 
 enum Puzzle2dNodeAnchor {
@@ -198,6 +203,17 @@ message Puzzle2dKindCatalogs {
   repeated Puzzle2dCatalogHandleKind handles = 2;
   repeated Puzzle2dCatalogEdgeKind edges = 3;
   repeated Puzzle2dCatalogWireKind wires = 4;
+}
+
+message Puzzle2dTargetRegion {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double width = 4;
+  double height = 5;
+  optional string label = 6;
+  bool hidden = 7;
+  bool locked = 8;
 }
 
 message Puzzle2dMeta {

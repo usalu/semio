@@ -60,6 +60,49 @@
                   },
                   "nalLengthSize": {
                     "type": "integer"
+                  },
+                  "format": {
+                    "enum": [
+                      "avc1",
+                      "avc3"
+                    ]
+                  },
+                  "extension": {
+                    "type": "object"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "codec": {
+                    "const": "hevc"
+                  },
+                  "format": {
+                    "enum": [
+                      "hvc1",
+                      "hev1"
+                    ]
+                  },
+                  "nalLengthSize": {
+                    "type": "integer"
+                  },
+                  "hevc": {
+                    "type": "object"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "codec": {
+                    "const": "jpeg"
+                  },
+                  "format": {
+                    "enum": [
+                      "jpeg",
+                      "mjpa"
+                    ]
                   }
                 }
               }

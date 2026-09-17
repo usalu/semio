@@ -37,7 +37,7 @@ pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:layout")
         .artifact(crate::artifacts::layout::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::layout::LayoutPlayApp>(crate::editor::layout::create_layout_app())
+        .editor_with_examples::<crate::editor::layout::LayoutPlayApp>(crate::editor::layout::create_layout_app(), vec![semio_s_artifact_layout_layout::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::layout::LayoutPlayApp>()
         .viewer::<crate::viewer::layout::LayoutViewer>(crate::viewer::layout::create_layout_viewer())
         .viewer_mutation_roster::<crate::viewer::layout::LayoutViewer>()

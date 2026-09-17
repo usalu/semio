@@ -512,6 +512,36 @@
           ]
         },
         {
+          "mutationId": "change-target-region-hidden",
+          "sourceMutationDirectoryName": "🙈change-target-region-hidden",
+          "mutationDirectoryName": "🙈change-target-region-hidden",
+          "scenarios": [
+            {
+              "id": "hides-region-1",
+              "directoryName": "🙈️hides-region-1"
+            },
+            {
+              "id": "rejects-hiding-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-hiding-a-region-the-board-never-held"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-target-region-locked",
+          "sourceMutationDirectoryName": "🔏change-target-region-locked",
+          "mutationDirectoryName": "🔏change-target-region-locked",
+          "scenarios": [
+            {
+              "id": "locks-region-1",
+              "directoryName": "🔏️locks-region-1"
+            },
+            {
+              "id": "rejects-locking-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-locking-a-region-the-board-never-held"
+            }
+          ]
+        },
+        {
           "mutationId": "connect-handles",
           "sourceMutationDirectoryName": "🪢️connect-handles",
           "mutationDirectoryName": "🪢️connect-handles",
@@ -565,6 +595,25 @@
           ]
         },
         {
+          "mutationId": "create-target-region",
+          "sourceMutationDirectoryName": "🌍create-target-region",
+          "mutationDirectoryName": "🌍create-target-region",
+          "scenarios": [
+            {
+              "id": "appends-region-2",
+              "directoryName": "🌍️appends-region-2"
+            },
+            {
+              "id": "paints-a-tower-footprint",
+              "directoryName": "🌍️paints-a-tower-footprint"
+            },
+            {
+              "id": "rejects-a-region-id-the-board-already-holds",
+              "directoryName": "🚫️rejects-a-region-id-the-board-already-holds"
+            }
+          ]
+        },
+        {
           "mutationId": "delete-node",
           "sourceMutationDirectoryName": "🗑️delete-node",
           "mutationDirectoryName": "🗑️delete-node",
@@ -580,6 +629,21 @@
             {
               "id": "removes-node-a-and-severs-edge",
               "directoryName": "🚫️removes-node-a-and-severs-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-target-region",
+          "sourceMutationDirectoryName": "🪦delete-target-region",
+          "mutationDirectoryName": "🪦delete-target-region",
+          "scenarios": [
+            {
+              "id": "removes-region-1",
+              "directoryName": "🪦️removes-region-1"
+            },
+            {
+              "id": "rejects-deleting-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-deleting-a-region-the-board-never-held"
             }
           ]
         },
@@ -641,6 +705,21 @@
           ]
         },
         {
+          "mutationId": "edit-target-region-label",
+          "sourceMutationDirectoryName": "🖋️edit-target-region-label",
+          "mutationDirectoryName": "🖋️edit-target-region-label",
+          "scenarios": [
+            {
+              "id": "renames-region-1",
+              "directoryName": "🖋️renames-region-1"
+            },
+            {
+              "id": "rejects-renaming-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-renaming-a-region-the-board-never-held"
+            }
+          ]
+        },
+        {
           "mutationId": "move-node",
           "sourceMutationDirectoryName": "📍move-node",
           "mutationDirectoryName": "📍move-node",
@@ -656,6 +735,21 @@
             {
               "id": "rejects-moving-a-capsule-the-board-never-held",
               "directoryName": "🚫️rejects-moving-a-capsule-the-board-never-held"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-target-region",
+          "sourceMutationDirectoryName": "🚀move-target-region",
+          "mutationDirectoryName": "🚀move-target-region",
+          "scenarios": [
+            {
+              "id": "slides-region-1",
+              "directoryName": "🚀️slides-region-1"
+            },
+            {
+              "id": "rejects-moving-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-moving-a-region-the-board-never-held"
             }
           ]
         },
@@ -751,6 +845,21 @@
           ]
         },
         {
+          "mutationId": "resize-target-region",
+          "sourceMutationDirectoryName": "📐resize-target-region",
+          "mutationDirectoryName": "📐resize-target-region",
+          "scenarios": [
+            {
+              "id": "widens-region-1",
+              "directoryName": "📐️widens-region-1"
+            },
+            {
+              "id": "rejects-resizing-a-region-the-board-never-held",
+              "directoryName": "🚫️rejects-resizing-a-region-the-board-never-held"
+            }
+          ]
+        },
+        {
           "mutationId": "scale-node",
           "sourceMutationDirectoryName": "📏scale-node",
           "mutationDirectoryName": "📏scale-node",
@@ -796,7 +905,14 @@
         "change-manifest-id",
         "connect-kind-compatibility",
         "disconnect-kind-compatibility",
-        "replace-kind-catalogs"
+        "replace-kind-catalogs",
+        "create-target-region",
+        "delete-target-region",
+        "move-target-region",
+        "resize-target-region",
+        "edit-target-region-label",
+        "change-target-region-hidden",
+        "change-target-region-locked"
       ]
     }
   ],
@@ -1049,6 +1165,46 @@
           ]
         },
         {
+          "id": "change-target-region-hidden",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-region-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetRegionHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-target-region-locked",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-region-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetRegionLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "connect-handles",
           "capability": "puzzle-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1106,6 +1262,26 @@
           ]
         },
         {
+          "id": "create-target-region",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-target-region",
+            "bridgeVersion": 1,
+            "variant": "CreateTargetRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "delete-node",
           "capability": "puzzle-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1117,6 +1293,26 @@
             "operation": "delete-node",
             "bridgeVersion": 1,
             "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-target-region",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-target-region",
+            "bridgeVersion": 1,
+            "variant": "DeleteTargetRegion"
           },
           "oracleRequirements": [
             {
@@ -1186,6 +1382,26 @@
           ]
         },
         {
+          "id": "edit-target-region-label",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-target-region-label",
+            "bridgeVersion": 1,
+            "variant": "EditTargetRegionLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "move-node",
           "capability": "puzzle-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1197,6 +1413,26 @@
             "operation": "move-node",
             "bridgeVersion": 1,
             "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-target-region",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-target-region",
+            "bridgeVersion": 1,
+            "variant": "MoveTargetRegion"
           },
           "oracleRequirements": [
             {
@@ -1296,6 +1532,26 @@
             "operation": "replace-node-handle",
             "bridgeVersion": 1,
             "variant": "ReplaceNodeHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-target-region",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-target-region",
+            "bridgeVersion": 1,
+            "variant": "ResizeTargetRegion"
           },
           "oracleRequirements": [
             {

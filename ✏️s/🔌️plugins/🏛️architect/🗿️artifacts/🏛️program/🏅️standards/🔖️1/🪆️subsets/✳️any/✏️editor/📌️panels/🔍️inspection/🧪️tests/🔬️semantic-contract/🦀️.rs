@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin::BuiltNode;
 
 fn project(node: BuiltNode) -> serde_json::Value {
     let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");

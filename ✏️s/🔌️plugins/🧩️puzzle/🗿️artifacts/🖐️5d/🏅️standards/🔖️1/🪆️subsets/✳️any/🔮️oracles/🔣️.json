@@ -169,6 +169,44 @@
           ]
         },
         {
+          "mutationId": "change-target-volume-hidden",
+          "sourceMutationDirectoryName": "🙈change-target-volume-hidden",
+          "mutationDirectoryName": "🙈change-target-volume-hidden",
+          "scenarios": [
+            {
+              "id": "hides-volume-1",
+              "directoryName": "🙈️hides-volume-1"
+            },
+            {
+              "id": "hides-the-seed-bay",
+              "directoryName": "🌲️hides-the-seed-bay"
+            },
+            {
+              "id": "rejects-hiding-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-hiding-a-volume-the-model-never-held"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-target-volume-locked",
+          "sourceMutationDirectoryName": "🔐change-target-volume-locked",
+          "mutationDirectoryName": "🔐change-target-volume-locked",
+          "scenarios": [
+            {
+              "id": "locks-volume-1",
+              "directoryName": "🔒️locks-volume-1"
+            },
+            {
+              "id": "locks-the-seed-bay",
+              "directoryName": "🌲️locks-the-seed-bay"
+            },
+            {
+              "id": "rejects-locking-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-locking-a-volume-the-model-never-held"
+            }
+          ]
+        },
+        {
           "mutationId": "connect-grips",
           "sourceMutationDirectoryName": "🪢️connect-grips",
           "mutationDirectoryName": "🪢️connect-grips",
@@ -202,6 +240,25 @@
           ]
         },
         {
+          "mutationId": "create-target-volume",
+          "sourceMutationDirectoryName": "🌍create-target-volume",
+          "mutationDirectoryName": "🌍create-target-volume",
+          "scenarios": [
+            {
+              "id": "appends-volume-2",
+              "directoryName": "🧊️appends-volume-2"
+            },
+            {
+              "id": "paints-the-seed-bay",
+              "directoryName": "🌲️paints-the-seed-bay"
+            },
+            {
+              "id": "rejects-a-volume-id-the-model-already-holds",
+              "directoryName": "🚫️rejects-a-volume-id-the-model-already-holds"
+            }
+          ]
+        },
+        {
           "mutationId": "delete-part",
           "sourceMutationDirectoryName": "🗑️delete-part",
           "mutationDirectoryName": "🗑️delete-part",
@@ -209,6 +266,25 @@
             {
               "id": "removes-part-a-and-severs-fastener",
               "directoryName": "🚫️removes-part-a-and-severs-fastener"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-target-volume",
+          "sourceMutationDirectoryName": "🪦delete-target-volume",
+          "mutationDirectoryName": "🪦delete-target-volume",
+          "scenarios": [
+            {
+              "id": "removes-volume-1",
+              "directoryName": "🚫️removes-volume-1"
+            },
+            {
+              "id": "clears-the-seed-bay",
+              "directoryName": "🌲️clears-the-seed-bay"
+            },
+            {
+              "id": "rejects-deleting-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-deleting-a-volume-the-model-never-held"
             }
           ]
         },
@@ -275,6 +351,25 @@
             {
               "id": "moves-part-a-in-world",
               "directoryName": "🗺️moves-part-a-in-world"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-target-volume",
+          "sourceMutationDirectoryName": "🚀move-target-volume",
+          "mutationDirectoryName": "🚀move-target-volume",
+          "scenarios": [
+            {
+              "id": "lifts-volume-1",
+              "directoryName": "⬆️lifts-volume-1"
+            },
+            {
+              "id": "shifts-the-seed-bay-north",
+              "directoryName": "🌲️shifts-the-seed-bay-north"
+            },
+            {
+              "id": "rejects-moving-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-moving-a-volume-the-model-never-held"
             }
           ]
         },
@@ -356,6 +451,25 @@
           ]
         },
         {
+          "mutationId": "rotate-target-volume",
+          "sourceMutationDirectoryName": "🌀rotate-target-volume",
+          "mutationDirectoryName": "🌀rotate-target-volume",
+          "scenarios": [
+            {
+              "id": "half-turn-about-z",
+              "directoryName": "🔄️half-turn-about-z"
+            },
+            {
+              "id": "squares-the-seed-bay",
+              "directoryName": "🌲️squares-the-seed-bay"
+            },
+            {
+              "id": "rejects-rotating-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-rotating-a-volume-the-model-never-held"
+            }
+          ]
+        },
+        {
           "mutationId": "scale-part3d",
           "sourceMutationDirectoryName": "📏scale-part3d",
           "mutationDirectoryName": "📏scale-part3d",
@@ -363,6 +477,25 @@
             {
               "id": "uniform-double",
               "directoryName": "📏️uniform-double"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-target-volume",
+          "sourceMutationDirectoryName": "📐scale-target-volume",
+          "mutationDirectoryName": "📐scale-target-volume",
+          "scenarios": [
+            {
+              "id": "per-axis-to-uniform",
+              "directoryName": "📏️per-axis-to-uniform"
+            },
+            {
+              "id": "widens-the-seed-bay",
+              "directoryName": "🌲️widens-the-seed-bay"
+            },
+            {
+              "id": "rejects-scaling-a-volume-the-model-never-held",
+              "directoryName": "🚫️rejects-scaling-a-volume-the-model-never-held"
             }
           ]
         }
@@ -395,7 +528,14 @@
         "change-description",
         "connect-kind-compatibility",
         "disconnect-kind-compatibility",
-        "replace-kind-catalogs"
+        "replace-kind-catalogs",
+        "create-target-volume",
+        "delete-target-volume",
+        "move-target-volume",
+        "rotate-target-volume",
+        "scale-target-volume",
+        "change-target-volume-hidden",
+        "change-target-volume-locked"
       ]
     }
   ],
@@ -607,6 +747,46 @@
           ]
         },
         {
+          "id": "change-target-volume-hidden",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-volume-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetVolumeHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-target-volume-locked",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-volume-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetVolumeLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "connect-grips",
           "capability": "puzzle-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -665,6 +845,26 @@
           ]
         },
         {
+          "id": "create-target-volume",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-target-volume",
+            "bridgeVersion": 1,
+            "variant": "CreateTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "delete-part",
           "capability": "puzzle-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -676,6 +876,26 @@
             "operation": "delete-part",
             "bridgeVersion": 1,
             "variant": "DeletePart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-target-volume",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-target-volume",
+            "bridgeVersion": 1,
+            "variant": "DeleteTargetVolume"
           },
           "oracleRequirements": [
             {
@@ -796,6 +1016,26 @@
             "operation": "move-part3d",
             "bridgeVersion": 1,
             "variant": "MovePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-target-volume",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-target-volume",
+            "bridgeVersion": 1,
+            "variant": "MoveTargetVolume"
           },
           "oracleRequirements": [
             {
@@ -943,6 +1183,26 @@
           ]
         },
         {
+          "id": "rotate-target-volume",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-target-volume",
+            "bridgeVersion": 1,
+            "variant": "RotateTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "scale-part3d",
           "capability": "puzzle-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -954,6 +1214,26 @@
             "operation": "scale-part3d",
             "bridgeVersion": 1,
             "variant": "ScalePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-target-volume",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-target-volume",
+            "bridgeVersion": 1,
+            "variant": "ScaleTargetVolume"
           },
           "oracleRequirements": [
             {

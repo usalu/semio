@@ -2,9 +2,10 @@
 //! document. Owns the world scene payload (instances/meshes/grips/fasteners, the selection and
 //! gumball descriptor, the chunking/environment blocks and the interaction channel), binds the
 //! transform-gumball and relocate utilities plus the two shared brush/fill ones, and scopes the
-//! transform/3D-camera actions (`🎬️actions`). Its only genuinely 3D-specific chrome measure is the
-//! sun group in `☑️options/☀️sun`; the brush/fill Utility Options it shares with the 2D window come
-//! from the mode's own `☑️options/*`.
+//! transform/3D-camera actions (`🎬️actions`). Its own chrome lives in `☑️options/*` — projection,
+//! grip show/direction, LOD, grid and sun are 3D-specific; the selection group is the shared body the
+//! board pane also renders. The brush Utility Options it shares with the 2D window come from the
+//! mode's own `☑️options/*`, and fill's from the mode-level tool `🛠️tools/🪣️fill`.
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
@@ -15,11 +16,12 @@ use crate::editor::puzzle5d::precompute::{puzzle5d_placement_entity, PUZZLE5D_WO
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::{
     part_scale_json, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction,
-    world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND,
+    target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRIP_SHOW_ALWAYS,
+    PUZZLE5D_TARGET_VOLUME_COLOR,
 };
 use semio_framework_plugin::{
-    world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition,
-    WindowMeasure, WindowOptions,
+    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
+    WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
@@ -33,9 +35,9 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
 ///
-/// 🔁️ The `brush`/`fill` utility ids it binds resolve to the definitions declared once under the 2D
-/// window (`🪟️windows/◻️2d/🪛️utilities/{🖌️brush,🪣️fill}`) — both windows expose the identical utility,
-/// so it is never duplicated here.
+/// 🔁️ The `brush` utility id it binds resolves to the definition declared once under the 2D window
+/// (`🪟️windows/◻️2d/🪛️utilities/🖌️brush`) — both windows expose the identical utility, so it is never
+/// duplicated here.
 pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
@@ -43,14 +45,14 @@ pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKi
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle5d-3d".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels, None), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![
             utilities::transform::MOVE_UTILITY_ID.into(),
             utilities::transform::ROTATE_UTILITY_ID.into(),
             utilities::transform::SCALE_UTILITY_ID.into(),
             board2d::utilities::brush::UTILITY_ID.into(),
-            board2d::utilities::fill::UTILITY_ID.into(),
+            utilities::volume_brush::UTILITY_ID.into(),
             utilities::world_relocate::UTILITY_ID.into(),
         ],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
@@ -62,10 +64,24 @@ pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKi
     }
 }
 
-/// 🎚️ The live chrome measures for this window: its own sun group plus the mode-level brush/fill
-/// Utility Options groups it shares with the 2D window.
-pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> Vec<WindowMeasure> {
-    vec![options::sun::measure(&envelope.runtime, labels.is_de()), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
+/// 🎚️ The live chrome measures for this window: its own projection / grip / LOD / grid / selection /
+/// sun groups plus the transform gumball's Utility Options and the mode-level brush Utility Options
+/// group it shares with the 2D window. Fill is a mode-level TOOL, so its count and distribution measures are
+/// the tool options rail's (`🛠️tools/🪣️fill`), never this window's.
+pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+    let mut measures = vec![
+        options::projection::measure(&envelope.runtime),
+        options::grip::show_measure(&envelope.runtime, labels),
+        options::grip::direction_measure(&envelope.runtime, labels),
+        options::lod::measure(&envelope.runtime, labels),
+        options::grid::measure(&envelope.runtime, labels),
+        options::select::measure(&envelope.runtime, labels),
+        options::sun::measure(&envelope.runtime, labels.is_de()),
+    ];
+    measures.extend(utilities::transform::options(&envelope.runtime, labels));
+    measures.push(utilities::volume_brush::options(&envelope.runtime, labels));
+    measures.push(mode_options::brush::measure(envelope, labels));
+    measures
 }
 
 pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
@@ -74,14 +90,18 @@ pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEn
 //#endregion 🔖️Definition
 
 //#region 🔖️SceneJson
+/// 🎥️ The camera payload the world host reads, including this pane's own projection taxonomy
+/// (`setProjection`/`setProjectionParam`) — `world3d_camera_projection_json` derives the host's `fov`
+/// and orientation from it, so the hand-rolled fixed-45° object it replaces is gone.
 pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
-    json!({ "position": camera.position, "target": camera.target, "zoom": camera.zoom, "fov": 45.0 }).to_string()
+    world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection)
 }
 
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `selected`/`hovered` per
-/// instance always read `false` now — see `world_selection_json_ex`'s doc comment for why (`render`
-/// has no `InteractionView`). A part a tool run holds provisionally carries `provisional: true`.
-fn world_instances_json(document: &Puzzle5dDocument, tool_run: Option<&ToolRunView>) -> String {
+/// 🕹️ `selected`/`hovered` per instance are painted from the live `vortex` domain the ONE 5d
+/// interaction snapshot reads — the same domain the board pane writes, so a part picked on the board
+/// lights up here. A part a tool run holds provisionally carries `provisional: true`.
+pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dInteractionSnapshot, tool_run: Option<&ToolRunView>) -> String {
+    let selected = interaction.selected_part_ids();
     let instances: Vec<Value> = document
         .parts
         .iter()
@@ -94,8 +114,8 @@ fn world_instances_json(document: &Puzzle5dDocument, tool_run: Option<&ToolRunVi
                 "rotation": part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 "scale": part_scale_json(part),
                 "label": part.part_3d.label.clone().unwrap_or_else(|| part.part_kind.clone()),
-                "selected": false,
-                "hovered": false,
+                "selected": selected.iter().any(|id| id == &part.id),
+                "hovered": interaction.hovered.iter().any(|id| id == &part.id),
                 "disabled": part.part_2d.locked.unwrap_or(false),
                 "provisional": tool_run.is_some_and(|run| run.provisional_entities.contains(&puzzle5d_placement_entity(&part.id))),
             })
@@ -119,18 +139,41 @@ fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
         .unwrap_or_else(|| "#38bdf8".into())
 }
 
-fn world_grips_json(document: &Puzzle5dDocument) -> String {
+/// 🖌️ Placement utilities publish every part's grip markers so the host can hit-test them without a
+/// prior part selection (those utilities block instance pick).
+fn grip_markers_publish_for_utility(active_utility: &str) -> bool {
+    matches!(active_utility, "brush" | "fill")
+}
+
+/// 👁️ True when this part's grips should render — `PUZZLE5D_GRIP_SHOW_ALWAYS`, a live hover/selection
+/// touch, or an armed placement utility. `…_SELECTED` otherwise hides markers until the part (or one
+/// of its own grips) is marked.
+fn part_grips_visible(part: &Puzzle5dPart, runtime: &Puzzle5dRuntime, interaction: &Puzzle5dInteractionSnapshot, active_utility: &str) -> bool {
+    runtime.grip_show == PUZZLE5D_GRIP_SHOW_ALWAYS || interaction.touches_part(part) || grip_markers_publish_for_utility(active_utility)
+}
+
+/// 🤏️ Per-grip marker records. `selected`/`hovered` are painted from the live `vortex` domain —
+/// `WorldVortexMarkers` reads them off each record, not off `selectionJson`.
+pub fn world_grips_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime, interaction: &Puzzle5dInteractionSnapshot, active_utility: &str) -> String {
+    let selected_grips = interaction.selected_grip_ids();
     let mut records = Vec::new();
     for part in &document.parts {
+        if !part_grips_visible(part, runtime, interaction, active_utility) {
+            continue;
+        }
         for grip in &part.grips {
+            let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
             records.push(json!({
-                "fullId": puzzle5d_grip_full_id(&part.id, &grip.id),
+                "fullId": full_id,
                 "objectId": part.id,
                 "vortexKind": grip.grip_kind,
                 "position": world_grip_position(part, grip),
                 "direction": world_grip_direction(part, grip),
                 "radius": grip.grip_3d.radius.max(0.36),
                 "color": grip_color(document.kind_catalogs.as_ref(), &grip.grip_kind),
+                "displayDirection": runtime.grip_direction,
+                "selected": selected_grips.iter().any(|id| id == &full_id),
+                "hovered": interaction.hovered.iter().any(|id| id == &full_id),
             }));
         }
     }
@@ -150,23 +193,39 @@ fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-/// 🎯️ Base selection JSON augmented with the mesh granularity, transform tool, and gumball fields the
-/// world-3d host reads. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap:
-/// selection/hover ids used to come from `runtime.selection`/`hovered_part_id`, now dissolved into
-/// the framework-owned `vortex` interaction domain; `render` has no `InteractionView` to read it from
-/// (see `puzzle3d`'s `world_selection_json` doc comment for the identical gap), so this payload
-/// carries no live ids until that framework gap closes.
-fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
+/// 🎯️ The host's `WorldSelectionRecord` for this pane: the framework-owned `vortex` domain projected
+/// onto exactly the field names `World3dHost`'s parser reads (`ids`/`activeObjectId`/`hoveredId`),
+/// plus the mesh granularity, transform mode and gumball descriptor. Grip selection/hover is
+/// deliberately NOT here — `WorldSelectionRecord` has no grip field, so a marker's own flags travel
+/// on `vorticesJson` (see `world_grips_json`).
+pub fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     let runtime = &envelope.runtime;
-    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
+    let interaction = &envelope.interaction;
+    let part_ids = interaction.selected_part_ids();
+    let hovered_id = interaction.hovered_part_id(&envelope.document).map(str::to_string);
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", part_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
+        if let Some(id) = part_ids.first() {
+            object.insert("activeObjectId".into(), json!(id));
+        }
         if let Some(transform_mode) = puzzle5d_transform_handle(&envelope.active_utility) {
             object.insert("transformMode".into(), json!(transform_mode));
+            object.insert(
+                "gumballConfig".into(),
+                json!({
+                    "moveAxes": runtime.transform_move,
+                    "movePlanes": runtime.transform_move,
+                    "rotate": runtime.transform_rotate,
+                    "scaleAxes": false,
+                    "scalePlanes": false,
+                    "scaleUniform": false,
+                }),
+            );
         }
-        object.insert("gumballActive".into(), json!(puzzle5d_gumball_active(runtime, &envelope.active_utility)));
+        object.insert("gumballActive".into(), json!(puzzle5d_gumball_active(runtime, &envelope.active_utility, interaction)));
     }
     value.to_string()
 }
@@ -180,16 +239,38 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
     .to_string()
 }
 
+/// 🧊️ The target volumes the world host paints as wireframe boxes — the same record shape puzzle 3d
+/// publishes, so `World3dHost`'s generic `targetVolumesJson` lane reads both artifacts unchanged.
+pub fn world_target_volumes_json(document: &Puzzle5dDocument) -> String {
+    let records: Vec<Value> = document
+        .target_volumes
+        .iter()
+        .map(|volume| {
+            json!({
+                "id": volume.id,
+                "origin": volume.origin,
+                "orientation": volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                "scale": target_volume_scale_json(volume),
+                "color": PUZZLE5D_TARGET_VOLUME_COLOR,
+                "hidden": volume.hidden,
+                "locked": volume.locked,
+            })
+        })
+        .collect();
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle5dScene, tool_run: Option<&ToolRunView>, mesh_lane: &[String]) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(mesh_lane), world_instances_json(&envelope.document, tool_run), world_selection_json_ex(envelope));
-    scene.vortices_json = Some(world_grips_json(&envelope.document));
+    let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(mesh_lane), world_instances_json(&envelope.document, &envelope.interaction, tool_run), world_selection_json_ex(envelope));
+    scene.vortices_json = Some(world_grips_json(&envelope.document, &envelope.runtime, &envelope.interaction, &envelope.active_utility));
     scene.attractions_json = Some(world_fasteners_json(&envelope.document));
     scene.interaction_json = Some(world_interaction_json(&envelope.runtime, &envelope.active_utility));
     scene.chunking_json = Some(world3d_chunking_json(256.0, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
+    scene.target_volumes_json = Some(world_target_volumes_json(&envelope.document));
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render

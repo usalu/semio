@@ -36,8 +36,10 @@ const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️package
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
 const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);
 const sessionPath = sessionAlias.replacement;
-const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
+const playgroundTarget = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin));
+const brandId = process.env.SEMIO_BRAND ?? playgroundTarget?.brand;
 const brand = resolveShellBrandById(brandId);
+const playgroundDistDir = playgroundTarget?.distDir;
 const distributionSource = (source: string) => source === "\0vite/preload-helper.js" ? "virtual/vite/preload-helper.js" : path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
 const distributionRollupOutput = {
   entryFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(DISTRIBUTION_LAYOUT, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
@@ -119,7 +121,7 @@ return {
     assetsDir: DISTRIBUTION_LAYOUT.bundles,
     emptyOutDir: false,
     rollupOptions: { output: distributionRollupOutput },
-    ...(brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : {}),
+    ...(brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : playgroundDistDir ? { outDir: path.join(repoRoot, playgroundDistDir) } : {}),
   },
   resolve: {
     alias: [

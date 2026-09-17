@@ -54,7 +54,7 @@ const GRAPH_OUTLINE_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/
 
 fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["fixture"].to_string()).expect("law fixture parses");
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("outline builds");

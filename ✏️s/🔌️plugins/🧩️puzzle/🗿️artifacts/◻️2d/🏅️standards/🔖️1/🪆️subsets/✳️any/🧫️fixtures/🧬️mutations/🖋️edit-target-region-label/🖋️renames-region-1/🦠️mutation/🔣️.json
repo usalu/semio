@@ -1,0 +1,5 @@
+{
+  "mutation": "editTargetRegionLabel",
+  "id": "region-1",
+  "newLabel": "Tower Footprint"
+}

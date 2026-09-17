@@ -112,17 +112,20 @@ pub(crate) fn dec_paint_layer_list(s: &str) -> Result<Vec<LowpolyPaintLayer>, St
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_paint_layer).collect()
 }
 
-/// 🧊️ One object: `[id,name,transform,smooth-shading,mesh-handle,paint-layers]`. The live half-edge
-/// mesh JSON content is DELIBERATELY absent — it is not a field of `LowpolyObject` at all (moved to
-/// `✏️editor/🖌️session::LowpolyScratch`'s session-local `mesh_workspace` cache, ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` round-trip law fix round 2).
+/// 🧊️ One object: `[id,name,transform,smooth-shading,mesh-handle,paint-layers,mesh-content]`. The
+/// seventh (mesh content) slot is absent from legacy handle-only documents and decodes as `""`.
 pub(crate) fn enc_object(o: &LowpolyObject) -> String {
-    format!("[{},{},{},{},{},{}]", enc_str(&o.id), enc_str(&o.name), enc_lowpoly_transform(&o.transform), o.smooth_shading, enc_child_opt(&o.mesh), enc_paint_layer_list(&o.paint_layers),)
+    format!("[{},{},{},{},{},{},{}]", enc_str(&o.id), enc_str(&o.name), enc_lowpoly_transform(&o.transform), o.smooth_shading, enc_child_opt(&o.mesh), enc_paint_layer_list(&o.paint_layers), enc_str(&o.mesh_content))
 }
 pub(crate) fn dec_object(s: &str) -> Result<LowpolyObject, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, name, transform, smooth_shading, mesh, paint_layers] = parts.as_slice() else {
-        return Err(format!("object: expected 6 fields, got {}", parts.len()));
+    let (fields, mesh_content) = match parts.as_slice() {
+        [head @ .., content] if head.len() == 6 => (head, dec_str(content)?),
+        fields if fields.len() == 6 => (fields, String::new()),
+        _ => return Err(format!("object: expected 6 or 7 fields, got {}", parts.len())),
+    };
+    let [id, name, transform, smooth_shading, mesh, paint_layers] = fields else {
+        return Err(format!("object: expected 6 fields, got {}", fields.len()));
     };
     Ok(LowpolyObject {
         id: dec_str(id)?,
@@ -131,6 +134,7 @@ pub(crate) fn dec_object(s: &str) -> Result<LowpolyObject, String> {
         smooth_shading: smooth_shading.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
         mesh: dec_child_opt(mesh)?,
         paint_layers: dec_paint_layer_list(paint_layers)?,
+        mesh_content,
     })
 }
 pub(crate) fn enc_object_list(list: &[LowpolyObject]) -> String {
@@ -257,15 +261,17 @@ fn write_object(out: &mut Vec<u8>, o: &LowpolyObject) {
     out.push(o.smooth_shading as u8);
     write_child_opt(out, &o.mesh);
     write_paint_layer_list(out, &o.paint_layers);
+    write_str_lp(out, &o.mesh_content);
 }
-fn read_object(reader: &mut store::ByteReader<'_>) -> Result<LowpolyObject, String> {
+fn read_object(reader: &mut store::ByteReader<'_>, format: u8) -> Result<LowpolyObject, String> {
     let id = read_str_lp(reader)?;
     let name = read_str_lp(reader)?;
     let transform = read_lowpoly_transform(reader)?;
     let smooth_shading = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let mesh = read_child_opt(reader)?;
     let paint_layers = read_paint_layer_list(reader)?;
-    Ok(LowpolyObject { id, name, transform, smooth_shading, mesh, paint_layers })
+    let mesh_content = if format >= 2 { read_str_lp(reader)? } else { String::new() };
+    Ok(LowpolyObject { id, name, transform, smooth_shading, mesh, paint_layers, mesh_content })
 }
 fn write_object_list(out: &mut Vec<u8>, list: &[LowpolyObject]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
@@ -273,27 +279,27 @@ fn write_object_list(out: &mut Vec<u8>, list: &[LowpolyObject]) {
         write_object(out, o);
     }
 }
-fn read_object_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<LowpolyObject>, String> {
+fn read_object_list(reader: &mut store::ByteReader<'_>, format: u8) -> Result<Vec<LowpolyObject>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    (0..count).map(|_| read_object(reader)).collect()
+    (0..count).map(|_| read_object(reader, format)).collect()
 }
 
+/// 🔢️ Format 2 appends each object's mesh content; format 1 (handle-only) still decodes.
+const PACK_BINARY_FORMAT: u8 = 2;
 fn encode_lowpoly_snapshot_binary(s: &LowpolySnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
     write_object_list(&mut out, &s.objects);
     out
 }
 fn decode_lowpoly_snapshot_binary(bytes: &[u8]) -> Result<LowpolySnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
+    if !(1..=PACK_BINARY_FORMAT).contains(&format) {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let objects = read_object_list(&mut reader)?;
+    let objects = read_object_list(&mut reader, format)?;
     Ok(LowpolySnapshot { schema, objects })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -357,6 +363,7 @@ pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &s
             smooth_shading: false,
             mesh: Some(crate::mesh_child_handle(object_id, mesh_json)),
             paint_layers: vec![LowpolyPaintLayer::new("Base")],
+            mesh_content: mesh_json.into(),
         }],
     }
 }

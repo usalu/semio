@@ -11,6 +11,10 @@ semio_framework_plugin::app_labels! {
         window_curated: native_en "Curated", native_de "Kuratiert", reuse_en "Curated", reuse_de "Kuratiert";
         window_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
         window_grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        grid_instance_display: native_en "Instance display", native_de "Instanzdarstellung", reuse_en "Instance display", reuse_de "Instanzdarstellung";
+        grid_instance_display_line_behind: native_en "Line behind grid", native_de "Linie hinter Raster", reuse_en "Line behind grid", reuse_de "Linie hinter Raster";
+        grid_instance_display_representative: native_en "Representative only", native_de "Nur Vertreter", reuse_en "Representative only", reuse_de "Nur Vertreter";
+        grid_instance_display_representative_with_count: native_en "Representative and count", native_de "Vertreter und Anzahl", reuse_en "Representative and count", reuse_de "Vertreter und Anzahl";
         mode_curation: native_en "Curation", native_de "Kuratierung", reuse_en "Curation", reuse_de "Kuratierung";
         search_placeholder: native_en "Search…", native_de "Suchen…", reuse_en "Search…", reuse_de "Suchen…";
         all_typologies: native_en "All Typologies", native_de "Alle Typologien", reuse_en "All Typologies", reuse_de "Alle Typologien";

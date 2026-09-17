@@ -1458,7 +1458,10 @@ impl ReconstructionEngine {
         match remodeling_mesh::mesh_pipeline_step(pipeline, 1) {
             remodeling_mesh::MeshPipelineStatus::Working { stage, .. } => MeshStepOutcome::Working(mesh_stage_to_engine_stage(stage)),
             remodeling_mesh::MeshPipelineStatus::Done => MeshStepOutcome::Done,
-            remodeling_mesh::MeshPipelineStatus::Failed(msg) => MeshStepOutcome::Failed(msg),
+            remodeling_mesh::MeshPipelineStatus::Failed(msg) => {
+                eprintln!("TEMPDIAG mesh pipeline failed: {msg}");
+                MeshStepOutcome::Failed(msg)
+            }
         }
     }
 

@@ -1,0 +1,30 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": null,
+  "edges": null,
+  "targetRegions": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "region-1",
+        "patch": {
+          "replacement": {
+            "id": "region-1",
+            "x": -12.5,
+            "y": -12.5,
+            "width": 80.5,
+            "height": 60.5,
+            "label": "Tower Footprint",
+            "hidden": false,
+            "locked": false
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "meta": null
+}

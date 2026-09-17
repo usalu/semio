@@ -115,3 +115,16 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
     And a rejected or no-op vector yields no operation
     And the members the patch touches are exactly the members the typed Puzzle2dDiff declares
     And the typed diff's added, removed and patched sets are exactly what jsonpatch needs operations for
+
+  @id-region-containment
+  @level-long
+  @mode-differential
+  Scenario: shapely adjudicates the target-region family by containment and intersection
+    Given every committed target-region vector under shared://🧬️mutations/🔣️.json
+    When each region is built as a shapely box normalized over whichever corner the brush stroke started from
+    Then every committed region's shapely area equals the product of the width and height it states
+    And move-target-region equals shapely's translate of the before rectangle and preserves its area
+    And resize-target-region takes the area its arguments imply and leaves the minimum corner where it was
+    And the label and flag verbs leave every rectangle geometrically equal
+    And a painted region never straddles a node — it either contains that node's whole footprint or does not touch it
+    And a refused or no-op vector moves no rectangle at all

@@ -2,6 +2,7 @@
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { prefetchDemonstratorMapTiles } from "./🗺️map-tiles/🟦️.ts";
 
 /** 🎪️ Publishes the Demonstrator using prerequisites selected by the outer Nx graph. */
 class BuildScript extends BundleScript {
@@ -11,7 +12,8 @@ class BuildScript extends BundleScript {
     const cancel = (): void => { controller.abort(); process.exitCode = 130; };
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      await buildViteArtifact({ root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist/site"), owner: "demonstrator:site", signal: controller.signal, environment: { SEMIO_BUILD_MODE: "ship", SEMIO_RENDERER: "react" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
+      await prefetchDemonstratorMapTiles(this.repoRoot);
+      await buildViteArtifact({ root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist/site"), owner: "demonstrator:site", signal: controller.signal, environment: { SEMIO_BUILD_MODE: "ship", SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

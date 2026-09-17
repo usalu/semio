@@ -976,7 +976,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 None,
             )?,
             document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK3D_BODY_ARTIFACT))?,
-            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels)?,
+            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK3D_BODY_INSPECTOR))?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))

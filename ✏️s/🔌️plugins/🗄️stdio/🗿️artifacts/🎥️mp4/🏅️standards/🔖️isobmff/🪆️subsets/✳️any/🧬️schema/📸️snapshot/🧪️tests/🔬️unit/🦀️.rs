@@ -8,7 +8,7 @@ async fn sample_snapshot() -> Mp4Snapshot {
         tracks: vec![Mp4Track {
             track_id: 1,
             timescale: 1000,
-            codec: Mp4Codec { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
+            codec: Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None),
             width: 64,
             height: 64,
             metadata: Mp4TrackMetadata::default(),

@@ -12683,7 +12683,7 @@
                       ]
                     },
                     "required": false,
-                    "default": "demo"
+                    "default": "concrete-forest"
                   }
                 ],
                 "inPalette": true,
@@ -17342,7 +17342,7 @@
                       ]
                     },
                     "required": false,
-                    "default": "demo"
+                    "default": "concrete-forest"
                   }
                 ],
                 "inPalette": true,

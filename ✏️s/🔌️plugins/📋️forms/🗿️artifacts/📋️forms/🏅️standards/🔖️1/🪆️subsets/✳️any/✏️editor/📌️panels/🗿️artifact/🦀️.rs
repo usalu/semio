@@ -11,12 +11,12 @@
 //! `interactionSelect` binding [`PanelTreeBuilder::interaction_domain`] stamps.
 
 use crate::editor::forms::terminology::FormsLabels;
-use crate::editor::forms::{forms_action, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
+use crate::editor::forms::{forms_action, ui_label, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
 use crate::schema::forms_play_step_tree_id;
 use crate::{forms_steps, FormQuestion, FormStep, FormsSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{
-    tree_window_item, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    tree_window_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
@@ -46,7 +46,7 @@ fn ui_text(value: &str, code: &str) -> UiAssemblyResult<UiText> {
 
 /// 🎯️ One question row: a `"field"` pick target keyed by its own raw id, draggable, binding nothing.
 fn question_row(question: &FormQuestion) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui::tree_item(Label::data(question.label.clone()))
+    let builder = ui::tree_item(ui_label(&question.label)?)
         .try_id(&question.id)
         .map_err(|_| PluginAssemblyError::new("ui.document", "forms question id admission failed"))?
         .description(ui_text(&question.kind, "forms question kind admission failed")?)
@@ -60,7 +60,7 @@ fn question_row(question: &FormQuestion) -> UiAssemblyResult<BuiltNode> {
 /// a windowed container over the questions it owns.
 fn step_row(step: &FormStep, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let id = forms_play_step_tree_id(&step.id);
-    let item = ui::tree_item(Label::data(step.title.clone()))
+    let item = ui::tree_item(ui_label(&step.title)?)
         .try_id(&id)
         .map_err(|_| PluginAssemblyError::new("ui.document", "forms step id admission failed"))?
         .description(UiText::clipped(&format!("{} questions", step.blocks.len())))
@@ -88,7 +88,7 @@ pub fn render(spec: &FormsSnapshot, labels: &FormsLabels, windows: &TreeWindows<
         .window_section_or_placeholder(
             windows,
             FORMS_PLAY_DOCUMENT_STEPS,
-            Some(crate::editor::forms::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?),
+            Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?),
             true,
             &steps,
             |step| step_row(step, windows),

@@ -106,8 +106,7 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts deps"
-      },
-      "parallelism": false
+      }
     }
   }
 }

@@ -133,7 +133,7 @@ describe("favicon delivery", () => {
           expect(response.status).toBe(item.kind === null ? 404 : 200);
           if (item.kind !== null) {
             const kind = item.kind as keyof typeof expected;
-            expect(decodeURIComponent(url.pathname)).toBe(`/${authority[kind]}`);
+            expect(decodeURIComponent(url.pathname)).toBe(item.path ?? `/${authority[kind]}`);
             expect(response.headers.get("content-type")).toBe(kind === "svg" ? "image/svg+xml" : "image/x-icon");
             expect(createHash("sha256").update(new Uint8Array(await response.arrayBuffer())).digest("hex")).toBe(createHash("sha256").update(expected[kind]).digest("hex"));
           }
@@ -156,7 +156,7 @@ describe("favicon delivery", () => {
 });
 
 describe("declared HTML entry", () => {
-  it("builds and serves the declared HTML entry without publishing generic aliases", async () => {
+  it("builds and serves the declared HTML entry and static-host aliases", async () => {
     const { build, preview } = await import("vite"), { parse } = await import("parse5");
     const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🏠️html-entry.json"), "utf8"));
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "html-entry-"))), output = join(sandbox, "📤️output");
@@ -180,7 +180,10 @@ describe("declared HTML entry", () => {
         expect(markup).toContain(`<title>${fixture.title}</title>`);
         expect(parse(markup).childNodes.some(node => node.nodeName === "html")).toBe(true);
       }
-      for (const path of fixture.forbiddenFiles) expect(existsSync(join(output, path))).toBe(false);
+      for (const path of fixture.requiredAliasFiles) {
+        expect(readFileSync(join(output, path), "utf8")).toContain("runtime-kept");
+        expect(readFileSync(join(output, path), "utf8")).toBe(readFileSync(join(output, fixture.entry), "utf8"));
+      }
       expect(readFileSync(join(output, fixture.entry), "utf8")).toContain("runtime-kept");
       console.log("[DEBUG] actual Vite build and preview served only the declared HTML output");
     } finally { await server.close(); }
@@ -204,9 +207,9 @@ describe("build output write authority", () => {
         const brand = semioBrandHtmlVitePlugins(sandbox, { windowTitle: "fixture", logoSvg: fixture.markup, faviconIcoPath: "📥️input/🖼️icon.ico", cnameHost: fixture.cname });
         const hooks = {
           mesh: { plugin: meshCollectionVitePlugin(sandbox, { kind: "mesh-collection", route: "/mesh", catalog: "📇️catalog.json" })[1]!, expected: { "mesh/🧊️model.glb": fixture.payload } },
-          favicon: { plugin: brand.find(plugin => plugin.name === "semio-favicon-build")!, expected: { "🛡️favicon.svg": fixture.markup, "🔖️favicon.ico": fixture.payload } },
+          favicon: { plugin: brand.find(plugin => plugin.name === "semio-favicon-build")!, expected: { "🛡️favicon.svg": fixture.markup, "🔖️favicon.ico": fixture.payload, "favicon.svg": fixture.markup, "favicon.ico": fixture.payload } },
           markers: { plugin: brand.find(plugin => plugin.name === "static-deploy-markers")!, expected: { ".nojekyll": "", CNAME: fixture.cname + "\n" } },
-          html: { plugin: semioEmojiIndexHtmlVitePlugin(sandbox), expected: { "🌐️.html": fixture.html } },
+          html: { plugin: semioEmojiIndexHtmlVitePlugin(sandbox), expected: { "🌐️.html": fixture.html, "index.html": fixture.html, "404.html": fixture.html } },
           assets: { plugin: semioAssetsVitePlugin(sandbox)[1]!, expected: { "🖼️assets/🔤️fonts/🔤️font.ttf": fixture.payload } },
           tile: { plugin: tileProxyVitePlugin(sandbox, { kind: "tile-proxy", route: "/tiles", cache: "tiles", upstream: "https://example.invalid/{z}/{x}/{y}.png" }, "bundle")[1]!, expected: { "tiles/0/0/0.png": fixture.payload } },
           static: { plugin: staticDirVitePlugin(sandbox, { kind: "static-dir", route: "/fixture", root: "📥️input" })[1]!, expected: { "fixture/🧊️model.glb": fixture.payload, "fixture/🖼️icon.ico": fixture.payload } },

@@ -177,10 +177,6 @@ fn glazing_construction_options(model: &Model, locale: Locale) -> Vec<(String, S
     options
 }
 
-fn surface_options(model: &Model) -> Vec<(String, String)> {
-    model.surfaces.iter().map(|surface| (energy_target_id(surface.id), surface.name.clone())).collect()
-}
-
 fn class_options() -> Vec<(String, String)> {
     SURFACE_CLASS_IDS.iter().map(|id| ((*id).to_string(), (*id).to_string())).collect()
 }

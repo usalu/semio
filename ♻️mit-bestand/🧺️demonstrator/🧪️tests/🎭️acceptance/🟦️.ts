@@ -474,6 +474,9 @@ test("demonstrator overview: pane cards use window-silhouette chrome without dra
     await expect(card.locator('[data-slot="window-chrome-body-surface"]')).toHaveClass(/ui-glass/);
     await expect(card.locator('[data-slot="window-chrome-body"]')).not.toHaveClass(/ui-surface/);
     await expect(card.locator('[data-slot="demonstrator-pane-card-title-chip"] svg')).toHaveCount(1);
+    await expect(card.locator('[data-slot="demonstrator-pane-card-tagline"]')).toHaveText(/.+/);
+    await expect(card.locator('[data-slot="introduction-body-paragraph"]')).toHaveCount(2);
+    await expect(card.locator('[data-slot="demonstrator-pane-card-open-chip"]')).toContainText("Demonstrator öffnen");
     await expect(card.locator('[data-slot*="drag"], [data-drag-handle]')).toHaveCount(0);
   }
 

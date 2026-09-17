@@ -1,12 +1,12 @@
 {
   "mutation": "commitReconstruction",
+  "sparse": {
+    "points": "remodeling-content:remodeling-asset-orbit-sparse-unpublished|2",
+    "colors": null
+  },
   "trajectory": null,
   "mesh": null,
   "geo": null,
   "qc": null,
-  "assets": [],
-  "sparse": {
-    "points": "remodeling-content:remodeling-asset-orbit-sparse-unpublished|2",
-    "colors": null
-  }
+  "assets": []
 }

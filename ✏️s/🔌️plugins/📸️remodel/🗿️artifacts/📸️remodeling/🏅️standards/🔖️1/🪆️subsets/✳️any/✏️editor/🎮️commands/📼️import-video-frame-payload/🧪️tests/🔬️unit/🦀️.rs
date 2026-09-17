@@ -48,7 +48,7 @@ async fn import_video_frame_payload_then_done_writes_one_stream_with_video_sourc
 #[semio_framework_async_macros::async_test]
 async fn add_remove_and_sync_streams_edit_the_stream_list() {
     let mut app = app().await;
-    dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() })).await;
+    dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     let stream_id = app.snapshot().expect("projection").streams[0].id.clone();
     dispatch(&mut app, RemodelingCommand::SetStreamSync(set_stream_sync::SetStreamSync { stream_id: stream_id.clone(), sync_offset_ms: 12.5 })).await;
     assert_eq!(app.snapshot().expect("projection").streams[0].sync_offset_ms, 12.5);

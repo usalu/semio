@@ -7,6 +7,7 @@ async fn document_panel_lists_nodes_section() {
     let json = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
     assert!(json.contains("puzzle2d-play-document.nodes"));
     assert!(json.contains("seed-left-001"));
+    close_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -20,6 +21,7 @@ async fn labels_resolve_native_english_and_german_and_reuse() {
     let reuse_view = semio_framework_plugin::ViewModel { terminology: semio_framework_plugin::Terminology::Reuse, ..Default::default() };
     let reuse = render_body_with_view(&mut app, PUZZLE2D_PLAY_BODY_LAYERS, &reuse_view);
     assert!(reuse.contains("Building components"));
+    close_app(&mut app);
 }
 
 //#region 🪟️WindowLaws
@@ -78,6 +80,12 @@ fn granularity_of(node: &BuiltNode) -> Option<String> {
     }
 }
 
+/// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
+/// not `serde_json` on the root — is what walks and retires them.
+fn body_json(tree: BuiltNode) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+}
+
 fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
@@ -96,7 +104,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_
 fn the_outliner_stamps_every_container_and_never_pages() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
-    let windows = semio_framework_plugin::TreeWindows::unhosted();
+    let windows = TreeWindows::unhosted();
     let tree = render(&scene, labels(), &windows).expect("an oversized outliner must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);
     let edges = child_of(&tree, EDGES_SECTION);
@@ -105,10 +113,9 @@ fn the_outliner_stamps_every_container_and_never_pages() {
     assert!(nodes.children.len() <= SCALE_NODES, "a section may never materialise more than its extent");
     assert!(nodes.children.len() <= semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX, "a built node may not exceed the children contract");
     assert!(!nodes.children.is_empty(), "the open nodes section must materialise its first window");
-    let body = serde_json::to_string(&tree).expect("serialize the outliner body");
+    let body = body_json(tree);
     assert!(!body.contains(".more"), "a windowed body carries no continuation key: {body:.400}");
     assert!(!body.contains("\"+"), "a windowed body carries no `+N` label: {body:.400}");
-    drop(tree);
     drain_retired_ui_owners();
 }
 
@@ -119,7 +126,7 @@ fn a_closed_outliner_container_stamps_its_total_and_builds_no_row() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let view = view_with(vec![request(NODES_SECTION, Some(false), 0, 32)]);
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
     let tree = render(&scene, labels(), &windows).expect("a closed outliner must be admitted");
     for (section, total) in [(NODES_SECTION, SCALE_NODES), (EDGES_SECTION, SCALE_EDGES)] {
         let container = child_of(&tree, section);
@@ -137,7 +144,7 @@ fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let (offset, rows) = (64u32, 12u32);
     let view = view_with(vec![request(NODES_SECTION, Some(true), offset, rows), request(EDGES_SECTION, Some(true), 0, 5)]);
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
     let tree = render(&scene, labels(), &windows).expect("a windowed outliner must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);
     assert_eq!(window_of(nodes).expect("stamped window").offset, offset);
@@ -159,10 +166,10 @@ fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
     drain_retired_ui_owners();
     let scene = scaled_scene(24, 12);
     let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 24), request(EDGES_SECTION, Some(true), 0, 12)]);
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
     let tree = render(&scene, labels(), &windows).expect("a domain-bound outliner must be admitted");
     assert_eq!(tree.bindings.len(), 1, "the tree root carries exactly one interactionSelect binding");
-    assert_eq!(tree.bindings.iter().next().expect("root binding").action.as_str(), semio_framework_plugin::INTERACTION_SELECT_ACTION_ID);
+    assert_eq!(tree.bindings.iter().next().expect("root binding").action.name.as_str(), semio_framework_plugin::INTERACTION_SELECT_ACTION_ID);
     for (section, granularity) in [(NODES_SECTION, PUZZLE2D_GRANULARITY_NODE), (EDGES_SECTION, PUZZLE2D_GRANULARITY_EDGE)] {
         for row in child_of(&tree, section).children.iter() {
             assert_eq!(granularity_of(row).as_deref(), Some(granularity), "row {} must declare its granularity", row.key.as_str());
@@ -172,4 +179,118 @@ fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
     drop(tree);
     drain_retired_ui_owners();
 }
+
+/// 🧾️ Every node record one body spends — the tree root, every section and every row counts once,
+/// exactly as `SurfaceReconcileLimits::max_nodes` counts them.
+fn node_records(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(node_records).sum::<usize>()
+}
+
+/// 🧾️ The whole-document law: one container holds more entries than a whole `UI_DOCUMENT_NODES` arena
+/// AND every container is open at once asking for more rows than the arena could hold. Per-container
+/// clamps alone do not save this body — only the SDK's body-wide node ledger does. Every container
+/// must still stamp its FULL total, the body must reconcile inside `UI_DOCUMENT_NODES` records, and
+/// nothing may be closed off with a `+N`.
+#[test]
+fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
+    drain_retired_ui_owners();
+    let (nodes_len, edges_len) = (ui::UI_DOCUMENT_NODES + 72, ui::UI_DOCUMENT_NODES + 40);
+    let scene = scaled_scene(nodes_len, edges_len);
+    let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 512), request(EDGES_SECTION, Some(true), 0, 512)]);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let tree = render(&scene, labels(), &windows).expect("a fully open oversized outliner must be admitted");
+    for (section, total) in [(NODES_SECTION, nodes_len), (EDGES_SECTION, edges_len)] {
+        let container = child_of(&tree, section);
+        assert_eq!(window_of(container).expect("every container stamps its window").total as usize, total, "container {section} must stamp its FULL total however few rows it could afford");
+    }
+    let records = node_records(&tree);
+    assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
+    let body = body_json(tree);
+    assert!(!body.contains(".more"), "no continuation row closes an exhausted container: {body:.400}");
+    assert!(!body.contains("\"+"), "and no `+N` label either: {body:.400}");
+    drain_retired_ui_owners();
+}
 //#endregion 🪟️WindowLaws
+
+//#region 🙈️RowFlagLaws
+fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
+    match &node.component {
+        ui::Component::TreeItem(props) => props
+            .row_actions
+            .iter()
+            .map(|action| {
+                let asked = match action.action.args.as_ref() {
+                    Some(semio_framework_plugin::UiValue::Map(map)) => map.iter().find(|(key, _)| key == "value").and_then(|(_, value)| match value {
+                        semio_framework_plugin::UiValue::Bool(value) => Some(*value),
+                        _ => None,
+                    }),
+                    _ => None,
+                };
+                (action.icon.as_str().to_string(), asked.expect("a row toggle always names the state it asks for"))
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn flagged_scene(hidden: bool, locked: bool) -> Puzzle2dScene {
+    let mut scene = scaled_scene(1, 0);
+    scene.fixture["nodes"][0]["hidden"] = serde_json::json!(hidden);
+    scene.fixture["nodes"][0]["locked"] = serde_json::json!(locked);
+    scene
+}
+
+/// 🙈️ An outliner node row carries hide + lock toggles whose `value` is ALWAYS the inverse of the
+/// row's current state — the alternating-toggle law puzzle3d's own outliner once broke by hardcoding
+/// `true`, which made "Show"/"Unlock" re-apply the state the row was already in.
+#[test]
+fn outliner_node_rows_toggle_hide_and_lock_to_the_inverse_state() {
+    drain_retired_ui_owners();
+    for (hidden, locked) in [(false, false), (true, false), (false, true), (true, true)] {
+        let scene = flagged_scene(hidden, locked);
+        let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 4)]);
+        let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+        let tree = render(&scene, labels(), &windows).expect("a flagged outliner must be admitted");
+        let row = child_of(child_of(&tree, NODES_SECTION), "node-0");
+        let actions = row_actions_of(row);
+        assert_eq!(actions.len(), 2, "a node row carries exactly the hide and lock toggles");
+        assert_eq!(actions[0], (if hidden { "eye-off" } else { "eye" }.to_string(), !hidden), "the hide toggle asks for the inverse of hidden={hidden}");
+        assert_eq!(actions[1], (if locked { "lock" } else { "lock-open" }.to_string(), !locked), "the lock toggle asks for the inverse of locked={locked}");
+        drop(tree);
+        drain_retired_ui_owners();
+    }
+}
+
+/// 🔗️ Edge rows carry NO inline toggles — mirroring puzzle3d's attraction rows, and halving the
+/// per-document argument-arena cost on a Nakagin-scale board.
+#[test]
+fn outliner_edge_rows_carry_no_inline_toggles() {
+    drain_retired_ui_owners();
+    let scene = scaled_scene(4, 3);
+    let view = view_with(vec![request(EDGES_SECTION, Some(true), 0, 3)]);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let tree = render(&scene, labels(), &windows).expect("an outliner with edges must be admitted");
+    for row in child_of(&tree, EDGES_SECTION).children.iter() {
+        assert!(row_actions_of(row).is_empty(), "edge row {} must carry no inline toggle", row.key.as_str());
+    }
+    drop(tree);
+    drain_retired_ui_owners();
+}
+
+/// 🏷️ A Nakagin-scale document still materialises its first window with toggles attached — the
+/// graceful-degradation law: a row the argument arena cannot afford keeps the row and drops only its
+/// toggles, so a section can never end at zero rows.
+#[test]
+fn an_oversized_outliner_still_materialises_rows_when_toggles_cannot_be_afforded() {
+    drain_retired_ui_owners();
+    let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
+    let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 128)]);
+    let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
+    let tree = render(&scene, labels(), &windows).expect("an oversized outliner must be admitted");
+    let nodes = child_of(&tree, NODES_SECTION);
+    assert!(!nodes.children.is_empty(), "the open nodes section must materialise rows whatever the arena can afford");
+    assert_eq!(window_of(nodes).expect("stamped window").total as usize, SCALE_NODES);
+    drop(tree);
+    drain_retired_ui_owners();
+}
+//#endregion 🙈️RowFlagLaws

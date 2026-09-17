@@ -7,7 +7,6 @@
   "targets": {
     "build": {
       "cache": true,
-      "parallelism": false,
       "outputs": [
         "{projectRoot}/dist/build"
       ],
@@ -22,7 +21,6 @@
     },
     "check": {
       "cache": true,
-      "parallelism": false,
       "outputs": [],
       "inputs": [
         "default",
@@ -35,7 +33,6 @@
     },
     "test": {
       "cache": true,
-      "parallelism": false,
       "outputs": [],
       "inputs": [
         "default",
@@ -67,7 +64,6 @@
     },
     "test-quick": {
       "cache": true,
-      "parallelism": false,
       "outputs": [],
       "inputs": [
         "default",
@@ -80,7 +76,6 @@
     },
     "test-long": {
       "cache": true,
-      "parallelism": false,
       "outputs": [],
       "inputs": [
         "default",
@@ -93,7 +88,6 @@
     },
     "test-exhaustive": {
       "cache": true,
-      "parallelism": false,
       "outputs": [],
       "inputs": [
         "default",

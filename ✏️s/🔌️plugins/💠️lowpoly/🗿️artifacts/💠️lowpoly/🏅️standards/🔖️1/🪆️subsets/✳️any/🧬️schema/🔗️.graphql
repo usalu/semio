@@ -42,4 +42,6 @@ type LowpolyObject {
   "null when the object owns no mesh yet — confirmed against the create-object mutation fixture."
   mesh: ArtifactChild
   paintLayers: [LowpolyPaintLayer!]!
+  "Half-edge-mesh JSON the mesh handle hashes; empty in legacy handle-only documents."
+  meshContent: String
 }

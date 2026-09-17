@@ -302,7 +302,7 @@ mod args_bridge {
                 codec: text_or("codec", ""),
             }),
             "importVideoBytesPayload" => RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: text_or("payload", ""), name: text_or("name", "") }),
-            "addStream" => RemodelingCommand::AddStream(add_stream::AddStream { name: text_or("name", "Stream"), kind: text_or("kind", "image-sequence"), camera_id: text_or("cameraId", "cam-0") }),
+            "addStream" => RemodelingCommand::AddStream(add_stream::AddStream { name: text_or("name", "Stream"), kind: text_or("kind", "image-sequence"), camera_id: text_or("cameraId", "") }),
             "removeStream" => RemodelingCommand::RemoveStream(remove_stream::RemoveStream { stream_id: text_or("streamId", "") }),
             "setStreamSync" => RemodelingCommand::SetStreamSync(set_stream_sync::SetStreamSync { stream_id: text_or("streamId", ""), sync_offset_ms: f64_or("syncOffsetMs", 0.0) }),
             "editCalibration" => RemodelingCommand::EditCalibration(edit_calibration::EditCalibration {
@@ -690,164 +690,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedC
 }
 //#endregion 🧵️RetainedCommands
 
-//#region 📬️StorePreparation
-/// 📬️ The document lane's one-item retained preparation. Without it every route declaring
-/// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
-/// stays dispatch-dead, no matter how it is classified.
-struct RemodelingStorePreparationFactory;
-
-struct RemodelingStorePreparation {
-    base: Option<store::SnapshotRead<RemodelingSnapshot>>,
-    mutation: Option<RemodelingMutation>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    phase: u8,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, RemodelingMutation> for RemodelingStorePreparationFactory {
-    fn preflight(&self, _mutation: &RemodelingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Remodeling Store preparation rejected its lane or description envelope".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(
-            store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
-        ))
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<RemodelingSnapshot, RemodelingMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutation>>, store::ArtifactStoreOneItemPreparationRequest<RemodelingSnapshot, RemodelingMutation>> {
-        let scene = request.base.get();
-        let frames: usize = scene.streams.iter().map(|stream| stream.frames.len()).sum();
-        let item_count = scene.streams.len().saturating_add(frames).saturating_add(scene.assets.len()).saturating_add(scene.gcps.len());
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-            || item_count > REMODELING_RETAINED_WORK_ITEMS
-        {
-            return Err(request);
-        }
-        Ok(Box::new(RemodelingStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            phase: 0,
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutation> for RemodelingStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        if self.phase >= 1 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        let base = self.base.as_ref().ok_or_else(|| "Remodeling preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Remodeling preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Remodeling preparation lost its Store authority".to_string())?;
-        let id = format!("remodeling-retained-{}", authority.next_sequence_number());
-        let edit = remodeling_retained_edit(id, authority, vec![mutation], inverse, self.description.take());
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        self.phase = 1;
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Remodeling preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-
- /// 🧾️ The one `protocol::Edit` envelope both lanes above stage — identical field-for-field, so it is
-/// written once and parameterised by the mutation type rather than duplicated per lane.
-fn remodeling_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
-    let mutation_id = protocol::MutationId(format!("{id}#0"));
-    protocol::Edit {
-        id,
-        actor: Some(authority.actor().to_string()),
-        forwards,
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(mutation_id),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-        }],
-        description,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for RemodelingPlayApp {
     type Snapshot = RemodelingSnapshot;
@@ -866,8 +708,13 @@ impl ArtifactEditor for RemodelingPlayApp {
     const DIALECT: Dialect = crate::REMODELING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
 
+    /// 📬️ The document lane's one-item retained preparation — the framework's generic bounded
+    /// preparation (the shooting/dag/trinity precedent), never a copied preparation factory. Without one,
+    /// every route declaring `ArtifactToolPublicationLane::Artifact` is registered with an unsupported
+    /// publication contract and stays dispatch-dead, no matter how it is classified. Item-count
+    /// admission (`REMODELING_RETAINED_WORK_ITEMS`) is `remodeling_retained_extent`'s at dispatch.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(RemodelingStorePreparationFactory))
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("remodeling-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -1196,7 +1043,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_args("addStream", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"Stream"),
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("image-sequence", LocalizedLabel::native("Image Sequence", "Bildsequenz")), ActionArgOption::new("video", LocalizedLabel::native("Video", "Video"))]).default_value(&"image-sequence"),
-                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value(&"cam-0"),
+                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value(&""),
             ])
             .mutation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
             .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])

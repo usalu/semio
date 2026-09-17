@@ -1,7 +1,7 @@
 /** 🧬️ Puzzle5d direct-mutation discriminated union — TS mirror of `Puzzle5dMutation` (see the
  * sibling `🦀️.rs` union enum and each variant's `<slug>/🦠️mutation/🦀️.rs`
  * payload struct). */
-import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor } from "../📸️snapshot/🟦️.ts";
+import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dTargetVolume } from "../📸️snapshot/🟦️.ts";
 
 /** 🔘️ One rim grip's 2D-projection presentation (board handle). */
 export interface Puzzle5dGrip2d {
@@ -224,6 +224,51 @@ export interface ReplaceKindCatalogs {
   newCatalogs: Puzzle5dKindCatalogs | null;
 }
 
+/** 🌍 `create-target-volume` payload — full initial payload at an optional FINAL-state index
+ * (`null` appends). `index: Option<usize>` carries no `skip_serializing_if`, so the key stays
+ * required with a nullable value. */
+export interface CreateTargetVolume {
+  targetVolume: Puzzle5dTargetVolume;
+  index: number | null;
+}
+
+/** 🪦 `delete-target-volume` payload. */
+export interface DeleteTargetVolume {
+  id: string;
+}
+
+/** 🚀 `move-target-volume` payload — absolute reposition of a target volume's origin. */
+export interface MoveTargetVolume {
+  id: string;
+  newOrigin: [number, number, number];
+}
+
+/** 🌀 `rotate-target-volume` payload — `new_orientation: Option<[f64; 4]>` carries no
+ * `skip_serializing_if`, so the key stays required with a nullable value. */
+export interface RotateTargetVolume {
+  id: string;
+  newOrientation: [number, number, number, number] | null;
+}
+
+/** 📐 `scale-target-volume` payload — `new_scale: Option<Puzzle5dScale>` carries no
+ * `skip_serializing_if`, so the key stays required with a nullable value. */
+export interface ScaleTargetVolume {
+  id: string;
+  newScale: Puzzle5dScale | null;
+}
+
+/** 🙈 `change-target-volume-hidden` payload. */
+export interface ChangeTargetVolumeHidden {
+  id: string;
+  newHidden: boolean;
+}
+
+/** 🔐 `change-target-volume-locked` payload. */
+export interface ChangeTargetVolumeLocked {
+  id: string;
+  newLocked: boolean;
+}
+
 /** 🧮️ Semantic puzzle-5d document mutation vocabulary — id-keyed part create-delete plus per-2d/
  * per-3d-projection field edits, grip membership, a grip-to-grip fastener connect/disconnect
  * relationship, and document-level edits, in `Puzzle5dMutation` declaration order. */
@@ -255,4 +300,11 @@ export type Puzzle5dMutation =
   | ({ mutation: "changeDescription" } & ChangeDescription)
   | ({ mutation: "connectKindCompatibility" } & ConnectKindCompatibility)
   | ({ mutation: "disconnectKindCompatibility" } & DisconnectKindCompatibility)
-  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs);
+  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs)
+  | ({ mutation: "createTargetVolume" } & CreateTargetVolume)
+  | ({ mutation: "deleteTargetVolume" } & DeleteTargetVolume)
+  | ({ mutation: "moveTargetVolume" } & MoveTargetVolume)
+  | ({ mutation: "rotateTargetVolume" } & RotateTargetVolume)
+  | ({ mutation: "scaleTargetVolume" } & ScaleTargetVolume)
+  | ({ mutation: "changeTargetVolumeHidden" } & ChangeTargetVolumeHidden)
+  | ({ mutation: "changeTargetVolumeLocked" } & ChangeTargetVolumeLocked);

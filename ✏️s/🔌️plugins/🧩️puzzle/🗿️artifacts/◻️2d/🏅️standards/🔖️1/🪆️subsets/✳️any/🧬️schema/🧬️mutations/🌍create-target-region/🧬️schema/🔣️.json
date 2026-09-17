@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutation/create-target-region/schema.json",
+  "title": "CreateTargetRegion",
+  "description": "The `create-target-region` mutation record — internally tagged `\"mutation\": \"createTargetRegion\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targetRegion"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createTargetRegion"
+    },
+    "targetRegion": {
+      "$ref": "#/$defs/Puzzle2dTargetRegion"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "Puzzle2dTargetRegion": {
+      "title": "Puzzle2dTargetRegion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y",
+        "width",
+        "height",
+        "hidden",
+        "locked"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

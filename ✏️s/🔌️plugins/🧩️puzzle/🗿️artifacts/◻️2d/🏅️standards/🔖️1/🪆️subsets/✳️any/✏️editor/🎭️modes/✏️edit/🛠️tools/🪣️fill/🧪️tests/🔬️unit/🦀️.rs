@@ -32,7 +32,9 @@ fn fill_count_entry_is_a_tool_measure() {
 fn fill_count_is_the_only_unbounded_measure_and_defaults_to_one_hundred() {
     let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
     let children = fill_children(Puzzle2dPlayRuntime { fill_count: 5_000, ..Puzzle2dPlayRuntime::default() }, labels);
-    let [WindowMeasure::Number { id, value, min, max, step, ready, loading, waiting, .. }] = children.as_slice() else { panic!("the count is the only fill measure: {children:?}") };
+    // ⚖️ The count leads; the node/handle distribution groups the brush shares follow it.
+    let [WindowMeasure::Number { id, value, min, max, step, ready, loading, waiting, .. }, WindowMeasure::Group { id: nodes, .. }, WindowMeasure::Group { id: handles, .. }] = children.as_slice() else { panic!("the count leads the fill measures, followed by the two distribution groups: {children:?}") };
+    assert!(nodes.ends_with("-suggestion-distribution-nodes") && handles.ends_with("-suggestion-distribution-handles"), "the distribution groups are the brush's own: {nodes} {handles}");
     assert_eq!((id.as_str(), *value, *min, *max, *step), ("puzzle2d-fill-count", 5_000.0, Some(0.0), None, Some(1.0)));
     assert_eq!((*ready, *loading, *waiting), (None, None, None), "run progress lives in the ToolRun panel, not in the count");
     assert_eq!(PUZZLE2D_DEFAULT_FILL_COUNT, 100);

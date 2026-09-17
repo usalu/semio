@@ -5,7 +5,7 @@ use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::{parse_jack_ast, JackAstNode};
 use crate::{writer_text, WriterSnapshot};
 use crate::editor::writer::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, WRITER_PLAY_APP_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
 use semio_framework_plugin::{tree_item, tree_window_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
 

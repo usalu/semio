@@ -3,7 +3,7 @@
   "id": "orbit-primary",
   "frame": {
     "index": 10,
-    "timestampMs": 5000,
+    "timestampMs": 5000.0,
     "assetId": "orbit-frame-00"
   },
   "kind": "video"

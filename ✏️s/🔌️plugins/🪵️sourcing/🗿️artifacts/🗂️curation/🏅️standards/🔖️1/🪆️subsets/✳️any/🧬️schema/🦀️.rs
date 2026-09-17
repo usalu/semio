@@ -3,6 +3,7 @@
 use crate::{CurationSnapshot, SourcingMutation};
 use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
+use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -196,7 +197,43 @@ pub fn box_parts(recipe: &GeometryRecipe) -> Option<Vec<([f64; 3], [f64; 3])>> {
                 ([half_w - profile * 0.5, 0.0, 0.0], [profile, stile_h, depth]),
             ])
         }
-        GeometryRecipe::Mesh { .. } => None,
+        GeometryRecipe::Mesh { .. } | GeometryRecipe::Glb { .. } => None,
+    }
+}
+
+/// 🥽️ Public mesh route when geometry references a delivered GLB asset.
+pub fn geometry_mesh_url(recipe: &crate::GeometryRecipe) -> Option<&str> {
+    match recipe {
+        crate::GeometryRecipe::Glb { url, .. } => Some(url.as_str()),
+        _ => None,
+    }
+}
+
+/// 🧊️ Scene mesh id for a stock kind — url-backed ids match puzzle/cad (`world3d_mesh_id_from_url`).
+pub fn kind_world_mesh_id(kind: &ObjectKind) -> String {
+    geometry_mesh_url(&kind.geometry).map(world3d_mesh_id_from_url).unwrap_or_else(|| kind.id.clone())
+}
+
+/// 🧊️ One `{ id, url }` mesh atom for the world3d host.
+pub fn glb_mesh_json(url: &str) -> dsl::DslValue {
+    let id = world3d_mesh_id_from_url(url);
+    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id)), ("url".to_string(), dsl::DslValue::String(url.to_string()))])
+}
+
+/// 🌐️ Registers every mesh atom `kinds` need in a grid/preview scene (unit box is separate).
+pub fn append_kind_scene_meshes(meshes: &mut Vec<dsl::DslValue>, seen: &mut std::collections::BTreeSet<String>, kind: &ObjectKind) {
+    if box_parts(&kind.geometry).is_some() {
+        return;
+    }
+    if let Some(url) = geometry_mesh_url(&kind.geometry) {
+        let id = world3d_mesh_id_from_url(url);
+        if seen.insert(id) {
+            meshes.push(glb_mesh_json(url));
+        }
+        return;
+    }
+    if seen.insert(kind.id.clone()) {
+        meshes.push(kind_mesh_json(kind));
     }
 }
 
@@ -227,7 +264,38 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
         GeometryRecipe::Frame { width, height, depth, .. } => width.max(*height).max(*depth),
         GeometryRecipe::Slab { width, depth, thickness } => width.max(*depth).max(*thickness),
         GeometryRecipe::Mesh { positions, .. } => positions.chunks(3).flat_map(|p| p.iter().map(|v| v.abs() as f64 * 2.0)).fold(0.0_f64, f64::max).max(1e-6),
+        GeometryRecipe::Glb { extent, .. } => extent.max(1e-6),
     }
+}
+
+/// 📐️ Axis-aligned bounds of one stock kind staged at the preview origin with unit scale — drives
+/// `World3dScene.fit_json` when the catalogue selection changes.
+pub fn preview_kind_bounds(kind: &ObjectKind) -> Option<([f64; 3], [f64; 3])> {
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    let mut grow = |point: [f64; 3]| {
+        for axis in 0..3 {
+            minimum[axis] = minimum[axis].min(point[axis]);
+            maximum[axis] = maximum[axis].max(point[axis]);
+        }
+    };
+    if let Some(parts) = box_parts(&kind.geometry) {
+        for (center, size) in parts {
+            let half = [size[0] * 0.5, size[1] * 0.5, size[2] * 0.5];
+            grow([center[0] - half[0], center[1] - half[1], center[2] - half[2]]);
+            grow([center[0] + half[0], center[1] + half[1], center[2] + half[2]]);
+        }
+    } else if let GeometryRecipe::Glb { extent, .. } = &*kind.geometry {
+        let half = extent * 0.5;
+        grow([-half, -half, -half]);
+        grow([half, half, half]);
+    } else {
+        let spec = mesh_spec_for(&kind.geometry);
+        for vertex in spec.positions.chunks_exact(3) {
+            grow([vertex[0] as f64, vertex[1] as f64, vertex[2] as f64]);
+        }
+    }
+    (0..3).all(|axis| minimum[axis].is_finite() && maximum[axis].is_finite()).then_some((minimum, maximum))
 }
 //#endregion 🔖️Geometry
 
@@ -260,7 +328,8 @@ fn mesh_json(id: &str, spec: &MeshDataSpec) -> dsl::DslValue {
 /// stock it lays out.
 pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<dsl::DslValue> {
     let Some(parts) = box_parts(&kind.geometry) else {
-        return vec![instance_json(&kind.id, &kind.id, &kind.name, origin, [scale; 3], selected)];
+        let mesh_id = kind_world_mesh_id(kind);
+        return vec![instance_json(&kind.id, &mesh_id, &kind.name, origin, [scale; 3], selected)];
     };
     let single = parts.len() == 1;
     parts
@@ -285,6 +354,50 @@ fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale
         ("selected".to_string(), dsl::DslValue::Bool(selected)),
         ("hovered".to_string(), dsl::DslValue::Bool(false)),
     ])
+}
+
+/// 🔢️ Appends unit-box voxels spelling `count` in a 3×5 dot matrix beside `anchor` — used by the
+/// sourcing grid's representative-with-count display mode.
+pub fn append_grid_count_glyph_instances(instances: &mut Vec<dsl::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64) {
+    if count == 0 {
+        return;
+    }
+    let dot = cell * 0.07;
+    let pitch = cell * 0.11;
+    let digit_gap = cell * 0.35;
+    let digits = count.to_string();
+    let glyph_y = anchor[1] + cell * 0.55;
+    let start_x = anchor[0] + cell * 0.45;
+    for (digit_index, ch) in digits.chars().enumerate() {
+        let digit = ch.to_digit(10).unwrap_or(0) as usize;
+        let origin_x = start_x + digit_index as f64 * digit_gap;
+        for row in 0..5 {
+            for col in 0..3 {
+                if !grid_count_glyph_dot(digit, row, col) {
+                    continue;
+                }
+                let position = [origin_x + (col as f64 - 1.0) * pitch, glyph_y + (2.0 - row as f64) * pitch, anchor[2]];
+                let id = format!("{object_id}#count-glyph-{digit_index}-{row}-{col}");
+                instances.push(instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, "", position, [dot, dot, dot], false));
+            }
+        }
+    }
+}
+
+fn grid_count_glyph_dot(digit: usize, row: usize, col: usize) -> bool {
+    const PATTERNS: [[[bool; 3]; 5]; 10] = [
+        [[true, true, true], [true, false, true], [true, false, true], [true, false, true], [true, true, true]],
+        [[false, true, false], [true, true, false], [false, true, false], [false, true, false], [true, true, true]],
+        [[true, true, true], [false, false, true], [true, true, true], [true, false, false], [true, true, true]],
+        [[true, true, true], [false, false, true], [true, true, true], [false, false, true], [true, true, true]],
+        [[true, false, true], [true, false, true], [true, true, true], [false, false, true], [false, false, true]],
+        [[true, true, true], [true, false, false], [true, true, true], [false, false, true], [true, true, true]],
+        [[true, true, true], [true, false, false], [true, true, true], [true, false, true], [true, true, true]],
+        [[true, true, true], [false, false, true], [false, true, false], [false, true, false], [false, true, false]],
+        [[true, true, true], [true, false, true], [true, true, true], [true, false, true], [true, true, true]],
+        [[true, true, true], [true, false, true], [true, true, true], [false, false, true], [true, true, true]],
+    ];
+    PATTERNS.get(digit).and_then(|pattern| pattern.get(row)).and_then(|row| row.get(col)).copied().unwrap_or(false)
 }
 //#endregion 🔖️World3d
 
@@ -503,6 +616,48 @@ pub mod windows {
     }
 }
 
+pub mod reuse {
+    use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
+
+    pub const MESH_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT: &str = "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb";
+    pub const MESH_HEXAGONAL_CUT_CONCRETE_FOREST_RIGHT: &str = "/mesh/🧊️hexagonal-cut-concrete-forest-right.glb";
+    const CONCRETE_FOREST_EXTENT_M: f64 = 9.45;
+
+    pub struct ReuseModule;
+
+    impl SourcingModule for ReuseModule {
+        fn module_id(&self) -> &str {
+            "reuse"
+        }
+        fn label(&self) -> &str {
+            "Reuse"
+        }
+        fn typology(&self) -> TypologyNode {
+            TypologyNode::new("reuse", "Reuse", vec![TypologyNode::new("concrete", "Concrete", vec![TypologyNode::new("forest", "Forest", vec![])])])
+        }
+        fn demo_kinds(&self) -> Vec<ObjectKind> {
+            vec![
+                ObjectKind {
+                    id: "hexagonal-cut-concrete-forest-left".into(),
+                    name: "Hexagonal Cut Concrete Forest Left".into(),
+                    module_id: "reuse".into(),
+                    typology_path: vec!["reuse".into(), "concrete".into(), "forest".into()],
+                    availability: 12,
+                    geometry: Box::new(GeometryRecipe::Glb { url: MESH_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT.into(), extent: CONCRETE_FOREST_EXTENT_M }),
+                },
+                ObjectKind {
+                    id: "hexagonal-cut-concrete-forest-right".into(),
+                    name: "Hexagonal Cut Concrete Forest Right".into(),
+                    module_id: "reuse".into(),
+                    typology_path: vec!["reuse".into(), "concrete".into(), "forest".into()],
+                    availability: 12,
+                    geometry: Box::new(GeometryRecipe::Glb { url: MESH_HEXAGONAL_CUT_CONCRETE_FOREST_RIGHT.into(), extent: CONCRETE_FOREST_EXTENT_M }),
+                },
+            ]
+        }
+    }
+}
+
 pub mod slabs {
     use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
 
@@ -585,6 +740,7 @@ dyn_enum_close! {
         Beams(beams::BeamsModule),
         Windows(windows::WindowsModule),
         Slabs(slabs::SlabsModule),
+        Reuse(reuse::ReuseModule),
         Contributed(ContributedSourcingModule),
     }
 }
@@ -723,7 +879,7 @@ pub const SOURCING_MAXIMUM_MODULES: usize = 8;
 /// each contributed module whose id no module already serves — a `sourcing-module-beams` extension
 /// re-contributing the authored `beams` module installs nothing, it does not duplicate it.
 pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
-    let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into()];
+    let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into(), reuse::ReuseModule.into()];
     for module in contributed_sourcing_modules(contributions_json) {
         if modules.len() >= SOURCING_MAXIMUM_MODULES {
             break;

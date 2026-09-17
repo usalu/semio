@@ -46,6 +46,8 @@ describe("🖱️ context menu submenu reachability", () => {
     expect(chrome?.contains(panel as Node)).toBe(true);
     expect(document.querySelectorAll('[data-slot="context-menu-title-chip"]')).toHaveLength(1);
     expect(panel?.getAttribute("data-context-menu-submenu-of")).toBe(contextMenuPathKey([1]));
+    const transfer = getByRole("menuitem", { name: /Transfer/u });
+    expect(Math.abs((panel as Element).getBoundingClientRect().top - transfer.getBoundingClientRect().top)).toBeLessThan(2);
   });
 
   it("gives a submenu its own menu role, so a pointer inside it is not an outside dismiss", () => {

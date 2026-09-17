@@ -56,7 +56,6 @@
       "options": {}
     }
   ],
-  "parallel": 3,
   "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/nx",
   "maxCacheSize": "200GB",
   "analytics": false

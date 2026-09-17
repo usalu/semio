@@ -516,10 +516,8 @@ async function armGuestRuntimeDiagnostics() {
     try {
       const { _setEnv } = await import(/* @vite-ignore */ "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js");
       _setEnv({ "${SHARD_RUNTIME_DIAGNOSTICS_KEY}": "1" });
-      console.debug("[DEBUG] guest runtime diagnostics armed through wasi:cli/environment");
       return true;
-    } catch (error) {
-      console.warn(\`[DEBUG] guest runtime diagnostics could not be armed: \${error}\`);
+    } catch {
       return false;
     }
   })();

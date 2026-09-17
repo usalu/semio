@@ -437,8 +437,6 @@ pub mod editor {
             pub mod presence_heartbeat;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-space/🦀️.rs"]
             pub mod rename_space;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪪️set-client/🦀️.rs"]
-            pub mod set_client;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏛️manage-space/🦀️.rs"]
             pub mod manage_space;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️share-space/🦀️.rs"]

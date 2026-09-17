@@ -21,7 +21,7 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_detail),
         body_key: BODY_KEY.into(),
-        surface_kind: SurfaceKind::Canvas2d,
+        surface_kind: SurfaceKind::Board2d,
         icon_id: "focus".into(),
         options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, host, labels)) },
         actions: Vec::new(),

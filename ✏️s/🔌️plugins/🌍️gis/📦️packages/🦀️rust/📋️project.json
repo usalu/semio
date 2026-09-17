@@ -28,7 +28,6 @@
         "forwardAllArgs": true
       },
       "cache": true,
-      "parallelism": false,
       "outputs": [
         "{projectRoot}/dist/component-cold-map-patch-native-check"
       ]

@@ -10,7 +10,7 @@ async fn base_snapshot() -> Mp4Snapshot {
         tracks: vec![Mp4Track {
             track_id: 1,
             timescale: 1000,
-            codec: Mp4Codec { sps: vec![vec![0x67]], pps: vec![vec![0x68]], nal_length_size: 4, extension: None },
+            codec: Mp4Codec::avc(vec![vec![0x67]], vec![vec![0x68]], 4, None),
             width: 64,
             height: 64,
             metadata: Mp4TrackMetadata::default(),
@@ -31,7 +31,7 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
             track: Mp4Track { track_id: 2, timescale: 500, codec: Mp4Codec::default(), width: 32, height: 32, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] },
         }),
         Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index: 0, width: 128, height: 128 }),
-        Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: 0, codec: Mp4Codec { sps: vec![vec![9]], pps: vec![vec![8]], nal_length_size: 4, extension: None } }),
+        Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: 0, codec: Mp4Codec::avc(vec![vec![9]], vec![vec![8]], 4, None) }),
         Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: 0, index: 1, sample: Mp4Sample { data: vec![9, 9], duration: 33, cts_offset: 0, sync: false } }),
         Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: false }),
     ];

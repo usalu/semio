@@ -298,6 +298,24 @@
     "run": 7,
     "requested": 60
   },
+  "targetRegion": {
+    "description": "Fill places only inside VISIBLE target regions when the board declares any — the flat twin of puzzle3d's `world_volumes_contain_aabb` rule. The region is stated as a half-span around the seed node's own centre rather than as absolute coordinates, so this vector stays language-neutral and survives any re-authoring of the example's geometry. `halfSpan` is wide enough to admit several placements and narrow enough that the same run without a region provably leaves it.",
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "keepNodes": 1
+    },
+    "run": 1,
+    "requested": 5,
+    "halfSpan": 120,
+    "expected": {
+      "everyPlacementInsideRegion": true,
+      "atLeastOneOutsideRejection": true,
+      "unconstrainedRunLeavesTheRegion": true,
+      "hiddenRegionConstrainsNothing": true,
+      "reasonId": "outside-target-region",
+      "reasonVerdict": "warning"
+    }
+  },
   "resume": {
     "document": {
       "example": "nakagin-capsule-tower",

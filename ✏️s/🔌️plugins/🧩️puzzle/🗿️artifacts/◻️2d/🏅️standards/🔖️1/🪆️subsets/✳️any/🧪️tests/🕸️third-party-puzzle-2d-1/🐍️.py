@@ -617,6 +617,125 @@ def diff_reproduction(ctx):
 # endregion 🔖️Diff
 
 
+# region 🎯️Regions
+REGION_FAMILY = "target-region"
+"""🎯️ The substring every fill-constraining rectangle kind's directory carries."""
+
+
+def region_vectors(ctx):
+    """🎯️ Every committed `target-region` vector, read straight off the fixture layout
+    (`<vocabulary>/<leaf>/<scenario>/…`) rather than through `vectors`, whose `SCENARIOS_DIR`
+    indirection still points at the pre-relocation tree and therefore discovers nothing today. Read
+    the ticket report beside this case before reconciling the two."""
+    root = os.path.dirname(ctx.fixture(VECTOR_ROOT_URI))
+    found = []
+    for leaf in sorted(os.listdir(root)):
+        if REGION_FAMILY not in kind_of(leaf) or not os.path.isdir(os.path.join(root, leaf)):
+            continue
+        for scenario in sorted(os.listdir(os.path.join(root, leaf))):
+            directory = os.path.join(root, leaf, scenario)
+            if not os.path.isdir(directory):
+                continue
+            found.append(
+                {
+                    "id": "%s/%s" % (leaf, scenario),
+                    "kind": kind_of(leaf),
+                    "before": read_json(directory, *SNAPSHOT_BEFORE),
+                    "after": read_json(directory, *SNAPSHOT_AFTER),
+                    "mutation": read_json(directory, *MUTATION_LEAF),
+                    "outcome": read_json(directory, *OUTCOME_LEAF),
+                }
+            )
+    if not found:
+        raise AssertionError("no committed target-region vector was discovered under %s" % root)
+    return found
+
+
+def region_box(region):
+    """🎯️ One target region as a real shapely rectangle, normalized so a brush stroke that started
+    from any corner answers the same figure."""
+    x, y = region["x"], region["y"]
+    width, height = region["width"], region["height"]
+    return box(min(x, x + width), min(y, y + height), max(x, x + width), max(y, y + height))
+
+
+def regions_of(document):
+    """🎯️ The document's target regions by id; an absent collection is an empty one."""
+    return {region["id"]: region for region in document.get("targetRegions", [])}
+
+
+def region_containment(ctx):
+    """🎯️ shapely answers the target-region family: a region IS the rectangle its four members state,
+    a move translates it without resizing, a resize keeps its minimum corner, the flag and label verbs
+    move no geometry at all, and the real-world paint vector's region CONTAINS the seed node it was
+    drawn around — containment and intersection are exactly what a geometry library adjudicates, and
+    exactly what fill then reads."""
+    rows = []
+    failures = []
+    for vector in region_vectors(ctx):
+        if vector["before"] is None or vector["after"] is None or vector["mutation"] is None:
+            continue
+        kind = vector["kind"]
+        payload = payload_of(vector)
+        before = regions_of(vector["before"])
+        after = regions_of(vector["after"])
+        checks = 0
+        for identity, region in after.items():
+            shape = region_box(region)
+            checks += 1
+            if abs(shape.area - abs(region["width"] * region["height"])) > TOLERANCE:
+                failures.append("%s: region %r has shapely area %r where its width x height states %r" % (vector["id"], identity, shape.area, abs(region["width"] * region["height"])))
+            if not shape.is_valid or shape.is_empty:
+                failures.append("%s: region %r is not a valid non-empty rectangle" % (vector["id"], identity))
+        if not moves_document(vector):
+            checks += 1
+            if sorted(before) != sorted(after) or any(not region_box(before[key]).equals_exact(region_box(after[key]), TOLERANCE) for key in before):
+                failures.append("%s: a refused or no-op vector moved a region" % vector["id"])
+            rows.append({"id": vector["id"], "kind": kind, "checks": checks})
+            continue
+        if kind == "move-target-region":
+            source, destination = before[payload["id"]], after[payload["id"]]
+            moved = affinity.translate(region_box(source), xoff=payload["newX"] - source["x"], yoff=payload["newY"] - source["y"])
+            checks += 1
+            if not moved.equals_exact(region_box(destination), TOLERANCE):
+                failures.append("%s: shapely's translate of the before rectangle does not equal the after rectangle (bounds %r vs %r)" % (vector["id"], moved.bounds, region_box(destination).bounds))
+            if abs(moved.area - region_box(source).area) > TOLERANCE:
+                failures.append("%s: a translation changed the region's area" % vector["id"])
+        elif kind == "resize-target-region":
+            source, destination = before[payload["id"]], after[payload["id"]]
+            checks += 1
+            if abs(region_box(destination).area - abs(payload["newWidth"] * payload["newHeight"])) > TOLERANCE:
+                failures.append("%s: the resized rectangle has area %r where its arguments state %r" % (vector["id"], region_box(destination).area, abs(payload["newWidth"] * payload["newHeight"])))
+            if (source["x"], source["y"]) != (destination["x"], destination["y"]):
+                failures.append("%s: a resize moved the region's minimum corner" % vector["id"])
+        elif kind in ("edit-target-region-label", "change-target-region-hidden", "change-target-region-locked"):
+            checks += 1
+            if any(not region_box(before[key]).equals_exact(region_box(after[key]), TOLERANCE) for key in before):
+                failures.append("%s: a presentation verb moved a region's geometry" % vector["id"])
+        elif kind == "create-target-region":
+            painted = [identity for identity in after if identity not in before]
+            checks += 1
+            if len(painted) != 1:
+                failures.append("%s: a create must add exactly one region, added %r" % (vector["id"], painted))
+                rows.append({"id": vector["id"], "kind": kind, "checks": checks})
+                continue
+            shape = region_box(after[painted[0]])
+            for node in vector["after"]["nodes"]:
+                node_shape = footprint(node)
+                if node_shape is None:
+                    continue
+                checks += 1
+                if shape.intersects(node_shape) and not shape.contains(node_shape):
+                    failures.append("%s: the painted region straddles node %r — it intersects its footprint without containing it, which fill would read as unplaceable" % (vector["id"], node["id"]))
+        elif kind == "delete-target-region":
+            checks += 1
+            if payload["id"] in after:
+                failures.append("%s: a delete left the region on the board" % vector["id"])
+        rows.append({"id": vector["id"], "kind": kind, "checks": checks})
+    return report("region-containment", rows, failures)
+# endregion 🎯️Regions
+
+
 # region 🔖️Registration
 def adapter():
     """🧭️ Registration in the ORACLE role only. These libraries are the reference; this repository's
@@ -628,5 +747,6 @@ def adapter():
         .oracle("geometry-transforms", geometry_transforms)
         .oracle("payload-schemas", payload_schemas)
         .oracle("diff-reproduction", diff_reproduction)
+        .oracle("region-containment", region_containment)
     )
 # endregion 🔖️Registration

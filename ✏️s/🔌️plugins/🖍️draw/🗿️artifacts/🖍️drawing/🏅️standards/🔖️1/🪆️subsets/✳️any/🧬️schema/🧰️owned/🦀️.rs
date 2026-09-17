@@ -4706,6 +4706,9 @@ enum DrawingStoreInitializationPhase {
     ValidateEditPair { left: usize, right: usize },
     HashInitialSchema,
     HashInitialId,
+    CloneInitialHeader,
+    CloneInitialLayer { index: usize },
+    CloneInitialAsset { index: usize, cursor: usize },
     MoveInitialOwner,
     SeedHistory { edit: usize, lane: u8, index: usize },
     FindApplied { position: usize, scan: usize },
@@ -4742,6 +4745,13 @@ struct DrawingStoreInitializationAuthority {
     prepared_actor: std::mem::ManuallyDrop<Option<String>>,
     initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
     edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    /// 🧬️ The paged clone of `envelope.vcs.initial_snapshot` that becomes the runtime's live fold —
+    /// the envelope keeps its own initial snapshot, which `print_document_pack` / the cold from-scratch
+    /// fold read back (moving it out left every loaded document's `.pack` empty — ticket
+    /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17).
+    initial_clone: std::mem::ManuallyDrop<Option<DrawingSnapshot>>,
+    initial_layer_clone: std::mem::ManuallyDrop<Option<Box<DrawingLayerCloneAuthority>>>,
+    initial_clone_digest: Option<store::ArtifactStoreInitializationDigest>,
     phase: DrawingStoreInitializationPhase,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
@@ -4780,6 +4790,9 @@ impl DrawingStoreInitializationAuthority {
             prepared_actor: std::mem::ManuallyDrop::new(None),
             initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"drawing.initial"))),
             edit_digest: std::mem::ManuallyDrop::new(None),
+            initial_clone: std::mem::ManuallyDrop::new(None),
+            initial_layer_clone: std::mem::ManuallyDrop::new(None),
+            initial_clone_digest: None,
             phase,
             cancel_requested: false,
             fault,
@@ -4828,6 +4841,21 @@ impl DrawingStoreInitializationAuthority {
         }
         if let Some(value) = self.prepared_actor.take() {
             *self.active = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::String(value))));
+            return Ok(false);
+        }
+        if let Some(layer) = self.initial_layer_clone.as_mut() {
+            return match layer.close_step(1, DRAWING_OWNED_FIELD_BYTES)? {
+                store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
+                    drop(self.initial_layer_clone.take());
+                    Ok(false)
+                }
+                store::SnapshotRetirementStep::Complete => Err("Drawing initial layer clone reported a false terminal".into()),
+                _ => Ok(false),
+            };
+        }
+        if let Some(value) = self.initial_clone.take() {
+            self.initial_clone_digest = None;
+            *self.active = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Snapshot(value))));
             return Ok(false);
         }
         if self.mutation_candidate.is_some() {
@@ -4897,6 +4925,8 @@ impl DrawingStoreInitializationAuthority {
             && self.prepared_actor.is_none()
             && self.initial_digest.is_none()
             && self.edit_digest.is_none()
+            && self.initial_clone.is_none()
+            && self.initial_layer_clone.is_none()
     }
 }
 
@@ -4991,13 +5021,110 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::HashInitialId => {
                 let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial digest").vcs.initial_snapshot;
                 self.initial_digest.as_mut().expect("Drawing initial digest remains retained").observe(source.id.as_bytes());
-                self.phase = DrawingStoreInitializationPhase::MoveInitialOwner;
+                self.phase = DrawingStoreInitializationPhase::CloneInitialHeader;
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
+            DrawingStoreInitializationPhase::CloneInitialHeader => {
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let header = (|| -> Result<DrawingSnapshot, &'static str> {
+                    let mut layers = Vec::new();
+                    layers.try_reserve_exact(source.layers.len()).map_err(|_| "drawing-store.initializer-layer-admission")?;
+                    Ok(DrawingSnapshot {
+                        schema: clone_drawing_string(&source.schema)?,
+                        id: clone_drawing_string(&source.id)?,
+                        title: source.title.as_deref().map(clone_drawing_string).transpose()?,
+                        layers,
+                        assets: std::collections::BTreeMap::new(),
+                        artboard: source.artboard.clone(),
+                    })
+                })();
+                match header {
+                    Ok(header) => {
+                        cx.consume_fuel((header.schema.len() + header.id.len()).max(1) as u64);
+                        *self.initial_clone = Some(header);
+                        self.initial_clone_digest = Some(store::ArtifactStoreInitializationDigest::new(b"drawing.initial-clone"));
+                        self.phase = DrawingStoreInitializationPhase::CloneInitialLayer { index: 0 };
+                    }
+                    Err(code) => self.fail(code.as_bytes()),
+                }
+                semio_framework_job::StepOutcome::Yield
+            }
+            DrawingStoreInitializationPhase::CloneInitialLayer { index } => {
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let Some(layer) = source.layers.get(index) else {
+                    self.phase = DrawingStoreInitializationPhase::CloneInitialAsset { index: 0, cursor: 0 };
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                };
+                if self.initial_layer_clone.is_none() {
+                    *self.initial_layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(layer)));
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                let clone = self.initial_layer_clone.as_mut().expect("Drawing initial layer clone remains retained");
+                let digest = self.initial_clone_digest.as_mut().expect("Drawing initial clone digest remains retained");
+                match clone.step(layer, digest, cx) {
+                    Ok(false) => {}
+                    Ok(true) => {
+                        let value = clone.take().expect("completed Drawing initial layer clone hands off its exact value");
+                        drop(self.initial_layer_clone.take());
+                        self.initial_clone.as_mut().expect("Drawing initial clone remains retained").layers.push(value);
+                        self.phase = DrawingStoreInitializationPhase::CloneInitialLayer { index: index + 1 };
+                    }
+                    Err(code) => self.fail(code.as_bytes()),
+                }
+                semio_framework_job::StepOutcome::Yield
+            }
+            DrawingStoreInitializationPhase::CloneInitialAsset { index, cursor } => {
+                // 🖼️ One asset entry per index; its base64 `data` (tens of KiB for a PNG) is copied one
+                // `DRAWING_OWNED_FIELD_BYTES` page per step so no step exceeds the owned-field grant.
+                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
+                let Some((key, asset)) = source.assets.iter().nth(index) else {
+                    self.phase = DrawingStoreInitializationPhase::MoveInitialOwner;
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                };
+                let target = self.initial_clone.as_mut().expect("Drawing initial clone remains retained");
+                if cursor == 0 {
+                    let entry = (|| -> Result<(String, DrawingImageAsset), &'static str> {
+                        let mut data = String::new();
+                        data.try_reserve_exact(asset.data.len()).map_err(|_| "drawing-store.initializer-asset-admission")?;
+                        Ok((clone_drawing_string(key)?, DrawingImageAsset { mime: clone_drawing_string(&asset.mime)?, data, width: asset.width, height: asset.height }))
+                    })();
+                    match entry {
+                        Ok((key, value)) => {
+                            cx.consume_fuel((key.len() + value.mime.len()).max(1) as u64);
+                            target.assets.insert(key, value);
+                            self.phase = DrawingStoreInitializationPhase::CloneInitialAsset { index, cursor: 1 };
+                        }
+                        Err(code) => self.fail(code.as_bytes()),
+                    }
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                let copied = cursor - 1;
+                let Some(entry) = target.assets.get_mut(key) else {
+                    self.fail(b"drawing-store.initializer-asset-owner-missing");
+                    return semio_framework_job::StepOutcome::Yield;
+                };
+                if copied >= asset.data.len() {
+                    self.phase = DrawingStoreInitializationPhase::CloneInitialAsset { index: index + 1, cursor: 0 };
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                let mut end = (copied + DRAWING_OWNED_FIELD_BYTES).min(asset.data.len());
+                while end < asset.data.len() && !asset.data.is_char_boundary(end) {
+                    end += 1;
+                }
+                entry.data.push_str(&asset.data[copied..end]);
+                cx.consume_fuel((end - copied).max(1) as u64);
+                self.phase = DrawingStoreInitializationPhase::CloneInitialAsset { index, cursor: end + 1 };
+                semio_framework_job::StepOutcome::Yield
+            }
             DrawingStoreInitializationPhase::MoveInitialOwner => {
-                let envelope = self.envelope.as_mut().expect("Drawing envelope remains retained during initial owner move");
-                let initial = std::mem::replace(&mut envelope.vcs.initial_snapshot, DrawingSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: std::collections::BTreeMap::new(), artboard: None });
+                let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained during initial owner move");
+                self.initial_clone_digest = None;
+                let initial = self.initial_clone.take().expect("Drawing initial clone remains retained until the runtime adopts it");
                 let initial_digest = self.initial_digest.take().expect("Drawing initial digest remains retained").finish();
                 let owner_catalog = self.owner_catalog.take().expect("Drawing owner catalog was pre-admitted before initialization");
                 *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, initial, initial_digest, owner_catalog));

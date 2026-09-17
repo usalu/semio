@@ -107,12 +107,10 @@ export function createWgpuPageHostIo(): WgpuHostIo {
     if (request.op === "download-media-export") {
       if (!bytes) throw new Error("wgpu-host-io.download-media-export: no bytes");
       downloadBytes(request.filename, request.mimeType, bytes);
-      console.log(`[DEBUG] wgpu-host-io download name=${request.filename} type=${request.mimeType} bytes=${bytes.byteLength}`);
       return "";
     }
     if (request.op === "request-file-open") {
       const opened = await openFiles(request.accept, request.readAs, Boolean(request.multiple));
-      console.log(`[DEBUG] wgpu-host-io file-open accept=${request.accept} files=${opened.length} bytes=${opened.reduce((total, file) => total + file.contents.length, 0)}`);
       return JSON.stringify(opened);
     }
     throw new Error(`wgpu-host-io: unknown op ${JSON.stringify((request as { readonly op?: unknown }).op)}`);

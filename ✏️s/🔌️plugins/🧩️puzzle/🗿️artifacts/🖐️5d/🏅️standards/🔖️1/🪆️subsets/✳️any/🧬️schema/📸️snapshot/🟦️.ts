@@ -37,6 +37,8 @@ export interface Puzzle5dSnapshot {
   parts: Puzzle5dPart[];
   /** @state artifact */
   fasteners: Puzzle5dFastener[];
+  /** @state artifact */
+  targetVolumes: Puzzle5dTargetVolume[];
 }
 
 
@@ -239,6 +241,16 @@ export interface Puzzle5dFastener {
   y?: number;
 }
 
+/** 🧊️ Oriented box constraining fill placement in the 3D projection. */
+export interface Puzzle5dTargetVolume {
+  id: string;
+  origin?: [number, number, number];
+  orientation?: [number, number, number, number];
+  scale?: number | [number, number, number];
+  hidden?: boolean;
+  locked?: boolean;
+}
+
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class puzzlePuzzle5dSnapshotGuardRefusal extends Error {
@@ -285,6 +297,20 @@ export const puzzlePuzzle5dSnapshotGuardMember = <T extends string>(value: unkno
 export const puzzlePuzzle5dSnapshotGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
   value === expected ? expected : puzzlePuzzle5dSnapshotGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
+
+export function parsePuzzle5dTargetVolume(value: unknown, at = "$"): Puzzle5dTargetVolume {
+  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
+  const axes = (key: string, count: number): number[] | undefined =>
+    row[key] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row[key], `${at}.${key}`, { minItems: count, maxItems: count }).map((item, index) => puzzlePuzzle5dSnapshotGuardNumber(item, `${at}.${key}[${index}]`));
+  return {
+    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
+    origin: axes("origin", 3) as [number, number, number] | undefined,
+    orientation: axes("orientation", 4) as [number, number, number, number] | undefined,
+    scale: row["scale"] === undefined ? undefined : typeof row["scale"] === "number" ? puzzlePuzzle5dSnapshotGuardNumber(row["scale"], `${at}.scale`) : (axes("scale", 3) as [number, number, number]),
+    hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["hidden"], `${at}.hidden`),
+    locked: row["locked"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["locked"], `${at}.locked`),
+  };
+}
 
 export function parseArtifactChildHandle(value: unknown, at = "$"): ArtifactChildHandle {
   const row = puzzlePuzzle5dSnapshotGuardObject(value, at);

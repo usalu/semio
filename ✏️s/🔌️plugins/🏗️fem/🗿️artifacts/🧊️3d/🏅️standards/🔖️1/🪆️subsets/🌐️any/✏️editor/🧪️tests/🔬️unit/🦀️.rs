@@ -213,8 +213,9 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_the_bundled_example_not_empty() {
     let snapshot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
-    assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");
-    assert!(!snapshot.solids.is_empty(), "expected the bundled default example's solids");
+    let expected = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
+    assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
+    assert_eq!(snapshot.elements.len(), expected.elements.len(), "expected the bundled concrete-forest example's elements");
 }
 //#endregion 🧪️RetainedCommandEnvelope
 
@@ -327,7 +328,7 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         "01190307496d706f736564046c697665046e616d6503000601010602020600",
         "011a0303312e35097465726d3a6c69766503756c7303000602010601020600",
         "011b020870696e67506f6e670c726573756c74732d6c656674040005000000000000e03f0102030600070601",
-        "011c0000",
+        "011c010c726573756c74732d6c65667401000600",
         "011d01026e3101000600",
         "011e01026e3104000c0106000105000000000000e03f020500000000000000000305000000000000d0bf",
         "011f0005000c0001050000000000000000020500000000000000000305000000000000f03f04059a9999999999b93f",

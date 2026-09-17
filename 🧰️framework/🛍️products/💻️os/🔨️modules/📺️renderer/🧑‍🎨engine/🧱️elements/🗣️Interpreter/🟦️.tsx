@@ -32,6 +32,7 @@ import {
   SelectValue,
   Slider,
   Stepper,
+  TREE_WINDOW_BODY_NODE_BUDGET,
   TREE_WINDOW_OVERSCAN_ROWS,
   Textarea,
   Toggle,
@@ -41,12 +42,14 @@ import {
   borderNormalTopClass,
   catalogueTreeDragController,
   classifyIconSelectorMode,
+  capTreeWindowRequests,
   cn,
   elementSkeleton,
   loadingBorderElementClass,
   interactionMergeFromModifiers,
   renderControlIcon,
   treeWindowRequestsForViewport,
+  treeWindowVisibleRowsForViewport,
   useLabel,
   waitingBorderElementClass,
   type ContextMenuItem,
@@ -57,6 +60,9 @@ import {
   type TreeDataSection,
   type TreeDragAndDropController,
   type TreePanelConfig,
+  type TreeWindowContainerMeasure,
+  type TreeWindowRequest,
+  type TreeWindowRowMeasure,
   type UiLabel,
   type UiTranslationKey,
 } from "@semio-tech/ui-react";
@@ -1004,7 +1010,7 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
         if (phase === "commit") gestureRef.current = null;
         return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
       },
-      onFault: (error) => console.error("[DEBUG] continuous control dispatch failed", error),
+      onFault: (error) => undefined,
     });
   }
   return laneRef.current;
@@ -1486,27 +1492,80 @@ export function treeWindowRowHeightPx(): number {
 }
 
 /** 🪟️ The bounded scroll container a guest tree actually scrolls inside — the ancestor `🖼️Panel`'s
- * `📜️Scrollable` viewport, not the guest `<Tree>`'s own root div, whose `overflow-auto` never engages
- * because the chain above it is a natural-height stack (📓️audit-host-tree-pipeline.md §3). Falls back
- * to the nearest scrollable ancestor so a tree mounted outside a `Panel` still streams. */
+ * `📜️Scrollable`, not the guest `<Tree>`'s own root div, whose `overflow-auto` never engages because the
+ * chain above it is a natural-height stack (📓️audit-host-tree-pipeline.md §3).
+ *
+ * 🧯️ It is the element that CARRIES the overflow, `[data-slot="scroll-area"]`, never its inner
+ * `[data-slot="scroll-area-viewport"]` content div: that inner div is unbounded
+ * (`📜️Scrollable/🟦️.tsx:43` — `min-h-0 min-w-0 w-full`, no height), so its `scrollHeight` always equals
+ * its `clientHeight` and its `scrollTop` is permanently `0`. Binding there measured 3720/3720 (extent 0)
+ * against the real 466/3722 in a browser, which made every window request answer `offset: 0` and a
+ * windowed tree could never stream past its first page (📓️w3-browser-verification.md §5).
+ *
+ * So the rule is behavioural, not a selector: collect every candidate scroller between the guest `<Tree>`'s
+ * own root (it carries `overflow-auto` and IS the scroller wherever the chain above it bounds its height)
+ * and the document, nearest first, then take
+ * 1. the nearest one that ACTUALLY overflows (`scrollHeight − clientHeight > 1`) — the only proof,
+ * 2. else the nearest `📜️Scrollable`, which is where the panel chain will scroll once the body has grown,
+ * 3. else the nearest candidate at all, so a tree mounted outside a `📜️Scrollable` still streams,
+ * 4. else the document's own scrolling element, for a tree on a plain scrolling page.
+ * The effect re-runs on every store revision, so a first-paint body that overflows only after its rows
+ * arrive is re-resolved against the grown document rather than measured forever against the wrong box. */
 export function treeWindowScrollViewport(root: HTMLElement): HTMLElement | null {
-  const slot = root.closest('[data-slot="scroll-area-viewport"]');
-  if (slot instanceof HTMLElement) return slot;
   const view = root.ownerDocument?.defaultView ?? null;
-  for (let candidate = root.parentElement; candidate; candidate = candidate.parentElement) {
+  const isScroller = (candidate: HTMLElement): boolean => {
+    if (candidate.getAttribute("data-slot") === "scroll-area") return true;
     const overflowY = view?.getComputedStyle(candidate).overflowY;
-    if (overflowY === "auto" || overflowY === "scroll") return candidate;
-  }
-  return null;
+    return overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay";
+  };
+  const candidates: HTMLElement[] = [];
+  // 🌳️ `TreeView` wraps `<Tree>` in a `display: contents` div, so the tree's own root is the first
+  // element child of `root` and belongs in the chain — skipping it would miss a bounded guest tree.
+  const inner = root.firstElementChild;
+  if (inner instanceof HTMLElement && isScroller(inner)) candidates.push(inner);
+  for (let candidate = root.parentElement; candidate; candidate = candidate.parentElement) if (isScroller(candidate)) candidates.push(candidate);
+  return candidates.find((candidate) => candidate.scrollHeight - candidate.clientHeight > 1) ?? candidates.find((candidate) => candidate.getAttribute("data-slot") === "scroll-area") ?? candidates[0] ?? treeWindowDocumentScroller(root);
 }
 
-/** 🪟️ Every windowed container under `root`, measured in the viewport's own scroll-content space, in
- * the shape `treeWindowRequestsForViewport` consumes. A container with `total <= 0` is not windowed and
- * is skipped — reporting it would ask the guest for rows that do not exist. */
-export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLElement): readonly { readonly key: string; readonly total: number; readonly offset: number; readonly length: number; readonly top: number; readonly height: number }[] {
-  const viewportRect = viewport.getBoundingClientRect();
-  const scrollTop = viewport.scrollTop;
-  const measured: { key: string; total: number; offset: number; length: number; top: number; height: number }[] = [];
+/** 🪟️ The page itself, for a tree that has no scrolling ancestor at all. `scrollingElement` is the element
+ * whose `scrollTop` a page scroll moves; the `scroll` event for it fires on the DOCUMENT, which is why
+ * {@link useTreeWindowObserver} listens on the window too whenever this is the viewport. */
+export function treeWindowDocumentScroller(root: HTMLElement): HTMLElement | null {
+  const owner = root.ownerDocument ?? null;
+  const scrolling = owner?.scrollingElement ?? owner?.documentElement ?? null;
+  return scrolling instanceof HTMLElement ? scrolling : null;
+}
+
+/** 🪟️ The viewport's own visible box, in the client coordinates every `getBoundingClientRect` already
+ * speaks: where its CONTENT box starts on screen, and how tall the part of it a reader can see is.
+ *
+ * 🧯️ `clientHeight`, never `getBoundingClientRect().height` — the rect is the BORDER box and includes the
+ * element's borders and (when it has one) a horizontal scrollbar, so a rect-based `viewportRows` reports
+ * rows the user cannot see and a rect-based overlap runs a row past the bottom edge. `clientTop` is the
+ * top border, the offset between the rect's top and the first pixel of scrollable content.
+ *
+ * 🧯️ The document's scrolling element is the one box whose own rect MOVES with the scroll (its `top` is
+ * `−scrollY`), so its content origin is the client origin `0` and its visible height is the window's, not
+ * its own `clientHeight` (which is the whole document on a quirks-mode page). */
+export function treeWindowViewportMetrics(viewport: HTMLElement): { readonly originTop: number; readonly height: number } {
+  const owner = viewport.ownerDocument ?? null;
+  if (viewport === owner?.scrollingElement || viewport === owner?.documentElement) return { originTop: 0, height: Math.max(0, owner?.defaultView?.innerHeight ?? viewport.clientHeight) };
+  const rect = viewport.getBoundingClientRect();
+  return { originTop: rect.top + viewport.clientTop, height: Math.max(0, viewport.clientHeight || rect.height) };
+}
+
+/** 🪟️ Every windowed container under `root`, measured RELATIVE TO the viewport's content origin — i.e.
+ * `top: 0` is the first visible pixel of the scroll container — in the shape
+ * `treeWindowRequestsForViewport` consumes with `viewportTop: 0`.
+ *
+ * Client coordinates, not scroll-content coordinates: only the DIFFERENCE `viewportTop − top` and the
+ * container extents reach the rule, both are identical in either space, and this one needs no `scrollTop`
+ * bookkeeping — which is what made the document scroller (whose own rect moves with the scroll) and any
+ * bordered scroller misreport. A container with `total <= 0` is not windowed and is skipped: reporting it
+ * would ask the guest for rows that do not exist. */
+export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLElement): readonly TreeWindowContainerMeasure[] {
+  const originTop = treeWindowViewportMetrics(viewport).originTop;
+  const measured: TreeWindowContainerMeasure[] = [];
   for (const element of Array.from(root.querySelectorAll("[data-tree-window-key]"))) {
     if (!(element instanceof HTMLElement)) continue;
     const key = element.getAttribute("data-tree-window-key");
@@ -1514,9 +1573,34 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
     const total = treeWindowAttributeNumber(element, "data-tree-window-total");
     if (total <= 0) continue;
     const rect = element.getBoundingClientRect();
-    measured.push({ key, total, offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - viewportRect.top + scrollTop, height: rect.height });
+    // 🧯️ A CLOSED section still renders its content element, `hidden`, so its rect is zero — it is not on
+    // screen, it materialises nothing, and measuring it would ask for rows nobody is looking at.
+    if (rect.height <= 0) continue;
+    measured.push({ key, total, offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - originTop, height: rect.height, rows: treeWindowRowsUnder(element, originTop) });
   }
   return measured;
+}
+
+/** 📐️ One container's OWN materialised rows, as `{index, top}` in the container's own space. This is what
+ * replaces "pixels ÷ one row height" inside a container: a materialised row that is itself an open windowed
+ * group is many rows tall, and only its real rect says where the row after it begins
+ * (📓️s3-review-streaming-loop.md §2).
+ *
+ * 🧯️ Ownership is `closest("[data-tree-window-key]")`, not `:scope >` — a row with a context menu is wrapped
+ * in one and would vanish from a direct-child query, while a nested group's own rows must stay with that
+ * group. Sorted by TOP, not by index: the position rule searches on pixels, and a `direction === "up"` tree
+ * paints the slice reversed. */
+export function treeWindowRowsUnder(container: HTMLElement, originTop: number): readonly TreeWindowRowMeasure[] {
+  const rows: TreeWindowRowMeasure[] = [];
+  for (const element of Array.from(container.querySelectorAll("[data-tree-window-row]"))) {
+    if (!(element instanceof HTMLElement)) continue;
+    if (element.closest("[data-tree-window-key]") !== container) continue;
+    const index = Number(element.getAttribute("data-tree-window-row"));
+    if (!Number.isFinite(index) || index < 0) continue;
+    rows.push({ index: Math.floor(index), top: element.getBoundingClientRect().top - originTop });
+  }
+  rows.sort((left, right) => left.top - right.top || left.index - right.index);
+  return rows;
 }
 
 function treeWindowAttributeNumber(element: HTMLElement, attribute: string): number {
@@ -1531,15 +1615,56 @@ export function treeWindowReportSignatureV1(requests: readonly TreeWindowReportV
   return `${viewportRows}|${requests.map((request) => `${request.nodeKey}:${request.offset}:${request.rows}`).join(",")}`;
 }
 
+/** 🪟️ The rows an off-screen container is asked for. Zero: it is in the body, so it costs its own node in
+ * the guest's ledger either way, but nobody is looking at its rows and every one of them would be a row a
+ * VISIBLE container does not get. It keeps the offset it already has, so scrolling back to it lands where
+ * the reader left it rather than at row 0 (📓️s3-review-streaming-loop.md §3). */
+const TREE_WINDOW_OFFSCREEN_ROWS = 0;
+
+/** 🪟️ Every windowed container of one body, priced together: the ones the viewport covers with the rows
+ * they need, the rest as spacer-only windows at the offset they already hold. The whole set goes through
+ * {@link capTreeWindowRequests} because the guest's ledger charges `1 + rows` for EVERY container in the
+ * body, on-screen or not — pricing only the visible ones is what made the host ask 112 and be answered 110
+ * on every render (📓️s3-review-streaming-loop.md §1). */
+export function treeWindowBodyRequestsV1(containers: readonly TreeWindowContainerMeasure[], viewportHeight: number, rowHeightPx: number): readonly TreeWindowRequest[] {
+  const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight, rowHeightPx);
+  const wanted = new Map(treeWindowRequestsForViewport(containers, 0, viewportHeight, rowHeightPx, TREE_WINDOW_OVERSCAN_ROWS).map((request) => [request.key, request] as const));
+  const requests = containers.map((container) => wanted.get(container.key) ?? { key: container.key, offset: Math.min(Math.max(0, Math.floor(container.offset)), Math.max(0, Math.floor(container.total) - 1)), rows: TREE_WINDOW_OFFSCREEN_ROWS });
+  return capTreeWindowRequests(requests, visible, TREE_WINDOW_BODY_NODE_BUDGET);
+}
+
+/** 🔑️ A duplicate `data-tree-window-key` inside one body is an authoring fault, not a host one: two
+ * containers would share one open state and one window, and each other's measurements would silently
+ * overwrite the other's in the report (📓️s3-review-streaming-loop.md §4). The host cannot repair it — the
+ * key is what the guest addresses its containers by — so it says so, loudly, once per body. */
+function reportDuplicateTreeWindowKeys(containers: readonly TreeWindowContainerMeasure[], bodyKey: string, reported: Set<string>): void {
+  const seen = new Set<string>();
+  for (const container of containers) {
+    if (!seen.has(container.key)) {
+      seen.add(container.key);
+      continue;
+    }
+    const once = `${bodyKey} ${container.key}`;
+    if (reported.has(once)) continue;
+    reported.add(once);
+    console.error(`[tree-window] duplicate key ${JSON.stringify(container.key)} in panel body ${JSON.stringify(bodyKey)} — two windowed containers share one window and one open state; give every windowed container its own node key`);
+  }
+}
+
 /** 🪟️ Measures the windowed containers under `rootRef` against their scroll viewport and reports the
  * rows the guest should materialise, coalesced to one measurement per animation frame and re-run on
- * every `scroll`, on a viewport resize, and on every store revision (a refresh changes what is there to
- * measure). The diff against the last report is what keeps a scroll gesture from firing one partial
- * refresh per frame. */
-function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, windows: TreeWindowContextValue | null, revision: unknown): void {
+ * every `scroll`, on a viewport resize, and on every store revision AND store identity (a body refresh
+ * both bumps the revision and — when the panel config cache misses — hands `TreeView` a whole new
+ * `UiDocumentStore` whose revision restarts at its own snapshot's, which a revision-only dependency can
+ * read as "unchanged" and never re-measure the tree that just replaced the old one). The diff against
+ * the last report is what keeps a scroll gesture from firing one partial refresh per frame, and what
+ * makes a SETTLED window silent: the answer is a function of the container geometry alone, and the
+ * geometry a window's own answer produces is the geometry that asked for it. */
+function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, windows: TreeWindowContextValue | null, revision: unknown, store: unknown): void {
   const windowsRef = useRef<TreeWindowContextValue | null>(windows);
   windowsRef.current = windows;
   const lastReportRef = useRef<string>("");
+  const duplicateKeysRef = useRef<Set<string>>(new Set());
   const frameRef = useRef<number | null>(null);
   const bodyKey = windows?.bodyKey ?? null;
   useEffect(() => {
@@ -1555,8 +1680,11 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       const live = rootRef.current;
       if (!channel || !live || !live.isConnected) return;
       const rowHeight = treeWindowRowHeightPx();
-      const viewportHeight = viewport.getBoundingClientRect().height;
-      const requests = treeWindowRequestsForViewport(treeWindowContainersUnder(live, viewport), viewport.scrollTop, viewportHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
+      // 🪟️ Client space with the viewport's content origin at 0 — see `treeWindowContainersUnder`.
+      const viewportHeight = treeWindowViewportMetrics(viewport).height;
+      const containers = treeWindowContainersUnder(live, viewport);
+      reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
+      const requests = treeWindowBodyRequestsV1(containers, viewportHeight, rowHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
       const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
       if (signature === lastReportRef.current) return;
@@ -1569,17 +1697,26 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
     };
     schedule();
     viewport.addEventListener("scroll", schedule, { passive: true });
+    // 🧯️ A page scroll does not fire on the scrolling ELEMENT — it fires on the document — so a tree that
+    // has no scrolling ancestor of its own would never re-measure without this second listener.
+    const pageScroller = viewport === treeWindowDocumentScroller(root) ? view : null;
+    pageScroller?.addEventListener("scroll", schedule, { passive: true });
     const observer = typeof view.ResizeObserver === "function" ? new view.ResizeObserver(schedule) : null;
     observer?.observe(viewport);
+    // 🪟️ The tree's own extent moves under a fixed viewport too (a sibling branch folding, a nested window
+    // streaming in), and that changes which rows this one must show. Measuring the root as well is what
+    // makes a nested container re-report without waiting for the next store revision.
+    if (observer && root !== viewport) observer.observe(root.firstElementChild instanceof HTMLElement ? root.firstElementChild : root);
     return () => {
       viewport.removeEventListener("scroll", schedule);
+      pageScroller?.removeEventListener("scroll", schedule);
       observer?.disconnect();
       if (frameRef.current === null) return;
       if (typeof view.cancelAnimationFrame === "function") view.cancelAnimationFrame(frameRef.current);
       else view.clearTimeout(frameRef.current);
       frameRef.current = null;
     };
-  }, [rootRef, revision, bodyKey]);
+  }, [rootRef, revision, store, bodyKey]);
 }
 
 /** 🕹️ What one conversion pass of a guest tree collects and carries down the recursion — every field is
@@ -1640,12 +1777,30 @@ function dispatchTreePick(context: UiInterpreterContext, walk: TreeWalkContextV1
   void context.onIntent(context.store.buildIntent(pick.record, pick.binding, treePickIntentInputV1(merge, treePickTargetsV1(walk, key, granularity, merge, activation.selectedIds))));
 }
 
+/** 🔑️ `🌳️Tree` keys its expansion map by a ROLE-PREFIXED form of the row's DOM id
+ * (`getTreeSectionStateId` → `tree-section-<id>`, `getTreeItemStateId` → `tree-item-<id>`; both are
+ * private to that element and neither is exported). A host-controlled map therefore carries EVERY
+ * spelling of a row it knows about and strips the prefix on the way back. Unambiguous because a
+ * {@link uiNodeDomId} is `<surface>/<key>` and a panel surface is always `panel:…`, so no DOM id can
+ * itself begin with one of these prefixes. */
+const TREE_OPEN_STATE_ID_PREFIXES = ["tree-section-", "tree-item-"] as const;
+
+export function treeOpenStateIdsForDomIdV1(domId: string): readonly string[] {
+  return [domId, ...TREE_OPEN_STATE_ID_PREFIXES.map((prefix) => `${prefix}${domId}`)];
+}
+
+export function treeDomIdFromOpenStateIdV1(stateId: string): string {
+  for (const prefix of TREE_OPEN_STATE_ID_PREFIXES) if (stateId.startsWith(prefix)) return stateId.slice(prefix.length);
+  return stateId;
+}
+
 /** 🪟️ Records one converted row's identity in the walk's translation tables. */
 function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, key: string, domId: string): void {
   if (!walk || !key) return;
   walk.keysByDomId?.set(domId, key);
   const open = walk.openStates?.[key];
-  if (open !== undefined && walk.domOpenStates) walk.domOpenStates[domId] = open;
+  if (open === undefined || !walk.domOpenStates) return;
+  for (const stateId of treeOpenStateIdsForDomIdV1(domId)) walk.domOpenStates[stateId] = open;
 }
 //#endregion 🪟️TreeWindows
 
@@ -1723,8 +1878,12 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
     return { sections, walk };
   }, [store, record, revision, context, overlay, leftoverIds, windows]);
   const sections = walked.sections;
-  const handleOpenStateChange = useCallback((domId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(domId) ?? domId, open), [windows, walked]);
-  useTreeWindowObserver(rootRef, windows, revision);
+  // 🔑️ `TreeSection`/`TreeItem` each route a fold through the provider TWICE — once from the data view
+  // that owns the controlled `open` prop and once from the row component's own `useTreeOpenState`, both
+  // under the same state id. The host's map is idempotent (`createTreeWindowSchedulerV1.setOpen` returns
+  // on an unchanged value), so the duplicate costs nothing and is deliberately not filtered here.
+  const handleOpenStateChange = useCallback((stateId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(treeDomIdFromOpenStateIdV1(stateId)) ?? stateId, open), [windows, walked]);
+  useTreeWindowObserver(rootRef, windows, revision, store);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
     const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
     const catalogueMime = treeSectionsCatalogueDragMime(sections);
@@ -2047,7 +2206,7 @@ if (import.meta.vitest) {
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");
-  await registerTreeWindowTests(import.meta.vitest, { UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1 }, { url: import.meta.url });
+  await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowViewportMetrics }, { url: import.meta.url });
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
   await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");

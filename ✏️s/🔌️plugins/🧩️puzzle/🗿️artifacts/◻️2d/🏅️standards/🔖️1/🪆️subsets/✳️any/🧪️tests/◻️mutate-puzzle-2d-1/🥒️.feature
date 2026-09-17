@@ -4,7 +4,7 @@
 @mutations-puzzle-2d-1-any
 Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.puzzle.2d` board document and its twenty-six typed mutations,
+  second implementation of the `s.puzzle.2d` board document and its thirty-three typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
@@ -43,7 +43,7 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
   own fourteen-row kind-compatibility relation), and `replace-node-geometry` from
   `📚️examples/🌲️concrete-forest`'s seed node. The `spec-vector` table carries everything else: the
   original synthetic alpha-board vectors, which are kept rather than replaced because they exercise a
-  two-node board no real example offers; twenty-two REFUSAL vectors, each committing
+  two-node board no real example offers; twenty-nine REFUSAL vectors, each committing
   `🔺️diff/🚫️.absent` under contract D6 rather than an invented empty patch; and the two vectors that
   pin the warning-level branches — a duplicate edge id is a `mutation.no-op`, not a rejection, and a
   null catalogue argument clears rather than refuses.
@@ -110,6 +110,13 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair   |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair  |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog               |
+      | create-target-region          | 🌍create-target-region/🌍️paints-a-tower-footprint                         |
+      | delete-target-region          | 🪦delete-target-region/🪦️removes-region-1                                 |
+      | move-target-region            | 🚀move-target-region/🚀️slides-region-1                                    |
+      | resize-target-region          | 📐resize-target-region/📐️widens-region-1                                  |
+      | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames-region-1                            |
+      | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides-region-1                            |
+      | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks-region-1                            |
 
   @id-inverse
   @level-exhaustive
@@ -156,6 +163,13 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair   |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair  |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog               |
+      | create-target-region          | 🌍create-target-region/🌍️paints-a-tower-footprint                         |
+      | delete-target-region          | 🪦delete-target-region/🪦️removes-region-1                                 |
+      | move-target-region            | 🚀move-target-region/🚀️slides-region-1                                    |
+      | resize-target-region          | 📐resize-target-region/📐️widens-region-1                                  |
+      | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames-region-1                            |
+      | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides-region-1                            |
+      | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks-region-1                            |
 
   @id-spec-vector
   @level-exhaustive
@@ -225,6 +239,14 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
       | disconnect-kind-compatibility-refused | disconnect-kind-compatibility | refused | 💔disconnect-kind-compatibility/🚫️rejects-withdrawing-a-pair-the-relation-never-held | 🚫️.absent |
       | replace-kind-catalogs-alpha           | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/📇️installs-handle-kind-catalog                               | 🔣️.json   |
       | replace-kind-catalogs-cleared         | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog                        | 🔣️.json   |
+      | create-target-region-alpha            | create-target-region          | applied | 🌍create-target-region/🌍️appends-region-2                                            | 🔣️.json   |
+      | create-target-region-refused          | create-target-region          | refused | 🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds                 | 🚫️.absent |
+      | delete-target-region-refused          | delete-target-region          | refused | 🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held              | 🚫️.absent |
+      | move-target-region-refused            | move-target-region            | refused | 🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held                  | 🚫️.absent |
+      | resize-target-region-refused          | resize-target-region          | refused | 📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held              | 🚫️.absent |
+      | edit-target-region-label-refused      | edit-target-region-label      | refused | 🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held         | 🚫️.absent |
+      | change-target-region-hidden-refused   | change-target-region-hidden   | refused | 🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held         | 🚫️.absent |
+      | change-target-region-locked-refused   | change-target-region-locked   | refused | 🔏change-target-region-locked/🚫️rejects-locking-a-region-the-board-never-held        | 🚫️.absent |
 
   @id-identity-round-trip
   @level-long

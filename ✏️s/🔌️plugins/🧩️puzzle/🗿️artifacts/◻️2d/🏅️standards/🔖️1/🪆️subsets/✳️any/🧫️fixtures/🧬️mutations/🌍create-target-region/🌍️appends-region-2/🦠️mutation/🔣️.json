@@ -1,0 +1,13 @@
+{
+  "mutation": "createTargetRegion",
+  "targetRegion": {
+    "id": "region-2",
+    "x": 100.5,
+    "y": 0.5,
+    "width": 40.5,
+    "height": 40.5,
+    "hidden": false,
+    "locked": false
+  },
+  "index": null
+}

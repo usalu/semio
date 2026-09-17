@@ -38,6 +38,7 @@ export interface LowpolyObjectPatch {
   smoothShading: boolean | null;
   transform: LowpolyTransform | null;
   mesh: ArtifactChild | null;
+  meshContent?: string | null;
 }
 
 export interface LowpolyPaintLayersDelta {

@@ -60,6 +60,13 @@ pub enum Puzzle2dMutation {
     ConnectKindCompatibility(ConnectKindCompatibility),
     DisconnectKindCompatibility(DisconnectKindCompatibility),
     ReplaceKindCatalogs(ReplaceKindCatalogs),
+    CreateTargetRegion(CreateTargetRegion),
+    DeleteTargetRegion(DeleteTargetRegion),
+    MoveTargetRegion(MoveTargetRegion),
+    ResizeTargetRegion(ResizeTargetRegion),
+    EditTargetRegionLabel(EditTargetRegionLabel),
+    ChangeTargetRegionHidden(ChangeTargetRegionHidden),
+    ChangeTargetRegionLocked(ChangeTargetRegionLocked),
 }
 
 //#region 🏷️Kinds
@@ -94,6 +101,13 @@ pub const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "create-target-region",
+    "delete-target-region",
+    "move-target-region",
+    "resize-target-region",
+    "edit-target-region-label",
+    "change-target-region-hidden",
+    "change-target-region-locked",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -110,19 +124,26 @@ pub use super::change_node_kind::{change_node_kind, ChangeNodeKind};
 pub use super::change_node_locked::{change_node_locked, ChangeNodeLocked};
 pub use super::change_node_root::{change_node_root, ChangeNodeRoot};
 pub use super::change_node_visible::{change_node_visible, ChangeNodeVisible};
+pub use super::change_target_region_hidden::{change_target_region_hidden, ChangeTargetRegionHidden};
+pub use super::change_target_region_locked::{change_target_region_locked, ChangeTargetRegionLocked};
 pub use super::connect_handles::{connect_handles, ConnectHandles};
 pub use super::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
 pub use super::create_node::{create_node, CreateNode};
+pub use super::create_target_region::{create_target_region, CreateTargetRegion};
 pub use super::delete_node::{delete_node, DeleteNode};
+pub use super::delete_target_region::{delete_target_region, DeleteTargetRegion};
 pub use super::disconnect_handles::{disconnect_handles, DisconnectHandles};
 pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
 pub use super::edit_node_text::{edit_node_text, EditNodeText};
+pub use super::edit_target_region_label::{edit_target_region_label, EditTargetRegionLabel};
 pub use super::move_node::{move_node, MoveNode};
+pub use super::move_target_region::{move_target_region, MoveTargetRegion};
 pub use super::remove_node_handle::{remove_node_handle, RemoveNodeHandle};
 pub use super::replace_edge_geometry::{replace_edge_geometry, ReplaceEdgeGeometry};
 pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
 pub use super::replace_node_geometry::{replace_node_geometry, ReplaceNodeGeometry};
 pub use super::replace_node_handle::{replace_node_handle, ReplaceNodeHandle};
+pub use super::resize_target_region::{resize_target_region, ResizeTargetRegion};
 pub use super::scale_node::{scale_node, ScaleNode};
 
 //#region 🔖️SnapshotDelta
@@ -245,6 +266,33 @@ pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSn
             }
         }
     }
+    for region in &before.target_regions {
+        if !after.target_regions.iter().any(|entry| entry.id == region.id) {
+            mutations.push(delete_target_region(region.id.clone()));
+        }
+    }
+    for region in &after.target_regions {
+        match before.target_regions.iter().find(|entry| entry.id == region.id) {
+            None => mutations.push(create_target_region(region.clone(), None)),
+            Some(prior) => {
+                if prior.x != region.x || prior.y != region.y {
+                    mutations.push(move_target_region(region.id.clone(), region.x, region.y));
+                }
+                if prior.width != region.width || prior.height != region.height {
+                    mutations.push(resize_target_region(region.id.clone(), region.width, region.height));
+                }
+                if prior.label != region.label {
+                    mutations.push(edit_target_region_label(region.id.clone(), region.label.clone()));
+                }
+                if prior.hidden != region.hidden {
+                    mutations.push(change_target_region_hidden(region.id.clone(), region.hidden));
+                }
+                if prior.locked != region.locked {
+                    mutations.push(change_target_region_locked(region.id.clone(), region.locked));
+                }
+            }
+        }
+    }
     if before.meta.manifest_id != after.meta.manifest_id {
         mutations.push(change_manifest_id(after.meta.manifest_id.clone()));
     }
@@ -289,7 +337,7 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 // `Puzzle2dDiff` onto that `Value` boundary round-trips through the typed `Puzzle2dSnapshot`
 // (`serde_json::from_value`/`to_value`) rather than hand-splicing JSON per mutation kind — the
 // typed `Mutation<Puzzle2dSnapshot>`/`MutationDiff<Puzzle2dSnapshot>` impls stay the single source
-// of truth, so every one of this enum's 26 kinds gets `Value` support for free.
+// of truth, so every one of this enum's 33 kinds gets `Value` support for free.
 impl MutationDiff<Value> for Puzzle2dDiff {
     fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
         // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
@@ -312,7 +360,7 @@ impl Mutation<Value> for Puzzle2dMutation {
     /// 🧷️ `#[derive(dsl::Mutations)]` above only generates `impl Mutation<Puzzle2dSnapshot>`
     /// (its declared `#[mutations(snapshot = ...)]`); this hand-written `Value` bridge is a
     /// separate impl of the same trait and forwards to that one rather than duplicating its
-    /// 26-entry descriptor table.
+    /// 33-entry descriptor table.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle2dSnapshot>>::DESCRIPTORS;
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {

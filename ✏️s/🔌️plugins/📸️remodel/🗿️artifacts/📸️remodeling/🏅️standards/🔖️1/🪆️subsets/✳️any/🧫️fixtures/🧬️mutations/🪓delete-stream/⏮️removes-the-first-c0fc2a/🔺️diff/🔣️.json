@@ -9,12 +9,12 @@
         "name": "Side",
         "kind": "image-sequence",
         "cameraId": null,
-        "syncOffsetMs": 0,
-        "fpsHint": 24,
+        "syncOffsetMs": 0.0,
+        "fpsHint": 24.0,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 0,
+            "timestampMs": 0.0,
             "assetId": "asset-a"
           }
         ],

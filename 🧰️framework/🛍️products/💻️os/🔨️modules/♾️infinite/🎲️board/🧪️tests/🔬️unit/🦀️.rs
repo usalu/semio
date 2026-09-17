@@ -538,3 +538,72 @@ fn a_wire_whose_ends_declare_disjoint_value_types_never_snaps_and_never_connects
     let edge = engine.edges.values().next().expect("edge");
     assert_eq!(Ported::endpoint_as_u64(edge.source), 10, "and it is the drawn wire that stands");
 }
+
+/// 🕹️ The gumball's pivot is the arithmetic mean of the SELECTED node centres — the same definition
+/// the guest's `rotateSelection` reducer uses, so the in-canvas preview and the committed document
+/// turn about the same point. Locked members still count toward it; only their positions stay.
+#[test]
+fn transform_pivot_is_the_selection_centroid() {
+    assert_eq!(transform_pivot_of(&[]), None, "an empty selection has no pivot");
+    assert_eq!(transform_pivot_of(&[Point::new(-40.0, 0.0), Point::new(40.0, 0.0)]), Some(Point::new(0.0, 0.0)));
+    let pivot = transform_pivot_of(&[Point::new(0.0, 0.0), Point::new(30.0, 60.0), Point::new(-30.0, 0.0)]).expect("three centres have a pivot");
+    assert!((pivot.x - 0.0).abs() < 1e-9 && (pivot.y - 20.0).abs() < 1e-9, "pivot {pivot:?}");
+}
+
+/// 🔄️ Rotation is counter-clockwise about the pivot and exact on the quarter turns.
+#[test]
+fn rotate_point_about_turns_counter_clockwise() {
+    let turned = rotate_point_about(Point::new(0.0, 0.0), Point::new(40.0, 0.0), std::f64::consts::FRAC_PI_2);
+    assert!(turned.x.abs() < 1e-9 && (turned.y - 40.0).abs() < 1e-9, "a quarter turn of (40,0) is (0,40), got {turned:?}");
+    let about = rotate_point_about(Point::new(10.0, 10.0), Point::new(20.0, 10.0), std::f64::consts::PI);
+    assert!((about.x - 0.0).abs() < 1e-9 && (about.y - 10.0).abs() < 1e-9, "a half turn reflects through the pivot, got {about:?}");
+}
+
+/// ⭕️ The ring keeps a constant SCREEN clearance: doubling the zoom halves its world radius gap, and
+/// an empty-extent selection still gets a grabbable minimum.
+#[test]
+fn transform_ring_radius_keeps_a_constant_screen_gap() {
+    let pivot = Point::new(0.0, 0.0);
+    let corners = [Point::new(-100.0, -100.0), Point::new(100.0, 100.0)];
+    let at_one = transform_ring_radius_world(pivot, &corners, 1.0);
+    let at_two = transform_ring_radius_world(pivot, &corners, 2.0);
+    let reach = (100.0_f64 * 100.0 + 100.0 * 100.0).sqrt();
+    assert!((at_one - reach - TRANSFORM_RING_GAP_PX).abs() < 1e-9, "at zoom 1 the gap is one screen pixel per world unit, got {at_one}");
+    assert!((at_two - reach - TRANSFORM_RING_GAP_PX / 2.0).abs() < 1e-9, "at zoom 2 the world gap halves, got {at_two}");
+    let tiny = transform_ring_radius_world(pivot, &[Point::new(0.0, 0.0)], 1.0);
+    assert!(tiny >= TRANSFORM_RING_MIN_RADIUS_PX, "a point-sized selection still gets a grabbable ring, got {tiny}");
+    assert!(transform_ring_radius_world(pivot, &corners, 0.0) > 0.0, "a degenerate zoom must not produce a zero ring");
+}
+
+/// 🎯️ The ring is a band, not a disc: the pivot itself and the far outside both miss it.
+#[test]
+fn transform_ring_hit_is_a_band_around_the_radius() {
+    let pivot = Point::new(0.0, 0.0);
+    assert!(transform_ring_hit(pivot, 100.0, 1.0, Point::new(100.0, 0.0)), "dead on the ring is a hit");
+    assert!(transform_ring_hit(pivot, 100.0, 1.0, Point::new(100.0 + TRANSFORM_RING_HIT_TOLERANCE_PX - 0.1, 0.0)), "inside the tolerance is a hit");
+    assert!(!transform_ring_hit(pivot, 100.0, 1.0, Point::new(100.0 + TRANSFORM_RING_HIT_TOLERANCE_PX + 0.1, 0.0)), "past the tolerance is a miss");
+    assert!(!transform_ring_hit(pivot, 100.0, 1.0, pivot), "the pivot is never on the ring");
+}
+
+/// 📐️ A drag across the ±π seam reports the SHORT way round, never a full extra turn.
+#[test]
+fn transform_ring_angle_delta_takes_the_short_way_round() {
+    let pivot = Point::new(0.0, 0.0);
+    let quarter = transform_ring_angle_delta(pivot, Point::new(10.0, 0.0), Point::new(0.0, 10.0));
+    assert!((quarter - std::f64::consts::FRAC_PI_2).abs() < 1e-9, "got {quarter}");
+    let seam = transform_ring_angle_delta(pivot, Point::new(-10.0, 0.001), Point::new(-10.0, -0.001));
+    assert!(seam.abs() < 0.01, "crossing the seam must not jump a whole turn, got {seam}");
+    let back = transform_ring_angle_delta(pivot, Point::new(0.0, 10.0), Point::new(10.0, 0.0));
+    assert!((back + std::f64::consts::FRAC_PI_2).abs() < 1e-9, "the reverse drag is the negative delta, got {back}");
+}
+
+/// 🧲️ The grid-snap modifier quantizes the rotation; without it the angle passes through untouched.
+#[test]
+fn snap_transform_angle_quantizes_only_under_the_snap_modifier() {
+    let raw = 20.0_f64.to_radians();
+    assert!((snap_transform_angle(raw, false) - raw).abs() < 1e-12, "snap off leaves the angle alone");
+    let snapped = snap_transform_angle(raw, true);
+    assert!((snapped - 15.0_f64.to_radians()).abs() < 1e-9, "20° snaps to the 15° step, got {}", snapped.to_degrees());
+    assert!(snap_transform_angle(0.0, true).abs() < 1e-12, "a zero drag stays a zero rotation");
+    assert!((snap_transform_angle(-20.0_f64.to_radians(), true) + 15.0_f64.to_radians()).abs() < 1e-9, "negative drags snap symmetrically");
+}

@@ -70,8 +70,8 @@
       "reprojectionRmsPx": 0.5,
       "gcpCheckpointRmse": 0.25,
       "watertight": null,
-      "meanTrackLength": 6,
-      "registeredFrameRatio": 1,
+      "meanTrackLength": 6.0,
+      "registeredFrameRatio": 1.0,
       "denseCoverageRatio": 0.75,
       "warnings": [
         "low overlap on frame 12"

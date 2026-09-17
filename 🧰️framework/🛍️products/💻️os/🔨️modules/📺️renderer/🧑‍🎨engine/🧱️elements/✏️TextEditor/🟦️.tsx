@@ -146,7 +146,6 @@ function WasmEditorSurface({
       sessionRef.current?.syncFromScenePack?.(scenePack);
       sessionRef.current?.renderFrame();
     } catch (error) {
-      console.warn("[DEBUG] WasmEditorSurface sync failed", error instanceof Error ? error.message : String(error));
     }
   }, [scenePack]);
 

@@ -184,6 +184,10 @@ const MAX_PNG_ROW_PIXELS: u32 = 4_096;
 const MAX_JPEG_COMPRESSED_BYTES: usize = 131_072;
 const MAX_STILL_PIXELS: u64 = 262_144;
 const COMPRESSED_ROPE_LEAF_BYTES: usize = 4_096;
+/// ⏱️ MCUs (then RGBA output rows) one JPEG decoder microstep advances: a 4:2:0 MCU is six
+/// Huffman-decoded, dequantized, inverse-transformed 8x8 blocks, which keeps one unit far below
+/// the 8 ms worker ceiling even in an unoptimized build.
+const JPEG_UNITS_PER_STEP: usize = 1;
 
 #[derive(Default)]
 struct CompressedRopeReadCounters {
@@ -341,13 +345,14 @@ enum BoundedDecodeState {
     PngDecode { buffer: Vec<u8> },
     PngRows { decoder: semio_framework_pixels::PngScanlineDecoder, width: u32, height: u32, pixels: Vec<u8> },
     JpegProbe { rope: CompressedChunkRope, cursor: usize },
-    Jpeg { rope: CompressedChunkRope },
+    Jpeg { rope: CompressedChunkRope, decoder: Option<Box<semio_s_artifact_stdio_jpg::engine::JpgStepDecoder>> },
     Finished,
 }
 
 /// 🧩️ Repository-owned decoder state over a persistent 4-KiB-leaf rope. PNG consumes one
-/// scanline per call. JPEG probing advances 4 KiB per call and the shared baseline codec reads the
-/// same rope directly inside its fixed byte/pixel envelope, with no whole-input join allocation.
+/// scanline per call. JPEG probing advances 4 KiB per call, then the shared baseline codec's
+/// resumable decoder reads the same rope directly (no whole-input join allocation): one call parses
+/// the marker segments, every later call decodes one MCU and then converts one output row.
 pub struct BoundedStillDecoder {
     state: BoundedDecodeState,
 }
@@ -432,7 +437,7 @@ impl BoundedStillDecoder {
                         if width == 0 || height == 0 || width.checked_mul(height).is_none_or(|pixels| pixels > MAX_STILL_PIXELS) {
                             return BoundedDecodeProgress::Failed(ImageError::Decode(format!("JPEG exceeds the bounded {MAX_STILL_PIXELS}-pixel decoder envelope")));
                         }
-                        self.state = BoundedDecodeState::Jpeg { rope };
+                        self.state = BoundedDecodeState::Jpeg { rope, decoder: None };
                         return BoundedDecodeProgress::Working;
                     }
                 }
@@ -443,11 +448,27 @@ impl BoundedStillDecoder {
                     BoundedDecodeProgress::Working
                 }
             }
-            BoundedDecodeState::Jpeg { rope } => match semio_s_artifact_stdio_jpg::engine::decode_jpg_source(&rope) {
-                Ok(snapshot) => BoundedDecodeProgress::Complete(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels }),
-                Err(semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
-                Err(semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
-            },
+            BoundedDecodeState::Jpeg { rope, decoder } => {
+                let outcome = match decoder {
+                    // 🧾️ First unit: the marker segments up to SOS (tables, frame, scan header).
+                    None => semio_s_artifact_stdio_jpg::engine::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
+                    // 🎞️ Every later unit: one MCU of the entropy-coded scan, then one output row.
+                    Some(mut decoder) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
+                        Ok(Some(snapshot)) => Ok(Ok(snapshot)),
+                        Ok(None) => Ok(Err(decoder)),
+                        Err(error) => Err(error),
+                    },
+                };
+                match outcome {
+                    Ok(Ok(snapshot)) => BoundedDecodeProgress::Complete(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels }),
+                    Ok(Err(decoder)) => {
+                        self.state = BoundedDecodeState::Jpeg { rope, decoder: Some(decoder) };
+                        BoundedDecodeProgress::Working
+                    }
+                    Err(semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
+                    Err(semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
+                }
+            }
             BoundedDecodeState::Finished => BoundedDecodeProgress::Failed(ImageError::Decode("decoder polled after completion".into())),
         }
     }

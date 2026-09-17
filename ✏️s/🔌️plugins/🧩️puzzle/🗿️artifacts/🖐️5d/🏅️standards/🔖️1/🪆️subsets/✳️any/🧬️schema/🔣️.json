@@ -10,7 +10,8 @@
     "meta",
     "kindCompatibility",
     "parts",
-    "fasteners"
+    "fasteners",
+    "targetVolumes"
   ],
   "properties": {
     "schema": {
@@ -55,6 +56,13 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle5dFastener"
+      },
+      "x-semio-state": "artifact"
+    },
+    "targetVolumes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Puzzle5dTargetVolume"
       },
       "x-semio-state": "artifact"
     }
@@ -489,6 +497,59 @@
         },
         "defaultFastenerKind": {
           "type": "string"
+        }
+      }
+    },
+    "Puzzle5dTargetVolume": {
+      "title": "Puzzle5dTargetVolume",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hidden",
+        "id",
+        "locked",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "scale": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       }
     }

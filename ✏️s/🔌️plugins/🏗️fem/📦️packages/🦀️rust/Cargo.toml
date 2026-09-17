@@ -33,6 +33,7 @@ ports = { react = 6086, wgpu = 6186 }
 variant = "fem3d"
 app = "s.fem.fem3d@1/*#editor"
 aliases = ["fem 3d"]
+distDir = "✏️s/🔌️plugins/🏗️fem/dist"
 ports = { react = 6087, wgpu = 6187 }
 
 [lib]

@@ -556,6 +556,7 @@ fn retained_factories_declare_every_publication_lane() {
     for tool_id in ["setFilterQuery", "setFilterModule", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions"] {
         assert_eq!(lane_of(tool_id), [ArtifactToolPublicationLane::Config], "{tool_id} publishes view state only");
     }
+    assert_eq!(lane_of("setGridInstanceDisplay"), [ArtifactToolPublicationLane::WindowConfig], "grid display mode is per-window config");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -594,7 +595,7 @@ fn retained_route_catalog_covers_every_ui_reachable_command() {
     routes.sort_unstable();
     routes.dedup();
     assert_eq!(routes.len(), SOURCING_CURATION_BOUNDED_TOOL_IDS.len(), "no route is declared twice");
-    assert_eq!(routes.len(), 14);
+    assert_eq!(routes.len(), 15);
 }
 
 #[semio_framework_async_macros::async_test]

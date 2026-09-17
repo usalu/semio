@@ -1,6 +1,6 @@
 //! 🪟️ Exact-instance Puzzle 5D window configuration and transient interaction owners.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d};
+use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dRuntime, Puzzle5dSelectableKinds};
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use semio_framework_plugin::WorldSunConfig;
 
@@ -13,19 +13,44 @@ pub struct Puzzle5dWindowConfig {
     pub suggestion_offset: f64,
     pub grid_snap_enabled: bool,
     pub grid_factor: f64,
+    pub grid_visible: bool,
+    pub grid_spacing: f64,
+    pub lod_automatic: bool,
+    pub lod_depth_variable: bool,
+    pub lod_manual: f64,
+    pub selectable_kinds: Puzzle5dSelectableKinds,
+    pub grip_show: String,
+    pub grip_direction: String,
+    pub transform_move: bool,
+    pub transform_rotate: bool,
     pub sun: WorldSunConfig,
+    pub voxel_dims: [u32; 3],
 }
 
 impl Default for Puzzle5dWindowConfig {
+    /// 🎚️ Every field mirrors [`Puzzle5dRuntime::default`] so a freshly-opened pane and a
+    /// Rust-constructed runtime never disagree about a boot value.
     fn default() -> Self {
+        let runtime = Puzzle5dRuntime::default();
         Self {
-            camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
-            camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
-            lod_mode: crate::editor::puzzle5d::PUZZLE5D_LOD_MODE_AUTOMATIC.into(),
-            suggestion_offset: crate::editor::puzzle5d::PUZZLE5D_DEFAULT_SUGGESTION_OFFSET,
-            grid_snap_enabled: true,
-            grid_factor: 1.0,
-            sun: WorldSunConfig::default(),
+            camera2d: runtime.camera2d,
+            camera3d: runtime.camera3d,
+            lod_mode: runtime.lod_mode,
+            suggestion_offset: runtime.suggestion_offset,
+            grid_snap_enabled: runtime.grid_snap_enabled,
+            grid_factor: runtime.grid_factor,
+            grid_visible: runtime.grid_visible,
+            grid_spacing: runtime.grid_spacing,
+            lod_automatic: runtime.lod_automatic,
+            lod_depth_variable: runtime.lod_depth_variable,
+            lod_manual: runtime.lod_manual,
+            selectable_kinds: runtime.selectable_kinds,
+            grip_show: runtime.grip_show,
+            grip_direction: runtime.grip_direction,
+            transform_move: runtime.transform_move,
+            transform_rotate: runtime.transform_rotate,
+            sun: runtime.sun,
+            voxel_dims: runtime.voxel_dims,
         }
     }
 }
@@ -44,12 +69,23 @@ pub struct Puzzle5dBoardWindowConfig {
     pub suggestion_offset: f64,
     pub grid_snap_enabled: bool,
     pub grid_factor: f64,
+    pub grid_visible: bool,
+    #[dsl(block)]
+    pub selectable_kinds: Puzzle5dSelectableKinds,
 }
 
 impl Default for Puzzle5dBoardWindowConfig {
     fn default() -> Self {
         let value = Puzzle5dWindowConfig::default();
-        Self { camera2d: value.camera2d, lod_mode: value.lod_mode, suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor }
+        Self {
+            camera2d: value.camera2d,
+            lod_mode: value.lod_mode,
+            suggestion_offset: value.suggestion_offset,
+            grid_snap_enabled: value.grid_snap_enabled,
+            grid_factor: value.grid_factor,
+            grid_visible: value.grid_visible,
+            selectable_kinds: value.selectable_kinds,
+        }
     }
 }
 
@@ -63,12 +99,41 @@ pub struct Puzzle5dWorldWindowConfig {
     pub camera3d: Puzzle5dCamera3d,
     #[dsl(block)]
     pub sun: WorldSunConfig,
+    pub grid_visible: bool,
+    pub grid_snap_enabled: bool,
+    pub grid_spacing: f64,
+    pub lod_automatic: bool,
+    pub lod_depth_variable: bool,
+    pub lod_manual: f64,
+    #[dsl(block)]
+    pub selectable_kinds: Puzzle5dSelectableKinds,
+    pub grip_show: String,
+    pub grip_direction: String,
+    pub transform_move: bool,
+    pub transform_rotate: bool,
+    #[dsl(tuple)]
+    pub voxel_dims: Vec<u32>,
 }
 
 impl Default for Puzzle5dWorldWindowConfig {
     fn default() -> Self {
         let value = Puzzle5dWindowConfig::default();
-        Self { camera3d: value.camera3d, sun: value.sun }
+        Self {
+            camera3d: value.camera3d,
+            sun: value.sun,
+            grid_visible: value.grid_visible,
+            grid_snap_enabled: value.grid_snap_enabled,
+            grid_spacing: value.grid_spacing,
+            lod_automatic: value.lod_automatic,
+            lod_depth_variable: value.lod_depth_variable,
+            lod_manual: value.lod_manual,
+            selectable_kinds: value.selectable_kinds,
+            grip_show: value.grip_show,
+            grip_direction: value.grip_direction,
+            transform_move: value.transform_move,
+            transform_rotate: value.transform_rotate,
+            voxel_dims: value.voxel_dims.to_vec(),
+        }
     }
 }
 
@@ -264,22 +329,57 @@ pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransient
     registry.register::<Puzzle5dWorldWindowTransientOwner>()
 }
 
+/// 🎚️ Lifts ONE board pane's persisted options into the merged shape the runtime reads.
+fn window_config_from_board(value: &Puzzle5dBoardWindowConfig) -> Puzzle5dWindowConfig {
+    Puzzle5dWindowConfig {
+        camera2d: value.camera2d.clone(),
+        lod_mode: value.lod_mode.clone(),
+        suggestion_offset: value.suggestion_offset,
+        grid_snap_enabled: value.grid_snap_enabled,
+        grid_factor: value.grid_factor,
+        grid_visible: value.grid_visible,
+        selectable_kinds: value.selectable_kinds.clone(),
+        ..Default::default()
+    }
+}
+
+/// 🎚️ Lifts ONE world pane's persisted options into the merged shape the runtime reads.
+fn window_config_from_world(value: &Puzzle5dWorldWindowConfig) -> Puzzle5dWindowConfig {
+    Puzzle5dWindowConfig {
+        camera3d: value.camera3d.clone(),
+        sun: value.sun.clone(),
+        voxel_dims: puzzle5d_voxel_dims(&value.voxel_dims),
+        grid_visible: value.grid_visible,
+        grid_snap_enabled: value.grid_snap_enabled,
+        grid_spacing: value.grid_spacing,
+        lod_automatic: value.lod_automatic,
+        lod_depth_variable: value.lod_depth_variable,
+        lod_manual: value.lod_manual,
+        selectable_kinds: value.selectable_kinds.clone(),
+        grip_show: value.grip_show.clone(),
+        grip_direction: value.grip_direction.clone(),
+        transform_move: value.transform_move,
+        transform_rotate: value.transform_rotate,
+        ..Default::default()
+    }
+}
+
 pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle5d::config::Puzzle5dConfig>) -> Puzzle5dWindowConfig {
     if let Some(value) = view.window::<Puzzle5dBoardWindowConfigOwner>() {
-        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
+        return window_config_from_board(value);
     }
     if let Some(value) = view.window::<Puzzle5dWorldWindowConfigOwner>() {
-        return Puzzle5dWindowConfig { camera3d: value.camera3d.clone(), sun: value.sun.clone(), ..Default::default() };
+        return window_config_from_world(value);
     }
     Puzzle5dWindowConfig::default()
 }
 
 pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Puzzle5dWindowConfig {
     if let Some(value) = snapshot.and_then(|snapshot| snapshot.get::<Puzzle5dBoardWindowConfigOwner>()) {
-        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
+        return window_config_from_board(value);
     }
     if let Some(value) = snapshot.and_then(|snapshot| snapshot.get::<Puzzle5dWorldWindowConfigOwner>()) {
-        return Puzzle5dWindowConfig { camera3d: value.camera3d.clone(), sun: value.sun.clone(), ..Default::default() };
+        return window_config_from_world(value);
     }
     Puzzle5dWindowConfig::default()
 }
@@ -305,6 +405,8 @@ pub fn runtime(
 ) -> crate::editor::puzzle5d::config::Puzzle5dRuntime {
     let mut runtime = crate::editor::puzzle5d::config::Puzzle5dRuntime::default();
     runtime.contact_tolerance = shared.contact_tolerance;
+    runtime.proximity_radius = shared.proximity_radius;
+    runtime.chunk_size = shared.chunk_size;
     runtime.object_kind_weights = shared.object_kind_weights.clone();
     runtime.vortex_kind_weights = shared.vortex_kind_weights.clone();
     runtime.camera2d = window.camera2d.clone();
@@ -314,17 +416,37 @@ pub fn runtime(
     runtime.suggestion_offset = window.suggestion_offset;
     runtime.grid_snap_enabled = window.grid_snap_enabled;
     runtime.grid_factor = window.grid_factor;
+    runtime.grid_visible = window.grid_visible;
+    runtime.grid_spacing = window.grid_spacing;
+    runtime.lod_automatic = window.lod_automatic;
+    runtime.lod_depth_variable = window.lod_depth_variable;
+    runtime.lod_manual = window.lod_manual;
+    runtime.selectable_kinds = window.selectable_kinds.clone();
+    runtime.grip_show = window.grip_show.clone();
+    runtime.grip_direction = window.grip_direction.clone();
+    runtime.transform_move = window.transform_move;
+    runtime.transform_rotate = window.transform_rotate;
     runtime.sun = window.sun.clone();
+    runtime.voxel_dims = window.voxel_dims;
     runtime.engagement_input_by_window.clear();
     runtime.engagement_input_by_window.insert(window_id.to_string(), transient.engagement_input.clone());
     runtime.brush_candidate_index = transient.brush_candidate_index;
     runtime
 }
 
+/// 🧊️ A persisted world-window voxel triple back as the fixed `[w, d, h]` the runtime reads; a short
+/// or absent list falls back to the boot extent rather than inventing a zero axis.
+fn puzzle5d_voxel_dims(values: &[u32]) -> [u32; 3] {
+    let boot = crate::editor::puzzle5d::PUZZLE5D_DEFAULT_VOXEL_DIMS;
+    [values.first().copied().unwrap_or(boot[0]).max(1), values.get(1).copied().unwrap_or(boot[1]).max(1), values.get(2).copied().unwrap_or(boot[2]).max(1)]
+}
+
 pub fn shared(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> crate::editor::puzzle5d::config::Puzzle5dConfig {
     let mut config = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
     config.fill_count = runtime.fill_count;
     config.contact_tolerance = runtime.contact_tolerance;
+    config.proximity_radius = runtime.proximity_radius;
+    config.chunk_size = runtime.chunk_size;
     config.object_kind_weights = runtime.object_kind_weights.clone();
     config.vortex_kind_weights = runtime.vortex_kind_weights.clone();
     config
@@ -338,7 +460,18 @@ pub fn config_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5dRu
         suggestion_offset: runtime.suggestion_offset,
         grid_snap_enabled: runtime.grid_snap_enabled,
         grid_factor: runtime.grid_factor,
+        grid_visible: runtime.grid_visible,
+        grid_spacing: runtime.grid_spacing,
+        lod_automatic: runtime.lod_automatic,
+        lod_depth_variable: runtime.lod_depth_variable,
+        lod_manual: runtime.lod_manual,
+        selectable_kinds: runtime.selectable_kinds.clone(),
+        grip_show: runtime.grip_show.clone(),
+        grip_direction: runtime.grip_direction.clone(),
+        transform_move: runtime.transform_move,
+        transform_rotate: runtime.transform_rotate,
         sun: runtime.sun.clone(),
+        voxel_dims: runtime.voxel_dims,
     }
 }
 
@@ -349,8 +482,41 @@ pub fn transient_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
     match kind_for_view(view) {
-        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(id, Puzzle5dBoardWindowConfigMutation::Snapshot { config: Puzzle5dBoardWindowConfig { camera2d: config.camera2d, lod_mode: config.lod_mode, suggestion_offset: config.suggestion_offset, grid_snap_enabled: config.grid_snap_enabled, grid_factor: config.grid_factor } })),
-        Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(id, Puzzle5dWorldWindowConfigMutation::Snapshot { config: Puzzle5dWorldWindowConfig { camera3d: config.camera3d, sun: config.sun } })),
+        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
+            id,
+            Puzzle5dBoardWindowConfigMutation::Snapshot {
+                config: Puzzle5dBoardWindowConfig {
+                    camera2d: config.camera2d,
+                    lod_mode: config.lod_mode,
+                    suggestion_offset: config.suggestion_offset,
+                    grid_snap_enabled: config.grid_snap_enabled,
+                    grid_factor: config.grid_factor,
+                    grid_visible: config.grid_visible,
+                    selectable_kinds: config.selectable_kinds,
+                },
+            },
+        )),
+        Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
+            id,
+            Puzzle5dWorldWindowConfigMutation::Snapshot {
+                config: Puzzle5dWorldWindowConfig {
+                    camera3d: config.camera3d,
+                    sun: config.sun,
+                    voxel_dims: config.voxel_dims.to_vec(),
+                    grid_visible: config.grid_visible,
+                    grid_snap_enabled: config.grid_snap_enabled,
+                    grid_spacing: config.grid_spacing,
+                    lod_automatic: config.lod_automatic,
+                    lod_depth_variable: config.lod_depth_variable,
+                    lod_manual: config.lod_manual,
+                    selectable_kinds: config.selectable_kinds,
+                    grip_show: config.grip_show,
+                    grip_direction: config.grip_direction,
+                    transform_move: config.transform_move,
+                    transform_rotate: config.transform_rotate,
+                },
+            },
+        )),
         _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
     }
 }

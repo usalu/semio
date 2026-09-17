@@ -114,11 +114,63 @@ fn cached_fixture_json(_document_json: &str, fixture: &Value) -> String {
     fixture.to_string()
 }
 
-fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
+/// 💡️ How many placement candidates ONE handle-suggestions popup publishes. The surface doc it rides
+/// is fixed-capacity and a richly catalogued handle resolves arbitrarily many collision-free
+/// candidates, so an unbounded list would make the whole board render of that window fail closed the
+/// moment the popup opened. It is also the interaction answer: a picker read at a glance shows a
+/// bounded page, and `cycleBrushCandidate` walks the rest.
+pub const PUZZLE2D_SUGGESTION_MENU_CANDIDATE_PAGE: usize = 8;
+
+/// 💡️ The open popup's wire record — `None` whenever this window has none. Candidate rows are the
+/// SAME page the armed brush cycles (`runtime.brush_candidates`), decorated with the node kind's own
+/// icon and colour so the picker reads like the board it paints onto.
+fn puzzle2d_suggestion_menu_json(envelope: &Puzzle2dScene, glyph_catalogs_json: &str) -> Option<String> {
+    let menu = envelope.runtime.suggestion_menu.as_ref()?;
+    let catalogs: Value = serde_json::from_str(glyph_catalogs_json).unwrap_or(Value::Null);
+    let node_kinds = catalogs.get("nodeKinds").and_then(Value::as_array).map_or(&[][..], |rows| rows.as_slice());
+    let candidates: Vec<Value> = envelope
+        .runtime
+        .brush_candidates
+        .iter()
+        .take(PUZZLE2D_SUGGESTION_MENU_CANDIDATE_PAGE)
+        .enumerate()
+        .map(|(index, candidate)| {
+            let node_kind = candidate.get("nodeKind").and_then(|value| value.as_str()).or_else(|| candidate.as_str()).unwrap_or("kind");
+            let handle_index = candidate.get("targetHandleIndex").and_then(|value| value.as_i64()).unwrap_or(0);
+            let row = node_kinds.iter().find(|row| row.get("id").and_then(Value::as_str) == Some(node_kind));
+            json!({
+                "index": index,
+                "nodeLabel": node_kind,
+                "handleLabel": format!("handle {handle_index}"),
+                "icon": row.and_then(|row| row.get("icon")).and_then(Value::as_str),
+                "color": row.and_then(|row| row.get("color")).and_then(Value::as_str),
+            })
+        })
+        .collect();
+    Some(
+        json!({
+            "open": true,
+            "x": menu.x,
+            "y": menu.y,
+            "windowId": menu.window_id,
+            "handleId": menu.handle_id,
+            "hoveredIndex": envelope.runtime.brush_candidate_index,
+            // 🔎️ Pending only while the slot has resolved nothing AND still names the handle it opened
+            // on; an empty page on a resolved slot is the polite refusal, not a spinner that never ends.
+            "pending": candidates.is_empty() && envelope.runtime.brush_candidate_source_handle_id.is_empty(),
+            "candidates": candidates,
+        })
+        .to_string(),
+    )
+}
+
+/// 🖼️ The board-2d scene one pane publishes. Public so the laws can assert what reaches the client
+/// (hover id, suggestion popup) without decoding a rendered surface node.
+pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
     let fixture = &envelope.fixture;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json(fixture).unwrap_or_else(|| "{}".into());
+    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json_or_inferred(fixture).unwrap_or_else(|| "{}".into());
     // 🕹️ The framework-owned `vortex` selection, resolved once per render by
     // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
     let selection_json = envelope.interaction.selection_json();
@@ -129,21 +181,32 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     .unwrap_or_else(|_| "{}".into());
     let placement_compatibility_json = fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).map_or_else(|| "[]".into(), |value| value.to_string());
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
+    let suggestion_menu_json = puzzle2d_suggestion_menu_json(envelope, &glyph_catalogs_json);
     Board2dScene {
         fixture_json: cached_fixture_json(document_json, fixture),
         camera_json,
         glyph_catalogs_json,
         selection_json,
         interactive: pane == overview::WINDOW_KIND_ID,
-        hovered_id: None,
+        // 🐁️ The framework-owned `vortex` hover, echoed into every pane: the interactive overview
+        // publishes it from its own pointer raycast, the detail/selection panes and the outliner
+        // tree rows read it back, so hovering anywhere highlights the same entity everywhere.
+        hovered_id: envelope.interaction.hovered_id(),
         active_utility: Some(envelope.active_utility.clone()),
         selection_method: "rectangle".into(),
+        grid_visible: envelope.runtime.grid_visible,
         grid_snap_enabled: envelope.runtime.grid_snap_enabled,
         grid_factor: envelope.runtime.grid_factor,
+        selectable_nodes: envelope.runtime.selectable_kinds.nodes,
+        selectable_edges: envelope.runtime.selectable_kinds.edges,
+        selectable_handles: envelope.runtime.selectable_kinds.handles,
         suggestion_offset: envelope.runtime.suggestion_offset,
         brush_weights_json,
         placement_compatibility_json,
         lod_mode,
+        transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
+        domain_id: Some(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN.into()),
+        suggestion_menu_json,
         tool_run_trace: None,
         lanes: Vec::new(),
     }
@@ -169,7 +232,7 @@ pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &st
     let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
     let placeholder = match envelope.active_utility.as_str() {
         "brush" => "Brush",
-        _ => "select, brush, fill <n>, clear, move <dx> <dy>, rotate <deg>, scale <f>",
+        _ => "select, brush, fill <n>, clear, move <dx> <dy>, rotate <deg>, scale <f>, connect <handle> <handle>",
     };
     WindowEngagement {
         session_active: Some(envelope.active_utility != "select"),
@@ -180,7 +243,7 @@ pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &st
             disabled: None,
             on_change: Some(puzzle2d_action("engagementInput", Some(json!({ "pane": pane })))),
             on_submit: Some(puzzle2d_action("engagementSubmit", Some(json!({ "pane": pane })))),
-            on_repeat_last: None,
+            on_repeat_last: Some(puzzle2d_action("engagementRepeatLast", Some(json!({ "pane": pane })))),
             on_abort: Some(puzzle2d_action("engagementAbort", Some(json!({ "pane": pane })))),
         }),
         control: None,

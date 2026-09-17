@@ -237,16 +237,16 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// fuel on an unoptimized `wasm32-wasip2` build: 18× the old cap, so every real plugin trapped
 /// mid-`AppBuilder::try_build_definition` with a bare "error while executing" and no mention of
 /// fuel. Debug wasm is the build the describe step actually consumes, so it is the build the cap
-/// must be sized against; `2_000_000_000` leaves ~21× headroom over the measured figure while still
-/// bounding a runaway to seconds. Re-measure, do not re-estimate, if a larger plugin trips it.
-const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
+/// must be sized against; `semio-s-plugin-gis` exhausted **4_000_000_000** fuel at ~1_024_604 ms
+/// (2026-09-17), so `8_000_000_000` is the next measured step. Re-measure, do not re-estimate, if a
+/// larger plugin trips it.
+const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
 
 /// ⏳️ Aggregate plugin bundles build several complete app catalogs in one pure descriptor call.
 /// The ten-surface demonstrator exceeded the former single-plugin 60-second wall cap, and the
 /// current full-catalog Space component exceeded the later five-minute cap while remaining within
 /// the measured fuel bound. Thirty minutes preserves a finite wall deadline on constrained
-/// development machines; the independent two-billion-instruction fuel cap remains the deterministic
-/// runaway bound.
+/// development machines; the independent fuel cap remains the deterministic runaway bound.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
 /// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and
@@ -254,7 +254,7 @@ const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 /// input bound and deliberately NOT the strict catalog's runtime ceiling
 /// (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`), which applies to the optimized artifact that
 /// actually ships. Mirrored by `FRESH_COMPONENT_MAX_BYTES` in this crate's `📜️script.ts`.
-pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 128 * 1024 * 1024;
+pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 256 * 1024 * 1024;
 
 /// 🧱 Fixed-size IO keeps hashing and publication memory/work bounded and observable.
 pub const DESCRIBE_IO_CHUNK_BYTES: usize = 64 * 1024;

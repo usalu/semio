@@ -549,6 +549,8 @@ pub fn extract_tsdf(vol: &remodeling_dense::TsdfVolume, iso: f64, bounds_min: [i
     TriMesh { positions, triangles }
 }
 
+static TEMPDIAG_SN_VERTS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static TEMPDIAG_SN_EDGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 /// 🧊️ Resumable marching-tetrahedra checkpoint. One fuel unit samples and marches one voxel cube;
 /// ordered edge welding avoids a whole-table rehash in any continuation.
 pub struct TsdfExtractionPreparation {
@@ -602,10 +604,20 @@ impl TsdfExtractionPreparation {
                 corners[slot] = Corner { key: lattice, pos: [(lattice.0 as f64 + 0.5) * volume.voxel_size, (lattice.1 as f64 + 0.5) * volume.voxel_size, (lattice.2 as f64 + 0.5) * volume.voxel_size], val: value };
             }
             if known {
+                let inside = corners.iter().filter(|corner| corner.val < self.iso).count();
+                if inside != 0 && inside != 8 {
+                    TEMPDIAG_SN_VERTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+                for slot in [1usize, 3, 4] {
+                    if (corners[0].val < self.iso) != (corners[slot].val < self.iso) {
+                        TEMPDIAG_SN_EDGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                }
                 for tetrahedron in cube_tets(&corners) {
                     march_tet(tetrahedron, self.iso, &mut self.weld, &mut self.positions, &mut self.triangles);
-                    if self.positions.len() > 512 || self.triangles.len() > 512 {
+                    if (self.positions.len() > 512 || self.triangles.len() > 512) && std::env::var_os("TEMPDIAG_NOCAP").is_none() {
                         self.exceeded = true;
+                        eprintln!("TEMPDIAG tsdf-extract exceeded at cursor {:?} of {:?}..{:?}: {} positions {} triangles", self.cursor, self.bounds_min, self.bounds_max, self.positions.len(), self.triangles.len());
                         self.complete = true;
                         break;
                     }
@@ -614,6 +626,10 @@ impl TsdfExtractionPreparation {
             if !self.complete {
                 self.advance_cursor();
             }
+        }
+        if self.complete && !self.exceeded {
+            let norms: Vec<f64> = self.positions.iter().map(|p| (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]).sqrt()).collect();
+            eprintln!("TEMPDIAG tsdf-extract complete {:?}..{:?}: {} positions {} triangles; surface-nets estimate {} verts {} quads; norm range {:?}", self.bounds_min, self.bounds_max, self.positions.len(), self.triangles.len(), TEMPDIAG_SN_VERTS.load(std::sync::atomic::Ordering::Relaxed), TEMPDIAG_SN_EDGES.load(std::sync::atomic::Ordering::Relaxed), (norms.iter().cloned().fold(f64::INFINITY, f64::min), norms.iter().cloned().fold(0.0, f64::max)));
         }
         self.complete
     }
@@ -4361,8 +4377,16 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
             }
             Stage::Interchange => {
                 let preparation = state.interchange.get_or_insert_with(|| InterchangePreparation::new(&state.mesh));
-                if !preparation.advance(&state.mesh, state.uvs.as_deref(), state.texture.as_ref(), 64) {
-                    return MeshPipelineStatus::Working { stage: "interchange", progress: state.stage_index as f32 / STAGE_ORDER.len() as f32 };
+                if state.interactive {
+                    if !preparation.advance(&state.mesh, state.uvs.as_deref(), state.texture.as_ref(), 64) {
+                        return MeshPipelineStatus::Working { stage: "interchange", progress: state.stage_index as f32 / STAGE_ORDER.len() as f32 };
+                    }
+                } else {
+                    // 🧱️ A batch pipeline runs every stage whole per dispatch (see the non-interactive
+                    // arms above); only the interactive worker is micro-stepped. Driving the
+                    // interchange cursor 64 items per dispatch here made a batch pipeline's step
+                    // count scale with the mesh size instead of the stage count.
+                    while !preparation.advance(&state.mesh, state.uvs.as_deref(), state.texture.as_ref(), 64) {}
                 }
                 state.result = state.interchange.take().map(|preparation| preparation.mesh_data);
             }

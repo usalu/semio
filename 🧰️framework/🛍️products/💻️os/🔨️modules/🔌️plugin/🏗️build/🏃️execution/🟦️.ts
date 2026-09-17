@@ -34,6 +34,7 @@ import {
   selectComponentWasmProfile,
   semioBuildMode,
   semioShipEnv,
+  semioNxParallel,
 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
@@ -101,22 +102,26 @@ function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T
   };
 }
 
-/** @emoji 🧵️ Concurrency cap for the MATERIALIZE stage only (see `buildPluginCatalog`) — jco transpile
- * and `wasm-opt` are each single-process, mostly-single-threaded-per-invocation CPU-bound subprocesses,
- * and each holds a decoded wasm module plus jco's own intermediate JS AST in memory while running. 4 is
- * a deliberately small constant, not tied to `hardwareConcurrency`: unlike the cargo stage (one process
- * for the whole build, sharing rustc's own parallelism internally), materialize concurrency is
- * ~N-processes-at-once, and an unbounded `Promise.all` over a ~20-58-plugin catalog risks the same class
- * of machine-saturation `📌️important.md` records for parallel cargo (174 concurrent processes, 40
- * minutes, nothing produced) — just with jco/wasm-opt instead of rustc. `SEMIO_MATERIALIZE_CONCURRENCY`
- * overrides it for measurement/tuning. */
+/** @emoji 🧵️ Concurrency cap for bounded-parallel plugin catalog stages — each materialize invocation is
+ * a mostly-single-threaded subprocess with its own decoded wasm footprint, so the cap tracks machine
+ * width via `semioNxParallel()`. `SEMIO_MATERIALIZE_CONCURRENCY` overrides for measurement. */
 function materializeConcurrencyLimit(): number {
   const override = process.env.SEMIO_MATERIALIZE_CONCURRENCY;
   if (override) {
     const parsed = Number.parseInt(override, 10);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
-  return 4;
+  return semioNxParallel();
+}
+
+/** @emoji 🧵️ Concurrency cap for the plugin catalog cargo stage (isolated `CARGO_TARGET_DIR` per build). */
+function cargoConcurrencyLimit(): number {
+  const override = process.env.SEMIO_CARGO_CONCURRENCY;
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return semioNxParallel();
 }
 
 /** 🛡️Rejects stale public output without deleting another task's retained files. */
@@ -192,4 +197,4 @@ class PluginBuildScript extends BundleScript {
   }
 }
 
-export { PluginBuildScript, assertNoStalePublicPluginOutputs, buildPlugin, createConcurrencyLimiter, materializeConcurrencyLimit, preparePluginBuildTargets };
+export { PluginBuildScript, assertNoStalePublicPluginOutputs, buildPlugin, cargoConcurrencyLimit, createConcurrencyLimiter, materializeConcurrencyLimit, preparePluginBuildTargets };

@@ -12,6 +12,10 @@ pub struct Puzzle2dConfig {
     pub handle_kind_weights: BTreeMap<String, f64>,
     #[state(config)]
     pub fill_count: u32,
+    #[state(config)]
+    pub contact_tolerance: f64,
+    #[state(config)]
+    pub brush_placement_overlap_budget: f64,
 }
 
 pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor {

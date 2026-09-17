@@ -492,6 +492,7 @@ impl EngineSurfaceRetirement {
             || cache.suggestion_offset.take().is_some()
             || Self::close_string(&mut cache.brush_weights_json)
             || Self::close_string(&mut cache.lod_mode)
+            || Self::close_string(&mut cache.transform_flags)
             || Self::close_string(&mut cache.size_key)
             || Self::close_string(&mut cache.tool_run_trace_window_id)
         {
@@ -1573,6 +1574,7 @@ struct BoardSyncCache {
     suggestion_offset: Option<f64>,
     brush_weights_json: Option<String>,
     lod_mode: Option<String>,
+    transform_flags: Option<String>,
     size_key: Option<String>,
     tool_run_trace_window_id: Option<String>,
 }
@@ -1620,6 +1622,7 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.suggestion_offset.is_none()
         && cache.brush_weights_json.is_none()
         && cache.lod_mode.is_none()
+        && cache.transform_flags.is_none()
         && cache.size_key.is_none()
         && cache.tool_run_trace_window_id.is_none()
 }
@@ -2433,7 +2436,26 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.lod_mode = Some(board.lod_mode.clone());
         changed = true;
     }
+    let transform_flags = board.transform_flags.clone().unwrap_or_else(|| BOARD2D_DEFAULT_TRANSFORM_FLAGS_JSON.to_string());
+    if cache.transform_flags.as_deref() != Some(transform_flags.as_str()) {
+        let (move_enabled, rotate_enabled) = board2d_transform_flags_from_json(&transform_flags);
+        host.set_transform_flags(move_enabled, rotate_enabled);
+        cache.transform_flags = Some(transform_flags);
+        changed = true;
+    }
     changed
+}
+
+/// 🕹️ Both gumball handles on — what a board that never declares `transformFlags` composes.
+const BOARD2D_DEFAULT_TRANSFORM_FLAGS_JSON: &str = "{\"move\":true,\"rotate\":true}";
+
+/// 🕹️ Reads `{"move":bool,"rotate":bool}`; a malformed payload leaves both handles on rather than
+/// silently disarming the gumball.
+fn board2d_transform_flags_from_json(json: &str) -> (bool, bool) {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+        return (true, true);
+    };
+    (value.get("move").and_then(serde_json::Value::as_bool).unwrap_or(true), value.get("rotate").and_then(serde_json::Value::as_bool).unwrap_or(true))
 }
 
 /// ⏯️ Feeds a board's `toolRunTrace` lane into its resident trace layer, refreshes the placement footprints when the kind

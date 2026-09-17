@@ -1,5 +1,6 @@
 {
   "mutation": "commitReconstruction",
+  "sparse": null,
   "trajectory": null,
   "mesh": null,
   "geo": null,
@@ -9,6 +10,5 @@
       "id": "orbit-frame-10",
       "contentId": "remodeling-asset-orbit-frame-10-unpublished"
     }
-  ],
-  "sparse": null
+  ]
 }

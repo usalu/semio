@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetVolumeHidden",
+  "id": "seed-bay",
+  "newHidden": true
+}

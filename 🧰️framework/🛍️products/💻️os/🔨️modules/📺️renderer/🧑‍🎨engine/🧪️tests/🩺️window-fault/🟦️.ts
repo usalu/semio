@@ -158,9 +158,8 @@ describe("contributions pack crossing", () => {
     expect(shellSource).not.toContain("reachableKinds.length > 0 ? scopeContributionsJson");
     expect(shellSource).toContain("resolveDocumentOperatorKinds");
     expect(shellSource).toContain("scopeContributionsJson");
-    expect(shellSource).toContain("unresolved document operators");
     expect(shellSource).toContain("exampleArtifactSources");
-    expect(shellSource).toContain("contributions scoped from published examples");
+    expect(shellSource).toContain("fromExamples");
     expect(shellSource).toContain("readAppDocumentPack");
     expect(shellSource).toContain('encoding: "pack"');
     expect(shellSource).toContain("page: 0, pageCount: 1");

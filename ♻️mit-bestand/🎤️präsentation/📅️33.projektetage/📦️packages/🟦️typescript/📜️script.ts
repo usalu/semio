@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-praesentation-projektetage` task router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
-import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, playgroundPortEnv, resolveTestLevel, runBun, runBundleScriptMain, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, playgroundDevPortString, playgroundPortEnv, resolveTestLevel, runBundleScriptMain, runViteBunxDev, runViteBuild, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
@@ -16,7 +16,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
-    runBun(["run", "vite", "build", "--config", "../../🏗️builder/🌐️vite/🟦️.ts", ...segments], this.root, playPollingEnv());
+    runViteBuild(this.root, segments, "../../🏗️builder/🌐️vite/🟦️.ts");
   }
 }
 

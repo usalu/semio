@@ -37,7 +37,10 @@ fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &Ha
         .collect()
 }
 
-fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+/// ⚖️ One slider per part kind and one per grip kind, over the document's authored catalogs or — for a document
+/// that authors none — the kinds it already carries. Shared by the brush suggestions options and the fill tool's
+/// own distribution group, because both read the identical weights.
+pub fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
     let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
     let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
     vec![
@@ -54,7 +57,7 @@ fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> V
             loading: None,
             waiting: None,
             on_change: None,
-            children: kind_weight_measures("part-kind", "setObjectKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
+            children: kind_weight_measures("part-kind", "setPartKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
         },
         WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
@@ -69,7 +72,7 @@ fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> V
             loading: None,
             waiting: None,
             on_change: None,
-            children: kind_weight_measures("grip-kind", "setVortexKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
+            children: kind_weight_measures("grip-kind", "setGripKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
         },
     ]
 }

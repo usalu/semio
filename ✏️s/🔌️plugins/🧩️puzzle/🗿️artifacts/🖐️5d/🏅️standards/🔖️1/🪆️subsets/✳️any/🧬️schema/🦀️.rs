@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle5dKindCatalogsExtra, Puzzle5dSnapshot};
+use crate::{Puzzle5dKindCatalogsExtra, Puzzle5dSnapshot, Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;
@@ -30,6 +30,8 @@ pub struct Puzzle5dArtifact {
     pub parts: Vec<Puzzle5dPart>,
     #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,
+    #[state(artifact)]
+    pub target_volumes: Vec<Puzzle5dTargetVolume>,
 }
 //#endregion 🔖️Artifact
 
@@ -53,6 +55,7 @@ impl Puzzle5dArtifact {
             kind_compatibility: self.kind_compatibility.clone(),
             parts: self.parts.clone(),
             fasteners: self.fasteners.clone(),
+            target_volumes: self.target_volumes.clone(),
         }
     }
 
@@ -68,6 +71,7 @@ impl Puzzle5dArtifact {
             kind_compatibility: snapshot.kind_compatibility,
             parts: snapshot.parts,
             fasteners: snapshot.fasteners,
+            target_volumes: snapshot.target_volumes,
         }
     }
 
@@ -82,6 +86,7 @@ impl Puzzle5dArtifact {
         self.kind_compatibility = snapshot.kind_compatibility;
         self.parts = snapshot.parts;
         self.fasteners = snapshot.fasteners;
+        self.target_volumes = snapshot.target_volumes;
     }
 }
 //#endregion 🔖️Conversions

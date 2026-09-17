@@ -25,6 +25,14 @@ pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Window
         on_change: None,
         children: vec![
             WindowMeasure::Toggle {
+                id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-grid-visible"),
+                icon_id: "layout-grid".into(),
+                label: Some(labels.visible.into()),
+                pressed: runtime.grid_visible,
+                text: None,
+                on_change: puzzle2d_action("setGridVisible", None),
+            },
+            WindowMeasure::Toggle {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-grid-snap"),
                 icon_id: "magnet".into(),
                 label: Some(labels.grid_snap.into()),

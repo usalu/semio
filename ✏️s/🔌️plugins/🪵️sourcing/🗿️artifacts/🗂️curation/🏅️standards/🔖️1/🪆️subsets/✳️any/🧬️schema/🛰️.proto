@@ -33,12 +33,19 @@ message GeometryRecipeMesh {
   repeated uint32 indices = 4;
 }
 
+message GeometryRecipeGlb {
+  string kind = 1;
+  string url = 2;
+  double extent = 3;
+}
+
 message GeometryRecipe {
   oneof recipe {
     GeometryRecipeBox box = 1;
     GeometryRecipeFrame frame = 2;
     GeometryRecipeSlab slab = 3;
     GeometryRecipeMesh mesh = 4;
+    GeometryRecipeGlb glb = 5;
   }
 }
 

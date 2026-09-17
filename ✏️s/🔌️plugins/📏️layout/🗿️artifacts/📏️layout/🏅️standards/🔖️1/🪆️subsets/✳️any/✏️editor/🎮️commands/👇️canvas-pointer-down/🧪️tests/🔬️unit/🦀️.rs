@@ -89,8 +89,11 @@ async fn pointer_down_extend_click_inverts_the_hit_frame_inline() {
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
     settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "an invertive pick on an unselected frame selects it");
+    // ⚖️ `dispatch_interaction_action` never lets a fold with targets present empty the selection —
+    // an `Invertive` pick that would toggle the last frame off re-selects the targets instead
+    // (`next.ids.is_empty() && !targets.is_empty()` fallback), so the frame stays selected.
     settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    assert!(selected_elements(&app).await.is_empty(), "a second invertive pick on the same frame deselects it");
+    assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "a second invertive pick on the sole selected frame keeps it selected (framework fallback)");
     close_registered(app);
 }
 

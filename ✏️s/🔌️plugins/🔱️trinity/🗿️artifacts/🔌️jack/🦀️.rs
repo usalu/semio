@@ -508,7 +508,7 @@ impl Graph {
         Self::from_snapshot(JackSnapshot::from_json(json)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, TrinityRamError> {
+    pub fn host_snapshot_json(&self) -> Result<String, TrinityRamError> {
         self.to_snapshot().to_json()
     }
 
@@ -1287,7 +1287,7 @@ pub mod editor {
 
             #[path = "."]
             mod set_fixture_json_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-snapshot-json/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
                 mod component;
                 pub(crate) use component::*;
             }

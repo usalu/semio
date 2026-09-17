@@ -16,6 +16,7 @@ import type {
   WindowLayout,
   NamedLayout,
 } from "../🛂️manifest/🟦️.ts";
+import { normalizeManifestExamples } from "../🛂️manifest/🟦️.ts";
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
@@ -166,7 +167,7 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
   if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
   if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
   if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
-  return manifest as PluginManifest;
+  return normalizeManifestExamples(manifest as PluginManifest) as PluginManifest;
 }
 //#endregion 📇️DescriptorAdmission
 
@@ -2277,7 +2278,7 @@ export class ActivationRegistry {
     this.fetchAssets = options.fetchAssets ?? defaultGuestSlimAssetFetcher;
     this.now = options.now ?? (() => Date.now());
     this.onTurnResult = options.onTurnResult ?? (() => {});
-    const onTurnError = options.onTurnError ?? ((actorId: string, error: unknown) => console.error(`[DEBUG] ActivationRegistry: turn failed for ${actorId}`, error));
+    const onTurnError = options.onTurnError ?? ((actorId: string, error: unknown) => undefined);
     this.turnScheduler = new TurnScheduler<QueuedTurnPayload, ShardBudget>({
       mailboxCapacity: options.turnMailboxCapacity ?? DEFAULT_TURN_MAILBOX_CAPACITY,
       budgetFor: () => this.defaultBudget,
@@ -2318,7 +2319,6 @@ export class ActivationRegistry {
 
   private loadAssets(moduleUrl: string): Promise<readonly ShardAsset[]> {
     this.assetsPromise ??= this.fetchAssets(moduleUrl).catch((error: unknown) => {
-      console.warn("[DEBUG] ActivationRegistry: guestSlim asset fetch failed; affected actors render without it", error);
       this.assetsPromise = null;
       return [];
     });
@@ -2377,7 +2377,6 @@ export class ActivationRegistry {
     for (const extensionId of extensionIds) {
       const manifest = this.manifests.get(extensionId);
       if (!manifest) {
-        console.warn(`[DEBUG] ActivationRegistry: extension ${extensionId} of ${pluginId} has no registered manifest, skipping`);
         continue;
       }
       const childActorId = `${parentActorId}::${extensionId}`;
@@ -2388,7 +2387,6 @@ export class ActivationRegistry {
         this.markResident(childActorId, extensionId);
         children.push(childActorId);
       } catch (error) {
-        console.warn(`[DEBUG] ActivationRegistry: extension ${extensionId} of ${pluginId} failed to activate`, error);
       }
     }
     if (children.length > 0) this.extensionChildren.set(parentActorId, children);
@@ -2413,7 +2411,6 @@ export class ActivationRegistry {
   private async runQueuedTurn(actorId: string, payload: QueuedTurnPayload, budget: ShardBudget): Promise<void> {
     const currentGeneration = this.actorGeneration.get(actorId) ?? 0;
     if (payload.generation !== currentGeneration) {
-      console.warn(`[DEBUG] ActivationRegistry: dropping turn for ${actorId} queued against generation ${payload.generation}, now at ${currentGeneration} (restored in between)`);
       return;
     }
     this.touch(actorId);
@@ -2532,7 +2529,7 @@ export class ActivationRegistry {
    * lets one actor's restore failure block another's, same "one actor's failure never wedges the rest"
    * reasoning `TurnScheduler.onTurnError`'s own doc gives. */
   async restoreActors(actorIds: readonly string[]): Promise<void> {
-    await Promise.all(actorIds.map((actorId) => this.restoreActor(actorId).catch((error: unknown) => console.error(`[DEBUG] ActivationRegistry.restoreActors: failed to restore ${actorId}`, error))));
+    await Promise.all(actorIds.map((actorId) => this.restoreActor(actorId).catch((error: unknown) => undefined)));
   }
 
   /** 🚑️ Bound convenience handler for `ShardClientOptions.onShardLost` — pass this directly, e.g.
@@ -2707,14 +2704,94 @@ export interface PluginSource {
    * `moduleUrl`, unbusted — correct for a first load, where there is nothing stale to bust. */
   moduleUrl(pluginId: string, rebuiltAt?: number): string;
   /** Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
-   * on subscribe against sources that support it (the dev source's SSE endpoint always sends one). */
+   * on subscribe against sources that support it (the dev source's SSE endpoint always sends one —
+   * and when the page-shared stream is already open, its cached snapshot is replayed instead, which is
+   * the same observable input). */
   subscribe(listener: (event: PluginSourceEvent) => void): () => void;
 }
 
+/** @emoji 📡️ One live `EventSource` shared by every subscriber of the same watch URL on this page. */
+type SharedWatchStream = {
+  readonly source: EventSource;
+  readonly listeners: Set<(data: string) => void>;
+  /** 🗃️ The raw `data` string of the LAST `snapshot` seen on this stream (unparsed, unnormalized), kept
+   * so a LATE subscriber still receives the connect-time snapshot the endpoint only sends once. */
+  lastSnapshotData: string | undefined;
+};
+
+/** @emoji 📡️ Page-wide registry of open watch streams, keyed by watch URL. Module-level on purpose:
+ * every `FrameworkOsShell` on a page shares one entry per URL. */
+const sharedWatchStreams = new Map<string, SharedWatchStream>();
+
+/**
+ * @emoji 📡️ Subscribes to a server-sent watch endpoint through a page-shared `EventSource`.
+ *
+ * 🧮️ WHY (ticket 26/08/28 demonstrator, measured 2026-09-17): every shell used to open its OWN
+ * `EventSource` per watch URL, so an N-shell page held 2·N permanent streams. The dev server speaks
+ * HTTP/1.1 and Chromium allows SIX connections per origin: with three shells the six idle SSE streams
+ * consume the whole per-origin budget and EVERY later fetch of that page (plugin descriptors,
+ * `.core.wasm`) queues behind them — shell 3 and every later pane sit in "booting" forever with no
+ * console output. Sharing one stream per URL makes the cost O(1) per page instead of O(shells).
+ *
+ * 📬️ The first subscriber opens the stream; later ones attach as listeners and are replayed the cached
+ * `snapshot` (via `queueMicrotask`, so the caller's `subscribe` has returned first — a synchronous
+ * replay would re-enter the caller mid-subscribe). The dev/extension endpoints only send a snapshot at
+ * connect time, and the shell's install pump depends on receiving one, so a late subscriber MUST NOT
+ * wait for the next build. `built`/`installed` events are fanned out live to every listener.
+ *
+ * ♻️ Unsubscribing removes the listener; the last one out closes the `EventSource` and drops the entry,
+ * so a later subscription opens a fresh stream. `onerror` is deliberately unhandled (exactly as before
+ * this packet): `EventSource` reconnects on its own and the endpoint answers every reconnect with a
+ * full snapshot, which is fanned out like any other event — consumers drop replays themselves
+ * (ShellHost's `pluginAvailabilityRouteV1`).
+ *
+ * 🧪️ `EventSource` is unavailable under plain node, so this is a harmless no-op there (matches every
+ * other browser-only feature detection in this module). */
+function subscribeSharedWatchStream(watchUrl: string, onData: (data: string) => void): () => void {
+  if (typeof EventSource === "undefined") return () => {};
+  let stream = sharedWatchStreams.get(watchUrl);
+  if (!stream) {
+    const opened: SharedWatchStream = { source: new EventSource(watchUrl), listeners: new Set(), lastSnapshotData: undefined };
+    opened.source.onmessage = (event: MessageEvent) => {
+      const data = typeof event.data === "string" ? event.data : String(event.data);
+      // 🗃️ Parsed ONLY to decide whether this event is the snapshot worth caching — every listener does
+      // its own parse (and owns its own malformed-event warning), so a malformed frame still reaches
+      // them and still warns exactly once per subscriber, as before sharing.
+      try {
+        const parsed = JSON.parse(data) as { readonly kind?: string };
+        if (parsed && parsed.kind === "snapshot") opened.lastSnapshotData = data;
+      } catch {
+        // not cacheable — listeners warn below
+      }
+      for (const listener of [...opened.listeners]) listener(data);
+    };
+    sharedWatchStreams.set(watchUrl, opened);
+    stream = opened;
+  }
+  const entry = stream;
+  entry.listeners.add(onData);
+  const cached = entry.lastSnapshotData;
+  if (cached !== undefined) {
+    queueMicrotask(() => {
+      if (entry.listeners.has(onData)) onData(cached);
+    });
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    entry.listeners.delete(onData);
+    if (entry.listeners.size > 0) return;
+    entry.source.close();
+    if (sharedWatchStreams.get(watchUrl) === entry) sharedWatchStreams.delete(watchUrl);
+  };
+}
+
 /** @emoji 🔌️ `PluginSource` backed by an injected dev catalog and its owner's explicit watch URL.
- * `EventSource` is unavailable under vitest/node, so
- * `subscribe` there is a harmless no-op (matches every other browser-only feature detection in this
- * module). */
+ * `subscribe` attaches to the page-shared stream for `watchUrl` ({@link subscribeSharedWatchStream}) —
+ * N shells on one page hold ONE `EventSource` per URL, not N. `EventSource` is unavailable under
+ * vitest/node, so `subscribe` there is a harmless no-op (matches every other browser-only feature
+ * detection in this module). */
 export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watchUrl: string): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   const bootVersion = Date.now();
@@ -2730,16 +2807,42 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
       return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
     },
     subscribe(listener) {
-      if (typeof EventSource === "undefined") return () => {};
-      const source = new EventSource(watchUrl);
-      source.onmessage = (event) => {
+      return subscribeSharedWatchStream(watchUrl, (data) => {
         try {
-          listener(JSON.parse(event.data) as PluginSourceEvent);
+          listener(JSON.parse(data) as PluginSourceEvent);
         } catch (error) {
-          console.warn(`[DEBUG] plugin source "dev" malformed event: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      };
-      return () => source.close();
+                  }
+      });
+    },
+  };
+}
+
+/** @emoji 📦️ `PluginSource` for shipped static hosts: every registry entry is already materialized
+ * beside the HTML bundle, so there is no dev-server SSE `/watch` endpoint to announce availability.
+ * `subscribe` replays one immediate `snapshot` (same shape the dev endpoint sends on connect) so the
+ * shell's install pump loads the full expanded registry — plugins and bundled flow extensions — without
+ * waiting on `EventSource`. */
+export function createBundledPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
+  const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
+  const bootVersion = Date.now();
+  // 🚫️ No per-plugin `rebuiltAt` on the connect-time snapshot — static hosts replay the same build the
+  // primary boot already installed; naming a timestamp would hot-swap the session-owning plugin
+  // (`pluginAvailabilityRouteV1`). First-time installs still cache-bust via `moduleUrl`'s `bootVersion`.
+  const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: registry.map((entry) => ({ pluginId: entry.pluginId, rebuiltAt: undefined })) };
+  return {
+    id: "bundled",
+    async list() {
+      return registry;
+    },
+    moduleUrl(pluginId, rebuiltAt) {
+      const entry = byId.get(pluginId);
+      if (!entry) throw new Error(`[DEBUG] plugin source "bundled" has no registry entry for ${pluginId}`);
+      const separator = entry.moduleUrl.includes("?") ? "&" : "?";
+      return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
+    },
+    subscribe(listener) {
+      queueMicrotask(() => listener(snapshot));
+      return () => {};
     },
   };
 }
@@ -2761,17 +2864,25 @@ export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWi
   throw new Error("unknown extension source event kind");
 }
 
-/** @emoji 🧩️ `PluginSource` backed by an extension catalog and its owner's explicit watch URL.
- * Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
- * add artifacts under each extension id without changing this list. */
-export function createExtensionSource(catalog: PluginCatalog, watchUrl: string): PluginSource {
-  const registry: readonly PluginRegistryEntry[] = catalog.extensions.map((target) => ({
+/** @emoji 🧩️ Registry rows for flow extensions — shared by {@link createExtensionSource} and static
+ * {@link createBundledPluginSource} hosts. */
+export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly PluginRegistryEntry[] {
+  return catalog.extensions.map((target) => ({
     pluginId: target.pluginId,
     moduleUrl: catalog.extensionModuleUrl(target.pluginId),
     contributes: target.contributes,
     consumes: target.consumes,
     dependencies: dependsOnToPluginDependencies(target.dependsOn),
   }));
+}
+
+/** @emoji 🧩️ `PluginSource` backed by an extension catalog and its owner's explicit watch URL.
+ * Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
+ * add artifacts under each extension id without changing this list. `subscribe` shares one
+ * `EventSource` per watch URL across the page ({@link subscribeSharedWatchStream}) and normalizes the
+ * extension wire vocabulary per listener. */
+export function createExtensionSource(catalog: PluginCatalog, watchUrl: string): PluginSource {
+  const registry = extensionRegistryFromCatalog(catalog);
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   return {
     id: "extensions",
@@ -2784,17 +2895,13 @@ export function createExtensionSource(catalog: PluginCatalog, watchUrl: string):
       return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
     },
     subscribe(listener) {
-      if (typeof EventSource === "undefined") return () => {};
-      const source = new EventSource(watchUrl);
-      source.onmessage = (event) => {
+      return subscribeSharedWatchStream(watchUrl, (data) => {
         try {
-          const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(event.data) as ExtensionSourceWireEvent);
+          const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(data) as ExtensionSourceWireEvent);
           if (normalized) listener(normalized);
         } catch (error) {
-          console.warn(`[DEBUG] plugin source "extensions" malformed event: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      };
-      return () => source.close();
+                  }
+      });
     },
   };
 }
@@ -2949,7 +3056,6 @@ export class PlaygroundBootPlanner {
       const resolved = orderPluginRegistryEntries(this.expanded);
       this.order = resolved.order;
       this.errors = resolved.errors;
-      for (const error of this.errors) console.error(`[DEBUG] resolvePlaygroundBoot(${this.variant}): ${pluginGraphErrorMessage(error, "en")}`);
       this.phase = "done";
       return false;
     }
@@ -3479,3 +3585,10 @@ if (import.meta.vitest) {
   await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️IoRouterTests
+
+//#region 🧪️SharedWatchStreamTests
+if (import.meta.vitest) {
+  const { registerTests6 } = await import("./🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
+  await registerTests6(import.meta.vitest, { createBundledPluginSource, createDevPluginSource, createExtensionSource }, { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url });
+}
+//#endregion 🧪️SharedWatchStreamTests

@@ -22,6 +22,9 @@ use std::sync::Arc;
 pub(crate) const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
 /// 🧬️ Provisional ops one placement appends: `create_node` then `connect_handles`.
 pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: usize = 2;
+/// 🎯️ Target regions one run reads as its placement constraint. A board is painted by hand, so this
+/// admits far more than any authored document holds while keeping the run's own owner fixed.
+pub(crate) const FILL_RUN_TARGET_REGION_SLOTS: usize = 256;
 /// 🆔️ Prefix of the node ids the board engine mints for fill placements (`puzzle2d.fill.<serial>`).
 pub(crate) const FILL_RUN_NODE_ID_PREFIX: &str = "puzzle2d.fill.";
 const FILL_RUN_CAPTURE_UNITS: usize = 256;
@@ -141,10 +144,11 @@ pub enum FillRunReason {
     ArtifactCapacity,
     RequestedReached,
     Retracted,
+    OutsideTargetRegion,
 }
 
 impl FillRunReason {
-    pub const ALL: [Self; 11] = [
+    pub const ALL: [Self; 12] = [
         Self::Fits,
         Self::HostCollision,
         Self::VirtualCollision,
@@ -156,6 +160,7 @@ impl FillRunReason {
         Self::ArtifactCapacity,
         Self::RequestedReached,
         Self::Retracted,
+        Self::OutsideTargetRegion,
     ];
 
     pub fn code(self) -> u16 {
@@ -179,6 +184,7 @@ impl FillRunReason {
             Self::ArtifactCapacity => "artifact-capacity",
             Self::RequestedReached => "requested-reached",
             Self::Retracted => "retracted",
+            Self::OutsideTargetRegion => "outside-target-region",
         }
     }
 
@@ -205,6 +211,7 @@ impl FillRunReason {
             Self::ArtifactCapacity => |labels| labels.fill_reason_artifact_capacity,
             Self::RequestedReached => |labels| labels.fill_reason_requested_reached,
             Self::Retracted => |labels| labels.fill_reason_retracted,
+            Self::OutsideTargetRegion => |labels| labels.fill_reason_outside_target_region,
         }
     }
 
@@ -325,6 +332,24 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
     Ok([create_node(node, None), edge])
 }
 
+/// 🎯️ The normalized bounds of every visible target region the document declares, capped at
+/// [`FILL_RUN_TARGET_REGION_SLOTS`] — a document painted past that ceiling constrains fill by its
+/// first regions rather than faulting the run, and the excess is visible in the board itself.
+pub(crate) fn fill_visible_region_bounds(fixture: &Value) -> Vec<[f64; 4]> {
+    crate::editor::puzzle2d::fixture_target_regions(fixture)
+        .iter()
+        .filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true))
+        .take(FILL_RUN_TARGET_REGION_SLOTS)
+        .map(crate::editor::puzzle2d::puzzle2d_region_bounds)
+        .collect()
+}
+
+/// 🎯️ Whether a placement's own footprint lies fully inside ANY visible target region. An empty set
+/// is unconstrained, so a board with no region fills exactly as it did before regions existed.
+pub(crate) fn fill_regions_admit(regions: &[[f64; 4]], bounds: [f64; 4]) -> bool {
+    regions.is_empty() || regions.iter().any(|region| bounds[0] >= region[0] && bounds[1] >= region[1] && bounds[2] <= region[2] && bounds[3] <= region[3])
+}
+
 /// 📦️ Axis-aligned collision footprint `[min_x, min_y, max_x, max_y]` of a board node, exactly as the fill
 /// capture feeds it to the engine: a circle spans `radius · scale`, a rectangle half its scaled extents.
 pub(crate) fn fill_node_bounds(x: f64, y: f64, scale: Option<f64>, rectangle: bool, radius_or_width: Option<f64>, height: Option<f64>) -> [f64; 4] {
@@ -334,8 +359,25 @@ pub(crate) fn fill_node_bounds(x: f64, y: f64, scale: Option<f64>, rectangle: bo
     [x - half_x, y - half_y, x + half_x, y + half_y]
 }
 
-fn fill_bounds_overlap(left: [f64; 4], right: [f64; 4]) -> bool {
+/// 🚧️ The AABB collision test every fill placement is decided by, widened by `slack` on each side.
+/// `slack` is the net of the two placement-tuning settings (`contactTolerance - overlapBudget`,
+/// `Puzzle2dConfig`): a positive contact tolerance GROWS both footprints so a placement that merely
+/// grazes a neighbour is refused, a positive overlap budget SHRINKS them so a dense board can be
+/// packed deliberately. `slack` is clamped so a budget can never shrink a footprint past its centre.
+fn fill_bounds_overlap_with(left: [f64; 4], right: [f64; 4], slack: f64) -> bool {
+    let inset = |bounds: [f64; 4]| {
+        let half_x = (bounds[2] - bounds[0]) * 0.5;
+        let half_y = (bounds[3] - bounds[1]) * 0.5;
+        let dx = slack.max(-half_x);
+        let dy = slack.max(-half_y);
+        [bounds[0] - dx, bounds[1] - dy, bounds[2] + dx, bounds[3] + dy]
+    };
+    let (left, right) = (inset(left), inset(right));
     left[0] <= right[2] && left[2] >= right[0] && left[1] <= right[3] && left[3] >= right[1]
+}
+
+fn fill_bounds_overlap(left: [f64; 4], right: [f64; 4]) -> bool {
+    fill_bounds_overlap_with(left, right, 0.0)
 }
 
 fn fill_run_fault(context: &mut StepContext<'_>, code: &str) -> StepOutcome {
@@ -1052,6 +1094,10 @@ pub(crate) struct Puzzle2dFillRunJob {
     owed: Option<FillRunOwed>,
     progress_sequence: u64,
     closing: bool,
+    /// 🎯️ Normalized `[min_x, min_y, max_x, max_y]` of every VISIBLE target region the run's base
+    /// document declared, read once at construction. Empty means unconstrained — the same rule
+    /// puzzle3d states as `world_volumes_contain_aabb`.
+    target_regions: Vec<[f64; 4]>,
 }
 
 impl Puzzle2dFillRunJob {
@@ -1065,6 +1111,7 @@ impl Puzzle2dFillRunJob {
         };
         let provisional_placements = expected.len() / FILL_RUN_OPS_PER_PLACEMENT;
         let kinds = fill_kind_rows(&document.0);
+        let target_regions = fill_visible_region_bounds(&document.0);
         let mut job = Self {
             kinds,
             open_handles: 0,
@@ -1091,6 +1138,7 @@ impl Puzzle2dFillRunJob {
             owed: None,
             progress_sequence: 0,
             closing: false,
+            target_regions,
         };
         let target = provisional_placements.min(requested as usize);
         job.replay = (provisional_placements > 0).then_some(FillRunReplay { expected, retire, target });
@@ -1186,6 +1234,19 @@ impl Puzzle2dFillRunJob {
             return Err("puzzle2d-fill-checkpoint-stale");
         }
         let [create, connect] = mutations?;
+        if let Puzzle2dMutation::CreateNode(payload) = &create {
+            let node = &payload.node;
+            let rectangle = node.shape.as_deref() == Some("rectangle");
+            let bounds = fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height);
+            if !fill_regions_admit(&self.target_regions, bounds) {
+                if let Some(live) = self.live.take() {
+                    self.rejected += 1;
+                    self.decided_since_placement += 1;
+                    self.decide(context, live, FillRunReason::OutsideTargetRegion);
+                }
+                return Ok(false);
+            }
+        }
         let entity = match &create {
             Puzzle2dMutation::CreateNode(payload) => fill_run_entity(&payload.node.id),
             _ => return Err("puzzle2d-fill-run-create-node"),
@@ -1455,13 +1516,15 @@ pub(crate) struct Puzzle2dFillRevalidateJob {
     head_ids: HashSet<String>,
     handles: HashSet<String>,
     conflicts: Vec<bool>,
+    /// 🚧️ `contactTolerance - brushPlacementOverlapBudget`, the one number the AABB test is widened by.
+    placement_slack: f64,
     finished: bool,
     completed: bool,
     closed: bool,
 }
 
 impl Puzzle2dFillRevalidateJob {
-    pub(crate) fn new(identity: ToolRunIdentity, head: Arc<Puzzle2dPlaySnapshot>, provisional: &[Puzzle2dMutation], checkpoint: Option<&[u8]>) -> Self {
+    pub(crate) fn new(identity: ToolRunIdentity, head: Arc<Puzzle2dPlaySnapshot>, provisional: &[Puzzle2dMutation], checkpoint: Option<&[u8]>, placement_slack: f64) -> Self {
         let keys = checkpoint.and_then(FillRunCheckpoint::decode).map(|checkpoint| checkpoint.placements).unwrap_or_default();
         Self {
             writer: ToolRunTickWriter::with_provisional_base(identity, provisional.len() as u32),
@@ -1473,6 +1536,7 @@ impl Puzzle2dFillRevalidateJob {
             head_ids: HashSet::new(),
             handles: HashSet::new(),
             conflicts: Vec::new(),
+            placement_slack: if placement_slack.is_finite() { placement_slack } else { 0.0 },
             finished: false,
             completed: false,
             closed: false,
@@ -1511,7 +1575,8 @@ impl Puzzle2dFillRevalidateJob {
         let subject = ToolRunTraceSubject::Placement2d { shape, position: [node.x as f32, node.y as f32], rotation: 0.0 };
         let rectangle = node.shape.as_deref() == Some("rectangle");
         let bounds = fill_node_bounds(node.x, node.y, node.scale, rectangle, if rectangle { node.width } else { node.radius }, node.height);
-        let conflict = self.head_ids.contains(&node.id) || !self.handles.contains(source) || self.head_bounds.iter().any(|head| fill_bounds_overlap(bounds, *head));
+        let slack = self.placement_slack;
+        let conflict = self.head_ids.contains(&node.id) || !self.handles.contains(source) || self.head_bounds.iter().any(|head| fill_bounds_overlap_with(bounds, *head, slack));
         let handles: Vec<String> = if conflict { Vec::new() } else { node.handles.iter().map(|handle| handle.id.clone()).collect() };
         self.handles.extend(handles);
         (conflict, subject)

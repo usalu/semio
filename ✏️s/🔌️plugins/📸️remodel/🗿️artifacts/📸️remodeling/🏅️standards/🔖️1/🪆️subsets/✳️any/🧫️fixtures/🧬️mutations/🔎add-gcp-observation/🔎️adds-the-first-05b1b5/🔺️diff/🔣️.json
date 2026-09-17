@@ -13,17 +13,17 @@
         "id": "gcp-corner",
         "name": "Corner",
         "worldPosition": [
-          1,
-          2,
-          3
+          1.0,
+          2.0,
+          3.0
         ],
         "observations": [
           {
             "streamId": "stream-b",
             "frameIndex": 0,
             "pixel": [
-              10,
-              20
+              10.0,
+              20.0
             ]
           }
         ]
@@ -32,17 +32,17 @@
         "id": "gcp-ridge",
         "name": "Ridge",
         "worldPosition": [
-          4,
-          5,
-          6
+          4.0,
+          5.0,
+          6.0
         ],
         "observations": [
           {
             "streamId": "stream-a",
             "frameIndex": 1,
             "pixel": [
-              30,
-              40
+              30.0,
+              40.0
             ]
           }
         ]

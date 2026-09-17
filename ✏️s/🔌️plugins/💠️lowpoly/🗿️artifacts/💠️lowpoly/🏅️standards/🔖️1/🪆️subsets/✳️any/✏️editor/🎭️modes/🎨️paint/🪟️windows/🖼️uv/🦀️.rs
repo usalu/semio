@@ -54,46 +54,55 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
+/// 🎒️ `layers_json` rides the fixed-capacity Canvas2d spine (32 KiB, no paged lane), so the UV scene is
+/// fitted to this budget: the wireframe first (clipped to whole segments), then the paint texture only
+/// when it still fits. A 256² painted texture or a real mesh's UV net alone overflowed it
+/// (`scene-surface.encode … 39040 bytes`, 2026-09-17), which stopped the whole actor.
+const LOWPOLY_UV_LAYERS_BUDGET_BYTES: usize = 26 * 1024;
+
 fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
     use crate::editor::lowpoly::view::resolve_active_object_id;
-    let object_id = resolve_active_object_id(view.snapshot, view.config);
-    let mut layers: Vec<dsl::DslValue> = Vec::new();
-    if let Some(texture) = texture_cache.get(&object_id) {
-        let size = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
-        layers.push(dsl::DslValue::object([
-            ("id".to_string(), dsl::DslValue::String("uv-paint-texture".to_string())),
-            ("kind".to_string(), dsl::DslValue::String("image".to_string())),
-            ("name".to_string(), dsl::DslValue::String("Paint".to_string())),
-            ("x".to_string(), dsl::DslValue::float(-size * 0.5)),
-            ("y".to_string(), dsl::DslValue::float(-size * 0.5)),
-            ("width".to_string(), dsl::DslValue::float(size)),
-            ("height".to_string(), dsl::DslValue::float(size)),
-            ("dataUrl".to_string(), dsl::DslValue::String(format!("data:image/png;base64,{texture}"))),
-        ]));
-    }
+    let object_id = doc.active_object_id().to_string();
+    let object_id = if object_id.is_empty() { resolve_active_object_id(view.snapshot, view.config) } else { object_id };
+    let scale = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
+    let mut wireframe: Option<dsl::DslValue> = None;
     if let Ok(mesh) = doc.active_mesh() {
         if let Ok(transfer) = LowpolyDocument::tessellate_transfer_json(mesh) {
             let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
             let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
-            let mut points: Vec<[f64; 2]> = Vec::new();
-            for chunk in edge_uvs.as_chunks::<4>().0 {
-                let u0 = chunk[0] as f64;
-                let v0 = (1.0 - chunk[1]) as f64;
-                let u1 = chunk[2] as f64;
-                let v1 = (1.0 - chunk[3]) as f64;
-                let scale = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
-                points.push([u0 * scale - scale * 0.5, v0 * scale - scale * 0.5]);
-                points.push([u1 * scale - scale * 0.5, v1 * scale - scale * 0.5]);
+            // ✂️ ~48 printed bytes per segment (two rounded points + a seam flag).
+            let segments = (LOWPOLY_UV_LAYERS_BUDGET_BYTES / 48).min(edge_uvs.len() / 4);
+            let round = |value: f64| (value * 10.0).round() / 10.0;
+            let mut points: Vec<[f64; 2]> = Vec::with_capacity(segments * 2);
+            for chunk in edge_uvs.as_chunks::<4>().0.iter().take(segments) {
+                points.push([round(chunk[0] as f64 * scale - scale * 0.5), round((1.0 - chunk[1]) as f64 * scale - scale * 0.5)]);
+                points.push([round(chunk[2] as f64 * scale - scale * 0.5), round((1.0 - chunk[3]) as f64 * scale - scale * 0.5)]);
             }
-            layers.push(dsl::DslValue::object([
+            let seams: Vec<u8> = edge_is_seam.into_iter().take(segments).collect();
+            wireframe = Some(dsl::DslValue::object([
                 ("id".to_string(), dsl::DslValue::String("uv-wireframe".to_string())),
                 ("kind".to_string(), dsl::DslValue::String("polyline".to_string())),
                 ("name".to_string(), dsl::DslValue::String("UV Wireframe".to_string())),
                 ("points".to_string(), dsl::ToValue::to_value(&points)),
-                ("seams".to_string(), dsl::ToValue::to_value(&edge_is_seam)),
+                ("seams".to_string(), dsl::ToValue::to_value(&seams)),
             ]));
         }
     }
+    let wireframe_bytes = wireframe.as_ref().map_or(0, |layer| dsl::json::to_json_string(layer).len());
+    let mut layers: Vec<dsl::DslValue> = Vec::new();
+    if let Some(texture) = texture_cache.get(&object_id).filter(|texture| texture.len() + wireframe_bytes + 256 <= LOWPOLY_UV_LAYERS_BUDGET_BYTES) {
+        layers.push(dsl::DslValue::object([
+            ("id".to_string(), dsl::DslValue::String("uv-paint-texture".to_string())),
+            ("kind".to_string(), dsl::DslValue::String("image".to_string())),
+            ("name".to_string(), dsl::DslValue::String("Paint".to_string())),
+            ("x".to_string(), dsl::DslValue::float(-scale * 0.5)),
+            ("y".to_string(), dsl::DslValue::float(-scale * 0.5)),
+            ("width".to_string(), dsl::DslValue::float(scale)),
+            ("height".to_string(), dsl::DslValue::float(scale)),
+            ("dataUrl".to_string(), dsl::DslValue::String(format!("data:image/png;base64,{texture}"))),
+        ]));
+    }
+    layers.extend(wireframe);
     dsl::json::to_json_string(&layers)
 }
 

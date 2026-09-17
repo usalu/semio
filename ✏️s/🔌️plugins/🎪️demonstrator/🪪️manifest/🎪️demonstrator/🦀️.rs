@@ -12,11 +12,11 @@ use semio_framework_plugin::{Plugin, PluginApp};
 // `CadPlayApp` now implements `ArtifactEditor`, not `ArtifactApp`, and `create_cad_app()` returns
 // `AppDefinition`, not `App` — see `.editor::<…>(…)` below.
 use cad::editor::cad::{create_cad_app, CadPlayApp};
-use gis::editor::gis2d::{create_gis2d_app, Gis2dPlayApp};
-use procedural::editor::generation3d::{create_generation3d_app, Generation3dPlayApp};
+use semio_s_artifact_gis_gismap::editor::gis2d::{create_gis2d_app, Gis2dPlayApp};
+use semio_s_artifact_procedural_generation3d::editor::generation3d::{create_generation3d_app, Generation3dPlayApp};
 use process::editor::process3d::{create_process3d_app, Process3dPlayApp};
 use process::viewer::process3d::{create_process3d_viewer, Process3dViewer};
-use puzzle::editor::puzzle3d::{create_puzzle3d_app, Puzzle3dPlayApp};
+use semio_s_artifact_puzzle_3d::editor::puzzle3d::{create_puzzle3d_app, Puzzle3dPlayApp};
 use sourcing::editor::sourcing::{create_sourcing_curation_app, SourcingCurationApp};
 use sourcing::viewer::sourcing::{create_sourcing_viewer, SourcingViewer};
 

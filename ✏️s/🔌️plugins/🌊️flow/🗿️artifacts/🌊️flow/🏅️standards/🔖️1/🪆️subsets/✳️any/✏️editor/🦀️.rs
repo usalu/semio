@@ -2420,7 +2420,8 @@ impl ArtifactEditor for FlowPlayApp {
         match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_COMPILED => compiled::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
+                .map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(snapshot, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
@@ -2446,7 +2447,10 @@ impl ArtifactEditor for FlowPlayApp {
                 owner.with_session(|session| match body_key {
                     FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, &config, session).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, &config, session).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATIONS => {
+                        generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
+                            .map(semio_framework_plugin::built_to_component_tree)
+                    }
                     FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_ARTIFACT => document_panel::render(doc.snapshot, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),

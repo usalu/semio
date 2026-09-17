@@ -75,7 +75,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| owned_nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
         let (id, title) = if selected.is_empty() { ("empty", labels.select_a_node) } else { ("missing", labels.node_not_found) };
-        let rows = ui_node_list([tree_item_desc(format!("{ROOT}.{id}"), label(title.as_str())?, None)?])?;
+        let rows = ui_node_list([tree_item_desc(format!("{ROOT}.{id}"), label(title.as_str())?, None)])?;
         return PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.{id}"), Some(label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build();
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
@@ -105,7 +105,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
                 patch_args(&node_ids, name)?,
             )?);
         }
-        builder = builder.section(format!("{ROOT}.kind.slider"), Some(label(labels.slider_group.as_str())?), true, ui_node_list(fields)?)?;
+        builder = builder.section(format!("{ROOT}.kind.slider"), Some(label(labels.slider_group.as_str())?), true, ui_node_list(fields.into_iter().map(Ok))?)?;
     }
     let id_row = if node_ids.len() == 1 {
         input_field(&format!("{ROOT}.id"), labels.field_id.as_str(), InputKind::Text, &node_ids[0], None, "renameDagNode", ui_value_map([("oldId", ui_value_text(&node_ids[0])?)])?)?
@@ -118,7 +118,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
     let kind = dag_node_kind_tag(&nodes[0].kind);
     let kind_value = if nodes.iter().all(|node| dag_node_kind_tag(&node.kind) == kind) { kind.to_string() } else { "—".to_string() };
     let kind_row = tree_item_desc(format!("{ROOT}.kind"), label(labels.field_kind.as_str())?, Some(kind_value))?;
-    builder.section(format!("{ROOT}.base"), Some(label(labels.node_group.as_str())?), true, ui_node_list([id_row, name_row, kind_row])?)?.build()
+    builder.section(format!("{ROOT}.base"), Some(label(labels.node_group.as_str())?), true, ui_node_list([id_row, name_row, kind_row].map(Ok))?)?.build()
 }
 //#endregion 🔖️Render
 

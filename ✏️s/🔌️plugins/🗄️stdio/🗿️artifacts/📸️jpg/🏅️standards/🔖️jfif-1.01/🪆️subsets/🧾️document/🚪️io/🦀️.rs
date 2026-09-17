@@ -280,7 +280,9 @@ impl<'a> BitReader<'a> {
         }
         let b = self.data.byte(self.pos)?;
         if b == 0xFF {
-            let b2 = self.data.byte(self.pos.checked_add(1)?).unwrap_or(0);
+            // A lone 0xFF as the final byte of the source is a truncated stuffing pair or
+            // marker, never data — reporting it as a stuffed 0xFF decoded bits the input lacks.
+            let b2 = self.data.byte(self.pos.checked_add(1)?)?;
             if b2 == 0x00 {
                 self.pos += 2;
                 return Some(0xFF);
@@ -322,6 +324,24 @@ impl<'a> BitReader<'a> {
             }
         }
         Err(JpgError::Malformed("huffman decode: no matching code".into()))
+    }
+    /// 🏁️ T.81 §B.2.1/§E.2.4: the entropy-coded segment of the (single, interleaved) baseline
+    /// scan ends at a marker, which for a one-scan image is `EOI` — optionally preceded by `0xFF`
+    /// fill bytes (§B.1.1.2). Any other state after the last MCU (source exhausted, a missing or
+    /// partial `EOI`, trailing entropy bytes) means the scan was truncated or malformed, and
+    /// decoding it anyway would hand out pixels the input never carried.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn expect_end_of_image(&self) -> Result<(), JpgError> {
+        let mut pos = self.pos;
+        while self.data.byte(pos) == Some(0xFF) && pos.checked_add(1).and_then(|next| self.data.byte(next)) == Some(0xFF) {
+            pos += 1;
+        }
+        let marker = pos.checked_add(1).and_then(|next| self.data.byte(next));
+        if self.data.byte(pos) == Some(0xFF) && marker == Some(0xD9) {
+            Ok(())
+        } else {
+            Err(JpgError::Malformed("entropy-coded segment not terminated by EOI (truncated or trailing scan data)".into()))
+        }
     }
     /// 🔁 Byte-align and consume one `RSTn` marker at a restart boundary;
     /// also resets the DC predictors (caller's responsibility) per T.81 F.2.2.5.
@@ -886,6 +906,38 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
 
 /// 🧩️ Decodes a baseline JPEG directly from a bounded random-access chunk source.
 pub fn decode_jpg_source(data: &dyn JpgByteSource) -> Result<JpgSnapshot, JpgError> {
+    let mut decoder = JpgStepDecoder::new(data)?;
+    loop {
+        if let Some(snapshot) = decoder.step(data, usize::MAX)? {
+            return Ok(snapshot);
+        }
+    }
+}
+
+/// 🧾️ Everything the marker segments before `SOS` declared, plus where the entropy-coded scan
+/// starts — the parse half of [`JpgStepDecoder`].
+struct JpgHeader {
+    quant: HashMap<u8, [i32; 64]>,
+    dc_tables: HashMap<u8, HuffTable>,
+    ac_tables: HashMap<u8, HuffTable>,
+    quant_tables: Vec<JpgQuantTable>,
+    huffman_tables: Vec<JpgHuffmanTable>,
+    other_segments: Vec<JpgSegment>,
+    frame: JpgFrameHeader,
+    sof_marker: u8,
+    restart_interval_raw: u16,
+    restart_interval: Option<u16>,
+    jfif_version: JfifVersion,
+    jfif_density_units: JfifDensityUnits,
+    jfif_x_density: u16,
+    jfif_y_density: u16,
+    jfif_thumbnail: Option<JfifThumbnail>,
+    scan_tabs: Vec<(u8, u8)>,
+    scan_start: usize,
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
     if data.len() < 4 || data.byte(0) != Some(0xFF) || data.byte(1) != Some(0xD8) {
         return Err(JpgError::Malformed("missing SOI".into()));
     }
@@ -1057,34 +1109,24 @@ pub fn decode_jpg_source(data: &dyn JpgByteSource) -> Result<JpgSnapshot, JpgErr
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
                 }
                 i += len;
-                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw)?;
-                let (width, height) = (frame.width as u32, frame.height as u32);
-                // 🏅️ sof_marker/arithmetic: real data the decode loop above already computed
-                // transiently (the SOF0 marker byte, the DAC rejection above) — persisted here so
-                // `subsets::baseline::analyzer::check_baseline_conformance`
-                // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) has real fields
-                // to check instead of an unmodeled gap. `dc_huffman_table_count`/
-                // `ac_huffman_table_count` are now DERIVED from `huffman_tables` by the analyzer
-                // (ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION) —
-                // no longer separately persisted, one source of truth.
-                return Ok(JpgSnapshot {
-                    schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-                    width,
-                    height,
-                    pixels: rgba,
-                    re_encode_quality: None,
+                return Ok(JpgHeader {
+                    quant,
+                    dc_tables,
+                    ac_tables,
+                    quant_tables,
+                    huffman_tables,
+                    other_segments,
+                    frame,
+                    sof_marker,
+                    restart_interval_raw,
+                    restart_interval,
                     jfif_version,
                     jfif_density_units,
                     jfif_x_density,
                     jfif_y_density,
                     jfif_thumbnail,
-                    frame: Some(frame),
-                    sof_marker,
-                    arithmetic: false,
-                    quant_tables,
-                    huffman_tables,
-                    restart_interval,
-                    other_segments,
+                    scan_tabs,
+                    scan_start: i,
                 });
             }
             0xE0 => {
@@ -1120,114 +1162,180 @@ fn read_u16(data: &dyn JpgByteSource, at: usize) -> Result<usize, JpgError> {
     let lo = data.byte(at.checked_add(1).ok_or_else(|| JpgError::Malformed("marker length cursor overflow".into()))?).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     Ok(((hi as usize) << 8) | lo as usize)
 }
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-/// 🎞️ Decodes the entropy-coded scan for all components (nearest-neighbor
-/// chroma upsampling for subsampled components; grayscale skips color
-/// conversion entirely) into RGBA.
-#[allow(clippy::too_many_arguments)]
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_scan(
-    data: &dyn JpgByteSource,
-    start: usize,
-    frame: &JpgFrameHeader,
-    scan_tabs: &[(u8, u8)],
-    quant: &HashMap<u8, [i32; 64]>,
-    dc_tables: &HashMap<u8, HuffTable>,
-    ac_tables: &HashMap<u8, HuffTable>,
-    restart_interval: u16,
-) -> Result<Vec<u8>, JpgError> {
-    let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
-    let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
-    let mcu_w = 8 * hmax;
-    let mcu_h = 8 * vmax;
-    let (width, height) = (frame.width as usize, frame.height as usize);
-    let mcus_x = width.div_ceil(mcu_w);
-    let mcus_y = height.div_ceil(mcu_h);
+/// 🎞️ Resumable baseline decoder: [`JpgStepDecoder::new`] parses the marker segments up to `SOS`,
+/// then every [`JpgStepDecoder::step`] decodes at most `unit_budget` MCUs of the entropy-coded
+/// scan (nearest-neighbor chroma upsampling for subsampled components) and, once the scan has
+/// met its `EOI`, converts at most `unit_budget` output rows to RGBA — so a worker can hold one
+/// fixed-cost microstep per call however large the admitted frame is. The bit reader's cursor
+/// (`pos`/`acc`/`nbits`) and the DC predictors persist between steps, so a stepped decode reads
+/// every source byte exactly as often as a one-shot decode and yields the identical raster.
+pub struct JpgStepDecoder {
+    header: Option<Box<JpgHeader>>,
+    planes: Vec<Vec<f64>>,
+    plane_dims: Vec<(usize, usize)>,
+    hmax: usize,
+    vmax: usize,
+    mcus_x: usize,
+    mcus_y: usize,
+    mcu: usize,
+    mcus_since_restart: u32,
+    dc_pred: Vec<i32>,
+    pos: usize,
+    acc: u32,
+    nbits: u32,
+    entropy_done: bool,
+    rgba: Vec<u8>,
+    row: usize,
+}
 
-    let mut planes: Vec<Vec<f64>> = Vec::with_capacity(frame.components.len());
-    let mut plane_dims: Vec<(usize, usize)> = Vec::with_capacity(frame.components.len());
-    for c in frame.components.iter() {
-        let pwc = mcus_x * c.h_sampling.max(1) as usize * 8;
-        let phc = mcus_y * c.v_sampling.max(1) as usize * 8;
-        planes.push(vec![0f64; pwc * phc]);
-        plane_dims.push((pwc, phc));
+impl JpgStepDecoder {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
+        let header = parse_jpg_header(data)?;
+        let frame = &header.frame;
+        let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
+        let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
+        let (width, height) = (frame.width as usize, frame.height as usize);
+        let mcus_x = width.div_ceil(8 * hmax);
+        let mcus_y = height.div_ceil(8 * vmax);
+        let mut planes: Vec<Vec<f64>> = Vec::with_capacity(frame.components.len());
+        let mut plane_dims: Vec<(usize, usize)> = Vec::with_capacity(frame.components.len());
+        for c in frame.components.iter() {
+            let pwc = mcus_x * c.h_sampling.max(1) as usize * 8;
+            let phc = mcus_y * c.v_sampling.max(1) as usize * 8;
+            planes.push(vec![0f64; pwc * phc]);
+            plane_dims.push((pwc, phc));
+        }
+        let dc_pred = vec![0i32; frame.components.len()];
+        let pos = header.scan_start;
+        Ok(Self { header: Some(Box::new(header)), planes, plane_dims, hmax, vmax, mcus_x, mcus_y, mcu: 0, mcus_since_restart: 0, dc_pred, pos, acc: 0, nbits: 0, entropy_done: false, rgba: Vec::new(), row: 0 })
     }
 
-    let mut br = BitReader::new(data, start);
-    let mut dc_pred = vec![0i32; frame.components.len()];
-    let mut mcus_since_restart = 0u32;
-    for my in 0..mcus_y {
-        for mx in 0..mcus_x {
-            if restart_interval > 0 && mcus_since_restart == restart_interval as u32 && (my != 0 || mx != 0) {
-                br.skip_restart_marker()?;
-                for p in dc_pred.iter_mut() {
-                    *p = 0;
+    /// ⏱️ One bounded unit of work: `Ok(None)` while decoding continues, `Ok(Some(snapshot))` once.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn step(&mut self, data: &dyn JpgByteSource, unit_budget: usize) -> Result<Option<JpgSnapshot>, JpgError> {
+        let budget = unit_budget.max(1);
+        let header = self.header.as_deref().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
+        let frame = &header.frame;
+        if !self.entropy_done {
+            let total = self.mcus_x * self.mcus_y;
+            let end = self.mcu.saturating_add(budget).min(total);
+            let restart_interval = header.restart_interval_raw;
+            let mut br = BitReader { data, pos: self.pos, acc: self.acc, nbits: self.nbits };
+            while self.mcu < end {
+                let (my, mx) = (self.mcu / self.mcus_x, self.mcu % self.mcus_x);
+                if restart_interval > 0 && self.mcus_since_restart == restart_interval as u32 && self.mcu != 0 {
+                    br.skip_restart_marker()?;
+                    for p in self.dc_pred.iter_mut() {
+                        *p = 0;
+                    }
+                    self.mcus_since_restart = 0;
                 }
-                mcus_since_restart = 0;
-            }
-            for (ci, c) in frame.components.iter().enumerate() {
-                let (dc_id, ac_id) = scan_tabs[ci];
-                let dc_tab = dc_tables.get(&dc_id).ok_or_else(|| JpgError::Malformed("missing DC huffman table".into()))?;
-                let ac_tab = ac_tables.get(&ac_id).ok_or_else(|| JpgError::Malformed("missing AC huffman table".into()))?;
-                let q = quant.get(&c.quant_table_id).ok_or_else(|| JpgError::Malformed("missing quant table".into()))?;
-                let (pwc, _) = plane_dims[ci];
-                for by in 0..c.v_sampling.max(1) as usize {
-                    for bx in 0..c.h_sampling.max(1) as usize {
-                        let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab)?;
-                        let mut natural = [0f64; 64];
-                        for z in 0..64 {
-                            natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64;
-                        }
-                        let spatial = idct_8x8(&natural);
-                        let ox = (mx * c.h_sampling.max(1) as usize + bx) * 8;
-                        let oy = (my * c.v_sampling.max(1) as usize + by) * 8;
-                        for r in 0..8 {
-                            for cc in 0..8 {
-                                planes[ci][(oy + r) * pwc + (ox + cc)] = spatial[r * 8 + cc] + 128.0;
+                for (ci, c) in frame.components.iter().enumerate() {
+                    let (dc_id, ac_id) = header.scan_tabs[ci];
+                    let dc_tab = header.dc_tables.get(&dc_id).ok_or_else(|| JpgError::Malformed("missing DC huffman table".into()))?;
+                    let ac_tab = header.ac_tables.get(&ac_id).ok_or_else(|| JpgError::Malformed("missing AC huffman table".into()))?;
+                    let q = header.quant.get(&c.quant_table_id).ok_or_else(|| JpgError::Malformed("missing quant table".into()))?;
+                    let (pwc, _) = self.plane_dims[ci];
+                    for by in 0..c.v_sampling.max(1) as usize {
+                        for bx in 0..c.h_sampling.max(1) as usize {
+                            let zz = decode_block(&mut br, &mut self.dc_pred[ci], dc_tab, ac_tab)?;
+                            let mut natural = [0f64; 64];
+                            for z in 0..64 {
+                                natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64;
+                            }
+                            let spatial = idct_8x8(&natural);
+                            let ox = (mx * c.h_sampling.max(1) as usize + bx) * 8;
+                            let oy = (my * c.v_sampling.max(1) as usize + by) * 8;
+                            for r in 0..8 {
+                                for cc in 0..8 {
+                                    self.planes[ci][(oy + r) * pwc + (ox + cc)] = spatial[r * 8 + cc] + 128.0;
+                                }
                             }
                         }
                     }
                 }
+                self.mcus_since_restart += 1;
+                self.mcu += 1;
             }
-            mcus_since_restart += 1;
+            if self.mcu == total {
+                br.expect_end_of_image()?;
+                self.entropy_done = true;
+                self.rgba = vec![0u8; frame.width as usize * frame.height as usize * 4];
+            }
+            (self.pos, self.acc, self.nbits) = (br.pos, br.acc, br.nbits);
+            return Ok(None);
         }
-    }
 
-    let grayscale = frame.components.len() == 1;
-    let y_idx = frame.components.iter().position(|c| c.id == 1).unwrap_or(0);
-    let (cb_idx, cr_idx) = if grayscale { (None, None) } else { (frame.components.iter().position(|c| c.id == 2), frame.components.iter().position(|c| c.id == 3)) };
-    let mut rgba = vec![0u8; width * height * 4];
-    for y in 0..height {
-        for x in 0..width {
-            let yc = frame.components[y_idx];
-            let (ypwc, _) = plane_dims[y_idx];
-            let sy = (y * yc.v_sampling.max(1) as usize) / vmax;
-            let sx = (x * yc.h_sampling.max(1) as usize) / hmax;
-            let yy = planes[y_idx][sy * ypwc + sx];
-            let (r, g, b) = if grayscale {
-                let v = yy.round().clamp(0.0, 255.0) as u8;
-                (v, v, v)
-            } else {
-                let cb_idx = cb_idx.ok_or_else(|| JpgError::Malformed("missing Cb component".into()))?;
-                let cr_idx = cr_idx.ok_or_else(|| JpgError::Malformed("missing Cr component".into()))?;
-                let cbc = frame.components[cb_idx];
-                let crc = frame.components[cr_idx];
-                let (cbpwc, _) = plane_dims[cb_idx];
-                let (crpwc, _) = plane_dims[cr_idx];
-                let cby = (y * cbc.v_sampling.max(1) as usize) / vmax;
-                let cbx = (x * cbc.h_sampling.max(1) as usize) / hmax;
-                let cry = (y * crc.v_sampling.max(1) as usize) / vmax;
-                let crx = (x * crc.h_sampling.max(1) as usize) / hmax;
-                ycbcr_to_rgb(yy, planes[cb_idx][cby * cbpwc + cbx], planes[cr_idx][cry * crpwc + crx])
-            };
-            let idx = (y * width + x) * 4;
-            rgba[idx] = r;
-            rgba[idx + 1] = g;
-            rgba[idx + 2] = b;
-            rgba[idx + 3] = 255;
+        let (width, height) = (frame.width as usize, frame.height as usize);
+        let (hmax, vmax) = (self.hmax, self.vmax);
+        let grayscale = frame.components.len() == 1;
+        let y_idx = frame.components.iter().position(|c| c.id == 1).unwrap_or(0);
+        let (cb_idx, cr_idx) = if grayscale { (None, None) } else { (frame.components.iter().position(|c| c.id == 2), frame.components.iter().position(|c| c.id == 3)) };
+        let end = self.row.saturating_add(budget).min(height);
+        for y in self.row..end {
+            for x in 0..width {
+                let yc = frame.components[y_idx];
+                let (ypwc, _) = self.plane_dims[y_idx];
+                let sy = (y * yc.v_sampling.max(1) as usize) / vmax;
+                let sx = (x * yc.h_sampling.max(1) as usize) / hmax;
+                let yy = self.planes[y_idx][sy * ypwc + sx];
+                let (r, g, b) = if grayscale {
+                    let v = yy.round().clamp(0.0, 255.0) as u8;
+                    (v, v, v)
+                } else {
+                    let cb_idx = cb_idx.ok_or_else(|| JpgError::Malformed("missing Cb component".into()))?;
+                    let cr_idx = cr_idx.ok_or_else(|| JpgError::Malformed("missing Cr component".into()))?;
+                    let cbc = frame.components[cb_idx];
+                    let crc = frame.components[cr_idx];
+                    let (cbpwc, _) = self.plane_dims[cb_idx];
+                    let (crpwc, _) = self.plane_dims[cr_idx];
+                    let cby = (y * cbc.v_sampling.max(1) as usize) / vmax;
+                    let cbx = (x * cbc.h_sampling.max(1) as usize) / hmax;
+                    let cry = (y * crc.v_sampling.max(1) as usize) / vmax;
+                    let crx = (x * crc.h_sampling.max(1) as usize) / hmax;
+                    ycbcr_to_rgb(yy, self.planes[cb_idx][cby * cbpwc + cbx], self.planes[cr_idx][cry * crpwc + crx])
+                };
+                let idx = (y * width + x) * 4;
+                self.rgba[idx] = r;
+                self.rgba[idx + 1] = g;
+                self.rgba[idx + 2] = b;
+                self.rgba[idx + 3] = 255;
+            }
         }
+        self.row = end;
+        if self.row < height {
+            return Ok(None);
+        }
+        let header = *self.header.take().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
+        self.planes = Vec::new();
+        // 🏅️ sof_marker/arithmetic: real data the header parse already computed transiently (the
+        // SOF0 marker byte, the DAC rejection) — persisted so
+        // `subsets::baseline::analyzer::check_baseline_conformance`
+        // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) has real fields to check
+        // instead of an unmodeled gap. `dc_huffman_table_count`/`ac_huffman_table_count` are
+        // DERIVED from `huffman_tables` by the analyzer (ticket
+        // 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION) — one source of truth.
+        Ok(Some(JpgSnapshot {
+            schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
+            width: width as u32,
+            height: height as u32,
+            pixels: std::mem::take(&mut self.rgba),
+            re_encode_quality: None,
+            jfif_version: header.jfif_version,
+            jfif_density_units: header.jfif_density_units,
+            jfif_x_density: header.jfif_x_density,
+            jfif_y_density: header.jfif_y_density,
+            jfif_thumbnail: header.jfif_thumbnail,
+            frame: Some(header.frame),
+            sof_marker: header.sof_marker,
+            arithmetic: false,
+            quant_tables: header.quant_tables,
+            huffman_tables: header.huffman_tables,
+            restart_interval: header.restart_interval,
+            other_segments: header.other_segments,
+        }))
     }
-    Ok(rgba)
 }
 //#endregion Decode
 
