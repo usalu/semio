@@ -109,6 +109,11 @@ fn axis_cursor(axis: DragAxis) -> SemioCursor {
 /// active `CaptureKind` wins outright (dragging/scrolling a thumb never re-derives from whatever's
 /// merely hovered underneath), otherwise it falls back to the hovered node's own `NodeFlags`/
 /// `UiNode` variant.
+///
+/// 🚫️ React puts `disabled:cursor-not-allowed` on every interactive element, and the browser
+/// applies it before any drag/text affordance the same element would otherwise offer — so this
+/// check precedes them all. `UiPresence::state == Disabled` is the wire field React reads as
+/// `presence?.state === "disabled"` (`🗣️Interpreter/🟦️.tsx:1050`).
 pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, capture: Option<(NodeId, CaptureKind)>) -> SemioCursor {
     if let Some((_, kind)) = capture {
         match kind {
@@ -128,10 +133,6 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
     let Some(node) = tree.node(target) else {
         return SemioCursor::Default;
     };
-    // 🚫️ React puts `disabled:cursor-not-allowed` on every interactive element, and the browser
-    // applies it before any drag/text affordance the same element would otherwise offer — so this
-    // check precedes them all. `UiPresence::state == Disabled` is the wire field React reads as
-    // `presence?.state === "disabled"` (`🗣️Interpreter/🟦️.tsx:1050`).
     if node.spec.0.presence().state == crate::wgpu::component::ui::UiState::Disabled {
         return SemioCursor::NotAllowed;
     }

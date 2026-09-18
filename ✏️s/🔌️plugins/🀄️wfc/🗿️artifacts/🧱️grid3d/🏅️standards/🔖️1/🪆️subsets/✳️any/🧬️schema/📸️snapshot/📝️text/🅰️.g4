@@ -1,0 +1,11 @@
+// 🅰️ wfc.grid3d.snapshot — derived from 📖️.grammar.semio; rule names are the grammar's own, kebab folded to camelCase.
+grammar SnapshotGrid3d;
+
+document : header body ;
+header : 'schema' SP 'wfc.grid3d.snapshot' NL ;
+body : payload NL? ;
+payload : OCTET+ ;
+
+SP : ' ' ;
+NL : '\r'? '\n' ;
+OCTET : . ;

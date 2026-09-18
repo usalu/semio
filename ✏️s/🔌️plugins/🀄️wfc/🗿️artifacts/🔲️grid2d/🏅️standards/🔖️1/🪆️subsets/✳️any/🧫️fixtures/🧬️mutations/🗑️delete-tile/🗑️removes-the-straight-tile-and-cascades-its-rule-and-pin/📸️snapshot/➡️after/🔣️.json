@@ -1,0 +1,50 @@
+{
+  "schema": "s.wfc.grid2d",
+  "seed": 7,
+  "width": 3,
+  "height": 2,
+  "cellWidth": 4.0,
+  "cellHeight": 4.0,
+  "periodicX": false,
+  "periodicY": false,
+  "tiles": [
+    {
+      "id": "empty",
+      "label": "Empty",
+      "weight": 2.0,
+      "media": {
+        "kind": "vector",
+        "paths": []
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-bottom-empty-empty",
+      "tileAId": "empty",
+      "tileBId": "empty",
+      "direction": "BOTTOM",
+      "allowed": true
+    },
+    {
+      "id": "rule-right-empty-empty",
+      "tileAId": "empty",
+      "tileBId": "empty",
+      "direction": "RIGHT",
+      "allowed": true
+    }
+  ],
+  "pinned": [
+    {
+      "x": 0,
+      "y": 0,
+      "tileId": "empty"
+    }
+  ],
+  "masked": [
+    {
+      "x": 2,
+      "y": 1
+    }
+  ]
+}

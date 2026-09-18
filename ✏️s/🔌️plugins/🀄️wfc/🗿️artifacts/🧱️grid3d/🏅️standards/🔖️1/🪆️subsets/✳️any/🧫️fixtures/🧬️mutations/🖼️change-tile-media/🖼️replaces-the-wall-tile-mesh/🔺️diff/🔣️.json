@@ -1,0 +1,42 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": null,
+  "height": null,
+  "depth": null,
+  "cellSizesX": null,
+  "cellSizesY": null,
+  "cellSizesZ": null,
+  "periodicX": null,
+  "periodicY": null,
+  "periodicZ": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      2,
+      {
+        "id": "wall",
+        "weight": 3.0,
+        "media": {
+          "kind": "mesh",
+          "mesh": {
+            "positions": [],
+            "indices": [],
+            "color": {
+              "r": 40,
+              "g": 44,
+              "b": 52,
+              "a": 255
+            }
+          }
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

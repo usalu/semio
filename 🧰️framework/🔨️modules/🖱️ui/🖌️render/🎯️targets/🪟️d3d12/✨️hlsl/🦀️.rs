@@ -256,16 +256,32 @@ PSInput world3d_mesh_vertex_main(VSInput input) {
     return out_v;
 }
 
+static const float WORLD3D_RECIPROCAL_PI = 0.31830989;
+static const float WORLD3D_AMBIENT_INTENSITY = 1.15;
+static const float WORLD3D_HEMISPHERE_INTENSITY = 1.35;
+static const float3 WORLD3D_HEMISPHERE_GROUND = float3(0.32313, 0.35153, 0.40724);
+static const float WORLD3D_SELECTED_EMISSIVE = 0.35;
+static const float WORLD3D_HOVERED_EMISSIVE = 0.08;
+
+float3 world3d_irradiance(float3 n) {
+    float hemisphere = 0.5 * dot(n, float3(0.0, 0.0, 1.0)) + 0.5;
+    float3 irradiance = float3(WORLD3D_AMBIENT_INTENSITY, WORLD3D_AMBIENT_INTENSITY, WORLD3D_AMBIENT_INTENSITY);
+    irradiance += lerp(WORLD3D_HEMISPHERE_GROUND, float3(1.0, 1.0, 1.0), hemisphere) * WORLD3D_HEMISPHERE_INTENSITY;
+    irradiance += float3(2.4, 2.4, 2.4) * max(dot(n, normalize(float3(12.0, 18.0, 10.0))), 0.0);
+    irradiance += float3(1.2, 1.2, 1.2) * max(dot(n, normalize(float3(-14.0, -10.0, 6.0))), 0.0);
+    irradiance += float3(0.75, 0.75, 0.75) * max(dot(n, normalize(float3(0.0, 0.0, -16.0))), 0.0);
+    return irradiance;
+}
+
 float4 world3d_mesh_fragment_main(PSInput input) : SV_TARGET {
     float3 n = normalize(input.normal);
-    float diffuse = max(dot(n, normalize(light_dir.xyz)), 0.28);
-    float3 color = input.color.rgb * diffuse;
+    float emissive = 0.0;
     if (input.flags.x > 0.5) {
-        color = lerp(color, float3(0.35, 0.75, 1.0), 0.65);
+        emissive = WORLD3D_SELECTED_EMISSIVE;
+    } else if (input.flags.y > 0.5) {
+        emissive = WORLD3D_HOVERED_EMISSIVE;
     }
-    if (input.flags.y > 0.5) {
-        color = lerp(color, float3(1.0, 0.85, 0.35), 0.55);
-    }
+    float3 color = world3d_irradiance(n) * input.color.rgb * WORLD3D_RECIPROCAL_PI + input.color.rgb * emissive;
     return float4(color, input.color.a);
 }
 "#;

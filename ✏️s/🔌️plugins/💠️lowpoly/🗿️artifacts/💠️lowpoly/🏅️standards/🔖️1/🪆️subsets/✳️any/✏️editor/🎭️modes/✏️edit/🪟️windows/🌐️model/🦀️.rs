@@ -87,7 +87,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ The live chrome measures for this window, collected from the app-level `🛠️options/*` shared by
 /// both windows (see the master ticket's TEMPLATE.md §12.2 pattern).
 pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
-    lowpoly_window_measures(config, labels)
+    lowpoly_window_measures(config, labels, &crate::editor::lowpoly::options::select::SelectState::default())
 }
 //#endregion 🔖️Definition
 
@@ -134,6 +134,35 @@ fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, act
     ];
     if let Some(pivot) = pivot {
         entries.push(("gumballTarget".to_string(), dsl::ToValue::to_value(&pivot)));
+    }
+    // 🧲️ The composable gumball: every handle group the window toggles left on shows at once
+    // (`UnifiedGumball` reads `gumballConfig` over the single-mode `transformMode` fallback).
+    let handles = crate::editor::lowpoly::options::gumball::GumballHandles::from_config(config);
+    entries.push((
+        "gumballConfig".to_string(),
+        dsl::DslValue::object([
+            ("moveAxes".to_string(), dsl::DslValue::Bool(handles.r#move)),
+            ("movePlanes".to_string(), dsl::DslValue::Bool(handles.r#move)),
+            ("rotate".to_string(), dsl::DslValue::Bool(handles.rotate)),
+            ("scaleAxes".to_string(), dsl::DslValue::Bool(handles.scale)),
+            ("scalePlanes".to_string(), dsl::DslValue::Bool(handles.scale)),
+            ("scaleUniform".to_string(), dsl::DslValue::Bool(handles.scale)),
+        ]),
+    ));
+    // 🖱️ The mesh domain's pointer hover, echoed for the host's overlays: the hovered instance and,
+    // when the pointer is over a component, `{objectId, mode, id}` for its vertex/edge/face highlight.
+    if let Some(hovered) = &selection.hovered_object_id {
+        entries.push(("hoveredId".to_string(), dsl::DslValue::String(hovered.clone())));
+    }
+    if let Some(component) = &selection.hovered_component {
+        entries.push((
+            "hoveredComponent".to_string(),
+            dsl::DslValue::object([
+                ("objectId".to_string(), dsl::DslValue::String(component.object_id.clone())),
+                ("mode".to_string(), dsl::DslValue::String(component.mode.clone())),
+                ("id".to_string(), dsl::DslValue::Number(dsl::Number::UInt(u64::from(component.id)))),
+            ]),
+        ));
     }
     dsl::json::to_json_string(&dsl::DslValue::Object(entries))
 }

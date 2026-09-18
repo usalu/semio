@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.s.wfc.wfc3d.diff;
+
+import "📸️snapshot/🛰️.proto";
+
+message Slot3dUpsert {
+  uint64 index = 1;
+  semio.s.wfc.wfc3d.snapshot.Slot3d value = 2;
+}
+
+message SlotEdgeUpsert {
+  uint64 index = 1;
+  semio.s.wfc.wfc3d.snapshot.SlotEdge value = 2;
+}
+
+message TileUpsert {
+  uint64 index = 1;
+  semio.s.wfc.wfc3d.snapshot.Tile value = 2;
+}
+
+message GraphRuleUpsert {
+  uint64 index = 1;
+  semio.s.wfc.wfc3d.snapshot.GraphRule value = 2;
+}
+
+message Wfc3dDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  repeated string slots_removed = 3;
+  repeated Slot3dUpsert slots_upserted = 4;
+  repeated string edges_removed = 5;
+  repeated SlotEdgeUpsert edges_upserted = 6;
+  repeated string tiles_removed = 7;
+  repeated TileUpsert tiles_upserted = 8;
+  repeated string rules_removed = 9;
+  repeated GraphRuleUpsert rules_upserted = 10;
+}

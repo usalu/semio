@@ -1,0 +1,84 @@
+# 🧬️ s.wfc.grid2d mutation facet — one payload type per `🧬️mutations/<slug>/` triad leaf, in the
+# declaration order `KINDS` states. The dispatch union is externally tagged by variant name.
+
+type ChangeSeed {
+  seed: Int!
+}
+
+type ResizeGrid {
+  width: Int!
+  height: Int!
+}
+
+type ChangeCellSize {
+  cellWidth: Float!
+  cellHeight: Float!
+}
+
+type ChangePeriodicity {
+  periodicX: Boolean!
+  periodicY: Boolean!
+}
+
+type CreateTile {
+  tile: WfcTile2d!
+}
+
+type DeleteTile {
+  id: String!
+}
+
+type ChangeTileWeight {
+  id: String!
+  weight: Float!
+}
+
+type ChangeTileMedia {
+  id: String!
+  media: WfcTileMedia2d!
+}
+
+type CreateRule {
+  rule: WfcAdjacencyRule2d!
+}
+
+type DeleteRule {
+  id: String!
+}
+
+type PinCell {
+  x: Int!
+  y: Int!
+  tileId: String!
+}
+
+type UnpinCell {
+  x: Int!
+  y: Int!
+}
+
+type MaskCell {
+  x: Int!
+  y: Int!
+}
+
+type UnmaskCell {
+  x: Int!
+  y: Int!
+}
+
+union Grid2dMutation =
+    ChangeSeed
+  | ResizeGrid
+  | ChangeCellSize
+  | ChangePeriodicity
+  | CreateTile
+  | DeleteTile
+  | ChangeTileWeight
+  | ChangeTileMedia
+  | CreateRule
+  | DeleteRule
+  | PinCell
+  | UnpinCell
+  | MaskCell
+  | UnmaskCell

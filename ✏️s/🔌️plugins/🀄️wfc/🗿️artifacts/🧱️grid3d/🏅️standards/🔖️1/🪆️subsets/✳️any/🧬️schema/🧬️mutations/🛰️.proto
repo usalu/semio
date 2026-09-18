@@ -1,0 +1,93 @@
+// 🧬 s.wfc.grid3d — Protobuf mirror of the normative JSON Schema. Field numbers are stable and
+// follow the declaration order of the Rust records the schema is transcribed from.
+syntax = "proto3";
+
+package semio.s.wfc.grid3d.v1;
+
+import "snapshot.proto";
+
+message ChangeSeed {
+  uint64 seed = 1;
+}
+
+message ResizeGrid {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 depth = 3;
+}
+
+message ChangeCellSizes {
+  Grid3dAxis axis = 1;
+  repeated double sizes = 2;
+}
+
+message ChangePeriodicity {
+  bool periodic_x = 1;
+  bool periodic_y = 2;
+  bool periodic_z = 3;
+}
+
+message CreateTile {
+  Grid3dTile tile = 1;
+}
+
+message DeleteTile {
+  string id = 1;
+}
+
+message ChangeTileWeight {
+  string tile_id = 1;
+  double weight = 2;
+}
+
+message ChangeTileMedia {
+  string tile_id = 1;
+  Grid3dTileMedia media = 2;
+}
+
+message CreateRule {
+  Grid3dRule rule = 1;
+}
+
+message DeleteRule {
+  string id = 1;
+}
+
+message PinCell {
+  Grid3dPinnedCell pinned = 1;
+}
+
+message UnpinCell {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 z = 3;
+}
+
+message MaskCell {
+  Grid3dCell cell = 1;
+}
+
+message UnmaskCell {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 z = 3;
+}
+
+message Grid3dMutation {
+  oneof kind {
+    ChangeSeed change_seed = 1;
+    ResizeGrid resize_grid = 2;
+    ChangeCellSizes change_cell_sizes = 3;
+    ChangePeriodicity change_periodicity = 4;
+    CreateTile create_tile = 5;
+    DeleteTile delete_tile = 6;
+    ChangeTileWeight change_tile_weight = 7;
+    ChangeTileMedia change_tile_media = 8;
+    CreateRule create_rule = 9;
+    DeleteRule delete_rule = 10;
+    PinCell pin_cell = 11;
+    UnpinCell unpin_cell = 12;
+    MaskCell mask_cell = 13;
+    UnmaskCell unmask_cell = 14;
+  }
+}

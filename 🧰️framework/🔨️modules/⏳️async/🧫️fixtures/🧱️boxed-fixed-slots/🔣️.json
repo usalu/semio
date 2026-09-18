@@ -12,8 +12,8 @@
       "capacityConstant": "SCENE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "Option<AdmittedSurfaceEntry<World3dState>>",
-      "elementSizeBytes": 22512,
-      "ownerSizeBytes": 48128
+      "elementSizeBytes": 22608,
+      "ownerSizeBytes": 48320
     },
     {
       "guard": "renderer::engine_canvas",

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/diff.json",
+  "title": "Grid2dDiff",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "seed": { "type": "integer", "x-semio-state": "artifact" },
+    "width": { "type": "integer", "x-semio-state": "artifact" },
+    "height": { "type": "integer", "x-semio-state": "artifact" },
+    "cellWidth": { "type": "number", "x-semio-state": "artifact" },
+    "cellHeight": { "type": "number", "x-semio-state": "artifact" },
+    "periodicX": { "type": "boolean", "x-semio-state": "artifact" },
+    "periodicY": { "type": "boolean", "x-semio-state": "artifact" },
+    "tilesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "rulesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "pinnedRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "maskedRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" }
+  }
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package semio.s.wfc.wfc2d;
+
+message Wfc2dArtifact {
+  Wfc2dSnapshot snapshot = 1;
+}

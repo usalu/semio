@@ -1,0 +1,18 @@
+{
+  "schema": null,
+  "seed": 99,
+  "width": null,
+  "height": null,
+  "cellWidth": null,
+  "cellHeight": null,
+  "periodicX": null,
+  "periodicY": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

@@ -1762,6 +1762,10 @@ export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, inte
     selectionMode: selection.selectionMode ?? selection.granularity ?? null,
     componentIds: selection.componentIds ?? [],
     targets: selection.targets ?? null,
+    // 🖱️ The guest-echoed component hover and the composable gumball's handle groups, so an outside
+    // reader can tell "the pointer is over face 4" and "rotate handles are off" apart from silence.
+    hoveredComponent: selection.hoveredComponent ?? null,
+    gumballConfig: selection.gumballConfig ?? null,
   };
 }
 
@@ -3225,6 +3229,24 @@ function WorldInstancesLayer({
   readonly environment?: WorldEnvironmentRecord | null;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
+  // 🖱️ The component (vertex/edge/face) under the pointer, painted from THIS pane's own raycast the
+  // moment the pointer reaches it. The guest echoes the same hover back in its selection JSON
+  // (`hoveredComponent`) a few turns later; until then — and for a guest that never echoes it — the
+  // local hit is what highlights. Cleared on pointer-out and on every object-level hover, so a stale
+  // face highlight never outlives the pointer leaving the mesh (lowpoly, 2026-09-18).
+  const [localHoveredComponent, setLocalHoveredComponent] = useState<WorldHoverComponent | null>(null);
+  const onComponentHoverPainted = useCallback(
+    (args: { objectId: string; mode: string; id: number } | null) => {
+      setLocalHoveredComponent((prior) => {
+        const next = args && args.mode !== "mesh" && args.mode !== "object" ? args : null;
+        if (prior === next || (prior && next && prior.objectId === next.objectId && prior.mode === next.mode && prior.id === next.id)) return prior;
+        return next;
+      });
+      onComponentHover(args);
+    },
+    [onComponentHover],
+  );
+  const hoveredComponent = localHoveredComponent ?? selection.hoveredComponent;
   // 🧊️ Per-mesh-id visuals, keyed on the mesh RECORD's identity (`advanceWorldMeshResidency` keeps
   // that identity across a refresh that did not touch the mesh), so an N-mesh surface with one moved
   // mesh allocates one `BufferGeometry` instead of N — and every retired one is disposed.
@@ -3622,7 +3644,7 @@ function WorldInstancesLayer({
               selectionMode={selectionMode}
               selectedComponentIds={selectedComponentIds}
               previewComponentIds={previewComponentIds}
-              hoveredComponent={selection.hoveredComponent}
+              hoveredComponent={hoveredComponent}
               showEdges={selection.showEdges}
               pickEnabled={pickEnabled}
               onPaintAt={onPaintAt}
@@ -3631,7 +3653,7 @@ function WorldInstancesLayer({
               onInstancePointerDown={onInstancePointerDown}
               onInstancePointerMove={handleLocalInstancePointerMove}
               onWorldPick={onWorldPick}
-              onComponentHover={onComponentHover}
+              onComponentHover={onComponentHoverPainted}
               mergeMode={mergeMode}
               faceDragActive={selection.faceDragActive === true}
               onFaceDragStart={onFaceDragStart}

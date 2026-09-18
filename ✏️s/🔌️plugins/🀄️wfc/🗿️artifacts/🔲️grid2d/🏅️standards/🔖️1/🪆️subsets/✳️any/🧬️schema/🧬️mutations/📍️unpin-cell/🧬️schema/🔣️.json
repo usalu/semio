@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/unpin-cell/schema.json",
+  "title": "UnpinCell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "x",
+    "y"
+  ],
+  "properties": {
+    "x": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "y": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

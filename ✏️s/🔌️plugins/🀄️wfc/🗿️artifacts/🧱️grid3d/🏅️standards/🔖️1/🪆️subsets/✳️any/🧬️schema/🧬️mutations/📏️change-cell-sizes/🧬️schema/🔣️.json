@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/mutation/change-cell-sizes/schema.json",
+  "title": "ChangeCellSizes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "axis",
+    "sizes"
+  ],
+  "properties": {
+    "axis": {
+      "type": "string",
+      "enum": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "sizes": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    }
+  }
+}

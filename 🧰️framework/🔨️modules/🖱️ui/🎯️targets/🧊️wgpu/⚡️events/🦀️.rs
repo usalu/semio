@@ -120,11 +120,11 @@ pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<No
     hit_test_node(tree, root, 0.0, 0.0, x, y)
 }
 
+/// 🪟️ An OPEN floating overlay is tested at the placement it was painted at, never at its in-flow
+/// position — one origin rule shared with the retained paint/hit walk (`UiTree::overlay_origins`).
 fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
     let node = tree.node(id)?;
     let layout = tree.accepted_layout(id)?;
-    // 🪟️ An OPEN floating overlay is tested at the placement it was painted at, never at its in-flow
-    // position — one origin rule shared with the retained paint/hit walk (`UiTree::overlay_origins`).
     let (origin_x, origin_y) = tree.overlay_walk_origin(id).unwrap_or((origin_x, origin_y));
     let abs_x = origin_x + layout.x;
     let abs_y = origin_y + layout.y;
@@ -1604,6 +1604,12 @@ impl EventRouter {
 
     /// 🚦️ Resolves the event's target (capture target if captured, else `hit_test`), updates
     /// interaction flags, and returns any `UiCommand`s the event produced.
+    ///
+    /// 🔽️ A focused `Select` answers navigation/typeahead/commit keys before the generic
+    /// control routing below, exactly as React's `SelectTrigger`/`SelectContent` handlers
+    /// claim them ahead of the browser's own default (`🧱️elements/🔽️Select/🟦️.tsx`).
+    /// `Escape` stays with the overlay stack and `Tab` still moves focus after the popup
+    /// this closes, so neither of those two is ever reported as consumed.
     pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
@@ -1750,11 +1756,6 @@ impl EventRouter {
             }
             UiEvent::KeyDown { key, modifiers } => {
                 self.focus_visible = true;
-                // 🔽️ A focused `Select` answers navigation/typeahead/commit keys before the generic
-                // control routing below, exactly as React's `SelectTrigger`/`SelectContent` handlers
-                // claim them ahead of the browser's own default (`🧱️elements/🔽️Select/🟦️.tsx`).
-                // `Escape` stays with the overlay stack and `Tab` still moves focus after the popup
-                // this closes, so neither of those two is ever reported as consumed.
                 let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
                 if key == "Escape" {
                     commands.extend(self.close_topmost_overlay(tree));
@@ -1839,6 +1840,11 @@ impl EventRouter {
     /// `SelectContent` `onKeyDown` handlers, whose decision table lives with the element
     /// (`select::select_key`). `Tab` closes but reports `false`, so the same keystroke still moves
     /// focus the way it does in the DOM.
+    ///
+    /// ↹️ `finish_close` drops focus that sat inside the closed overlay's subtree, and a
+    /// `Select` IS its own popup root — so put focus back on the trigger before the `Tab`
+    /// handler runs, or the tab move would restart from the top of the document instead
+    /// of stepping off this control, which is what React's trigger-retained focus does.
     fn route_select_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers, out: &mut Vec<UiCommand>) -> bool {
         let Some(id) = self.focus.focused else { return false };
         let Some(node) = tree.node(id) else { return false };
@@ -1882,10 +1888,6 @@ impl EventRouter {
             select::SelectKey::Close => {
                 self.select_typeahead = None;
                 out.extend(self.close_overlay(tree, id));
-                // ↹️ `finish_close` drops focus that sat inside the closed overlay's subtree, and a
-                // `Select` IS its own popup root — so put focus back on the trigger before the `Tab`
-                // handler runs, or the tab move would restart from the top of the document instead
-                // of stepping off this control, which is what React's trigger-retained focus does.
                 if self.focus.focused.is_none() {
                     if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), true) {
                         self.push_app_command(tree, blurred, fired, out);

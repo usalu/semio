@@ -128,6 +128,8 @@ fn is_allowlisted(relative: &str, line: &str, item: &str) -> bool {
     ALLOWLIST.iter().any(|(path, marker, _)| relative.ends_with(path) && (line.contains(marker) || item.starts_with(marker)))
 }
 
+/// 🧪️ Test case directories build expected paints by hand on purpose — that is the oracle,
+/// not production paint.
 #[test]
 fn no_wgpu_target_paints_a_hand_written_colour_literal() {
     let root = repo_root();
@@ -143,8 +145,6 @@ fn no_wgpu_target_paints_a_hand_written_colour_literal() {
             if !relative.contains("🧊️wgpu") {
                 continue;
             }
-            // 🧪️ Test case directories build expected paints by hand on purpose — that is the oracle,
-            // not production paint.
             if relative.contains("🧪️tests") {
                 continue;
             }

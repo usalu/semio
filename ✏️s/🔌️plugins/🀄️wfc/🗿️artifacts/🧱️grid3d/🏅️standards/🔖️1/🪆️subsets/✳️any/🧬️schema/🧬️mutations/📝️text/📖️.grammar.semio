@@ -1,0 +1,8 @@
+dialect grammar
+grammar wfc.grid3d.mutations
+extension wfcgrid3d
+start line
+
+line = keyword [SP arguments]
+keyword = "change-seed" / "resize-grid" / "change-cell-sizes" / "change-periodicity" / "create-tile" / "delete-tile" / "change-tile-weight" / "change-tile-media" / "create-rule" / "delete-rule" / "pin-cell" / "unpin-cell" / "mask-cell" / "unmask-cell"
+arguments = OCTET+

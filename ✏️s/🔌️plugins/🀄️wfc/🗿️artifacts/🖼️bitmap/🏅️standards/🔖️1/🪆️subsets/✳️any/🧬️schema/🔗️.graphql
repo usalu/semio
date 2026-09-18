@@ -1,0 +1,47 @@
+# 🧬️ Bitmap artifact schema — the persisted overlapping-model problem.
+
+type BitmapArtifact {
+  snapshot: BitmapSnapshot! @state(class: ARTIFACT)
+}
+
+type BitmapColor {
+  r: Int!
+  g: Int!
+  b: Int!
+  a: Int!
+}
+
+type BitmapInput {
+  width: Int!
+  height: Int!
+  palette: [BitmapColor!]!
+  pixels: String!
+}
+
+type BitmapOutputSpec {
+  width: Int!
+  height: Int!
+  periodic: Boolean!
+}
+
+type BitmapOverlappingModel {
+  patternSize: Int!
+  symmetry: Int!
+  periodicInput: Boolean!
+  ground: Int
+}
+
+type BitmapPinnedPixel {
+  x: Int!
+  y: Int!
+  color: Int!
+}
+
+type BitmapSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  seed: Float! @state(class: ARTIFACT)
+  input: BitmapInput! @state(class: ARTIFACT)
+  output: BitmapOutputSpec! @state(class: ARTIFACT)
+  model: BitmapOverlappingModel! @state(class: ARTIFACT)
+  pinned: [BitmapPinnedPixel!]! @state(class: ARTIFACT)
+}

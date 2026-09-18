@@ -1,0 +1,89 @@
+syntax = "proto3";
+package semio.s.wfc.grid2d;
+
+import "snapshot.proto";
+
+message ChangeSeed {
+  uint64 seed = 1;
+}
+
+message ResizeGrid {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
+message ChangeCellSize {
+  double cell_width = 1;
+  double cell_height = 2;
+}
+
+message ChangePeriodicity {
+  bool periodic_x = 1;
+  bool periodic_y = 2;
+}
+
+message CreateTile {
+  WfcTile2d tile = 1;
+}
+
+message DeleteTile {
+  string id = 1;
+}
+
+message ChangeTileWeight {
+  string id = 1;
+  double weight = 2;
+}
+
+message ChangeTileMedia {
+  string id = 1;
+  WfcTileMedia2d media = 2;
+}
+
+message CreateRule {
+  WfcAdjacencyRule2d rule = 1;
+}
+
+message DeleteRule {
+  string id = 1;
+}
+
+message PinCell {
+  uint32 x = 1;
+  uint32 y = 2;
+  string tile_id = 3;
+}
+
+message UnpinCell {
+  uint32 x = 1;
+  uint32 y = 2;
+}
+
+message MaskCell {
+  uint32 x = 1;
+  uint32 y = 2;
+}
+
+message UnmaskCell {
+  uint32 x = 1;
+  uint32 y = 2;
+}
+
+message Grid2dMutation {
+  oneof kind {
+    ChangeSeed change_seed = 1;
+    ResizeGrid resize_grid = 2;
+    ChangeCellSize change_cell_size = 3;
+    ChangePeriodicity change_periodicity = 4;
+    CreateTile create_tile = 5;
+    DeleteTile delete_tile = 6;
+    ChangeTileWeight change_tile_weight = 7;
+    ChangeTileMedia change_tile_media = 8;
+    CreateRule create_rule = 9;
+    DeleteRule delete_rule = 10;
+    PinCell pin_cell = 11;
+    UnpinCell unpin_cell = 12;
+    MaskCell mask_cell = 13;
+    UnmaskCell unmask_cell = 14;
+  }
+}

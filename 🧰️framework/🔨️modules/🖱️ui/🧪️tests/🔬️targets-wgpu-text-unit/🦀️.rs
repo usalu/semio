@@ -217,3 +217,75 @@ async fn a_semibold_run_strikes_twice_at_the_regular_faces_own_advances() {
     assert!(widths.iter().any(|x| (*x - (10.0 + super::faux_bold_offset(size))).abs() < 0.001), "the second strike is offset by exactly the faux-bold offset");
 }
 //#endregion 🅰️WeightTests
+
+//#region 🔣️SymbolFaceTests
+
+/// 🔣️ The chord/arrow glyphs the shell writes, exactly as `format_keybinding_shortcut` and React's
+/// `formatKeybindingShortcut` spell them (`🐚️Shell/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json`).
+const SHORTCUT_SYMBOLS: [char; 12] = ['\u{2318}', '\u{2325}', '\u{21E7}', '\u{2303}', '\u{238B}', '\u{21B5}', '\u{232B}', '\u{2326}', '\u{2190}', '\u{2192}', '\u{2191}', '\u{2193}'];
+
+/// 🔣️ **Every glyph of the shortcut table rasterises to a non-empty bitmap** — the law the boot
+/// screenshot broke, where `Editor ⌘️⌥️E` painted four `.notdef` boxes because no shipped face carries
+/// U+2318/U+2325 and the atlas scans no system fonts.
+#[semio_framework_async_macros::async_test]
+async fn every_shortcut_symbol_rasterises_to_real_ink() {
+    for atlas_name in ["shaped", "builtin"] {
+        let mut atlas = if atlas_name == "shaped" { FontAtlas::shaped_default() } else { FontAtlas::builtin() };
+        for size in [11.2_f32, 12.8, 16.0] {
+            for symbol in SHORTCUT_SYMBOLS {
+                let (x, y, w, h, advance, is_color) = {
+                    let glyph = atlas.ensure_glyph(symbol, size);
+                    (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.is_color)
+                };
+                assert!(w > 0 && h > 0, "{atlas_name} atlas left U+{:04X} without a bitmap at {size} px", symbol as u32);
+                assert!(advance > 0.0, "{atlas_name} atlas left U+{:04X} without an advance", symbol as u32);
+                let page_width = atlas.width;
+                let inked = (0..h).any(|row| (0..w).any(|col| atlas.pixels[((y + row) * page_width + x + col) as usize] != 0));
+                assert!(inked, "{atlas_name} atlas rasterised U+{:04X} as a blank box at {size} px", symbol as u32);
+                assert!(!is_color, "a chord symbol is an alpha glyph, never a colour one");
+            }
+        }
+    }
+}
+
+/// 🫥 The variation selector this repo spells every symbol with is zero-width, zero-ink — it used to
+/// resolve to Anta's own `.notdef`, which is why `⌘️⌥️E` painted FOUR boxes for two symbols.
+#[semio_framework_async_macros::async_test]
+async fn a_default_ignorable_codepoint_paints_nothing_and_moves_no_pen() {
+    let mut atlas = FontAtlas::shaped_default();
+    for ignorable in ['\u{fe0f}', '\u{fe0e}', '\u{200d}', '\u{200b}', '\u{feff}', '\u{00ad}'] {
+        let glyph = atlas.ensure_glyph(ignorable, 11.2);
+        assert_eq!((glyph.width, glyph.height), (0, 0), "U+{:04X} must occupy no atlas texels", ignorable as u32);
+        assert_eq!(glyph.advance, 0.0, "U+{:04X} must move the pen by nothing", ignorable as u32);
+    }
+    let (with_selector, _) = atlas.measure_text("\u{2318}\u{fe0f}\u{2325}\u{fe0f}E", 11.2);
+    let (without_selector, _) = atlas.measure_text("\u{2318}\u{2325}E", 11.2);
+    assert!((with_selector - without_selector).abs() < 1e-3, "the repo's ⌘️⌥️E spelling must measure exactly its ⌘⌥E ink");
+}
+
+/// 📐️ A symbol sits on the same baseline and inside the same line box as the shaped face beside it,
+/// and it scales with the raster scale like every other glyph.
+#[semio_framework_async_macros::async_test]
+async fn a_symbol_glyph_shares_the_faces_baseline_and_honours_the_raster_scale() {
+    let mut atlas = FontAtlas::shaped_default();
+    let size = 16.0_f32;
+    let letter = {
+        let glyph = atlas.ensure_glyph('E', size);
+        (glyph.logical_height() + glyph.bearing_y, glyph.bearing_y)
+    };
+    let symbol = {
+        let glyph = atlas.ensure_glyph('\u{2318}', size);
+        (glyph.logical_height() + glyph.bearing_y, glyph.bearing_y)
+    };
+    assert!(symbol.0 > 0.0 && symbol.0 <= super::line_height(size), "a symbol's cap must stay inside React's own line box");
+    assert!(symbol.1 > -size * 0.3, "a symbol must not hang further below the baseline than a descender would");
+    assert!((symbol.0 - letter.0).abs() < size * 0.5, "a symbol's cap height must sit within half an em of the face's own");
+    let one_x = atlas.ensure_glyph('\u{2192}', size).advance;
+    atlas.set_raster_scale(2.0);
+    let glyph = atlas.ensure_glyph('\u{2192}', size);
+    assert_eq!(glyph.raster_scale, 2.0);
+    assert!((glyph.advance - one_x).abs() < 1.0, "the LOGICAL advance must survive a density change");
+    assert!(glyph.width as f32 > one_x, "the ATLAS extent must grow with the density");
+}
+
+//#endregion 🔣️SymbolFaceTests

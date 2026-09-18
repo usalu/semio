@@ -460,6 +460,14 @@ impl MountedLayoutJob {
         LayoutJobStep::Yield { stage: self.stage, nodes: progress.0, glyphs: progress.1 }
     }
 
+    /// 🧩️ The panel content-projection ESCAPE HATCH. An `ExternalSlot` is the one node whose
+    /// pixels this engine does not author: its host paints inside the solved rect. It used to
+    /// fall into `Leaf`, which measures from arena children — a slot has none, so the band
+    /// collapsed to nothing and any host-provided content (React hosts an arbitrary subtree
+    /// here through `Tree`'s `emptyState`: an agent chat transcript, a marketplace list) had no
+    /// box at all. The host declares its band in the slot's own `params_json`
+    /// (`{"hostContentHeight": <px>}`), so the reservation costs one node and no measurement,
+    /// and every other panel's node credit is untouched.
     fn admit_node_one(&mut self, tree: &UiTree) -> (usize, usize) {
         let Some((id, parent)) = self.pending_node.take() else {
             self.admission = AdmissionPhase::Unwind;
@@ -480,14 +488,6 @@ impl MountedLayoutJob {
             UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
             UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
             UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Button(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height },
-            // 🧩️ The panel content-projection ESCAPE HATCH. An `ExternalSlot` is the one node whose
-            // pixels this engine does not author: its host paints inside the solved rect. It used to
-            // fall into `Leaf`, which measures from arena children — a slot has none, so the band
-            // collapsed to nothing and any host-provided content (React hosts an arbitrary subtree
-            // here through `Tree`'s `emptyState`: an agent chat transcript, a marketplace list) had no
-            // box at all. The host declares its band in the slot's own `params_json`
-            // (`{"hostContentHeight": <px>}`), so the reservation costs one node and no measurement,
-            // and every other panel's node credit is untouched.
             UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
             _ => LayoutNodeKind::Leaf,
         };

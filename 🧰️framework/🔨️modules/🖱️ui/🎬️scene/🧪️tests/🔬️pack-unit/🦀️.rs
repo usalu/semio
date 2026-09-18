@@ -108,7 +108,7 @@ fn viewport_projection_pack_outside_control_fov_matches_native_projection_math()
     let mut camera = crate::math::Camera3d::default();
     let Viewport3dProjectionMode::ThreePoint { fov } = decoded.mode else { panic!("unexpected projection mode") };
     camera.fov_y = (fov as f32).to_radians();
-    let matrix = camera.view_proj(16.0 / 9.0);
+    let matrix = camera.view_proj(1600.0, 900.0);
     assert!(matrix.cols.into_iter().flatten().all(f32::is_finite));
     eprintln!("[DEBUG] Shared viewport projection Pack preserved FOV 130 and native projection math produced a finite matrix");
 }

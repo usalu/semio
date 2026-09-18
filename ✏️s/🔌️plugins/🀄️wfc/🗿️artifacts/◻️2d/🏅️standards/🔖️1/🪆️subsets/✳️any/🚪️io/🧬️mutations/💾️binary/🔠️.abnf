@@ -1,0 +1,6 @@
+; 🔠️ wfc2d.mutations record framing, one record per document.
+wfc2d-mutations-record = wfc2d-mutations-magic wfc2d-mutations-header wfc2d-mutations-payload wfc2d-mutations-footer
+wfc2d-mutations-magic = %x0A %x0D %x34 %x7D %x3F %xF8 %x53 %x89
+wfc2d-mutations-header = 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET
+wfc2d-mutations-payload = *OCTET
+wfc2d-mutations-footer = 4OCTET

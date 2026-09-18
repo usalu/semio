@@ -1,0 +1,100 @@
+"""🧬️ `ChangeSeed` payload."""
+type Wfc2dChangeSeed {
+  seed: Int!
+}
+
+"""🧬️ `CreateSlot` payload."""
+type Wfc2dCreateSlot {
+  slot: Wfc2dSlot!
+}
+
+"""🧬️ `DeleteSlot` payload."""
+type Wfc2dDeleteSlot {
+  id: String!
+}
+
+"""🧬️ `MoveSlot` payload."""
+type Wfc2dMoveSlot {
+  id: String!
+  x: Float!
+  y: Float!
+}
+
+"""🧬️ `ResizeSlot` payload."""
+type Wfc2dResizeSlot {
+  id: String!
+  width: Float!
+  height: Float!
+}
+
+"""🧬️ `ConnectSlots` payload."""
+type Wfc2dConnectSlots {
+  edge: Wfc2dEdge!
+}
+
+"""🧬️ `DisconnectSlots` payload."""
+type Wfc2dDisconnectSlots {
+  id: String!
+}
+
+"""🧬️ `PinSlot` payload."""
+type Wfc2dPinSlot {
+  id: String!
+  tileId: String!
+}
+
+"""🧬️ `UnpinSlot` payload."""
+type Wfc2dUnpinSlot {
+  id: String!
+}
+
+"""🧬️ `CreateTile` payload."""
+type Wfc2dCreateTile {
+  tile: Wfc2dTile!
+}
+
+"""🧬️ `DeleteTile` payload."""
+type Wfc2dDeleteTile {
+  id: String!
+}
+
+"""🧬️ `ChangeTileWeight` payload."""
+type Wfc2dChangeTileWeight {
+  tileId: String!
+  weight: Float!
+}
+
+"""🧬️ `ChangeTileMedia` payload."""
+type Wfc2dChangeTileMedia {
+  tileId: String!
+  media: Wfc2dMedia!
+}
+
+"""🧬️ `CreateRule` payload."""
+type Wfc2dCreateRule {
+  rule: Wfc2dRule!
+}
+
+"""🧬️ `DeleteRule` payload."""
+type Wfc2dDeleteRule {
+  id: String!
+}
+
+"""🧬️ The mutation union — exactly one member is set."""
+type Wfc2dMutation {
+  changeSeed: Wfc2dChangeSeed
+  createSlot: Wfc2dCreateSlot
+  deleteSlot: Wfc2dDeleteSlot
+  moveSlot: Wfc2dMoveSlot
+  resizeSlot: Wfc2dResizeSlot
+  connectSlots: Wfc2dConnectSlots
+  disconnectSlots: Wfc2dDisconnectSlots
+  pinSlot: Wfc2dPinSlot
+  unpinSlot: Wfc2dUnpinSlot
+  createTile: Wfc2dCreateTile
+  deleteTile: Wfc2dDeleteTile
+  changeTileWeight: Wfc2dChangeTileWeight
+  changeTileMedia: Wfc2dChangeTileMedia
+  createRule: Wfc2dCreateRule
+  deleteRule: Wfc2dDeleteRule
+}

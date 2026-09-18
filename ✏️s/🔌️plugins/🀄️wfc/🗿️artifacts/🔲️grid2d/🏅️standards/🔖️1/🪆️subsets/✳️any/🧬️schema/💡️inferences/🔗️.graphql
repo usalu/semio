@@ -1,0 +1,19 @@
+# 💡️ s.wfc.grid2d solve inference — the derived answer over the persisted problem.
+
+type Grid2dAssignment {
+  x: Int!
+  y: Int!
+  tileId: String!
+}
+
+type Grid2dCellEntropy {
+  x: Int!
+  y: Int!
+  value: Float!
+}
+
+type Grid2dInferenceCommit {
+  assignments: [Grid2dAssignment!]!
+  contradiction: Boolean!
+  entropy: [Grid2dCellEntropy!]!
+}

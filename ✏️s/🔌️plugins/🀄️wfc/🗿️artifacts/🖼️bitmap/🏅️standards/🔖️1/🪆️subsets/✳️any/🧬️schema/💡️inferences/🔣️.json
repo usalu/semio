@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/inference.json",
+  "title": "BitmapInferenceCommit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pixels", "contradiction", "entropy"],
+  "properties": {
+    "pixels": { "type": "string", "format": "base64" },
+    "contradiction": { "type": "boolean" },
+    "entropy": { "type": "array", "items": { "type": "number" } }
+  }
+}

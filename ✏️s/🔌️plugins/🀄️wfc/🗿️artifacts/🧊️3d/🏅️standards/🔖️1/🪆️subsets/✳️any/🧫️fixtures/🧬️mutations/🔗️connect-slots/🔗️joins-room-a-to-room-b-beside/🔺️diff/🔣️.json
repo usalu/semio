@@ -1,0 +1,1 @@
+{"schema":null,"seed":null,"slotsRemoved":[],"slotsUpserted":[],"edgesRemoved":[],"edgesUpserted":[[0,{"id":"edge-a-b","fromSlotId":"room-a","toSlotId":"room-b","relation":"beside"}]],"tilesRemoved":[],"tilesUpserted":[],"rulesRemoved":[],"rulesUpserted":[]}

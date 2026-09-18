@@ -350,6 +350,8 @@ pub enum EngineObservation {
     TracksBuilt { tracks: usize },
     CameraRegistered { frame: usize, pose: remodeling_camera::CameraPose },
     CameraRejected { frame: usize },
+    /// 🌱️ No seed pair could be solved: the capture has no registrable two-view geometry.
+    SeedPairFailed { detail: String },
     PointTriangulated { track: usize, point: [f64; 3] },
     PointPruned { track: usize, point: [f64; 3] },
     DepthMapEstimated { view: usize, samples: usize },
@@ -490,6 +492,8 @@ pub struct ReconstructionEngine {
     bundle_iterations: Option<BundleIterations>,
     finalization_preparation: Option<FinalizationPreparation>,
     pose_cursor: usize,
+    /// 🧭️ Frames to register after the seed pair, in registration order (outwards from the seed).
+    registration_order: Vec<usize>,
     ba_substep: usize,
     reconstruction: Option<remodeling_sfm::Reconstruction>,
     observations: Vec<(usize, usize, [f64; 2])>,
@@ -603,9 +607,12 @@ struct PairVerification {
 const PAIR_VERIFICATION_HYPOTHESES_PER_STEP: usize = 16;
 /// 🧭️ Calls one pair's verification spends before it commits to the best model found.
 const PAIR_VERIFICATION_STEPS: usize = 4;
-/// 🧭️ Sampson tolerance of the verification in normalized image coordinates (~1.4 px at the
-/// fixture's focal length).
-const PAIR_VERIFICATION_THRESHOLD: f64 = 0.005;
+/// 🧭️ Sampson tolerance of the verification, in pixels; divided by the focal length into the
+/// normalized coordinates the solver scores in, so a 96-pixel frame is judged as leniently as a
+/// 320-pixel one. Tight on purpose: at 2 px a fifth of a 10° pair's kept matches were still wrong
+/// and the registration chain drifted 20° around the orbit; at 1 px the kept matches are 98–100 %
+/// true and a legitimate pair still keeps dozens.
+const PAIR_VERIFICATION_THRESHOLD_PX: f64 = 1.0;
 /// 🧭️ Fewest inliers a pair keeps, and the share of its matches they must make up; below either
 /// the pair's matches are all dropped as noise. A five-point model fits five of any eight random
 /// matches and picks up a few more by chance, so eight of eight is what a 60° pair of unrelated
@@ -829,6 +836,7 @@ impl ReconstructionEngine {
             bundle_iterations: None,
             finalization_preparation: None,
             pose_cursor: 0,
+            registration_order: Vec::new(),
             ba_substep: 0,
             reconstruction: None,
             observations: Vec::new(),
@@ -880,7 +888,7 @@ impl ReconstructionEngine {
         match self.stage {
             EngineStage::ExtractingFeatures => (count(self.cursor), Some(count(self.frames.len()))),
             EngineStage::MatchingFeatures if self.match_pairs_ready => (count(self.pair_cursor), Some(count(self.match_pairs.len()))),
-            EngineStage::EstimatingPoses => (count(self.pose_cursor.min(self.frames.len())), Some(count(self.frames.len()))),
+            EngineStage::EstimatingPoses => (count(self.pose_cursor.min(self.registration_order.len())), Some(count(self.registration_order.len()))),
             EngineStage::DenseStereo | EngineStage::FusingVolume => (count(self.stage_cursor.min(self.dense_camera_indices.len())), Some(count(self.dense_camera_indices.len()))),
             _ => (0, None),
         }
@@ -951,7 +959,8 @@ impl ReconstructionEngine {
     /// rBRIEF description a few keypoints at a time; returns whether frames remain.
     fn step_extracting_features(&mut self) -> bool {
         const PIXELS_PER_STEP: usize = 4_096;
-        const DESCRIPTORS_PER_STEP: usize = 16;
+        const DETECTION_PIXELS_PER_STEP: usize = 512;
+        const DESCRIPTORS_PER_STEP: usize = 4;
         if self.cursor >= self.frames.len() {
             return false;
         }
@@ -988,8 +997,10 @@ impl ReconstructionEngine {
                 }
             }
             FeaturePhase::Detect => {
-                // ⏱️ One band is about PIXELS_PER_STEP pixels of the base level plus the filters' halo.
-                let rows = (PIXELS_PER_STEP / (image.width as usize).max(1)).max(1);
+                // ⏱️ One band is about DETECTION_PIXELS_PER_STEP pixels of the level: each of the
+                // streamed passes costs a few dozen operations per pixel, FAST + suppression a
+                // few hundred per corner.
+                let rows = (DETECTION_PIXELS_PER_STEP / (image.width as usize).max(1)).max(1);
                 let detection = preparation.detection.as_mut().expect("bounded detection");
                 if detection.advance(rows) {
                     let (pyramid, keypoints) = preparation.detection.take().expect("completed detection").finish();
@@ -1202,7 +1213,8 @@ impl ReconstructionEngine {
                 best: None,
             });
             let seed = ((frame_a as u64) << 32 | frame_b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ verification.attempts as u64;
-            if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_with_limit(&verification.correspondences, &intrinsics, &intrinsics, PAIR_VERIFICATION_THRESHOLD, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP) {
+            let threshold = PAIR_VERIFICATION_THRESHOLD_PX / intrinsics.fx.max(intrinsics.fy).max(1.0);
+            if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 1) {
                 if verification.best.as_ref().is_none_or(|best| candidate.inliers.len() > best.inliers.len()) {
                     verification.best = Some(candidate);
                 }
@@ -1239,7 +1251,9 @@ impl ReconstructionEngine {
 
     /// 🧵️ Consumes at most 4,096 union/group observations or 64 finalized groups.
     fn step_build_tracks(&mut self) -> Option<remodeling_sfm::FeatureTracks> {
-        const OBSERVATIONS_PER_STEP: usize = 4_096;
+        // ⏱️ A union is two hashed node lookups; a thousand per step keeps a debug-profile step
+        // inside the worker law with room for the host's scheduling jitter.
+        const OBSERVATIONS_PER_STEP: usize = 1_024;
         const GROUPS_PER_STEP: usize = 64;
         let preparation = self.track_preparation.get_or_insert_with(TrackPreparation::new);
         match preparation.phase {
@@ -1297,12 +1311,14 @@ impl ReconstructionEngine {
         None
     }
 
-    /// 🏗️ Either seeds [`remodeling_sfm::IncrementalSfm`] via `init_pair(0, 1, ..)` (first call), or
-    /// registers+triangulates the unregistered frame with the most 2D-3D (or two-view) support
-    /// (subsequent calls) — next-best rather than strict sequential order, so a later frame that
-    /// already shares triangulated tracks with the seed pair can unlock earlier starved frames.
-    /// Mirrors `run_all`'s best-effort policy (a frame that fails to register is skipped for this
-    /// step, not fatal) except for the initial pair, whose failure genuinely aborts the reconstruction.
+    /// 🏗️ Seeds [`remodeling_sfm::IncrementalSfm`] on the adjacent pair with the most verified
+    /// matches (first calls), then registers + triangulates one frame per bounded unit, walking
+    /// outwards from the seed — forwards to the last frame, then backwards to the first — so every
+    /// frame is registered against already-registered neighbours; each registration is followed by
+    /// a local bundle adjustment. A frame that fails to register is skipped (best effort, like
+    /// `run_all`). A seed pair that cannot be solved is not a fault either: the capture has no
+    /// registrable geometry, the stage ends with zero cameras and the run completes with an empty
+    /// reconstruction the trace explains, instead of a pipeline failure.
     fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
             let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
@@ -1312,24 +1328,44 @@ impl ReconstructionEngine {
             if self.recorded.is_some() {
                 sfm.observe_points();
             }
-            let pair01 = self.pairwise_matches.iter().find(|&&(a, b, _)| a == 0 && b == 1).map(|(_, _, matches)| remodeling_sfm::SeedPairPreparation::new(0, 1, matches)).ok_or_else(|| "no matches between frame 0 and 1".to_string())?;
+            let seed = self.pairwise_matches.iter().filter(|&&(a, b, _)| b == a + 1).max_by_key(|&&(a, _, ref matches)| (matches.len(), std::cmp::Reverse(a))).map(|(a, b, matches)| (*a, *b, remodeling_sfm::SeedPairPreparation::new(*a, *b, matches)));
             sfm.set_pairwise_matches(std::mem::take(&mut self.pairwise_matches));
             self.sfm = Some(sfm);
-            self.seed_pair_preparation = Some(pair01);
+            match seed {
+                Some((a, b, preparation)) => {
+                    self.seed_pair_preparation = Some(preparation);
+                    let n = self.frames.len();
+                    self.registration_order = ((b + 1)..n).chain((0..a).rev()).collect();
+                }
+                None => {
+                    self.record(EngineObservation::SeedPairFailed { detail: "no adjacent pair of frames shares verified matches".to_string() });
+                    self.pose_cursor = usize::MAX;
+                }
+            }
         }
         if let Some(preparation) = self.seed_pair_preparation.as_mut() {
-            if self.sfm.as_mut().expect("seed SfM").advance_seed_pair(preparation, 1).map_err(|error| error.to_string())? {
-                self.seed_pair_preparation = None;
-                self.pose_cursor = 2;
-                for frame in [0, 1] {
-                    if let Some(pose) = self.sfm.as_ref().and_then(|sfm| sfm.camera_pose(frame)) {
-                        self.record(EngineObservation::CameraRegistered { frame, pose });
+            match self.sfm.as_mut().expect("seed SfM").advance_seed_pair(preparation, 1) {
+                Ok(false) => {}
+                Ok(true) => {
+                    self.seed_pair_preparation = None;
+                    self.pose_cursor = 0;
+                    let seeded: Vec<usize> = (0..self.frames.len()).filter(|&frame| !self.registration_order.contains(&frame)).collect();
+                    for frame in seeded {
+                        if let Some(pose) = self.sfm.as_ref().and_then(|sfm| sfm.camera_pose(frame)) {
+                            self.record(EngineObservation::CameraRegistered { frame, pose });
+                        }
                     }
+                }
+                Err(error) => {
+                    self.seed_pair_preparation = None;
+                    self.pose_cursor = usize::MAX;
+                    self.record(EngineObservation::SeedPairFailed { detail: error.to_string() });
+                    return Ok(false);
                 }
             }
             return Ok(true);
         }
-        let n = self.frames.len();
+        let n = self.registration_order.len();
         let sfm = self.sfm.as_mut().expect("initialized SfM");
         let registered = sfm.registered_count();
         if self.params.max_registered_cameras > 0 && registered >= self.params.max_registered_cameras {
@@ -1339,7 +1375,7 @@ impl ReconstructionEngine {
             return Ok(false);
         }
         if self.registration_preparation.is_none() {
-            self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.pose_cursor));
+            self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.registration_order[self.pose_cursor]));
         }
         if let Some(bundle) = self.bundle_iterations.as_mut() {
             let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(2)], bundle.lambda, sfm.robust_loss());
@@ -1347,7 +1383,7 @@ impl ReconstructionEngine {
             bundle.remaining = bundle.remaining.saturating_sub(1);
             if converged || bundle.remaining == 0 {
                 self.bundle_iterations = None;
-                let frame = self.pose_cursor;
+                let frame = self.registration_order[self.pose_cursor];
                 if let Some(pose) = sfm.camera_pose(frame) {
                     self.record(EngineObservation::CameraRegistered { frame, pose });
                 }
@@ -1357,7 +1393,7 @@ impl ReconstructionEngine {
             return Ok(self.pose_cursor < n || self.registration_preparation.is_some());
         }
         let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
-        let frame = self.pose_cursor;
+        let frame = self.registration_order[self.pose_cursor];
         let registered = sfm.camera_pose(frame);
         match result {
             Ok(true) => {
@@ -1407,7 +1443,10 @@ impl ReconstructionEngine {
                     Some(factor) => remodeling_sfm::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
                     None => sfm.robust_loss(),
                 };
-                let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(2)], bundle.lambda, loss);
+                // 📌️ Only the first camera is held: holding the seed pair's second camera too would
+                // pin the reconstruction to the seed's five-point baseline (a few degrees off), and
+                // every other camera would bend to fit it. Scale is left to the damping.
+                let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(1)], bundle.lambda, loss);
                 bundle.lambda = lambda;
                 bundle.remaining = bundle.remaining.saturating_sub(1);
                 if converged || bundle.remaining == 0 {

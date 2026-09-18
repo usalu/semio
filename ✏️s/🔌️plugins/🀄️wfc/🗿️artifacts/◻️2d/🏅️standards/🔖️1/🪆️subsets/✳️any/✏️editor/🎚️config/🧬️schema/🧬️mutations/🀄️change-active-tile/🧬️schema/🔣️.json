@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/wfc/wfc2d/config/mutation/ChangeActiveTile/schema.json",
+  "title": "ChangeActiveTile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tileId"
+  ],
+  "properties": {
+    "tileId": {
+      "type": "string"
+    }
+  }
+}

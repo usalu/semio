@@ -1,0 +1,494 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/snapshot/schema.json",
+  "title": "Wfc2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "seed"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "s.wfc.wfc2d"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pinnedTileId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fromSlotId",
+          "toSlotId",
+          "relation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fromSlotId": {
+            "type": "string"
+          },
+          "toSlotId": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "weight"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0
+          },
+          "media": {
+            "description": "Externally tagged tile media: the bare string \"Empty\", or a one-key object Bitmap/Vector/Image.",
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Empty"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "Bitmap"
+                ],
+                "properties": {
+                  "Bitmap": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "width",
+                      "height",
+                      "palette",
+                      "pixels"
+                    ],
+                    "properties": {
+                      "width": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "height": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "palette": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "r",
+                            "g",
+                            "b",
+                            "a"
+                          ],
+                          "properties": {
+                            "r": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            },
+                            "g": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            },
+                            "b": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            },
+                            "a": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            }
+                          }
+                        }
+                      },
+                      "pixels": {
+                        "type": "string",
+                        "format": "base64"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "Vector"
+                ],
+                "properties": {
+                  "Vector": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "paths"
+                    ],
+                    "properties": {
+                      "paths": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "segments",
+                            "strokeWidth"
+                          ],
+                          "properties": {
+                            "segments": {
+                              "type": "array",
+                              "items": {
+                                "description": "Externally tagged path command in tile space 0..1: the bare string \"Close\", or a one-key object Move/Line/Quad/Cubic.",
+                                "oneOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "Close"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "Move"
+                                    ],
+                                    "properties": {
+                                      "Move": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "to"
+                                        ],
+                                        "properties": {
+                                          "to": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "Line"
+                                    ],
+                                    "properties": {
+                                      "Line": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "to"
+                                        ],
+                                        "properties": {
+                                          "to": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "Quad"
+                                    ],
+                                    "properties": {
+                                      "Quad": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "ctrl",
+                                          "to"
+                                        ],
+                                        "properties": {
+                                          "ctrl": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          },
+                                          "to": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "Cubic"
+                                    ],
+                                    "properties": {
+                                      "Cubic": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "ctrl1",
+                                          "ctrl2",
+                                          "to"
+                                        ],
+                                        "properties": {
+                                          "ctrl1": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          },
+                                          "ctrl2": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          },
+                                          "to": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            },
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "fill": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "r",
+                                "g",
+                                "b",
+                                "a"
+                              ],
+                              "properties": {
+                                "r": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "g": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "b": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "a": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                }
+                              }
+                            },
+                            "stroke": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "r",
+                                "g",
+                                "b",
+                                "a"
+                              ],
+                              "properties": {
+                                "r": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "g": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "b": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                },
+                                "a": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 255
+                                }
+                              }
+                            },
+                            "strokeWidth": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "Image"
+                ],
+                "properties": {
+                  "Image": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "child"
+                    ],
+                    "properties": {
+                      "child": {
+                        "type": "object",
+                        "description": "store::ArtifactChild handle into s.stdio.semio@v1/image.",
+                        "required": [
+                          "childId",
+                          "target"
+                        ],
+                        "properties": {
+                          "childId": {
+                            "type": "string"
+                          },
+                          "target": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tileAId",
+          "tileBId",
+          "allowed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tileAId": {
+            "type": "string"
+          },
+          "tileBId": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

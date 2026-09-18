@@ -1,0 +1,70 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      1,
+      {
+        "id": "tile-wall",
+        "weight": 5.0,
+        "media": {
+          "Vector": {
+            "paths": [
+              {
+                "segments": [
+                  {
+                    "Move": {
+                      "to": [
+                        0.0,
+                        0.0
+                      ]
+                    }
+                  },
+                  {
+                    "Line": {
+                      "to": [
+                        1.0,
+                        0.0
+                      ]
+                    }
+                  },
+                  {
+                    "Line": {
+                      "to": [
+                        1.0,
+                        1.0
+                      ]
+                    }
+                  },
+                  {
+                    "Line": {
+                      "to": [
+                        0.0,
+                        1.0
+                      ]
+                    }
+                  },
+                  "Close"
+                ],
+                "fill": {
+                  "r": 122,
+                  "g": 126,
+                  "b": 134,
+                  "a": 255
+                },
+                "strokeWidth": 0.0
+              }
+            ]
+          }
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

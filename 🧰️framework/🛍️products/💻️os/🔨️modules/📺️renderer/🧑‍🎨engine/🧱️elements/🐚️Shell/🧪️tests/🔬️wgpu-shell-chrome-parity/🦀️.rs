@@ -310,6 +310,10 @@ fn chord_key_action(key: &str) -> ui_wgpu::wgpu::KeyAction {
     }
 }
 
+/// ⌨️ Both chord families now resolve through the ONE remappable table
+/// (`SHELL_SHORTCUT_ROWS` → `shell_shortcut_for`), the Rust twin of React's
+/// `SHELL_KEYBINDINGS`; the per-family helpers this law used to call are gone with the
+/// open-coded ladder they read.
 #[test]
 fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybindings() {
     let fixture: Value = serde_json::from_str(SURFACE_SWITCH_FIXTURE).expect("🔀️ fixture parses");
@@ -328,10 +332,6 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
         assert!(is_reserved_shell_chord(&action, &modifiers), "{}: a shell chord must outrank every app-declared keybinding", case["controlId"]);
         let control_id = case["controlId"].as_str().expect("fixture control id");
         if let Some(role_suffix) = control_id.strip_prefix("playground.navbar.roles.") {
-            // ⌨️ Both chord families now resolve through the ONE remappable table
-            // (`SHELL_SHORTCUT_ROWS` → `shell_shortcut_for`), the Rust twin of React's
-            // `SHELL_KEYBINDINGS`; the per-family helpers this law used to call are gone with the
-            // open-coded ladder they read.
             assert_eq!(shell_shortcut_for(&action, &modifiers), Some(ShellShortcut::SurfaceRole(fixture_role(role_suffix))), "{control_id}");
             let dispatches = &case["dispatches"];
             let target = role_switch_target(&apps, &dialect, fixture_role(dispatches["currentRole"].as_str().expect("fixture current role")), fixture_role(dispatches["requested"].as_str().expect("fixture requested role")));
@@ -973,7 +973,11 @@ fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
     let flush_pills = surface_status_pills_for(&worlds, &[], &theme, false);
     let flush_controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
     assert_eq!(flush_pills[0].1.x, bounds.x + theme.gap_standard, "🛟️ with no panel open the row stays flush in its own corner");
-    assert_eq!(flush_controls[0].1[0], bounds.x + theme.gap_standard, "🛟️ the cancel control stays flush too");
+    assert_eq!(
+        flush_controls[0].1[0],
+        flush_pills[0].1.x + flush_pills[0].1.w + theme.gap_standard,
+        "🛟️ the cancel FOLLOWS the pill in the same row — React paints the cancel button inside the status container, after the phase and progress spans (`🌐️World3dHost/🟦️.tsx:4001,4018`, one `flex items-center gap-single` row)"
+    );
 
     let reserved_pills = surface_status_pills_for(&worlds, &[panel], &theme, false);
     let reserved_controls = surface_overlay_controls_for(&graphs, &worlds, &[panel], &theme, false);

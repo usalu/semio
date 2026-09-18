@@ -1,0 +1,44 @@
+# 🔺 s.wfc.grid3d diff facet — a sparse, key-keyed delta. An indexed upsert is a pair of the FINAL
+# state index and the member itself, which GraphQL models as a two-field type rather than a tuple.
+
+type Grid3dTileUpsert {
+  index: Int!
+  tile: Grid3dTile!
+}
+
+type Grid3dRuleUpsert {
+  index: Int!
+  rule: Grid3dRule!
+}
+
+type Grid3dPinnedUpsert {
+  index: Int!
+  pinned: Grid3dPinnedCell!
+}
+
+type Grid3dMaskedUpsert {
+  index: Int!
+  cell: Grid3dCell!
+}
+
+type Grid3dDiff {
+  schema: String
+  seed: Int
+  width: Int
+  height: Int
+  depth: Int
+  cellSizesX: [Float!]
+  cellSizesY: [Float!]
+  cellSizesZ: [Float!]
+  periodicX: Boolean
+  periodicY: Boolean
+  periodicZ: Boolean
+  tilesRemoved: [String!]!
+  tilesUpserted: [Grid3dTileUpsert!]!
+  rulesRemoved: [String!]!
+  rulesUpserted: [Grid3dRuleUpsert!]!
+  pinnedRemoved: [String!]!
+  pinnedUpserted: [Grid3dPinnedUpsert!]!
+  maskedRemoved: [String!]!
+  maskedUpserted: [Grid3dMaskedUpsert!]!
+}

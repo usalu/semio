@@ -1,0 +1,113 @@
+{
+  "schema": "s.wfc.grid3d",
+  "seed": 7,
+  "width": 2,
+  "height": 2,
+  "depth": 2,
+  "cellSizesX": [
+    1.0,
+    2.0
+  ],
+  "cellSizesY": [
+    1.0,
+    1.0
+  ],
+  "cellSizesZ": [
+    1.0,
+    1.5
+  ],
+  "periodicX": false,
+  "periodicY": false,
+  "periodicZ": false,
+  "tiles": [
+    {
+      "id": "air",
+      "weight": 2.0,
+      "media": {
+        "kind": "mesh",
+        "mesh": {
+          "positions": [],
+          "indices": [],
+          "color": {
+            "r": 200,
+            "g": 214,
+            "b": 232,
+            "a": 40
+          }
+        }
+      }
+    },
+    {
+      "id": "floor",
+      "weight": 1.0,
+      "media": {
+        "kind": "mesh",
+        "mesh": {
+          "positions": [],
+          "indices": [],
+          "color": {
+            "r": 120,
+            "g": 120,
+            "b": 126,
+            "a": 255
+          }
+        }
+      }
+    },
+    {
+      "id": "wall",
+      "weight": 3.0,
+      "media": {
+        "kind": "mesh",
+        "mesh": {
+          "positions": [],
+          "indices": [],
+          "color": {
+            "r": 212,
+            "g": 204,
+            "b": 188,
+            "a": 255
+          }
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "r-right-air-air",
+      "tileAId": "air",
+      "tileBId": "air",
+      "direction": "RIGHT",
+      "allowed": true
+    },
+    {
+      "id": "r-right-wall-wall",
+      "tileAId": "wall",
+      "tileBId": "wall",
+      "direction": "RIGHT",
+      "allowed": true
+    },
+    {
+      "id": "r-top-floor-wall",
+      "tileAId": "floor",
+      "tileBId": "wall",
+      "direction": "TOP",
+      "allowed": true
+    }
+  ],
+  "pinned": [
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "tileId": "floor"
+    }
+  ],
+  "masked": [
+    {
+      "x": 1,
+      "y": 1,
+      "z": 1
+    }
+  ]
+}

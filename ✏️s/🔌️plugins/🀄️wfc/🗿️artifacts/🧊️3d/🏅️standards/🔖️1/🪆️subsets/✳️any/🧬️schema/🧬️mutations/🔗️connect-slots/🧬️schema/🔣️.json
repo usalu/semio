@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/connect-slots/schema.json",
+  "title": "ConnectSlots",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edge",
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "edge": {
+      "title": "SlotEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fromSlotId",
+        "id",
+        "relation",
+        "toSlotId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fromSlotId": {
+          "type": "string"
+        },
+        "toSlotId": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

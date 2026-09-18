@@ -1,0 +1,724 @@
+//! 🌳️ The search driver: observe → sample → propagate → (on contradiction) chronologically
+//! backtrack, until every domain is a singleton (solved), the trail's root frame is exhausted
+//! (unsatisfiable — every branch of the search tree was visited), or a budget/restart/cancel
+//! signal stops the attempt short of either conclusion.
+
+use crate::bitset::PatternSet;
+use crate::constraint::ConstraintSet;
+use crate::diag::{DiagLevel, Event, EventSink, Metrics};
+use crate::domain::{DomainStore, RestrictResult};
+use crate::heuristics::{self, ObserveHeuristic};
+use crate::ids::{DecisionId, NodeId, PatternId};
+use crate::job::{WfcJob, WfcJobConfig, WfcSampler};
+use crate::model::CompiledModel;
+use crate::nogood::{NogoodConfig, NogoodIndex};
+use crate::outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
+use crate::prop_ac3;
+use crate::propagate::PropQueue;
+use crate::sample::{self, ValueSampler};
+use crate::topology::Topology;
+use crate::trail::Trail;
+use semio_framework_geometry::random::Rng;
+
+// #region 🔖️Config
+/// 🌳️ Whether a failed attempt restarts from scratch or resumes chronological backtracking.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum SearchMode {
+    /// 🌳️ On contradiction, undo decisions up to [`SearchConfig::restart_schedule`]'s per-attempt
+    /// backtrack budget (or the whole tree, if [`RestartSchedule::Never`]); when that budget or
+    /// the tree itself is exhausted, discard the attempt and start fresh with a new seed. Never
+    /// proves unsatisfiability, even if an attempt happens to exhaust its whole local tree.
+    RestartOnly,
+    /// 🌳️ On contradiction, undo the most recent decision and try the next candidate. Exhausting
+    /// every alternative back to the first decision proves unsatisfiability.
+    #[default]
+    Backtrack,
+    /// 🌳️ Semantically identical to [`SearchMode::Backtrack`] today (same completeness and
+    /// soundness guarantees) — true conflict-directed jump-target selection is deferred to land
+    /// alongside nogood learning (a later phase), since accelerating the jump without also
+    /// recording *why* the skipped decisions were irrelevant risks silently losing completeness.
+    /// Selecting this mode is forward-compatible: behavior only gets faster later, never different.
+    Backjump,
+}
+
+/// 🌳️ Limits that stop a solve attempt before it concludes either way.
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub struct Budget {
+    pub max_observations: Option<u64>,
+    pub max_backtracks: Option<u64>,
+    pub max_millis: Option<u64>,
+}
+
+/// 🌳️ The per-attempt backtrack budget schedule for [`SearchMode::RestartOnly`]. Ignored by
+/// [`SearchMode::Backtrack`]/[`SearchMode::Backjump`], which always run to full completion (or an
+/// explicit [`Budget`] limit) to preserve their unsat-proof guarantee.
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub enum RestartSchedule {
+    /// 🌳️ No schedule-driven cap — an attempt only restarts when its own local tree is fully
+    /// exhausted or the global [`Budget`] stops it.
+    #[default]
+    Never,
+    /// 🌳️ Every attempt gets the same backtrack budget.
+    Fixed(u64),
+    /// 🌳️ Attempt `i`'s budget is `base * factor.powi(i)`.
+    Geometric { base: u64, factor: f64 },
+    /// 🌳️ Attempt `i`'s budget is `unit * luby(i + 1)` (the standard Luby restart sequence).
+    Luby(u64),
+}
+
+impl RestartSchedule {
+    fn backtrack_budget(&self, attempt: u64) -> Option<u64> {
+        match *self {
+            RestartSchedule::Never => None,
+            RestartSchedule::Fixed(n) => Some(n),
+            RestartSchedule::Geometric { base, factor } => Some((base as f64 * factor.powi(attempt.min(62) as i32)) as u64),
+            RestartSchedule::Luby(unit) => Some(luby(attempt + 1).saturating_mul(unit)),
+        }
+    }
+}
+
+/// 🌳️ The standard Luby sequence (1-indexed): `1,1,2,1,1,2,4,1,1,2,1,1,2,4,8,...`.
+fn luby(i: u64) -> u64 {
+    let mut k = 1u32;
+    while (1u64 << k) - 1 < i {
+        k += 1;
+    }
+    if i == (1u64 << k) - 1 {
+        1u64 << (k - 1)
+    } else {
+        luby(i - (1u64 << (k - 1)) + 1)
+    }
+}
+
+/// 🌳️ A shareable, thread-safe flag a caller can set to stop a solve early.
+#[derive(Clone, Debug, Default)]
+pub struct CancelToken(std::sync::Arc<std::sync::atomic::AtomicBool>);
+
+impl CancelToken {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn cancel(&self) {
+        self.0.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    pub fn is_cancelled(&self) -> bool {
+        self.0.load(std::sync::atomic::Ordering::Relaxed)
+    }
+}
+
+/// 🌳️ Everything [`crate::solver_graph::GraphSolver`] (and later grid solvers) needs to configure
+/// one solve.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct SearchConfig {
+    pub mode: SearchMode,
+    pub heuristic: ObserveHeuristic,
+    pub sampler: ValueSampler,
+    pub budget: Budget,
+    /// 🌳️ [`SearchMode::RestartOnly`] only: gives up entirely after this many failed attempts.
+    pub max_restarts: Option<u64>,
+    /// 🌳️ [`SearchMode::RestartOnly`] only: per-attempt backtrack budget schedule.
+    pub restart_schedule: RestartSchedule,
+    pub diag_level: DiagLevel,
+    /// 🧠️ Opt-in nogood learning (see [`crate::nogood`]); disabled by default.
+    pub nogood: NogoodConfig,
+}
+// #endregion 🔖️Config
+
+// #region 🔖️Repair
+enum RepairOutcome {
+    Repaired,
+    /// 🌳️ No more frames to pop — the (local or whole) search tree is exhausted.
+    Exhausted,
+    BudgetExceeded,
+    /// 🌳️ [`SearchMode::RestartOnly`]'s per-attempt backtrack budget ran out before either
+    /// repairing or exhausting the tree.
+    LocalLimitReached,
+}
+
+/// 🌳️ Chronologically unwinds decisions until the most recently wiped domain (if any) is resolved
+/// — undoing a single frame is not always enough, since a contradiction can be the combined
+/// consequence of several decisions; this keeps unwinding until no domain is left wiped rather
+/// than trusting the next propagation pass to notice on its own (an already-empty domain can only
+/// ever report `Unchanged`, never re-report `Wipeout`, so a silent leftover wipeout would
+/// otherwise never be caught).
+#[allow(clippy::too_many_arguments)]
+fn backtrack_and_repair<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    budget: &Budget,
+    domains: &mut DomainStore,
+    queue: &mut PropQueue,
+    trail: &mut Trail,
+    metrics: &mut Metrics,
+    local_remaining: &mut Option<u64>,
+    sink: &mut EventSink,
+    nogoods: &mut NogoodIndex,
+) -> RepairOutcome {
+    // The trail's current decision prefix is exactly what caused this contradiction (whether an
+    // ordinary propagation wipeout or a rejected complete assignment) — record it once, before any
+    // unwinding, while it still reflects the combination that actually failed. Guarded on
+    // `is_enabled()` so a disabled (default) store costs not even the `Vec` allocation.
+    if nogoods.is_enabled() {
+        nogoods.record(trail.active_decisions());
+    }
+    loop {
+        if let Some(rem) = local_remaining {
+            if *rem == 0 {
+                return RepairOutcome::LocalLimitReached;
+            }
+            *rem -= 1;
+        }
+        metrics.backtracks += 1;
+        if let Some(max_bt) = budget.max_backtracks {
+            if metrics.backtracks >= max_bt {
+                return RepairOutcome::BudgetExceeded;
+            }
+        }
+        let frame = match trail.pop_frame() {
+            Some(f) => f,
+            None => return RepairOutcome::Exhausted,
+        };
+        trail.undo_to(frame.trail_mark, domains, model.weights());
+        if domains.any_wiped() {
+            // This frame's decision was not the (sole) cause; keep unwinding without wasting a
+            // repair attempt on a node that can't possibly fix a still-wiped domain elsewhere.
+            continue;
+        }
+        let repair_result = domains.get_mut(frame.node).remove(frame.candidate, model.weights());
+        trail.record_removed(frame.node, frame.candidate);
+        sink.emit_detailed(Event::Backtracked { node: frame.node, candidate: frame.candidate });
+
+        let contradiction = match repair_result {
+            RestrictResult::Wipeout => Some(frame.node),
+            _ => {
+                queue.clear();
+                queue.push(frame.node);
+                prop_ac3::run_to_fixed_point(model, topo, domains, queue, trail, metrics).err()
+            }
+        };
+        if contradiction.is_none() {
+            debug_assert!(!domains.any_wiped());
+            return RepairOutcome::Repaired;
+        }
+    }
+}
+// #endregion 🔖️Repair
+
+// #region 🔖️Drive
+enum StepOutcome {
+    Solved,
+    /// 🌳️ Every alternative at the root decision has been tried — the (local or whole) search
+    /// tree is exhausted.
+    Exhausted,
+    BudgetExceeded,
+    LocalLimitReached,
+    Cancelled,
+}
+
+/// 🧷️ Whether every constraint accepts the current (assumed all-singleton) domain state. `true`
+/// (vacuously) when there are no constraints to check.
+fn constraints_accept(domains: &DomainStore, constraints: Option<&ConstraintSet<'_>>) -> bool {
+    let Some(cs) = constraints else { return true };
+    let assignment: Vec<PatternId> = domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect();
+    cs.constraints.iter().all(|c| c.validate_complete(&assignment, cs.adjacency).is_ok())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn decide_and_propagate<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    rng: &mut Rng,
+    domains: &mut DomainStore,
+    queue: &mut PropQueue,
+    trail: &mut Trail,
+    metrics: &mut Metrics,
+    decision_counter: &mut u32,
+    node: NodeId,
+    sink: &mut EventSink,
+    nogoods: &mut NogoodIndex,
+) -> Option<NodeId> {
+    let rng_snapshot = rng.state();
+    let candidate = sample::sample_pattern(config.sampler, domains.get(node), model, rng);
+    trail.push_frame(DecisionId(*decision_counter), node, candidate, rng_snapshot);
+    *decision_counter += 1;
+    sink.emit_detailed(Event::Observed { node, chosen: candidate });
+
+    let mut removed = PatternSet::new_empty(model.pattern_count());
+    domains.get_mut(node).assign_collecting(candidate, model.weights(), &mut removed);
+    trail.record_removed_set(node, &removed);
+
+    queue.clear();
+    queue.push(node);
+    let contradiction = prop_ac3::run_to_fixed_point(model, topo, domains, queue, trail, metrics).err();
+    contradiction.or_else(|| nogoods.on_decision(model, topo, node, candidate, domains, queue, trail, metrics))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn drive<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    rng: &mut Rng,
+    domains: &mut DomainStore,
+    queue: &mut PropQueue,
+    trail: &mut Trail,
+    metrics: &mut Metrics,
+    decision_counter: &mut u32,
+    start: std::time::Instant,
+    cancel: Option<&CancelToken>,
+    local_backtrack_budget: Option<u64>,
+    constraints: Option<&ConstraintSet<'_>>,
+    sink: &mut EventSink,
+    nogoods: &mut NogoodIndex,
+) -> StepOutcome {
+    let mut local_remaining = local_backtrack_budget;
+    loop {
+        if cancel.is_some_and(CancelToken::is_cancelled) {
+            return StepOutcome::Cancelled;
+        }
+        if domains.all_singleton() {
+            if constraints_accept(domains, constraints) {
+                return StepOutcome::Solved;
+            }
+            // A global constraint rejected this complete assignment: exactly like a contradiction
+            // needing a backtrack, reusing the same proven repair machinery.
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink, nogoods) {
+                RepairOutcome::Repaired => continue,
+                RepairOutcome::Exhausted => return StepOutcome::Exhausted,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
+                RepairOutcome::LocalLimitReached => return StepOutcome::LocalLimitReached,
+            }
+        }
+        let node = match heuristics::select_unresolved(config.heuristic, domains) {
+            Some(n) => n,
+            None => unreachable!("not all singleton but no unresolved candidate: domain invariant violated"),
+        };
+
+        if let Some(max_obs) = config.budget.max_observations {
+            if metrics.observations >= max_obs {
+                sink.emit(Event::BudgetExceeded);
+                return StepOutcome::BudgetExceeded;
+            }
+        }
+        if let Some(max_ms) = config.budget.max_millis {
+            if start.elapsed().as_millis() as u64 >= max_ms {
+                sink.emit(Event::BudgetExceeded);
+                return StepOutcome::BudgetExceeded;
+            }
+        }
+        metrics.observations += 1;
+
+        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node, sink, nogoods);
+        if contradiction.is_some() {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink, nogoods) {
+                RepairOutcome::Repaired => {}
+                RepairOutcome::Exhausted => return StepOutcome::Exhausted,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
+                RepairOutcome::LocalLimitReached => return StepOutcome::LocalLimitReached,
+            }
+        }
+    }
+}
+
+/// 🌳️ Like [`drive`], but keeps searching for further solutions after each one is found (by
+/// treating "solved" the same as a contradiction that must be repaired) until `limit` solutions
+/// are collected or the tree is exhausted.
+#[allow(clippy::too_many_arguments)]
+fn drive_all<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    rng: &mut Rng,
+    domains: &mut DomainStore,
+    queue: &mut PropQueue,
+    trail: &mut Trail,
+    metrics: &mut Metrics,
+    decision_counter: &mut u32,
+    start: std::time::Instant,
+    solutions: &mut Vec<Vec<PatternId>>,
+    limit: usize,
+    constraints: Option<&ConstraintSet<'_>>,
+    sink: &mut EventSink,
+    nogoods: &mut NogoodIndex,
+) -> StepOutcome {
+    let mut local_remaining = None;
+    loop {
+        if domains.all_singleton() {
+            if constraints_accept(domains, constraints) {
+                solutions.push(domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect());
+                if solutions.len() >= limit {
+                    return StepOutcome::Solved;
+                }
+            }
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink, nogoods) {
+                RepairOutcome::Repaired => continue,
+                RepairOutcome::Exhausted => return StepOutcome::Exhausted,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
+                RepairOutcome::LocalLimitReached => unreachable!("solve_all never sets a local backtrack budget"),
+            }
+        }
+        let node = match heuristics::select_unresolved(config.heuristic, domains) {
+            Some(n) => n,
+            None => unreachable!("not all singleton but no unresolved candidate: domain invariant violated"),
+        };
+        if let Some(max_obs) = config.budget.max_observations {
+            if metrics.observations >= max_obs {
+                sink.emit(Event::BudgetExceeded);
+                return StepOutcome::BudgetExceeded;
+            }
+        }
+        if let Some(max_ms) = config.budget.max_millis {
+            if start.elapsed().as_millis() as u64 >= max_ms {
+                sink.emit(Event::BudgetExceeded);
+                return StepOutcome::BudgetExceeded;
+            }
+        }
+        metrics.observations += 1;
+
+        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node, sink, nogoods);
+        if contradiction.is_some() {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink, nogoods) {
+                RepairOutcome::Repaired => {}
+                RepairOutcome::Exhausted => return StepOutcome::Exhausted,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
+                RepairOutcome::LocalLimitReached => unreachable!("solve_all never sets a local backtrack budget"),
+            }
+        }
+    }
+}
+// #endregion 🔖️Drive
+
+// #region 🔖️Solve
+struct InitResult {
+    domains: DomainStore,
+    trail: Trail,
+    queue: PropQueue,
+    metrics: Metrics,
+    wipeout: Option<NodeId>,
+}
+
+fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], constraints: Option<&ConstraintSet<'_>>) -> InitResult {
+    let node_count = topo.node_count();
+    let mut domains = DomainStore::new_full(node_count, model.weights());
+    let mut trail = Trail::new();
+    let mut metrics = Metrics::default();
+    let mut wipeout: Option<NodeId> = None;
+
+    if let Some(overrides) = init_domains {
+        for (i, allowed) in overrides.iter().enumerate() {
+            let n = NodeId::from_index(i);
+            let mut removed = PatternSet::new_empty(model.pattern_count());
+            if let RestrictResult::Wipeout = domains.get_mut(n).restrict_collecting(allowed, model.weights(), &mut removed) {
+                wipeout = Some(n);
+            }
+            trail.record_removed_set(n, &removed);
+        }
+    }
+    for &(n, p) in fixed {
+        let mut removed = PatternSet::new_empty(model.pattern_count());
+        if let RestrictResult::Wipeout = domains.get_mut(n).assign_collecting(p, model.weights(), &mut removed) {
+            wipeout = Some(n);
+        }
+        trail.record_removed_set(n, &removed);
+    }
+    if let Some(cs) = constraints {
+        for c in cs.constraints {
+            let Ok(restrictions) = c.initialize(&domains, model.weights(), cs.adjacency) else {
+                continue; // a misconfigured constraint is a build-time concern, not a solve-time one
+            };
+            for (n, allowed) in restrictions {
+                let mut removed = PatternSet::new_empty(model.pattern_count());
+                if let RestrictResult::Wipeout = domains.get_mut(n).restrict_collecting(&allowed, model.weights(), &mut removed) {
+                    wipeout = Some(n);
+                }
+                trail.record_removed_set(n, &removed);
+            }
+        }
+    }
+
+    let mut queue = PropQueue::new(node_count);
+    queue.push_all(node_count);
+    if wipeout.is_none() {
+        wipeout = prop_ac3::run_to_fixed_point(model, topo, &mut domains, &mut queue, &mut trail, &mut metrics).err();
+    }
+
+    InitResult { domains, trail, queue, metrics, wipeout }
+}
+
+/// 🌳️ Applies `init_domains` (or full domains) and `fixed` pins, runs initial propagation, then
+/// drives search per `config` until solved, proven unsatisfiable, or a budget/restart limit stops
+/// the attempt. `init_domains`, when present, must have one entry per node.
+pub fn solve<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+    drive_batch_job(model, topo, config, seed, init_domains, fixed, None)
+}
+
+pub fn solve_cancellable<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
+    drive_batch_job(model, topo, config, seed, init_domains, fixed, Some(cancel))
+}
+
+fn partial_from_job<T: Topology + Clone>(job: &WfcJob<T>) -> PartialState {
+    let domains = job.domain_masks();
+    let decided = domains.iter().map(|domain| (domain.count_ones() == 1).then(|| domain.first_set().expect("singleton WFC domain"))).collect();
+    PartialState { domains, decided }
+}
+
+fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
+    use crate::job::{close_job, payload_bytes, retire_outcome};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext};
+
+    if config.mode == SearchMode::RestartOnly || config.nogood.enabled {
+        return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
+    }
+
+    let start = std::time::Instant::now();
+    let operation = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), seed);
+    let job_config = WfcJobConfig {
+        sampler: match config.sampler {
+            ValueSampler::WeightedRoulette => WfcSampler::WeightedRoulette,
+            ValueSampler::Uniform => WfcSampler::Uniform,
+        },
+    };
+    let mut job = WfcJob::new(operation, model.clone(), topo.clone(), job_config, init_domains.map(<[PatternSet]>::to_vec), fixed.to_vec());
+    let mut sequence = 0;
+    let result = loop {
+        let (observations, propagations, backtracks) = job.metrics();
+        let metrics = Metrics { observations, propagations, backtracks, elapsed_millis: start.elapsed().as_millis() as u64, ..Metrics::default() };
+        let run_report = |terminal: Event, observed: &[(NodeId, PatternId)]| {
+            let mut events = Vec::new();
+            if config.diag_level >= DiagLevel::Decisions {
+                events.extend(observed.iter().map(|&(node, chosen)| Event::Observed { node, chosen }));
+            }
+            if config.diag_level != DiagLevel::Off {
+                events.push(terminal);
+            }
+            RunReport { metrics, model_fingerprint: model.fingerprint(), seed, events }
+        };
+        if cancel.is_some_and(CancelToken::is_cancelled) {
+            break SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
+        }
+        if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
+            break SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
+        }
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
+        let mut outcome = job.step(&mut context);
+        let result = match &outcome {
+            semio_framework_job::StepOutcome::Complete(candidate) => {
+                let bytes = payload_bytes(&candidate.output);
+                let commit = semio_framework_os_kernel::json::from_json_str::<crate::job::WfcCommit>(std::str::from_utf8(&bytes).expect("completed WFC batch output is UTF-8"));
+                retire_outcome(&mut outcome);
+                let assignment = commit.expect("completed WFC batch job has a valid commit").assignment.into_iter().map(PatternId).collect();
+                Some(SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) }))
+            }
+            semio_framework_job::StepOutcome::Fault(fault) => {
+                let report = run_report(Event::Contradiction { node: NodeId(0) }, job.observed());
+                if payload_bytes(&fault.detail) == b"wfc-unsatisfiable" {
+                    Some(SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report }))
+                } else {
+                    Some(SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report }))
+                }
+            }
+            semio_framework_job::StepOutcome::Cancelled => Some(SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) }),
+            _ => None,
+        };
+        retire_outcome(&mut outcome);
+        if let Some(result) = result {
+            break result;
+        }
+    };
+    close_job(&mut job);
+    result
+}
+
+/// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an
+/// ordinary backtrack) any complete assignment a constraint does not accept.
+#[allow(clippy::too_many_arguments)]
+pub fn solve_with_constraints<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    cancel: Option<&CancelToken>,
+    constraints: &ConstraintSet<'_>,
+) -> SolveOutcome {
+    solve_inner(model, topo, config, seed, init_domains, fixed, cancel, Some(constraints))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn solve_inner<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    cancel: Option<&CancelToken>,
+    constraints: Option<&ConstraintSet<'_>>,
+) -> SolveOutcome {
+    let start = std::time::Instant::now();
+    let mut rng = Rng::from_seed(seed);
+    let mut restarts = 0u64;
+    // Persists across restarts: every attempt shares the same `init_domains`/`fixed`/constraints,
+    // so a nogood learned in one restart is exactly as valid — and as watchable — in the next.
+    let mut nogood_store = NogoodIndex::new(config.nogood);
+
+    loop {
+        let mut init = initialize(model, topo, init_domains, fixed, constraints);
+        let mut sink = EventSink::new(config.diag_level);
+        let mut decision_counter = 0u32;
+
+        if init.wipeout.is_none() {
+            init.wipeout = nogood_store.rewatch_for_new_attempt(model, topo, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics);
+        }
+        if let Some(wiped) = init.wipeout {
+            sink.emit(Event::Contradiction { node: wiped });
+            return conclude_failed_attempt(config, wiped, init.metrics, seed, &mut restarts, sink, model.fingerprint());
+        }
+
+        let local_budget = match config.mode {
+            SearchMode::RestartOnly => config.restart_schedule.backtrack_budget(restarts),
+            SearchMode::Backtrack | SearchMode::Backjump => None,
+        };
+        let step = drive(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, cancel, local_budget, constraints, &mut sink, &mut nogood_store);
+        init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
+
+        match step {
+            StepOutcome::Solved => {
+                sink.emit(Event::Solved);
+                let assignment: Vec<PatternId> = init.domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect();
+                return SolveOutcome::Solved(Solution { assignment, report: report(init.metrics, seed, model.fingerprint(), sink) });
+            }
+            StepOutcome::Exhausted => match config.mode {
+                SearchMode::Backtrack | SearchMode::Backjump => {
+                    return SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report: report(init.metrics, seed, model.fingerprint(), sink) });
+                }
+                SearchMode::RestartOnly => {
+                    if !restart_or_give_up(config, &mut restarts, &mut sink) {
+                        init.metrics.restarts = restarts;
+                        return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: report(init.metrics, seed, model.fingerprint(), sink) });
+                    }
+                    continue;
+                }
+            },
+            StepOutcome::LocalLimitReached => {
+                debug_assert_eq!(config.mode, SearchMode::RestartOnly);
+                if !restart_or_give_up(config, &mut restarts, &mut sink) {
+                    init.metrics.restarts = restarts;
+                    return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: report(init.metrics, seed, model.fingerprint(), sink) });
+                }
+                continue;
+            }
+            StepOutcome::BudgetExceeded => {
+                return SolveOutcome::BudgetExceeded { partial: partial_state(&init.domains), report: report(init.metrics, seed, model.fingerprint(), sink) };
+            }
+            StepOutcome::Cancelled => {
+                return SolveOutcome::Cancelled { partial: partial_state(&init.domains), report: report(init.metrics, seed, model.fingerprint(), sink) };
+            }
+        }
+    }
+}
+
+/// 🌳️ Exhaustively enumerates up to `limit` solutions, proving `complete = true` iff the whole
+/// tree was explored (never stopped early by `limit` or a budget).
+pub fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize) -> (Vec<Solution>, bool) {
+    solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, None)
+}
+
+/// 🌳️ Like [`solve_all`], but also applies every constraint's initial restriction and excludes any
+/// complete assignment a constraint does not accept.
+#[allow(clippy::too_many_arguments)]
+pub fn solve_all_with_constraints<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    limit: usize,
+    constraints: &ConstraintSet<'_>,
+) -> (Vec<Solution>, bool) {
+    solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, Some(constraints))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: Option<&ConstraintSet<'_>>) -> (Vec<Solution>, bool) {
+    let start = std::time::Instant::now();
+    let mut rng = Rng::from_seed(seed);
+    let mut init = initialize(model, topo, init_domains, fixed, constraints);
+    let mut decision_counter = 0u32;
+    let mut raw_solutions = Vec::new();
+    let mut nogood_store = NogoodIndex::new(config.nogood);
+    if init.wipeout.is_none() {
+        init.wipeout = nogood_store.rewatch_for_new_attempt(model, topo, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics);
+    }
+
+    if init.wipeout.is_some() {
+        return (Vec::new(), true);
+    }
+
+    let mut sink = EventSink::new(config.diag_level);
+    let step = drive_all(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, &mut raw_solutions, limit, constraints, &mut sink, &mut nogood_store);
+    init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
+
+    let complete = matches!(step, StepOutcome::Exhausted);
+    let fingerprint = model.fingerprint();
+    // Every returned solution shares the same cumulative event trace from the whole exhaustive
+    // search (not a solution-specific slice) — slicing per solution would need each `Solution` to
+    // remember its own trail-position range, which isn't worth the bookkeeping until a caller
+    // actually needs per-solution replay for `solve_all`.
+    let events = sink.into_events();
+    let solutions: Vec<Solution> = raw_solutions.into_iter().map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: events.clone() } }).collect();
+    (solutions, complete)
+}
+
+fn restart_or_give_up(config: &SearchConfig, restarts: &mut u64, sink: &mut EventSink) -> bool {
+    sink.emit(Event::Restarted);
+    *restarts += 1;
+    !matches!(config.max_restarts, Some(max_r) if *restarts > max_r)
+}
+
+fn partial_state(domains: &DomainStore) -> PartialState {
+    PartialState { domains: domains.iter().map(|(_, d)| d.bits().clone()).collect(), decided: domains.iter().map(|(_, d)| d.singleton()).collect() }
+}
+
+fn conclude_failed_attempt(config: &SearchConfig, wiped: NodeId, mut metrics: Metrics, seed: u64, restarts: &mut u64, sink: EventSink, fingerprint: u64) -> SolveOutcome {
+    match config.mode {
+        SearchMode::Backtrack | SearchMode::Backjump => {
+            // A wipeout during the very first propagation (before any decision) with nothing on
+            // the trail to undo means every branch is already excluded: unsatisfiable, proven.
+            SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report: report(metrics, seed, fingerprint, sink) })
+        }
+        SearchMode::RestartOnly => {
+            *restarts += 1;
+            metrics.restarts = *restarts;
+            SolveOutcome::Contradiction(ContradictionReport { node: wiped, report: report(metrics, seed, fingerprint, sink) })
+        }
+    }
+}
+
+fn report(metrics: Metrics, seed: u64, model_fingerprint: u64, sink: EventSink) -> RunReport {
+    RunReport { metrics, model_fingerprint, seed, events: sink.into_events() }
+}
+// #endregion 🔖️Solve
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+// #endregion 🔖️Tests

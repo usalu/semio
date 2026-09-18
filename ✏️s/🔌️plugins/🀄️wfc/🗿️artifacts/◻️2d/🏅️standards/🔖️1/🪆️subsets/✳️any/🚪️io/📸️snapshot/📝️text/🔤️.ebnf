@@ -1,0 +1,5 @@
+(* 🔤️ derived from 📖️.grammar.semio — kebab rule names rendered in space case. *)
+document = header, body ;
+header = "schema", " ", "wfc.wfc2d.snapshot", newline ;
+body = payload, [ newline ] ;
+payload = octet, { octet } ;

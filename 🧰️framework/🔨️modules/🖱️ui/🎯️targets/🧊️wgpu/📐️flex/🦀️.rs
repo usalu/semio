@@ -229,6 +229,12 @@ fn flow_from_spec(spec: &LayoutSpec) -> FlowStyle {
 /// 🌊️ One retained node's flow style. `authored` is the node's own `LayoutSpec` when the producer
 /// published one (the React-parity dialect); the composite wgpu kinds ignore it on purpose — their
 /// geometry is what `paint`/`events` already derive their rows from.
+///
+/// 🎛️ One control row tall AT LEAST, never exactly: a `Select`'s synthesized option rows
+/// are real arena children, and the popup grows past the control band to hold them.
+///
+/// 🧩️ EXACTLY the host's band, clipped, filling the parent's cross axis: the host paints inside
+/// the solved rect and this engine reserves it without measuring anything of its own.
 fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored: Option<&LayoutSpec>, metrics: &TreeRowMetrics) -> FlowStyle {
     if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. })) && !matches!(kind, LayoutNodeKind::TreeRow { .. }) {
         let rect = crate::wgpu::layout::tree_row_control_rect(0.0, metrics);
@@ -254,14 +260,10 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         LayoutNodeKind::TreeSection { header, height } => band(height, header),
         LayoutNodeKind::TreeRow { row, height, .. } => band(height, row),
         LayoutNodeKind::Control { height } => {
-            // 🎛️ One control row tall AT LEAST, never exactly: a `Select`'s synthesized option rows
-            // are real arena children, and the popup grows past the control band to hold them.
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
             flow.min_height = height;
             flow
         }
-        // 🧩️ EXACTLY the host's band, clipped, filling the parent's cross axis: the host paints inside
-        // the solved rect and this engine reserves it without measuring anything of its own.
         LayoutNodeKind::HostContent { height } => FlowStyle { height: Dim::Length(height), min_height: height, clips: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
     }
 }
@@ -679,9 +681,10 @@ impl FlowStyle {
     /// run is re-measured against the size its container actually offers it, so it wraps where CSS
     /// would: in a column its width is settled first and the wrapped height becomes its main size; in
     /// a row its width is the main size and the wrapped height becomes its cross size.
+    ///
+    /// 🧭️ A child's own axes are read along its PARENT's main axis, never its own `row` flag —
+    /// that flag describes how IT arranges ITS children, which says nothing about how it is placed.
     fn flow_size(self, parent: FlowStyle, content_main: f32, content_cross: f32, intrinsic: (f32, f32), node: usize, measure: &mut dyn FnMut(usize, MeasureConstraint) -> (f32, f32)) -> (f32, f32) {
-        // 🧭️ A child's own axes are read along its PARENT's main axis, never its own `row` flag —
-        // that flag describes how IT arranges ITS children, which says nothing about how it is placed.
         let (own_main, own_cross, intrinsic_main, intrinsic_cross, min_main, min_cross) =
             if parent.row { (self.width, self.height, intrinsic.0, intrinsic.1, self.min_width, self.min_height) } else { (self.height, self.width, intrinsic.1, intrinsic.0, self.min_height, self.min_width) };
         let stretched = matches!(parent.align, Align::Stretch) && matches!(own_cross, Dim::Auto);

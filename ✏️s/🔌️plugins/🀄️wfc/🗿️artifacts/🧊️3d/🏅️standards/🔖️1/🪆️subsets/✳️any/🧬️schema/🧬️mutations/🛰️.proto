@@ -1,0 +1,40 @@
+syntax = "proto3";
+package semio.s.wfc.wfc3d.mutation;
+
+import "📸️snapshot/🛰️.proto";
+
+message Wfc3dMutation {
+  oneof kind {
+    CreateSlot create_slot = 1;
+    DeleteSlot delete_slot = 2;
+    MoveSlot move_slot = 3;
+    ResizeSlot resize_slot = 4;
+    ConnectSlots connect_slots = 5;
+    DisconnectSlots disconnect_slots = 6;
+    PinSlot pin_slot = 7;
+    UnpinSlot unpin_slot = 8;
+    CreateTile create_tile = 9;
+    DeleteTile delete_tile = 10;
+    ChangeTileWeight change_tile_weight = 11;
+    ChangeTileMedia change_tile_media = 12;
+    CreateRule create_rule = 13;
+    DeleteRule delete_rule = 14;
+    ChangeSeed change_seed = 15;
+  }
+}
+
+message CreateSlot { uint64 index = 1; semio.s.wfc.wfc3d.snapshot.Slot3d slot = 2; }
+message DeleteSlot { string id = 1; }
+message MoveSlot { string id = 1; double x = 2; double y = 3; double z = 4; }
+message ResizeSlot { string id = 1; double width = 2; double height = 3; double depth = 4; }
+message ConnectSlots { uint64 index = 1; semio.s.wfc.wfc3d.snapshot.SlotEdge edge = 2; }
+message DisconnectSlots { string id = 1; }
+message PinSlot { string id = 1; string tile_id = 2; }
+message UnpinSlot { string id = 1; }
+message CreateTile { uint64 index = 1; semio.s.wfc.wfc3d.snapshot.Tile tile = 2; }
+message DeleteTile { string id = 1; }
+message ChangeTileWeight { string id = 1; double weight = 2; }
+message ChangeTileMedia { string id = 1; semio.s.wfc.wfc3d.snapshot.TileMedia3d media = 2; }
+message CreateRule { uint64 index = 1; semio.s.wfc.wfc3d.snapshot.GraphRule rule = 2; }
+message DeleteRule { string id = 1; }
+message ChangeSeed { uint64 seed = 1; }

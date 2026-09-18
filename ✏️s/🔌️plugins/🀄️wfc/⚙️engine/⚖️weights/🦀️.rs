@@ -1,0 +1,125 @@
+//! ⚖️ Pattern weight storage: precomputed `w`, `ln w`, `w·ln w` per pattern (the three terms the
+//! incremental Shannon-entropy heuristic needs at O(1) per update), plus an optional exact-integer
+//! parallel table for deterministic integer sampling.
+
+use crate::error::ModelError;
+use crate::ids::PatternId;
+
+// #region 🔖️Weights
+/// ⚖️ Per-pattern weight table with precomputed entropy terms.
+#[derive(Clone, Debug)]
+pub struct WeightTable {
+    w: Vec<f64>,
+    ln_w: Vec<f64>,
+    w_ln_w: Vec<f64>,
+    w_int: Option<Vec<u64>>,
+}
+
+impl WeightTable {
+    /// 🧵 Completes a table whose validated columns were materialized by a resumable model compiler.
+    pub fn from_resumable_parts(w: Vec<f64>, w_ln_w: Vec<f64>) -> Self {
+        debug_assert_eq!(w.len(), w_ln_w.len());
+        Self {
+            w,
+            w_ln_w,
+            ln_w: Vec::new(),
+            w_int: None,
+        }
+    }
+
+    pub fn with_reference_columns(mut self, ln_w: Vec<f64>, w_int: Option<Vec<u64>>) -> Self {
+        assert_eq!(self.w.len(), ln_w.len());
+        assert!(w_int.as_ref().is_none_or(|values| values.len() == self.w.len()));
+        self.ln_w = ln_w;
+        self.w_int = w_int;
+        self
+    }
+
+    /// ⚖️ Builds a table from raw positive-finite weights. `w_int` is populated only when every
+    /// weight is already an exact non-negative integer value (the common case for hand-authored
+    /// tilesets and frequency-counted extraction).
+    pub fn new(weights: &[f64]) -> Result<Self, ModelError> {
+        let mut w = Vec::with_capacity(weights.len());
+        let mut ln_w = Vec::with_capacity(weights.len());
+        let mut w_ln_w = Vec::with_capacity(weights.len());
+        let mut all_integral = true;
+        let mut w_int = Vec::with_capacity(weights.len());
+        for (i, &value) in weights.iter().enumerate() {
+            if !value.is_finite() || value < 0.0 {
+                return Err(ModelError::InvalidWeight { pattern_index: i, value });
+            }
+            w.push(value);
+            let lnv = if value > 0.0 { value.ln() } else { 0.0 };
+            ln_w.push(lnv);
+            w_ln_w.push(if value > 0.0 { value * lnv } else { 0.0 });
+            if value.fract() == 0.0 && value >= 0.0 && value <= u64::MAX as f64 {
+                w_int.push(value as u64);
+            } else {
+                all_integral = false;
+            }
+        }
+        Ok(Self { w, ln_w, w_ln_w, w_int: if all_integral { Some(w_int) } else { None } })
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.w.len()
+    }
+
+    /// 🕳️ Whether the table carries no pattern weights.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.w.is_empty()
+    }
+
+    #[inline]
+    pub fn w(&self, p: PatternId) -> f64 {
+        self.w[p.index()]
+    }
+
+    #[inline]
+    pub fn ln_w(&self, p: PatternId) -> f64 {
+        self.ln_w[p.index()]
+    }
+
+    #[inline]
+    pub fn w_ln_w(&self, p: PatternId) -> f64 {
+        self.w_ln_w[p.index()]
+    }
+
+    /// ⚖️ Exact integer weight, when [`WeightTable::has_integer_weights`] is `true`.
+    #[inline]
+    pub fn w_int(&self, p: PatternId) -> Option<u64> {
+        self.w_int.as_ref().map(|v| v[p.index()])
+    }
+
+    pub fn has_integer_weights(&self) -> bool {
+        self.w_int.is_some()
+    }
+
+    /// ⚖️ `(sum_w, sum_w_ln_w)` restricted to the patterns present in `set`. O(domain size); used
+    /// only to rebuild caches from scratch (initialization, periodic drift correction, debug
+    /// verification) — never on the hot incremental path.
+    pub fn sum_over(&self, set: &crate::bitset::PatternSet) -> (f64, f64) {
+        let mut sum_w = 0.0;
+        let mut sum_w_ln_w = 0.0;
+        for p in set.iter_ones() {
+            sum_w += self.w(p);
+            sum_w_ln_w += self.w_ln_w(p);
+        }
+        (sum_w, sum_w_ln_w)
+    }
+
+    /// ⚖️ Exact-integer analogue of [`WeightTable::sum_over`], `None` if this table lacks integer
+    /// weights.
+    pub fn sum_int_over(&self, set: &crate::bitset::PatternSet) -> Option<u64> {
+        self.w_int.as_ref().map(|w_int| set.iter_ones().map(|p| w_int[p.index()]).sum())
+    }
+}
+// #endregion 🔖️Weights
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+// #endregion 🔖️Tests

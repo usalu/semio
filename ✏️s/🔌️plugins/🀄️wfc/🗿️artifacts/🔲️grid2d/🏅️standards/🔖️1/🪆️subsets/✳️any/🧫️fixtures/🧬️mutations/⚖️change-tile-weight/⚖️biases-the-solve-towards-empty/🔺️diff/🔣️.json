@@ -1,0 +1,31 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": null,
+  "height": null,
+  "cellWidth": null,
+  "cellHeight": null,
+  "periodicX": null,
+  "periodicY": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      0,
+      {
+        "id": "empty",
+        "label": "Empty",
+        "weight": 5.0,
+        "media": {
+          "kind": "vector",
+          "paths": []
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

@@ -9863,16 +9863,6 @@ impl RuntimeApply {
             runtime.return_interaction(interaction);
             return true;
         };
-        debug_frame_deferred(&format!(
-            "start {}",
-            match &work {
-                FrameDeferredWork::ShellMaintenance => "shell-maintenance".to_string(),
-                FrameDeferredWork::PumpSync => "pump-sync".to_string(),
-                FrameDeferredWork::Action(action) => format!("action {action:?}"),
-                FrameDeferredWork::FlushTutorial => "flush-tutorial".to_string(),
-                FrameDeferredWork::Settle => "settle".to_string(),
-            }
-        ));
         if matches!(work, FrameDeferredWork::ShellMaintenance) {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -9941,7 +9931,6 @@ impl RuntimeApply {
                 return Self::start_dispatch(cursor, runtime, handle);
             }
             Self::ResumeFrameDeferred { interaction, cursor } => {
-                debug_frame_deferred(&format!("resume returned={}", interaction.is_some()));
                 if let Some(returned) = interaction.take() {
                     runtime.return_interaction(returned);
                 }
@@ -9972,38 +9961,6 @@ impl RuntimeApply {
             },
         }
         true
-    }
-}
-
-#[allow(dead_code, reason = "[DEBUG] temporary frame-deferred probe")]
-fn debug_frame_deferred(tag: &str) {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static SEEN: AtomicU32 = AtomicU32::new(0);
-    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-    if seen > 60 {
-        return;
-    }
-    log_debug(&format!("[DEBUG] w5c deferred seen={seen} {tag}"));
-}
-
-#[allow(dead_code, reason = "[DEBUG] temporary asset-pump probe")]
-fn debug_asset_branch(tag: &'static str) -> bool {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static SEEN: AtomicU32 = AtomicU32::new(0);
-    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-    if seen < 12 || seen % 500 == 0 {
-        log_debug(&format!("[DEBUG] w5c asset-branch seen={seen} {tag}"));
-    }
-    true
-}
-
-#[allow(dead_code, reason = "[DEBUG] temporary transaction-stage probe")]
-fn debug_stage(tag: &str) {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static SEEN: AtomicU32 = AtomicU32::new(0);
-    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-    if seen < 8 || seen % 4_000 == 0 {
-        log_debug(&format!("[DEBUG] w5c stage seen={seen} {tag}"));
     }
 }
 
@@ -10166,15 +10123,23 @@ fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeCompletion 
 #[path = "../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
 mod runtime_publication_tests;
 
+/// 📮️ Publishes one completion and its scene invalidation as ONE observation. The invalidation is
+/// written while the mailbox lock is still held, so a reader that takes that lock can never see a
+/// ready completion under the scene revision it was already built against.
+///
+/// 🐛️ ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration: `mark_scene_changed` used to
+/// run AFTER `drop(queue)`, and a reader landing in that window read `ready.len() == 1` beside the
+/// OLD witness — a completion the frame it is about to present does not know it must rebuild for.
+/// `mark_scene_changed` is a single `fetch_add` on an `AtomicU64`, so it adds no lock order.
 fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, presentation: &RuntimePresentationAuthority, waker: &Mutex<Option<RuntimeHostWaker>>, completion: RuntimeCompletion) -> bool {
     let mut queue = completions.lock().expect("runtime completion mailbox lock");
     if !queue.enqueue(completion) {
         return false;
     }
+    presentation.mark_scene_changed();
     drop(queue);
     #[cfg(all(test, not(target_arch = "wasm32")))]
     runtime_publication_tests::pause_after_completion_publication();
-    presentation.mark_scene_changed();
     if let Some(waker) = waker.lock().expect("runtime completion waker lock").as_ref() {
         waker();
     }
@@ -10614,7 +10579,7 @@ impl RuntimeMailbox {
         if probe_slot.is_none() {
             let Some(owner) = self.take_completed_renderer_asset_step() else { return false };
             *probe_slot = Some(RendererAssetProbe::new(owner));
-            return debug_asset_branch("new-probe");
+            return true;
         }
         let probe = probe_slot.as_mut().expect("asset probe initialized above");
         if matches!(probe.phase, RendererAssetProbePhase::Ready) {
@@ -10633,7 +10598,7 @@ impl RuntimeMailbox {
                     _ => {}
                 }
                 probe.begin_close();
-                return debug_asset_branch("shared");
+                return true;
             }
             let surface = match probe.owner() {
                 RendererAssetFetchOwner::World { surface, .. } => *surface,
@@ -10648,7 +10613,7 @@ impl RuntimeMailbox {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return debug_asset_branch("terrain-bytes-error");
+                        return true;
                     }
                 };
                 let Ok(mut runtime) = self.try_lock() else { return false };
@@ -10656,7 +10621,7 @@ impl RuntimeMailbox {
                 let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
                 apply_world3d_terrain_tile_bytes(state, z, x, y, &bytes);
                 probe.begin_close();
-                return debug_asset_branch("terrain");
+                return true;
             }
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
@@ -10667,7 +10632,7 @@ impl RuntimeMailbox {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return debug_asset_branch("reference-bytes-error");
+                        return true;
                     }
                 };
                 let Ok(mut runtime) = self.try_lock() else { return false };
@@ -10677,7 +10642,7 @@ impl RuntimeMailbox {
                 apply_reference_image_bytes(state, &url, &bytes);
                 log_debug_diagnostic(&format!("[DEBUG] reference image decode done url={url}"));
                 probe.begin_close();
-                return debug_asset_branch("reference");
+                return true;
             }
             let Some(lease) = probe.take_ready_mesh_lease() else { return false };
             let Ok(mut runtime) = self.try_lock() else {
@@ -10696,7 +10661,7 @@ impl RuntimeMailbox {
                 Ok(()) => {
                     log_debug_diagnostic(&format!("[DEBUG] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
-                    return debug_asset_branch("mesh-published");
+                    return true;
                 }
                 Err(rejected) => {
                     let stale = rejected.fault == WorldDynamicFault::StaleToken;
@@ -10706,7 +10671,7 @@ impl RuntimeMailbox {
                         drop(runtime);
                         drop(probe_slot);
                         self.record_frame_fault("asset mesh publication generation/revision witness was stale");
-                        return debug_asset_branch("mesh-stale");
+                        return true;
                     }
                     return false;
                 }
@@ -10714,7 +10679,7 @@ impl RuntimeMailbox {
         }
         if matches!(probe.phase, RendererAssetProbePhase::Closing) {
             if !probe.close_step() {
-                return debug_asset_branch("closing");
+                return true;
             }
             let owner = probe.take_terminal_owner().expect("completed close owns terminal response");
             let rejection = probe.take_rejection();
@@ -10727,11 +10692,11 @@ impl RuntimeMailbox {
                 restored.rejection = rejection;
                 restored.begin_close();
             }
-            return debug_asset_branch("closed");
+            return true;
         }
         match probe.step() {
-            RendererAssetProbeStep::Pending => debug_asset_branch("step-pending"),
-            RendererAssetProbeStep::Ready => debug_asset_branch("step-ready"),
+            RendererAssetProbeStep::Pending => true,
+            RendererAssetProbeStep::Ready => true,
             RendererAssetProbeStep::Reject(_) => {
                 let rejection = probe.rejection.clone().expect("rejected probe owns its refusal witness");
                 drop(probe_slot);
@@ -11977,6 +11942,24 @@ pub(crate) struct FrameTransaction {
     raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
 
+/// ⏱️ The share of ONE frame-transaction step the renderer asset decode lane may spend before the
+/// transaction's own phases get the rest of the slice.
+///
+/// 🩸️ The lane used to take the WHOLE slice and `return Pending`, so while any asset decoded
+/// `FrameTransaction::step` never reached its first phase: measured on the puzzle3d boot as
+/// `asset-decode-pump units=306 deadline=true` over and over from t≈6 s, four GLB decodes plus two
+/// reference images deep, with no frame built in between. React presents continuously while a GLB
+/// streams because its loader is not on the render path at all; the mirror of that here is a bounded
+/// SHARE, not the whole step (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w7b-presenter-one-frame-per-boot.md` §2).
+pub(crate) const RENDERER_ASSET_DECODE_SLICE_US: u64 = semio_framework_job::INTERACTIVE_LANE_WALL_US / 2;
+
+/// ⏱️ The wall instant the decode lane must hand the rest of its step back at — `None` when the clock
+/// is unusable, which spends no units at all rather than an unbounded number.
+pub(crate) fn renderer_asset_decode_slice_deadline_us(now_us: Option<u64>) -> Option<u64> {
+    now_us.map(|now| now.saturating_add(RENDERER_ASSET_DECODE_SLICE_US))
+}
+
 pub(crate) enum AppFrameTransactionStep {
     Pending,
     Complete(AppFrameBuild),
@@ -12046,32 +12029,18 @@ impl FrameTransaction {
         }
     }
 
-#[allow(dead_code, reason = "[DEBUG] temporary supersede probe")]
-fn debug_supersede(tag: &str) {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static SEEN: AtomicU32 = AtomicU32::new(0);
-    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-    if !(seen < 10 || seen % 50 == 0) || seen > 3_000 {
-        return;
-    }
-    log_debug(&format!("[DEBUG] w5c supersede seen={seen} {tag}"));
-}
-
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         context.set_stage(self.stage_label());
         if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
-            Self::debug_supersede(&format!("context operation={} generation={} cancelled={} deadline={}", context.operation() != self.operation, context.generation() != self.generation, context.is_cancelled(), context.deadline_exceeded()));
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         }
         let Some(current_witness) = runtime.presentation_witness_for(self.generation.0) else {
-            Self::debug_supersede("no-witness");
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         };
         if let Some(base_witness) = self.base_witness {
             if base_witness != current_witness {
-                Self::debug_supersede("witness-moved");
                 self.phase = AppFrameTransactionPhase::Terminal;
                 return AppFrameTransactionStep::Superseded;
             }
@@ -12092,26 +12061,17 @@ fn debug_supersede(tag: &str) {
             // 1, so a single `Pending` used to buy exactly one 256-byte structure block, one response
             // page, or one GLB vertex — measured at ~55 units/s on the puzzle3d playground, where the
             // reference underlay alone is 1 889 blocks and each mesh ~7 000 vertices. Nothing in the
-            // scene would have appeared for minutes. The wall slice this step was granted is the real
-            // bound (`INTERACTIVE_LANE_WALL_US`), so the lane spends it and yields on the deadline
-            // instead of on a fuel unit; each unit is a bounded byte-wise scan, so the deadline check
-            // dominates the work it guards.
-            let mut units = 1u32;
-            while !context.deadline_exceeded() && runtime.pump_renderer_asset_decode_step() {
-                units = units.saturating_add(1);
-            }
-            Self::debug_supersede(&format!("asset-decode-pump units={units} deadline={}", context.deadline_exceeded()));
-            return AppFrameTransactionStep::Pending;
+            // scene would have appeared for minutes. Each unit is a bounded byte-wise scan, so the
+            // clock is the real bound and the deadline check dominates the work it guards.
+            let decode_deadline_us = renderer_asset_decode_slice_deadline_us(semio_framework_job::default_now_us());
+            while decode_deadline_us.is_some_and(|deadline| semio_framework_job::default_now_us().is_some_and(|now| now < deadline)) && !context.deadline_exceeded() && runtime.pump_renderer_asset_decode_step() {}
         }
         #[cfg(not(target_arch = "wasm32"))]
         if runtime.pump_native_asset() {
             context.consume_fuel(1);
             return AppFrameTransactionStep::Pending;
         }
-        let Ok(mut app) = runtime.try_lock() else {
-            Self::debug_supersede("runtime lock refused");
-            return AppFrameTransactionStep::Pending;
-        };
+        let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
         // 🎟️ No interaction state, no frame — and NO PARKING.
         //
         // 🩸️ Parking here (`Pending`) kept the build alive across the whole checkout, and a live build
@@ -12124,11 +12084,9 @@ fn debug_supersede(tag: &str) {
         // every advance, the returning completion is applied at the next opportunity, and the build that
         // needs the state is admitted fresh against it.
         if !app.interaction_available() {
-            Self::debug_supersede(&format!("interaction-unavailable site={:?} opportunities={}", app.checkout.site(), app.checkout.opportunities()));
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         }
-        debug_stage(self.stage_label());
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
                 scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
@@ -12862,6 +12820,7 @@ impl AppFrameBuild {
             #[cfg(not(target_arch = "wasm32"))]
             job_progress,
             terminal: false,
+            fault: None,
         }
     }
 }
@@ -12880,9 +12839,21 @@ pub(crate) struct AppFramePreparation {
     #[cfg(not(target_arch = "wasm32"))]
     job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
     terminal: bool,
+    fault: Option<&'static str>,
 }
 
 impl AppFramePreparation {
+    /// 🩺️ Why this preparation refused, for the ONE caller that must not swallow it.
+    ///
+    /// 🩸️ Every refusal here became an empty `StepOutcome::Fault`/`Cancelled`, and `ActiveFrameBuild`
+    /// answered it by cancelling its own token — no fault recorded, no log, no quarantine. A single
+    /// unbound raster producer therefore ended every frame build after the reference image decoded and
+    /// the shell presented ONE frame per boot with a completely silent console (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md`).
+    pub(crate) fn fault(&self) -> Option<&'static str> {
+        self.fault
+    }
+
     pub(crate) fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
         self.session.as_ref().and_then(semio_framework_job::BatchJobSession::callback_verdict)
     }
@@ -12909,6 +12880,7 @@ impl AppFramePreparation {
             if rejected.close_step() {
                 self.job_rejected = None;
                 self.terminal = true;
+                self.fault = Some("prepared render job admission was refused");
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
             return semio_framework_job::StepOutcome::Yield;
@@ -12918,12 +12890,14 @@ impl AppFramePreparation {
             if rejected.terminal_is_empty() {
                 self.rejected = None;
                 self.terminal = true;
+                self.fault = Some("prepared render job session admission was refused");
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
             return semio_framework_job::StepOutcome::Yield;
         }
         let Some(session) = self.session.as_mut() else {
             self.terminal = true;
+            self.fault = Some("prepared render job lost its session");
             return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
         };
         if !matches!(session.step(), Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
@@ -12943,9 +12917,11 @@ impl AppFramePreparation {
             }
             Some(semio_framework_job::StepOutcome::Cancelled) => {
                 self.terminal = true;
+                self.fault = Some("prepared render job was cancelled");
                 semio_framework_job::StepOutcome::Cancelled
             }
             Some(semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) | semio_framework_job::StepOutcome::Fault(_)) | None => {
+                self.fault = session.checked_out_job_mut().and_then(|job| job.fault()).or(Some("prepared render job answered a non-terminal outcome"));
                 session.begin_close();
                 self.terminal = true;
                 semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })

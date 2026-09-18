@@ -1,0 +1,90 @@
+{
+  "schema": "s.wfc.wfc2d",
+  "seed": 7,
+  "slots": [
+    {
+      "id": "slot-a",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    },
+    {
+      "id": "slot-b",
+      "x": 2.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    },
+    {
+      "id": "slot-c",
+      "x": 4.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-ab",
+      "fromSlotId": "slot-a",
+      "toSlotId": "slot-b",
+      "relation": "adjacent"
+    },
+    {
+      "id": "edge-bc",
+      "fromSlotId": "slot-b",
+      "toSlotId": "slot-c",
+      "relation": "adjacent"
+    }
+  ],
+  "tiles": [
+    {
+      "id": "tile-roof",
+      "weight": 1.0,
+      "media": {
+        "Vector": {
+          "paths": [
+            {
+              "segments": [
+                {
+                  "Move": {
+                    "to": [
+                      0.0,
+                      1.0
+                    ]
+                  }
+                },
+                {
+                  "Line": {
+                    "to": [
+                      0.5,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Line": {
+                    "to": [
+                      1.0,
+                      1.0
+                    ]
+                  }
+                },
+                "Close"
+              ],
+              "fill": {
+                "r": 206,
+                "g": 84,
+                "b": 62,
+                "a": 255
+              },
+              "strokeWidth": 0.0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "rules": []
+}

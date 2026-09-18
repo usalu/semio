@@ -1,0 +1,10 @@
+{
+  "ConnectSlots": {
+    "edge": {
+      "id": "edge-ac",
+      "fromSlotId": "slot-a",
+      "toSlotId": "slot-c",
+      "relation": "adjacent"
+    }
+  }
+}

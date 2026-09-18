@@ -1928,9 +1928,10 @@ pub(crate) const PROGRESS_INDETERMINATE_SHARE: f32 = 1.0 / 3.0;
 /// 📶️ Track and fill rects of one retained progress bar inside `bounds`: a track `padding_standard`
 /// tall, centred vertically, filled from the left to `ui_contract::progress_fraction` while determinate,
 /// or carrying the centred [`PROGRESS_INDETERMINATE_SHARE`] sweep while `total` is `None`.
+///
+/// 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx:2114`) — `--size-tiny`, not the
+/// one-spacing-unit sliver this used to draw.
 pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, _theme: &Theme) -> ([f32; 4], [f32; 4]) {
-    // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx:2114`) — `--size-tiny`, not the
-    // one-spacing-unit sliver this used to draw.
     let height = SIZE_TINY.min(bounds.h).max(0.0);
     let track = [bounds.x, bounds.y + (bounds.h - height) * 0.5, bounds.w.max(0.0), height];
     let fill = match ui_contract::progress_fraction(node.completed, node.total) {

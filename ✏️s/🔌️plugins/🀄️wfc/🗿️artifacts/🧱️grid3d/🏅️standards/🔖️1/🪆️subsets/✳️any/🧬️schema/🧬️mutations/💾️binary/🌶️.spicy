@@ -1,0 +1,13 @@
+# 🌶️ wfc.grid3d.mutations — derived from 📡️.protocol.semio; one Spicy unit field per declared field.
+module MutationsGrid3d;
+
+public type Record = unit {
+    header_format_major: uint16;
+    header_format_minor: uint16;
+    header_flags: uint32;
+    header_domain_tag: uint32;
+    header_header_crc32: uint32;
+    body_payload: bytes;
+    footer_artifact_mark: bytes;
+    footer_body_crc32: uint32;
+};

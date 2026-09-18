@@ -1,0 +1,272 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/create-tile/schema.json",
+  "title": "CreateTile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tile"
+  ],
+  "properties": {
+    "tile": {
+      "title": "WfcTile2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "weight",
+        "media"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number"
+        },
+        "media": {
+          "title": "WfcTileMedia2d",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "bitmap",
+                "vector",
+                "image"
+              ]
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "palette": {
+              "type": "array",
+              "items": {
+                "title": "WfcColor",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "r",
+                  "g",
+                  "b",
+                  "a"
+                ],
+                "properties": {
+                  "r": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "g": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "b": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "a": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            },
+            "pixels": {
+              "type": "string",
+              "format": "base64"
+            },
+            "paths": {
+              "type": "array",
+              "items": {
+                "title": "WfcVectorPath",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "segments",
+                  "strokeWidth"
+                ],
+                "properties": {
+                  "segments": {
+                    "type": "array",
+                    "items": {
+                      "title": "WfcPathSegment",
+                      "type": "object",
+                      "required": [
+                        "kind"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "moveTo",
+                            "lineTo",
+                            "quadTo",
+                            "cubicTo",
+                            "close"
+                          ]
+                        },
+                        "to": {
+                          "title": "WfcPoint2",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "ctrl": {
+                          "title": "WfcPoint2",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "ctrl1": {
+                          "title": "WfcPoint2",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "ctrl2": {
+                          "title": "WfcPoint2",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "fill": {
+                    "title": "WfcColor",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "properties": {
+                      "r": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "g": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "b": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "a": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      }
+                    }
+                  },
+                  "stroke": {
+                    "title": "WfcColor",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "r",
+                      "g",
+                      "b",
+                      "a"
+                    ],
+                    "properties": {
+                      "r": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "g": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "b": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "a": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      }
+                    }
+                  },
+                  "strokeWidth": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "child": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  }
+}

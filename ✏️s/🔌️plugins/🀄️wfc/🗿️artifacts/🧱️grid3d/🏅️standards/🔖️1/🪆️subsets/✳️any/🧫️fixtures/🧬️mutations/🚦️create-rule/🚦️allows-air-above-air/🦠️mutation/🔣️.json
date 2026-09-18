@@ -1,0 +1,11 @@
+{
+  "CreateRule": {
+    "rule": {
+      "id": "r-top-air-air",
+      "tileAId": "air",
+      "tileBId": "air",
+      "direction": "TOP",
+      "allowed": true
+    }
+  }
+}

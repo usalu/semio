@@ -21,12 +21,19 @@ fn caret_blink_arms_exactly_once_while_present() {
     assert_eq!(scheduler.next_deadline(), first, "a still-present caret does not re-arm a second deadline");
 }
 
+/// 🔥️ `fire` is only ever reached AFTER the event loop has consumed the deadline that woke it —
+/// `FrameScheduler::should_render` drains every `due <= now` entry into `dirty`
+/// (`🖌️render/⏱️schedule/🦀️.rs:133-142`) and only then does the frame call `fire`. Without that
+/// drain the scheduler's append-only list still holds the half-period this law just consumed, and
+/// `next_deadline` answers the OLD 0.5 instead of the re-armed 1.0
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration; W1's §3.A2 hand-off).
 #[test]
 fn caret_blink_toggles_and_rearms_on_fire() {
     let mut scheduler = FrameScheduler::new();
     let mut blink = CaretBlink::new();
     blink.sync(&mut scheduler, 0.0, true);
     assert!(blink.is_visible());
+    assert!(scheduler.should_render(CARET_BLINK_SECONDS).is_some(), "the half-period is what woke this frame");
     blink.fire(&mut scheduler, CARET_BLINK_SECONDS);
     assert!(!blink.is_visible());
     assert_eq!(scheduler.next_deadline().map(|deadline| deadline.due), Some(CARET_BLINK_SECONDS * 2.0));

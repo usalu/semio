@@ -1,0 +1,5 @@
+# 🧬 s.wfc.grid3d artifact facet — the persisted problem spec IS the artifact.
+
+type Grid3dArtifact {
+  snapshot: Grid3dSnapshot!
+}

@@ -285,6 +285,13 @@ fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_s
 }
 
 /// 🖱️ The pick law, keyed by surface id for the same reason as `world3d_preview_window_law`.
+///
+/// 🎯️ `targets` is a JSON TEXT arg, never a nested array — the world authority writes it through
+/// bounded string credits (`INTERACTION_TARGETS_OPEN`, `🌍️world/🦀️.rs:6343`), so the law parses it.
+///
+/// ⚖️ A PICK reports `object`; only `interactionHover` reports the scene's own granularity. The
+/// shared oracle `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json` says so in both directions —
+/// `instance-pick-replaces` expects `object`, `instance-hover` expects `handle`.
 fn world3d_pointer_down_law(surface_id: &str) {
     let fixture = fixture();
     let scene = world3d_preview_scene_with_selection(surface_id, &fixture, json!({ "method": "pick", "mode": "replace", "ids": [] }).to_string());
@@ -295,7 +302,7 @@ fn world3d_pointer_down_law(surface_id: &str) {
     // 🎯️ Aim through the fixture camera's own target — the centre of the prism's base face, the one
     // point guaranteed both inside the solid and inside the 45° frustum.
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w / bounds.h), ui_wgpu::wgpu::Vec3::ZERO, bounds.w, bounds.h).expect("the camera target projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::ZERO, bounds.w, bounds.h).expect("the camera target projects");
     // 🖱️ A left press opens the marquee gesture and the RELEASE is what picks — the same
     // press-then-click contract React's World3dHost binds, so the lane drives both halves.
     let mut actions = publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], true, 0, &PointerModifiers::default()));
@@ -308,12 +315,7 @@ fn world3d_pointer_down_law(surface_id: &str) {
     assert_eq!(args["domainId"].as_str(), Some("graph"), "the window's own bound domain, never the OS `world` fallback");
     assert_eq!(args["merge"].as_str(), Some("replace"));
     assert_eq!(args["method"].as_str(), Some("pick"));
-    // 🎯️ `targets` is a JSON TEXT arg, never a nested array — the world authority writes it through
-    // bounded string credits (`INTERACTION_TARGETS_OPEN`, `🌍️world/🦀️.rs:6343`), so the law parses it.
     let targets: Value = serde_json::from_str(args["targets"].as_str().expect("targets is written as JSON text")).expect("targets text parses");
-    // ⚖️ A PICK reports `object`; only `interactionHover` reports the scene's own granularity. The
-    // shared oracle `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json` says so in both directions —
-    // `instance-pick-replaces` expects `object`, `instance-hover` expects `handle`.
     assert_eq!(targets[0]["granularity"].as_str(), Some("object"));
     let expected_channel_id = expected_id.split_once('#').map_or(expected_id, |(channel, _)| channel);
     assert_eq!(targets[0]["id"].as_str(), Some(expected_channel_id), "the target is the bare channel-qualified id React's World3dHost dispatches — never `surfaceId/id` and never the render id");
@@ -326,6 +328,10 @@ fn world3d_pointer_down_emits_the_graph_domain_selection_react_dispatches() {
 }
 
 /// 📷️ The camera law, keyed by surface id for the same reason as `world3d_preview_window_law`.
+///
+/// 🪟️ `windowId`, never `surfaceId` — `worldCameraSetCameraDispatchArgs` addresses the WINDOW
+/// instance, and the guest camera value has no `fov` member: React sends `{position, target,
+/// zoom, up?}` and a stray key fails the whole `camera` deserialization.
 fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let fixture = fixture();
     let scene = world3d_preview_scene(surface_id, &fixture);
@@ -338,9 +344,6 @@ fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let zoomed = wheel.iter().find(|action| action.action == "setCamera").expect("a wheel over the preview publishes setCamera");
     assert_eq!(zoomed.controller_id, "generation3d");
     let args = zoomed.args.clone().expect("camera args");
-    // 🪟️ `windowId`, never `surfaceId` — `worldCameraSetCameraDispatchArgs` addresses the WINDOW
-    // instance, and the guest camera value has no `fov` member: React sends `{position, target,
-    // zoom, up?}` and a stray key fails the whole `camera` deserialization.
     assert_eq!(args["windowId"].as_str(), Some(surface_id));
     assert!(args.get("surfaceId").is_none(), "the pre-fix `surfaceId` address is gone, not merely joined by `windowId`");
     assert!(args["camera"]["position"].as_array().is_some_and(|axes| axes.len() == 3), "generation3d's 📷️set-camera payload carries a 3-axis position");
@@ -516,6 +519,12 @@ fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
 /// React's `MapRenderer.uploadTileRow` (`🧭️TiledMapHost/🟦️.tsx:608-631`) is the reference: fetch
 /// every visible tile the session does not already hold, skip the ones it does, never re-request a
 /// miss.
+///
+/// 🔁️ A second paint must not double-reserve: the pending set de-duplicates by `(vector, z, x, y)`
+/// exactly like React's in-flight promise map.
+///
+/// 🧹️ Drain the shared registration list this paint appended to: `take_engine_surface_registrations`
+/// is process-wide, and a sibling test asserting on its OWN entries must not find these.
 #[test]
 fn tiled_map_paint_reserves_the_visible_tiles_react_fetches() {
     let fixture = fixture();
@@ -533,16 +542,12 @@ fn tiled_map_paint_reserves_the_visible_tiles_react_fetches() {
     let held = with_map_host("tiled-map-tiles", |host| pending.iter().any(|(vector, z, x, y)| if *vector { host.has_vector_tile(&map_tiles::tile_key(*z, *x, *y)) } else { host.has_tile(&map_tiles::tile_key(*z, *x, *y)) })).expect("map host");
     assert!(!held, "React skips the fetch for a tile the session already holds, and so does this — no pending tile may already be resident");
 
-    // 🔁️ A second paint must not double-reserve: the pending set de-duplicates by `(vector, z, x, y)`
-    // exactly like React's in-flight promise map.
     let before = pending.len();
     let frame = paint_scene(&map_scene, bounds, crate::scenes::AdmittedSurfaceMap::default());
     drop_world3d_states(frame.world3d_states);
     let after = ENGINE_SURFACES.with(|cell| cell.borrow().get("tiled-map-tiles").map(|entry| entry.map_sync_cache.tile_pending.len())).expect("map engine");
     assert_eq!(after, before, "the per-frame re-offer must be free");
 
-    // 🧹️ Drain the shared registration list this paint appended to: `take_engine_surface_registrations`
-    // is process-wide, and a sibling test asserting on its OWN entries must not find these.
     let _ = take_engine_surface_registrations();
     drop_engine_surface("tiled-map-tiles");
 }

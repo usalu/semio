@@ -1,0 +1,10 @@
+dialect grammar
+grammar wfc.wfc2d.diff
+extension wfc2d
+start diff
+
+artifact-mark = "wfc.wfc2d-diff"
+diff = artifact-mark change+
+change = scalar-change / collection-change
+scalar-change = "schema" "=" TEXT / "seed" "=" INT
+collection-change = ("slots" / "edges" / "tiles" / "rules") ("-removed" IDENT / "-upserted" INT IDENT)

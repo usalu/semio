@@ -1,0 +1,4 @@
+"""🧬️ The Wfc2d artifact facet — the persisted problem spec is the artifact."""
+type Wfc2dArtifact {
+  snapshot: Wfc2dSnapshot!
+}

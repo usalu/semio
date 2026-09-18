@@ -1,0 +1,8 @@
+dialect grammar
+grammar wfc.wfc2d.mutations
+extension wfc2d
+start line
+
+line = keyword [SP arguments]
+keyword = "change-seed" / "create-slot" / "delete-slot" / "move-slot" / "resize-slot" / "connect-slots" / "disconnect-slots" / "pin-slot" / "unpin-slot" / "create-tile" / "delete-tile" / "change-tile-weight" / "change-tile-media" / "create-rule" / "delete-rule"
+arguments = OCTET+

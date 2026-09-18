@@ -1,0 +1,87 @@
+syntax = "proto3";
+package semio.s.wfc.wfc3d.snapshot;
+
+message Color {
+  uint32 r = 1;
+  uint32 g = 2;
+  uint32 b = 3;
+  uint32 a = 4;
+}
+
+message ArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
+}
+
+message ArtifactRef {
+  string artifact_id = 1;
+  ArtifactDialect dialect = 2;
+}
+
+message ArtifactChildHandle {
+  string child_id = 1;
+  ArtifactRef target = 2;
+}
+
+message Mesh {
+  repeated double positions = 1;
+  repeated uint32 indices = 2;
+  optional Color color = 3;
+}
+
+message MeshChild {
+  ArtifactChildHandle child = 1;
+}
+
+message TileMedia3d {
+  oneof kind {
+    Mesh mesh = 1;
+    MeshChild mesh_child = 2;
+  }
+}
+
+message Tile {
+  string id = 1;
+  optional string label = 2;
+  double weight = 3;
+  TileMedia3d media = 4;
+}
+
+message Slot3d {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double width = 5;
+  double height = 6;
+  double depth = 7;
+  optional string pinned_tile_id = 8;
+}
+
+message SlotEdge {
+  string id = 1;
+  string from_slot_id = 2;
+  string to_slot_id = 3;
+  string relation = 4;
+}
+
+// ⛓️ One adjacency rule over an UNORDERED tile pair. The rules ARE the compatibility table — an
+// ALLOW-LIST — so a pair no rule mentions is forbidden. `allowed = false` always beats an admitting
+// rule, and an absent `relation` states the rule for every relation at once.
+message GraphRule {
+  string id = 1;
+  string tile_a_id = 2;
+  string tile_b_id = 3;
+  optional string relation = 4;
+  bool allowed = 5;
+}
+
+message Wfc3dSnapshot {
+  string schema = 1;
+  uint64 seed = 2;
+  repeated Slot3d slots = 3;
+  repeated SlotEdge edges = 4;
+  repeated Tile tiles = 5;
+  repeated GraphRule rules = 6;
+}

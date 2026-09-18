@@ -7392,33 +7392,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-procedural-assembly"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-artifact-flow-flow",
- "semio-framework-async-macros",
- "semio-framework-dispatch-macros",
- "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-job",
- "semio-framework-os-flow",
- "semio-framework-os-infinite",
- "semio-framework-os-kernel",
- "semio-framework-pack",
- "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-ui",
- "semio-framework-ui-contract",
- "semio-framework-ui-styling",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-txt",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-procedural-generation2d"
 version = "0.1.0"
 dependencies = [
@@ -8587,6 +8560,129 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-wfc-2d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-io-base64",
+ "semio-framework-job",
+ "semio-framework-os-flow",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-styling",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-wfc-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-wfc-3d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-wfc-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-wfc-bitmap"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-value-derive",
+ "semio-s-plugin-wfc-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-wfc-grid2d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-job",
+ "semio-framework-os-flow",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-styling",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-json",
+ "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-wfc-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-wfc-grid3d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-job",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
+ "semio-framework-ui-styling",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-wfc-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-writer-writer"
 version = "0.1.0"
 dependencies = [
@@ -9406,7 +9502,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-tool-run",
  "semio-framework-trace",
- "semio-s-artifact-procedural-assembly",
  "semio-s-artifact-procedural-generation2d",
  "semio-s-artifact-procedural-generation3d",
  "serde_json",
@@ -9842,6 +9937,39 @@ dependencies = [
  "semio-s-artifact-vcs-vcs",
  "semio-s-plugin-stdio",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-wfc"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-tool-run",
+ "semio-framework-trace",
+ "semio-s-artifact-wfc-2d",
+ "semio-s-artifact-wfc-3d",
+ "semio-s-artifact-wfc-bitmap",
+ "semio-s-artifact-wfc-grid2d",
+ "semio-s-artifact-wfc-grid3d",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-wfc-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-value-derive",
  "serde_json",
 ]
 

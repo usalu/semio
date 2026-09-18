@@ -1,0 +1,44 @@
+semio wfc.wfc3d.dsl v1
+schema=s.wfc.wfc3d seed=19
+slots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {
+  cantilever 1.5 3 0 2 1 1 _
+  storey-0 0 0 0 2 3 2 pier
+  storey-1 0 3 0 2 3 2 _
+  storey-2 0 6 0 2 3 2 _
+  storey-3 0 9 0 2 1 2 _
+}
+edges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {
+  edge-0-1 storey-0 storey-1 above
+  edge-1-2 storey-1 storey-2 above
+  edge-2-3 storey-2 storey-3 above
+  edge-cantilever storey-1 cantilever beside
+  edge-cantilever-brace storey-2 cantilever beside
+}
+tiles [id:TEXT label:TEXT weight:NUM media:VAL] {
+  cap Cap 1 {
+    color={
+      a=255 b=110 g=90 r=90
+    }
+    indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ]
+  }
+  deck Deck 3 {
+    color={
+      a=255 b=160 g=190 r=200
+    }
+    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
+  }
+  pier Pier 2 {
+    color={
+      a=255 b=135 g=130 r=130
+    }
+    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
+  }
+}
+rules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {
+  rule-cap-deck-above cap deck above true
+  rule-cap-pier-above cap pier above true
+  rule-deck-deck deck deck _ true
+  rule-deck-pier deck pier _ true
+  rule-pier-pier pier pier _ true
+  rule-pier-pier-above pier pier above false
+}

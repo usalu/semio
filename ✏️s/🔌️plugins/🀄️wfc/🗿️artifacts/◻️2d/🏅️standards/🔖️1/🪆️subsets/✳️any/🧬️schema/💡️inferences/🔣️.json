@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/inferences/schema.json",
+  "title": "Wfc2dInferenceCommit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignments",
+    "contradiction",
+    "entropy"
+  ],
+  "properties": {
+    "assignments": {
+      "type": "object",
+      "description": "Slot id to solved tile id.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "contradiction": {
+      "type": "boolean",
+      "description": "True when the spec admits no total assignment."
+    },
+    "entropy": {
+      "type": "object",
+      "description": "Slot id to pre-propagation Shannon entropy over the tile weights.",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

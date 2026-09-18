@@ -220,11 +220,6 @@ pub(crate) fn engine_surface_law_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 #[cfg(test)]
-fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
-}
-
-#[cfg(test)]
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
@@ -584,7 +579,7 @@ pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32,
 #[cfg(test)]
 fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHost) -> Vec<ActionDescriptor> {
     vec![
-        scene_action(
+        crate::scenes::scene_action(
             scene,
             "textSelect",
             json!({
@@ -592,7 +587,7 @@ fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHo
                 "selectionJson": json!({ "start": host.anchor(), "end": host.caret() }).to_string(),
             }),
         ),
-        scene_action(scene, "textEdit", json!({ "surfaceId": scene.surface_id, "document": host.text() })),
+        crate::scenes::scene_action(scene, "textEdit", json!({ "surfaceId": scene.surface_id, "document": host.text() })),
     ]
 }
 

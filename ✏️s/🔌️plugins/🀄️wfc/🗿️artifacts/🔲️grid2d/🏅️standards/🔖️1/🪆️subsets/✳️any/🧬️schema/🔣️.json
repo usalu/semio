@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/artifact.json",
+  "title": "Grid2dArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["snapshot"],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/snapshot.json",
+      "x-semio-state": "artifact"
+    }
+  }
+}

@@ -1032,6 +1032,13 @@ pub fn estimate_essential_five_point(matches: &[([f64; 2], [f64; 2])], k_a: &Int
 /// worker step can spend a fixed number of minimal samples per call and keep the best model it has
 /// seen across calls instead of running an unbounded search in one step.
 pub fn estimate_essential_five_point_with_limit(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64, maximum_hypotheses: usize) -> Option<TwoViewResult> {
+    estimate_essential_five_point_bounded(matches, k_a, k_b, threshold, seed, maximum_hypotheses, 5)
+}
+
+/// 🎯️ [`estimate_essential_five_point_with_limit`] with an explicit polish budget: `polish_rounds`
+/// rounds of the nonlinear refinement (each an LM solve over the inlier set), so a worker step can
+/// spend one round per call and polish the best model it keeps across calls.
+pub fn estimate_essential_five_point_bounded(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, seed: u64, maximum_hypotheses: usize, polish_rounds: usize) -> Option<TwoViewResult> {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
@@ -1051,7 +1058,7 @@ pub fn estimate_essential_five_point_with_limit(matches: &[([f64; 2], [f64; 2])]
     let result = ransac(&EssentialFivePointSolver, &normalized, &cfg)?;
     let mut model = result.model;
     let mut inliers = result.inliers.clone();
-    for _ in 0..5 {
+    for _ in 0..polish_rounds {
         let inlier_corr: Vec<([f64; 2], [f64; 2])> = inliers.iter().map(|&i| normalized[i]).collect();
         let Some(pose) = decompose_essential(&model, &inlier_corr) else { break };
         let refined_pose = refine_essential_lm(&pose, &inlier_corr);
@@ -2083,7 +2090,16 @@ pub struct SeedPairPreparation {
     cursor: usize,
     correspondences: Vec<([f64; 2], [f64; 2])>,
     phase: SeedPairPhase,
+    /// 🎯️ Hypothesis batches spent and the best essential-matrix estimate they produced: one
+    /// bounded five-point batch per call, so no call runs the whole search.
+    attempts: usize,
+    best: Option<TwoViewResult>,
 }
+
+/// 🎯️ Five-point hypotheses one seed-solve call draws, and the calls a seed spends before it
+/// commits to the best model found.
+const SEED_HYPOTHESES_PER_CALL: usize = 4;
+const SEED_SOLVE_CALLS: usize = 16;
 
 impl SeedPairPreparation {
     pub fn new(frame_a: usize, frame_b: usize, matches: &[Match]) -> Self {
@@ -2094,6 +2110,8 @@ impl SeedPairPreparation {
             cursor: 0,
             correspondences: Vec::with_capacity(matches.len().min(MAX_INTERACTIVE_SEED_CORRESPONDENCES)),
             phase: SeedPairPhase::Collect,
+            attempts: 0,
+            best: None,
         }
     }
 }
@@ -2188,17 +2206,17 @@ impl IncrementalSfm {
     pub fn retained_bytes(&self) -> usize {
         let nested = |outer: usize, inner: usize| outer + inner;
         nested(
-            self.tracks.tracks.len() * std::mem::size_of::<Vec<(usize, u32)>>(),
-            self.tracks.tracks.iter().map(|track| track.capacity() * std::mem::size_of::<(usize, u32)>()).sum::<usize>(),
+            self.tracks.tracks.len() * size_of::<Vec<(usize, u32)>>(),
+            self.tracks.tracks.iter().map(|track| track.capacity() * size_of::<(usize, u32)>()).sum::<usize>(),
         ) + nested(
-            self.keypoints_per_frame.len() * std::mem::size_of::<Vec<Keypoint>>(),
-            self.keypoints_per_frame.iter().map(|frame| frame.capacity() * std::mem::size_of::<Keypoint>()).sum::<usize>(),
+            self.keypoints_per_frame.len() * size_of::<Vec<Keypoint>>(),
+            self.keypoints_per_frame.iter().map(|frame| frame.capacity() * size_of::<Keypoint>()).sum::<usize>(),
         ) + nested(
-            self.pairwise_matches.len() * std::mem::size_of::<(usize, usize, Vec<Match>)>(),
-            self.pairwise_matches.iter().map(|(_, _, matches)| matches.capacity() * std::mem::size_of::<Match>()).sum::<usize>(),
-        ) + self.cameras.capacity() * std::mem::size_of::<(usize, CameraPose)>()
-            + self.points.len() * (std::mem::size_of::<usize>() + std::mem::size_of::<[f64; 3]>() + 16)
-            + self.point_events.as_ref().map_or(0, |events| events.capacity() * std::mem::size_of::<(usize, [f64; 3], bool)>())
+            self.pairwise_matches.len() * size_of::<(usize, usize, Vec<Match>)>(),
+            self.pairwise_matches.iter().map(|(_, _, matches)| matches.capacity() * size_of::<Match>()).sum::<usize>(),
+        ) + self.cameras.capacity() * size_of::<(usize, CameraPose)>()
+            + self.points.len() * (size_of::<usize>() + size_of::<[f64; 3]>() + 16)
+            + self.point_events.as_ref().map_or(0, |events| events.capacity() * size_of::<(usize, [f64; 3], bool)>())
     }
 
     /// 🔭️ Starts recording every triangulated (`true`) and pruned (`false`) point by track id.
@@ -2540,16 +2558,43 @@ impl IncrementalSfm {
                 if preparation.correspondences.len() < 8 {
                     return Err(SfmError::InsufficientMatches);
                 }
-                // 🎯️ Five-point minimal solve with the nonlinear polish first: it stays on the
-                // essential matrix's 5-DOF manifold, so the seed pose it yields is accurate enough
-                // for the triangulations everything downstream (PnP registration, bundle adjustment)
-                // is anchored to. The unconstrained 8-point fit is only the fallback for a pair the
-                // five-point search cannot solve within its hypothesis budget.
+                // 🎯️ Five-point minimal solves with a one-round nonlinear polish, one bounded batch
+                // per call, the best-supported model kept across calls: the seed pose anchors every
+                // triangulation, PnP registration and bundle adjustment downstream, so it is worth
+                // the manifold-true estimate; the unconstrained 8-point fit is only the fallback for
+                // a pair the five-point search cannot solve at all.
                 const SEED_FIVE_POINT_THRESHOLD: f64 = 0.005;
-                let estimate = estimate_essential_five_point_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, SEED_FIVE_POINT_THRESHOLD, 1, MAX_INTERACTIVE_SEED_HYPOTHESES)
-                    .filter(|estimate| estimate.inliers.len() >= 8)
-                    .or_else(|| estimate_essential_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES))
-                    .ok_or(SfmError::DegenerateGeometry)?;
+                let seed = (preparation.frame_a as u64) << 32 ^ preparation.frame_b as u64 ^ (preparation.attempts as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+                let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, &self.intrinsics, &self.intrinsics, SEED_FIVE_POINT_THRESHOLD, seed, SEED_HYPOTHESES_PER_CALL, 1);
+                if candidate.is_none() && preparation.best.is_none() {
+                    // 🛑️ The linear fit must at least yield a decomposable model, or the
+                    // correspondences are degenerate (coincident, collinear) and no further batch
+                    // will change that.
+                    let linear = estimate_essential_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
+                    let TwoViewModel::Fundamental(essential) = linear.model else { return Err(SfmError::DegenerateGeometry) };
+                    let rays: Vec<([f64; 2], [f64; 2])> = linear
+                        .inliers
+                        .iter()
+                        .take(MAX_INTERACTIVE_SEED_CORRESPONDENCES)
+                        .map(|&index| {
+                            let left = self.intrinsics.unproject_ray(preparation.correspondences[index].0);
+                            let right = self.intrinsics.unproject_ray(preparation.correspondences[index].1);
+                            ([left[0], left[1]], [right[0], right[1]])
+                        })
+                        .collect();
+                    decompose_essential(&essential, &rays).ok_or(SfmError::DegenerateGeometry)?;
+                    preparation.best = Some(linear);
+                }
+                if let Some(candidate) = candidate {
+                    if preparation.best.as_ref().is_none_or(|best| candidate.inliers.len() > best.inliers.len()) {
+                        preparation.best = Some(candidate);
+                    }
+                }
+                preparation.attempts += 1;
+                if preparation.attempts < SEED_SOLVE_CALLS {
+                    return Ok(false);
+                }
+                let estimate = preparation.best.take().filter(|estimate| estimate.inliers.len() >= 8).ok_or(SfmError::DegenerateGeometry)?;
                 let TwoViewModel::Fundamental(essential) = estimate.model else { return Err(SfmError::DegenerateGeometry) };
                 let rays: Vec<([f64; 2], [f64; 2])> = estimate
                     .inliers
@@ -2862,7 +2907,6 @@ impl IncrementalSfm {
         }
     }
 
-    #[cfg(test)]
     fn build_bundle_problem(&self, camera_frames: &[usize], fixed_frames: &[usize]) -> (SfmBundleProblem, Vec<VecD>, Vec<VecD>, Vec<usize>) {
         let a_index_of: std::collections::HashMap<usize, usize> = camera_frames.iter().enumerate().map(|(i, &f)| (f, i)).collect();
         let mut point_track_ids: Vec<usize> = Vec::new();
@@ -2907,7 +2951,6 @@ impl IncrementalSfm {
         }
         let cfg = LmConfig { max_iters: 1, initial_lambda: lambda, loss, ..LmConfig::default() };
         let result: SchurResult = schur_lm(&problem, a0, b0, &cfg);
-        eprintln!("TEMPDIAG ba cameras {} points {} terms {} cost {:.3} iterations {} converged {} lambda_in {lambda:.2e} lambda_out {:.2e}", camera_frames.len(), point_track_ids.len(), problem.terms.len(), result.cost, result.iterations, result.converged, result.lambda);
         for (frame, a) in camera_frames.iter().zip(result.a_params.iter()) {
             let xi: [f64; 6] = std::array::from_fn(|k| a.get(k));
             if let Some(entry) = self.cameras.iter_mut().find(|entry| entry.0 == *frame) {
@@ -3190,5 +3233,4 @@ impl IncrementalSfm {
 mod tests;
 // #endregion 🔖️Tests
 
-#[cfg(test)]
 use crate::optimize::{schur_lm, SchurResult};

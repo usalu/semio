@@ -105,17 +105,40 @@ await note("boot", await state(), 0);
   await page.waitForTimeout(800);
   await page.keyboard.press(process.platform === "darwin" ? "Meta+Enter" : "Control+Enter");
   const seen = [];
+  const stages = [];
   let after = null;
   let terminal = null;
+  const started = Date.now();
   for (let i = 0; i < runSeconds * 2; i++) {
     await page.waitForTimeout(500);
     after = await state();
     const key = JSON.stringify(after.runRows);
     if (seen[seen.length - 1] !== key) seen.push(key);
+    // ⏱️ Stage transitions with their wall-clock offset, the run's own timeline.
+    const pill = (after.runRows.find((row) => /framework\.toolRun=/.test(row)) ?? "").replace(/^[^=]*=/, "").slice(0, 60);
+    const stage = (pill.match(/·\s*([^(]+\(\d+\/\d+\))/) ?? [null, null])[1];
+    if (stage && stages[stages.length - 1]?.stage !== stage) { stages.push({ stage, atSeconds: Math.round((Date.now() - started) / 1000) }); console.log(`[DEBUG] stage ${stage} at ${Math.round((Date.now() - started) / 1000)}s`); }
     const body = await text();
-    if (/Faulted|Finalized|Completed|Failed/.test(body)) { terminal = (body.match(/Faulted|Finalized|Completed|Failed/) ?? [null])[0]; break; }
+    if (/Faulted|Finalized|Complete\b|Failed/.test(body)) { terminal = (body.match(/Faulted|Finalized|Complete\b|Failed/) ?? [null])[0]; break; }
   }
-  await note("reconstruction-run", { terminal, samples: seen.length, seen: seen.slice(-8), ...after, body: (await text()).slice(0, 2000) }, from);
+  await note("reconstruction-run", { terminal, stages, samples: seen.length, seen: seen.slice(-8), ...after, body: (await text()).slice(0, 2000) }, from);
+}
+
+// ── finalize: a complete run publishes its products only on the user's Finalize ──
+{
+  const from = lines.length;
+  let finalized = null;
+  const button = page.locator('[id$=".toolRunFinalize"]').first();
+  if (await button.count()) {
+    await button.click({ force: true, timeout: 5000 }).catch(() => {});
+    for (let i = 0; i < 240; i++) {
+      await page.waitForTimeout(500);
+      const body = await text();
+      if (/Finalized|Faulted/.test(body)) { finalized = (body.match(/Finalized|Faulted/) ?? [null])[0]; break; }
+    }
+  }
+  await page.waitForTimeout(3000);
+  await note("finalize", { finalized, ...(await state()), body: (await text()).slice(0, 1500) }, from);
 }
 
 // ── results ───────────────────────────────────────────────────────────────

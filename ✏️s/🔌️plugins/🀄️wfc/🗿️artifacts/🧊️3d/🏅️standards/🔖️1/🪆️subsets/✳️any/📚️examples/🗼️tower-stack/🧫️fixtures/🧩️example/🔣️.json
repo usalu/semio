@@ -1,0 +1,21 @@
+{
+  "assignments": {
+    "cantilever": "pier",
+    "storey-0": "pier",
+    "storey-1": "deck",
+    "storey-2": "deck",
+    "storey-3": "cap"
+  },
+  "edges": 5,
+  "example": "tower-stack",
+  "rules": 6,
+  "satisfiable": true,
+  "schema": "s.wfc.wfc3d.example-outcome/v1",
+  "seed": 19,
+  "slots": 5,
+  "tiles": [
+    "cap",
+    "deck",
+    "pier"
+  ]
+}

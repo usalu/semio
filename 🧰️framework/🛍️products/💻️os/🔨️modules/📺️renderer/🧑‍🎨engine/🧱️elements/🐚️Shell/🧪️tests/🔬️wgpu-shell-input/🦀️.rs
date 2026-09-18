@@ -140,13 +140,14 @@ fn content_focus_tracker_ignores_non_focus_commands() {
 /// and the new dispatch is a documented no-op here — this pins the "must still complete without a
 /// host to log against" half of that behavior; `note_shell_command_action`'s own shape (the other
 /// half) is covered directly in `command_registry_tests`.
+///
+/// 🎬️ A live drag never edits the committed tree, so the drop zone is a path into
+/// `DockState::render_view`'s derivation — lifting `a` out of the lone axis child hoists the stack
+/// to the ROOT, exactly as React's `collapseLayout` does.
 #[test]
 fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a"), DockStackTab::new("b"), DockStackTab::new("c")], active: "a".into() }, 1.0)]);
-    // 🎬️ A live drag never edits the committed tree, so the drop zone is a path into
-    // `DockState::render_view`'s derivation — lifting `a` out of the lone axis child hoists the stack
-    // to the ROOT, exactly as React's `collapseLayout` does.
     let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), window_kind_id: "a".into(), source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
     let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 2 };
     shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(zone) });

@@ -1,0 +1,34 @@
+# 🧬️ wfc3d mutation vocabulary.
+
+type CreateSlot { index: Int! slot: Slot3d! }
+type DeleteSlot { id: String! }
+type MoveSlot { id: String! x: Float! y: Float! z: Float! }
+type ResizeSlot { id: String! width: Float! height: Float! depth: Float! }
+type ConnectSlots { index: Int! edge: SlotEdge! }
+type DisconnectSlots { id: String! }
+type PinSlot { id: String! tileId: String! }
+type UnpinSlot { id: String! }
+type CreateTile { index: Int! tile: Tile! }
+type DeleteTile { id: String! }
+type ChangeTileWeight { id: String! weight: Float! }
+type ChangeTileMedia { id: String! media: TileMedia3d! }
+type CreateRule { index: Int! rule: GraphRule! }
+type DeleteRule { id: String! }
+type ChangeSeed { seed: Float! }
+
+union Wfc3dMutation =
+  CreateSlot
+  | DeleteSlot
+  | MoveSlot
+  | ResizeSlot
+  | ConnectSlots
+  | DisconnectSlots
+  | PinSlot
+  | UnpinSlot
+  | CreateTile
+  | DeleteTile
+  | ChangeTileWeight
+  | ChangeTileMedia
+  | CreateRule
+  | DeleteRule
+  | ChangeSeed

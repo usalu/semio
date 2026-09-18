@@ -1,0 +1,137 @@
+{
+  "schema": "s.wfc.wfc2d",
+  "seed": 7,
+  "slots": [
+    {
+      "id": "slot-a",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    },
+    {
+      "id": "slot-b",
+      "x": 2.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    },
+    {
+      "id": "slot-c",
+      "x": 4.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0,
+      "pinnedTileId": "tile-wall"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-ab",
+      "fromSlotId": "slot-a",
+      "toSlotId": "slot-b",
+      "relation": "adjacent"
+    },
+    {
+      "id": "edge-bc",
+      "fromSlotId": "slot-b",
+      "toSlotId": "slot-c",
+      "relation": "adjacent"
+    }
+  ],
+  "tiles": [
+    {
+      "id": "tile-roof",
+      "weight": 1.0,
+      "media": {
+        "Bitmap": {
+          "width": 4,
+          "height": 4,
+          "palette": [
+            {
+              "r": 30,
+              "g": 64,
+              "b": 175,
+              "a": 255
+            },
+            {
+              "r": 96,
+              "g": 165,
+              "b": 250,
+              "a": 255
+            }
+          ],
+          "pixels": "AAAAAAAAAAABAQEBAQEBAQ=="
+        }
+      }
+    },
+    {
+      "id": "tile-wall",
+      "weight": 2.0,
+      "media": {
+        "Vector": {
+          "paths": [
+            {
+              "segments": [
+                {
+                  "Move": {
+                    "to": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Line": {
+                    "to": [
+                      1.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Line": {
+                    "to": [
+                      1.0,
+                      1.0
+                    ]
+                  }
+                },
+                {
+                  "Line": {
+                    "to": [
+                      0.0,
+                      1.0
+                    ]
+                  }
+                },
+                "Close"
+              ],
+              "fill": {
+                "r": 122,
+                "g": 126,
+                "b": 134,
+                "a": 255
+              },
+              "strokeWidth": 0.0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-roof-wall",
+      "tileAId": "tile-roof",
+      "tileBId": "tile-wall",
+      "allowed": true
+    },
+    {
+      "id": "rule-wall-wall",
+      "tileAId": "tile-wall",
+      "tileBId": "tile-wall",
+      "allowed": true
+    }
+  ]
+}

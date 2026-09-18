@@ -112,19 +112,34 @@ mod semantic_document_tests {
         while !retained.advance_realm_close_one() {}
     }
 
+    /// 📄️ One published page is exactly [`UI_DOCUMENT_LEASE_SLOTS`] owners, and the owner AFTER that
+    /// page stays qualified in the close lane across a nonterminal close.
+    ///
+    /// 🐛️ ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration: this law was written when a
+    /// page was eight owners and still filled a nine-slot list, then admitted `UI_DOCUMENT_LEASE_SLOTS`
+    /// of them — which has been SIXTY-FOUR since the lease slots followed `UI_RESIDENT_SLOTS`, so the
+    /// tenth `swap_remove` panicked "first page owner" before the law asserted anything. A page's worth
+    /// of owners is now built from the page size itself: one lease yields
+    /// [`ui_contract::UI_DOCUMENT_LEASE_ALIASES`] owners (the primary plus its aliases), so the page
+    /// needs `UI_DOCUMENT_LEASE_SLOTS / UI_DOCUMENT_LEASE_ALIASES` leases.
     #[test]
-    fn command_batch_ninth_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired() {
-        let first = document(91_001, "command.retirement.first");
-        let mut owners = UiFixedList::<ExchangeSurfaceDocument, 9>::default();
-        for ordinal in 0..7 {
-            owners
-                .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from(format!("command.retirement.alias-{ordinal}")).expect("bounded alias surface"), document: first.try_alias().expect("fixed command document alias") })
-                .unwrap_or_else(|_| panic!("command alias owner"));
+    fn command_batch_slots_plus_one_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired() {
+        const OWNERS_PER_LEASE: usize = ui_contract::UI_DOCUMENT_LEASE_ALIASES as usize;
+        const PAGE_LEASES: usize = UI_DOCUMENT_LEASE_SLOTS / OWNERS_PER_LEASE;
+        assert_eq!(PAGE_LEASES * OWNERS_PER_LEASE, UI_DOCUMENT_LEASE_SLOTS, "a page is a whole number of fully aliased leases");
+        let mut owners = UiFixedList::<ExchangeSurfaceDocument, { UI_DOCUMENT_LEASE_SLOTS + 1 }>::default();
+        for lease in 0..PAGE_LEASES {
+            let primary = document(91_001 + lease as u64, &format!("command.retirement.lease-{lease}"));
+            for alias in 0..OWNERS_PER_LEASE - 1 {
+                owners
+                    .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from(format!("command.retirement.alias-{lease}-{alias}")).expect("bounded alias surface"), document: primary.try_alias().expect("fixed command document alias") })
+                    .unwrap_or_else(|_| panic!("command alias owner"));
+            }
+            owners.try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from(format!("command.retirement.primary-{lease}")).expect("bounded primary surface"), document: primary }).unwrap_or_else(|_| panic!("command primary owner"));
         }
-        owners.try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from("command.retirement.primary").expect("bounded primary surface"), document: first }).unwrap_or_else(|_| panic!("command primary owner"));
         owners
-            .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from("command.retirement.ninth").expect("bounded ninth surface"), document: document(91_002, "command.retirement.ninth-document") })
-            .unwrap_or_else(|_| panic!("command ninth owner"));
+            .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from("command.retirement.slots-plus-one").expect("bounded overflow surface"), document: document(91_099, "command.retirement.slots-plus-one-document") })
+            .unwrap_or_else(|_| panic!("command slots-plus-one owner"));
         let mut registry = CommandDocumentRetirementRegistry::new();
         let mut first_page = registry.try_reserve_page(7, 91_101).expect("first fixed page destinations");
         for _ in 0..UI_DOCUMENT_LEASE_SLOTS {
@@ -132,16 +147,16 @@ mod semantic_document_tests {
         }
         registry.release(&mut first_page);
         let mut second_page = registry.try_reserve_page(7, 91_101).expect("second fixed page destinations");
-        registry.admit(&mut second_page, owners.swap_remove(0).expect("ninth page owner"));
+        registry.admit(&mut second_page, owners.swap_remove(0).expect("slots-plus-one page owner"));
         registry.release(&mut second_page);
         registry.begin_close_batch(7, 91_100);
         assert!(!registry.has_close_work(), "stale batch generation cannot mutate pending document owners");
         let mut output = UiFixedList::default();
         registry.publish_batch(7, 91_101, &mut output);
         assert_eq!(output.len(), UI_DOCUMENT_LEASE_SLOTS);
-        assert!(!registry.batch_is_empty(7, 91_101), "the ninth owner remains qualified in the close lane");
+        assert!(!registry.batch_is_empty(7, 91_101), "the slots-plus-one owner remains qualified in the close lane");
         while !registry.close_one() {}
-        assert!(!registry.batch_is_empty(7, 91_101), "one nonterminal close opportunity cannot discard the ninth owner");
+        assert!(!registry.batch_is_empty(7, 91_101), "one nonterminal close opportunity cannot discard the slots-plus-one owner");
         let mut cleanup = registry.try_reserve_page(8, 91_102).expect("output cleanup destinations");
         for owner in output {
             registry.admit(&mut cleanup, owner);

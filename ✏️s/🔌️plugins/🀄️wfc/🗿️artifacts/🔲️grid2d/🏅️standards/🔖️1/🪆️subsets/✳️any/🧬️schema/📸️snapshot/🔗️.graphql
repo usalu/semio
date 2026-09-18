@@ -1,0 +1,86 @@
+# 📸️ s.wfc.grid2d snapshot facet — the persisted WFC problem for a regular rectangular grid.
+
+enum WfcDirection2d {
+  LEFT
+  RIGHT
+  TOP
+  BOTTOM
+}
+
+type WfcColor {
+  r: Int!
+  g: Int!
+  b: Int!
+  a: Int!
+}
+
+type WfcPoint2 {
+  x: Float!
+  y: Float!
+}
+
+type WfcPathSegment {
+  kind: String!
+  to: WfcPoint2
+  ctrl: WfcPoint2
+  ctrl1: WfcPoint2
+  ctrl2: WfcPoint2
+}
+
+type WfcVectorPath {
+  segments: [WfcPathSegment!]!
+  fill: WfcColor
+  stroke: WfcColor
+  strokeWidth: Float!
+}
+
+type WfcTileMedia2d {
+  kind: String!
+  width: Int
+  height: Int
+  palette: [WfcColor!]
+  pixels: String
+  paths: [WfcVectorPath!]
+  child: String
+}
+
+type WfcTile2d {
+  id: String!
+  label: String
+  weight: Float!
+  media: WfcTileMedia2d!
+}
+
+type WfcAdjacencyRule2d {
+  id: String!
+  tileAId: String!
+  tileBId: String!
+  direction: WfcDirection2d!
+  allowed: Boolean!
+}
+
+type WfcPinnedCell2d {
+  x: Int!
+  y: Int!
+  tileId: String!
+}
+
+type WfcCell2d {
+  x: Int!
+  y: Int!
+}
+
+type Grid2dSnapshot {
+  schema: String!
+  seed: Int!
+  width: Int!
+  height: Int!
+  cellWidth: Float!
+  cellHeight: Float!
+  periodicX: Boolean!
+  periodicY: Boolean!
+  tiles: [WfcTile2d!]!
+  rules: [WfcAdjacencyRule2d!]!
+  pinned: [WfcPinnedCell2d!]!
+  masked: [WfcCell2d!]!
+}

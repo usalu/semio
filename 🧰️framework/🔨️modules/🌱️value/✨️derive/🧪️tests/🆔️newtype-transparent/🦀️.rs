@@ -5,8 +5,7 @@
 //! a genuine `tests/*.rs` integration crate, so `#[derive(ToValue, FromValue)]` runs exactly as any
 //! downstream consumer's derive invocation would (a proc-macro crate cannot exercise its own
 //! derives from inside its own `src`). Motivated by `id_newtype!` in
-//! `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/
-//! 💡️inferences/🧩️wfc-engine/🆔️ids/🦀️.rs`, which generates exactly this shape. Ticket
+//! `✏️s/🔌️plugins/🀄️wfc/⚙️engine/🆔️ids/🦀️.rs`, which generates exactly this shape. Ticket
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 
 // 🌿️ See the sibling `🛡️deny-unknown-fields-enums.rs` test file's identical docstring for why

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package semio.s.wfc.wfc2d;
+
+message Wfc2dInferenceCommit {
+  map<string, string> assignments = 1;
+  bool contradiction = 2;
+  map<string, double> entropy = 3;
+}

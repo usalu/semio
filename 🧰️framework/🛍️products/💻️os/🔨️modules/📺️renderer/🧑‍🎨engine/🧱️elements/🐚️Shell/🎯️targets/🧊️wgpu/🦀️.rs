@@ -9686,7 +9686,22 @@ impl ShellState {
             // `folded` state and nothing else.
             id if id.starts_with("shell.projection.template.") => {
                 if let Some((window_id, template_id)) = id.trim_start_matches("shell.projection.template.").split_once("::") {
-                    self.world_projection_template.insert(window_id.to_string(), world_projection_template(template_id).id.to_string());
+                    let (window_id, template) = (window_id.to_string(), world_projection_template(template_id));
+                    let (id, family) = (template.id.to_string(), template.family);
+                    self.world_projection_template.insert(window_id.clone(), id);
+                    // 🔀️ React's switch is view state ONLY on the plugin's side — no `setProjection`
+                    // exists to dispatch (`handleProjectionKindChange`'s own comment) — but it DOES
+                    // remount the pane's camera, and the pose that remount settles on rides the
+                    // ordinary `setCamera`. So the press moves the orbit and then queues the same
+                    // zero-delta camera intent a wheel settle queues, which publishes that pose
+                    // through the bounded interaction lane. Both halves, or the chip changes an icon
+                    // and nothing else.
+                    if let Some(world) = self.world3d_states.get_mut(&window_id) {
+                        if infinite_world::world::apply_world3d_projection(world, family) {
+                            let settle = WorldInteractionIntent::wheel(0.0, 0.0, 0.0, &ui_wgpu::wgpu::PointerModifiers::default());
+                            let _ = enqueue_world3d_events(world, [settle]);
+                        }
+                    }
                 }
                 return Ok(true);
             }
@@ -13265,25 +13280,28 @@ pub(crate) struct WorldProjectionTemplate {
     pub icon_id: &'static str,
     /// 🌲️ Depth in React's template tree — a branch is 0, its leaves are 1.
     pub depth: u8,
+    /// 📐️ The camera class this row mounts — React's `worldProjectionFamily`: the whole `Parallel`
+    /// subtree is orthographic, the whole `Perspective` subtree is not.
+    pub family: ui_wgpu::wgpu::CameraProjection3d,
 }
 
 /// 🔀️ React's projection taxonomy, depth-first, branch before its own leaves.
 pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
-    WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0 },
-    WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1 },
-    WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1 },
-    WorldProjectionTemplate { id: "axonometric-isometric", label: "Isometric", icon_id: "projection-isometric", depth: 2 },
-    WorldProjectionTemplate { id: "axonometric-dimetric", label: "Dimetric", icon_id: "projection-dimetric", depth: 2 },
-    WorldProjectionTemplate { id: "axonometric-trimetric", label: "Trimetric", icon_id: "projection-trimetric", depth: 2 },
-    WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1 },
-    WorldProjectionTemplate { id: "oblique-cabinet", label: "Cabinet", icon_id: "projection-oblique-cabinet", depth: 2 },
-    WorldProjectionTemplate { id: "oblique-cavalier", label: "Cavalier", icon_id: "projection-oblique-cavalier", depth: 2 },
-    WorldProjectionTemplate { id: "oblique-military", label: "Military", icon_id: "projection-oblique-military", depth: 2 },
-    WorldProjectionTemplate { id: "perspective", label: "Perspective", icon_id: "projection-perspective", depth: 0 },
-    WorldProjectionTemplate { id: "one-point", label: "1-Point", icon_id: "projection-one-point", depth: 1 },
-    WorldProjectionTemplate { id: "two-point", label: "2-Point", icon_id: "projection-two-point", depth: 1 },
-    WorldProjectionTemplate { id: "three-point", label: "3-Point", icon_id: "projection-three-point", depth: 1 },
-    WorldProjectionTemplate { id: "curvilinear", label: "Curvilinear", icon_id: "projection-curvilinear", depth: 1 },
+    WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "axonometric-isometric", label: "Isometric", icon_id: "projection-isometric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "axonometric-dimetric", label: "Dimetric", icon_id: "projection-dimetric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "axonometric-trimetric", label: "Trimetric", icon_id: "projection-trimetric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "oblique-cabinet", label: "Cabinet", icon_id: "projection-oblique-cabinet", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "oblique-cavalier", label: "Cavalier", icon_id: "projection-oblique-cavalier", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "oblique-military", label: "Military", icon_id: "projection-oblique-military", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic },
+    WorldProjectionTemplate { id: "perspective", label: "Perspective", icon_id: "projection-perspective", depth: 0, family: ui_wgpu::wgpu::CameraProjection3d::Perspective },
+    WorldProjectionTemplate { id: "one-point", label: "1-Point", icon_id: "projection-one-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective },
+    WorldProjectionTemplate { id: "two-point", label: "2-Point", icon_id: "projection-two-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective },
+    WorldProjectionTemplate { id: "three-point", label: "3-Point", icon_id: "projection-three-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective },
+    WorldProjectionTemplate { id: "curvilinear", label: "Curvilinear", icon_id: "projection-curvilinear", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective },
 ];
 
 /// 🔀️ The template a pane with no explicit selection reads. React resolves
@@ -13347,9 +13365,19 @@ impl ShellState {
     }
 
     /// 🔀️ The projection template this pane shows as selected — React's `worldProjectionSpec`
-    /// fallback chain, collapsed onto this renderer's flat template ids.
+    /// fallback chain (`cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ?
+    /// worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"))`,
+    /// `🌐️World3dHost/🟦️.tsx`), collapsed onto this renderer's flat template ids: an explicit press
+    /// wins, otherwise the pane's LIVE camera family answers, which is what makes a `Top` pane open
+    /// on Orthographic instead of the static default.
     pub(crate) fn world_projection_template_id(&self, window_id: &str) -> &str {
-        self.world_projection_template.get(window_id).map_or(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, String::as_str)
+        if let Some(selected) = self.world_projection_template.get(window_id) {
+            return selected.as_str();
+        }
+        match self.world3d_states.get(window_id).map(infinite_world::world::world3d_camera_projection) {
+            Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic) => "orthographic",
+            _ => WORLD_PROJECTION_DEFAULT_TEMPLATE_ID,
+        }
     }
 
     /// 🎛️ React's `Window` `actionsFolded` — the ONE fold both the Actions pane and the Search pane
@@ -15425,12 +15453,10 @@ impl ShellChromeBuildState {
 }
 
 /// 🎓️ Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
-/// they don't overlap). The React shell now renders one fullscreen `ui-veil` div and raises the
-/// introduced/shown element's chrome unit above it via z-index instead of doing this subtraction itself —
-/// wgpu keeps the geometric subtraction because it's the only way to realize the *same visual result*
-/// here: `push_solid` quads tile with no seam (no per-quad backdrop-filter to discontinue), a real glass
-/// veil can't work in this renderer (see `introduction_veil_bands`'s doc), and 3D window content lives in
-/// separate `scene_passes` that can't be repainted above an overlay at all.
+/// they don't overlap). The React shell renders one fullscreen `ui-veil` div and raises the
+/// introduced/shown element's chrome unit above it via z-index; wgpu keeps the geometric subtraction
+/// because 3D window content lives in separate `scene_passes` that cannot be repainted above an
+/// overlay at all, so a cutout is the only way to leave the introduced element unveiled.
 fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     let top = band.y.max(hole.y);
     let left = band.x.max(hole.x);
@@ -15445,15 +15471,24 @@ fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
         .collect()
 }
 
-/// 🎓️ Splits the viewport into bands tiling the space around every cutout, painted as this renderer's
-/// internal realization of "one fullscreen veil beneath elevated elements" — an empty cutout list returns
-/// one full-viewport band. A *real* glass veil (matching React's `ui-veil`) is infeasible here: the
-/// blur chain (`run_blur_chain`, ui/wgpu/rs/lib.rs) only mips the main draw-list's scene texture, but
-/// panels/navbar/footer paint into the *overlay* DrawList (`with_chrome_sink`), so a glass veil would show
-/// blurred canvas where it overlaps chrome rather than frosting it; and in `composite_to_swapchain`,
-/// overlay glass regions composite *before* the overlay's own instance pass, i.e. beneath that chrome
-/// regardless of push order. A solid-fill veil with real geometric holes is therefore the correct choice,
-/// not a shortcut — and it's seam-free by construction (no per-quad backdrop-filter exists to discontinue).
+/// 🎓️ Splits the viewport into bands tiling the space around every cutout — an empty cutout list
+/// returns one full-viewport band. Each band is pushed as a REAL `ui-veil` glass region
+/// (`Theme::veil_glass`), so the shell behind it is blurred exactly as React's `backdrop-filter` blurs
+/// the page.
+///
+/// 🩸️ This docstring used to argue that a real glass veil was infeasible, reading the batch renderer's
+/// `composite_to_swapchain` — where overlay glass composites BEFORE the overlay's own instance pass,
+/// i.e. beneath the chrome it should frost. That path is `#[cfg(test)]`. The production ladder is
+/// `Commands → BlurScene → EncodeComposite → GlassCommands → ForegroundCommands` (`🧊️gpu/🦀️.rs`),
+/// which encodes every non-glass-content layer of BOTH lists into the scene the blur chain mips, so a
+/// glass region composites the frosted navbar, footer and panes — not blurred bare canvas. The
+/// argument was true of the batch path and false of the one that actually presents
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W8a).
+///
+/// ⚠️ One divergence remains: `ForegroundCommands` re-encodes EVERY glass-content layer after the
+/// glass pass, so a window cap's own chips (`🛰️Dock`'s `begin_glass_content`) stay crisp over the
+/// veil where React blurs them. Ordering foreground content against a LATER glass region is a
+/// ladder-level change — see the packet report's hand-offs.
 fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
     let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
     for cutout in cutouts {
@@ -15543,6 +15578,12 @@ fn split_introduction_body_paragraphs(body: &str) -> Vec<String> {
     paragraphs
 }
 
+/// 🆔️ React's `panelTabElementId` (`🖥️platform/🟦️.ts`): the id an introduction step names a panel tab
+/// by. The tab id is already dotted, so it is appended verbatim — no `element_id_segment` pass.
+fn panel_tab_introduction_element_id(tab_id: &str) -> String {
+    format!("framework.panelTab.{tab_id}")
+}
+
 /// 🎓️ Where the element `step.introduce`/`step.show` names actually IS on this frame's screen — the
 /// wgpu twin of React's `useIntroductionAnchorRect`/`useIntroductionElevation`, which resolve the id
 /// through `elementIdSelector` and read the DOM rect. Three registries answer here, in React's own
@@ -15563,6 +15604,19 @@ fn chrome_tour_anchor_rect(state: &ShellState, element_id: &str) -> Option<Rect>
         .into_iter()
         .filter(|(_, kind_id)| kind_id == &kind.id)
         .find_map(|(window_id, _)| state.window_content_rects.get(&window_id).copied())
+}
+
+/// 🫧 Closes an overlay sheet's glass-content layer, if this walk opened one — the tour card and the
+/// confirm dialog both. `cursor.depth` carries `region + 1` so `0` is "never opened": these ladders
+/// are stepped ACROSS host opportunities and can be abandoned at a fault, a closed session, a
+/// vanished step or a popped dialog, and an unbalanced `begin_glass_content` would classify every
+/// LATER overlay child as this sheet's foreground.
+fn close_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList) {
+    if cursor.depth == 0 {
+        return;
+    }
+    overlay.end_glass_content();
+    cursor.depth = 0;
 }
 
 /// 🎓️ One tour step's whole geometry, measured once per walk step so the card, the veil holes and the
@@ -15842,8 +15896,10 @@ fn tutorial_camera_to_orbit(state: &semio_framework::TutorialCameraState) -> Opt
             target: ui_wgpu::wgpu::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
             up: ui_wgpu::wgpu::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
             fov_y: (fov.unwrap_or(45.0) as f32).to_radians(),
-            near: 0.1,
-            far: 1000.0,
+            near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
+            far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
+            projection: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+            zoom: 1.0,
         })),
         semio_framework::TutorialCameraState::Canvas { .. } => None,
     }
@@ -17588,6 +17644,7 @@ impl ShellState {
                     drag_axis: Some(DragAxis::Both),
                     drag_data: None,
                 });
+                self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&node.id), chip);
                 x += chip_w + theme.gap_standard;
             }
             if preview == Some(x) {
@@ -17895,6 +17952,7 @@ impl ShellState {
                     RetainedChromeGroupStep::Complete => {}
                     RetainedChromeGroupStep::Fault => self.error = Some("Shell navbar leading panel tab exceeded the retained glyph boundary".to_string()),
                 }
+                self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&control_id), rect);
                 cursor.x = rect.x + rect.w + theme.gap_standard;
                 cursor.rect = None;
                 cursor.item += 1;
@@ -18410,6 +18468,7 @@ impl ShellState {
                     RetainedChromeGroupStep::Complete => {}
                     RetainedChromeGroupStep::Fault => self.error = Some("Shell footer panel tab exceeded the retained glyph boundary".to_string()),
                 }
+                self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&control_id), rect);
                 cursor.rect = None;
                 cursor.item += 1;
                 return false;
@@ -18977,11 +19036,15 @@ impl ShellState {
 
     fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if cursor.flag {
+            close_chrome_overlay_glass_content(cursor, overlay);
             self.error = Some("Shell dialog text exceeded the retained glyph boundary".to_string());
             cursor.flag = false;
             return true;
         }
-        let Some(request) = self.chrome_build.dialog_stack.last() else { return true };
+        let Some(request) = self.chrome_build.dialog_stack.last() else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
         let dialog = Rect::new((width - 360.0) * 0.5, (height - 168.0) * 0.5, 360.0, 168.0);
         let pad = theme.padding_standard;
         let confirm = Rect::new(dialog.x + dialog.w - pad - 110.0, dialog.y + dialog.h - pad - theme.control_height, 110.0, theme.control_height);
@@ -19007,9 +19070,12 @@ impl ShellState {
             return false;
         }
         match cursor.scalar {
-            0 => overlay.push_solid([0.0, 0.0, width, height], theme.veil(Level::Dialog)),
+            0 => {
+                overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+            }
             1 => {
-                overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog));
+                cursor.depth = overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog)).saturating_add(1);
+                overlay.begin_glass_content(cursor.depth.saturating_sub(1));
             }
             4 => overlay.push_rounded([cancel.x, cancel.y, cancel.w, cancel.h], theme.button, theme.border_radius),
             6 => overlay.push_rounded([confirm.x, confirm.y, confirm.w, confirm.h], theme.accent, theme.border_radius),
@@ -19023,7 +19089,10 @@ impl ShellState {
                     }
                 }
             }
-            11 => return true,
+            11 => {
+                close_chrome_overlay_glass_content(cursor, overlay);
+                return true;
+            }
             _ => return false,
         }
         cursor.scalar += 1;
@@ -19035,6 +19104,16 @@ impl ShellState {
     /// ring on the introduced element, and a card carrying the title, Skip, the body's paragraphs, the
     /// interaction checklist and a Back / `i / n` / Next-or-Done footer.
     ///
+    /// 🫧 **A tour armed means its card's glyphs are encoded in the FOREGROUND pass.** The veil is a
+    /// real `ui-veil` glass region (blur + saturate + tint, `Theme::veil_glass`), so everything behind
+    /// it is blurred exactly as React's `backdrop-filter` blurs the page; the card then opens a
+    /// `begin_glass_content` layer, which is what makes the prepared ladder re-encode the title, Skip,
+    /// the body, the counter, Next/Back and the spotlight ring into the COMPOSITE target after the
+    /// glass pass instead of into the scene it samples. Without that split the card painted its own
+    /// copy and then blurred it away — the boot screenshot showed a smeared card under a crisp navbar,
+    /// the exact inverse of the reference (`📓️w3c` §3 fixed the same defect for the window cap;
+    /// ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W8a).
+    ///
     /// 🧯️ The veil is a real hit target (`ui.introduction.veil`), not just paint. React's veil is
     /// `pointer-events-auto` while it blocks, so a press anywhere on it ends the tour and NOTHING under
     /// it ever sees the pointer; here the press used to fall straight through to the 3D surface below,
@@ -19042,17 +19121,28 @@ impl ShellState {
     /// (`📓️w5b-interaction-parity-probe.md` §4.3).
     fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if cursor.flag {
+            close_chrome_overlay_glass_content(cursor, overlay);
             self.error = Some("Shell tour text exceeded the retained glyph boundary".to_string());
             cursor.flag = false;
             return true;
         }
         if self.session.is_none() {
+            close_chrome_overlay_glass_content(cursor, overlay);
             self.chrome_build.tour_state = None;
             return true;
         }
-        let Some(step) = self.chrome_tour_active_step() else { return true };
-        let Some(step_index) = self.chrome_build.tour_state.as_ref().map(|state| state.step_index) else { return true };
-        let Some(step_count) = self.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()) else { return true };
+        let Some(step) = self.chrome_tour_active_step() else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        let Some(step_index) = self.chrome_build.tour_state.as_ref().map(|state| state.step_index) else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        let Some(step_count) = self.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()) else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
         let layout = chrome_tour_layout(self, atlas, theme, &step, step_index, step_count, width, height);
         let card = layout.card;
         let chip_text = |rect: Rect, size: f32| (rect.x + theme.padding_standard * 2.0, rect.y + (rect.h + size) * 0.5 - 1.0, (rect.w - theme.padding_standard * 4.0).max(1.0));
@@ -19080,11 +19170,12 @@ impl ShellState {
         match cursor.scalar {
             0 => {
                 for band in introduction_veil_bands(width, height, &layout.cutouts) {
-                    overlay.push_solid([band.x, band.y, band.w, band.h], theme.veil(Level::Dialog));
+                    overlay.push_glass([band.x, band.y, band.w, band.h], 0.0, theme.veil_glass(Level::Dialog));
                 }
             }
             1 => {
-                overlay.push_glass([card.x, card.y, card.w, card.h], theme.border_radius, theme.glass(Level::Dialog));
+                cursor.depth = overlay.push_glass([card.x, card.y, card.w, card.h], theme.border_radius, theme.glass(Level::Dialog)).saturating_add(1);
+                overlay.begin_glass_content(cursor.depth.saturating_sub(1));
             }
             2 => {
                 // 🎯️ React pulses `data-introduced` on the introduced element itself; the instanced
@@ -19149,7 +19240,10 @@ impl ShellState {
             14 => input.register_hit(HitTarget { rect: layout.skip, event: None, control_id: Some(UI_INTRODUCTION_SKIP_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             15 if layout.advances_by_button => input.register_hit(HitTarget { rect: layout.next, event: None, control_id: Some(UI_INTRODUCTION_NEXT_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             16 if layout.shows_back => input.register_hit(HitTarget { rect: layout.back, event: None, control_id: Some(UI_INTRODUCTION_BACK_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
-            17 => return true,
+            17 => {
+                close_chrome_overlay_glass_content(cursor, overlay);
+                return true;
+            }
             _ => {}
         }
         cursor.scalar += 1;
@@ -21302,3 +21396,7 @@ mod media_export_encoding_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/📐️wgpu-dpi-logical-units/🦀️.rs"]
 mod dpi_logical_units_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/💓️chrome-maintenance-pressure/🦀️.rs"]
+mod chrome_maintenance_pressure_tests;

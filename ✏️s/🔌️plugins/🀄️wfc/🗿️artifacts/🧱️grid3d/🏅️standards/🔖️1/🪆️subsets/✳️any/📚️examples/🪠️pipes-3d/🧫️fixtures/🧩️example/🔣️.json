@@ -1,0 +1,15 @@
+{
+  "schema": "s.wfc.grid3d.example-outcome/v1",
+  "example": "pipes-3d",
+  "seed": 19,
+  "width": 3,
+  "height": 3,
+  "depth": 3,
+  "tiles": 3,
+  "rules": 14,
+  "pinned": 1,
+  "masked": 0,
+  "satisfiable": true,
+  "assigned": 27,
+  "rationale": "The x axis is periodic, so the pinned pipe-x at 1:1:1 forces its whole wrapped row to pipe-x; everything else can settle to empty, which every direction admits. A pipe-z column is all-or-nothing on z, which is what makes the propagation non-trivial without ever making the instance unsatisfiable."
+}

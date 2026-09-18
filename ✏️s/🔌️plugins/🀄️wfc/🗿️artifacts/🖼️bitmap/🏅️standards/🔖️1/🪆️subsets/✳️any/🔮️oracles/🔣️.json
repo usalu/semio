@@ -1,0 +1,395 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Oracle registry for s.wfc.bitmap@1/*. The mutation vocabulary is adjudicated by an in-repository Python second implementation; the collapse itself is the engine crate's own subject and is not a vector here.",
+  "oracles": [
+    {
+      "id": "wfc-bitmap-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "wfc-bitmap-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.wfc.bitmap` document and all ten typed mutations, in Python, at `../../../../../🧪️tests/🧩️mutate-bitmap-1/🐍️.py`. It is written from `../🧬️schema/📸️snapshot/🔣️.json` (the six members), from the ten per-kind payload schemas under `../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, and from the ten committed `(before, mutation, diff, outcome, after)` quintets, which are the only statement of four things this carrier does not share with any sibling artifact. FIRST, the pixel buffer is RFC 4648 standard base64 of one palette index per pixel, row-major — not an inline integer array — so every pixel assertion the reference makes it must make through its own base64 decoder, written from the RFC rather than transliterated. SECOND, this subset tags its mutations EXTERNALLY: a payload is `{\"ChangeSeed\": {…}}`, a PascalCase variant name as the single key. THIRD, `add-palette-color` INSERTS at an index and renumbers every pixel and pin at or above it, and `remove-palette-color` is its exact inverse — which is why removing a colour that is still painted or pinned is FATAL rather than a silent repaint, and why neither can be modelled as an append/pop pair. FOURTH, `resize-output` CASCADES: a pin outside the new extent is removed and the removal is announced with an info-level `mutation.cascade`, so a vector that declares the code must have moved the pin lane as well as the output lane. A THIRD-PARTY ORACLE WAS DECLINED, not merely absent, and the reason is concrete: the published overlapping-model WFC implementations compute a COLLAPSE from a PNG and hand back another PNG — none of them carries the problem statement as a document, none reads a palette-indexed base64 carrier, and none exposes the mutation vocabulary that is what these vectors actually specify. The SOLVE itself is deliberately outside this capability: it is an inference, it is covered by `semio-s-plugin-wfc-engine`'s own 301 tests and by this subset's deterministic-seed and contradiction tests, and pinning a seeded collapse into a committed vector would freeze a sampler, not a specification. ALL TEN KINDS ARE ADJUDICATED AND NONE IS REFUSED. CEILING, stated rather than implied: the SUBJECT half does not link this subset's own codec — `🦀️.rs` beside the reference replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors, but not yet our codec against a second producer.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.wfc.bitmap",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "wfc",
+              "reason": "an overlapping-model collapser over PNG input; it carries no problem document and no mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            },
+            {
+              "package": "wavefunctioncollapse",
+              "reason": "same shape — a solver, not a document model; it has no notion of a palette-indexed base64 buffer, a pin lane or an output specification."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json; RFC 4648 §4; ../../../../../🧫️fixtures/🧬️mutations",
+        "fixtureCoverage": {
+          "vectors": 10,
+          "capabilitiesCovered": [
+            "wfc-bitmap-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "wfc-bitmap-1-any",
+      "capability": "wfc-bitmap-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-palette-color",
+          "sourceMutationDirectoryName": "🎨️add-palette-color",
+          "mutationDirectoryName": "🎨️add-palette-color",
+          "scenarios": [
+            {
+              "id": "appends-a-third-colour",
+              "directoryName": "🎨️appends-a-third-colour"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-model",
+          "sourceMutationDirectoryName": "⚙️change-model",
+          "mutationDirectoryName": "⚙️change-model",
+          "scenarios": [
+            {
+              "id": "widens-the-window-to-three",
+              "directoryName": "⚙️widens-the-window-to-three"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-palette-color",
+          "sourceMutationDirectoryName": "🖍️change-palette-color",
+          "mutationDirectoryName": "🖍️change-palette-color",
+          "scenarios": [
+            {
+              "id": "recolours-the-second-entry",
+              "directoryName": "🖍️recolours-the-second-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-seed",
+          "sourceMutationDirectoryName": "🎲️change-seed",
+          "mutationDirectoryName": "🎲️change-seed",
+          "scenarios": [
+            {
+              "id": "reseeds-the-solve-from-7-to-99",
+              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+            }
+          ]
+        },
+        {
+          "mutationId": "pin-pixel",
+          "sourceMutationDirectoryName": "📌️pin-pixel",
+          "mutationDirectoryName": "📌️pin-pixel",
+          "scenarios": [
+            {
+              "id": "pins-the-origin-cell-to-colour-1",
+              "directoryName": "📌️pins-the-origin-cell-to-colour-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-palette-color",
+          "sourceMutationDirectoryName": "🧽️remove-palette-color",
+          "mutationDirectoryName": "🧽️remove-palette-color",
+          "scenarios": [
+            {
+              "id": "drops-the-unused-third-colour",
+              "directoryName": "🧽️drops-the-unused-third-colour"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-input",
+          "sourceMutationDirectoryName": "📐️resize-input",
+          "mutationDirectoryName": "📐️resize-input",
+          "scenarios": [
+            {
+              "id": "grows-the-sample-to-6-by-4",
+              "directoryName": "📐️grows-the-sample-to-6-by-4"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-output",
+          "sourceMutationDirectoryName": "🖼️resize-output",
+          "mutationDirectoryName": "🖼️resize-output",
+          "scenarios": [
+            {
+              "id": "shrinks-the-output-and-cascades-a-pin",
+              "directoryName": "🖼️shrinks-the-output-and-cascades-a-pin"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-input-pixels",
+          "sourceMutationDirectoryName": "🖌️set-input-pixels",
+          "mutationDirectoryName": "🖌️set-input-pixels",
+          "scenarios": [
+            {
+              "id": "paints-a-2-by-2-block-of-colour-1",
+              "directoryName": "🖌️paints-a-2-by-2-block-of-colour-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "unpin-pixel",
+          "sourceMutationDirectoryName": "📍️unpin-pixel",
+          "mutationDirectoryName": "📍️unpin-pixel",
+          "scenarios": [
+            {
+              "id": "releases-the-pinned-origin-cell",
+              "directoryName": "📍️releases-the-pinned-origin-cell"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.wfc.bitmap",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-palette-color",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "add-palette-color",
+            "bridgeVersion": 1,
+            "variant": "AddPaletteColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-model",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "change-model",
+            "bridgeVersion": 1,
+            "variant": "ChangeModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-palette-color",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "change-palette-color",
+            "bridgeVersion": 1,
+            "variant": "ChangePaletteColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-seed",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-seed",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "pin-pixel",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "pin-pixel",
+            "bridgeVersion": 1,
+            "variant": "PinPixel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-palette-color",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "remove-palette-color",
+            "bridgeVersion": 1,
+            "variant": "RemovePaletteColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-input",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "resize-input",
+            "bridgeVersion": 1,
+            "variant": "ResizeInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-output",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "resize-output",
+            "bridgeVersion": 1,
+            "variant": "ResizeOutput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-input-pixels",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "info",
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "set-input-pixels",
+            "bridgeVersion": 1,
+            "variant": "SetInputPixels"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unpin-pixel",
+          "capability": "wfc-bitmap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "fatal"
+          ],
+          "productionDispatch": {
+            "operation": "unpin-pixel",
+            "bridgeVersion": 1,
+            "variant": "UnpinPixel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-bitmap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

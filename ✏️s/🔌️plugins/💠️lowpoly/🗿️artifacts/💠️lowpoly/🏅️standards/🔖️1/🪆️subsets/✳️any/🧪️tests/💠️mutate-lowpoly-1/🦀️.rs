@@ -70,7 +70,7 @@ const KINDS: &[&str] = &[
     "edit-paint-layer",
 ];
 
-/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `LowpolyDiff` mirrors `LowpolySnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🧩️assembly` and `🖐️5d`/`🧊️3d` block subsets, whose diffs split, rename or FOLD their fields, carry real rows here.
+/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `LowpolyDiff` mirrors `LowpolySnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🀄️wfc` and `🖐️5d`/`🧊️3d` block subsets, whose diffs split, rename or FOLD their fields, carry real rows here.
 const DIFF_ALIASES: &[(&str, &[&str])] = &[];
 
 /// 🕳️ Fields whose CLEARED state would be inexpressible on the JSON wire (an `Option<Option<T>>`

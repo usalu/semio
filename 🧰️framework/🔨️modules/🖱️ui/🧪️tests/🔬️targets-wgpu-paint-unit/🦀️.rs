@@ -426,13 +426,13 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
     assert!(has_selected_highlight, "the popup row matching the Select's current value should paint a row_hover highlight");
 }
 
+/// 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
+/// `WidgetState::open`), so the popup's rows only exist after re-reconciling with the bit set.
 #[test]
 fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout() {
     let fixture = select("sel", "a");
     let (mut tree, root, theme, mut atlas) = setup(&fixture);
     tree.node_mut(root).unwrap().state.open = true;
-    // 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
-    // `WidgetState::open`), so the popup's rows only exist after re-reconciling with the bit set.
     tree.apply_tree(&fixture);
     assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
@@ -708,6 +708,7 @@ fn retained_text_paint_emits_at_most_one_glyph_per_grant() {
     assert_eq!(cursor.glyph.byte(), 2);
 }
 
+/// 🔽️ See `opening_a_selects_popup_...`: the rows exist only once the tree is reconciled OPEN.
 #[test]
 fn retained_multi_megabyte_input_advances_one_scalar_per_grant() {
     let value = "x".repeat(2 * 1_024 * 1_024);
@@ -763,7 +764,6 @@ fn retained_select_sync_writes_at_most_one_row_per_grant() {
     let (mut tree, root, theme, _) = setup(&fixture);
     let Some(root_node) = tree.node_mut(root) else { panic!("retained select root") };
     root_node.state.open = true;
-    // 🔽️ See `opening_a_selects_popup_...`: the rows exist only once the tree is reconciled OPEN.
     tree.apply_tree(&fixture);
     let children: Vec<NodeId> = tree.children(root).collect();
     let mut cursor = RetainedInteractiveSyncCursor::default();

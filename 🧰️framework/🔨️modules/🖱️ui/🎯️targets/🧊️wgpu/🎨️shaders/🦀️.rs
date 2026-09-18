@@ -231,17 +231,33 @@ out.flags = instance.flags;
 return out;
 }
 
+const WORLD3D_RECIPROCAL_PI: f32 = 0.31830989;
+const WORLD3D_AMBIENT_INTENSITY: f32 = 1.15;
+const WORLD3D_HEMISPHERE_INTENSITY: f32 = 1.35;
+const WORLD3D_HEMISPHERE_GROUND: vec3<f32> = vec3<f32>(0.32313, 0.35153, 0.40724);
+const WORLD3D_SELECTED_EMISSIVE: f32 = 0.35;
+const WORLD3D_HOVERED_EMISSIVE: f32 = 0.08;
+
+fn world3d_irradiance(n: vec3<f32>) -> vec3<f32> {
+var irradiance = vec3<f32>(WORLD3D_AMBIENT_INTENSITY);
+let hemisphere = 0.5 * dot(n, vec3<f32>(0.0, 0.0, 1.0)) + 0.5;
+irradiance = irradiance + mix(WORLD3D_HEMISPHERE_GROUND, vec3<f32>(1.0), hemisphere) * WORLD3D_HEMISPHERE_INTENSITY;
+irradiance = irradiance + vec3<f32>(2.4) * max(dot(n, normalize(vec3<f32>(12.0, 18.0, 10.0))), 0.0);
+irradiance = irradiance + vec3<f32>(1.2) * max(dot(n, normalize(vec3<f32>(-14.0, -10.0, 6.0))), 0.0);
+irradiance = irradiance + vec3<f32>(0.75) * max(dot(n, normalize(vec3<f32>(0.0, 0.0, -16.0))), 0.0);
+return irradiance;
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let n = normalize(in.normal);
-let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.28);
-var color = in.color.rgb * diffuse;
+var emissive = 0.0;
 if (in.flags.x > 0.5) {
-    color = mix(color, vec3<f32>(0.35, 0.75, 1.0), 0.65);
+    emissive = WORLD3D_SELECTED_EMISSIVE;
+} else if (in.flags.y > 0.5) {
+    emissive = WORLD3D_HOVERED_EMISSIVE;
 }
-if (in.flags.y > 0.5) {
-    color = mix(color, vec3<f32>(1.0, 0.85, 0.35), 0.55);
-}
+let color = world3d_irradiance(n) * in.color.rgb * WORLD3D_RECIPROCAL_PI + in.color.rgb * emissive;
 return vec4<f32>(color, in.color.a);
 }
 "#;

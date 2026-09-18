@@ -1,0 +1,9 @@
+dialect grammar
+grammar wfc.wfc2d.snapshot
+extension wfc2d
+start document
+
+document = header body
+header = "schema" SP "wfc.wfc2d.snapshot" NL
+body = payload NL?
+payload = OCTET+

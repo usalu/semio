@@ -452,6 +452,10 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
     commands
 }
 
+/// 🚦️ One gate before the gesture becomes a queued action: a `seq` this surface has
+/// already admitted is a duplicate or a reorder and is dropped, exactly as React's
+/// runtime drops one. The stale-revision half already ran in the renderer's own
+/// `events::EventRouter::build_intent`, against the tree that dispatched it.
 /** 🧵️ W3 clipboard/drag-drop wiring (`report-w3-clipboard-dnd.md`): every `ui_wgpu::wgpu::UiCommand`
  * variant now has an explicit arm — no more silently-dropped-by-omission commands.
  *  - `App` → reserves and copies `action` into the bounded action authority every other
@@ -482,10 +486,6 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
     for command in commands {
         match command {
             ui_wgpu::wgpu::UiCommand::App { window_id, intent } => {
-                // 🚦️ One gate before the gesture becomes a queued action: a `seq` this surface has
-                // already admitted is a duplicate or a reorder and is dropped, exactly as React's
-                // runtime drops one. The stale-revision half already ran in the renderer's own
-                // `events::EventRouter::build_intent`, against the tree that dispatched it.
                 if input.admit_intent(intent) != ui_wgpu::wgpu::UiIntentAdmission::Accepted {
                     continue;
                 }
@@ -922,6 +922,10 @@ fn focus_text_editor(window_id: &str, node: NodeId, surface_id: &str) {
     FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = Some(FocusedTextEditor { window_id: window_id.to_string(), node, surface_id: surface_id.to_string() }));
 }
 
+/// 🍿️ The POPUPS see the key first: `Ctrl/Cmd+Space` opens completions, `F2` starts a rename,
+/// and while either is open its own arrow/commit/dismiss keys win over editing — React's own
+/// `onKeyDown` prelude order (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`). A key the popups do
+/// not claim falls through to the buffer unchanged.
 /** ⌨️ Applies one key to the focused text editor, returning whether it consumed the key. The ONLY
  * production caller of `engine_canvas::text_editor_apply_key_into`: the renderer's own `handle_key`
  * offers every key here before the shell's chord table sees it, so typing into an editor never
@@ -940,10 +944,6 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
         if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.surface_id != surface_id {
             return None;
         }
-        // 🍿️ The POPUPS see the key first: `Ctrl/Cmd+Space` opens completions, `F2` starts a rename,
-        // and while either is open its own arrow/commit/dismiss keys win over editing — React's own
-        // `onKeyDown` prelude order (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`). A key the popups do
-        // not claim falls through to the buffer unchanged.
         match crate::scenes::text_editor_popup_key(scene, key, modifiers, input) {
             Ok(true) => return Some(Ok(true)),
             Ok(false) => {}
@@ -1060,6 +1060,9 @@ enum SceneIntentProgress {
     Complete,
 }
 
+/// 🍿️ A press on an open completions dropdown COMMITS that row (and a press
+/// anywhere else dismisses it) before the caret path moves the caret — React's
+/// popup is a real element above the canvas and swallows the press the same way.
 fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<SceneIntentProgress, ui_wgpu::wgpu::BoundedActionFault> {
     let operation_generation = intent.generation;
     if operation_generation == 0 {
@@ -1101,9 +1104,6 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
             let result = match intent.event {
                 SceneIntentEvent::PointerDown { x, y, button } => {
                     focus_text_editor(window_id, node, &scene.surface_id);
-                    // 🍿️ A press on an open completions dropdown COMMITS that row (and a press
-                    // anywhere else dismisses it) before the caret path moves the caret — React's
-                    // popup is a real element above the canvas and swallows the press the same way.
                     match crate::scenes::text_editor_popup_pointer(scene, rect, x, y, false, input) {
                         Ok(true) => return Ok(SceneIntentProgress::Complete),
                         Ok(false) => {}

@@ -1,0 +1,18 @@
+{
+  "ChangeTileMedia": {
+    "tileId": "wall",
+    "media": {
+      "kind": "mesh",
+      "mesh": {
+        "positions": [],
+        "indices": [],
+        "color": {
+          "r": 40,
+          "g": 44,
+          "b": 52,
+          "a": 255
+        }
+      }
+    }
+  }
+}

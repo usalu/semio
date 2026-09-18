@@ -10,7 +10,7 @@
     { "keys": "mod+k", "apple": "⌘️K", "other": "Ctrl+K" },
     { "keys": "mod+shift+z", "apple": "⌘️⇧️Z", "other": "Ctrl+Shift+Z" },
     { "keys": "ctrl+s", "apple": "⌃️S", "other": "Ctrl+S" },
-    { "keys": "meta+p", "apple": "⌘️P", "other": "⌘️P" },
+    { "keys": "meta+p", "apple": "⌘️P", "other": "⌘️+P" },
     { "keys": "escape", "apple": "⎋️", "other": "Esc" },
     { "keys": "enter", "apple": "↵️", "other": "Enter" },
     { "keys": "backspace", "apple": "⌫️", "other": "⌫️" },

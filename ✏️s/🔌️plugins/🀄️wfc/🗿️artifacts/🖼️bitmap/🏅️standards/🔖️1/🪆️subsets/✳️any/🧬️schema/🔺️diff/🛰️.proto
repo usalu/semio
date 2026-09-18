@@ -1,0 +1,31 @@
+syntax = "proto3";
+package semio.s.wfc.bitmap.diff;
+
+import "📸️snapshot/🛰️.proto";
+
+message BitmapPixelRegion {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  string pixels = 5;
+}
+
+message BitmapPinnedUpsert {
+  uint64 index = 1;
+  semio.s.wfc.bitmap.snapshot.BitmapPinnedPixel pin = 2;
+}
+
+message BitmapDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  optional uint32 input_width = 3;
+  optional uint32 input_height = 4;
+  optional string input_pixels = 5;
+  repeated BitmapPixelRegion input_regions = 6;
+  repeated semio.s.wfc.bitmap.snapshot.BitmapColor palette = 7;
+  optional semio.s.wfc.bitmap.snapshot.BitmapOutputSpec output = 8;
+  optional semio.s.wfc.bitmap.snapshot.BitmapOverlappingModel model = 9;
+  repeated string pinned_removed = 10;
+  repeated BitmapPinnedUpsert pinned_upserted = 11;
+}

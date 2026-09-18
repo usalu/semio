@@ -2,7 +2,7 @@
   "examples": [
     { "id": "hexagonal-mushroom-column", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
     { "id": "box-shell-preview", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
-    { "id": "two-room-corridor", "dialect": { "artifactKind": "s.assembly", "standard": "1", "subset": "*" } },
+    { "id": "two-room-corridor", "dialect": { "artifactKind": "s.wfc.wfc3d", "standard": "1", "subset": "*" } },
     { "id": "hexagonal-mushroom-column", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "*" } },
     { "id": "strict-only", "dialect": { "artifactKind": "s.procedural.generation3d", "standard": "1", "subset": "strict" } }
   ],
@@ -19,7 +19,7 @@
     },
     {
       "name": "another-artifacts-surface-never-sees-them",
-      "app": { "id": "s.assembly@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.assembly", "standard": "1", "subset": "*" } },
+      "app": { "id": "s.wfc.wfc3d@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.wfc.wfc3d", "standard": "1", "subset": "*" } },
       "expected": ["two-room-corridor"]
     },
     {

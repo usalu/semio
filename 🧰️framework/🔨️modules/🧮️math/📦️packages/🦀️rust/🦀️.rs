@@ -40,8 +40,7 @@ extern crate semio_framework_geometry as geometry;
 #[path = "../../../🧮️math/🎯️sampling/🦀️.rs"]
 pub mod sampling;
 
-// 🧩️ `wfc` dissolved into the Assembly artifact
-// (`✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/…/🧬️schema/💡️inferences/🧩️wfc-engine/`),
-// where the solve is reached only as an `InferredField` over a snapshot authored by mutations —
-// slots/rules/weights/seed as persisted content, `AssemblySolve`/`AssemblyContradiction`/
-// `AssemblyEntropy` as its derivations. Verified 626/626 symbol parity before this removal.
+// 🌊️ `wfc` lives in its own plugin's engine crate (`✏️s/🔌️plugins/🀄️wfc/⚙️engine/`), where the
+// solve is reached only as an `InferredField` over a snapshot authored by mutations — slots/rules/
+// weights/seed as persisted content, the collapse and its contradiction/entropy verdicts as
+// derivations. Verified 626/626 symbol parity before this removal.

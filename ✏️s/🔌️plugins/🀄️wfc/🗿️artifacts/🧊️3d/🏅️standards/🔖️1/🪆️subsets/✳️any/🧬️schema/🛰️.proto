@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.wfc.wfc3d.artifact;
+
+import "📸️snapshot/🛰️.proto";
+
+message Wfc3dArtifact {
+  semio.s.wfc.wfc3d.snapshot.Wfc3dSnapshot snapshot = 1;
+}

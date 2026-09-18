@@ -349,12 +349,16 @@ pub use prepared::{
 pub use ui_scene::math as kernel_3d_scene;
 
 pub use kernel_3d_scene::{
-    aabb_intersects_frustum, axis_rotate_angle, frame_distance_for_radius, frame_orbit_to_bounds, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
-    lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal,
+    aabb_intersects_frustum, axis_rotate_angle, camera_grid_fade_distance, frame_distance_for_radius, frame_orbit_to_bounds, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
+    lod_grid_fade_alpha, lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal,
     mesh3d_terminal_is_empty, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab,
     ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d,
     LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor, Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
     Vec3Math, WORLD_FRAME_BOUNDS_MARGIN,
+};
+pub use kernel_3d_scene::{
+    adaptive_orbit_camera_far, camera_grid_visible_radius, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance, world_projection_ortho_zoom, CameraProjection3d,
+    WORLD_LOD_REFERENCE_FOV_DEG, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_ORBIT_CAMERA_NEAR, WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, WORLD_PROJECTION_FRAME_PADDING,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};

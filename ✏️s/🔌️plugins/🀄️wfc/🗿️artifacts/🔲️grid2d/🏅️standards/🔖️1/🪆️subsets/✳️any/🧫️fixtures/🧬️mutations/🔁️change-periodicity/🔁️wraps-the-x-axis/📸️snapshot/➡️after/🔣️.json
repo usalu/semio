@@ -1,0 +1,97 @@
+{
+  "schema": "s.wfc.grid2d",
+  "seed": 7,
+  "width": 3,
+  "height": 2,
+  "cellWidth": 4.0,
+  "cellHeight": 4.0,
+  "periodicX": true,
+  "periodicY": false,
+  "tiles": [
+    {
+      "id": "empty",
+      "label": "Empty",
+      "weight": 2.0,
+      "media": {
+        "kind": "vector",
+        "paths": []
+      }
+    },
+    {
+      "id": "straight",
+      "label": "Straight",
+      "weight": 1.0,
+      "media": {
+        "kind": "vector",
+        "paths": [
+          {
+            "segments": [
+              {
+                "kind": "moveTo",
+                "to": {
+                  "x": 0.0,
+                  "y": 0.5
+                }
+              },
+              {
+                "kind": "lineTo",
+                "to": {
+                  "x": 1.0,
+                  "y": 0.5
+                }
+              }
+            ],
+            "stroke": {
+              "r": 56,
+              "g": 189,
+              "b": 248,
+              "a": 255
+            },
+            "strokeWidth": 0.2
+          }
+        ]
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-bottom-empty-empty",
+      "tileAId": "empty",
+      "tileBId": "empty",
+      "direction": "BOTTOM",
+      "allowed": true
+    },
+    {
+      "id": "rule-right-empty-empty",
+      "tileAId": "empty",
+      "tileBId": "empty",
+      "direction": "RIGHT",
+      "allowed": true
+    },
+    {
+      "id": "rule-right-straight-straight",
+      "tileAId": "straight",
+      "tileBId": "straight",
+      "direction": "RIGHT",
+      "allowed": true
+    }
+  ],
+  "pinned": [
+    {
+      "x": 0,
+      "y": 0,
+      "tileId": "empty"
+    },
+    {
+      "x": 1,
+      "y": 0,
+      "tileId": "straight"
+    }
+  ],
+  "masked": [
+    {
+      "x": 2,
+      "y": 1
+    }
+  ]
+}

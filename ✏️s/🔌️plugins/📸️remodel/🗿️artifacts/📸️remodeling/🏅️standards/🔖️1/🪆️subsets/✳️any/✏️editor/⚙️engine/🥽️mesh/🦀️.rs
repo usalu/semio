@@ -1285,61 +1285,114 @@ impl BoundedEdgePreparation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum BoundedRepairPhase {
     Edges,
-    Reject,
-    Filter,
+    /// 🧩️ Union the faces across every 2-face edge, one edge record per unit.
+    Union,
+    /// 🩹️ Split every edge with more than two faces, one offender per unit.
+    Split,
     Done,
 }
 
+/// 🩹️ Resumable counterpart of [`repair_non_manifold`]'s edge pass: the faces around a
+/// non-manifold edge are grouped by their manifold connectivity (a union-find across the 2-face
+/// edges, [`group_faces_by_manifold_connectivity`]'s rule) and every group but the first gets its
+/// own copy of the edge's two vertices. Dropping the surplus faces instead — what this preparation
+/// used to do — only moved the defect: the hole fill that followed closed the two holes it left and
+/// put a face back on the same edge, so a net with one such edge failed validation with exactly
+/// one non-manifold edge, every time.
 struct BoundedRepairPreparation {
     phase: BoundedRepairPhase,
     edges: BoundedEdgePreparation,
-    cursor: usize,
-    reject_key: Option<(u32, u32)>,
-    reject_face_cursor: usize,
-    rejected: BTreeSet<u32>,
+    /// 🧩️ Face connectivity across manifold edges.
+    components: Option<DisjointSet>,
+    /// 🧭️ Union cursor: the edge key the next unit resumes after.
+    union_cursor: Option<(u32, u32)>,
+    /// 🧭️ Offenders (edges with more than two faces) in key order, and the next one to split.
+    offenders: Vec<(u32, u32)>,
+    offender_cursor: usize,
+    /// 🩹️ Vertex copies appended and the rewritten triangles, applied at `finish`.
+    added_positions: Vec<[f64; 3]>,
     triangles: Vec<[u32; 3]>,
 }
 
 impl BoundedRepairPreparation {
     fn new(mesh: &TriMesh) -> Self {
-        Self { phase: BoundedRepairPhase::Edges, edges: BoundedEdgePreparation::new(), cursor: 0, reject_key: None, reject_face_cursor: 0, rejected: BTreeSet::new(), triangles: Vec::with_capacity(mesh.triangles.len()) }
+        Self { phase: BoundedRepairPhase::Edges, edges: BoundedEdgePreparation::new(), components: None, union_cursor: None, offenders: Vec::new(), offender_cursor: 0, added_positions: Vec::new(), triangles: mesh.triangles.clone() }
     }
 
     fn advance(&mut self, mesh: &TriMesh, item_budget: usize) -> bool {
         match self.phase {
             BoundedRepairPhase::Edges => {
                 if self.edges.advance(mesh, item_budget) {
-                    self.reject_key = self.edges.records.keys().next().copied();
-                    self.phase = if self.reject_key.is_some() { BoundedRepairPhase::Reject } else { BoundedRepairPhase::Filter };
+                    self.components = Some(DisjointSet::new(mesh.triangles.len()));
+                    self.offenders = self.edges.records.iter().filter(|(_, record)| record.faces.len() > 2).map(|(key, _)| *key).collect();
+                    self.phase = BoundedRepairPhase::Union;
                 }
             }
-            BoundedRepairPhase::Reject => {
+            BoundedRepairPhase::Union => {
+                let components = self.components.as_mut().expect("repair components");
+                let mut visited = 0usize;
+                let range = match self.union_cursor {
+                    Some(key) => self.edges.records.range((std::ops::Bound::Excluded(key), std::ops::Bound::Unbounded)),
+                    None => self.edges.records.range(..),
+                };
+                let mut last = None;
+                for (key, record) in range {
+                    if record.faces.len() == 2 {
+                        components.union(record.faces[0], record.faces[1]);
+                    }
+                    last = Some(*key);
+                    visited += 1;
+                    if visited >= item_budget.max(1) {
+                        break;
+                    }
+                }
+                match last {
+                    Some(key) => self.union_cursor = Some(key),
+                    None => self.phase = if self.offenders.is_empty() { BoundedRepairPhase::Done } else { BoundedRepairPhase::Split },
+                }
+                if visited < item_budget.max(1) {
+                    self.phase = if self.offenders.is_empty() { BoundedRepairPhase::Done } else { BoundedRepairPhase::Split };
+                }
+            }
+            BoundedRepairPhase::Split => {
+                let components = self.components.as_mut().expect("repair components");
                 for _ in 0..item_budget.max(1) {
-                    let Some(key) = self.reject_key else {
-                        self.phase = BoundedRepairPhase::Filter;
+                    let Some(&(a, b)) = self.offenders.get(self.offender_cursor) else {
+                        self.phase = BoundedRepairPhase::Done;
                         break;
                     };
-                    let record = self.edges.records.get(&key).expect("bounded repair edge key");
-                    if self.reject_face_cursor >= 2 {
-                        self.rejected.insert(record.faces[self.reject_face_cursor]);
+                    self.offender_cursor += 1;
+                    let Some(record) = self.edges.records.get(&(a, b)) else { continue };
+                    let mut roots: Vec<u32> = record.faces.iter().map(|&face| components.find(face)).collect();
+                    roots.sort_unstable();
+                    roots.dedup();
+                    for root in roots.into_iter().skip(1) {
+                        let new_a = (mesh.positions.len() + self.added_positions.len()) as u32;
+                        self.added_positions.push(mesh.positions[a as usize]);
+                        let new_b = (mesh.positions.len() + self.added_positions.len()) as u32;
+                        self.added_positions.push(mesh.positions[b as usize]);
+                        // Every face of that fan group touching `a` or `b` moves onto the copies,
+                        // not only the faces on the offending edge (the same rule as the batch pass).
+                        for face in 0..self.triangles.len() {
+                            if components.find(face as u32) != root {
+                                continue;
+                            }
+                            let mut triangle = self.triangles[face];
+                            let mut touched = false;
+                            for vertex in triangle.iter_mut() {
+                                if *vertex == a {
+                                    *vertex = new_a;
+                                    touched = true;
+                                } else if *vertex == b {
+                                    *vertex = new_b;
+                                    touched = true;
+                                }
+                            }
+                            if touched {
+                                self.triangles[face] = triangle;
+                            }
+                        }
                     }
-                    self.reject_face_cursor += 1;
-                    if self.reject_face_cursor == record.faces.len() {
-                        self.reject_key = self.edges.records.range((std::ops::Bound::Excluded(key), std::ops::Bound::Unbounded)).next().map(|(next, _)| *next);
-                        self.reject_face_cursor = 0;
-                    }
-                }
-            }
-            BoundedRepairPhase::Filter => {
-                let end = self.cursor.saturating_add(item_budget.max(1)).min(mesh.triangles.len());
-                for face in self.cursor..end {
-                    if !self.rejected.contains(&(face as u32)) {
-                        self.triangles.push(mesh.triangles[face]);
-                    }
-                }
-                self.cursor = end;
-                if end == mesh.triangles.len() {
-                    self.phase = BoundedRepairPhase::Done;
                 }
             }
             BoundedRepairPhase::Done => {}
@@ -1348,6 +1401,7 @@ impl BoundedRepairPreparation {
     }
 
     fn finish(self, mesh: &mut TriMesh) {
+        mesh.positions.extend(self.added_positions);
         mesh.triangles = self.triangles;
     }
 }

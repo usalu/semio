@@ -1661,11 +1661,11 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "ac5f8d90c1f3a909cdcb303bd4ca6e3a3f2552401356c4320c208ff8522c810c",
-        "🔣️.json": "c805d41df733d729f09af695b65db7305f8c447accf36ac9e312f6ed355415fb",
-        "🛰️.proto": "bb6528098bd54097b88f0ae2e07dd4428dfa0aeb9b3f3daa435170baa43170ac",
-        "🟦️.ts": "f96ef6f704484e4b9a10dc6f23a8f843c897cd9a8f6c1055442c17ec8fc15951",
-        "🦀️.rs": "96d335df5e05f58693d717f1edeef2731d58bbfce82467e3e3bd854aed69da57"
+        "🔗️.graphql": "afac77108743d581d8d36545c57c75f3a9c65ae87c8fe84b72e967c4ac04f4aa",
+        "🔣️.json": "96ca612a9f9edb0b8e52d6688d24d718f0b8c8cf69478fa30ef406243bd463e5",
+        "🛰️.proto": "6770311037b007bd3fe528cdd76eedc2f4fc575791c90b9ecd58f19cd1a479ec",
+        "🟦️.ts": "34682d2a054d25954bd6c3241fd6cdad1099988cf95b1100792dd5510ceac678",
+        "🦀️.rs": "d7cb039d61f23f2845994d1e6fa7611f3f12c3d1bad4e25671ecabab61046620"
       }
     },
     "app.puzzle.puzzle2d.presence": {
@@ -1765,11 +1765,11 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "e64535abbf1490955e7034332a24f167b944baa0644f72b5567a233ad9e6068e",
-        "🔣️.json": "f79572379293dc175fa1b6aa37118a209741a37d9957cf8587c3e7d2d784ff07",
-        "🛰️.proto": "cf386205e67539806771804e11bed7dc5b12409567a6892476cac4a3bd45b2ae",
-        "🟦️.ts": "6a4b3eb338077382126d24d6786474a42db2cb781d6ec516a8b7e2ad54a5667d",
-        "🦀️.rs": "f0a6349979c7a086dca0d531561368983945e8c8ccb5a9d125f63d5bcdce4b81"
+        "🔗️.graphql": "47257361967ebfd90c6fcfe42c4ccd42969c38a547ddafb36a30e10dff675cba",
+        "🔣️.json": "bd9e60697b66fdb517bbd656e4408b8180cb559f86440899922f7abb3d78c73b",
+        "🛰️.proto": "851be8a031d7b1241999bba5afefc057508c05cd937afe4bb143d81ba3c6548d",
+        "🟦️.ts": "d10b77e854f0374db1ed9af63c14a327b10fb3362b9c45eb8013bf413529766e",
+        "🦀️.rs": "196d0dbb8cceb329bb7cd3e4f01911ec42310361ea4940a0d8e5427b311448f1"
       }
     },
     "app.puzzle.puzzle5d.presence": {
@@ -4378,7 +4378,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "a5dc125d7e97bcf77809209c6b986bd08fa4edf7707038e7ff709a2e3c39ce14",
-        "🦀️.rs": "ec033e08dcb6640b3448755fbdd47b656ebf22bc54762e77bb263f33c61373dc"
+        "🦀️.rs": "0ace67507225786c7131789644026c84ed519556461a4a7a7b8d1cb091491dba"
       }
     },
     "framework.ui.contract.bindings.copy": {
@@ -5622,11 +5622,15 @@
         "ToolRunTraceCursor": {
           "file": "🔣️.json",
           "facet": "schema"
+        },
+        "TreeWindowRequest": {
+          "file": "🔣️.json",
+          "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b5df00d785409938194ea692ad61d1e6312e0a46fe7638e45e5cf8d8c94fce90"
+        "🔣️.json": "6636413d4db123f94e701c0ab16972a0f04ad4a6c27f3e11469a7161c054f89c"
       }
     },
     "hub.admin": {
@@ -12582,7 +12586,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a714c8bc0277241696d59d3dc79250318e1de8f1bbae6a5d462b1687c9fad7df"
+        "🔣️.json": "7a0add16a2095b84f6f459fd98216ff5d251a7dbd327b390fd6bb6497d03bf6a"
       }
     },
     "repo.library.caching.vite": {
@@ -23796,7 +23800,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0fa71f53eeb128a5c972c319c0ffdbe838b2b9405a616e6cc56aa8514f4d046a"
+        "🔣️.json": "849552805488ebe74e257f946906c75d21316042f5dfabfccaadcc12614d943d"
       }
     },
     "s.draw.drawing.1.metadata": {
@@ -31403,7 +31407,7 @@
         "📸️snapshot/📝️text/🔣️.json": "a8b5cf5048709991682b1bd22c47a76761f770efe3a4e51847f463e5e46228b0",
         "📸️snapshot/📝️text/🛰️.proto": "d54df75e03e569e848f35f7ceed0158a99361c7a7c056a3c16b8b1ea49b17d07",
         "📸️snapshot/📝️text/🟦️.ts": "8f64bbe1ac0b3199a3f3141d4e286e9177c87bb8779a20e759dfaf3b2053ded2",
-        "📸️snapshot/📝️text/🦀️.rs": "79c053de89e01896cde8265669b0d3106ad90d72a83ea3c7fa689e4e89779641",
+        "📸️snapshot/📝️text/🦀️.rs": "ecabacef12d7774def71b2bae05c5ff4e7c2da466af57a7e6428e99484ed99a1",
         "📸️snapshot/🔗️.graphql": "c4586bd8fa4ff667b96c90f92773286a2653f401be2d616b21947f13f7112409",
         "📸️snapshot/🔣️.json": "89540ac707725c17342ea7997f2f5105ee575d96093bce7169db0d810a4fd44c",
         "📸️snapshot/🛰️.proto": "9e13a337b77c7dcc792731c58b750912a091b416f36c1041f0b84b99e974f4ee",
@@ -33484,7 +33488,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "7de0dadbafbf68e11af2e53630ef6fcf4c1de51b0093eaf268fe04ff4efe7498"
+        "🔣️.json": "d69883ae9766b15e86092b0c263449c84d963e9dd56b9b767613c7b9a04c8a2c"
       }
     },
     "s.lowpoly.lowpoly": {
@@ -33619,14 +33623,14 @@
         "📸️snapshot/📝️text/🔣️.json": "f961323bec174f4a595da22b86047cb4df922432e0f39f5a3e2b4c6a4f9d6241",
         "📸️snapshot/📝️text/🛰️.proto": "9458ffa0cccecbb2dd71fee6689f1edcfffb0326f4097ceb48d5846f43134d33",
         "📸️snapshot/📝️text/🟦️.ts": "c77a3848c87bdf9d8d54dfeda4afab3dfa5cb03cba4dc6c0ab02b6347eef8832",
-        "📸️snapshot/📝️text/🦀️.rs": "e3111040813e6e1bc0d8e948f2bab65541f13f31e232be738a8e1adcbb60bb5a",
+        "📸️snapshot/📝️text/🦀️.rs": "f4adaef208ae80eff5000699f113916b73c145e7f3390d9baf3b7a533e223602",
         "📸️snapshot/🔗️.graphql": "20b257c657764ee596579c986d717959c6f62a663fc633febe82cd118888eed7",
         "📸️snapshot/🔣️.json": "3602fdf314e16042392b65b47769245fe7214d6530147a29a38e62c3c25cef29",
         "📸️snapshot/🛰️.proto": "246cfaa9eccd052e3cfdf23b77e4754b96c3e64fbfcde37a7aab599f442fdfde",
         "📸️snapshot/🟦️.ts": "cf777606d4ebdbf9512ab8435797dca044d7e14c349e0f3118dc2c70e6346dcc",
-        "📸️snapshot/🦀️.rs": "6feb88cec075f30dee3cb49dc0f21a3dd3fbf8d29a4050eb884bc6db319b0149",
-        "🔗️.graphql": "1ab07340fbdf3420931cd50f58de49d90b75416157f357e9df038ee855f8519f",
-        "🔣️.json": "b044721eea672fc7b51f3c07987ce79aef0878ab3756e09d29df9b1f6e9e6341",
+        "📸️snapshot/🦀️.rs": "115dbb66685a554595680637272fcc738edde866b4c2699e7378c8f03b212380",
+        "🔗️.graphql": "72aaae4af50e4710b79ee839790996c69518bf69391e72b98d16c6a983493fda",
+        "🔣️.json": "0fd291e2afef1843f3a7a4f1d813abd2c521c2f84d962bbcf084b7fd6cbc48f1",
         "🔺️diff/💾️binary/🟦️.ts": "cfdb27568e8e80a6168e05a0223fb56c31c4ccd29083ad5edd3b251fb50bab64",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "a9c4af1ae3b8e4424c612735eee2d01e1a07ebdfb649d2bff705ec82e21954d1",
@@ -33634,14 +33638,14 @@
         "🔺️diff/📝️text/🛰️.proto": "bb1e31ff9686497a70bc2006907173f4a4e4de2893e16b55b35c20eea19943d1",
         "🔺️diff/📝️text/🟦️.ts": "08bde4bdf210616efdb91e6666a0b49712ca465b2015a223d46612afaf96cff9",
         "🔺️diff/📝️text/🦀️.rs": "a23e1bcd991f054be25a94851b2e2811f8df05798ac468b3ef494b67ffc51377",
-        "🔺️diff/🔗️.graphql": "fa566909c37e26e5aa85868d62595734104f97e6a1b6d18a2e15f8e7d6e328ab",
-        "🔺️diff/🔣️.json": "74a09665bff7af9b1e5354ca8816c8a75d99a011fc94bff551aebdf4b943775a",
-        "🔺️diff/🛰️.proto": "7b709febf15d48fee176a3c841f0fea3abc26c380150c8f515d785589db538fd",
-        "🔺️diff/🟦️.ts": "3865265a18b5bf311e00326f58fdb00fa89f8b1f4bae7747f6948cb9c14d2de6",
-        "🔺️diff/🦀️.rs": "404026dff018c618a27cf6e90ae648d7923d29a7b31490bd7ec4b5fdca1fad1d",
-        "🛰️.proto": "ee233ee0b01d857c3cad92c622df378e601e34a399166a0fd63c03ddde2f78a7",
-        "🟦️.ts": "1b851063688e9ef29ec3ee45588d3731a12d9f7f3f31ac4f1c47160d11ef8af7",
-        "🦀️.rs": "d92370215670a5fa4b86d0619329dca9e924fe1e10d34670f398e1d4083463ad",
+        "🔺️diff/🔗️.graphql": "e776db2d7e32568f0be55d32a824005296c2a380db3a28cc8357ed13782fd5ca",
+        "🔺️diff/🔣️.json": "7576d7ec0085843a0b299a02b972c1f4482e46bb183b22f7a4e2fee76b9b1b94",
+        "🔺️diff/🛰️.proto": "144501fa9674b0540540932cf33934efa9e17114e6a5860edc129e599449972a",
+        "🔺️diff/🟦️.ts": "fd8b516098afc67b7ae6ebc0492db85512f7c3bf41b21ad4985a02042517ac4a",
+        "🔺️diff/🦀️.rs": "30787cb04d6330184638857ee34c6e830a4fccfb7220425ca022d5b0bfd3e61c",
+        "🛰️.proto": "38b3e882c28b46104b160b51480876d9fc9a5cc8f7db418decef890439cd4a0e",
+        "🟦️.ts": "e7861c53ed410fbc89cc81192dddef5ac8e14e6403dfafd17562d6e9dd49fcaa",
+        "🦀️.rs": "34495b2d5b35c427ba6ea25d0f539be91d0e81b695f50b6a7ac3f8d5ce795c19",
         "🧬️mutations/💾️binary/🟦️.ts": "9ee8be0c1843c53d63351b68ea5d3183fda09d14ef8fc2bc30f04630dab3bbc5",
         "🧬️mutations/💾️binary/🦀️.rs": "20c07829e196f331455158f47f5508616a4c00172973f25b0815c4457b279814",
         "🧬️mutations/📝️text/🔗️.graphql": "e0b13a1402e9bb7dd6308ba17c02cfadb67a01b218db2a9dacd8985ffcd29ec3",
@@ -33649,11 +33653,11 @@
         "🧬️mutations/📝️text/🛰️.proto": "18f88e58cee2d90e7cb578b22e419cab5c15af6dc716dabfe14452663d4a2009",
         "🧬️mutations/📝️text/🟦️.ts": "10047b7bfd0c5b6f4c3ef28272e87a98a39a2773757b9bf20bd61a97c2c7fba7",
         "🧬️mutations/📝️text/🦀️.rs": "f001e7294ffd2e91ba97fabe7b35196d965b2fc3a8744924c7a836049c213576",
-        "🧬️mutations/🔗️.graphql": "6c3b461b15e22695d50968db9d99902c269adddd935b29682a120bf45206f5ae",
+        "🧬️mutations/🔗️.graphql": "446318d9f7843aaf3d8a99458b1dba5069e2215665f1cca052effac347ccd11a",
         "🧬️mutations/🔣️.json": "19298939de4c2cb00b95b35c92ba585c56713daaeb45299c3ee0d69cbf6b1541",
         "🧬️mutations/🛰️.proto": "cac098733d46ca5f9b39b4472c5492b4e09203e54fabd9ae0dcd081118f8fba7",
         "🧬️mutations/🟦️.ts": "f8f3feaf87682ea9646dda1f4ff23a22a629b98b9a30b97a74be7fef59a03a67",
-        "🧬️mutations/🦀️.rs": "aad0787a17de852f2742ccbc0603e8027ed3303db039d5598ede202de7218195"
+        "🧬️mutations/🦀️.rs": "35717eace1b12f46ab77ce96dca8aa44fbc737e1995711c8be48547eafcbb5e5"
       }
     },
     "s.lowpoly.lowpoly.mutation.change-object-smooth-shading": {
@@ -33761,7 +33765,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6f32f08a6cdc8a0ca72bb8f78090a3ff0015d0dc6ce934ea103843bee34840c9"
+        "🔣️.json": "f7f11fd2e108eaba323817293371810d2535255956a990ce00682c51c36d2bd8"
       }
     },
     "s.lowpoly.lowpoly.mutation.delete-mesh": {
@@ -44400,240 +44404,6 @@
         "🔣️.json": "f08090ef288258c81bb95c0d8f61e07f14e59b2be65c32527b1d070477a467bc"
       }
     },
-    "s.procedural.assembly.1.any": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
-      "level": "artifact-standard-subset",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🦀️rust": "🦀️.rs",
-        "🟦️typescript": "🟦️.ts",
-        "🔗️graphql": "🔗️.graphql",
-        "🔣️jsonschema": "🔣️.json",
-        "🛰️protobuf": "🛰️.proto"
-      },
-      "exports": {
-        "AssemblyArtifact": {
-          "file": "🔣️.json",
-          "facet": "artifact"
-        },
-        "AssemblyDiff": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "AssemblyInferenceCommit": {
-          "file": "💡️inferences/🔣️.json",
-          "facet": "inference"
-        },
-        "AssemblySnapshot": {
-          "file": "📸️snapshot/🔣️.json",
-          "facet": "snapshot"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "💡️inferences/🔗️.graphql": "c199b839f83662ebe21e36aca773dec4cf2cde25be444f947a7f167c1bb18413",
-        "💡️inferences/🔣️.json": "eec18309e93f86294ea4d8f2539a065a82e19682a1f0f9eadcbcec7d1a4a509b",
-        "💡️inferences/🛰️.proto": "fc6c31facad0a311606ec09a1ee471026c875c4b8fa9c7e6a6d9c2d8088293d4",
-        "💡️inferences/🟦️.ts": "64ac0d8d255ca1aeba5feceb5755fecea4686e65668cd83b669517712e6cd94e",
-        "💡️inferences/🦀️.rs": "3b7a8d2da681d7d268d5d967d513a02bd733513173c645a1b09eddb786175de8",
-        "📸️snapshot/💾️binary/🟦️.ts": "f8561ca5753fc904e2aa652515d504ed83ba27ece1448234af82ff6c67df37c7",
-        "📸️snapshot/💾️binary/🦀️.rs": "c33baad780c99c03bc51a264a2c94e6e24341e8a24245e75a2fcfed18a56f496",
-        "📸️snapshot/📝️text/🔗️.graphql": "e673015ca828b41f0a7562a20bb558beb10ee94c231a51698bb555612337d1b1",
-        "📸️snapshot/📝️text/🔣️.json": "71e0f11c4d81a0d6bb5e27d0445570f521b59b73139be7963e5fadadd503c608",
-        "📸️snapshot/📝️text/🛰️.proto": "86daed18a028c9b3123bd387bb172b0f6d212ac3a322396d042087e43ac867a8",
-        "📸️snapshot/📝️text/🟦️.ts": "0495ad27db3ebf4d0bf4815ab9d96096d157cc0e810f09802d35fb28b687ed2f",
-        "📸️snapshot/📝️text/🦀️.rs": "b1cd2562436aac2679abcfc095ba5da966998ad40aedafcb5a39cadf56ca0a95",
-        "📸️snapshot/🔗️.graphql": "bfededa2fd6d2a78905226355061c723647ede7f0cb04ea2dae89dbae349e462",
-        "📸️snapshot/🔣️.json": "099af58f046a2f1c54b919d936065f52939e8b7eb21b61dabb2927cb34d1c4f5",
-        "📸️snapshot/🛰️.proto": "a72ed8b3ad4e91676ad52cc31b27a39d77bd5723fb3ca52a43b13344bd6dc511",
-        "📸️snapshot/🟦️.ts": "1ade45dfc7a91bbfe4da5dc640f982bb07d15dcdd167c664e75da5a2fbc61349",
-        "📸️snapshot/🦀️.rs": "72de2a04442901603c43063c21f32c1941d7e458da3f701d4c73340f3eee5606",
-        "🔗️.graphql": "2eaa3ba8690bb5b3c7358b7236e9c59d07ab1c6bb215535d7557fa747b8c1c50",
-        "🔣️.json": "764d56a92a6bb18586767f42ce62e581624b5b1c462536e9d924c85e1f2a2ef1",
-        "🔺️diff/🔗️.graphql": "0944ab77385a6a401bf8f9c4eb979878a1defe28f3ec565c0fdbd798c3a5149f",
-        "🔺️diff/🔣️.json": "ef2514f0f97df7aa73af3c0381010bad4f359d38082d87dd8f8bf8aba7a934c2",
-        "🔺️diff/🛰️.proto": "d30e49a2fdd87a09545e45e38e0dfdf49956a8ba7c173da816adb11c0bb41224",
-        "🔺️diff/🟦️.ts": "b389e277f8f8740d474ad7e4a9f8b7589ee9cb38e8319e1403af56543b93d64e",
-        "🔺️diff/🦀️.rs": "445c073a2247cfdc94feab263d4f65681b98f0b2b4f5bfa62564861b7b06407f",
-        "🛰️.proto": "92e3219b6a820f530242ab398a513edc4e1603ae5a84b61b58d1e8f7f3ad00d3",
-        "🟦️.ts": "25a61a1b39f3f4fd21f97e908661ad77d7d661cceaf779e441a458ac55a0373b",
-        "🦀️.rs": "0d48aec066be31f012ce4514d23c5f0a6049d05ebfbae84d1aa5a0677b00d227",
-        "🧬️mutations/💾️binary/🟦️.ts": "e1111816f4947824f49a5c79a098ac9abe5b5b820746c5b24df9456be9227d69",
-        "🧬️mutations/💾️binary/🦀️.rs": "c2fea3f3c31299d933b0f7322b48f42e4774dd3782b9d0f61bb9ce30a97f244d",
-        "🧬️mutations/📝️text/🔗️.graphql": "6058986e6ae923dfd48d3a1c6e0163a06b52828d2074fb2b6ed55ccf1e6735ce",
-        "🧬️mutations/📝️text/🔣️.json": "9320ae1e18826c88bb32025f41ddd431786c08b0c09dff36348a9a4240cf1d08",
-        "🧬️mutations/📝️text/🛰️.proto": "b8d60631f5268e07c74102024fc5518487d64a70a1425c50ce6720ef7e85c468",
-        "🧬️mutations/📝️text/🟦️.ts": "9f3bde910dfb57d8445ff5fe01275be88b7dd615b1213834763b0e9795f91c91",
-        "🧬️mutations/📝️text/🦀️.rs": "640bd11de8bc3a23782121fc4e69229cffab0ff61d171a1f19215290d1d68c14",
-        "🧬️mutations/🔗️.graphql": "928f0af4e5dfc24be784ed7cafea5ed54d6a6c4f3618a5e2fd75a94b61e0150e",
-        "🧬️mutations/🔣️.json": "400122de83bc12778c4bf7cda83b24d42f4ff2fffdf1b3e8663897cf0a8aea44",
-        "🧬️mutations/🛰️.proto": "fa0f2e9954c6541917a829cb5b0e2923c97c4eed56f4e5198a3194ada13c577f",
-        "🧬️mutations/🟦️.ts": "ea817de9e3706b4754c91933e3b3362d966e1161ce4e04cfb2a94632f9ef2534",
-        "🧬️mutations/🦀️.rs": "57396e546e206ef486bd5fd3e9bec63fc046ab438bbe51501ba1688abc51ff0c"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.change-seed": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ChangeSeed": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "8d2ab232bce4db4be8b416ffafd9908e99be443ed9d843ad42ac192646948ad3"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.change-weight": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-weight/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ChangeWeight": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "d5047923844b91fb42675f899261401148083445927b8dbdd41213a5085552d5"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.connect-slots": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ConnectSlots": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "0fdd888f454d17a49dfe217f12f8f93f988ce944943eed72bc7049f25ca9f4b0"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.create-rule": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "CreateRule": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "fa9fb275ac887f42f36fe2f583ba36a3ac8b57412f53899b9fbad3bd981775ca"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.create-slot": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "CreateSlot": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "6ade3b4925e01924bcde76dfb01c092f3a7914de78ed57b4d8ede8f37f8c337a"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.delete-rule": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "DeleteRule": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "aea687ec963beced4108034a1a44c0cbd03fb9a6299f62e915f8be6a84a6da5f"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.delete-slot": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "DeleteSlot": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "8708c2e4ede67ee3582edf86189910aa171c2edf4cb1fb174b34d55a748206de"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.disconnect-slots": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "DisconnectSlots": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "4614e3867b03d6501bf09d53f5ea6518309e1bfa616a39118a803280fa07cd64"
-      }
-    },
-    "s.procedural.assembly.1.any.mutation.remove-weight": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️remove-weight/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "RemoveWeight": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "22bc0bd64c278988f23e2ebbd278b420f69766b7ae2a72f6afb90030967cea3f"
-      }
-    },
     "s.procedural.generation2d": {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
       "level": "artifact-standard-subset",
@@ -46023,6 +45793,22 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Puzzle2dTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "Puzzle2dTargetRegionPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Puzzle2dTargetRegionPatchEntry": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Puzzle2dTargetRegionsDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Puzzle2dWasmSessionFactory": {
           "file": "🔣️.json",
           "facet": "artifact"
@@ -46041,19 +45827,26 @@
         "s.puzzle.puzzle2d.mutation.change-node-locked",
         "s.puzzle.puzzle2d.mutation.change-node-root",
         "s.puzzle.puzzle2d.mutation.change-node-visible",
+        "s.puzzle.puzzle2d.mutation.change-target-region-hidden",
+        "s.puzzle.puzzle2d.mutation.change-target-region-locked",
         "s.puzzle.puzzle2d.mutation.connect-handles",
         "s.puzzle.puzzle2d.mutation.connect-kind-compatibility",
         "s.puzzle.puzzle2d.mutation.create-node",
+        "s.puzzle.puzzle2d.mutation.create-target-region",
         "s.puzzle.puzzle2d.mutation.delete-node",
+        "s.puzzle.puzzle2d.mutation.delete-target-region",
         "s.puzzle.puzzle2d.mutation.disconnect-handles",
         "s.puzzle.puzzle2d.mutation.disconnect-kind-compatibility",
         "s.puzzle.puzzle2d.mutation.edit-node-text",
+        "s.puzzle.puzzle2d.mutation.edit-target-region-label",
         "s.puzzle.puzzle2d.mutation.move-node",
+        "s.puzzle.puzzle2d.mutation.move-target-region",
         "s.puzzle.puzzle2d.mutation.remove-node-handle",
         "s.puzzle.puzzle2d.mutation.replace-edge-geometry",
         "s.puzzle.puzzle2d.mutation.replace-kind-catalogs",
         "s.puzzle.puzzle2d.mutation.replace-node-geometry",
         "s.puzzle.puzzle2d.mutation.replace-node-handle",
+        "s.puzzle.puzzle2d.mutation.resize-target-region",
         "s.puzzle.puzzle2d.mutation.scale-node"
       ],
       "hashes": {
@@ -46076,40 +45869,40 @@
         "📸️snapshot/📝️text/🛰️.proto": "d2ba9370372108377813ab02a2f279d3bf5574ea4cd0254746528fdf80e5fb67",
         "📸️snapshot/📝️text/🟦️.ts": "44d08f1dd17786d074322a758ede9fb980e80934edfe6b7e12fcd1ca193269e8",
         "📸️snapshot/📝️text/🦀️.rs": "81afbc9538bd1d71372dc8f243b37a48e9297af9d870c66f075c15b6e4c19b60",
-        "📸️snapshot/🔗️.graphql": "6601a9936f62376596a6781cb67ef662992aca3df3c25b355be525f035b301cd",
-        "📸️snapshot/🔣️.json": "f7e76b25e86eb22f17f5553c62859af2e7dac0462d1d1ec8d0826f641c4e534a",
-        "📸️snapshot/🛰️.proto": "8c59e80426255650fba6f2430082237a3290989889bc4cca3e5dbe27e87960aa",
-        "📸️snapshot/🟦️.ts": "acb041d9a82a334baa0a54be8bad18d0fd66287dfa22e287f6ddeb14157d7012",
-        "📸️snapshot/🦀️.rs": "1ed7a278f9bc7984ea9a250209e988a011835961502616ac3428494d021d6c66",
-        "🔗️.graphql": "c3ac2639b9dee192e06616c3a1a9213586a1dea2d335f852cac78fc5d20c5cae",
-        "🔣️.json": "b85075239de6be9e876f7c1e70ba17904f4bf1680b878d6c30d3db0193f67116",
+        "📸️snapshot/🔗️.graphql": "324982b0133318ec12f78d879579ec87dd3017944e017ef2f5e8addfb1a58187",
+        "📸️snapshot/🔣️.json": "c8a76f32344f3033240c880f251de43668a42647b40a63a5fc69f63dc1523791",
+        "📸️snapshot/🛰️.proto": "c8cde4db91a523727ef38bfaa50525c5de38cece64b0026f8073d1e4d0ceaedf",
+        "📸️snapshot/🟦️.ts": "798ddc9dbfd87eae79ee46ef9cf00e52f38fe318b7d870a07b0270b68cf839da",
+        "📸️snapshot/🦀️.rs": "3e29dd8e111b9c22820eeba015e3912096fd82fec7ff21fd7d4f9c1d423b9012",
+        "🔗️.graphql": "7e274c70e6ad64f5017f2f89a63683e2515b5e6337b1405f3b1873bf9081426a",
+        "🔣️.json": "9e78789592137dad0e6550f2de62566892ab6b7f4405e8d620efa28df97614e5",
         "🔺️diff/💾️binary/🟦️.ts": "31d4800cb0249529337fdb85a76f03cb889dba5e51c89fd2f0267821aa7c8862",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "5c5e7e4d31fce5a0c97c36f09c3abd5d2cf84eb109635465056a26a672e9981b",
         "🔺️diff/📝️text/🔣️.json": "d0258c6f5f247991ac2b1010bcbf57c6bd7831b4be4f28890e5b0c925a6198d5",
         "🔺️diff/📝️text/🛰️.proto": "7fd0d62a58107f5ae1bf90202bc195d755250cde4e907e5fe4523dd21fb9a533",
         "🔺️diff/📝️text/🟦️.ts": "0a92cb3e32168e6889c8db2272bc859a2c09c9616836ace1d224a88cc17cbb85",
-        "🔺️diff/📝️text/🦀️.rs": "184593bd23a3a9c7d96aa3f2e8a16fedb8429e1f0181c4fc4c5e77f080175125",
-        "🔺️diff/🔗️.graphql": "ebc3ea4002d7d05ffee0e6324d011ffb276bc3cadd36af789ef753b108ecbf03",
-        "🔺️diff/🔣️.json": "b3cf7b20fb07b14fe64d9fd8f489794b1524a3f527bfafb565ea8db651bd9a1c",
-        "🔺️diff/🛰️.proto": "99f51fe4238adc98cda5fdefe639987e59e945bcef2559d7b9de616620412923",
-        "🔺️diff/🟦️.ts": "5493bc007c6d49c646296afa80908000e962347d63ed9bfe0474c302a6551f6d",
-        "🔺️diff/🦀️.rs": "34212593ef46f0017aeef6e003a392246eb3f5f2736b16e2504a543637b455f6",
-        "🛰️.proto": "fd5cec4bc451dd6ace4e272c04b18371bf8c2c219536dcf278e0481e140e2c0e",
-        "🟦️.ts": "8cadf245d91ac808d35e03186b32bf1b3a94ff2e7a0e61f8a383c15828129ccb",
-        "🦀️.rs": "ff252bc985cda13e101b0092968ce5dbb59d6609d3473a2a474f82509544f5f4",
+        "🔺️diff/📝️text/🦀️.rs": "6ee7679812af701d6d7e213fe822341df88445fa9c31f4f5868f31ebcfa31580",
+        "🔺️diff/🔗️.graphql": "e7c7f09e62b6bc3eddf47160c76dd13cd64ed4bf11648499a16dec68cec06eb4",
+        "🔺️diff/🔣️.json": "c020986e06064221139e24d34bd6ab81e772418632b51b045fa9eba3505bcd42",
+        "🔺️diff/🛰️.proto": "eb0e9cd74a63975d14002a9a8870a9bd996e29785da5ed69198746ecf5cf3a66",
+        "🔺️diff/🟦️.ts": "2798aa651447212eb47d3517d56887443937162a3588018936954ad5507ee85f",
+        "🔺️diff/🦀️.rs": "81a2fa45ababd850529008e44134c65f0c6160fa938d22cd2938bc3c143aa8a1",
+        "🛰️.proto": "2463c5fd400da2ca1919688340f92ce50e438b8738c58c996a810492931b9a6e",
+        "🟦️.ts": "4e1baf64fc56351568257cd9d68977183bfac1749abd37d63eb570f3cd829a57",
+        "🦀️.rs": "d904d3d9b09faf393791a923dcffbe561664e251473e626aa78bc6a07b239d8e",
         "🧬️mutations/💾️binary/🟦️.ts": "c3d03478d2b5e0ed85edb0636d9e216b96e6d83de3ef6642d8288a46b39f1d91",
-        "🧬️mutations/💾️binary/🦀️.rs": "354cfbbef2bd520ce0e5e2832f98662fa8f9ff80a4465bc3b879236a77a658ac",
+        "🧬️mutations/💾️binary/🦀️.rs": "2a5d7147fc544ecfe9a9d0160ba63c4d7859ff36f0a4ed56ffc0a6bfa959af7f",
         "🧬️mutations/📝️text/🔗️.graphql": "56773d205c426b5a54bc4f2cd6a9ccfc9cfea43e77d60796afa614143533b03a",
         "🧬️mutations/📝️text/🔣️.json": "1c7652e928e6d80918c5331db9ded1277a7c3fd4886763d6c9c2ef877451d9e9",
         "🧬️mutations/📝️text/🛰️.proto": "eb48fb990542a38bab5fcae8bbce5c4a41e2ee868d9e0e74b51ba80397c2628e",
         "🧬️mutations/📝️text/🟦️.ts": "0dde0d46acf1d2523b92e9923821067a514d67332695cfd1ea80ca37128d8f88",
         "🧬️mutations/📝️text/🦀️.rs": "317f4d45f62cf81c2633fac8a65d6232b534e995b111150bd5ba5d59dc3fd659",
         "🧬️mutations/🔗️.graphql": "60e330402aa0e8dba58b9b19288a1104f4bf12bfa6a00768b8e207d5b48cc167",
-        "🧬️mutations/🔣️.json": "7ae0efd16628db261e4e943965e9c894d9b7a9cfbe38c1b3f2268e8d12395895",
+        "🧬️mutations/🔣️.json": "d78848eeaacd9d18c50f59b5b2ab197e5ca0fbd844d05d33beeaf37ec9bd6ba7",
         "🧬️mutations/🛰️.proto": "0c9ec41358857521991f5c88b66622314034c480f3151b1e3c6deab1b401ba03",
-        "🧬️mutations/🟦️.ts": "31ad680682e0265446e14a78348a57fa3465172c524786ab9237bc810d1760fd",
-        "🧬️mutations/🦀️.rs": "0334a4fd0ce1c1d10f8042d496e590b50eacd16c7eb8a192de30f3f50809ad29"
+        "🧬️mutations/🟦️.ts": "c98e058f35310b832fe9ca8ffc93f5f0267ad55b225e820f40edda286bf11564",
+        "🧬️mutations/🦀️.rs": "4bfe1a302a83e5852af26cc39d39bab9470451ecbf54fc87faf6891b401d9c53"
       }
     },
     "s.puzzle.puzzle2d.mutation.add-node-handle": {
@@ -46336,6 +46129,42 @@
         "🔣️.json": "e95953aeb8dc3e22b3557bf96006345fab5696a5ef60969aab7dc54911ad46c7"
       }
     },
+    "s.puzzle.puzzle2d.mutation.change-target-region-hidden": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTargetRegionHidden": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cdba8d9b2ed5511b4808cbf9f6e529061376174a332b0f1bb8f272f6b3ca455d"
+      }
+    },
+    "s.puzzle.puzzle2d.mutation.change-target-region-locked": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTargetRegionLocked": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "bc91820109455604dfaa2ee48732c29c49d739cbda9ed82b5f3542f3e4203677"
+      }
+    },
     "s.puzzle.puzzle2d.mutation.connect-handles": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧬️schema",
       "level": "mutation-leaf",
@@ -46406,6 +46235,28 @@
         "🔣️.json": "bee48fcec7dd976cd07e9c9724ecc78f1ed518fcd817ca791a867657dad16bf9"
       }
     },
+    "s.puzzle.puzzle2d.mutation.create-target-region": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Puzzle2dTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d38e6282258cc89550c9b7411d7d4005ebc759cc1f2c0334acfbc8aafef5797d"
+      }
+    },
     "s.puzzle.puzzle2d.mutation.delete-node": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧬️schema",
       "level": "mutation-leaf",
@@ -46422,6 +46273,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "62f93a6378a523d8fd9daa1c095983b1cf3a06c085b506cc3d1e148ce169f7c9"
+      }
+    },
+    "s.puzzle.puzzle2d.mutation.delete-target-region": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6c4b23b1de7fee4e31816bea1f8f62c90b35cc360e494db699c49c7ff57f2432"
       }
     },
     "s.puzzle.puzzle2d.mutation.disconnect-handles": {
@@ -46478,6 +46347,24 @@
         "🔣️.json": "cc52d8cab6db3b3dbb965fea16c439d900d32496e5b1528b95b849cfb5dcfe0d"
       }
     },
+    "s.puzzle.puzzle2d.mutation.edit-target-region-label": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "EditTargetRegionLabel": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "efa96a3aa02c8a67b411a941c40c05a989d8231cb70de4fe62957de5159d6bb5"
+      }
+    },
     "s.puzzle.puzzle2d.mutation.move-node": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧬️schema",
       "level": "mutation-leaf",
@@ -46494,6 +46381,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "4149511e4cd11731aecf8c7024710e0ed8f9f1d6188ae5cc119cb2dd9aaad76e"
+      }
+    },
+    "s.puzzle.puzzle2d.mutation.move-target-region": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MoveTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "59d455bb471220e6a5df1ef3c935271e77de4c2b2d0d4d0d079670c90fbe6473"
       }
     },
     "s.puzzle.puzzle2d.mutation.remove-node-handle": {
@@ -46624,6 +46529,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "7fdad207e13f2c50d95b57bfa8e2f5617b07493156a84d543ccda3f4156697bf"
+      }
+    },
+    "s.puzzle.puzzle2d.mutation.resize-target-region": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeTargetRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "21fed2a63c20810ff3b45e7aa6d8f5726554ac55cc0051160e5c6218e7012dd8"
       }
     },
     "s.puzzle.puzzle2d.mutation.scale-node": {
@@ -47691,6 +47614,22 @@
         "Puzzle5dStringList": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
+        },
+        "Puzzle5dTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "Puzzle5dTargetVolumePatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Puzzle5dTargetVolumePatchEntry": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Puzzle5dTargetVolumesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
         }
       },
       "dependsOn": [
@@ -47704,16 +47643,21 @@
         "s.puzzle.puzzle5d.mutation.change-part2d-icon",
         "s.puzzle.puzzle5d.mutation.change-part2d-locked",
         "s.puzzle.puzzle5d.mutation.change-part3d-mesh",
+        "s.puzzle.puzzle5d.mutation.change-target-volume-hidden",
+        "s.puzzle.puzzle5d.mutation.change-target-volume-locked",
         "s.puzzle.puzzle5d.mutation.connect-grips",
         "s.puzzle.puzzle5d.mutation.connect-kind-compatibility",
         "s.puzzle.puzzle5d.mutation.create-part",
+        "s.puzzle.puzzle5d.mutation.create-target-volume",
         "s.puzzle.puzzle5d.mutation.delete-part",
+        "s.puzzle.puzzle5d.mutation.delete-target-volume",
         "s.puzzle.puzzle5d.mutation.disconnect-grips",
         "s.puzzle.puzzle5d.mutation.disconnect-kind-compatibility",
         "s.puzzle.puzzle5d.mutation.edit-part2d-text",
         "s.puzzle.puzzle5d.mutation.edit-part3d-label",
         "s.puzzle.puzzle5d.mutation.move-part2d",
         "s.puzzle.puzzle5d.mutation.move-part3d",
+        "s.puzzle.puzzle5d.mutation.move-target-volume",
         "s.puzzle.puzzle5d.mutation.remove-part-grip",
         "s.puzzle.puzzle5d.mutation.rename-puzzle5d",
         "s.puzzle.puzzle5d.mutation.replace-fastener-geometry",
@@ -47721,7 +47665,9 @@
         "s.puzzle.puzzle5d.mutation.replace-part-grip",
         "s.puzzle.puzzle5d.mutation.replace-part2d-geometry",
         "s.puzzle.puzzle5d.mutation.rotate-part3d",
-        "s.puzzle.puzzle5d.mutation.scale-part3d"
+        "s.puzzle.puzzle5d.mutation.rotate-target-volume",
+        "s.puzzle.puzzle5d.mutation.scale-part3d",
+        "s.puzzle.puzzle5d.mutation.scale-target-volume"
       ],
       "hashes": {
         "💡️inferences/💾️binary/🟦️.ts": "0e665c4cb38e95ebc44d1f2484888e2598528bd2938de82a06c239fd34bec987",
@@ -47743,28 +47689,28 @@
         "📸️snapshot/📝️text/🛰️.proto": "2cca8c149fcab4ba5c7b7ef47e93f00b41226bc17c273b0fe7b780a6a12137b0",
         "📸️snapshot/📝️text/🟦️.ts": "17af136e103c57c3de19d205cfa949b2c55c434f979005c5e272ee44adc72070",
         "📸️snapshot/📝️text/🦀️.rs": "bfac2585db35a073b769a3ceeb49e15dcb4e146dd2ba78989342a50771d542c8",
-        "📸️snapshot/🔗️.graphql": "25de078644b78c73c1fba50a0a07c074243363453ea97116fea45ede060b2106",
-        "📸️snapshot/🔣️.json": "d845246c6876e3f91cd90c9be8dd3e6ff32d7fc4ed196f9f82f612dd630bd675",
-        "📸️snapshot/🛰️.proto": "9ea1f84e4d48559fa054d93f6c4d5a34c61cf5b82a7356fd48f2903223665f1e",
-        "📸️snapshot/🟦️.ts": "d929cd7dfb4977a92a418bdb6324419cc5b7d2c53432e127bd1b2f3615bded7e",
-        "📸️snapshot/🦀️.rs": "a519006cbad6f1425d150f369fc968adcb0167e93640584a3a31fd7c6b9f1406",
-        "🔗️.graphql": "5dfbbb84f0b9b5155e83a2542444e7c9d6d507ecf7eecc737349ed4e8a811ef6",
-        "🔣️.json": "360cce2cc27a0978ee23e5aaadbf7a7813716bcc9d52ac915737ddb44446c121",
+        "📸️snapshot/🔗️.graphql": "e6f1e38e149e605252515add47ae0b3b98028b69b72653ac1fc0ecbe14294c48",
+        "📸️snapshot/🔣️.json": "73881bd005608b28c872b664fe81954ef7caf6f4bf541ee7c4f4c123d1b93eee",
+        "📸️snapshot/🛰️.proto": "0d1301c7b29f7d22b7ed2545f94498fa357140a6180c25ad57e8e9a84777762b",
+        "📸️snapshot/🟦️.ts": "b438b252944a8e0f7bae2e732ff817085d8b6aa97a7bd715ca44479f32d1343e",
+        "📸️snapshot/🦀️.rs": "deab456cdb0e4776a2f5f1fe33d8106fd8f40db1919a2c65691525d96db2e533",
+        "🔗️.graphql": "57afee89da75f9466481731b477e0ffc7d13da71f15ee368a214c4b5bef550aa",
+        "🔣️.json": "4ef6f76702b17273d9f968f745649610e0c83cffe31f59e030c5f2b3ab141c00",
         "🔺️diff/💾️binary/🟦️.ts": "60abfd3622caa1988021b7200831f24e32aad58576b4ea65e763f90a0e4d7fcb",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "8ecd250027cbe16369c0859ecd61e4744adfc4d7ba8d54e8d2185d8960092634",
         "🔺️diff/📝️text/🔣️.json": "14aefcadf38bb871edff2888d614b8d370c31fbdcde5659cdfc4ac733b5a5de1",
         "🔺️diff/📝️text/🛰️.proto": "45fa5793c3d973eedf0aeac265a409bd18fe65b1406d806621773e5725d64379",
         "🔺️diff/📝️text/🟦️.ts": "fae74aa6c04c86bcbbbada95faea9203210e4801e936366dd953412bf2edf599",
-        "🔺️diff/📝️text/🦀️.rs": "da08339e937b5736282d9e444bf2ccabf42ef3889b5af3f815176fac38932468",
-        "🔺️diff/🔗️.graphql": "690137ab061393863a724f547a447352a778d787d629d59b4dd69d5c46f5dc6c",
-        "🔺️diff/🔣️.json": "45cf88f5481c047a83c34658d195179cdc92e7b48cfd38a59b0a04779c84e8aa",
-        "🔺️diff/🛰️.proto": "605314ee06e424470c25628f2b045b02af0b9834ca8a96a757bbb7239ef395ad",
-        "🔺️diff/🟦️.ts": "a93af3241d713d57e4fdd953f86c4a0336740c13fc6e1e750657901668580d8c",
-        "🔺️diff/🦀️.rs": "959ef30a36f14ecb7e2d9f476b4e0860ee8bd80c0061e37d6d6d7b24cf11f823",
-        "🛰️.proto": "204248ffca4994f6c445772575312dd80fe4108aa7d106a0799ae841d5c745b7",
-        "🟦️.ts": "11782a12a2c9e3caf11db8dbca69a8e079e937f4793bdc476bb51ebeb9b72c2d",
-        "🦀️.rs": "afe7011d9c335154e7cb0f5bd638b3dd57dc5ed5efbc4d7f99ca165417e80612",
+        "🔺️diff/📝️text/🦀️.rs": "a71ac244da7a2927c07843216aac0d155d59c2cf20b0ca81d44a71d84b3bcd04",
+        "🔺️diff/🔗️.graphql": "b3109523027df6d5cef4352e3b39162f5448866805719ab6bea52de23f722a5e",
+        "🔺️diff/🔣️.json": "e02aad1b60205a3eed3fd4a754d79e3c708f011690b0ad08edbaf5ec7591cc40",
+        "🔺️diff/🛰️.proto": "99165637d9e8366814fc6de1a989b10b058d967d17faa58e7e0463f1479084f5",
+        "🔺️diff/🟦️.ts": "3cda0b0cf2900026c77704a538355fe36e1c63a113ec4730798d81b793f105cc",
+        "🔺️diff/🦀️.rs": "ba3ffed5e6aae8a2a35bd6f5e78fa04a04f03be9807f76a3ed1b5e23e7735cc9",
+        "🛰️.proto": "3617441bd45e5e4c558fa0b577b24461be6b9f2890351be8707d4fb33ce297eb",
+        "🟦️.ts": "7a938f45eddedac5429757a4ace61f84c8937361568e6e4c66379183442a0c13",
+        "🦀️.rs": "59d88905390f2cc29fc957a07f99ab06fa45056f7aa859d654ac77732418982f",
         "🧬️mutations/💾️binary/🟦️.ts": "daf95e0dec3d27b7b48bdb5d03e0aa0b9413876f93fa1c0c49ca5aad38ce1b6a",
         "🧬️mutations/💾️binary/🦀️.rs": "637fc94000f8dd40bed5791b7efceaefd124f976bf6844d6cf60c0010a3433d0",
         "🧬️mutations/📝️text/🔗️.graphql": "3a81fc6489b615cf9e6d5c0413c8a966b36a68527bdbf1dee4957a1e1c2d181f",
@@ -47772,11 +47718,11 @@
         "🧬️mutations/📝️text/🛰️.proto": "0dcbf12d910a55929773160c54ab5765128e5d0823a50c13c1bfdd5b0efdc798",
         "🧬️mutations/📝️text/🟦️.ts": "b6323ca51715ad7200e23af352abaab87eaf07bd81090dc9150729796f2bacba",
         "🧬️mutations/📝️text/🦀️.rs": "6cf44f57c14f398d82437131c32135c6f959ff3243e605df0471ce3bea5a2732",
-        "🧬️mutations/🔗️.graphql": "c7926022da7d29078b4ccd793d277bad8a3e05bedbbfaeca1e63a349d1fa2aed",
-        "🧬️mutations/🔣️.json": "ae98df4bcafc6de218c71d2a35208d9fec6b87499f38f3ce8f9aa8b123afdf55",
-        "🧬️mutations/🛰️.proto": "5ec6c9495fbb0f4c2bd15f66ba4694ca90e23fb54bb02e81048629382c413c49",
-        "🧬️mutations/🟦️.ts": "8bce8e11b4e400d4b6750281d4e1a11596635ceffed6513cbe5eee33325c097f",
-        "🧬️mutations/🦀️.rs": "19bd8cae026505ecd0d73a1ba2363f1cf890fe546de11c2cddae8d6961aeb68e"
+        "🧬️mutations/🔗️.graphql": "d144fca1b03be3f73c29561321cc142dce104256679e1602c365ce2e4e3a89ed",
+        "🧬️mutations/🔣️.json": "513f4e278cde0ee848271ad222e76b6fe3747beaced3d98fbe51f70827324bbb",
+        "🧬️mutations/🛰️.proto": "73ee81770146897c6a1fe6f59c5714c83fd0afc8912bd5ae2383620bd976efab",
+        "🧬️mutations/🟦️.ts": "415d53fbc17e38c4807189c858557879829722f7bcc843430f4caa3f783daba0",
+        "🧬️mutations/🦀️.rs": "a01932b700bc73c61ba624ee2fd1d6e321f7120e0239212524be11e12d61aa29"
       }
     },
     "s.puzzle.puzzle5d.mutation.add-part-grip": {
@@ -47959,6 +47905,42 @@
         "🔣️.json": "36e49171a98be369681c003ee0499b080c073da48da504feb0f3a5abefdcbb2d"
       }
     },
+    "s.puzzle.puzzle5d.mutation.change-target-volume-hidden": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTargetVolumeHidden": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "23559ac9be4ec44984c363644a6657350e500f082bc031a5f9594fc450618d6b"
+      }
+    },
+    "s.puzzle.puzzle5d.mutation.change-target-volume-locked": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTargetVolumeLocked": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "566bbc6fa82b309adb00a3fd4050363c815023f95f52e068c7d42bfc54f7a374"
+      }
+    },
     "s.puzzle.puzzle5d.mutation.connect-grips": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-grips/🧬️schema",
       "level": "mutation-leaf",
@@ -48013,6 +47995,24 @@
         "🔣️.json": "4bb6976496829e7fc336609231986652086269b1a9f95410c49b5958ced44413"
       }
     },
+    "s.puzzle.puzzle5d.mutation.create-target-volume": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "615deb2cd80045e550d436e10aba660b51cbaed331947f9599d3971ba3b9cb61"
+      }
+    },
     "s.puzzle.puzzle5d.mutation.delete-part": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧬️schema",
       "level": "mutation-leaf",
@@ -48029,6 +48029,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "f8e93eb86973e885357d49d1b00815ff36153af06748f588839e6e7926b2ff79"
+      }
+    },
+    "s.puzzle.puzzle5d.mutation.delete-target-volume": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "eb60729641a99e17d41a6630f1062931648b7639884d48fe5a22fb9d75e660db"
       }
     },
     "s.puzzle.puzzle5d.mutation.disconnect-grips": {
@@ -48137,6 +48155,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "38b96d7698ad8c75167a8fbbaa7f8263a63d2f9ed26689e919c6e0abe8dfdbcf"
+      }
+    },
+    "s.puzzle.puzzle5d.mutation.move-target-volume": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MoveTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f56ab9615d51d28d658fec2e8057d4c8595e26713b5e0aac9d14afca90ed0870"
       }
     },
     "s.puzzle.puzzle5d.mutation.remove-part-grip": {
@@ -48265,6 +48301,24 @@
         "🔣️.json": "f13c64e0c9f3c5377de3be26abe0cc9c48ed72d50889630a5c2d95bf6d7f8881"
       }
     },
+    "s.puzzle.puzzle5d.mutation.rotate-target-volume": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RotateTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "80b1e403793587f48b021d0d434eca4cc48f200cd5ea73d28095db9e3e3aaa78"
+      }
+    },
     "s.puzzle.puzzle5d.mutation.scale-part3d": {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-part3d/🧬️schema",
       "level": "mutation-leaf",
@@ -48281,6 +48335,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "01110887ff0fb4eeae35d2740dc0d7300ce361bb6fe3b49b490a1c620f25c91e"
+      }
+    },
+    "s.puzzle.puzzle5d.mutation.scale-target-volume": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ScaleTargetVolume": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "91daa26d5a41a8da609924ed3ddcdc8619dd0308880f29aa1b2e757504326c4f"
       }
     },
     "s.raster": {
@@ -48439,9 +48511,9 @@
         "🔺️diff/🦀️.rs": "1c02313ddf36280cda9711cef270b2aed5a5bbe515b928d68891d10f5f46962c",
         "🛰️.proto": "1ac64b5a54278f6c8f65f9af7f58c4dc3f6ac80ae87b3baed2968815cad361fa",
         "🟦️.ts": "ea0199d3b46d42726a4992eedec670a9e6a6619a6b30455fdc3023bbf4046771",
-        "🦀️.rs": "74ecb258d963796c245b536493e19ac1683ea769685493cac1a02b3cbabc1833",
+        "🦀️.rs": "8f90ab76304e1ba56c4b4282a681d83e13fb98acba37cdbc3514dcf79a9fbe17",
         "🧬️mutations/💾️binary/🟦️.ts": "5473371744c0bcef45695e174319010a385f04a42250a70aabbb636566f6c938",
-        "🧬️mutations/💾️binary/🦀️.rs": "aa0519b613a7b2e28573ad276c6f35086d8a0109bc525a7646673fc555425e3f",
+        "🧬️mutations/💾️binary/🦀️.rs": "51b7ea8c75457eda0254797ad90b50707c8fd3b6401bc79d170294f507165c9d",
         "🧬️mutations/📝️text/🔗️.graphql": "fcc82f6b9631a535fd131081d524252299dc4ce52ac2efc2c43d20dbb9f58b6e",
         "🧬️mutations/📝️text/🔣️.json": "2ece8cdc22c5d14b1eb5b15502339cce0136994cb0acbd48e84bc67dc3054ac3",
         "🧬️mutations/📝️text/🛰️.proto": "8dc410b24e79a0c6d60a505c0796531a41f06404eb13e7d3797e0908388693e3",
@@ -50487,13 +50559,13 @@
         "📸️snapshot/📝️text/🛰️.proto": "7f750e9fb329fd2a31273ba50850d7db7165e812a86ef812987f522ece32c4eb",
         "📸️snapshot/📝️text/🟦️.ts": "06fb9b8131d45664ec6b6244607ed89815bd5c06e40dc1ef9f50f0e96da544f2",
         "📸️snapshot/📝️text/🦀️.rs": "e9d600d02fd4bf99529fb2b59bea9259ed20e44d3aea35e2e7f38ec7186e2103",
-        "📸️snapshot/🔗️.graphql": "d6dc1b384a3124927738a8c98e7ccd86618bf3cf62eee5368e190d8f5a16842d",
+        "📸️snapshot/🔗️.graphql": "9084fa8c69c616fcfb6198065f375f5a7069610811c397307a7de577c32abe80",
         "📸️snapshot/🔣️.json": "9f04714b1db4057d590a5b06670d7430762d37051a7b4cbe2389206b10af6069",
-        "📸️snapshot/🛰️.proto": "a4366549cc1b863d8a99c99eceb4150468ee98098f55df7ca58c467961f880a5",
-        "📸️snapshot/🟦️.ts": "b6138dd6cf7b9e7731e861d58f76b8a58c87b4a4bd49ed103c73afab6f13e740",
+        "📸️snapshot/🛰️.proto": "5397fd57cccd6ddbcd0dde6cf11ffac69e84bbf44cb30e07925abb77f8e6fc6a",
+        "📸️snapshot/🟦️.ts": "e95726ff8864e7bb3300ca9b5ae57d85d67b8ef824416c20eca5c591cca4bb9d",
         "📸️snapshot/🦀️.rs": "66d0ddfda0b20b2467d86947d07570ef8009591866a2b563f1504454b7d3b0c7",
-        "🔗️.graphql": "3d75e5d1c360fca1e34d941bccd774df1eec7b79f1b19b9b376099335447b13e",
-        "🔣️.json": "bba8b0a4f036b8941185b35716f3b4b3ad2ad3c70a344e82fc9de00a08e8e5d9",
+        "🔗️.graphql": "edd9b26f16de64891c55f5e3bd9817619880c5595d73567a24f75bd600b9a584",
+        "🔣️.json": "606d44083b2965e12564973bbecc9e2c63cbeb704fcc3a443f58ef9409bab71f",
         "🔺️diff/💾️binary/🟦️.ts": "e69992c997ab43d68d0939bd4076d8b2aee28a373f677624f4ecc3090105bde2",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "98e0d743a46b4fe18cc19c67495e85fa8ebc374b3a1cf72600f42006ad7669c0",
@@ -50501,14 +50573,14 @@
         "🔺️diff/📝️text/🛰️.proto": "a0367ff73e3d181b2320298fd773604180f79422c10ac52d41bd4cf04fb331a8",
         "🔺️diff/📝️text/🟦️.ts": "b33a5a0abb776ea3bdb42707b46f4f8b9a7e3c0e6156be9b6676cad6eeea0f6d",
         "🔺️diff/📝️text/🦀️.rs": "763fcfce4e0e9944d6314896e1b3a599ba73b12ad113c013956a2c4e4592e505",
-        "🔺️diff/🔗️.graphql": "dbe909618949c01225c739b2cde569d60919e0e09520014153e7c23ac8cc9c81",
+        "🔺️diff/🔗️.graphql": "2ddf9f8f0b2776a9ca26fbe8a13932f97f736e4d316b5cafb372041320478b09",
         "🔺️diff/🔣️.json": "cb8d50cf15c46de425a210337e84cc46862c385eefcb8167e2c702043f99716b",
-        "🔺️diff/🛰️.proto": "e8eae41506669a9808214ba716f8e0e87eb9bbcb853e0ac2cbc6070fefe122a6",
-        "🔺️diff/🟦️.ts": "09ec644f963b4fe82adc5384996060b63a7fb8e65549c2cee75bd1f14effb10c",
+        "🔺️diff/🛰️.proto": "8956ff2c4d9520fa7877f7da9bb63ba1bc6031bec386ce8e8c02ca17e28d2deb",
+        "🔺️diff/🟦️.ts": "4aaa17bb2bdb6441436f9e127b5c5e6ab9a28c493ab0127451354ac2085576c6",
         "🔺️diff/🦀️.rs": "29ab2fd319ebfd5b08831d60c47319d7f41d4477a1af12ace71d0026d20151df",
-        "🛰️.proto": "475956eb9e22c80464c8bf2b368f7fa64a279183fedef2f4236016307681e723",
-        "🟦️.ts": "e2770d653d99d840acf5ca45d02918d979d7c251fd9f28185f5a98c5b7f16fed",
-        "🦀️.rs": "de03e18454149b2d91e91c64664046d4053dd2e81929a13501b62f5a3c9d99d6",
+        "🛰️.proto": "c76df9df50c753af3bcc06e2f713da408cc85e8cfd6c41b5102cef334185104c",
+        "🟦️.ts": "283ac8cd153bfc55c4bc87a6e595435fb143ac84781cd1986da8b2b63095024c",
+        "🦀️.rs": "26f3ab0589e1b36c31b5f8f22759a8461ca2c6f34378f33c11940bb385cd4779",
         "🧬️mutations/💾️binary/🟦️.ts": "27c5c7509b6ab8833a4b61947e59f36bd8660a40062c1481fa014cbc583080cb",
         "🧬️mutations/💾️binary/🦀️.rs": "27a5152bf652509310df8f719b6d4f05a2fd0be0aefdfab27372dc1d37764853",
         "🧬️mutations/📝️text/🔗️.graphql": "998d666a5691a0ccf3eec72e35903aab9250db1529e8fb9ed9da54882c08d5bd",
@@ -50516,9 +50588,9 @@
         "🧬️mutations/📝️text/🛰️.proto": "7f7892ee38f9160b3d1aba0b67f6ee202c2c9ba91f15ec8a5075f4ee31e7db10",
         "🧬️mutations/📝️text/🟦️.ts": "27b34d13fca6c06591c80a4eb6b430694861324a3912f8ba9338f2fbed91fe32",
         "🧬️mutations/📝️text/🦀️.rs": "09941f864eea9bbcfee5158ae931dcac972a4d8326a1d604e68e5bcbfa5bab10",
-        "🧬️mutations/🔗️.graphql": "ffd9346aab0812cd57ac22e53fc83215673b133e9753fdccd14818a302ffb693",
+        "🧬️mutations/🔗️.graphql": "4a7cf399d3aeb64262603da595d448712639ee640b46ae3b8656fb68e3594be8",
         "🧬️mutations/🔣️.json": "84e8d94d37f0f4148f6cbb8b868a548f3eb3303205d288b082783f26c94b3f2d",
-        "🧬️mutations/🛰️.proto": "50f608d772a16e1697edb112abcdf3838b67621ffbcd117e74275d020616f821",
+        "🧬️mutations/🛰️.proto": "ee698877c789d80c77d7601e9ed5157ecfeb85f7061bc405b1c73a7f909163c0",
         "🧬️mutations/🟦️.ts": "2736b19d7434fa4513cf3fee30f5f65028665221a219fda4e9cedc03671918dc",
         "🧬️mutations/🦀️.rs": "f96a402f8ef6724845526039071ae4a182d0f1509d0cfdf6954d83df7999741c"
       }
@@ -51160,22 +51232,22 @@
         "💡️inferences/🔣️.json": "4be2a0ff66560fbb36ddf53903bf9c5227bc73e471e2caf2e2caa6cc55f54ab9",
         "💡️inferences/🛰️.proto": "b6b17abacbbdb5c4912bbafc0673c4a4521d45a09c774ba75274eb1cf986054b",
         "💡️inferences/🟦️.ts": "7a5b368438cd82f13c3c557da5a6beb953635f289bf4803bb0cbd5be677609be",
-        "💡️inferences/🦀️.rs": "a2b24293d309ba7c116e4e5499d7dff69165d3085b15d567ba6992d4928836f7",
+        "💡️inferences/🦀️.rs": "06180221126113116158a5f9ef9fa093c3948ed43c358d3a2a19f8c8b913c6d3",
         "📸️snapshot/🔗️.graphql": "31c061a31b717fba2c45b7fb5960cb5b17d76963ef911a65a68f2ce3ee54b83e",
         "📸️snapshot/🔣️.json": "d8057a19c923a9df485b51280383241e0d6df9c4c49f8fc6fd5e12c2e0bf4c81",
         "📸️snapshot/🛰️.proto": "b2dad557082317a3251befbbd3a88d25f26aae596aa30bd2a05389bb393c60bf",
         "📸️snapshot/🟦️.ts": "4a36ae5717f2f80fb2827b801dafc1a7878d5bfb6e710b195bc9363300364677",
         "📸️snapshot/🦀️.rs": "68b5e5691a5be55ba2e67207b28f536b292ebefdcceedcddc080a3978c02cb79",
-        "🔗️.graphql": "6f8de6f9545f1d6837efba9ce0a98a31121636b48335d07847fb25f37a7f343e",
-        "🔣️.json": "2568de979713fd5d2ea24bc4374c04f9e5127513761adbab1d4e1e1260190e32",
+        "🔗️.graphql": "3e2c1ce63879f9e9ef107b7303ddbb85beef2a17002776b2e7999ff8eb608480",
+        "🔣️.json": "0674592c96a31eb075400d11944335d2cb8ae3eaedb5210ad76c8cd5d8e837cc",
         "🔺️diff/🔗️.graphql": "9ae1fc1fdf0fac9e6333738066ada3494ccc9f965d939526772455538613c8a4",
         "🔺️diff/🔣️.json": "e3e139d06ddbb47e83af7d18a75e98ee0f6ff3f10fd8ad3b804688fb7ef00e92",
         "🔺️diff/🛰️.proto": "599aba74014addd53a62773e844ee833fe8d0605fe83089bbbcab71114c560a3",
         "🔺️diff/🟦️.ts": "b542cf7ed3396656e64f9cc0470eb362f7337f317cfe2a62eac8b03371733af0",
         "🔺️diff/🦀️.rs": "f9428848cde12b556fa41ba11235864292acb44e42e969d62212089898d619d9",
-        "🛰️.proto": "970679c95841d207af2c1d535be1475b4fbc85e78490f2f6a6c7ff3171d98f3d",
-        "🟦️.ts": "9ebcdae6e2026d37e8db61cde1f7e6597beeb413e7bab2bf3a6f5249912f6578",
-        "🦀️.rs": "e09e8d3a5e3103c2dd4e871d01f4381738ce7aad3b3e5867990b3b4b52e58423",
+        "🛰️.proto": "b60c31f7440d362528bcf570e34456191b153a4f30526b69ec7ab13f45b9ec4f",
+        "🟦️.ts": "9a1c49f33086388a8f22518b6e1351def0bf63ccf7423bb8a2e06462be944125",
+        "🦀️.rs": "fd34b2cb31e5785899813fe0b00c37227893fa19b3a56b99b36064f1da5f31bb",
         "🧬️mutations/💾️binary/🦀️.rs": "5dd02b8dcd6921adb21ee73ec71c2f85d311be0ee2d9e7b0039b70f0d375c135",
         "🧬️mutations/📝️text/🦀️.rs": "b92022009213f063317494ab8f7574dffba5562690550318d370436345893a0c",
         "🧬️mutations/🔗️.graphql": "30b623e753eb96e51e42a331e579f11c3d6e42b11a518ff96161f48d6f5f7938",
@@ -72644,15 +72716,15 @@
         "📸️snapshot/💾️binary/🟦️.ts": "fa2576bc03c70648ab589c6ec4683f4a75646abcb3a353881b384fc52b43b044",
         "📸️snapshot/💾️binary/🦀️.rs": "38a2473165e7af63c7f3511184b0dd1ea5f3cb292c1aff2b399557cb6d48d4e7",
         "📸️snapshot/📝️text/🔗️.graphql": "75a86a2732a4a6e2d36f51a70915c8c2fb5c4a344488b99074aacbb5a8a658bc",
-        "📸️snapshot/📝️text/🔣️.json": "ad4a36e54fb8330acc0547798d6b487b007e4bf0605c5e2061b4edd6a243cc46",
+        "📸️snapshot/📝️text/🔣️.json": "a82800ab46fcd6ba933d44eda4b076181fc001f5ef4ae51da221aa29a1dc540d",
         "📸️snapshot/📝️text/🛰️.proto": "19bc65f1485d5b09020961a697e5fadb06157be40c43d0de71c10009a5cfa5ca",
         "📸️snapshot/📝️text/🟦️.ts": "aad7e60ed745f740fd76d790243a0fc206d9efe9818add9da8f08e80cc52af2d",
         "📸️snapshot/📝️text/🦀️.rs": "db4ca732d6e840c3e634b929cd70da5748f95f4875aab5f1a320e45bebd96733",
-        "📸️snapshot/🔗️.graphql": "c979ba0c97442ebc06102be0bc4ba34b6c65fc518ffab3b631203ff37f112066",
-        "📸️snapshot/🔣️.json": "421e9d9d6032c61701cf8793bbdd73c44eceaf16c9540977eeb9d5f4e598a02f",
-        "📸️snapshot/🛰️.proto": "3658d6d45635f3766c1a589b080970ea97664a87c04d95412a5213424771a33c",
-        "📸️snapshot/🟦️.ts": "746491c1c47c6b5d33159f9620691891e48d794936926b523fda99f8ab0bcc81",
-        "📸️snapshot/🦀️.rs": "1bcf21cc8674293d71056ac8185fb66d0a269b34ffda0d937938dbb88fc5939a",
+        "📸️snapshot/🔗️.graphql": "f204bc3c1447e747a341ba12a1562dcd0e63a5bc071f4b58881a51422f510338",
+        "📸️snapshot/🔣️.json": "9cb5a843cc71d39d6f0d6b07194f3a61a24cfcabccc4777a937e7b366df40110",
+        "📸️snapshot/🛰️.proto": "0629ccceb58c43e5fc988a7dc2bad59bdf032287d24a4b01563924c7a389363a",
+        "📸️snapshot/🟦️.ts": "0f4753b8f88f45860a1d52cc0d93f93636d47be27d1f5cd275c17d27ab15af15",
+        "📸️snapshot/🦀️.rs": "3d4beaee806a0c22844f7a063a3f6fa8b0518800d7493eefe585f7e71284adbf",
         "🔗️.graphql": "aaa49b911d4e2d0b9574f8dbe2a439bd44cc0c3c15eb91cca17287be89673e91",
         "🔣️.json": "a0c251eb2364df03463e630a2871d422d06c3522dba3e6d9d44eba6fe4137a93",
         "🔺️diff/💾️binary/🔗️.graphql": "eafbfbdf83b9a8fd32ca3d5d58b205c43403ce757529de0eebc64965d1628874",
@@ -72738,6 +72810,14 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "Mp4HevcConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Mp4HevcNalArray": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "Mp4PixelAspectRatio": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -72761,7 +72841,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "1cfd2daa3fd35eec9daad71623c5a63ab61dd9b62c8839cf65de29ba45ab7623"
+        "🔣️.json": "d20bbcc582db7533d81ab44b619374bdc46213f531ba09d611f6da843d5600b2"
       }
     },
     "s.stdio.mp4.isobmff.any.mutation.remove-sample": {
@@ -72872,6 +72952,14 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "Mp4HevcConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Mp4HevcNalArray": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "Mp4Movie": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -72907,7 +72995,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "acfaa25fbb0bba999103093746070703cd8f011b0896b62b9e934039abf7405b"
+        "🔣️.json": "8c360927ee5687ac637fdea6d2f4d0c03252a2f3e9b4f244a4e52574aec325e4"
       }
     },
     "s.stdio.mp4.isobmff.any.mutation.set-track-codec": {
@@ -72926,6 +73014,14 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "Mp4HevcConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Mp4HevcNalArray": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "SetTrackCodec": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -72933,7 +73029,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e8ced11ff60529b83f67d4706dea2c061f1a21f3fcbb0e1e64682f33cd08754b"
+        "🔣️.json": "93bd7a02487877fee9ca1e509ece4d18fe962df14db036d35ec8591d93b8ebcc"
       }
     },
     "s.stdio.mp4.isobmff.any.mutation.set-track-dimensions": {
@@ -98426,7 +98522,7 @@
         "📸️snapshot/🔣️.json": "ec1ad1a29e6ae5456b925ca4074fd903ee41e1fd340904d93920bbc527d4717b",
         "📸️snapshot/🛰️.proto": "d7c53723a169ab36cdc3b3af4dc91537a7a9ac0f93e3bdca16d9b55a242517cd",
         "📸️snapshot/🟦️.ts": "7ad3cfdceb0fc7ca35101ac6a8f11b89f8150da4f87a848455d11be522259134",
-        "📸️snapshot/🦀️.rs": "05a5c12c24bb36942dd557380f05eb8ff349e905a2b431ac6ef9a43ae1da0a7f",
+        "📸️snapshot/🦀️.rs": "d3402a022f9de14dfa5ad268fcdbcbbe1f4c33787faf45395db5c84e8b2ab493",
         "🔗️.graphql": "e914fca653a3076a003813d0fcc70394f6546590c7e0130e8382f2585b716d2d",
         "🔣️.json": "fed95346bffe8d1f7c29b966cada2078d4c9dcf147f552caee0db15335cbe2da",
         "🔺️diff/💾️binary/🟦️.ts": "b987cb7209f0719aa8a0ad49f9d9d7a3186514cfe1ea8278acee9c01a25a6feb",
@@ -98450,7 +98546,7 @@
         "🧬️mutations/📝️text/🔣️.json": "0c7b28489e42a946cc8728dc18154c47c00fd0291071afe34f83351195fb017c",
         "🧬️mutations/📝️text/🛰️.proto": "430c1f71cf43cc2ff123386e6bd074534eb899235da1399bc42f166ab0984958",
         "🧬️mutations/📝️text/🟦️.ts": "09a4e66878bdbad5d1d9fc184235076eead6f28defe814d3d6506e059b8ba3b1",
-        "🧬️mutations/📝️text/🦀️.rs": "f1aa26834d17bd0864a21ba69477dca5f850bd4ac4fbf234072f97fa0a0a021a",
+        "🧬️mutations/📝️text/🦀️.rs": "c59eedf778c169027380fe65adff1e631db295e3f5f076ed77f84cbaf16fd3c8",
         "🧬️mutations/🔗️.graphql": "f33ab4e5713a5b9d394ef0684e74b66e30b89a4a97e7840f66aaaa199c317ecd",
         "🧬️mutations/🔣️.json": "6f271478a00967715c04e00772d9643ca87cfcf58f436fcc9bf2bee83b5d7b25",
         "🧬️mutations/🛰️.proto": "d3a473426ebe74d020fb067eee933062bab5f09abb4da6d3ba93e23d99a0c873",
@@ -99084,6 +99180,1632 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "cd4a750dbe5738b4dd9338ed8278eb07a4d7cf2fa5c00df8a0f0e4e8b97c3386"
+      }
+    },
+    "s.wfc.bitmap.1.any": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "BitmapArtifact": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "BitmapDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "BitmapInferenceCommit": {
+          "file": "💡️inferences/🔣️.json",
+          "facet": "inference"
+        },
+        "BitmapSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "💡️inferences/🔗️.graphql": "dcb9d98f58a266fa63e46f0174fc06d7b087394ea678f74807f4f18ae65a0b70",
+        "💡️inferences/🔣️.json": "1c90136bbcd5b76001fd453d45a84dc5ea05da000dd25e2ae35bad917aa84688",
+        "💡️inferences/🛰️.proto": "17ba34a1bfacb2e485a4f5ea60a6830c71ab1cede8dbcb439d3137fd003bddef",
+        "💡️inferences/🟦️.ts": "1f98d85e1c71a21c9d022b25234dffeab7ab241073a1374f5e615da2885f4070",
+        "💡️inferences/🦀️.rs": "23a1c3a8648278ce3a3bd4d929718d9910e60d8828b272aeb0887f731534688d",
+        "📸️snapshot/💾️binary/🟦️.ts": "c85f0eca29dec738a39c902213c3a8adfb98601ab9821391bb7ed703c496e33b",
+        "📸️snapshot/💾️binary/🦀️.rs": "12f4daf2f4c2187a3c7654838b070f15416ebc3f805e798490a54c37a189092f",
+        "📸️snapshot/📝️text/🟦️.ts": "1adfc3c35f399fcbc590589eaec59c60f7f944d11fcf89c45f00070a42f0ceb8",
+        "📸️snapshot/📝️text/🦀️.rs": "d20a9ad3927781a8368d38dba7f305ddae58dd141140b897138927f6c481c1c6",
+        "📸️snapshot/🔗️.graphql": "28d48191c1d88ac505bcce23a097554ec63dca9c4e172b2828717538cf2f3922",
+        "📸️snapshot/🔣️.json": "6564177770dafa45459b44f18e036b46787a47322fd4d0ee192d93e96ce90b26",
+        "📸️snapshot/🛰️.proto": "c3f5250aa702df81326af76e0a6a11d16cd208121f1dd63dc1dc772ef6074e16",
+        "📸️snapshot/🟦️.ts": "f4a3b6efa6ece91fb8613930a46d608e554e7f19bee4d77bdd85ad94583c485f",
+        "📸️snapshot/🦀️.rs": "400a9a942edb3b5b80bee5d79cacf4bb443868b4eae805e446f3810f072644db",
+        "🔗️.graphql": "922b69e7bacd3133e32b7f2a77dd26c8d1f6171b14edb84fa4855d626f607991",
+        "🔣️.json": "1f18e729d328eded14d7cb390d28fa0148f5ad31168c0c283b69b567477ce73b",
+        "🔺️diff/💾️binary/🟦️.ts": "b79e62c13c62822507189168aab8f9fc61593a03334cbda06db98a9aefcf45fe",
+        "🔺️diff/📝️text/🟦️.ts": "f3c8e104d50d28dfc7bfa9dbb4b9e3de199e71faa78119873472269ab8389334",
+        "🔺️diff/🔗️.graphql": "98f23cc535b4e6d2e959eea25b9e373611a12b16b0619050db9a7088bfc20ceb",
+        "🔺️diff/🔣️.json": "f6a3cf0abe816a049f555a197a60a54e548129d65593e65ce83354f9c7220a5b",
+        "🔺️diff/🛰️.proto": "0e6d618bc41b32a69ab39918f2e00af76a6f693df01bab07961788ea66dd91dd",
+        "🔺️diff/🟦️.ts": "852e89451cadd6fa867bae350286451180689fc0a28fcfde977136d95694ba69",
+        "🔺️diff/🦀️.rs": "5ed83893197dd6a6d190ec72775d57f674c48619e05d069e2e9ac341e1430f4b",
+        "🛰️.proto": "66a455f3fb00aaff8fe027c6707ff3f45f849c4a3912c4d874892440a5aee6d1",
+        "🟦️.ts": "278a7d45c0a38e0ae8376d14691266124f4dfff54516c2f00e1bb8082f69e2d9",
+        "🦀️.rs": "225b9b45cb22fe3ae51314f4c6cbc80a94c0751d8301795ebabe225211ac7d1e",
+        "🧬️mutations/💾️binary/🟦️.ts": "29ae3acd65d87b4b637bd756b726975c41a28826063d67182db66fac0f80ad67",
+        "🧬️mutations/💾️binary/🦀️.rs": "1c95a2bbb9be33a8a6f5560f7632870a94e8c9d26e7c7753e56d4ebd5bf8a14d",
+        "🧬️mutations/📝️text/🟦️.ts": "e67e21f08b47c4b9791fd076a78acb2b0105a3ea2a1aeff3c8b8847ec3b27fce",
+        "🧬️mutations/📝️text/🦀️.rs": "3485fa13e89d312fed212f54db88bd086bd4bf38eaf139a7a2fedc6aedf34307",
+        "🧬️mutations/🔗️.graphql": "7003144b13c9a214e616120a1a7cf6cc961407d4c1010741b4eae986fb4c71bf",
+        "🧬️mutations/🔣️.json": "8edaa170122f41a731b0659e6aff9e0cc3dd4cff2acc5857a1b08ceed83ce508",
+        "🧬️mutations/🛰️.proto": "6bb89d2c0f197c3a7931e14bdad8afaad12983c7f8eea655fe1cc21287f47196",
+        "🧬️mutations/🟦️.ts": "59bfa8ad09b8d88cf2d2b84ffde91ebcc61a3e89a01a4519d211ae49c7e04862",
+        "🧬️mutations/🦀️.rs": "5fe07fccd3cd97bd39288f95402ed85e7cd7a30f055c91a83cd1f992eaa9003d"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.add-palette-color": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "AddPaletteColor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "bf49b057a6b5c0ff9a2d826e292b4aaa876356e732f116c9ee88eadaf6c17eb4"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.change-model": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeModel": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d748ae97f9ead53cc5de4a5bf21e74cb2ba083888ffdfa1eed38162a84a04101"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.change-palette-color": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangePaletteColor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7bb69c95e47be7e9b4c8a5d838adb974e03853a8fc95513816e73f131cdb6fcf"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.change-seed": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSeed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0e35315faf6af754aa9b08f13249573ec02f6553aea46c08b679fab300c5b34e"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.pin-pixel": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PinPixel": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c77c95efa5bb7e47fa2ea6446087f682f2c303c1ea43d4095cbd7f954a085db7"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.remove-palette-color": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemovePaletteColor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a84fafa91acec4ebead4b9832808dc2cd1d0fe521c17f47c5c445e74adab3e10"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.resize-input": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeInput": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "3d0c9bb2c6e83ee331e3fe58a1d3990e3708e553ea80fdd8bc1d1f499166d37b"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.resize-output": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeOutput": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b0e2fb83c725c92d1ccf513e002758742001c6731fdf7e55d2d48d8020b8854c"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.set-input-pixels": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetInputPixels": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "739dc2b01fc9c50cc0c26d125f9ff303bb3997baa1a4533f7aa1219043b08075"
+      }
+    },
+    "s.wfc.bitmap.1.any.mutation.unpin-pixel": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnpinPixel": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0757d14e174fd0deb1ded0a0d7faffb0f6f3a7868a5d3dd3830c5f09c5e773e3"
+      }
+    },
+    "s.wfc.bitmap.1.any.transient.set-solve": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-solve/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetSolve": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "45110fe39326ea6f179734ccff3c666047c11e168805b19ef827febdbb856a4f"
+      }
+    },
+    "s.wfc.grid2d.1.any": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Grid2dArtifact": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "Grid2dDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Grid2dInferenceCommit": {
+          "file": "💡️inferences/🔣️.json",
+          "facet": "inference"
+        },
+        "Grid2dSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "💡️inferences/🔗️.graphql": "8d46307b56792235494abdb58114f3eaa9400a2fd924321cdd7ae2ca7b625e0b",
+        "💡️inferences/🔣️.json": "0548b3964902b8604a012e0141a36d37d1333c296968c8d3444bb79a70562ba9",
+        "💡️inferences/🛰️.proto": "79e27110347b4d7b56c6b4a2698c5e8093510a1343382d898b785ae7a9c8f816",
+        "💡️inferences/🟦️.ts": "2bf1325e639b27c0ef5c583459e048ef48e57d699d561776c90268cf525b426b",
+        "💡️inferences/🦀️.rs": "0fd3ed440603d4c4f51f981813c1436395e3bad186a492107079c7a3ed801107",
+        "📸️snapshot/💾️binary/🟦️.ts": "50a4244364a4f5e1f8c81ca338549c0e3af2a3fdffa9644d79d5b6cc4075c1dd",
+        "📸️snapshot/💾️binary/🦀️.rs": "8fbd2b5c43b0b6cbcb6a72e27ae295d5cc072a9c050da34ca66567609fcddace",
+        "📸️snapshot/📝️text/🟦️.ts": "d78f4c46bff100cb23d7b24a43c18e1e6ec4e729a8a608683343b738040d68fa",
+        "📸️snapshot/📝️text/🦀️.rs": "bf9194dd60380039d9c0b4829e42b469dfce0746a982b8e46ce920f56e4dc594",
+        "📸️snapshot/🔗️.graphql": "6a566d0234bc95fcfebc7beaef9eaaf833e0b97fde695f84660c28f014bc4646",
+        "📸️snapshot/🔣️.json": "a71647a0a9997fab6545ee4a36c4c0d251c9076ccd4fd364199be1483dc05d87",
+        "📸️snapshot/🛰️.proto": "e431312ff488fa61e4dec8b51e671780067f0350abad67bc32ae0d209a6f7873",
+        "📸️snapshot/🟦️.ts": "85ebfe09116fa3785d0eee5c8a1475c4d699e63190d54f9b4aec8d9e5097e540",
+        "📸️snapshot/🦀️.rs": "a8944517a0b3f1175d8a0cee33081c2c9041c2095f5f86609099b24972932629",
+        "🔗️.graphql": "c9db8854b73dde8704708ed252664ddffa1b013eed69d701b10203b419ca4426",
+        "🔣️.json": "98b164835bc937573fd9c0cfb956fb1c3e815891f429919747e585bd02d9336c",
+        "🔺️diff/💾️binary/🟦️.ts": "fd6acbf85dc8db3988e762e7af99d141e87826c0343e852c8d1a6bfe013d3a2d",
+        "🔺️diff/📝️text/🟦️.ts": "3f31efb30cba34c227e1bbb9c00aecfcbad911eb1fd6fbc2a9c8c664b1b2fa8a",
+        "🔺️diff/🔗️.graphql": "68a21cd55469dcf91f7997bdde859dcd3b2fa996f8b441ddaf938f527fb9b431",
+        "🔺️diff/🔣️.json": "5a2f5a4cab3590f1dec41c59faddc12ac7c867dd464fd84633327a2b7253a36c",
+        "🔺️diff/🛰️.proto": "a1b6af6e7b1d76e6d7bbea66cab074ff64e654d80e11f58db0046bbefacbba38",
+        "🔺️diff/🟦️.ts": "d6d0992da5188722a2cf693188443ac1dc9ee4204a0b4d24b2b9b3f231775067",
+        "🔺️diff/🦀️.rs": "13a94ac616dd011140fe01ec59577c5871359c74ff8aa0e7644deb7d853d29a4",
+        "🛰️.proto": "0214a24db6d55d226d6fa3d04d45ab6f3adb28e8cc7f8e60e7c3315e93834ff3",
+        "🟦️.ts": "87dc0eb2655d2227b1aa750716c32382d2f1b8baf1e6248ceeaad0c602dfabb2",
+        "🦀️.rs": "046ae10bab8f4c43c3df9d3cf806d2e45da99f77fc554a616100cb3d77494478",
+        "🧬️mutations/💾️binary/🟦️.ts": "f46317f1f77c40a4f7701d8cfc111162032b8badd25dd925ee391a4f5f190cbd",
+        "🧬️mutations/💾️binary/🦀️.rs": "ba0416d6f5c1781b5340ad1ef6a971ad8db0171d116baa96b516c09c7a9700f7",
+        "🧬️mutations/📝️text/🟦️.ts": "aaf9bf6e00437da5f8623a7dcbe11a0359e4f7711de8992bbfc0bcfc796e9cf7",
+        "🧬️mutations/📝️text/🦀️.rs": "373dbbdbad1ddedd6785fab6fa70f3f378e8ae8d8534cdfe8bd7a517d3d81fdf",
+        "🧬️mutations/🔗️.graphql": "6025b0fb4399ba806016e741708d19a2dc59a55230cd7e623ce18b3ae8371930",
+        "🧬️mutations/🔣️.json": "883599be5af9f48dd2404cd9b7bc0402cff26637fab9874812abb1543323be57",
+        "🧬️mutations/🛰️.proto": "9b238648586c69175552688b972789af4c66aa2cc0b8325c0b1c844c370bee5c",
+        "🧬️mutations/🟦️.ts": "cac4f23008272c8847ebfa0ee175a09df27f1da94f515c51ebf6301ee7abf9c8",
+        "🧬️mutations/🦀️.rs": "c3ba3f6f4e9d745950f9e782684a83590cb8cd0021aeee92aef671d7fac49b7d"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.change-cell-size": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-cell-size/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCellSize": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "08188da41376d485562c8b7fc0e876a70ab940be39b964d3d257b13fd35c4792"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.change-periodicity": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-periodicity/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangePeriodicity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "66a59af70d10a6229e23bf554d4cccf1aea1b96c608aafe33d1e526aba827585"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.change-seed": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSeed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cf130a070bb700442a867b913ed00a3c23e598580e591b0311d07887b3c1381f"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.change-tile-media": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileMedia": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "939d1e8e3a361eb8e55c0e38dc651372c3ee30ec21658aaa5749cd2fd0736d39"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.change-tile-weight": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileWeight": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2845997f099c928381ac91ab48673e92c388422f2090dde2caa1d61a0386838c"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.create-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "dca57d8cd37b931d5b2a4ad87957a2cf2f914da34c0ad324fa94664afbf2614a"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.create-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "48748071fad058a9f92ab476ed01ee28fed825356f9525acbca06d82ea971403"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.delete-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "eb89b4958397ba6ac3c46085bc147e95e2f27ca8c22d12cf2327b45c60087fd1"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.delete-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e5a1d0a56bf5912fe06f77b3667cc87728ab773c0afee98c94061db8a2ff6025"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.mask-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MaskCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c53cdcb4f4b3d6d2812da5c38e2bc33cf1a8a9686656a479ddb204f60fc7ca0e"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.pin-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PinCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "01c5be66182e7936bfd0d07585e3f0a16e4e17fedf3338c7e4fdc6a371fd4dea"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.resize-grid": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-grid/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeGrid": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e139b7443127e8285f830416382598859e79c814eeb91d7310a7526e6451295b"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.unmask-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️unmask-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnmaskCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "dcf89670f63c02fb876e6cf035970d70624533c16cc1f234cae5fb01247841d2"
+      }
+    },
+    "s.wfc.grid2d.1.any.mutation.unpin-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnpinCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "56612bb1985b5054bbaf4bab5da1ddb424b6eb27a7c6acb997b905b7d8390a88"
+      }
+    },
+    "s.wfc.grid3d.1.any.artifact": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Grid3dArtifact": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Grid3dDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "schema"
+        },
+        "Grid3dSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "schema"
+        },
+        "Grid3dSolve": {
+          "file": "💡️inferences/🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "💡️inferences/🔗️.graphql": "1562731f6e2cc1459572a83a37f6dc0dd368f50224681bf0036f4b4a21e3a37f",
+        "💡️inferences/🔣️.json": "3b4723962d09327bc75534504cd37098eddefad4c0e8369c8d3fc421cd49a35f",
+        "💡️inferences/🛰️.proto": "a2df46799d7116511f70c3ebefd892b00a67457369010e955e865d2f0b1535bd",
+        "💡️inferences/🟦️.ts": "06d73c1481244f48fc0108ae6448573ba2a9e2a77eae9ee3c5d2681c60b21963",
+        "💡️inferences/🦀️.rs": "5ed3dcc5117bd601c347051511067a937250ff61d06e66ae0fae515423d7b452",
+        "📸️snapshot/💾️binary/🦀️.rs": "c6770931f33b6762013cc019ef305b1324e02fc33e64283c5dc9fb957f87d8cf",
+        "📸️snapshot/📝️text/🦀️.rs": "db04756b181478f3fcc717443544a5f77a2ed6b3c3cca3e62c4fb725c0416292",
+        "📸️snapshot/🔗️.graphql": "6416cb9dac1e78f29e9013ad1149268ee8003ea8d0f473e089006b0dfd1bdf22",
+        "📸️snapshot/🔣️.json": "33c8e87f33239e6794c9433ae1d6384ed506ed1a9887c721c8a496f18e3da21d",
+        "📸️snapshot/🛰️.proto": "0b1ce6d5b6e2651324de37be1b473462eba8f85445d50bbced8134d1ada971bd",
+        "📸️snapshot/🟦️.ts": "185358f2a26ca804cfec23ccc3332f1e7ed1764a8d1db031817d6126c325b9f7",
+        "📸️snapshot/🦀️.rs": "9fa555408787a97e2d83ee48e3e9e1430c393838f75c55691cca26653af8c2fc",
+        "🔗️.graphql": "71b421f6f39eb3457cc6c2b9d85564edeab198bc493dbe32751edfb18d7090b9",
+        "🔣️.json": "801b4798c126a34b50381c25d4b058a05fe395e51bf95428212a5f7e5433a5e8",
+        "🔺️diff/🔗️.graphql": "6ab773aa8fe5b576b3df7eee6eccd75cd0c1530fbfd9a2bbe20b3a26f6a39a80",
+        "🔺️diff/🔣️.json": "b2decb03858bdd15402a7d44dbf731684ce52f8fc3a25086b7c34a7e85acbec1",
+        "🔺️diff/🛰️.proto": "a8b736831b40ebc52bbc3a808428a58f9be09b2d1129d98015482b7240505de1",
+        "🔺️diff/🟦️.ts": "ee2d98108f314766bff7521011af1590ab57aa5971b5613f8ca121a3086593cc",
+        "🔺️diff/🦀️.rs": "41ae416c6d03f539a474f92f985a13c739f49f126c23fac6f9f03cca79a87538",
+        "🛰️.proto": "40db5ec23fdc48386272a8c49191e1a657e1c5b026f75adccbf0d34408fc3811",
+        "🟦️.ts": "139d7c6585df672d703f13b000690591c3a4740bbd3f2a060fc1e7283527838d",
+        "🦀️.rs": "f8931c692805f394ab2a9c85fc629caefba3ffbea80431d88a760459c5b35e13",
+        "🧬️mutations/💾️binary/🦀️.rs": "988a16d95d55038c5a8a168a34dab3d054f8b7abc1d1188899a3fbb30f5af416",
+        "🧬️mutations/📝️text/🦀️.rs": "81efd4ee406c886d6ec30f80868fa9e1314a6a112854f3318de429103148e95e",
+        "🧬️mutations/🔗️.graphql": "1f49bb98de05c9db860b9055b529d27c0f23917ced3a27a51400ead9f1cb874d",
+        "🧬️mutations/🔣️.json": "40aaa003ee212243332aa3d1e99d43060774777766287d271dab13f0244fd3d3",
+        "🧬️mutations/🛰️.proto": "e9135fcee4e753a5627f420fd0eaa714666f69c1a42d9315826abb499a42735f",
+        "🧬️mutations/🟦️.ts": "7fc309169865a7c458c8a38d627806e5abadf074949b69e47ea69065337ca057",
+        "🧬️mutations/🦀️.rs": "c1bdc319edf523ddd42f71d9b7be753c0ec8c1573c611c45b6c46df9c6fb0987"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.change-cell-sizes": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-cell-sizes/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCellSizes": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7187168cf4d13339999aa4e6d4e5710b9f21ba3c8685bf085def4abc5f9f593a"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.change-periodicity": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-periodicity/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangePeriodicity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cae9c7b4f5e33fd01b66df2b45343270b9482f4358cda54db2b79bef3a4bd1d1"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.change-seed": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSeed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2325b42e70a147d9ce678f26f7c68b934d5f5ddbdcd73732e70e2b122bd38ee9"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.change-tile-media": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileMedia": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "296f3e74d25f9d491ed297089ba38133f86365338e50a046f95200d93bae95f9"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.change-tile-weight": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileWeight": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "92492d62f3f99d9818fe6b470119838eb6c691936d9fa50cdaa51819fbbc92a7"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.create-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "be44dc698b3bcebadb09d56ebf917ca2bdbaf345af0b839eff80b6dddbe75d8c"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.create-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d9b6cdc11e206d6481afdfee57661b43a5fd01505fcae0c994a922303a1e31ef"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.delete-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "add94ddc99d173f4c7aede08a6e07f8ae04c80ba070f8f073da4cf62feafb8ea"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.delete-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b3aac9dcf96fd2b56b10994ea537c1018fa0840dd7c42ef7cdba795e777d5506"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.mask-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️mask-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MaskCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a696325b38ac0becbbad74c490df885d92e62c9ea1b700e4cfb36a9bc6c0b8c5"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.pin-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PinCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d931cf2bf354deff19f179bc8908aad8428578ec226b5ae1d52ef5a84e87fe43"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.resize-grid": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-grid/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeGrid": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a6e9ad44e3860def5316f2bff0bb447e0ffea50644729a5bd5f19226e9110542"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.unmask-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️unmask-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnmaskCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6746a8d8177a0b7f418a55655e17107d6596bf982dbf19c71dbb35a656d252f2"
+      }
+    },
+    "s.wfc.grid3d.1.any.mutation.unpin-cell": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-cell/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnpinCell": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "60d13550353178c2e9201d9905996e9c06c3287a136eb81c2fb183c779d7d4d0"
+      }
+    },
+    "s.wfc.wfc2d.1.any.artifact": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Wfc2dArtifact": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Wfc2dDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "schema"
+        },
+        "Wfc2dInferenceCommit": {
+          "file": "💡️inferences/🔣️.json",
+          "facet": "schema"
+        },
+        "Wfc2dSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "💡️inferences/🔗️.graphql": "f958ed853a71be0fd869d201d5274885db254602122ff7d6382fd72662a41ac5",
+        "💡️inferences/🔣️.json": "f298aaaf76ad63b8226f7e8957103623540edfc322a7b6b52186f5ac784c955b",
+        "💡️inferences/🛰️.proto": "d105a805e7e1570300b2c0aa2d6f4eab433004d526b2d1a3dacd1a3a5a0ea430",
+        "💡️inferences/🟦️.ts": "514348b14d53db8ce6156ac96842f83b7bd1cb70bf91789b597c2296c5049c31",
+        "💡️inferences/🦀️.rs": "4ac96db103a1f4b503d6ca2367bf51d82ecae809dd9df73b07ab322afb9fde50",
+        "📸️snapshot/💾️binary/🟦️.ts": "e012b0b3e8da6d6845ccb229002d42b5141975c389b620e9eb9389a58c149d59",
+        "📸️snapshot/📝️text/🟦️.ts": "db8fc51e8f12771619c386fa9036583316036483c24fe970254d7b9406e11b84",
+        "📸️snapshot/🔗️.graphql": "c5cdee771bcc845a7516791e7664b69a5c2d8b80c6f23255a9dca93d381a9e15",
+        "📸️snapshot/🔣️.json": "2e77ff17fce07e54dd53905e5ef4f2222e47e687556ccfc6feaa5ff7b0f6f996",
+        "📸️snapshot/🛰️.proto": "702255de589ae9370d01f7b438b9e57b2aa59d0fc8af901d786e6a0601b1acd9",
+        "📸️snapshot/🟦️.ts": "6a784871aa4888763c6e5bf107df0b24c7b70135ffb412dd1d2ece3006071519",
+        "📸️snapshot/🦀️.rs": "728422571fdb9d735b91077c2e7d4b20c15b5b936b96a28f9c003141d643104a",
+        "🔗️.graphql": "6d09a4feee2bf491c07414423a85d9b02b388c83ec07d6714fdef98e294dfd45",
+        "🔣️.json": "a3ab23b10c6525490e66ca11324c0cb7b7ab2c1d9d335087b78cd855fe45b749",
+        "🔺️diff/💾️binary/🟦️.ts": "6c5c9a4f7be618a595b39428d55679a76fcecf57211981efff5d1376a84d4300",
+        "🔺️diff/📝️text/🟦️.ts": "50b1b6a4985e35cd66ff98d61a13e7271e1b5c0cbce26818cf4896413aeb16b2",
+        "🔺️diff/🔗️.graphql": "27adbae70144a9302791dbffa588908832dabc9901ae2971c4d8e21751fd0c33",
+        "🔺️diff/🔣️.json": "65e8c1627313557e72939234e88de7941b66954953d4263e72829ae260d3d171",
+        "🔺️diff/🛰️.proto": "127680beaefeddf92fc3867d62d3282a33076526bcff01a82ed7e940b81c7d25",
+        "🔺️diff/🟦️.ts": "67051d78b146d2738a9740ffbababb1295fb1495661b9b4fc014647a5f6e62ef",
+        "🔺️diff/🦀️.rs": "8e95330f729838fcf3689d4cd9de4bc296e578db50346eff2130ee65ae760ad3",
+        "🛰️.proto": "61328c1964d06575e24c1b8b82b3c8e1e09d76e7500bba309b72c5510b977a5c",
+        "🟦️.ts": "ee007745256aa5b6d10ded53c31ef8062404cd67f7e64c64c1a94c26cc09b8d0",
+        "🦀️.rs": "a95b62297e2e6618cd7f540eca53daf0d5a78f966ea7eea09f1857269697013b",
+        "🧬️mutations/💾️binary/🟦️.ts": "94a4b315f2246e298d42745a2daa9de268a5cb1ccf25046f5f6fcb91875450b6",
+        "🧬️mutations/📝️text/🟦️.ts": "e4dd420d4ba5876d08aaabebb64d7a06f5fbbb087b548a5b90a902c52a5d4995",
+        "🧬️mutations/🔗️.graphql": "bec59fd29310559c12da30cb6209ae66260890126a7dafa2d6986024d61a53d5",
+        "🧬️mutations/🔣️.json": "d8035a82818dd4fed7344180187164136e18184b52efa538cccf50c418a9861c",
+        "🧬️mutations/🛰️.proto": "a9f294aa4c72e6268dfad3cf4a63d172dac2c76a99e5b332e9ee646868bce5c2",
+        "🧬️mutations/🟦️.ts": "76189c9b06478970bca7bcf275bddb858e0ed0041064433a5c03439533727a9e",
+        "🧬️mutations/🦀️.rs": "ebd0d38a6ae466bb32d673d2d64a6f814153c73c85046138e877c36c59282d46"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.change-seed": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSeed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2df594c2e597772fec0b1490fd26ae66542dc99c8aa955362a4402a3f4eaae1a"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.change-tile-media": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileMedia": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "8e31ee02c268b9fdf90465583c091c68ac46f5e5e3d46a119841d4cf501d5d1c"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.change-tile-weight": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileWeight": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "586b23fc46ea2f7d88459e0dbd9e5906f1621e1dbb05e721ede13d8a54e36bd8"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.connect-slots": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ConnectSlots": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1d5b368309664235e12660b86a3b519021b2ddda8d4b40e8be8ca121b812999f"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.create-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cac4403a189935f5b8863547df83a76f0abb7a9b5be3b04bea34fb4bdb4c8979"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.create-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "34e3cc372b7ffd9d3a3566de4d4682341a554e62936f6b043b3a670504cd07b7"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.create-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7b76246460a18ec84e8ecfa73ca4493431545b49e240af3317af6f86c87b496c"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.delete-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a817e7f407709adf0f1eb8b583b420f58cae1d9e45e0e054b51b333fa868f04e"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.delete-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6ac21ebae66256afcb3ae798f6ce185cd5ee7f3d15659d3ea009ae0e7bd8022d"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.delete-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b9df7967f5d4ae4049a08a441aa622bdfc164322570d153ad02481055ef0f8eb"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.disconnect-slots": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DisconnectSlots": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0f694aad8dd21071309ea02df6781ae2b27c3b62cf62d3a5f7f058df56267736"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.move-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MoveSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f06cc678400e54cacbabae874525731868e8c41a815f38ad1d03f1087365c3f3"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.pin-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PinSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "15dfee4fd88e7fddea82dcfab8d6366e97d32e89f7cef90f4e6bc471f4462162"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.resize-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b8155d344559df78db717bab23863bd2fcd34f23ce11c2663ecc4c074495b414"
+      }
+    },
+    "s.wfc.wfc2d.1.any.mutation.unpin-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️unpin-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnpinSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "07c1b7e840a87136be650798e810a7993cb6f6307581b5d6e3ee1ed4437eb73e"
+      }
+    },
+    "s.wfc.wfc3d.1.any": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Wfc3dArtifact": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "Wfc3dDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Wfc3dInferenceCommit": {
+          "file": "💡️inferences/🔣️.json",
+          "facet": "inference"
+        },
+        "Wfc3dSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "💡️inferences/🔗️.graphql": "f0c817e3db8be59ccbe01d1b2b7a25abf6808a01abf8c05d97c7985d5955d856",
+        "💡️inferences/🔣️.json": "d8c5323afc3d1d0b6b78857e402115c8677879767b195522049573d866efe674",
+        "💡️inferences/🛰️.proto": "2bc1c3861feaf9a7946a129b58cd715688b3dbd79e978585ba7a05a2473d9d5a",
+        "💡️inferences/🟦️.ts": "4a32c31a28259b5637e8103d9318167e4618a6bd5472dc4cfe61d2416a2437b7",
+        "💡️inferences/🦀️.rs": "20bbe12fa9f293cd231c960fe4c61d3ea1f84e87f22e1b730330096f2decd2ca",
+        "📸️snapshot/💾️binary/🟦️.ts": "637c26f32ae1aee75ed38c2080e86a7a120203f4689a3bbac2495ad4ab7cf156",
+        "📸️snapshot/💾️binary/🦀️.rs": "e3651f42b9b1f360ecba66372c406a5eece441e5153f58100fdf75cf68fff1a5",
+        "📸️snapshot/📝️text/🟦️.ts": "3eccea850892776f11a23a755af118f9ff3c563ba199e4c6261ded913224e2e1",
+        "📸️snapshot/📝️text/🦀️.rs": "54d1c37303849be1828660370a733493eb5877a941f9b66a4a2291159abd9461",
+        "📸️snapshot/🔗️.graphql": "6028fd041815efcfe4849eb55f3d0a4ecbb5054baebe41b45bb8da078f0d1c9a",
+        "📸️snapshot/🔣️.json": "89dccf0e97708f0ae57060cb9b243d89003373a1341b2a653e972c71686f1941",
+        "📸️snapshot/🛰️.proto": "e39177cd481fb5b49dad1e436801884d3bae0160f09e04dedbb6ea1d711dc15f",
+        "📸️snapshot/🟦️.ts": "a9e07c07653c3ac37054d6052c24569fb90082ceec5ce09b636c9343a3b28af3",
+        "📸️snapshot/🦀️.rs": "6e850cfbad89360bf82633f6187fc402beb6f89705e87ffda2ea9ebbf7a3a803",
+        "🔗️.graphql": "769cdeb746b165faafe5a6be0646b711fc83da98317d356489b00f777d07b908",
+        "🔣️.json": "b7938578a9e1a995ec0ee19fb245d45bc3f8f2f30eefbf683892c1a56d9f17f8",
+        "🔺️diff/💾️binary/🟦️.ts": "a70b0b9130f194db871db598c9f541b2b8fbd6b1c21756eddcc51b9aeec1878d",
+        "🔺️diff/📝️text/🟦️.ts": "a17510046412a87bd53141a6825f198ec6ecf84ddd10ec9f1b5aeb39ff2b3ef6",
+        "🔺️diff/🔗️.graphql": "2254f4d0bba41153fa73bccb2cd12322dc32bc98064699fb288cc2232ba0513c",
+        "🔺️diff/🔣️.json": "cd7162a7cada3e3dc8b5fe2e40899f1d200f1d5e58b62cf29d488bf025d4a144",
+        "🔺️diff/🛰️.proto": "947c2333d802f1b85c1314a80eaa46a41c08e05d1b4d50b3c5775eb0f8f11bf8",
+        "🔺️diff/🟦️.ts": "10cbbf45308cbf5858f2390ee97ffc630aae4aa8b5fd31b8b92d9960bc8bc8b1",
+        "🔺️diff/🦀️.rs": "5bb71c557d2fdd4670a0c7f15c2db7b1fcfa663b2b8a111f7c6ea789397dbaa2",
+        "🛰️.proto": "af69dd64540aff88023260625d9ec08f384f1f5b1b3258a9a9b593e1beacac1a",
+        "🟦️.ts": "e84da5befab06ff84536a0fac028ee547409ea5373b7489c1efb1e0017acb021",
+        "🦀️.rs": "b1fc612be3a50b8180c0a16c43f86b2d9f31ff104f53b826be1915459c058bde",
+        "🧬️mutations/💾️binary/🟦️.ts": "ffb50fe9ab0cff6d74470bbfca293fd45b49dfa7f95205aa725746cf9400a579",
+        "🧬️mutations/💾️binary/🦀️.rs": "c4b2d50d1fd8c1d6b885d30bb10e6a4a4b28331df810129f7b761be0615ba1cd",
+        "🧬️mutations/📝️text/🟦️.ts": "2af85e21f61fed4ab37f5bd8b05e77140d45d66bfa6c8f4e3d2f099b309cffca",
+        "🧬️mutations/📝️text/🦀️.rs": "451f364e3c31b86ae3d95f142ff89bc9201a556095e3f54f6983b847185317ac",
+        "🧬️mutations/🔗️.graphql": "9950adc9c4281611b60ad2b6d7d1e58c72ef6a268df80803d15bd4426ae2332b",
+        "🧬️mutations/🔣️.json": "55cbbd5d48f719904524cf2ba2335534aab78c1a8c474e521d9db8a2e0da0375",
+        "🧬️mutations/🛰️.proto": "256d6d7af399f967978cd6dca3289057fb53cc9bdd3cfda428e1891bef8d4704",
+        "🧬️mutations/🟦️.ts": "a928b149e680e116146dee4fdbe011192418b9bd0f2a63ef02f5622e9213521f",
+        "🧬️mutations/🦀️.rs": "2159e2d3a156da10fab95d674ab60c28c7ff883454b47ab95a3c49ad238f09c3"
+      }
+    },
+    "s.wfc.wfc3d.1.any.config.mutation.change-active-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🀄️change-active-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeActiveTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "dca4581d82b532810ae0548fb7a202a133b6572eba393ca338daf2ac036a080b"
+      }
+    },
+    "s.wfc.wfc3d.1.any.config.mutation.change-camera": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎥️change-camera/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCamera": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c1a67bde97af3ea4592cf3114d82ef29607cb7e9e789271db1e0d211a0e48e8a"
+      }
+    },
+    "s.wfc.wfc3d.1.any.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "3fa0f5215df9e7acde01b5c9083c5a545124db0ebe9785fcb90bf5c7670b4e74"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.change-seed": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSeed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1bf6d418511bfa4580e4a63bce787496d115e6bd8f6883f00631161dad74bd3f"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.change-tile-media": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileMedia": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7c8cce2cb22d1cf948cde10fed0de12a22a38079b272fec3265a8bfdadf86fd6"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.change-tile-weight": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeTileWeight": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "dde276be3273163b9ac85a38dfa3573b57fe4caf923fd0135486fe618ca0ddff"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.connect-slots": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ConnectSlots": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6bf02dc27434211a2ca1cd1e5d47245d7af5065555426d6575876647ff9dd80a"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.create-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4fb365b03988272a4450f2b016a6cbbcabd4bdb553ff41425f2cd86c7571dba4"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.create-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e230ea7d9849e5967ba51ed4c65fb9fd428059e7068fb29ec4c14f7704f3dccf"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.create-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "CreateTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "82dc2155291834c3943333ef11ead9335576322632e547988eea22c691cf361f"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.delete-rule": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0aecad48c15b1157028b5b6131d163069be41bcc73a196f9e166bded0d41cfb0"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.delete-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "83c6d74a783e480fb53bf8151eaec10974c7c6c152d8477e658fda2bf2d908b1"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.delete-tile": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteTile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "05e04c8a83bb229f33f740ee9c0cd9b45489d2a86e9836225f73788cd0bcf986"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.disconnect-slots": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DisconnectSlots": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7ebd66fcbd27ef23d48fc205679cda092637067229fd8a4e212eaef90c70008f"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.move-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MoveSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4de36165a113a43cea2ae8ebe512eda863d540cc5976172441207315c0b0adc6"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.pin-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PinSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b68780ba6a7636cabdfaab6c2abf3e7751806dc36727f95bc88c6b930ac0e868"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.resize-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ResizeSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "bd09c6430c0223adc538205f642508f6c35660660fb126abe459769e97d8b988"
+      }
+    },
+    "s.wfc.wfc3d.1.any.mutation.unpin-slot": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnpinSlot": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b58f99903b0a7560c2d88315fce8974c7ceed2ba7ed672a7c33fb1ddae743306"
       }
     },
     "s.writer.writer": {

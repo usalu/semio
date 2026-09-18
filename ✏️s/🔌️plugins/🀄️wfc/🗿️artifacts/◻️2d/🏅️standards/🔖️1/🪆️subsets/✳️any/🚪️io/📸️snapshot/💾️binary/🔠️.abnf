@@ -1,0 +1,6 @@
+; 🔠️ wfc2d.snapshot record framing, one record per document.
+wfc2d-snapshot-record = wfc2d-snapshot-magic wfc2d-snapshot-header wfc2d-snapshot-payload wfc2d-snapshot-footer
+wfc2d-snapshot-magic = %x0A %x0D %x34 %x7D %x3F %xF8 %x53 %x89
+wfc2d-snapshot-header = 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET
+wfc2d-snapshot-payload = *OCTET
+wfc2d-snapshot-footer = 4OCTET

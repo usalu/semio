@@ -1,0 +1,62 @@
+semio wfc.grid3d.dsl v1
+schema=s.wfc.grid3d seed=7 width=4 height=3 depth=4 periodic-x=false periodic-y=false periodic-z=false cell-sizes-x=[ 1 2 2 1 ] cell-sizes-y=[ 3 1.5 1.5 ] cell-sizes-z=[ 1 1 1 2 ]
+tiles [id:TEXT label:TEXT weight:NUM media:BLOCK] {
+  air Air 4 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=200 g=214 b=232 a=40
+  }
+  floor Floor 1 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=120 g=120 b=126 a=255
+  }
+  roof Roof 1.5 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=172 g=84 b=62 a=255
+  }
+  wall Wall 3 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=212 g=204 b=188 a=255
+  }
+}
+rules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT direction:ENUM allowed:BOOL] {
+  r-back-air-air air air back true
+  r-back-air-floor air floor back true
+  r-back-air-roof air roof back true
+  r-back-air-wall air wall back true
+  r-back-floor-air floor air back true
+  r-back-floor-floor floor floor back true
+  r-back-floor-roof floor roof back true
+  r-back-floor-wall floor wall back true
+  r-back-roof-air roof air back true
+  r-back-roof-floor roof floor back true
+  r-back-roof-roof roof roof back true
+  r-back-roof-wall roof wall back true
+  r-back-wall-air wall air back true
+  r-back-wall-floor wall floor back true
+  r-back-wall-roof wall roof back true
+  r-back-wall-wall wall wall back true
+  r-right-air-air air air right true
+  r-right-air-floor air floor right true
+  r-right-air-roof air roof right true
+  r-right-air-wall air wall right true
+  r-right-floor-air floor air right true
+  r-right-floor-floor floor floor right true
+  r-right-floor-roof floor roof right true
+  r-right-floor-wall floor wall right true
+  r-right-roof-air roof air right true
+  r-right-roof-floor roof floor right true
+  r-right-roof-roof roof roof right true
+  r-right-roof-wall roof wall right true
+  r-right-wall-air wall air right true
+  r-right-wall-floor wall floor right true
+  r-right-wall-roof wall roof right true
+  r-right-wall-wall wall wall right true
+  r-top-air-air air air top true
+  r-top-floor-air floor air top true
+  r-top-floor-wall floor wall top true
+  r-top-roof-air roof air top true
+  r-top-wall-roof wall roof top true
+  r-top-wall-wall wall wall top true
+}
+pinned [x:UINT y:UINT z:UINT tile-id:TEXT] {
+  0 0 0 floor
+}
+masked [x:UINT y:UINT z:UINT] {
+  3 2 3
+}

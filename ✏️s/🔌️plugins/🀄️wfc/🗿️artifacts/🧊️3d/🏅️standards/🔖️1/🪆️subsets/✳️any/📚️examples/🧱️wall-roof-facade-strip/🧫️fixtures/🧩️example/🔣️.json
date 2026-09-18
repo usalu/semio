@@ -1,0 +1,19 @@
+{
+  "assignments": {
+    "bay-0-ground": "roof",
+    "bay-0-top": "wall",
+    "bay-1-ground": "wall",
+    "bay-1-top": "roof"
+  },
+  "edges": 4,
+  "example": "wall-roof-facade-strip",
+  "rules": 4,
+  "satisfiable": true,
+  "schema": "s.wfc.wfc3d.example-outcome/v1",
+  "seed": 42,
+  "slots": 4,
+  "tiles": [
+    "roof",
+    "wall"
+  ]
+}

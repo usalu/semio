@@ -159,3 +159,64 @@ fn only_a_glass_content_layer_is_split_off_the_scene_target() {
     assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::Glass(0)), "a glass region itself is not its own foreground");
     assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassInstance { pass: 0, draw: 0, instance: 0, translucent: false }), "a scene pass with no layer is never a foreground scalar");
 }
+
+/// 🖼️ LAW: a TEXTURED world instance is encoded, and into the same target every other scene scalar
+/// of its pass goes to.
+///
+/// 🩸️ `ScenePass3d::textured_draws` had been measured into command pages since the scene pass
+/// existed — `advance_pipeline` walks `PassTextured`/`PassTexturedInstance`/`PassTexturedKey` and the
+/// puzzle3d playground publishes 146 of those pages per frame — but `encode_prepared_draw_scalar`
+/// had no arm for any of them, so the reference underlay could not paint on ANY target. Measured on
+/// the live wgpu playground as `textured=1` on both World3d surfaces with nothing on the canvas
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c).
+#[test]
+fn a_textured_world_instance_is_encoded_into_its_pass_target() {
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs");
+    assert!(source.contains("DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance } =>"), "the ladder owns an arm for the textured instance cursor");
+    assert!(source.contains("encode_prepared_world_textured("), "and that arm reaches the textured encoder");
+
+    let theme = crate::wgpu::theme::Theme::default();
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
+    draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d {
+        viewport: [0.0, 0.0, 100.0, 40.0],
+        textured_draws: vec![crate::wgpu::kernel_3d_scene::TexturedDraw3d {
+            instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d { texture_key: "/reference.png".to_string(), model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([3.5, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [12.0, 8.0, 1.0]), tint: [1.0, 1.0, 1.0, 0.85] }],
+        }],
+        ..Default::default()
+    });
+    assert_eq!(draw.scene_passes.len(), 1, "the pass carries its textured draw");
+    let cursor = DrawMeasureCursor::PassTexturedInstance { pass: 0, draw: 0, instance: 0 };
+    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, cursor), "a textured scalar under an ordinary layer stays on the scene target");
+    assert!(
+        !prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassTexturedInstance { pass: draw.scene_passes.len(), draw: 0, instance: 0 }),
+        "a stale pass index is never a foreground scalar"
+    );
+}
+
+/// 🖼️ LAW: the world textured pass is an UNDERLAY — it blends and never writes depth, and its quad
+/// is a centred unit XY plane whose first texture row is its TOP.
+///
+/// A depth-writing underlay would punch its own semi-transparent quad through everything behind it,
+/// and an upside-down `v` would mirror React's plan image. Both are invisible in a compile check and
+/// expensive to see on a live boot, so they are pinned here.
+#[test]
+fn the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane() {
+    assert_eq!(size_of::<crate::wgpu::draw::World3dTexturedGpuInstance>(), 80, "the instance stride the shader contract declares");
+    let vertices = crate::wgpu::draw::WORLD_PLANE_VERTICES;
+    assert_eq!(vertices.len(), 30, "six vertices of position(3) + uv(2)");
+    for chunk in vertices.chunks_exact(5) {
+        assert!(chunk[0].abs() == 0.5 && chunk[1].abs() == 0.5 && chunk[2] == 0.0, "every corner is on the centred unit XY quad");
+        assert_eq!(chunk[3], chunk[0] + 0.5, "u grows with +x");
+        assert_eq!(chunk[4], 0.5 - chunk[1], "v grows with -y, so row 0 of the image is the TOP of the quad");
+    }
+
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
+    let pipeline = source.split("label: Some(\"world3d_textured_pipeline\")").nth(1).expect("the built textured pipeline");
+    let pipeline = &pipeline[..pipeline.find("cache: None,").expect("the pipeline descriptor ends at its cache slot")];
+    assert!(pipeline.contains("blend: Some(wgpu::BlendState::ALPHA_BLENDING)"), "the underlay composites over the ground");
+    assert!(pipeline.contains("depth_write_enabled: Some(false)"), "and never writes depth");
+    assert!(pipeline.contains("depth_compare: Some(wgpu::CompareFunction::LessEqual)"), "so geometry that already wrote depth still occludes it");
+    assert!(pipeline.contains("cull_mode: None"), "React's reference plane is double-sided");
+    assert!(pipeline.contains("array_stride: 20"), "position(3) + uv(2) per vertex");
+}

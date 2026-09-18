@@ -1194,6 +1194,8 @@ pub mod editor {
             pub mod paint_params_eraser;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️.rs"]
             pub mod select;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️gumball/🦀️.rs"]
+            pub mod gumball;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🦀️.rs"]
             pub mod show_edges;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️snap/🦀️.rs"]

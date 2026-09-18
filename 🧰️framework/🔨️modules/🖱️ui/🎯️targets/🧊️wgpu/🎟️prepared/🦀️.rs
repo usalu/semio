@@ -2323,6 +2323,15 @@ impl PreparedRenderJobRejected {
 }
 
 impl PreparedRenderJob {
+    /// 🩺️ The exact reason this job refused, once it has refused — the string [`Self::fault_outcome`]
+    /// recorded. [`StepOutcome::Fault`] carries an EMPTY retained payload here (a fixed `&'static str`
+    /// needs no page), so without this accessor a preparation fault is completely invisible to its
+    /// driver, which is exactly how one silent refusal froze the wgpu shell at one presented frame per
+    /// boot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md`).
+    pub fn fault(&self) -> Option<&'static str> {
+        self.fault
+    }
+
     #[expect(clippy::result_large_err, reason = "Job admission failure retains the exact input and its credits for incremental retirement without allocating.")]
     pub fn try_new(mut input: PreparedRenderInput) -> Result<Self, PreparedRenderJobRejected> {
         let Some(receiver) = PreparedRenderReceiver::try_reserve() else {
@@ -2537,7 +2546,7 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Glass(0);
                     return Some(PreparedRenderUsage::default());
                 };
-                let next = if value.draws.is_empty() { Self::next_after_opaque(draw, pass) } else { DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false } };
+                let next = if value.textured_draws.is_empty() { Self::next_after_textured(draw, pass) } else { DrawMeasureCursor::PassTextured { pass, draw: 0 } };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassDraw { pass, draw: draw_index, translucent } => {
@@ -2684,19 +2693,31 @@ impl PreparedRenderJob {
         }
     }
 
-    fn next_after_translucent(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if !draw.scene_passes[pass].textured_draws.is_empty() {
-            DrawMeasureCursor::PassTextured { pass, draw: 0 }
+    /// 🖼️ A scene pass is measured — and therefore encoded — TEXTURED → opaque → lines → translucent.
+    ///
+    /// 🩸️ The textured underlay used to come last, so the world reference plane composited OVER the
+    /// grid and the model and tinted everything it covered. React draws the same plane at
+    /// `renderOrder = -10` (`🎨️r3f/🟦️.tsx`'s `WorldReferencePlaneItem`), under the grid's `-5` and the
+    /// model's default `0`. The pass is a non-depth-writing `LessEqual` blend either way, so drawing it
+    /// first is what makes the geometry in front of it actually occlude it (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md` §4).
+    fn next_after_textured(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        if !draw.scene_passes[pass].draws.is_empty() {
+            DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false }
         } else {
-            DrawMeasureCursor::PassHeader(pass + 1)
+            Self::next_after_opaque(draw, pass)
         }
+    }
+
+    fn next_after_translucent(_draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        DrawMeasureCursor::PassHeader(pass + 1)
     }
 
     fn next_textured_draw(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
         if draw_index + 1 < draw.scene_passes[pass].textured_draws.len() {
             DrawMeasureCursor::PassTextured { pass, draw: draw_index + 1 }
         } else {
-            DrawMeasureCursor::PassHeader(pass + 1)
+            Self::next_after_textured(draw, pass)
         }
     }
 

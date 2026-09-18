@@ -137,9 +137,35 @@ pub struct LowpolyWorldSelection {
     pub active_object_id: String,
     pub object_ids: Vec<String>,
     pub component_ids: Vec<u32>,
+    /// 🖱️ The object the pointer is over (an instance id), and the component under it when the hover
+    /// addressed one — what `World3dHost` paints as `hoveredId` / `hoveredComponent`.
+    pub hovered_object_id: Option<String>,
+    pub hovered_component: Option<LowpolyHoveredComponent>,
+}
+
+/// 🖱️ One hovered mesh component: `(object, granularity, id)` off the mesh domain's pointer channel.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LowpolyHoveredComponent {
+    pub object_id: String,
+    pub mode: String,
+    pub id: u32,
+}
+
+/// 🖱️ The mesh domain's live pointer hover, parsed back into object/component terms. The host's hover
+/// verb carries the same `lowpoly-document.<object>[.<granularity>.<n>]` ids its picks do.
+pub fn hovered_from_state(hover: Option<&protocol::DomainHover>) -> (Option<String>, Option<LowpolyHoveredComponent>) {
+    let Some((object_id, component)) = hover.and_then(|hover| hover.ids.first()).and_then(|raw| parse_mesh_target_id(raw)) else { return (None, None) };
+    let component = component.map(|(mode, id)| LowpolyHoveredComponent { object_id: object_id.clone(), mode, id });
+    (Some(object_id), component)
 }
 
 pub fn world_selection_from_state(snapshot: &LowpolySnapshot, config: &LowpolyConfig, selected: &protocol::DomainSelection, active_granularity: Option<&str>) -> LowpolyWorldSelection {
+    world_selection_with_hover(snapshot, config, selected, active_granularity, None)
+}
+
+/// 🖱️ `world_selection_from_state` plus the pointer hover of the same domain.
+pub fn world_selection_with_hover(snapshot: &LowpolySnapshot, config: &LowpolyConfig, selected: &protocol::DomainSelection, active_granularity: Option<&str>, hover: Option<&protocol::DomainHover>) -> LowpolyWorldSelection {
+    let (hovered_object_id, hovered_component) = hovered_from_state(hover);
     let active_object_id = active_object_for_selection(snapshot, config, selected);
     let granularity = active_granularity.filter(|granularity| !granularity.is_empty()).or((!selected.granularity.is_empty()).then_some(selected.granularity.as_str())).unwrap_or(MESH_GRANULARITY_OBJECT).to_string();
     let mut object_ids = Vec::new();
@@ -155,7 +181,7 @@ pub fn world_selection_from_state(snapshot: &LowpolySnapshot, config: &LowpolyCo
             Some(_) => {}
         }
     }
-    LowpolyWorldSelection { granularity, active_object_id, object_ids, component_ids }
+    LowpolyWorldSelection { granularity, active_object_id, object_ids, component_ids, hovered_object_id, hovered_component }
 }
 //#endregion 🔖️MeshDomain
 
@@ -182,6 +208,16 @@ pub fn mirror_axis_from_param(params: &serde_json::Value) -> semio_framework_3d:
 pub fn utility_param_f32(params: &serde_json::Value, key: &str, default: f32) -> f32 {
     params.get(key).and_then(|value| value.as_f64()).map_or(default, |v| v as f32)
 }
+
+/// 🎛️ A boolean utility param (the gumball handle-group switches live here, beside the snap grid).
+pub fn utility_param_bool(params: &serde_json::Value, key: &str, default: bool) -> bool {
+    params.get(key).and_then(|value| value.as_bool()).unwrap_or(default)
+}
+
+/// 🎛️ The composable gumball's three handle groups, every one on unless a toggle turned it off.
+pub const GUMBALL_MOVE_PARAM: &str = "gumballMove";
+pub const GUMBALL_ROTATE_PARAM: &str = "gumballRotate";
+pub const GUMBALL_SCALE_PARAM: &str = "gumballScale";
 
 pub fn utility_param_u32(params: &serde_json::Value, key: &str, default: u32) -> u32 {
     params.get(key).and_then(|value| value.as_u64()).map_or(default, |v| v as u32)

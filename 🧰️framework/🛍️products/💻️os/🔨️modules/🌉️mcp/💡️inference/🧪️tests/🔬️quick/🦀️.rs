@@ -9,8 +9,8 @@ fn empty_catalog() -> Arc<Catalog> {
     Arc::new(compile(&CatalogSource::default(), Locale::En, Terminology::Native).expect("empty catalog compiles"))
 }
 
-fn procedural_only_catalog() -> Arc<Catalog> {
-    plugin_only_catalog("procedural")
+fn wfc_only_catalog() -> Arc<Catalog> {
+    plugin_only_catalog("wfc")
 }
 
 fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
@@ -103,13 +103,13 @@ fn gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_too
 }
 
 #[test]
-fn declared_inferences_for_workspace_finds_the_real_procedural_roster() {
-    let workspace = open_workspace(procedural_only_catalog());
-    let declared = declared_inferences_for_workspace(&workspace).expect("procedural is the sole plugin owner");
+fn declared_inferences_for_workspace_finds_the_real_wfc_roster() {
+    let workspace = open_workspace(wfc_only_catalog());
+    let declared = declared_inferences_for_workspace(&workspace).expect("wfc is the sole plugin owner");
     assert_eq!(declared.len(), 1, "{declared:?}");
-    assert_eq!(declared[0].owner, "procedural");
-    assert_eq!(declared[0].artifact_kind, "s.assembly");
-    assert_eq!(declared[0].inference_schema, "s.assembly.solve");
+    assert_eq!(declared[0].owner, "wfc");
+    assert_eq!(declared[0].artifact_kind, "s.wfc.wfc3d");
+    assert_eq!(declared[0].inference_schema, "s.wfc.wfc3d.solve");
 }
 
 #[test]
@@ -122,7 +122,7 @@ fn declared_inferences_for_workspace_is_plugin_unavailable_for_an_empty_catalog(
 
 #[tokio::test]
 async fn declared_inferences_for_artifact_is_empty_for_an_open_probe() {
-    let workspace = open_workspace(procedural_only_catalog());
+    let workspace = open_workspace(wfc_only_catalog());
     workspace.ensure_probe_artifact("probe-inf", serde_json::json!({ "n": 1 })).await.expect("seed");
     let (schema, declared) = declared_inferences_for_artifact(&workspace, "probe-inf").expect("probe schema resolves");
     assert_eq!(schema, PROBE_SCHEMA);
@@ -131,18 +131,18 @@ async fn declared_inferences_for_artifact_is_empty_for_an_open_probe() {
 
 #[test]
 fn declared_inferences_for_artifact_is_retryable_plugin_unavailable_for_an_unknown_id() {
-    let workspace = open_workspace(procedural_only_catalog());
+    let workspace = open_workspace(wfc_only_catalog());
     let error = declared_inferences_for_artifact(&workspace, "does-not-exist").expect_err("never seen — same gap as 🏠️workspace's own /schema arm");
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
 }
 #[tokio::test]
 async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
-    let workspace = open_workspace(procedural_only_catalog());
+    let workspace = open_workspace(wfc_only_catalog());
     workspace.ensure_probe_artifact("probe-get", serde_json::json!({ "n": 1 })).await.expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_inference_tools(&mut registry, Some(workspace));
-    let result = registry.call("inference_get", serde_json::json!({ "artifactId": "probe-get", "inferenceSchema": "s.assembly.solve" })).expect("registered tool");
+    let result = registry.call("inference_get", serde_json::json!({ "artifactId": "probe-get", "inferenceSchema": "s.wfc.wfc3d.solve" })).expect("registered tool");
     assert!(result.is_error);
     let payload = result.structured_content.expect("structured error payload");
     assert_eq!(payload["code"], "NOT_FOUND");
@@ -153,41 +153,41 @@ async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
 #[test]
 fn lookup_inference_distinguishes_no_such_service_from_execute() {
     let declared = vec![DeclaredInference {
-        owner: "procedural".to_string(),
-        artifact_kind: "s.assembly".to_string(),
-        artifact_schema: "s.assembly".to_string(),
+        owner: "wfc".to_string(),
+        artifact_kind: "s.wfc.wfc3d".to_string(),
+        artifact_schema: "s.wfc.wfc3d".to_string(),
         artifact_schema_version: 1,
-        inference_schema: "s.assembly.solve".to_string(),
+        inference_schema: "s.wfc.wfc3d.solve".to_string(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "procedural".to_string(),
+        contributor: "wfc".to_string(),
         depends_on: Vec::new(),
     }];
-    assert!(matches!(lookup_inference(&declared, "s.assembly.solve"), InferenceLookup::Execute(_)));
+    assert!(matches!(lookup_inference(&declared, "s.wfc.wfc3d.solve"), InferenceLookup::Execute(_)));
     assert!(matches!(lookup_inference(&declared, "no.such.schema"), InferenceLookup::NoSuchService));
 }
 
 #[test]
 fn execute_lookup_reports_a_retryable_channel_not_wired_gap() {
     let item = DeclaredInference {
-        owner: "procedural".to_string(),
-        artifact_kind: "s.assembly".to_string(),
-        artifact_schema: "s.assembly".to_string(),
+        owner: "wfc".to_string(),
+        artifact_kind: "s.wfc.wfc3d".to_string(),
+        artifact_schema: "s.wfc.wfc3d".to_string(),
         artifact_schema_version: 1,
-        inference_schema: "s.assembly.solve".to_string(),
+        inference_schema: "s.wfc.wfc3d.solve".to_string(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "procedural".to_string(),
+        contributor: "wfc".to_string(),
         depends_on: Vec::new(),
     };
     let error = execution_not_wired_error(&item);
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
     let payload = inference_job_payload("art-1", &item, "cancel-1");
-    assert_eq!(payload.artifact_kind, "s.assembly");
-    assert_eq!(payload.inference_schema, "s.assembly.solve");
+    assert_eq!(payload.artifact_kind, "s.wfc.wfc3d");
+    assert_eq!(payload.inference_schema, "s.wfc.wfc3d.solve");
 }
 //#endregion 🧪️ExecutionSeam
 
@@ -218,7 +218,7 @@ fn bare_tier_inference_index_read_is_retryable_plugin_unavailable() {
 
 #[tokio::test]
 async fn bound_tier_inference_index_read_lists_the_real_declared_roster() {
-    let workspace = open_workspace(procedural_only_catalog());
+    let workspace = open_workspace(wfc_only_catalog());
     workspace.ensure_probe_artifact("probe-idx", serde_json::json!({ "n": 1 })).await.expect("seed");
     let result = read_inference_resource("semio://artifact/probe-idx/inference", Some(&workspace)).expect("ours");
     let contents = result.expect("bound workspace resolves");
@@ -234,7 +234,7 @@ fn bare_tier_inference_resources_list_is_empty() {
 
 #[tokio::test]
 async fn bound_tier_inference_resources_list_names_every_known_artifact() {
-    let workspace = open_workspace(procedural_only_catalog());
+    let workspace = open_workspace(wfc_only_catalog());
     workspace.ensure_probe_artifact("probe-list", serde_json::json!({ "n": 1 })).await.expect("seed");
     let resources = inference_resources(Some(&workspace));
     assert!(resources.iter().any(|resource| resource.uri == "semio://artifact/probe-list/inference"));

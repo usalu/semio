@@ -1,0 +1,9 @@
+dialect grammar
+grammar wfcbitmap.snapshot
+extension wfcbitmap
+start document
+
+document = header body
+header = "schema" SP "wfc.bitmap.snapshot" NL
+body = payload NL?
+payload = OCTET+

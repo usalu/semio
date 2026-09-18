@@ -95,12 +95,13 @@ fn resolve_mount(source: &Path, literal: &str) -> Option<PathBuf> {
 }
 
 /// 📇️ Every mount in the scan roots, as `(source file, literal, resolved target)`.
+///
+/// 💬️ Doc comments quote `#[path = "…"]` while explaining it; only real items count.
 fn mounts(root: &Path, sources: &[PathBuf]) -> Vec<(String, String, Option<PathBuf>)> {
     let mut mounts = Vec::new();
     for source in sources {
         let Ok(text) = fs::read_to_string(source) else { continue };
         for line in text.lines() {
-            // 💬️ Doc comments quote `#[path = "…"]` while explaining it; only real items count.
             if line.trim_start().starts_with("//") {
                 continue;
             }

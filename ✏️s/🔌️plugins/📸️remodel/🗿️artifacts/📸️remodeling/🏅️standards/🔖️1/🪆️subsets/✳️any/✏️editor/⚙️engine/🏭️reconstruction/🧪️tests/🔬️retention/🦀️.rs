@@ -21,7 +21,7 @@ fn vec_bytes<T>(v: &[T]) -> usize {
 }
 
 fn nested_bytes<T>(v: &[Vec<T>]) -> usize {
-    v.len() * std::mem::size_of::<Vec<T>>() + v.iter().map(|inner| vec_bytes(inner.as_slice())).sum::<usize>()
+    v.len() * size_of::<Vec<T>>() + v.iter().map(|inner| vec_bytes(inner.as_slice())).sum::<usize>()
 }
 
 /// 🧾️ Retained bytes per structure, in the order the pipeline fills them.
@@ -85,11 +85,11 @@ impl Retention {
 
 fn retention(engine: &ReconstructionEngine) -> Retention {
     Retention {
-        frames: engine.frames.iter().map(|frame| frame.image.data.capacity() + std::mem::size_of::<AcceptedFrame>()).sum::<usize>()
+        frames: engine.frames.iter().map(|frame| frame.image.data.capacity() + size_of::<AcceptedFrame>()).sum::<usize>()
             + engine.frame_source.frames.iter().map(|frame| frame.image.data.capacity()).sum::<usize>(),
         keypoints: nested_bytes(&engine.keypoints_per_frame),
         descriptors: nested_bytes(&engine.descriptors_per_frame),
-        pairwise: engine.pairwise_matches.len() * std::mem::size_of::<(usize, usize, Vec<remodeling_feature::Match>)>() + engine.pairwise_matches.iter().map(|(_, _, matches)| vec_bytes(matches.as_slice())).sum::<usize>(),
+        pairwise: engine.pairwise_matches.len() * size_of::<(usize, usize, Vec<remodeling_feature::Match>)>() + engine.pairwise_matches.iter().map(|(_, _, matches)| vec_bytes(matches.as_slice())).sum::<usize>(),
         tracks: engine.tracks.as_ref().map_or(0, |tracks| nested_bytes(&tracks.tracks)),
         sfm: engine.sfm.as_ref().map_or(0, remodeling_sfm::IncrementalSfm::retained_bytes),
         reconstruction: engine.reconstruction.as_ref().map_or(0, |reconstruction| vec_bytes(reconstruction.cameras.as_slice()) + vec_bytes(reconstruction.points.as_slice()) + vec_bytes(reconstruction.point_track_ids.as_slice())),

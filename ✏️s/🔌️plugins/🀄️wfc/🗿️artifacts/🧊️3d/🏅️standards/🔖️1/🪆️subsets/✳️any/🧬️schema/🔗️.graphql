@@ -1,0 +1,5 @@
+# 🧬️ wfc3d artifact schema — the persisted WFC problem spec is the artifact.
+
+type Wfc3dArtifact {
+  snapshot: Wfc3dSnapshot! @state(class: ARTIFACT)
+}

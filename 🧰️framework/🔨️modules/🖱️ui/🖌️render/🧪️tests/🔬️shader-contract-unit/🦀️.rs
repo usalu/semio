@@ -158,6 +158,8 @@ fn vertex_attribute_offsets_fit_declared_stride() {
 /// reads that crate's source text instead of its constants — the only way to tie two copies of the
 /// same WGSL together without inverting the crate graph.
 const WGPU_TARGET_SHADERS_SOURCE: &str = include_str!("../../../🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+const D3D12_HLSL_SOURCE: &str = include_str!("../../🎯️targets/🪟️d3d12/✨️hlsl/🦀️.rs");
+const METAL_MSL_SOURCE: &str = include_str!("../../🎯️targets/🍎️metal/✨️msl/🦀️.rs");
 
 /// ✂️ Lifts `pub const <name>: &str = r#"…"#;` out of Rust source text.
 fn raw_string_const(source: &str, name: &str) -> Option<String> {
@@ -202,6 +204,25 @@ fn world3d_vertex_locations_are_all_fed_by_the_declared_vertex_buffers() {
                 pipeline.label
             );
         }
+    }
+}
+/// ⚖️ Law: the world-3d lighting rig is ONE set of numbers in four backends. The WGSL lives twice
+/// (above) and is transcribed by hand into HLSL and MSL, so a rig change that lands in the WGSL only
+/// would silently leave d3d12 and metal lighting the scene differently — the same class of drift the
+/// twin law above exists for. The numbers are React's own R3F scene
+/// (`<ambientLight intensity={1.15}>`, `<hemisphereLight groundColor="#9aa0ab" intensity={1.35}>`
+/// and its three `<directionalLight>`s, `🌐️World3dHost/🟦️.tsx`) plus `MESH_STYLE_PAINT`'s
+/// selected/hovered `emissiveIntensity`.
+#[test]
+fn world3d_lighting_constants_are_identical_in_every_backend_mirror() {
+    const RIG: &[&str] = &["0.31830989", "1.15", "1.35", "0.32313", "0.35153", "0.40724", "2.4", "1.2", "0.75", "0.35", "0.08", "12.0, 18.0, 10.0", "-14.0, -10.0, 6.0", "0.0, 0.0, -16.0"];
+    let hlsl = raw_string_const(D3D12_HLSL_SOURCE, "WORLD3D_MESH_SHADER_HLSL").expect("the d3d12 target declares WORLD3D_MESH_SHADER_HLSL as a raw string const");
+    let msl = raw_string_const(METAL_MSL_SOURCE, "WORLD3D_MESH_SHADER_MSL").expect("the metal target declares WORLD3D_MESH_SHADER_MSL as a raw string const");
+    for (label, source) in [("wgsl", WORLD3D_SHADER), ("hlsl", hlsl.as_str()), ("msl", msl.as_str())] {
+        for value in RIG {
+            assert!(source.contains(value), "the {label} world-3d shader is missing the lighting-rig value `{value}`");
+        }
+        assert!(!source.contains("0.28"), "the {label} world-3d shader still carries the old single-directional ambient floor");
     }
 }
 //#endregion ⚖️WgpuTargetShaderAgreement

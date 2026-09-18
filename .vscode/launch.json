@@ -1284,6 +1284,261 @@
       }
     },
     {
+      "name": "🛠️dev🀄️wfc🖼️bitmap⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc bitmap",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6041",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 201
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6041)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🖼️bitmap🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc bitmap",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6141",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 201.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6141)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🖼️bitmap🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- bitmap",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 201.2
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🔲️grid2d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 2d grid",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6042",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 202
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6042)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🔲️grid2d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 2d grid",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6142",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 202.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6142)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🔲️grid2d🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- grid2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 202.2
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc◻️2d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6043",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 203
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6043)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc◻️2d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6143",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 203.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6143)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc◻️2d🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- wfc2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 203.2
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧱️grid3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 3d grid",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6044",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 204
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6044)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧱️grid3d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 3d grid",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6144",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 204.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6144)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧱️grid3d🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- grid3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 204.2
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧊️3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6045",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 205
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6045)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧊️3d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- wfc 3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6145",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 205.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6145)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🀄️wfc🧊️3d🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- wfc3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 205.2
+      }
+    },
+    {
       "name": "🛠️dev🔧️procedural🏙️3d🎛️hexagonal🍄️mushroom🧱️column⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3600,50 +3855,6 @@
     }
     ,
 {
-      "name": "🛠️dev🌀️procedural🧩️assembly⚛️react",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- assembly",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "S_OS_PORT": "6019",
-        "SEMIO_PLUGIN": "procedural",
-        "SEMIO_RENDERER": "react",
-        "SEMIO_APP": "s.assembly@1/*#editor"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 420.03
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
-        "uriFormat": "%s"
-      }
-    },
-{
-      "name": "🛠️dev🌀️procedural🧩️assembly🧊️wgpu🌐️wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- assembly",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "S_OS_PORT": "6119",
-        "SEMIO_PLUGIN": "procedural",
-        "SEMIO_RENDERER": "wgpu",
-        "SEMIO_APP": "s.assembly@1/*#editor"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 420.031
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6119)",
-        "uriFormat": "%s"
-      }
-    },
-{
       "name": "🛠️dev♻️mit-bestand🧺️demonstrator⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -4317,7 +4528,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.37
+        "order": 420.39
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -4339,7 +4550,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.371
+        "order": 420.391
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -4360,7 +4571,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.43
+        "order": 420.45
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -4381,7 +4592,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.431
+        "order": 420.451
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -4403,7 +4614,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.58
+        "order": 420.6
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -4425,7 +4636,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 420.581
+        "order": 420.601
       },
       "serverReadyAction": {
         "action": "openExternally",

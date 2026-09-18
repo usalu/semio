@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.wfc.wfc3d.inference;
+
+message Wfc3dInferenceCommit {
+  map<string, string> assignments = 1;
+}

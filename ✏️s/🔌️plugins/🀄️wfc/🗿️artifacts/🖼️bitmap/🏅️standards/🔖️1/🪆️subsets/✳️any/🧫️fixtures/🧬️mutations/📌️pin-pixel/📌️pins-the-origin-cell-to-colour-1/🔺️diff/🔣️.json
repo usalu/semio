@@ -1,0 +1,22 @@
+{
+  "schema": null,
+  "seed": null,
+  "inputWidth": null,
+  "inputHeight": null,
+  "inputPixels": null,
+  "inputRegions": [],
+  "palette": null,
+  "output": null,
+  "model": null,
+  "pinnedRemoved": [],
+  "pinnedUpserted": [
+    [
+      0,
+      {
+        "x": 0,
+        "y": 0,
+        "color": 1
+      }
+    ]
+  ]
+}

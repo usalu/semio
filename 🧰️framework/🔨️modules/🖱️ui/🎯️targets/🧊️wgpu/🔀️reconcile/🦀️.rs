@@ -893,6 +893,22 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
 impl UiTree {
     /// 🌳️ Advances this surface's document→arena reconcile by exactly one unit. See
     /// [`UiDocumentReconcileCursor`] for the phase ladder and the identity rule.
+    ///
+    /// 📐️ The record's own `LayoutSpec` is the React-parity geometry channel
+    /// (`layoutSpecStyle`'s input); a change to it alone — a grid gaining a
+    /// column, a stack flipping to `justify: SpaceBetween` — moves every
+    /// descendant's box without touching the projected `UiNode` at all, so it
+    /// is re-stamped unconditionally. `Publish` below already re-dirties the
+    /// whole surface's layout, so no per-node bubble is needed here.
+    ///
+    /// 🎬️ Always re-stamped, never diffed: the address carries the document's
+    /// CURRENT revision, which moves on every published patch even when the
+    /// node's own spec did not — and a node left at an old revision would
+    /// start dropping its own live gestures as stale.
+    ///
+    /// 🪟️ Only ever RAISED here: `events::EventRouter::open_overlay`/`close_overlay`
+    /// own this bit at runtime for popups the document knows nothing about, so a
+    /// re-mount must not drop an open Select's hit-test priority.
     pub fn step_document_reconcile(&mut self, cursor: &mut UiDocumentReconcileCursor, surface: &str, controller: &str) -> UiDocumentReconcileStep {
         match cursor.phase {
             UiDocumentReconcilePhase::Complete => return UiDocumentReconcileStep::Complete,
@@ -971,17 +987,7 @@ impl UiTree {
                             if existing.spec != spec {
                                 existing.spec = spec;
                             }
-                            // 📐️ The record's own `LayoutSpec` is the React-parity geometry channel
-                            // (`layoutSpecStyle`'s input); a change to it alone — a grid gaining a
-                            // column, a stack flipping to `justify: SpaceBetween` — moves every
-                            // descendant's box without touching the projected `UiNode` at all, so it
-                            // is re-stamped unconditionally. `Publish` below already re-dirties the
-                            // whole surface's layout, so no per-node bubble is needed here.
                             existing.layout_spec = Some(layout_spec);
-                            // 🎬️ Always re-stamped, never diffed: the address carries the document's
-                            // CURRENT revision, which moves on every published patch even when the
-                            // node's own spec did not — and a node left at an old revision would
-                            // start dropping its own live gestures as stale.
                             existing.intent = Some(intent);
                         }
                         node
@@ -998,9 +1004,6 @@ impl UiTree {
                 if let Some(mounted) = self.node_mut(node) {
                     mounted.flags.set(NodeFlags::SCROLLABLE, routing.scrollable);
                     mounted.flags.set(NodeFlags::CLIPS_CHILDREN, routing.clips);
-                    // 🪟️ Only ever RAISED here: `events::EventRouter::open_overlay`/`close_overlay`
-                    // own this bit at runtime for popups the document knows nothing about, so a
-                    // re-mount must not drop an open Select's hit-test priority.
                     if routing.overlay {
                         mounted.flags.set(NodeFlags::OVERLAY, true);
                     }

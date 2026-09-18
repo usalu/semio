@@ -1,0 +1,5 @@
+module Wfc3dSnapshot;
+
+public type Document = unit {
+    payload: bytes &eod;
+};

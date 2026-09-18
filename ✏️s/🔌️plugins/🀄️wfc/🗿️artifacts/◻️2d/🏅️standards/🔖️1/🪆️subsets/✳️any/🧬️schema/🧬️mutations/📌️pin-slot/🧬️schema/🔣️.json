@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/pin-slot/schema.json",
+  "title": "PinSlot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "tileId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tileId": {
+      "type": "string"
+    }
+  }
+}

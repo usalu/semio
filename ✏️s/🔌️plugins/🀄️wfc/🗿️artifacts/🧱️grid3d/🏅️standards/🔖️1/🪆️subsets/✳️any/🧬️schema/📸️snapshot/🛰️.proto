@@ -1,0 +1,102 @@
+// 🧬 s.wfc.grid3d — Protobuf mirror of the normative JSON Schema. Field numbers are stable and
+// follow the declaration order of the Rust records the schema is transcribed from.
+syntax = "proto3";
+
+package semio.s.wfc.grid3d.v1;
+
+message Grid3dColor {
+  uint32 r = 1;
+  uint32 g = 2;
+  uint32 b = 3;
+  uint32 a = 4;
+}
+
+message Grid3dMesh {
+  repeated double positions = 1;
+  repeated uint32 indices = 2;
+  optional Grid3dColor color = 3;
+}
+
+message ArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
+}
+
+message ArtifactRef {
+  string artifact_id = 1;
+  ArtifactDialect dialect = 2;
+}
+
+message ArtifactChildHandle {
+  string child_id = 1;
+  ArtifactRef target = 2;
+}
+
+message Grid3dTileMedia {
+  oneof kind {
+    Grid3dMesh mesh = 1;
+    ArtifactChildHandle child = 2;
+  }
+}
+
+message Grid3dTile {
+  string id = 1;
+  optional string label = 2;
+  double weight = 3;
+  Grid3dTileMedia media = 4;
+}
+
+enum Grid3dDirection {
+  GRID3D_DIRECTION_LEFT = 0;
+  GRID3D_DIRECTION_RIGHT = 1;
+  GRID3D_DIRECTION_FRONT = 2;
+  GRID3D_DIRECTION_BACK = 3;
+  GRID3D_DIRECTION_BOTTOM = 4;
+  GRID3D_DIRECTION_TOP = 5;
+}
+
+enum Grid3dAxis {
+  GRID3D_AXIS_X = 0;
+  GRID3D_AXIS_Y = 1;
+  GRID3D_AXIS_Z = 2;
+}
+
+message Grid3dRule {
+  string id = 1;
+  string tile_a_id = 2;
+  string tile_b_id = 3;
+  Grid3dDirection direction = 4;
+  bool allowed = 5;
+}
+
+message Grid3dPinnedCell {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 z = 3;
+  string tile_id = 4;
+}
+
+message Grid3dCell {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 z = 3;
+}
+
+message Grid3dSnapshot {
+  string schema = 1;
+  uint64 seed = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  uint32 depth = 5;
+  repeated double cell_sizes_x = 6;
+  repeated double cell_sizes_y = 7;
+  repeated double cell_sizes_z = 8;
+  bool periodic_x = 9;
+  bool periodic_y = 10;
+  bool periodic_z = 11;
+  repeated Grid3dTile tiles = 12;
+  repeated Grid3dRule rules = 13;
+  repeated Grid3dPinnedCell pinned = 14;
+  repeated Grid3dCell masked = 15;
+}

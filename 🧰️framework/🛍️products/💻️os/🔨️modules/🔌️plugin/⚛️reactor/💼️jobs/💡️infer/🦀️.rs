@@ -1,4 +1,4 @@
-//! 💡️ `semio.infer` cold-job bridge. Exact ActionBus routes such as `s.assembly.solve`
+//! 💡️ `semio.infer` cold-job bridge. Exact ActionBus routes such as `s.wfc.wfc3d.solve`
 //! decode through their factory-owned schema and retain one persistent `InteractiveJob` session.
 //! Every guest continuation admits exactly one bounded step to the shared WorkerPool; previews
 //! coalesce, checkpoints and commits remain lossless under explicit item/byte bounds, and

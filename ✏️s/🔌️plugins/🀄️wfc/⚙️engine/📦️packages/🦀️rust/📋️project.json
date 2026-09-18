@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/wfc-engine-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": ["language:rust", "role:engine", "family:wfc"],
+  "namedInputs": {"default": ["{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/⚙️engine/**/*"]},
+  "targets": {
+    "check": {"executor": "nx:run-commands", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts check", "forwardAllArgs": true}},
+    "test": {"executor": "nx:run-commands", "options": {"cwd": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true}}
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/wfc/wfc2d/transient/mutation/SetSolve/schema.json",
+  "title": "SetSolve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignments",
+    "contradiction"
+  ],
+  "properties": {
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slotId",
+          "tileId"
+        ],
+        "properties": {
+          "slotId": {
+            "type": "string"
+          },
+          "tileId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contradiction": {
+      "type": "boolean"
+    }
+  }
+}

@@ -419,6 +419,17 @@ impl Theme {
         levels::VEIL_BLUR_PX as f32
     }
 
+    /// 🌫️ `ui-veil` as a GLASS region — the whole utility, not just its fill. React's scrim is
+    /// `backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate))` UNDER
+    /// `color-mix(… var(--surface-bg) calc(var(--veil-alpha) * 100%) …)`, so a scrim pushed as a
+    /// plain [`Self::veil`] quad is only half of it: everything behind stayed razor sharp while the
+    /// reference blurred the entire page. Pushing this through `DrawList::push_glass` is what gives
+    /// [`Self::veil_blur_px`] its first production consumer (`📓️w4a`/`📓️w7a` hand-off 2).
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
+    pub fn veil_glass(&self, level: Level) -> GlassStyle {
+        GlassStyle { tint: self.surface(level), alpha: levels::VEIL_ALPHA as f32, blur_px: Self::veil_blur_px(), saturate: self.glass_saturate }
+    }
+
     //#endregion 🔖️LevelSurfaces
 
     //#region 🔖️Presence

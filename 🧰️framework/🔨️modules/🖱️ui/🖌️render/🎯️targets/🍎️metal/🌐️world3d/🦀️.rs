@@ -1,9 +1,9 @@
 //! @emoji 🌐️ World3d mesh/lines encoding: the dynamic-offset globals ring plus per-`SurfacePass`
 //! instance/line upload and draw replay. Mirrors the wgpu target's `WorldGlobalsRing`/
-//! `prepare_world_passes`/`draw_world_pass_at` (`🎯️targets/🧊️wgpu/🦀️draw.rs`), minus the textured-mesh
-//! variant — `shader_contract.rs` itself documents `WORLD3D_TEXTURED_PIPELINE` as **inferred, not
-//! wired to any real pipeline construction** in the reference implementation (no `draw.rs` call site
-//! ever built it), so this backend does not add a first Metal call site for dead contract surface.
+//! `prepare_world_passes`/`draw_world_pass_at` (`🎯️targets/🧊️wgpu/🦀️draw.rs`), minus the textured-quad
+//! variant — the wgpu reference builds `world3d_textured_pipeline` for the reference underlay since
+//! ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c, and this backend has not yet grown its
+//! Metal twin.
 //!
 //! **No dynamic-offset bind group.** wgpu bakes a `has_dynamic_offset: true` uniform binding into the
 //! bind group layout and supplies the byte offset at `set_bind_group` time. Metal has no such

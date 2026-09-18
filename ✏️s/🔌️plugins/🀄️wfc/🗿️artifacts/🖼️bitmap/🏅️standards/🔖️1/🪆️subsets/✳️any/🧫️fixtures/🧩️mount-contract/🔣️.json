@@ -1,0 +1,25 @@
+{
+  "editorAppId": "s.wfc.bitmap@1/*#editor",
+  "viewerAppId": "s.wfc.bitmap@1/*#viewer",
+  "dialect": "s.wfc.bitmap@1/*",
+  "artifactKindId": "2d.wfcbitmap",
+  "inferenceToolId": "s.wfc.bitmap.solve",
+  "windowKindIds": ["wfc-bitmap-input", "wfc-bitmap-output"],
+  "windowLabels": [{"en": "Input", "de": "Eingabe"}, {"en": "Output", "de": "Ausgabe"}],
+  "mutationKinds": [
+    "change-seed",
+    "resize-input",
+    "set-input-pixels",
+    "add-palette-color",
+    "change-palette-color",
+    "remove-palette-color",
+    "resize-output",
+    "change-model",
+    "pin-pixel",
+    "unpin-pixel"
+  ],
+  "examples": [
+    {"id": "rooms-16", "label": {"en": "Rooms 16", "de": "Räume 16"}, "inputWidth": 16, "inputHeight": 16, "paletteSize": 3},
+    {"id": "flowers-24", "label": {"en": "Flowers 24", "de": "Blumen 24"}, "inputWidth": 24, "inputHeight": 24, "paletteSize": 4}
+  ]
+}

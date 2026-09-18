@@ -441,12 +441,12 @@ impl PatchMatchPreparation {
 
     /// 🧮️ Retained heap bytes of this checkpoint: the three hypothesis buffers plus the output map.
     pub fn retained_bytes(&self) -> usize {
-        self.depths.capacity() * std::mem::size_of::<f32>()
-            + self.normals.capacity() * std::mem::size_of::<[f32; 3]>()
-            + self.costs.capacity() * std::mem::size_of::<f32>()
-            + self.output.depth.capacity() * std::mem::size_of::<f32>()
-            + self.output.normal.capacity() * std::mem::size_of::<[f32; 3]>()
-            + self.output.confidence.capacity() * std::mem::size_of::<f32>()
+        self.depths.capacity() * size_of::<f32>()
+            + self.normals.capacity() * size_of::<[f32; 3]>()
+            + self.costs.capacity() * size_of::<f32>()
+            + self.output.depth.capacity() * size_of::<f32>()
+            + self.output.normal.capacity() * size_of::<[f32; 3]>()
+            + self.output.confidence.capacity() * size_of::<f32>()
     }
 
     pub fn advance(
@@ -1205,7 +1205,7 @@ impl TsdfVolume {
 /// 🧮️ Heap bytes one allocated [`TsdfBlock`] costs: two dense `f32` buffers of `8³` voxels each,
 /// plus the ordered map's own node share. Any voxel a depth ray touches allocates the whole block,
 /// which is why an unbounded integration extent is a memory hazard rather than a mere slowdown.
-pub const TSDF_BLOCK_RETAINED_BYTES: usize = TSDF_BLOCK_VOXELS * 2 * std::mem::size_of::<f32>() + 64;
+pub const TSDF_BLOCK_RETAINED_BYTES: usize = TSDF_BLOCK_VOXELS * 2 * size_of::<f32>() + 64;
 
 /// 🧊️ Cursor for one depth-map integration. A continuation performs at most the requested number of
 /// ray samples; sparse blocks use an ordered map so insertion never triggers a whole-table rehash.

@@ -1,0 +1,11 @@
+{
+  "artifact": "s.wfc.grid3d",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained wfc grid3d 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.wfc.grid3d@1` is one self-contained WaveFunctionCollapse problem document — grid extent, per-axis cell sizes, periodicity, tiles, adjacency rules, pins and masks. There is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation reads and writes the SAME value model through the SAME codec and dispatch, so `✳️any` is this artifact's only real scope."
+}

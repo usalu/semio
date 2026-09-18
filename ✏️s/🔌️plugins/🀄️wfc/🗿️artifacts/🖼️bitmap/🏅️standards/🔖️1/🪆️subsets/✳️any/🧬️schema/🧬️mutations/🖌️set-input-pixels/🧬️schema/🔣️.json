@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/set-input-pixels/schema.json",
+  "title": "SetInputPixels",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "x",
+    "y",
+    "width",
+    "height",
+    "pixels"
+  ],
+  "properties": {
+    "x": { "type": "integer", "minimum": 0 },
+    "y": { "type": "integer", "minimum": 0 },
+    "width": { "type": "integer", "minimum": 1, "maximum": 512 },
+    "height": { "type": "integer", "minimum": 1, "maximum": 512 },
+    "pixels": { "type": "string", "format": "base64" }
+  }
+}

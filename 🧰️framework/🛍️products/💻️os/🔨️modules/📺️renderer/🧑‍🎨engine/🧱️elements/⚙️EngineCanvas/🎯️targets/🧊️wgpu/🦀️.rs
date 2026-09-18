@@ -5063,14 +5063,14 @@ pub fn puzzle_board_pointer_up_into(
     Ok(true)
 }
 
+/// 🐁️ The leave clears the domain's hover before the board events go out — React's
+/// `dispatchBoardHover(null)` on the same transition. The engine's own `hovered_id` is already
+/// `None` by the time a leave is planned, so the witness comparison publishes exactly one clear.
 pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let was_inside = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).is_some_and(|entry| entry.board_pointer_inside));
     if !was_inside {
         return Ok(false);
     }
-    // 🐁️ The leave clears the domain's hover before the board events go out — React's
-    // `dispatchBoardHover(null)` on the same transition. The engine's own `hovered_id` is already
-    // `None` by the time a leave is planned, so the witness comparison publishes exactly one clear.
     let cleared = puzzle_board_hover_into(surface_id, controller_id, input)?;
     let _ = cleared;
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;

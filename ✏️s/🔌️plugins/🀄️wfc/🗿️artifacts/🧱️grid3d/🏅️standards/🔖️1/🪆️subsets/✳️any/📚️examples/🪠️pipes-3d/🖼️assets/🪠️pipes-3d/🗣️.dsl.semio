@@ -1,0 +1,34 @@
+semio wfc.grid3d.dsl v1
+schema=s.wfc.grid3d seed=19 width=3 height=3 depth=3 periodic-x=true periodic-y=false periodic-z=false cell-sizes-x=[ 1 1 1 ] cell-sizes-y=[ 1 1 1 ] cell-sizes-z=[ 0.5 1 0.5 ]
+tiles [id:TEXT label:TEXT weight:NUM media:BLOCK] {
+  empty Empty 6 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=230 g=236 b=244 a=30
+  }
+  pipe-x "Pipe X" 2 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=66 g=134 b=196 a=255
+  }
+  pipe-z "Pipe Z" 2 {
+    mesh mesh=positions=[ ] indices=[ ] color=r=196 g=134 b=66 a=255
+  }
+}
+rules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT direction:ENUM allowed:BOOL] {
+  r-back-empty-empty empty empty back true
+  r-back-empty-pipe-x empty pipe-x back true
+  r-back-pipe-x-empty pipe-x empty back true
+  r-back-pipe-x-pipe-x pipe-x pipe-x back true
+  r-back-pipe-z-pipe-z pipe-z pipe-z back true
+  r-right-empty-empty empty empty right true
+  r-right-empty-pipe-z empty pipe-z right true
+  r-right-pipe-x-pipe-x pipe-x pipe-x right true
+  r-right-pipe-z-empty pipe-z empty right true
+  r-right-pipe-z-pipe-z pipe-z pipe-z right true
+  r-top-empty-empty empty empty top true
+  r-top-empty-pipe-x empty pipe-x top true
+  r-top-pipe-x-empty pipe-x empty top true
+  r-top-pipe-z-pipe-z pipe-z pipe-z top true
+}
+pinned [x:UINT y:UINT z:UINT tile-id:TEXT] {
+  1 1 1 pipe-x
+}
+masked [x:UINT y:UINT z:UINT] {
+}

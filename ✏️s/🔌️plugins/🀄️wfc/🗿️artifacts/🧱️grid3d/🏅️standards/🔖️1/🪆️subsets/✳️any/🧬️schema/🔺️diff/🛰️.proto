@@ -1,0 +1,49 @@
+// 🧬 s.wfc.grid3d — Protobuf mirror of the normative JSON Schema. Field numbers are stable and
+// follow the declaration order of the Rust records the schema is transcribed from.
+syntax = "proto3";
+
+package semio.s.wfc.grid3d.v1;
+
+import "snapshot.proto";
+
+message Grid3dTileUpsert {
+  uint32 index = 1;
+  Grid3dTile tile = 2;
+}
+
+message Grid3dRuleUpsert {
+  uint32 index = 1;
+  Grid3dRule rule = 2;
+}
+
+message Grid3dPinnedUpsert {
+  uint32 index = 1;
+  Grid3dPinnedCell pinned = 2;
+}
+
+message Grid3dMaskedUpsert {
+  uint32 index = 1;
+  Grid3dCell cell = 2;
+}
+
+message Grid3dDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+  optional uint32 depth = 5;
+  repeated double cell_sizes_x = 6;
+  repeated double cell_sizes_y = 7;
+  repeated double cell_sizes_z = 8;
+  optional bool periodic_x = 9;
+  optional bool periodic_y = 10;
+  optional bool periodic_z = 11;
+  repeated string tiles_removed = 12;
+  repeated Grid3dTileUpsert tiles_upserted = 13;
+  repeated string rules_removed = 14;
+  repeated Grid3dRuleUpsert rules_upserted = 15;
+  repeated string pinned_removed = 16;
+  repeated Grid3dPinnedUpsert pinned_upserted = 17;
+  repeated string masked_removed = 18;
+  repeated Grid3dMaskedUpsert masked_upserted = 19;
+}

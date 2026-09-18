@@ -1005,12 +1005,12 @@ pub fn compute_tab_insert_index(pointer_x: f32, tab_bar: Rect, tab_widths: &[f32
     tab_widths.len()
 }
 
+/// 📥️ Tabs are painted edge to edge (`layout_stack_cap` advances by the chip width alone),
+/// so the insert midpoints must be measured with no gap — a phantom gap drifted the split
+/// point by `gap × index` and let a drop land one tab off at the end of a long bar.
 pub fn compute_dock_drop_zone(pointer_x: f32, pointer_y: f32, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect) -> Option<DockDropZone> {
     for (path, corner, rect, widths) in tab_bars {
         if rect.contains(pointer_x, pointer_y) {
-            // 📥️ Tabs are painted edge to edge (`layout_stack_cap` advances by the chip width alone),
-            // so the insert midpoints must be measured with no gap — a phantom gap drifted the split
-            // point by `gap × index` and let a drop land one tab off at the end of a long bar.
             let index = compute_tab_insert_index(pointer_x, *rect, widths, 0.0);
             return Some(DockDropZone::Tab { stack_path: path.clone(), corner: *corner, index });
         }
@@ -1171,11 +1171,11 @@ fn dock_tab_label<'a>(tab: &'a DockStackTab, window_labels: &'a HashMap<String, 
     window_labels.get(&tab.window_id).or_else(|| window_labels.get(&tab.window_kind_id)).map(String::as_str).unwrap_or(tab.window_id.as_str())
 }
 
+/// 📥️ An empty corner still offers a drop pad: React renders `mode-dock-corner-drop-pad` at
+/// `min-h-medium min-w-medium` while a drag is live (`🧱️elements/🎨️Canvas/🟦️.tsx:1114`), and
+/// `--size-medium` is `7 × --ui-spacing` — the same token `theme.control_height` carries.
 fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, action_count: usize, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
     let tab_h = theme.control_height;
-    // 📥️ An empty corner still offers a drop pad: React renders `mode-dock-corner-drop-pad` at
-    // `min-h-medium min-w-medium` while a drag is live (`🧱️elements/🎨️Canvas/🟦️.tsx:1114`), and
-    // `--size-medium` is `7 × --ui-spacing` — the same token `theme.control_height` carries.
     let pad = theme.control_height;
     for (corner, tabs) in tabs_by_corner(windows) {
         let widths: Vec<f32> = tabs.iter().map(|tab| dock_tab_chip_width(atlas, theme, dock_tab_label(tab, window_labels), action_count)).collect();
@@ -1547,6 +1547,13 @@ fn register_split_hit(ctx: &mut DockRenderContext<'_>, path: &[usize], index: us
     ctx.input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("dock.split.{}.{index}", path_str(path))), kind: HitKind::DockSplit, drag_axis: Some(axis), drag_data: None });
 }
 
+/// 🪟️ The focus visual: a hairline stroke along the WHOLE stack silhouette (tabs + cutouts +
+/// body), `--active-base` when the stack holds the active window and `--border-normal-color`
+/// otherwise — React's `windowSilhouetteBorderPaint`'s `active`/`normal` kinds
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:7494-7509`) over the same v1 geometry.
+///
+/// 🩸️ The call sat COMMENTED OUT here, so no window ever had an outline on wgpu and the only
+/// focus cue was the active tab's text tint.
 fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usize], node: &DockNode, bounds: Rect, maximized: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str)) {
     let DockNode::Stack { windows, active } = node else {
         return;
@@ -1610,13 +1617,6 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         ctx.draw.end_glass_content();
     }
 
-    // 🪟️ The focus visual: a hairline stroke along the WHOLE stack silhouette (tabs + cutouts +
-    // body), `--active-base` when the stack holds the active window and `--border-normal-color`
-    // otherwise — React's `windowSilhouetteBorderPaint`'s `active`/`normal` kinds
-    // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:7494-7509`) over the same v1 geometry.
-    //
-    // 🩸️ The call sat COMMENTED OUT here, so no window ever had an outline on wgpu and the only
-    // focus cue was the active tab's text tint.
     push_window_silhouette_border(&mut *ctx.draw, &silhouette, theme.stroke_hairline, if globally_active { theme.selected } else { theme.border_normal });
 }
 

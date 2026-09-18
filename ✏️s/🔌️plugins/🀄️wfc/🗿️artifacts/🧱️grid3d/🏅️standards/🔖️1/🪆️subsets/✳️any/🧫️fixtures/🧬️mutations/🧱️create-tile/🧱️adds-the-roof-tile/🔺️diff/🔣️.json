@@ -1,0 +1,43 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": null,
+  "height": null,
+  "depth": null,
+  "cellSizesX": null,
+  "cellSizesY": null,
+  "cellSizesZ": null,
+  "periodicX": null,
+  "periodicY": null,
+  "periodicZ": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      2,
+      {
+        "id": "roof",
+        "label": "Roof",
+        "weight": 1.5,
+        "media": {
+          "kind": "mesh",
+          "mesh": {
+            "positions": [],
+            "indices": [],
+            "color": {
+              "r": 172,
+              "g": 84,
+              "b": 62,
+              "a": 255
+            }
+          }
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

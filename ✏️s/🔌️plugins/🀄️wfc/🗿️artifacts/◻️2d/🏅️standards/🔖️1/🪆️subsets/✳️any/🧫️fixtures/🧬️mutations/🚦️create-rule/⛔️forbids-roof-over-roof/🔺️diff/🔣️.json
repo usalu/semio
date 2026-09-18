@@ -1,0 +1,22 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": [
+    [
+      0,
+      {
+        "id": "rule-roof-roof",
+        "tileAId": "tile-roof",
+        "tileBId": "tile-roof",
+        "allowed": false
+      }
+    ]
+  ]
+}

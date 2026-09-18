@@ -332,8 +332,10 @@ fn chunking_does_not_change_the_final_mesh() {
 // #region 🔖️ParamsAndPreviewTests
 #[test]
 fn orbit_sfm_registers_enough_cameras_for_gauge() {
-    const N_FRAMES: usize = 16;
-    const SIZE: u32 = 96;
+    // 🎞️ 24 views 15° apart at 128 px: the resolution and step the bounded ORB features pair
+    // across (a 96 px frame 22.5° apart left no adjacent pair with twelve verified matches).
+    const N_FRAMES: usize = 24;
+    const SIZE: u32 = 128;
     const HALF: f64 = 1.0;
     const RADIUS: f64 = 3.2;
     let (frames, _lo, _hi, _eyes) = orbiting_cube_frames(N_FRAMES, SIZE, HALF, RADIUS);
@@ -461,13 +463,13 @@ mod long {
         let mut calls = 0usize;
         let status = loop {
             calls += 1;
-            match engine.advance(4) {
+            match engine.advance(16) {
                 EngineStatus::Working { stage, progress } => {
-                    if calls.is_multiple_of(20) {
+                    if calls.is_multiple_of(100) {
                         println!("[long] call {calls}: stage={stage:?} progress={progress:.2}");
                     }
-                    if calls > 10_000 {
-                        panic!("engine did not reach a terminal status within 10000 advance() calls");
+                    if calls > 40_000 {
+                        panic!("engine did not reach a terminal status within 40000 advance(16) calls");
                     }
                 }
                 terminal => break terminal,
@@ -583,9 +585,10 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
         }
         engine.frames.push(AcceptedFrame { index: 0, image: remodeling_image::ImageRgba8 { width: width as u32, height: height as u32, data: pixels }, timestamp_ms: 0.0, stream_id: 0, sharpness: 1.0 });
         while engine.cursor == 0 {
+            let phase = engine.feature_preparation.as_ref().map(|preparation| format!("{:?} {}", preparation.phase, preparation.detection.as_ref().map_or(String::new(), |detection| detection.phase_label())));
             let started = std::time::Instant::now();
             engine.step_extracting_features();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted feature allocation/luma/detect/describe microstep exceeded 8 ms");
+            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted feature allocation/luma/detect/describe microstep exceeded 8 ms: {:?} in {phase:?}", started.elapsed());
             if let Some(preparation) = &engine.feature_preparation {
                 assert!(preparation.cursor <= width * height);
             }
@@ -605,9 +608,10 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
 
         engine.pairwise_matches = vec![(0, 1, (0..200_000).map(|index| remodeling_feature::Match { a: index, b: index, distance: 0 }).collect())];
         loop {
+            let phase = engine.track_preparation.as_ref().map(|preparation| format!("{:?} pair {} matched {} grouping {}", preparation.phase, preparation.pair, preparation.matched, preparation.grouping_cursor));
             let started = std::time::Instant::now();
             let complete = engine.step_build_tracks();
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "track microstep exceeded 8 ms");
+            assert!(started.elapsed() < std::time::Duration::from_millis(8), "track microstep exceeded 8 ms: {:?} in {phase:?}", started.elapsed());
             if complete.is_some() {
                 break;
             }

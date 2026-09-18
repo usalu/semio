@@ -865,6 +865,11 @@ mod native {
             self.recompute_control_flow(event_loop);
         }
 
+        /// 🌓️ The OS switched light/dark under a shell whose appearance preference is
+        /// `"system"`. The next `FrameBuildPhase::ThemeResolve` re-reads the published value,
+        /// so the only thing owed here is a redraw — the twin of React's ONE shared
+        /// `matchMedia("(prefers-color-scheme: dark)")` `change` listener
+        /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`).
         // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
         fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
             let Some(window) = self.window.clone() else { return };
@@ -900,11 +905,6 @@ mod native {
                         host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
                     }
                 }
-                // 🌓️ The OS switched light/dark under a shell whose appearance preference is
-                // `"system"`. The next `FrameBuildPhase::ThemeResolve` re-reads the published value,
-                // so the only thing owed here is a redraw — the twin of React's ONE shared
-                // `matchMedia("(prefers-color-scheme: dark)")` `change` listener
-                // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`).
                 WindowEvent::ThemeChanged(theme) => {
                     publish_system_appearance(Some(*theme));
                     window.request_redraw();

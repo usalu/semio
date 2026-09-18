@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package semio.s.wfc.wfc2d;
+
+message Wfc2dChangeSeed {
+  uint64 seed = 1;
+}
+
+message Wfc2dCreateSlot {
+  Wfc2dSlot slot = 1;
+}
+
+message Wfc2dDeleteSlot {
+  string id = 1;
+}
+
+message Wfc2dMoveSlot {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+}
+
+message Wfc2dResizeSlot {
+  string id = 1;
+  double width = 2;
+  double height = 3;
+}
+
+message Wfc2dConnectSlots {
+  Wfc2dSlotEdge edge = 1;
+}
+
+message Wfc2dDisconnectSlots {
+  string id = 1;
+}
+
+message Wfc2dPinSlot {
+  string id = 1;
+  string tile_id = 2;
+}
+
+message Wfc2dUnpinSlot {
+  string id = 1;
+}
+
+message Wfc2dCreateTile {
+  Wfc2dTile tile = 1;
+}
+
+message Wfc2dDeleteTile {
+  string id = 1;
+}
+
+message Wfc2dChangeTileWeight {
+  string tile_id = 1;
+  double weight = 2;
+}
+
+message Wfc2dChangeTileMedia {
+  string tile_id = 1;
+  Wfc2dTileMedia media = 2;
+}
+
+message Wfc2dCreateRule {
+  Wfc2dRule rule = 1;
+}
+
+message Wfc2dDeleteRule {
+  string id = 1;
+}
+
+message Wfc2dMutation {
+  oneof mutation {
+    Wfc2dChangeSeed change_seed = 1;
+    Wfc2dCreateSlot create_slot = 2;
+    Wfc2dDeleteSlot delete_slot = 3;
+    Wfc2dMoveSlot move_slot = 4;
+    Wfc2dResizeSlot resize_slot = 5;
+    Wfc2dConnectSlots connect_slots = 6;
+    Wfc2dDisconnectSlots disconnect_slots = 7;
+    Wfc2dPinSlot pin_slot = 8;
+    Wfc2dUnpinSlot unpin_slot = 9;
+    Wfc2dCreateTile create_tile = 10;
+    Wfc2dDeleteTile delete_tile = 11;
+    Wfc2dChangeTileWeight change_tile_weight = 12;
+    Wfc2dChangeTileMedia change_tile_media = 13;
+    Wfc2dCreateRule create_rule = 14;
+    Wfc2dDeleteRule delete_rule = 15;
+  }
+}

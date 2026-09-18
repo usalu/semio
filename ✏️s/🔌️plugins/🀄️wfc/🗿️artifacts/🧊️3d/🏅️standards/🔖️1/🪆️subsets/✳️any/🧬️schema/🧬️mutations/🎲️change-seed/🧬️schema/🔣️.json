@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/change-seed/schema.json",
+  "title": "ChangeSeed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "seed"
+  ],
+  "properties": {
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

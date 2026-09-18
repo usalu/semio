@@ -718,21 +718,22 @@ impl BrowserRendererBootstrap {
 /// This is the same class of defect as the 27 dead `eprintln!` traces
 /// (`📓️wgpu-input-hit-runtime-2026-09-13.md` §3) and is fixed the same way: report it where the
 /// Worker can actually be heard.
+///
+/// 🧭️ A wasm panic's own `PanicInfo` names the file the ALLOCATOR panicked in
+/// (`raw_vec/mod.rs:28: capacity overflow`), never the code that asked — a bare message
+/// that cannot be acted on. A JS `Error` minted here captures the whole live call stack,
+/// and a debug renderer build keeps its name section, so the stack names the Rust
+/// functions (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w3a-asset-decoder-boot-fault.md`).
 fn install_worker_panic_trace() {
     use std::sync::Once;
     static INSTALLED: Once = Once::new();
     INSTALLED.call_once(|| {
         let previous = std::panic::take_hook();
         std::panic::set_hook(Box::new(move |info| {
-            // 🧭️ A wasm panic's own `PanicInfo` names the file the ALLOCATOR panicked in
-            // (`raw_vec/mod.rs:28: capacity overflow`), never the code that asked — a bare message
-            // that cannot be acted on. A JS `Error` minted here captures the whole live call stack,
-            // and a debug renderer build keeps its name section, so the stack names the Rust
-            // functions (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-            // `📓️w3a-asset-decoder-boot-fault.md`).
             let witness = js_sys::Error::new("wgpu-worker panic stack");
             let stack = js_sys::Reflect::get(&witness, &wasm_bindgen::JsValue::from_str("stack")).unwrap_or_else(|_| wasm_bindgen::JsValue::from_str("<stack unavailable>"));
-            web_sys::console::error_2(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker panicked: {info}")), &stack);
+            web_sys::console::error_2(&wasm_bindgen::JsValue::from_str(&format!("wgpu-worker panicked: {info}")), &stack);
             previous(info);
         }));
     });

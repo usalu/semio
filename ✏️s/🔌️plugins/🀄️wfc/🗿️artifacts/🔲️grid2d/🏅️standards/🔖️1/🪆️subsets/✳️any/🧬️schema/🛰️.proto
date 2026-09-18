@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.wfc.grid2d;
+
+import "snapshot.proto";
+
+message Grid2dArtifact {
+  Grid2dSnapshot snapshot = 1;
+}

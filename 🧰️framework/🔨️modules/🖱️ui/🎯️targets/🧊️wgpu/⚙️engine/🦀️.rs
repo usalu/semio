@@ -159,6 +159,10 @@ impl RetainedPaintWalk {
         Self { visits, len: 1 }
     }
 
+    /// 🪟️ An OPEN floating overlay's content root ignores its in-flow parent offset and takes
+    /// the placement `events::resolve_overlay_placement_side` settled on — the SAME override
+    /// `events::hit_test`/`absolute_rect` apply, so what is painted is what is hit
+    /// (`UiTree::overlay_origins`). Everything below it accumulates from there as usual.
     fn step(&mut self, tree: &UiTree) -> RetainedPaintWalkStep {
         let Some(index) = self.len.checked_sub(1) else { return RetainedPaintWalkStep::Complete };
         let Some(visit) = self.visits[index].as_mut() else { return RetainedPaintWalkStep::DepthFault };
@@ -177,10 +181,6 @@ impl RetainedPaintWalk {
             // phase and the hit-registry phase walk through here, so a scrolled container can never
             // paint its children at one origin and register them at another.
             let (scroll_x, scroll_y) = tree.node(visit.node).filter(|node| node.flags.contains(NodeFlags::SCROLLABLE)).map_or((0.0, 0.0), |node| node.state.scroll_offset);
-            // 🪟️ An OPEN floating overlay's content root ignores its in-flow parent offset and takes
-            // the placement `events::resolve_overlay_placement_side` settled on — the SAME override
-            // `events::hit_test`/`absolute_rect` apply, so what is painted is what is hit
-            // (`UiTree::overlay_origins`). Everything below it accumulates from there as usual.
             let (child_origin_x, child_origin_y) = tree.overlay_walk_origin(child).unwrap_or((visit.origin_x + layout.x - scroll_x, visit.origin_y + layout.y - scroll_y));
             let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
             self.visits[self.len] = Some(child_visit);

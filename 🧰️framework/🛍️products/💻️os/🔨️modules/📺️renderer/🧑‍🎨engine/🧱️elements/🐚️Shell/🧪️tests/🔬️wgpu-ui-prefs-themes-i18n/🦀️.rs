@@ -75,48 +75,51 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
     println!("[DEBUG] wgpu replayed the full shared OS UI preference fixture into its live host projection");
 }
 
-/// 🧪️ `env_lock` treats an empty-string env value the same as unset (matches
-/// `FrameworkOsLocks`' optional-string semantics: an empty `VITE_SEMIO_LOCKED_*` never locks).
-#[test]
-fn env_lock_ignores_unset_and_empty() {
-    assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
-    unsafe {
-        std::env::set_var("SEMIO_WP14_TEST_EMPTY_VAR", "");
-    }
-    assert_eq!(env_lock("SEMIO_WP14_TEST_EMPTY_VAR"), None);
-    unsafe {
-        std::env::set_var("SEMIO_WP14_TEST_EMPTY_VAR", "en");
-    }
-    assert_eq!(env_lock("SEMIO_WP14_TEST_EMPTY_VAR"), Some("en".to_string()));
-    unsafe {
-        std::env::remove_var("SEMIO_WP14_TEST_EMPTY_VAR");
-    }
+/// 🧭️ Installs one lock set and hands back the descriptor that was in place, so a law restores the
+/// thread exactly as it found it. The process env is NOT the source of truth: `resolve_environment_
+/// boot_descriptor` reads `SEMIO_LOCKED_*` ONCE, when this thread first touches `BOOT_DESCRIPTOR`, and
+/// every later read goes to the installed descriptor (`🧊️renderer/🦀️.rs:15530`, `:15631`). A
+/// `std::env::set_var` after that point can never reach `env_lock` — which is why these two laws
+/// failed for a whole wave while the code they test was correct
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration; W4a's own hand-off).
+fn with_boot_locks(locks: crate::WgpuBootLocks) -> crate::WgpuBootDescriptor {
+    let previous = crate::boot_descriptor();
+    crate::apply_boot_descriptor(crate::WgpuBootDescriptor { locks, ..previous.clone() }).expect("bounded test lock axes");
+    previous
 }
 
-/// 🧪️ `shell_pref_locks` wires `SEMIO_LOCKED_*` onto the four lockable fields — byte-identical
-/// env var names to `framework/product/os/dev/js/index.ts:19-23`'s `VITE_SEMIO_LOCKED_*` reads.
+/// 🧪️ `env_lock` treats an empty lock value the same as unset (matches `FrameworkOsLocks`'
+/// optional-string semantics: an empty `VITE_SEMIO_LOCKED_*` never locks), and a name that is not one
+/// of the five lockable axes never locks either.
+#[test]
+fn env_lock_ignores_unset_and_empty() {
+    let previous = with_boot_locks(crate::WgpuBootLocks::default());
+    assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
+    assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), None);
+    let _ = with_boot_locks(crate::WgpuBootLocks { locale: String::new(), ..Default::default() });
+    assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), None);
+    let _ = with_boot_locks(crate::WgpuBootLocks { locale: "en".to_string(), ..Default::default() });
+    assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), Some("en".to_string()));
+    assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
+    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
+}
+
+/// 🧪️ `shell_pref_locks` wires the four lockable axes onto the four lockable fields — byte-identical
+/// axis names to `framework/product/os/dev/js/index.ts:19-23`'s `VITE_SEMIO_LOCKED_*` reads, which
+/// `🧭️boot-descriptor/🟦️.ts` resolves into `locks` before the mount.
 #[test]
 fn shell_pref_locks_reads_the_four_lockable_envs() {
-    unsafe {
-        std::env::set_var("SEMIO_LOCKED_APPEARANCE", "dark");
-        std::env::set_var("SEMIO_LOCKED_LOCALE", "de");
-        std::env::set_var("SEMIO_LOCKED_TERMINOLOGY", "reuse");
-        std::env::set_var("SEMIO_LOCKED_THEME", "mono");
-    }
+    let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), locale: "de".to_string(), terminology: "reuse".to_string(), theme_id: "mono".to_string(), ..Default::default() });
     let locks = shell_pref_locks();
     assert_eq!(locks.appearance.as_deref(), Some("dark"));
     assert_eq!(locks.locale.as_deref(), Some("de"));
     assert_eq!(locks.terminology.as_deref(), Some("reuse"));
     assert_eq!(locks.theme_id.as_deref(), Some("mono"));
-    unsafe {
-        std::env::remove_var("SEMIO_LOCKED_APPEARANCE");
-        std::env::remove_var("SEMIO_LOCKED_LOCALE");
-        std::env::remove_var("SEMIO_LOCKED_TERMINOLOGY");
-        std::env::remove_var("SEMIO_LOCKED_THEME");
-    }
+    let _ = with_boot_locks(crate::WgpuBootLocks::default());
     let unlocked = shell_pref_locks();
     assert_eq!(unlocked.appearance, None);
     assert_eq!(unlocked.locale, None);
+    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
 /// 🧪️ A locked appearance wins over storage at load time — mirrors `os-shell.tsx:862`'s
@@ -175,6 +178,10 @@ fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
 
 /// 🧪️ `resolve_theme_for_ids("semio", _)` is exactly `resolve_theme` (the pre-WP14 behavior),
 /// and `"mono"` resolves to a *different* real palette (not a copy of semio's).
+///
+/// ⚫️ Since ticket 26/09/17 packet W2k mono is the ui target's own `Theme::mono`, resolved from the
+/// GENERATED `CHROME_MONO_*` palettes instead of 20 hand-written `Rgba::from_srgb8` literals in
+/// this crate — so its floor is mono's `chrome.base`, not the authored `canvas` the hand-port read.
 #[test]
 fn resolve_theme_for_ids_semio_and_mono_differ() {
     let semio_dark = resolve_theme_for_ids("semio", "dark");
@@ -182,9 +189,6 @@ fn resolve_theme_for_ids_semio_and_mono_differ() {
     assert_eq!(semio_dark.background, plain_dark.background);
     let mono_dark = resolve_theme_for_ids("mono", "dark");
     assert_ne!(mono_dark.background, semio_dark.background);
-    // ⚫️ Since ticket 26/09/17 packet W2k mono is the ui target's own `Theme::mono`, resolved from the
-    // GENERATED `CHROME_MONO_*` palettes instead of 20 hand-written `Rgba::from_srgb8` literals in
-    // this crate — so its floor is mono's `chrome.base`, not the authored `canvas` the hand-port read.
     assert_eq!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(true).background);
     assert_ne!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(false).background, "both appearances resolve");
     // Metrics are shared with the base theme (mono only recolors chrome paints).

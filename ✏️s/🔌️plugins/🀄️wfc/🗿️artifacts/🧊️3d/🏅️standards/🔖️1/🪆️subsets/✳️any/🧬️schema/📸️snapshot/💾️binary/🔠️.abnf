@@ -1,0 +1,2 @@
+document = 1*OCTET
+OCTET = %x00-FF

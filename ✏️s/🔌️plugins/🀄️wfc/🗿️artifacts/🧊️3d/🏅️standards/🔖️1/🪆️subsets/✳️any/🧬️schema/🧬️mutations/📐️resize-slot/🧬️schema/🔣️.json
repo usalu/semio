@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/resize-slot/schema.json",
+  "title": "ResizeSlot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "depth",
+    "height",
+    "id",
+    "width"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "width": {
+      "type": "number"
+    },
+    "height": {
+      "type": "number"
+    },
+    "depth": {
+      "type": "number"
+    }
+  }
+}

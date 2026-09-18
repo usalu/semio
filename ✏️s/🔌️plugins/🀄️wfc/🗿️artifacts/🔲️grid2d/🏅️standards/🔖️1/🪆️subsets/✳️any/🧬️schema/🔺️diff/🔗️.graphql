@@ -1,0 +1,41 @@
+# 🔺️ s.wfc.grid2d diff facet — a sparse, key-addressed structural delta, never a whole-snapshot
+# capture. Collection rows carry their FINAL-state index so applying restores position and value.
+
+type Grid2dTileRow {
+  index: Int!
+  tile: WfcTile2d!
+}
+
+type Grid2dRuleRow {
+  index: Int!
+  rule: WfcAdjacencyRule2d!
+}
+
+type Grid2dPinnedRow {
+  index: Int!
+  cell: WfcPinnedCell2d!
+}
+
+type Grid2dMaskedRow {
+  index: Int!
+  cell: WfcCell2d!
+}
+
+type Grid2dDiff {
+  schema: String
+  seed: Int
+  width: Int
+  height: Int
+  cellWidth: Float
+  cellHeight: Float
+  periodicX: Boolean
+  periodicY: Boolean
+  tilesRemoved: [String!]!
+  tilesUpserted: [Grid2dTileRow!]!
+  rulesRemoved: [String!]!
+  rulesUpserted: [Grid2dRuleRow!]!
+  pinnedRemoved: [String!]!
+  pinnedUpserted: [Grid2dPinnedRow!]!
+  maskedRemoved: [String!]!
+  maskedUpserted: [Grid2dMaskedRow!]!
+}

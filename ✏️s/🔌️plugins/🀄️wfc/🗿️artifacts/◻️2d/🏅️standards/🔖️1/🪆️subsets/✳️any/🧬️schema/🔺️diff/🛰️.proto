@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package semio.s.wfc.wfc2d;
+
+message Wfc2dSlotUpsert {
+  uint32 index = 1;
+  Wfc2dSlot value = 2;
+}
+
+message Wfc2dSlotEdgeUpsert {
+  uint32 index = 1;
+  Wfc2dSlotEdge value = 2;
+}
+
+message Wfc2dTileUpsert {
+  uint32 index = 1;
+  Wfc2dTile value = 2;
+}
+
+message Wfc2dRuleUpsert {
+  uint32 index = 1;
+  Wfc2dRule value = 2;
+}
+
+message Wfc2dDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  repeated string slots_removed = 3;
+  repeated Wfc2dSlotUpsert slots_upserted = 4;
+  repeated string edges_removed = 5;
+  repeated Wfc2dSlotEdgeUpsert edges_upserted = 6;
+  repeated string tiles_removed = 7;
+  repeated Wfc2dTileUpsert tiles_upserted = 8;
+  repeated string rules_removed = 9;
+  repeated Wfc2dRuleUpsert rules_upserted = 10;
+}

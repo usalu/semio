@@ -5,10 +5,10 @@ use super::*;
 // (panel-tab lane, 2026-09-13) — both are re-pointed here so the crate's test target builds again.
 use semio_framework::PanelTabKind;
 
+/// 🧪️ `ShellState::new` calls `load_persisted_dock`, which — on native — reads whatever the
+/// machine running the test happens to have in its `semio.os.config` document. Every assertion
+/// below explicitly sets the state it exercises afterward, so the outcome never depends on that.
 fn fresh_state() -> ShellState {
-    // 🧪️ `ShellState::new` calls `load_persisted_dock`, which — on native — reads whatever the
-    // machine running the test happens to have in its `semio.os.config` document. Every assertion
-    // below explicitly sets the state it exercises afterward, so the outcome never depends on that.
     ShellState::new(Vec::new(), String::new())
 }
 
@@ -439,6 +439,11 @@ fn move_tab_in_dock_reanchors_a_tab_and_refuses_self_drops() {
 /// `preferences` key clobbers whatever dock layer was written a microsecond earlier. The layer rules —
 /// per-app precedence, `None` removal, the version gate — are what this pins, and they are the whole
 /// of what a renderer switch depends on.
+///
+/// 🗄️ A per-app layer wins over the shared `os` one; removing it falls back to `os`; removing both
+/// leaves nothing — `DockLayoutStore::getSnapshot`/`save`/`saveOs` exactly.
+///
+/// 🧭️ And moving the tab back to its computed default drops the override entirely, so nothing persists.
 #[test]
 fn dock_override_round_trips_through_the_os_shell_config_document() {
     let mut shell = fixture_dock_shell();
@@ -457,8 +462,6 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
     assert_eq!(reloaded.locate("fixture.details").map(|(anchor, _)| anchor), Some(PanelAnchor::TopMiddle));
     assert_eq!(dock_skeleton_of(&reloaded), dock_skeleton_of(&shell.dock_tabs));
 
-    // 🗄️ A per-app layer wins over the shared `os` one; removing it falls back to `os`; removing both
-    // leaves nothing — `DockLayoutStore::getSnapshot`/`save`/`saveOs` exactly.
     let default_skeleton = dock_skeleton_of(&shell.default_dock());
     write_os_shell_config_layer_in(&mut config, "dockLayouts", None, Some(&default_skeleton));
     let still_app: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("per-app layer still wins");
@@ -469,7 +472,6 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
     write_os_shell_config_layer_in::<DockSkeleton>(&mut config, "dockLayouts", None, None);
     assert!(read_os_shell_config_layer::<DockSkeleton>(&config, "dockLayouts", Some("fixture-app")).is_none());
 
-    // 🧭️ And moving the tab back to its computed default drops the override entirely, so nothing persists.
     let back = DockTabMoveTarget { anchor: PanelAnchor::TopRight, parent_path: Vec::new(), index: 0 };
     assert!(shell.move_dock_tab("fixture.details", &back));
     assert!(shell.dock_override.is_none(), "a dock back at its computed default persists no override");
@@ -505,6 +507,9 @@ fn dock_ui_state_round_trips_visibility_size_and_path() {
 /// second call with nothing changed must not write again — the render-loop hook that replaces patching
 /// every `ui.panelToggle.*` call site. Asserted against the owned present-state snapshot rather than the
 /// shared store, for the same read-modify-write reason the override test above documents.
+///
+/// Nothing changed since: a wrongly-unconditional write would be observable as a new snapshot object
+/// replacing this deliberately-wrong marker.
 #[test]
 fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
     let mut shell = fixture_dock_shell();
@@ -514,8 +519,6 @@ fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
     let persisted = shell.chrome_present.last_persisted_dock_ui.clone().expect("first call must persist");
     assert!(persisted.anchors.get("top-left").and_then(|entry| entry.visible).unwrap_or(false));
 
-    // Nothing changed since: a wrongly-unconditional write would be observable as a new snapshot object
-    // replacing this deliberately-wrong marker.
     shell.chrome_present.last_persisted_dock_ui = Some(persisted.clone());
     shell.persist_dock_ui_if_changed();
     assert_eq!(shell.chrome_present.last_persisted_dock_ui.as_ref(), Some(&persisted), "unchanged state must not re-persist");

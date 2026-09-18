@@ -81,6 +81,40 @@ pub fn fast_corners(img: &ImageGray, threshold: f32) -> Vec<(u32, u32, f32)> {
     out
 }
 
+/// 🟢️ [`fast_corners`]'s test restricted to rows `[first, last)` (clamped to the border margin),
+/// answering only the corner positions.
+fn fast_corner_rows(img: &ImageGray, threshold: f32, first: u32, last: u32) -> Vec<(u32, u32)> {
+    let (w, h) = (i64::from(img.width), i64::from(img.height));
+    let mut out = Vec::new();
+    if w <= 2 * FAST_BORDER_MARGIN || h <= 2 * FAST_BORDER_MARGIN {
+        return out;
+    }
+    let first = i64::from(first).max(FAST_BORDER_MARGIN);
+    let last = i64::from(last).min(h - FAST_BORDER_MARGIN);
+    for y in first..last {
+        for x in FAST_BORDER_MARGIN..(w - FAST_BORDER_MARGIN) {
+            let center = img.get(x as u32, y as u32);
+            let circle: [f32; 16] = std::array::from_fn(|i| {
+                let (dx, dy) = FAST_CIRCLE_OFFSETS[i];
+                img.get((x + i64::from(dx)) as u32, (y + i64::from(dy)) as u32)
+            });
+            let signs: [i8; 16] = std::array::from_fn(|i| {
+                if circle[i] > center + threshold {
+                    1
+                } else if circle[i] < center - threshold {
+                    -1
+                } else {
+                    0
+                }
+            });
+            if fast_longest_arc(&signs).is_some_and(|(_, len)| len >= FAST_ARC_LENGTH) {
+                out.push((x as u32, y as u32));
+            }
+        }
+    }
+    out
+}
+
 fn structure_tensor_fields(img: &ImageGray) -> (ImageGray, ImageGray, ImageGray) {
     let g = scharr_gradients(img);
     let gx2 = ImageGray { width: img.width, height: img.height, data: g.gx.iter().map(|&v| v * v).collect() };
@@ -235,8 +269,16 @@ pub enum BoundedDetector {
 enum BoundedDetectionPhase {
     /// Building pyramid level `level + 1` from level `level`, `row` rows of it done.
     Level { level: usize, row: u32 },
-    /// Scoring corner candidates on `level`, `row` rows of it done.
+    /// Scharr gradient products of `level`, `row` rows done.
+    Gradients { level: usize, row: u32 },
+    /// Horizontal pass of the structure-tensor blur, `row` rows done.
+    BlurRows { level: usize, row: u32 },
+    /// Vertical pass of the blur and the Harris score, `row` rows done.
+    BlurColumns { level: usize, row: u32 },
+    /// Testing the corners of `level`, `row` rows of it done (positions and scores kept per row).
     Corners { level: usize, row: u32 },
+    /// Suppressing non-maxima among the kept corners of `level`, `row` rows of it done.
+    Suppress { level: usize, row: u32 },
     /// Spreading and ranking the candidates of each level.
     Select,
     /// Assigning intensity-centroid orientations, `cursor` keypoints done.
@@ -253,6 +295,10 @@ enum BoundedDetectionPhase {
 /// `rows × width` pixels plus that fixed halo.
 pub struct BoundedDetectionPreparation {
     detector: BoundedDetector,
+    /// 🌄️ The active level's streamed Harris response.
+    harris: Option<HarrisStream>,
+    /// 🟢️ The active level's corners by row: `(x, score)`, from the FAST pass, for the suppression.
+    corner_rows: Vec<Vec<(u32, f32)>>,
     /// 🧭️ Leave every keypoint at angle `0` (an upright descriptor) instead of steering it by the
     /// intensity centroid. Steering wins on the orbit fixture at every step size measured (5°–36°,
     /// `diagnose_orb_matching_vs_orbit_step`), so it is the default; upright is the option for
@@ -268,9 +314,112 @@ pub struct BoundedDetectionPreparation {
 
 /// 🌫️ Rows the blur of one pyramid level reaches past a band (`sigma = 1` → kernel radius 3).
 const LEVEL_BLUR_HALO_ROWS: u32 = 3;
-/// 🌄️ Rows the Harris structure tensor (Scharr 3×3 + `sigma = 1.5` blur, radius 5) and FAST
-/// (radius 3) reach past a band.
-const CORNER_HALO_ROWS: u32 = 6;
+/// 🌄️ Rows the corner suppression (radius 3) reaches past a band.
+const CORNER_HALO_ROWS: u32 = 3;
+
+/// 🌄️ The Harris response of one level computed in row bands: the Scharr gradient products, their
+/// separable `sigma = 1.5` blur as two streamed passes, and the score. Each pass reads only what
+/// earlier passes finished, so a band costs its own rows and nothing is recomputed for a halo —
+/// the halo-band version of this (whole filters re-run on 12 extra rows per band) could not keep
+/// an adversarial 512×512 frame's band inside a worker step.
+struct HarrisStream {
+    width: u32,
+    height: u32,
+    /// Scharr products `gx²`, `gy²`, `gx·gy`, then (in place) their horizontally blurred versions.
+    xx: Vec<f32>,
+    yy: Vec<f32>,
+    xy: Vec<f32>,
+    /// Horizontally blurred products, source of the vertical pass.
+    hxx: Vec<f32>,
+    hyy: Vec<f32>,
+    hxy: Vec<f32>,
+    /// Per-pixel Harris response.
+    score: Vec<f32>,
+    kernel: Vec<f32>,
+}
+
+fn mirror(index: i64, n: i64) -> i64 {
+    let mut index = index;
+    loop {
+        if index < 0 {
+            index = -1 - index;
+        } else if index >= n {
+            index = 2 * n - 1 - index;
+        } else {
+            return index;
+        }
+    }
+}
+
+impl HarrisStream {
+    fn new(width: u32, height: u32) -> Self {
+        let pixels = width as usize * height as usize;
+        let radius = (3.0 * ORB_STRUCTURE_TENSOR_SIGMA).ceil() as i64;
+        let mut kernel: Vec<f32> = (-radius..=radius).map(|k| ((k * k) as f32 * (-0.5 / (ORB_STRUCTURE_TENSOR_SIGMA * ORB_STRUCTURE_TENSOR_SIGMA))).exp()).collect();
+        let total: f32 = kernel.iter().sum();
+        for weight in &mut kernel {
+            *weight /= total;
+        }
+        Self { width, height, xx: vec![0.0; pixels], yy: vec![0.0; pixels], xy: vec![0.0; pixels], hxx: vec![0.0; pixels], hyy: vec![0.0; pixels], hxy: vec![0.0; pixels], score: vec![0.0; pixels], kernel }
+    }
+
+    /// Scharr gradient products of rows `[first, last)`.
+    fn gradients(&mut self, image: &ImageGray, first: u32, last: u32) {
+        let (w, h) = (i64::from(self.width), i64::from(self.height));
+        for y in i64::from(first)..i64::from(last) {
+            for x in 0..w {
+                let p = |dx: i64, dy: i64| image.data[(mirror(y + dy, h) * w + mirror(x + dx, w)) as usize];
+                let gx = (3.0 * (p(1, -1) - p(-1, -1)) + 10.0 * (p(1, 0) - p(-1, 0)) + 3.0 * (p(1, 1) - p(-1, 1))) / 32.0;
+                let gy = (3.0 * (p(-1, 1) - p(-1, -1)) + 10.0 * (p(0, 1) - p(0, -1)) + 3.0 * (p(1, 1) - p(1, -1))) / 32.0;
+                let index = (y * w + x) as usize;
+                self.xx[index] = gx * gx;
+                self.yy[index] = gy * gy;
+                self.xy[index] = gx * gy;
+            }
+        }
+    }
+
+    /// Horizontal blur of rows `[first, last)`.
+    fn blur_rows(&mut self, first: u32, last: u32) {
+        let w = i64::from(self.width);
+        let radius = (self.kernel.len() / 2) as i64;
+        for y in i64::from(first)..i64::from(last) {
+            for x in 0..w {
+                let (mut sxx, mut syy, mut sxy) = (0.0f32, 0.0f32, 0.0f32);
+                for (k, weight) in self.kernel.iter().enumerate() {
+                    let source = (y * w + mirror(x + k as i64 - radius, w)) as usize;
+                    sxx += weight * self.xx[source];
+                    syy += weight * self.yy[source];
+                    sxy += weight * self.xy[source];
+                }
+                let index = (y * w + x) as usize;
+                self.hxx[index] = sxx;
+                self.hyy[index] = syy;
+                self.hxy[index] = sxy;
+            }
+        }
+    }
+
+    /// Vertical blur and Harris score of rows `[first, last)` (reads the finished horizontal pass).
+    fn blur_columns(&mut self, first: u32, last: u32) {
+        let (w, h) = (i64::from(self.width), i64::from(self.height));
+        let radius = (self.kernel.len() / 2) as i64;
+        for y in i64::from(first)..i64::from(last) {
+            for x in 0..w {
+                let (mut sxx, mut syy, mut sxy) = (0.0f32, 0.0f32, 0.0f32);
+                for (k, weight) in self.kernel.iter().enumerate() {
+                    let source = (mirror(y + k as i64 - radius, h) * w + x) as usize;
+                    sxx += weight * self.hxx[source];
+                    syy += weight * self.hyy[source];
+                    sxy += weight * self.hxy[source];
+                }
+                let det = sxx * syy - sxy * sxy;
+                let trace = sxx + syy;
+                self.score[(y * w + x) as usize] = det - ORB_HARRIS_K * trace * trace;
+            }
+        }
+    }
+}
 /// 🧭️ Keypoints one orientation call handles per fuel unit.
 const ORIENTATIONS_PER_UNIT: usize = 8;
 /// 🎯️ Radius (pixels, per level) inside which only the strongest candidate survives. FAST answers a
@@ -280,33 +429,11 @@ const ORIENTATIONS_PER_UNIT: usize = 8;
 /// registered frame and every registration after the fifth starved.
 const CANDIDATE_SUPPRESSION_RADIUS: u32 = 3;
 
-/// 🎯️ Non-maximum suppression over scored candidates: strongest first, each kept unless a kept
-/// candidate lies within `radius` (Chebyshev) of it. Grid-bucketed, so linear in the candidates.
-fn suppress_non_maxima(mut candidates: Vec<(u32, u32, f32)>, radius: u32) -> Vec<(u32, u32, f32)> {
-    let cell = radius.max(1);
-    candidates.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal).then_with(|| (a.1, a.0).cmp(&(b.1, b.0))));
-    let mut kept: std::collections::HashMap<(u32, u32), Vec<(u32, u32)>> = std::collections::HashMap::new();
-    let mut out = Vec::with_capacity(candidates.len());
-    for (x, y, score) in candidates {
-        let (cx, cy) = (x / cell, y / cell);
-        let mut suppressed = false;
-        'cells: for ny in cy.saturating_sub(1)..=cy + 1 {
-            for nx in cx.saturating_sub(1)..=cx + 1 {
-                if let Some(points) = kept.get(&(nx, ny)) {
-                    if points.iter().any(|&(kx, ky)| kx.abs_diff(x) <= radius && ky.abs_diff(y) <= radius) {
-                        suppressed = true;
-                        break 'cells;
-                    }
-                }
-            }
-        }
-        if !suppressed {
-            kept.entry((cx, cy)).or_default().push((x, y));
-            out.push((x, y, score));
-        }
-    }
-    out
-}
+/// 🎯️ Candidates the whole level keeps after suppression, as a multiple of the target count and
+/// spread evenly over the row bands (never fewer than this many per band), so an adversarial image
+/// (every pixel a corner) cannot make the final spread's work unbounded.
+const CANDIDATE_MULTIPLE_OF_TARGET: usize = 4;
+const MIN_CANDIDATES_PER_BAND: usize = 8;
 
 impl BoundedDetectionPreparation {
     /// 🧭️ Detection over `levels` pyramid levels of `base`, aiming at `target_count` keypoints.
@@ -315,8 +442,8 @@ impl BoundedDetectionPreparation {
             BoundedDetector::Orb => levels.max(1),
             BoundedDetector::Harris => 1,
         };
-        let phase = if level_count > 1 && base.width > 1 && base.height > 1 { BoundedDetectionPhase::Level { level: 0, row: 0 } } else { BoundedDetectionPhase::Corners { level: 0, row: 0 } };
-        Self { detector, upright, target_count, levels: vec![base], level_count, candidates: Vec::new(), keypoints: Vec::new(), phase }
+        let phase = if level_count > 1 && base.width > 1 && base.height > 1 { BoundedDetectionPhase::Level { level: 0, row: 0 } } else { BoundedDetectionPhase::Gradients { level: 0, row: 0 } };
+        Self { detector, harris: None, corner_rows: Vec::new(), upright, target_count, levels: vec![base], level_count, candidates: Vec::new(), keypoints: Vec::new(), phase }
     }
 
     /// 📏️ The rows `[first, last)` of `image` with up to `halo` rows on either side, and the offset
@@ -354,42 +481,111 @@ impl BoundedDetectionPreparation {
                 if end == next_height {
                     let built = level + 1;
                     let last = &self.levels[built];
-                    self.phase = if built + 1 < self.level_count && last.width > 1 && last.height > 1 { BoundedDetectionPhase::Level { level: built, row: 0 } } else { BoundedDetectionPhase::Corners { level: 0, row: 0 } };
+                    self.phase = if built + 1 < self.level_count && last.width > 1 && last.height > 1 { BoundedDetectionPhase::Level { level: built, row: 0 } } else { BoundedDetectionPhase::Gradients { level: 0, row: 0 } };
                 } else {
                     self.phase = BoundedDetectionPhase::Level { level, row: end };
                 }
             }
+            BoundedDetectionPhase::Gradients { level, row } => {
+                let image = &self.levels[level];
+                let stream = self.harris.get_or_insert_with(|| HarrisStream::new(image.width, image.height));
+                let end = (row + rows).min(image.height);
+                stream.gradients(image, row, end);
+                self.phase = if end == image.height { BoundedDetectionPhase::BlurRows { level, row: 0 } } else { BoundedDetectionPhase::Gradients { level, row: end } };
+            }
+            BoundedDetectionPhase::BlurRows { level, row } => {
+                let height = self.levels[level].height;
+                let stream = self.harris.as_mut().expect("harris stream");
+                let end = (row + rows).min(height);
+                stream.blur_rows(row, end);
+                self.phase = if end == height { BoundedDetectionPhase::BlurColumns { level, row: 0 } } else { BoundedDetectionPhase::BlurRows { level, row: end } };
+            }
+            BoundedDetectionPhase::BlurColumns { level, row } => {
+                let height = self.levels[level].height;
+                let stream = self.harris.as_mut().expect("harris stream");
+                let end = (row + rows).min(height);
+                stream.blur_columns(row, end);
+                self.phase = if end == height { BoundedDetectionPhase::Corners { level, row: 0 } } else { BoundedDetectionPhase::BlurColumns { level, row: end } };
+            }
             BoundedDetectionPhase::Corners { level, row } => {
+                let image = &self.levels[level];
+                let stream = self.harris.as_ref().expect("harris stream");
+                if self.corner_rows.len() != image.height as usize {
+                    self.corner_rows = vec![Vec::new(); image.height as usize];
+                }
+                let end = (row + rows).min(image.height);
+                if image.width > 2 * FAST_BORDER_MARGIN as u32 && image.height > 2 * FAST_BORDER_MARGIN as u32 {
+                    let positions: Vec<(u32, u32)> = match self.detector {
+                        BoundedDetector::Orb => fast_corner_rows(image, ORB_FAST_THRESHOLD, row, end),
+                        BoundedDetector::Harris => (row..end).flat_map(|y| (0..image.width).map(move |x| (x, y))).collect(),
+                    };
+                    for (x, y) in positions {
+                        let score = stream.score[(y * image.width + x) as usize];
+                        if score > 0.0 {
+                            self.corner_rows[y as usize].push((x, score));
+                        }
+                    }
+                }
+                self.phase = if end == image.height { BoundedDetectionPhase::Suppress { level, row: 0 } } else { BoundedDetectionPhase::Corners { level, row: end } };
+            }
+            BoundedDetectionPhase::Suppress { level, row } => {
                 if self.candidates.len() == level {
                     self.candidates.push(Vec::new());
                 }
-                let image = &self.levels[level];
-                let end = (row + rows).min(image.height);
-                if image.width > 2 * FAST_BORDER_MARGIN as u32 && image.height > 2 * FAST_BORDER_MARGIN as u32 {
-                    let (band, offset) = Self::band(image, row, end, CORNER_HALO_ROWS);
-                    let harris = harris_response(&band, ORB_HARRIS_K);
-                    let interior = |y: u32| y >= offset && y < offset + (end - row);
-                    let found: Vec<(u32, u32, f32)> = match self.detector {
-                        BoundedDetector::Orb => fast_corners(&band, ORB_FAST_THRESHOLD)
-                            .into_iter()
-                            .filter(|&(_, y, _)| interior(y))
-                            .map(|(x, y, _)| (x, y - offset + row, harris[(y * band.width + x) as usize]))
-                            .filter(|&(_, _, score)| score > 0.0)
-                            .collect(),
-                        BoundedDetector::Harris => harris
-                            .iter()
-                            .enumerate()
-                            .map(|(index, &score)| (index as u32 % band.width, index as u32 / band.width, score))
-                            .filter(|&(_, y, score)| interior(y) && score > 0.0)
-                            .map(|(x, y, score)| (x, y - offset + row, score))
-                            .collect(),
-                    };
-                    self.candidates[level].extend(found);
+                let height = self.levels[level].height;
+                let end = (row + rows).min(height);
+                // The band's corners plus a suppression-radius halo, so an interior corner is
+                // judged against its neighbours across the band edge too.
+                let (halo_first, halo_last) = (row.saturating_sub(CORNER_HALO_ROWS), end.saturating_add(CORNER_HALO_ROWS).min(height));
+                // Dense score grid of those rows: a corner survives when no corner within the
+                // suppression radius outscores it (ties go to the earlier row, then column), a
+                // fixed 7×7 look per corner however dense the corners are.
+                let width = self.levels[level].width as usize;
+                let grid_rows = (halo_last - halo_first) as usize;
+                let mut grid = vec![0.0f32; grid_rows * width];
+                for y in halo_first..halo_last {
+                    for &(x, score) in &self.corner_rows[y as usize] {
+                        grid[(y - halo_first) as usize * width + x as usize] = score;
+                    }
                 }
-                if end == image.height {
-                    self.phase = if level + 1 < self.levels.len() && self.detector == BoundedDetector::Orb { BoundedDetectionPhase::Corners { level: level + 1, row: 0 } } else { BoundedDetectionPhase::Select };
+                let radius = CANDIDATE_SUPPRESSION_RADIUS as i64;
+                let mut found: Vec<(u32, u32, f32)> = Vec::new();
+                for y in row..end {
+                    for &(x, score) in &self.corner_rows[y as usize] {
+                        let mut suppressed = false;
+                        'window: for dy in -radius..=radius {
+                            let gy = i64::from(y - halo_first) + dy;
+                            if gy < 0 || gy >= grid_rows as i64 {
+                                continue;
+                            }
+                            for dx in -radius..=radius {
+                                let gx = i64::from(x) + dx;
+                                if gx < 0 || gx >= width as i64 || (dx == 0 && dy == 0) {
+                                    continue;
+                                }
+                                let other = grid[gy as usize * width + gx as usize];
+                                if other > score || (other == score && (dy < 0 || (dy == 0 && dx < 0))) {
+                                    suppressed = true;
+                                    break 'window;
+                                }
+                            }
+                        }
+                        if !suppressed {
+                            found.push((x, y, score));
+                        }
+                    }
+                }
+                let bands = height.div_ceil(rows).max(1) as usize;
+                let per_band = (CANDIDATE_MULTIPLE_OF_TARGET * self.target_count).div_ceil(bands).max(MIN_CANDIDATES_PER_BAND);
+                found.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+                found.truncate(per_band);
+                self.candidates[level].extend(found);
+                if end == height {
+                    self.harris = None;
+                    self.corner_rows = Vec::new();
+                    self.phase = if level + 1 < self.levels.len() && self.detector == BoundedDetector::Orb { BoundedDetectionPhase::Gradients { level: level + 1, row: 0 } } else { BoundedDetectionPhase::Select };
                 } else {
-                    self.phase = BoundedDetectionPhase::Corners { level, row: end };
+                    self.phase = BoundedDetectionPhase::Suppress { level, row: end };
                 }
             }
             BoundedDetectionPhase::Select => {
@@ -410,8 +606,7 @@ impl BoundedDetectionPreparation {
                     let cells_x = image.width.div_ceil(ORB_GRID_CELL).max(1);
                     let cells_y = image.height.div_ceil(ORB_GRID_CELL).max(1);
                     let per_cell = level_target.div_ceil((cells_x * cells_y) as usize).max(1);
-                    let suppressed = suppress_non_maxima(candidates.clone(), CANDIDATE_SUPPRESSION_RADIUS);
-                    let mut selected = bucket_top_k(&suppressed, ORB_GRID_CELL, cells_x, per_cell);
+                    let mut selected = bucket_top_k(candidates, ORB_GRID_CELL, cells_x, per_cell);
                     selected.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
                     selected.truncate(level_target);
                     self.keypoints.extend(selected.into_iter().map(|(x, y, response)| Keypoint { x: x as f32, y: y as f32, octave: level as u8, angle: 0.0, response }));
@@ -430,6 +625,11 @@ impl BoundedDetectionPreparation {
             BoundedDetectionPhase::Done => {}
         }
         self.phase == BoundedDetectionPhase::Done
+    }
+
+    /// 🧭️ The phase the next call works on, for the worker-law tests' diagnostics.
+    pub fn phase_label(&self) -> String {
+        format!("{:?}", self.phase)
     }
 
     /// 🧭️ The pyramid the keypoints live in and the keypoints, once [`Self::advance`] answered `true`.

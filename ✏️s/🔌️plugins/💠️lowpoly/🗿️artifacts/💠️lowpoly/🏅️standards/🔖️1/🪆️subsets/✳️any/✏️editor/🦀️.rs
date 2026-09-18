@@ -145,13 +145,14 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 //#region 🔖️SharedMeasures
 /// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
 /// (Model + UV expose an identical set — see this file's top-level doc comment).
-pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
+pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels, select: &crate::editor::lowpoly::options::select::SelectState) -> Vec<WindowMeasure> {
     use crate::editor::lowpoly::options;
     vec![
         options::show_edges::measure(config, labels),
         options::sun::measure(config, labels),
         options::snap::measure(config, labels),
-        options::select::measure(config, labels),
+        options::gumball::measure(config, labels),
+        options::select::measure(config, labels, select),
         options::paint_params_brush::measure(config, labels),
         options::paint_params_eraser::measure(config, labels),
     ]
@@ -407,11 +408,13 @@ mod args_bridge {
     /// 📝️ Moves the merged control `value` into the JSON-text `value_json` field the reducers re-parse.
     fn value_json(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
         if !entries.iter().any(|(key, _)| key == "value_json") {
-            if let Some((_, value)) = entries.iter().find(|(key, _)| key == "value").cloned() {
+            // 🎛️ A window toggle measure dispatches its new state as `pressed` (`WindowMeasureToggle`),
+            // a slider/number as `value`; both are the param's value.
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == "value" || key == "pressed").cloned() {
                 put(&mut entries, "value_json", DslValue::String(dsl::json::to_json_string(&value)));
             }
         }
-        entries.retain(|(key, _)| key != "value");
+        entries.retain(|(key, _)| key != "value" && key != "pressed");
         entries
     }
 
@@ -1701,7 +1704,7 @@ fn lowpoly_render(
     let config = cfg.snapshot;
     let empty_domain_selection = protocol::DomainSelection::default();
     let domain_selection = interaction.map_or(&empty_domain_selection, |interaction| interaction.selection(MESH_INTERACTION_DOMAIN));
-    let world_selection = crate::editor::lowpoly::view::world_selection_from_state(projection, config, domain_selection, interaction.and_then(|interaction| interaction.active_granularity(MESH_INTERACTION_DOMAIN)));
+    let world_selection = crate::editor::lowpoly::view::world_selection_with_hover(projection, config, domain_selection, interaction.and_then(|interaction| interaction.active_granularity(MESH_INTERACTION_DOMAIN)), interaction.map(|interaction| interaction.hover(MESH_INTERACTION_DOMAIN, "pointer")));
     scratch.set_selection_object_id(crate::editor::lowpoly::view::selection_object_id(projection, domain_selection));
     let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
@@ -2048,7 +2051,17 @@ impl ArtifactEditor for LowpolyPlayApp {
     fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
-        let measures = lowpoly_window_measures(config, labels);
+        let measures = lowpoly_window_measures(config, labels, &crate::editor::lowpoly::options::select::SelectState::default());
+        HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), measures)])
+    }
+
+    /// 🎛️ The live measures: the granularity/selection-mode toggles read the mesh domain's current
+    /// state, so the pressed toggle IS the one the next pick uses (they used to be always-off).
+    fn window_measures_with_request_context(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.snapshot;
+        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
+        let select = crate::editor::lowpoly::options::select::SelectState::from_interaction(interaction);
+        let measures = lowpoly_window_measures(config, labels, &select);
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), measures)])
     }
 }

@@ -1,0 +1,34 @@
+[package]
+name = "semio-s-artifact-wfc-bitmap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "WFC bitmap artifact — overlapping model over a sample bitmap"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-ui-contract"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-wfc-engine = { workspace = true }
+pack = { workspace = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

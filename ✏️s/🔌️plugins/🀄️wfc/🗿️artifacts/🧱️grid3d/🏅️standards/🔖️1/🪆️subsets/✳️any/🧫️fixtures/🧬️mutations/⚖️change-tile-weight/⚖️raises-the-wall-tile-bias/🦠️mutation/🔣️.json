@@ -1,0 +1,6 @@
+{
+  "ChangeTileWeight": {
+    "tileId": "wall",
+    "weight": 5.0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "contract": "semio.wfc.close-ladder/v1",
+  "app": "s.wfc.grid2d@1/*#editor",
+  "instance": 7,
+  "sessions": [
+    {
+      "label": "cold",
+      "documentLoads": 0,
+      "turnsPerLoad": 0
+    },
+    {
+      "label": "warm",
+      "documentLoads": 3,
+      "turnsPerLoad": 2
+    },
+    {
+      "label": "long",
+      "documentLoads": 8,
+      "turnsPerLoad": 4
+    }
+  ],
+  "maximumCloseTurns": 768,
+  "turnBudget": 16384,
+  "minimumRetainedWorkDilutionPercent": 140,
+  "note": "🚪️ The cost of closing one wfc grid2d editor instance, as a function of the session it accumulated. Each close turn is one browser worker round trip, so a ladder whose turn count grows with the retained session is a role switch whose wall time grows with it. retainedWork = documentLoads x turnsPerLoad.",
+  "lawNote": "📏️ Two statements, because the turn count is a LATENCY PROXY — how many empty reactor polls fit while the close pump grinds on the maintenance lane — so the absolute numbers move with machine load, all three sessions together. (1) maximumCloseTurns is the browser's own close budget and every session must fit the SAME one, whatever it retained. (2) minimumRetainedWorkDilutionPercent is the load-INVARIANT half: the dearest session's turns-per-retained-unit must be at least this percent cheaper than the cheapest non-cold session's. Ratios and additive spreads both measure the load instead of the ladder. A ladder that pages one retained item per turn scores a flat 100. The ceiling and the dilution are carried over from the procedural twin (🌀️procedural/🧫️fixtures/🚪️close-ladder/🔣️.json, ten measured runs) because both owners close through the same reactor ladder; re-measure them against this owner's own runs once the five artifacts land and their preview windows retain real evaluation state. The cold session is deliberately excluded from the dilution: it retains nothing, so it measures only the noise floor."
+}

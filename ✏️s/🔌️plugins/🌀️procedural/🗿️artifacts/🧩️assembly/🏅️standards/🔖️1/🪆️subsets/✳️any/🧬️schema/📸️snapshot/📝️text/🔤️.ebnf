@@ -1,3 +1,0 @@
-(* ebnf procedural.assembly.snapshot *)
-document = header, body ;
-header = 'schema', space, 'procedural.assembly.snapshot', newline ;

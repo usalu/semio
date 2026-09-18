@@ -1,0 +1,24 @@
+# 🧬️ Bitmap mutations — the externally-tagged dispatch union.
+
+type ChangeSeed { seed: Float! }
+type ResizeInput { width: Int!, height: Int! }
+type SetInputPixels { x: Int!, y: Int!, width: Int!, height: Int!, pixels: String! }
+type AddPaletteColor { index: Int!, color: BitmapColor! }
+type ChangePaletteColor { index: Int!, color: BitmapColor! }
+type RemovePaletteColor { index: Int! }
+type ResizeOutput { width: Int!, height: Int!, periodic: Boolean! }
+type ChangeModel { patternSize: Int!, symmetry: Int!, periodicInput: Boolean!, ground: Int }
+type PinPixel { x: Int!, y: Int!, color: Int! }
+type UnpinPixel { x: Int!, y: Int! }
+
+union BitmapMutation =
+    ChangeSeed
+  | ResizeInput
+  | SetInputPixels
+  | AddPaletteColor
+  | ChangePaletteColor
+  | RemovePaletteColor
+  | ResizeOutput
+  | ChangeModel
+  | PinPixel
+  | UnpinPixel

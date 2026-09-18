@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/mutation/pin-cell/schema.json",
+  "title": "PinCell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pinned"
+  ],
+  "properties": {
+    "pinned": {
+      "title": "Grid3dPinnedCell",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "tileId"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tileId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -278,8 +278,13 @@ export class TurnLedger {
     return ordered[Math.min(count - 1, Math.ceil(count * 0.99) - 1)]!;
   }
 
+  /** @emoji 🩺️ The one print this module owns, behind {@link turnDiagnosticsEnabled}. Its body was
+   * stripped by a `[DEBUG]`-removal sweep, which left the gate standing over nothing and made every
+   * overrun invisible — the breach this ledger exists to surface
+   * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration). */
   private trace(site: string, verdict: TurnVerdict, executingMs: number): void {
     if (!turnDiagnosticsEnabled()) return;
+    console.debug(`[DEBUG] ${this.scope} ${verdict} site=${site} executing=${executingMs.toFixed(3)}ms budget=${this.budgetMs}ms consecutive=${this.consecutive} worst=${this.worstExecutingMs.toFixed(3)}ms@${this.worstSite}`);
   }
 }
 // #endregion 📒️Ledger

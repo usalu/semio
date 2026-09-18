@@ -1,0 +1,10 @@
+{
+  "CreateRule": {
+    "rule": {
+      "id": "rule-roof-roof",
+      "tileAId": "tile-roof",
+      "tileBId": "tile-roof",
+      "allowed": false
+    }
+  }
+}

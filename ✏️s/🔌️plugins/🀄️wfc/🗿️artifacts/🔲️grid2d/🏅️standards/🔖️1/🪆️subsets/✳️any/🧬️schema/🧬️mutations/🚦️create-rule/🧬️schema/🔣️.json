@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/create-rule/schema.json",
+  "title": "CreateRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rule"
+  ],
+  "properties": {
+    "rule": {
+      "title": "WfcAdjacencyRule2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tileAId",
+        "tileBId",
+        "direction",
+        "allowed"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "tileAId": {
+          "type": "string"
+        },
+        "tileBId": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "LEFT",
+            "RIGHT",
+            "TOP",
+            "BOTTOM"
+          ]
+        },
+        "allowed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

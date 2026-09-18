@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/create-rule/schema.json",
+  "title": "CreateRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rule"
+  ],
+  "properties": {
+    "rule": {
+      "title": "Wfc2dRule",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tileAId",
+        "tileBId",
+        "allowed"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "tileAId": {
+          "type": "string"
+        },
+        "tileBId": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "allowed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

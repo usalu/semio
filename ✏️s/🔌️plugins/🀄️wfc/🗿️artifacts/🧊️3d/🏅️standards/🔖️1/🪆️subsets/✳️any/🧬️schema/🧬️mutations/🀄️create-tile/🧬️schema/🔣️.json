@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/create-tile/schema.json",
+  "title": "CreateTile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "tile"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tile": {
+      "title": "Tile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "media",
+        "weight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "media": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "mesh"
+                },
+                "positions": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "color": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "a",
+                    "b",
+                    "g",
+                    "r"
+                  ],
+                  "properties": {
+                    "r": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "g": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "b": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "a": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "meshChild"
+                },
+                "child": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "childId",
+                    "target"
+                  ],
+                  "properties": {
+                    "childId": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "artifactId",
+                        "dialect"
+                      ],
+                      "properties": {
+                        "artifactId": {
+                          "type": "string"
+                        },
+                        "dialect": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "artifactKind",
+                            "standard",
+                            "subset"
+                          ],
+                          "properties": {
+                            "artifactKind": {
+                              "type": "string"
+                            },
+                            "standard": {
+                              "type": "string"
+                            },
+                            "subset": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

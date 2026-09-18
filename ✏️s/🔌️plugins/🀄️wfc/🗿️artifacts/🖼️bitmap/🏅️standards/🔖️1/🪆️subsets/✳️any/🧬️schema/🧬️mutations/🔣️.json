@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutations.json",
+  "title": "BitmapMutation",
+  "oneOf": [
+    { "$ref": "./change-seed/schema.json" },
+    { "$ref": "./resize-input/schema.json" },
+    { "$ref": "./set-input-pixels/schema.json" },
+    { "$ref": "./add-palette-color/schema.json" },
+    { "$ref": "./change-palette-color/schema.json" },
+    { "$ref": "./remove-palette-color/schema.json" },
+    { "$ref": "./resize-output/schema.json" },
+    { "$ref": "./change-model/schema.json" },
+    { "$ref": "./pin-pixel/schema.json" },
+    { "$ref": "./unpin-pixel/schema.json" }
+  ]
+}

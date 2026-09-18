@@ -316,6 +316,74 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     assert!(job.terminal_is_empty());
 }
 
+/// 🖼️ LAW: a scene pass is measured — and therefore ENCODED — textured underlay → opaque → lines →
+/// translucent, mirroring React's `renderOrder` of -10 (reference plane), -5 (grid) and 0 (model).
+#[test]
+fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under() {
+    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ScenePass3d, SceneDraw3d, TexturedDraw3d, TexturedInstance3d};
+    let mut draw = DrawList::default();
+    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    draw.push_scene_pass(ScenePass3d {
+        viewport: [0.0, 0.0, 100.0, 40.0],
+        draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()] }],
+        translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()] }],
+        line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0, 0.0, 0.0], color: [1.0, 1.0, 1.0, 1.0] }] }],
+        textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, tint: [1.0, 1.0, 1.0, 0.85] }] }],
+        ..Default::default()
+    });
+
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    let mut order = Vec::new();
+    for _ in 0..64 {
+        let label = match cursor {
+            DrawMeasureCursor::PassTextured { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassTexturedKey { .. } => "textured",
+            DrawMeasureCursor::PassDraw { translucent, .. } | DrawMeasureCursor::PassDrawKey { translucent, .. } | DrawMeasureCursor::PassInstance { translucent, .. } | DrawMeasureCursor::PassInstanceKey { translucent, .. } => {
+                if translucent {
+                    "translucent"
+                } else {
+                    "opaque"
+                }
+            }
+            DrawMeasureCursor::PassLine { .. } | DrawMeasureCursor::PassLineVertex { .. } => "lines",
+            _ => "other",
+        };
+        if order.last() != Some(&label) && label != "other" {
+            order.push(label);
+        }
+        if PreparedRenderJob::next_draw_usage(&draw, &mut cursor).is_none() || matches!(cursor, DrawMeasureCursor::Complete) {
+            break;
+        }
+    }
+    assert_eq!(order, vec!["textured", "opaque", "lines", "translucent"], "the underlay is measured first and the translucent draws last");
+}
+
+/// 🎟️ A raster producer must be bound to the frame it is published into BEFORE it is pushed, and the
+/// job's refusal must be readable — `StepOutcome::Fault` carries an empty payload here, so
+/// [`PreparedRenderJob::fault`] is the only way a driver can name it
+/// (`📓️w7b-presenter-one-frame-per-boot.md` §1).
+#[test]
+fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
+    let (unbound, _) = PreparedRasterProducer::try_admit("unbound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
+    let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+    assert!(input.try_push_raster_producer(unbound).is_ok());
+    let mut job = PreparedRenderJob::new(input, 1);
+    let mut preview = 0;
+    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert_eq!(job.fault(), Some("raster producer generation is stale"));
+    while !job.close_step() {}
+
+    let (mut bound, _) = PreparedRasterProducer::try_admit("bound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
+    assert!(bound.bind_frame_generation(3));
+    let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+    assert!(input.try_push_raster_producer(bound).is_ok());
+    let mut job = PreparedRenderJob::new(input, 1);
+    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(matches!(outcome, StepOutcome::Yield));
+    assert_eq!(job.fault(), None);
+    while !job.close_step() {}
+}
+
 #[test]
 fn raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one() {
     let mut ledger = PreparedRasterLedger::default();

@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/snapshot.json",
+  "title": "Grid2dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "seed", "width", "height", "cellWidth", "cellHeight", "periodicX", "periodicY"],
+  "definitions": {
+    "WfcColor": {
+      "title": "WfcColor",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "g", "b", "a"],
+      "properties": {
+        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "a": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
+    "WfcPoint2": {
+      "title": "WfcPoint2",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "WfcPathSegment": {
+      "title": "WfcPathSegment",
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["moveTo", "lineTo", "quadTo", "cubicTo", "close"] },
+        "to": { "$ref": "#/definitions/WfcPoint2" },
+        "ctrl": { "$ref": "#/definitions/WfcPoint2" },
+        "ctrl1": { "$ref": "#/definitions/WfcPoint2" },
+        "ctrl2": { "$ref": "#/definitions/WfcPoint2" }
+      }
+    },
+    "WfcVectorPath": {
+      "title": "WfcVectorPath",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segments", "strokeWidth"],
+      "properties": {
+        "segments": { "type": "array", "items": { "$ref": "#/definitions/WfcPathSegment" } },
+        "fill": { "$ref": "#/definitions/WfcColor" },
+        "stroke": { "$ref": "#/definitions/WfcColor" },
+        "strokeWidth": { "type": "number" }
+      }
+    },
+    "WfcTileMedia2d": {
+      "title": "WfcTileMedia2d",
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["bitmap", "vector", "image"] },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "palette": { "type": "array", "items": { "$ref": "#/definitions/WfcColor" } },
+        "pixels": { "type": "string", "format": "base64" },
+        "paths": { "type": "array", "items": { "$ref": "#/definitions/WfcVectorPath" } },
+        "child": { "type": "object" }
+      }
+    },
+    "WfcTile2d": {
+      "title": "WfcTile2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "weight", "media"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "weight": { "type": "number", "exclusiveMinimum": 0 },
+        "media": { "$ref": "#/definitions/WfcTileMedia2d" }
+      }
+    },
+    "WfcAdjacencyRule2d": {
+      "title": "WfcAdjacencyRule2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "tileAId", "tileBId", "direction", "allowed"],
+      "properties": {
+        "id": { "type": "string" },
+        "tileAId": { "type": "string" },
+        "tileBId": { "type": "string" },
+        "direction": { "type": "string", "enum": ["LEFT", "RIGHT", "TOP", "BOTTOM"] },
+        "allowed": { "type": "boolean" }
+      }
+    },
+    "WfcPinnedCell2d": {
+      "title": "WfcPinnedCell2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "tileId"],
+      "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 }, "tileId": { "type": "string" } }
+    },
+    "WfcCell2d": {
+      "title": "WfcCell2d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "integer", "minimum": 0 }, "y": { "type": "integer", "minimum": 0 } }
+    }
+  },
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "seed": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "width": { "type": "integer", "minimum": 1, "x-semio-state": "artifact" },
+    "height": { "type": "integer", "minimum": 1, "x-semio-state": "artifact" },
+    "cellWidth": { "type": "number", "exclusiveMinimum": 0, "x-semio-state": "artifact" },
+    "cellHeight": { "type": "number", "exclusiveMinimum": 0, "x-semio-state": "artifact" },
+    "periodicX": { "type": "boolean", "x-semio-state": "artifact" },
+    "periodicY": { "type": "boolean", "x-semio-state": "artifact" },
+    "tiles": { "type": "array", "items": { "$ref": "#/definitions/WfcTile2d" }, "x-semio-state": "artifact" },
+    "rules": { "type": "array", "items": { "$ref": "#/definitions/WfcAdjacencyRule2d" }, "x-semio-state": "artifact" },
+    "pinned": { "type": "array", "items": { "$ref": "#/definitions/WfcPinnedCell2d" }, "x-semio-state": "artifact" },
+    "masked": { "type": "array", "items": { "$ref": "#/definitions/WfcCell2d" }, "x-semio-state": "artifact" }
+  }
+}

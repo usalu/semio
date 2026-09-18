@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio-tech/wfc-js",
+  "version": "0.1.0",
+  "description": "🀄️ WFC plugin TS: schema, snapshot, diff, mutation and IO facades of the bitmap, grid2d, wfc2d, grid3d and wfc3d artifacts.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/wfc-js:test"
+  },
+  "exports": {
+    ".": "./🟦️.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

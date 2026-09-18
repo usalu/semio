@@ -1,0 +1,126 @@
+//! 🧪️ The World3d preview: the mesh catalogue is per TILE (never per slot), instances carry the
+//! slot's own box, and an unresolvable tile still gets a body.
+
+use super::*;
+use crate::editor::wfc3d::transient::solved_transient;
+use serde_json::Value;
+
+fn document() -> Wfc3dSnapshot {
+    crate::examples::tower_stack::snapshot()
+}
+
+fn array(text: &str) -> Vec<Value> {
+    serde_json::from_str::<Value>(text).expect("json").as_array().cloned().expect("array")
+}
+
+#[test]
+fn the_window_declares_a_world3d_surface_and_authors_nothing() {
+    let definition = definition();
+    assert_eq!(definition.id, WFC_3D_PREVIEW_WINDOW);
+    assert_eq!(definition.body_key, WFC_3D_PREVIEW_BODY);
+    assert_eq!(definition.surface_kind, SurfaceKind::World3d);
+    assert!(definition.actions.is_empty(), "a derived view authors nothing");
+}
+
+/// 🥽️ THE instancing contract: the catalogue is bounded by the TILE count (plus one placeholder), and
+/// the instance lane by the SOLVED slot count. A catalogue that grew with the slots would defeat
+/// instancing.
+#[test]
+fn the_mesh_catalogue_is_per_tile_and_the_instance_lane_is_per_solved_slot() {
+    let document = document();
+    let transient = solved_transient(&document);
+    let meshes = array(&meshes_json(&document));
+    let instances = array(&instances_json(&document, &transient));
+    assert_eq!(meshes.len(), document.tiles.len() + 1, "one entry per tile plus the shared placeholder");
+    assert_eq!(transient.assignments.len(), document.slots.len(), "this example solves completely");
+    assert_eq!(instances.len(), transient.assignments.len());
+}
+
+#[test]
+fn every_instance_references_a_mesh_the_catalogue_declares() {
+    let document = document();
+    let transient = solved_transient(&document);
+    let ids: Vec<String> = array(&meshes_json(&document)).iter().map(|mesh| mesh["id"].as_str().unwrap_or_default().to_string()).collect();
+    for instance in array(&instances_json(&document, &transient)) {
+        let mesh = instance["meshId"].as_str().unwrap_or_default().to_string();
+        assert!(ids.contains(&mesh), "instance {} references an undeclared mesh {mesh}", instance["id"]);
+    }
+}
+
+/// 📐️ An instance is `position = slot origin`, `scale = slot extent`, which is what lets slots of
+/// different sizes share one tile mesh.
+#[test]
+fn an_instance_carries_its_own_slots_box() {
+    let document = document();
+    let transient = solved_transient(&document);
+    let instances = array(&instances_json(&document, &transient));
+    let cantilever = instances.iter().find(|instance| instance["id"] == "cantilever").expect("the cantilever is placed");
+    assert_eq!(cantilever["position"], serde_json::json!([1.5, 3.0, 0.0]));
+    assert_eq!(cantilever["scale"], serde_json::json!([2.0, 1.0, 1.0]));
+}
+
+/// 🩺 An UNSATISFIABLE document draws NOTHING and says why. This window paints the SOLUTION, so a slot
+/// the solve never reached is omitted from the lane rather than drawn as a placeholder box that would
+/// read as a result.
+#[test]
+fn an_unsatisfiable_document_places_no_instances_and_says_so() {
+    let mut document = document();
+    document.rules.clear();
+    let transient = solved_transient(&document);
+    assert!(transient.contradiction, "clearing every rule leaves an allow-list that admits nothing");
+    assert!(array(&instances_json(&document, &transient)).is_empty(), "an unsolved slot is omitted, never placeholder-drawn");
+    let delta: Value = serde_json::from_str(&instances_delta_json(&document, &transient)).expect("delta json");
+    assert_eq!(delta["count"].as_u64(), Some(0));
+    let status: Value = serde_json::from_str(&status_json(&document, &transient)).expect("status json");
+    assert!(status["message"].as_str().unwrap_or_default().contains("Contradiction"), "the verdict must be visible: {status}");
+    render(&document, &transient, 1.0).expect("an unsatisfiable document still assembles a surface");
+}
+
+/// 📦️ A SOLVED slot whose tile media resolves to no geometry still gets a body — the one case the
+/// shared placeholder mesh exists for.
+#[test]
+fn a_solved_slot_whose_tile_has_no_geometry_borrows_the_placeholder() {
+    let mut document = document();
+    for tile in &mut document.tiles {
+        tile.media = TileMedia3d::Mesh { positions: Vec::new(), indices: Vec::new(), color: None };
+    }
+    let transient = solved_transient(&document);
+    let instances = array(&instances_json(&document, &transient));
+    assert_eq!(instances.len(), transient.assignments.len());
+    assert!(instances.iter().all(|instance| instance["meshId"] == WFC_3D_PLACEHOLDER_MESH));
+}
+
+/// 🚚️ The delta lane rides ALONGSIDE the authoritative set and must describe the same records.
+#[test]
+fn the_delta_lane_agrees_with_the_authoritative_instance_set() {
+    let document = document();
+    let transient = solved_transient(&document);
+    let delta: Value = serde_json::from_str(&instances_delta_json(&document, &transient)).expect("delta json");
+    assert_eq!(delta["count"].as_u64().expect("count"), transient.assignments.len() as u64);
+    assert_eq!(delta["changed"].as_array().expect("changed").len(), transient.assignments.len());
+    assert!(delta["removed"].as_array().expect("removed").is_empty());
+}
+
+#[test]
+fn the_camera_frames_what_the_document_actually_holds() {
+    let camera: Value = serde_json::from_str(&camera_json(&document(), 1.0)).expect("camera json");
+    assert!(camera.get("position").is_some() && camera.get("target").is_some(), "a world camera needs a pose: {camera}");
+}
+
+#[test]
+fn the_status_line_says_what_the_solve_concluded() {
+    let document = document();
+    let status: Value = serde_json::from_str(&status_json(&document, &solved_transient(&document))).expect("status json");
+    let message = status["message"].as_str().expect("a message");
+    assert!(message.len() <= 256, "a window's owned text is capacity-bounded");
+    assert!(!message.is_empty());
+}
+
+#[test]
+fn the_window_renders_a_non_empty_surface_for_every_example() {
+    for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
+        let transient = solved_transient(&document);
+        let built = render(&document, &transient, 1.0).expect("the preview surface assembles");
+        assert!(!format!("{built:?}").is_empty());
+    }
+}

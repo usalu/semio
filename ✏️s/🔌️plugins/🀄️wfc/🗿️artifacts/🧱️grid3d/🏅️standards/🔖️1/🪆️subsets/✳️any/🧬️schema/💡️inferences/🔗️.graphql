@@ -1,0 +1,18 @@
+# 💡 s.wfc.grid3d.solve — the routed solve inference. One assignment row per solved, unmasked cell.
+
+type Grid3dAssignment {
+  x: Int!
+  y: Int!
+  z: Int!
+  tileId: String!
+}
+
+type Grid3dInferenceRequest {
+  snapshot: Grid3dSnapshot!
+  checkpoint: [Int!]
+}
+
+type Grid3dInferenceCommit {
+  satisfiable: Boolean!
+  assignments: [Grid3dAssignment!]!
+}

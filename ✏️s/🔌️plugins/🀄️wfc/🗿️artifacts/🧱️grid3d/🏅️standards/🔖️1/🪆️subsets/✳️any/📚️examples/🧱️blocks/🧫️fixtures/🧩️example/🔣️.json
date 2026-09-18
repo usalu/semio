@@ -1,0 +1,15 @@
+{
+  "schema": "s.wfc.grid3d.example-outcome/v1",
+  "example": "blocks",
+  "seed": 7,
+  "width": 4,
+  "height": 3,
+  "depth": 4,
+  "tiles": 4,
+  "rules": 38,
+  "pinned": 1,
+  "masked": 1,
+  "satisfiable": true,
+  "assigned": 47,
+  "rationale": "Horizontally every tile may stand beside every other, so the only real constraint is the vertical stack law (floor→wall|air, wall→wall|roof, roof→air, air→air). The pinned floor at 0:0:0 anchors one column and the masked cell at 3:2:3 leaves 47 cells to fill, so a consistent assignment always exists for any seed."
+}

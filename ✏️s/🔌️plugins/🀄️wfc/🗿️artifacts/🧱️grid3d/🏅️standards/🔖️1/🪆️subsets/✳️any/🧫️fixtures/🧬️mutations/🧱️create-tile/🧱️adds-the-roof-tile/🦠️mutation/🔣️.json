@@ -1,0 +1,22 @@
+{
+  "CreateTile": {
+    "tile": {
+      "id": "roof",
+      "label": "Roof",
+      "weight": 1.5,
+      "media": {
+        "kind": "mesh",
+        "mesh": {
+          "positions": [],
+          "indices": [],
+          "color": {
+            "r": 172,
+            "g": 84,
+            "b": 62,
+            "a": 255
+          }
+        }
+      }
+    }
+  }
+}

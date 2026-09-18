@@ -1,0 +1,11 @@
+{
+  "ChangePaletteColor": {
+    "index": 1,
+    "color": {
+      "r": 240,
+      "g": 230,
+      "b": 200,
+      "a": 255
+    }
+  }
+}

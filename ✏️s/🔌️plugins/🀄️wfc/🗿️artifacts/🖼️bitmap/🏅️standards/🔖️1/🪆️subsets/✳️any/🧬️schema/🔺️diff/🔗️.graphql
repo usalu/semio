@@ -1,0 +1,28 @@
+# 🔺️ Bitmap diff — a sparse, lane-addressed delta over BitmapSnapshot.
+
+type BitmapPixelRegion {
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+  pixels: String!
+}
+
+type BitmapPinnedUpsert {
+  index: Int!
+  pin: BitmapPinnedPixel!
+}
+
+type BitmapDiff {
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  inputWidth: Int @state(class: ARTIFACT)
+  inputHeight: Int @state(class: ARTIFACT)
+  inputPixels: String @state(class: ARTIFACT)
+  inputRegions: [BitmapPixelRegion!]! @state(class: ARTIFACT)
+  palette: [BitmapColor!] @state(class: ARTIFACT)
+  output: BitmapOutputSpec @state(class: ARTIFACT)
+  model: BitmapOverlappingModel @state(class: ARTIFACT)
+  pinnedRemoved: [String!]! @state(class: ARTIFACT)
+  pinnedUpserted: [BitmapPinnedUpsert!]! @state(class: ARTIFACT)
+}

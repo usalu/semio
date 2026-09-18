@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package semio.s.wfc.wfc2d;
+
+message Wfc2dColor {
+  uint32 r = 1;
+  uint32 g = 2;
+  uint32 b = 3;
+  uint32 a = 4;
+}
+
+message Wfc2dPathSegment {
+  string kind = 1;
+  repeated double to = 2;
+  repeated double ctrl = 3;
+  repeated double ctrl1 = 4;
+  repeated double ctrl2 = 5;
+}
+
+message Wfc2dVectorPath {
+  repeated Wfc2dPathSegment segments = 1;
+  Wfc2dColor fill = 2;
+  Wfc2dColor stroke = 3;
+  double stroke_width = 4;
+}
+
+message Wfc2dBitmapMedia {
+  uint32 width = 1;
+  uint32 height = 2;
+  repeated Wfc2dColor palette = 3;
+  string pixels = 4;
+}
+
+message Wfc2dVectorMedia {
+  repeated Wfc2dVectorPath paths = 1;
+}
+
+message Wfc2dImageMedia {
+  string child_id = 1;
+  string artifact_id = 2;
+}
+
+message Wfc2dTileMedia {
+  oneof media {
+    bool empty = 1;
+    Wfc2dBitmapMedia bitmap = 2;
+    Wfc2dVectorMedia vector = 3;
+    Wfc2dImageMedia image = 4;
+  }
+}
+
+message Wfc2dTile {
+  string id = 1;
+  string label = 2;
+  double weight = 3;
+  Wfc2dTileMedia media = 4;
+}
+
+message Wfc2dSlot {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double width = 4;
+  double height = 5;
+  string pinned_tile_id = 6;
+}
+
+message Wfc2dSlotEdge {
+  string id = 1;
+  string from_slot_id = 2;
+  string to_slot_id = 3;
+  string relation = 4;
+}
+
+message Wfc2dRule {
+  string id = 1;
+  string tile_a_id = 2;
+  string tile_b_id = 3;
+  string relation = 4;
+  bool allowed = 5;
+}
+
+message Wfc2dSnapshot {
+  string schema = 1;
+  uint64 seed = 2;
+  repeated Wfc2dSlot slots = 3;
+  repeated Wfc2dSlotEdge edges = 4;
+  repeated Wfc2dTile tiles = 5;
+  repeated Wfc2dRule rules = 6;
+}

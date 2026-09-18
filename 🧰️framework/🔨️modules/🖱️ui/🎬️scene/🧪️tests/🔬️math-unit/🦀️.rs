@@ -174,8 +174,7 @@ fn mat4_inverse_undoes_view_projection() {
 #[test]
 fn ray_from_screen_center_points_at_target() {
     let camera = Camera3d::default();
-    let aspect = 1.6;
-    let (origin, dir) = camera.ray_from_screen(aspect, 400.0, 300.0, 800.0, 600.0);
+    let (origin, dir) = camera.ray_from_screen(400.0, 300.0, 800.0, 600.0);
     assert!((origin.x - camera.position.x).abs() < 1e-4);
     let to_target = camera.target.sub_m(camera.position).normalize_m();
     let dot = dir.dot_m(to_target);
@@ -207,7 +206,7 @@ fn ray_aabb_misses_offset_box() {
 #[test]
 fn frustum_contains_origin_box() {
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let planes = frustum_planes(view_proj);
     assert!(aabb_intersects_frustum(&planes, [-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]));
 }
@@ -215,7 +214,7 @@ fn frustum_contains_origin_box() {
 #[test]
 fn frustum_culls_behind_camera_box() {
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let planes = frustum_planes(view_proj);
     assert!(aabb_intersects_frustum(&planes, [-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]));
     let behind = camera.position.add_m(camera.position.sub_m(camera.target).normalize_m().scale_m(2.0));
@@ -225,13 +224,13 @@ fn frustum_culls_behind_camera_box() {
 }
 
 fn concrete_forest_camera() -> Camera3d {
-    Camera3d { position: vec3_new_m(30.0, -30.0, 20.0), target: vec3_new_m(7.0, 0.0, 3.0), up: vec3_new_m(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 }
+    Camera3d { position: vec3_new_m(30.0, -30.0, 20.0), target: vec3_new_m(7.0, 0.0, 3.0), up: vec3_new_m(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: CameraProjection3d::Perspective, zoom: 1.0 }
 }
 
 #[test]
 fn concrete_forest_frustum_contains_target_box() {
     let camera = concrete_forest_camera();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let planes = frustum_planes(view_proj);
     let target = camera.target;
     for plane in &planes {
@@ -244,7 +243,7 @@ fn concrete_forest_frustum_contains_target_box() {
 #[test]
 fn concrete_forest_frustum_culls_off_axis_boxes() {
     let camera = concrete_forest_camera();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let planes = frustum_planes(view_proj);
     assert!(!aabb_intersects_frustum(&planes, [7.0, 0.0, 200.0], [8.0, 1.0, 201.0]));
     let behind = camera.position.add_m(camera.position.sub_m(camera.target).normalize_m().scale_m(4.0));
@@ -278,7 +277,7 @@ fn projected_aabb_skips_far_instance() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let ids = screen_select_instances(&lookup, &draws, view_proj, 200.0, 200.0, &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]], true, true);
     assert!(ids.is_empty());
 }
@@ -304,7 +303,7 @@ fn screen_select_instances_window_requires_full_vertex_enclosure() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let width = 800.0;
     let height = 600.0;
     let mut min_x = f32::INFINITY;
@@ -331,6 +330,225 @@ fn screen_select_instances_window_requires_full_vertex_enclosure() {
 fn lod_from_camera_distance_scales() {
     assert!((lod_from_camera_distance(100.0, 100.0) - 1.0).abs() < 1e-6);
     assert!((lod_from_camera_distance(20000.0, 100.0) - 200.0).abs() < 1e-6);
+}
+
+/// 📐️ LAW: the grid's fade radius follows the camera and stays inside the far plane it is drawn
+/// against, so it is neither clipped away nor drawn with a hard square edge — React's
+/// `cameraGridFadeDistance` (`🎨️r3f/🟦️.tsx`), viewport branch and all, now that the orbit camera
+/// grows its own far plane the way React's does
+/// (`📓️w7b-presenter-one-frame-per-boot.md` §5, `📓️w8b-orthographic-camera-and-3d-parity.md` §2).
+#[test]
+fn the_grid_fade_radius_follows_the_camera_and_stays_inside_the_far_plane() {
+    let orbit = OrbitController::default();
+    let camera = orbit.to_camera();
+    assert_eq!(camera.far, adaptive_orbit_camera_far(orbit.distance));
+    assert_eq!(camera.far, WORLD_ORBIT_CAMERA_MIN_FAR, "a near orbit sits on React's floor");
+    assert_eq!(adaptive_orbit_camera_far(4_096.0), 2.0_f32.powf((4_096.0 * WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR).log2().ceil()), "and a far one follows the distance, quantized to a power of two");
+
+    let fade = camera_grid_fade_distance(&camera, 0.0, 10.0, 800.0, 600.0);
+    assert!(fade > 0.0, "the grid always covers something");
+    assert!(fade <= f32::from(camera.far) * 0.25 + 1e-3, "and never reaches past a quarter of the far plane while the coverage floor allows it");
+    let higher = Camera3d { position: vec3_new_m(camera.position.x, camera.position.y, camera.position.z * 20.0), ..camera.clone() };
+    assert!(camera_grid_fade_distance(&higher, 0.0, 10.0, 800.0, 600.0) >= fade, "a camera further above the plane covers at least as much");
+    assert_eq!(camera_grid_fade_distance(&camera, 0.0, 0.0, 800.0, 600.0), 0.0, "a degenerate step draws nothing");
+
+    assert_eq!(lod_grid_fade_alpha(0.0, 100.0), 1.0, "the grid is opaque at its centre");
+    assert_eq!(lod_grid_fade_alpha(100.0, 100.0), 0.0, "and gone at its rim");
+    assert!(lod_grid_fade_alpha(50.0, 100.0) < 1.0 && lod_grid_fade_alpha(50.0, 100.0) > 0.0, "with a monotone fade between");
+    assert_eq!(lod_grid_fade_alpha(10.0, 0.0), 0.0, "a zero fade radius draws nothing");
+}
+
+/// 🎥️ The puzzle 3d `Top` pane's camera, verbatim off the wire
+/// (`🗑️generated/w7b-diag/dumps.json`): an orthographic plan view whose `up` is `+Y`.
+fn puzzle3d_top_camera(zoom: f32) -> Camera3d {
+    Camera3d {
+        position: vec3_new_m(3.5, 0.0, 9.455),
+        target: vec3_new_m(3.5, 0.0, 0.005),
+        up: vec3_new_m(0.0, 1.0, 0.0),
+        fov_y: 45.0_f32.to_radians(),
+        near: WORLD_ORBIT_CAMERA_NEAR,
+        far: WORLD_ORBIT_CAMERA_MIN_FAR,
+        projection: CameraProjection3d::Orthographic,
+        zoom,
+    }
+}
+
+/// 🎥️ The puzzle 3d `Perspective` pane's camera, verbatim off the same wire.
+fn puzzle3d_perspective_camera() -> Camera3d {
+    Camera3d {
+        position: vec3_new_m(9.17, -5.67, 4.2575),
+        target: vec3_new_m(3.5, 0.0, 0.005),
+        up: vec3_new_m(0.0, 0.0, 1.0),
+        fov_y: 50.0_f32.to_radians(),
+        near: WORLD_ORBIT_CAMERA_NEAR,
+        far: WORLD_ORBIT_CAMERA_MIN_FAR,
+        projection: CameraProjection3d::Perspective,
+        zoom: 1.0,
+    }
+}
+
+/// 📐️ LAW: the parallel frustum is drei's PIXEL frustum — `left = -width / 2` … divided by `zoom`
+/// (`worldProjectionGoalMatrix`, `🎨️r3f/🟦️.tsx`). A point exactly `width / (2 · zoom)` to the right
+/// of the target lands on the right edge of the viewport, and nothing about that depends on where
+/// along the view axis the eye stands, which is what makes a parallel camera parallel.
+#[test]
+fn the_parallel_frustum_is_dreis_pixel_frustum_and_ignores_the_eyes_distance() {
+    let (width, height) = (478.0_f32, 814.0_f32);
+    let camera = puzzle3d_top_camera(1.0);
+    let (half_width, half_height) = camera.orthographic_half_extent(width, height);
+    assert!((half_width - width * 0.5).abs() < 1e-3, "zoom 1 shows exactly `width` world units across");
+    assert!((half_height - height * 0.5).abs() < 1e-3);
+
+    let view_proj = camera.view_proj(width, height);
+    let centre = project_point(view_proj, camera.target, width, height).expect("the target projects");
+    assert!((centre[0] - width * 0.5).abs() < 1e-2 && (centre[1] - height * 0.5).abs() < 1e-2, "the target sits in the middle of the pane");
+    let edge = project_point(view_proj, vec3_new_m(camera.target.x + half_width, camera.target.y, camera.target.z), width, height).expect("the rim projects");
+    assert!((edge[0] - width).abs() < 1e-2, "and the half-extent lands on the rim: {edge:?}");
+
+    let pulled_back = Camera3d { position: vec3_new_m(3.5, 0.0, 900.0), ..camera.clone() };
+    let pulled_edge = project_point(pulled_back.view_proj(width, height), vec3_new_m(camera.target.x + half_width, camera.target.y, camera.target.z), width, height).expect("the rim projects");
+    assert!((pulled_edge[0] - edge[0]).abs() < 1e-2, "a parallel camera's scale does not change when the eye moves along its own axis");
+
+    let zoomed = puzzle3d_top_camera(4.0);
+    let (zoomed_half, _) = zoomed.orthographic_half_extent(width, height);
+    assert!((zoomed_half - half_width / 4.0).abs() < 1e-3, "and four times the zoom shows a quarter as much");
+}
+
+/// 📡️ LAW: a screen pixel round-trips through the parallel camera — the pick ray it builds projects
+/// back to the pixel it came from, and its direction is the view axis (three's `Raycaster` parallel
+/// branch), so `pick_*` keeps working under a plan view.
+#[test]
+fn a_parallel_pick_ray_round_trips_through_the_pixel_it_came_from() {
+    let (width, height) = (478.0_f32, 814.0_f32);
+    let camera = puzzle3d_top_camera(12.0);
+    let view_proj = camera.view_proj(width, height);
+    let forward = camera.target.sub_m(camera.position).normalize_m();
+    for pixel in [[120.0_f32, 200.0_f32], [239.0, 407.0], [400.0, 700.0]] {
+        let (origin, dir) = camera.ray_from_screen(pixel[0], pixel[1], width, height);
+        assert!(dir.sub_m(forward).length_m() < 1e-4, "a parallel ray runs down the view axis");
+        let ahead = origin.add_m(dir.scale_m(25.0));
+        let back = project_point(view_proj, ahead, width, height).expect("the ray point projects");
+        assert!((back[0] - pixel[0]).abs() < 1e-2 && (back[1] - pixel[1]).abs() < 1e-2, "pixel {pixel:?} round-tripped to {back:?}");
+    }
+}
+
+/// 📡️ LAW: the perspective pick ray survives React's adaptive far plane. It is three's
+/// `origin = camera.position, direction = unproject(ndc, 0.5) - origin`; the near-minus-far pair it
+/// replaced was numerically empty in `f32` at a `0.2 / 524 288` ratio and missed every instance
+/// (`📓️w7b-presenter-one-frame-per-boot.md` §5.1).
+#[test]
+fn a_perspective_pick_ray_survives_the_adaptive_far_plane() {
+    let (width, height) = (956.0_f32, 814.0_f32);
+    let camera = puzzle3d_perspective_camera();
+    assert_eq!(camera.far, WORLD_ORBIT_CAMERA_MIN_FAR);
+    let view_proj = camera.view_proj(width, height);
+    for pixel in [[478.0_f32, 407.0_f32], [100.0, 120.0], [900.0, 780.0]] {
+        let (origin, dir) = camera.ray_from_screen(pixel[0], pixel[1], width, height);
+        assert!(origin.sub_m(camera.position).length_m() < 1e-4, "a perspective ray starts at the eye");
+        assert!((dir.length_m() - 1.0).abs() < 1e-4, "and carries a unit direction, not a degenerate one");
+        let back = project_point(view_proj, origin.add_m(dir.scale_m(9.0)), width, height).expect("the ray point projects");
+        assert!((back[0] - pixel[0]).abs() < 1e-2 && (back[1] - pixel[1]).abs() < 1e-2, "pixel {pixel:?} round-tripped to {back:?}");
+    }
+}
+
+/// 🎯️ LAW: a fit moves the number its camera family owns. A perspective orbit dollies; a parallel
+/// one cannot, so it takes React's `worldProjectionOrthoZoom` and keeps its distance
+/// (`frameWorldProjectionPose`, `🎨️r3f/🟦️.tsx`).
+#[test]
+fn a_parallel_fit_moves_the_zoom_and_a_perspective_fit_moves_the_distance() {
+    let (width, height) = (478.0_f32, 814.0_f32);
+    let minimum = [0.0_f32, -2.0, 0.0];
+    let maximum = [7.0_f32, 2.0, 1.0];
+
+    let perspective = OrbitController::default();
+    let framed = frame_orbit_to_bounds(&perspective, minimum, maximum, width, height, WORLD_FRAME_BOUNDS_MARGIN);
+    assert_eq!(framed.target, vec3_new_m(3.5, 0.0, 0.5), "both families centre on the box");
+    assert!((framed.distance - perspective.distance).abs() > 1e-3, "a perspective fit dollies");
+    assert!((framed.zoom - 1.0).abs() < 1e-6, "and leaves the identity zoom alone");
+
+    let parallel = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, ..OrbitController::default() };
+    let parallel_framed = frame_orbit_to_bounds(&parallel, minimum, maximum, width, height, WORLD_FRAME_BOUNDS_MARGIN);
+    assert_eq!(parallel_framed.target, vec3_new_m(3.5, 0.0, 0.5));
+    assert!((parallel_framed.distance - parallel.distance).abs() < 1e-6, "a parallel fit never dollies");
+    let framed_camera = parallel_framed.to_camera();
+    let (screen_half_w, screen_half_h) = screen_half_extent(&framed_camera, minimum, maximum);
+    assert!((parallel_framed.zoom - world_projection_ortho_zoom(screen_half_w, screen_half_h, width, height, WORLD_FRAME_BOUNDS_MARGIN)).abs() < 1e-3, "it takes React's ortho zoom over the box's SCREEN half-extent: {}", parallel_framed.zoom);
+    let (half_width, half_height) = framed_camera.orthographic_half_extent(width, height);
+    assert!(half_width >= screen_half_w && half_height >= screen_half_h, "and the framed box fits inside the frustum it chose");
+}
+
+/// 🔎️ LAW: the wheel moves whichever number the family owns — three's `OrbitControls` dollies a
+/// perspective camera and scales an orthographic one's `zoom` (`captureNavigationSnapshot` reports
+/// exactly that split).
+#[test]
+fn the_wheel_dollies_a_perspective_orbit_and_zooms_a_parallel_one() {
+    let mut perspective = OrbitController::default();
+    let (distance, zoom) = (perspective.distance, perspective.zoom);
+    perspective.zoom(-200.0);
+    assert!(perspective.distance > distance, "a perspective wheel dollies");
+    assert!((perspective.zoom - zoom).abs() < 1e-6, "and never touches the zoom");
+
+    let mut parallel = OrbitController { projection: CameraProjection3d::Orthographic, zoom: WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, ..OrbitController::default() };
+    let distance = parallel.distance;
+    parallel.zoom(200.0);
+    assert!(parallel.zoom > WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, "a parallel wheel scales the zoom");
+    assert!((parallel.distance - distance).abs() < 1e-6, "and never dollies");
+    parallel.zoom(-1e9);
+    assert!(parallel.zoom >= WORLD_ORBIT_PARALLEL_ZOOM_MIN, "the frustum never inverts");
+}
+
+/// 🎥️ LAW: the two puzzle 3d panes' delivered cameras survive the orbit round-trip intact — this is
+/// the fixture the whole packet is measured against. The `Top` pane's `up` is `+Y`, and the Z-up the
+/// orbit used to hard-code made its `look_at` cross product degenerate, which is why that pane
+/// rendered nothing useful (`📓️w8b-orthographic-camera-and-3d-parity.md` §1).
+#[test]
+fn the_puzzle3d_pane_cameras_survive_the_orbit_round_trip() {
+    let top = puzzle3d_top_camera(1.0);
+    let orbit = OrbitController::from_camera(&top);
+    assert_eq!(orbit.projection, CameraProjection3d::Orthographic);
+    assert_eq!(orbit.up, vec3_new_m(0.0, 1.0, 0.0));
+    assert!((orbit.zoom - 1.0).abs() < 1e-6);
+    let round_tripped = orbit.to_camera();
+    assert!(round_tripped.position.sub_m(top.position).length_m() < 1e-3, "the plan eye survives: {:?}", round_tripped.position);
+    assert_eq!(round_tripped.target, top.target);
+    assert_eq!(round_tripped.up, top.up);
+    let matrix = round_tripped.view_proj(478.0, 814.0);
+    assert!(matrix.cols.iter().flatten().all(|value| value.is_finite()), "and the plan view-projection is finite, not NaN");
+
+    let perspective = puzzle3d_perspective_camera();
+    let orbit = OrbitController::from_camera(&perspective);
+    assert_eq!(orbit.projection, CameraProjection3d::Perspective);
+    assert!((orbit.distance - 9.0764).abs() < 1e-2, "distance={}", orbit.distance);
+    assert!((orbit.fov_y.to_degrees() - 50.0).abs() < 1e-3);
+    assert!(orbit.to_camera().position.sub_m(perspective.position).length_m() < 1e-3);
+}
+
+/// 📐️ LAW: the two `zoom` ↔ frustum mappings React uses are exact inverses, so a projection switch
+/// never jumps scale (`worldProjectionMatchedOrthoZoom` / `…MatchedPerspectiveDistance`).
+#[test]
+fn the_matched_zoom_and_distance_mappings_invert_each_other() {
+    let zoom = world_projection_matched_ortho_zoom(WORLD_LOD_REFERENCE_FOV_DEG, 9.45, 814.0);
+    let distance = world_projection_matched_perspective_distance(WORLD_LOD_REFERENCE_FOV_DEG, zoom, 814.0);
+    assert!((distance - 9.45).abs() < 1e-3, "distance={distance}");
+    let camera = Camera3d { projection: CameraProjection3d::Orthographic, zoom, ..puzzle3d_perspective_camera() };
+    assert!((lod_orbit_distance_for_camera(&camera, 0.0, 814.0) - 9.45).abs() < 1e-3, "a parallel pane bands its LOD on the matched distance");
+    let perspective = puzzle3d_perspective_camera();
+    assert!((lod_orbit_distance_for_camera(&perspective, 9.45, 814.0) - 9.45).abs() < 1e-6, "and a perspective one on its own");
+}
+
+/// 📐️ LAW: a parallel camera's visible radius is its own zoomed pixel extent, never the
+/// height-above-plane a perspective one uses — React's `cameraGridVisibleRadius`.
+#[test]
+fn the_grid_visible_radius_reads_the_cameras_own_family() {
+    let perspective = OrbitController::default().to_camera();
+    let radius = camera_grid_visible_radius(&perspective, 0.0, 960.0, 800.0);
+    assert!(radius > 0.0);
+
+    let parallel = Camera3d { projection: CameraProjection3d::Orthographic, zoom: 1.0, ..perspective.clone() };
+    let half = (960.0_f32 * 0.5).hypot(800.0 * 0.5);
+    assert!((camera_grid_visible_radius(&parallel, 0.0, 960.0, 800.0) - half).abs() < 1e-3, "zoom 1 shows exactly the viewport in world units");
+    let zoomed = Camera3d { zoom: 4.0, ..parallel.clone() };
+    assert!((camera_grid_visible_radius(&zoomed, 0.0, 960.0, 800.0) - half / 4.0).abs() < 1e-3, "and four times the zoom shows a quarter of it");
 }
 
 #[test]
@@ -561,7 +779,7 @@ fn screen_select_components_face_granularity_selects_visible_triangle() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
     assert_eq!(selected, vec!["42".to_string()]);
@@ -576,7 +794,7 @@ fn screen_select_components_vertex_granularity_selects_ids() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let mut selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "vertex", None, false);
     selected.sort();
@@ -593,7 +811,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "edge", None, false);
     assert_eq!(selected, vec!["99".to_string()]);
@@ -606,7 +824,7 @@ fn screen_select_components_default_granularity_selects_whole_instance() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", None, false);
     assert_eq!(selected, vec!["whole".to_string()]);
@@ -626,7 +844,7 @@ fn screen_select_components_filters_by_active_instance_id() {
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", Some("keep"), false);
     assert_eq!(selected, vec!["keep".to_string()]);
@@ -637,7 +855,7 @@ fn screen_select_components_skips_missing_mesh_lookup() {
     let draws = vec![SceneDraw3d { mesh_key: "missing".into(), mesh_version: 0, instances: vec![] }];
     let lookup = std::collections::HashMap::new();
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
     let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
     assert!(selected.is_empty());
@@ -660,7 +878,7 @@ fn screen_segment_distance_degenerate_segment_falls_back_to_point_distance() {
 #[test]
 fn project_point_rejects_points_outside_near_far_clip() {
     let camera = Camera3d::default();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let far_behind = camera.position.add_m(camera.position.sub_m(camera.target).normalize_m().scale_m(2.0));
     assert!(project_point(view_proj, far_behind, 800.0, 600.0).is_none());
     assert!(project_point(view_proj, camera.target, 800.0, 600.0).is_some());
@@ -695,7 +913,7 @@ fn gumball_extent_clamps_to_bounds() {
 
 #[test]
 fn gumball_eye_points_from_pivot_to_camera() {
-    let camera = Camera3d { position: vec3_new_m(0.0, 0.0, 10.0), target: Vec3::ZERO, up: vec3_new_m(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 100.0 };
+    let camera = Camera3d { position: vec3_new_m(0.0, 0.0, 10.0), target: Vec3::ZERO, up: vec3_new_m(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 100.0, projection: CameraProjection3d::Perspective, zoom: 1.0 };
     let eye = gumball_eye(&camera, Vec3::ZERO);
     assert!((eye.length_m() - 1.0).abs() < 1e-5);
     assert!(eye.z > 0.99);
@@ -802,10 +1020,16 @@ fn pick_closest_mesh_url_filters_out_non_finite_and_negative_lods() {
 }
 
 #[test]
-fn lod_grid_step_world_returns_finest_active_band() {
-    assert_eq!(lod_grid_step_world(5000.0, 10.0), None);
+fn lod_grid_step_world_quantizes_like_reacts_helper() {
+    assert_eq!(lod_grid_step_world(0.0, 10.0), None, "a degenerate LOD draws nothing");
+    assert_eq!(lod_grid_step_world(-1.0, 10.0), None);
+    assert_eq!(lod_grid_step_world(1.0, 0.0), None, "and so does a degenerate factor");
     let step = lod_grid_step_world(1.0, 10.0).expect("step");
-    assert!((step - 1.0).abs() < 1e-9, "step={step}");
+    assert!((step - 10.0).abs() < 1e-9, "one factor covers everything up to the base LOD: step={step}");
+    assert!((lod_grid_step_world(2.0, 10.0).expect("step") - 10.0).abs() < 1e-9);
+    assert!((lod_grid_step_world(5.0, 10.0).expect("step") - 25.0).abs() < 1e-9, "2.5 quantum");
+    assert!((lod_grid_step_world(9.0, 10.0).expect("step") - 50.0).abs() < 1e-9, "5 quantum");
+    assert!((lod_grid_step_world(25.0, 10.0).expect("step") - 250.0).abs() < 1e-9, "and the next decade");
 }
 
 #[test]

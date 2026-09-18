@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/create-slot/schema.json",
+  "title": "CreateSlot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "slot"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "slot": {
+      "title": "Slot3d",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "depth",
+        "height",
+        "id",
+        "width",
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pinnedTileId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -2,10 +2,9 @@
 //! 256-byte-strided root-CBV ring, uploading instance/line data, and replaying opaque/translucent
 //! mesh + line draws. Mirrors the wgpu target's `WorldGlobalsRing`/`prepare_world_passes`/
 //! `draw_world_pass_at` (`🎯️targets/🧊️wgpu/🦀️draw.rs`) and the Metal backend's `🌐️world3d.rs`, minus
-//! the textured-mesh variant — `shader_contract.rs` itself documents `WORLD3D_TEXTURED_PIPELINE` as
-//! **inferred, not wired to any real pipeline construction** in the reference implementation (no
-//! `draw.rs` call site ever built it), so this backend does not add a first D3D12 call site for dead
-//! contract surface either (same call the Metal backend made).
+//! the textured-quad variant — the wgpu reference builds `world3d_textured_pipeline` for the
+//! reference underlay since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c, and neither this
+//! backend nor Metal has grown its twin yet.
 //!
 //! **No separate "ring buffer" type, unlike Metal.** Metal needs `WorldGlobalsRing` because Metal's
 //! vertex/fragment buffer binding takes a *byte offset* into a buffer at bind time

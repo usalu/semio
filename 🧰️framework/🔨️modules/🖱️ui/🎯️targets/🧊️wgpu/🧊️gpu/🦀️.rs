@@ -37,72 +37,6 @@ enum PreparedGpuPresentPhase {
 /// banner alone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const PREPARED_GPU_OPPORTUNITY_CEILING_US: u64 = 2_000;
 
-#[allow(dead_code, reason = "[DEBUG] temporary ladder census")]
-fn debug_ladder_census(packet: &PreparedRenderPacket) {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static SEEN: AtomicU32 = AtomicU32::new(0);
-    static LOGGED: AtomicU32 = AtomicU32::new(0);
-    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-    if !(seen < 3 || seen % 10 == 0) || LOGGED.fetch_add(1, Ordering::Relaxed) >= 40 {
-        return;
-    }
-    let pages = packet.command_pages();
-    let (mut instances, mut lines, mut textured, mut passes, mut ui, mut foreground, mut overlay_owned, mut no_cursor) = (0u32, 0u32, 0u32, 0u32, 0u32, 0u32, 0u32, 0u32);
-    for index in 0..pages.len() {
-        let Some(command) = pages.get(index) else { continue };
-        if command.packet_overlay() {
-            overlay_owned += 1;
-        }
-        let Some(draw_cursor) = command.draw_cursor() else {
-            no_cursor += 1;
-            continue;
-        };
-        let owner = if command.packet_overlay() { packet.overlay.as_ref() } else { Some(&packet.draw) };
-        if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor)) {
-            foreground += 1;
-        }
-        match draw_cursor {
-            DrawMeasureCursor::PassInstance { .. } => instances += 1,
-            DrawMeasureCursor::PassLineVertex { .. } => lines += 1,
-            DrawMeasureCursor::PassTextured { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassTexturedKey { .. } => textured += 1,
-            DrawMeasureCursor::PassHeader(_) => passes += 1,
-            DrawMeasureCursor::LayerUi { .. } => ui += 1,
-            _ => {}
-        }
-    }
-    let draw_passes = packet.draw.scene_passes.len();
-    let draw_draws: usize = packet.draw.scene_passes.iter().map(|pass| pass.draws.len()).sum();
-    let draw_instances: usize = packet.draw.scene_passes.iter().flat_map(|pass| pass.draws.iter()).map(|draw| draw.instances.len()).sum();
-    let draw_textured: usize = packet.draw.scene_passes.iter().map(|pass| pass.textured_draws.len()).sum();
-    let overlay_passes = packet.overlay.as_ref().map_or(0, |draw| draw.scene_passes.len());
-    let message = format!(
-        "[DEBUG] w5c ladder seen={seen} revision={} generation={} pages={} instances={instances} lines={lines} textured={textured} pass-headers={passes} ui={ui} foreground={foreground} overlay-owned={overlay_owned} no-cursor={no_cursor} draw-passes={draw_passes} draw-draws={draw_draws} draw-instances={draw_instances} draw-textured={draw_textured} overlay-passes={overlay_passes}",
-        packet.scene_revision(),
-        packet.preview_generation(),
-        pages.len()
-    );
-    let detail: Vec<String> = packet
-        .draw
-        .scene_passes
-        .iter()
-        .map(|pass| {
-            format!(
-                "pass viewport={:?} draws={} lines={} textured={} keys={:?}",
-                pass.viewport,
-                pass.draws.len(),
-                pass.line_draws.len(),
-                pass.textured_draws.len(),
-                pass.draws.iter().map(|draw| (draw.mesh_key.clone(), draw.mesh_version, draw.instances.len())).collect::<Vec<_>>()
-            )
-        })
-        .collect();
-    let message = format!("{message} {}", detail.join(" | "));
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&message));
-    #[cfg(not(target_arch = "wasm32"))]
-    eprintln!("{message}");
-}
-
 /// 🫧 Resolves one `DrawMeasureCursor::Glass` command page against the draw list it was measured
 /// on. `advance_pipeline` emits one command page per MEASURED step, and the step that retires the
 /// glass section is measured too: `Glass(index)` with `index == glass_regions.len()` sets the cursor
@@ -514,27 +448,6 @@ impl GpuContext {
 
     pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {
         let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
-        {
-            use std::sync::atomic::{AtomicU32, Ordering};
-            static SEEN: AtomicU32 = AtomicU32::new(0);
-            static LOGGED: AtomicU32 = AtomicU32::new(0);
-            let seen = SEEN.fetch_add(1, Ordering::Relaxed);
-            if (seen < 4 || seen % 512 == 0) && LOGGED.fetch_add(1, Ordering::Relaxed) < 40 {
-                let shape = match upload {
-                    PreparedRenderUpload::GlyphAtlasPages { .. } => "glyph-pages".to_string(),
-                    PreparedRenderUpload::IconAtlasPages { .. } => "icon-pages".to_string(),
-                    PreparedRenderUpload::RasterPages { key, pixels } => format!("raster-pages key={key} {}x{} gen={} packet-gen={}", pixels.width(), pixels.height(), pixels.frame_generation(), packet.preview_generation()),
-                    PreparedRenderUpload::Mesh { key, version, .. } => format!("mesh key={key} version={version} cursor={:?}", self.mesh_store.debug_upload_cursor()),
-                    #[allow(unreachable_patterns)]
-                    _ => "other".to_string(),
-                };
-                let message = format!("[DEBUG] w5c upload seen={seen} index={index}/{} {shape}", packet.uploads().len());
-                #[cfg(target_arch = "wasm32")]
-                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&message));
-                #[cfg(not(target_arch = "wasm32"))]
-                eprintln!("{message}");
-            }
-        }
         let complete = match upload {
             #[cfg(test)]
             PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
@@ -641,7 +554,6 @@ impl GpuContext {
             }
             PreparedGpuPresentPhase::Commands => {
                 let Some(command) = packet.command_pages().get(cursor.command) else {
-                    debug_ladder_census(packet);
                     cursor.phase = PreparedGpuPresentPhase::BlurScene;
                     return Ok(false);
                 };

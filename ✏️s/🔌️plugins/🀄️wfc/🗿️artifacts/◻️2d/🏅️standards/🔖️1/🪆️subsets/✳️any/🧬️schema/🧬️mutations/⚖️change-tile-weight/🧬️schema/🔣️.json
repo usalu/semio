@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/change-tile-weight/schema.json",
+  "title": "ChangeTileWeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tileId",
+    "weight"
+  ],
+  "properties": {
+    "tileId": {
+      "type": "string"
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

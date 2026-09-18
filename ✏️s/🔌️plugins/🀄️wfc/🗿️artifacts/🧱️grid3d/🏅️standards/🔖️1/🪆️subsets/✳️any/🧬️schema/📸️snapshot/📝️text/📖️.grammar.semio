@@ -1,0 +1,9 @@
+dialect grammar
+grammar wfc.grid3d.snapshot
+extension wfcgrid3d
+start document
+
+document = header body
+header = "schema" SP "wfc.grid3d.snapshot" NL
+body = payload NL?
+payload = OCTET+

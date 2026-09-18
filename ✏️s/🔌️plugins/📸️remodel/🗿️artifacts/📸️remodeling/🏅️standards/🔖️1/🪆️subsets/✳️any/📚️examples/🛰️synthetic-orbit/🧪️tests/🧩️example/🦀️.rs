@@ -670,16 +670,12 @@ async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document
 }
 #[semio_framework_async_macros::async_test]
 async fn a_finalized_reconstruction_is_one_undoable_edit() {
-    let mut app = app_with_registry().await;
-    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
-        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 })).await;
-        settle(&mut app, "the frame import").await;
-    }
+    let mut app = imported_app().await;
     let before = durable(&mut app).await;
     let before_scene = app.snapshot().expect("imported snapshot");
     start_reconstruction(&mut app).await;
     let complete = pump_run(&mut app, "the run rests", |run| matches!(run.state.wire_name(), "complete" | "faulted")).await;
-    assert_eq!(complete.state.wire_name(), "complete", "the default two-frame sample completes without registering a camera: {complete:?}");
+    assert_eq!(complete.state.wire_name(), "complete", "the calibrated orbit completes: {complete:?}");
     let unfinalized = durable(&mut app).await;
     assert!(unfinalized.0 == before.0 && unfinalized.1 == before.1, "a complete but unfinalized run leaves the document pack byte-identical");
     let arguments = run_arguments(&mut app).await;
@@ -694,6 +690,29 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
     assert_eq!(app.snapshot().expect("undone snapshot"), before_scene, "one undo removes the whole finalized reconstruction");
     semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     assert_eq!(app.snapshot().expect("redone snapshot"), finalized_scene, "one redo restores it");
+    close(app);
+}
+
+/// 🌱️ A capture no two adjacent frames of can be solved (the boot document's stride-5 sampling
+/// leaves eight views 50° apart) completes without cameras rather than faulting; finalize then has
+/// nothing to publish and leaves the document byte-identical.
+#[semio_framework_async_macros::async_test]
+async fn an_unregistrable_capture_completes_without_cameras() {
+    let mut app = app_with_registry().await;
+    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
+        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 })).await;
+        settle(&mut app, "the frame import").await;
+    }
+    let before = durable(&mut app).await;
+    start_reconstruction(&mut app).await;
+    let complete = pump_run(&mut app, "the run rests", |run| matches!(run.state.wire_name(), "complete" | "faulted")).await;
+    assert_eq!(complete.state.wire_name(), "complete", "an unregistrable sample completes: {complete:?}");
+    let arguments = run_arguments(&mut app).await;
+    run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
+    settle(&mut app, "the finalize publication").await;
+    let finalized = durable(&mut app).await;
+    assert!(finalized.0 == before.0 && finalized.1 == before.1, "nothing to publish leaves the document pack byte-identical");
     close(app);
 }
 //#endregion 🧪️EndToEnd

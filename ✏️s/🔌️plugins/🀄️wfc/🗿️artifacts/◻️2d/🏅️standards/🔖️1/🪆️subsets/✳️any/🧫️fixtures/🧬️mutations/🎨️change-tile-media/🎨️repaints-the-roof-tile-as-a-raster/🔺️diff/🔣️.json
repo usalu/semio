@@ -1,0 +1,41 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      0,
+      {
+        "id": "tile-roof",
+        "weight": 1.0,
+        "media": {
+          "Bitmap": {
+            "width": 4,
+            "height": 4,
+            "palette": [
+              {
+                "r": 30,
+                "g": 64,
+                "b": 175,
+                "a": 255
+              },
+              {
+                "r": 96,
+                "g": 165,
+                "b": 250,
+                "a": 255
+              }
+            ],
+            "pixels": "AAAAAAAAAAABAQEBAQEBAQ=="
+          }
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

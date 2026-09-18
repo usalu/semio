@@ -155,7 +155,7 @@ const SPEC_VECTORS: &[&str] = &[
     "change-target-region-locked-refused",
 ];
 
-/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle2dDiff` mirrors `Puzzle2dSnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🧩️assembly` and `🧱️block` subsets, whose diffs split, rename or fold their fields, carry real rows here.
+/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle2dDiff` mirrors `Puzzle2dSnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🀄️wfc` and `🧱️block` subsets, whose diffs split, rename or fold their fields, carry real rows here.
 const DIFF_ALIASES: &[(&str, &[&str])] = &[];
 
 /// 🕳️ Fields whose CLEARED state would be inexpressible on the JSON wire (an `Option<Option<T>>`

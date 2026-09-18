@@ -88,7 +88,7 @@ const KINDS: &[&str] = &[
     "replace-kind-catalogs",
 ];
 
-/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle3dDiff` mirrors `Puzzle3dSnapshot` name for name across all four collections, so the table is empty; the sibling `🧩️assembly` subset, whose diff splits every collection into a `<name>Removed`/`<name>Upserted` pair, carries real rows here.
+/// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle3dDiff` mirrors `Puzzle3dSnapshot` name for name across all four collections, so the table is empty; the sibling `🀄️wfc` subset, whose diff splits every collection into a `<name>Removed`/`<name>Upserted` pair, carries real rows here.
 const DIFF_ALIASES: &[(&str, &[&str])] = &[];
 
 /// 🕳️ Fields whose CLEARED state would be inexpressible on the JSON wire (an `Option<Option<T>>`

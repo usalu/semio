@@ -1,0 +1,10 @@
+# 💡️ wfc3d solve inference — the assignment derived from the persisted problem spec.
+
+type Wfc3dInferenceCommit {
+  assignments: [Wfc3dAssignment!]!
+}
+
+type Wfc3dAssignment {
+  slotId: String!
+  tileId: String!
+}

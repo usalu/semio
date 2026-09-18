@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutations.json",
+  "title": "Grid2dMutation",
+  "oneOf": [
+    { "$ref": "./change-seed/schema.json" },
+    { "$ref": "./resize-grid/schema.json" },
+    { "$ref": "./change-cell-size/schema.json" },
+    { "$ref": "./change-periodicity/schema.json" },
+    { "$ref": "./create-tile/schema.json" },
+    { "$ref": "./delete-tile/schema.json" },
+    { "$ref": "./change-tile-weight/schema.json" },
+    { "$ref": "./change-tile-media/schema.json" },
+    { "$ref": "./create-rule/schema.json" },
+    { "$ref": "./delete-rule/schema.json" },
+    { "$ref": "./pin-cell/schema.json" },
+    { "$ref": "./unpin-cell/schema.json" },
+    { "$ref": "./mask-cell/schema.json" },
+    { "$ref": "./unmask-cell/schema.json" }
+  ]
+}

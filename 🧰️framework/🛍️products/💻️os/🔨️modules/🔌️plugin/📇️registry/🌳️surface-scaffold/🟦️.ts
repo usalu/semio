@@ -87,7 +87,7 @@ export function resolveSubsetRel(repoRoot: string, pluginArg: string, kindArg: s
 /** @emoji 🪆️ Every subset dir across every plugin area whose `🧬️schema` facet is present — the "owned"
  * predicate this ticket freezes (contract §6): schema presence alone, independent of `🚪️io`, because
  * the 286-surface target (143 subsets × 2 roles) only holds when every schema-bearing subset counts,
- * including the one subset (🧩️assembly) that has no `🚪️io` yet. */
+ * including any subset that has no `🚪️io` yet. */
 export function discoverOwnedSubsetRels(repoRoot: string): string[] {
   const out: string[] = [];
   for (const area of PLUGIN_AREAS) {

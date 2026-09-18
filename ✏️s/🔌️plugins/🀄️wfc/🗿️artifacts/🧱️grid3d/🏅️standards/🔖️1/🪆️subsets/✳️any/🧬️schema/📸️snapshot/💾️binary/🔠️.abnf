@@ -1,0 +1,11 @@
+; 🔠 wfc.grid3d.snapshot — derived from 📡️.protocol.semio; the record is the concatenation of its declared fields.
+
+record = header-format_major header-format_minor header-flags header-domain_tag header-header_crc32 body-payload footer-artifact_mark footer-body_crc32
+header-format_major = 2OCTET
+header-format_minor = 2OCTET
+header-flags = 4OCTET
+header-domain_tag = 4OCTET
+header-header_crc32 = 4OCTET
+body-payload = *OCTET
+footer-artifact_mark = *OCTET
+footer-body_crc32 = 4OCTET

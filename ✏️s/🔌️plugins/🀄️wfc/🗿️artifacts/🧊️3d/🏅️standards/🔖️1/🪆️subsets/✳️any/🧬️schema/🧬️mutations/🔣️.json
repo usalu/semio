@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutations.json",
+  "title": "Wfc3dMutation",
+  "oneOf": [
+    {
+      "$ref": "./create-slot/schema.json"
+    },
+    {
+      "$ref": "./delete-slot/schema.json"
+    },
+    {
+      "$ref": "./move-slot/schema.json"
+    },
+    {
+      "$ref": "./resize-slot/schema.json"
+    },
+    {
+      "$ref": "./connect-slots/schema.json"
+    },
+    {
+      "$ref": "./disconnect-slots/schema.json"
+    },
+    {
+      "$ref": "./pin-slot/schema.json"
+    },
+    {
+      "$ref": "./unpin-slot/schema.json"
+    },
+    {
+      "$ref": "./create-tile/schema.json"
+    },
+    {
+      "$ref": "./delete-tile/schema.json"
+    },
+    {
+      "$ref": "./change-tile-weight/schema.json"
+    },
+    {
+      "$ref": "./change-tile-media/schema.json"
+    },
+    {
+      "$ref": "./create-rule/schema.json"
+    },
+    {
+      "$ref": "./delete-rule/schema.json"
+    },
+    {
+      "$ref": "./change-seed/schema.json"
+    }
+  ]
+}

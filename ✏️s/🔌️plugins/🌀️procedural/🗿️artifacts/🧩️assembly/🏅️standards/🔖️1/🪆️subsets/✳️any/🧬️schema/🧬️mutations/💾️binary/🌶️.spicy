@@ -1,4 +1,0 @@
-module Procedural_assembly_mutations;
-type Operation = unit {
-    payload: bytes &eod;
-};

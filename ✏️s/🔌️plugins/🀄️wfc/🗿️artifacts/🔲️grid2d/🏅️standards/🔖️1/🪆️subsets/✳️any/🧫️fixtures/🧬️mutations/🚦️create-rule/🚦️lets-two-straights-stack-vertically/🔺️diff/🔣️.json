@@ -1,0 +1,29 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": null,
+  "height": null,
+  "cellWidth": null,
+  "cellHeight": null,
+  "periodicX": null,
+  "periodicY": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": [
+    [
+      1,
+      {
+        "id": "rule-bottom-straight-straight",
+        "tileAId": "straight",
+        "tileBId": "straight",
+        "direction": "BOTTOM",
+        "allowed": true
+      }
+    ]
+  ],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

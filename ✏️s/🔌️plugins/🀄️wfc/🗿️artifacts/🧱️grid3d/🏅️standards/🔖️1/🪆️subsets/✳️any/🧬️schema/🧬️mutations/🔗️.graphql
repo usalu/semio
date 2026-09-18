@@ -1,0 +1,85 @@
+# 🧬 s.wfc.grid3d mutation facet — one type per semantic kind, united by `Grid3dMutation`. The wire
+# form is internally tagged by the variant name, exactly as the committed fixtures carry it.
+
+type ChangeSeed {
+  seed: Int!
+}
+
+type ResizeGrid {
+  width: Int!
+  height: Int!
+  depth: Int!
+}
+
+type ChangeCellSizes {
+  axis: Grid3dAxis!
+  sizes: [Float!]!
+}
+
+type ChangePeriodicity {
+  periodicX: Boolean!
+  periodicY: Boolean!
+  periodicZ: Boolean!
+}
+
+type CreateTile {
+  tile: Grid3dTile!
+}
+
+type DeleteTile {
+  id: String!
+}
+
+type ChangeTileWeight {
+  tileId: String!
+  weight: Float!
+}
+
+type ChangeTileMedia {
+  tileId: String!
+  media: Grid3dTileMedia!
+}
+
+type CreateRule {
+  rule: Grid3dRule!
+}
+
+type DeleteRule {
+  id: String!
+}
+
+type PinCell {
+  pinned: Grid3dPinnedCell!
+}
+
+type UnpinCell {
+  x: Int!
+  y: Int!
+  z: Int!
+}
+
+type MaskCell {
+  cell: Grid3dCell!
+}
+
+type UnmaskCell {
+  x: Int!
+  y: Int!
+  z: Int!
+}
+
+union Grid3dMutation =
+    ChangeSeed
+  | ResizeGrid
+  | ChangeCellSizes
+  | ChangePeriodicity
+  | CreateTile
+  | DeleteTile
+  | ChangeTileWeight
+  | ChangeTileMedia
+  | CreateRule
+  | DeleteRule
+  | PinCell
+  | UnpinCell
+  | MaskCell
+  | UnmaskCell

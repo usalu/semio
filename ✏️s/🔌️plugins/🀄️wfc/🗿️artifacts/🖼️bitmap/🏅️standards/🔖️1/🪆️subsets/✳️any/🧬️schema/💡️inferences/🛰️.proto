@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.wfc.bitmap.inference;
+
+message BitmapInferenceCommit {
+  string pixels = 1;
+  bool contradiction = 2;
+  repeated double entropy = 3;
+}

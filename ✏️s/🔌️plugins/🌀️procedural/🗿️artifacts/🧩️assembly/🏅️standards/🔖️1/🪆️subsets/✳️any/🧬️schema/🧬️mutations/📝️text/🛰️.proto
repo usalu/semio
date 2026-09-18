@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.s.procedural.assembly.mutations_text;
-message OperationLine { string keyword = 1; string arguments = 2; }

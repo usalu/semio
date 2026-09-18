@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/snapshot.json",
+  "title": "BitmapSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "seed", "input", "output", "model"],
+  "definitions": {
+    "BitmapColor": {
+      "title": "BitmapColor",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "g", "b", "a"],
+      "properties": {
+        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "a": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
+    "BitmapInput": {
+      "title": "BitmapInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "palette", "pixels"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "palette": { "type": "array", "maxItems": 256, "items": { "$ref": "#/definitions/BitmapColor" } },
+        "pixels": { "type": "string", "format": "base64" }
+      }
+    },
+    "BitmapOutputSpec": {
+      "title": "BitmapOutputSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "periodic"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "periodic": { "type": "boolean" }
+      }
+    },
+    "BitmapOverlappingModel": {
+      "title": "BitmapOverlappingModel",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["patternSize", "symmetry", "periodicInput"],
+      "properties": {
+        "patternSize": { "type": "integer", "minimum": 2, "maximum": 5 },
+        "symmetry": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "periodicInput": { "type": "boolean" },
+        "ground": { "type": ["integer", "null"], "minimum": 0, "maximum": 255 }
+      }
+    },
+    "BitmapPinnedPixel": {
+      "title": "BitmapPinnedPixel",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "color"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "color": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "type": "string", "const": "s.wfc.bitmap", "x-semio-state": "artifact" },
+    "seed": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "input": { "$ref": "#/definitions/BitmapInput", "x-semio-state": "artifact" },
+    "output": { "$ref": "#/definitions/BitmapOutputSpec", "x-semio-state": "artifact" },
+    "model": { "$ref": "#/definitions/BitmapOverlappingModel", "x-semio-state": "artifact" },
+    "pinned": { "type": "array", "items": { "$ref": "#/definitions/BitmapPinnedPixel" }, "x-semio-state": "artifact" }
+  }
+}

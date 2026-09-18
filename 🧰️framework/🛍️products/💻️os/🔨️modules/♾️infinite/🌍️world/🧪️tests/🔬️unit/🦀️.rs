@@ -878,7 +878,7 @@ fn world_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]]) -> Vec<St
 fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degenerate_cases() {
     let state = world_marquee_geometry_fixture(1);
     let viewport = render_pick_viewport(&state);
-    let view_projection = state.orbit.to_camera().view_proj(1.0);
+    let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let mesh = state.meshes.get("mesh").unwrap();
     let projected: Vec<_> = (0..3).map(|index| ui_wgpu::wgpu::project_point(view_projection, world_mesh_vertex(*mesh, index).unwrap(), viewport.w, viewport.h).unwrap()).collect();
     let min_x = projected.iter().map(|point| point[0]).fold(f32::INFINITY, f32::min);
@@ -899,7 +899,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
 fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
     let state = world_marquee_geometry_fixture(WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
     let points = [[0.0, 0.0], [400.0, 400.0]];
-    let view_projection = state.orbit.to_camera().view_proj(1.0);
+    let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let (meshes, draws) = legacy_geometry_fixture(&state);
     let legacy = screen_select_instances(&meshes, &draws, view_projection, 400.0, 400.0, &points, true, false);
     let retained = world_marquee_cursor_ids(&state, &points);
@@ -912,7 +912,7 @@ fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
     let mut state = world_marquee_geometry_fixture(1);
     state.selection_method = "lasso".into();
     let viewport = render_pick_viewport(&state);
-    let view_projection = state.orbit.to_camera().view_proj(1.0);
+    let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 0.0], [400.0, 400.0], [0.0, 400.0]];
     let (meshes, draws) = legacy_geometry_fixture(&state);
     let legacy = screen_select_instances(&meshes, &draws, view_projection, viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
@@ -970,7 +970,7 @@ fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]])
 fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
     let mut state = world_marquee_geometry_fixture(1);
     let viewport = render_pick_viewport(&state);
-    let view_projection = state.orbit.to_camera().view_proj(1.0);
+    let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 400.0]];
     for granularity in ["vertex", "edge", "face"] {
         state.granularity = granularity.into();
@@ -1507,6 +1507,45 @@ fn renderer_world_consumers_use_only_fixed_intent_ingress() {
     assert!(!world.contains(concat!("pub fn ", "handle_world3d_wheel")));
 }
 
+/// 📐️ The world reference underlay is the only raster producer this lane publishes, and a producer it
+/// appends UNBOUND is refused by the prepared render job with `raster producer generation is stale` —
+/// the silent refusal that held the wgpu shell at exactly one presented frame per boot
+/// (`📓️w7b-presenter-one-frame-per-boot.md` §1).
+#[test]
+fn an_appended_world_raster_producer_is_bound_to_the_frames_generation() {
+    use semio_framework_job::InteractiveJob;
+    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    resources.ensure_world_plane_texture("plan", &[1, 2, 3, 4], 1, 1);
+    let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
+    assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+    assert_eq!(input.raster_producers.len(), 1);
+    assert!(input.raster_producers.get_mut(0).is_some_and(|producer| matches!(producer.step(2), ui_wgpu::wgpu::PreparedRasterProducerStep::Pending)), "the appended producer answers its own frame generation");
+    assert!(input.raster_producers.get_mut(0).is_some_and(|producer| matches!(producer.step(3), ui_wgpu::wgpu::PreparedRasterProducerStep::Fault(_))), "and refuses any other generation");
+
+    let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
+    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    resources.ensure_world_plane_texture("plan", &[1, 2, 3, 4], 1, 1);
+    assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+    let mut job = ui_wgpu::wgpu::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
+    let mut preview = 0;
+    let outcome = semio_framework_job::drive_step(
+        &mut job,
+        "world.prepare",
+        semio_framework_job::OperationId(1),
+        semio_framework_job::Generation(2),
+        semio_framework_job::InteractiveStage::BackgroundStep,
+        semio_framework_job::StepBudget::new(4, u64::MAX),
+        semio_framework_job::root_cancel_token(),
+        semio_framework_job::default_now_us,
+        &mut preview,
+        &mut None,
+    );
+    assert!(matches!(outcome, semio_framework_job::StepOutcome::Yield), "a bound producer keeps the preparation alive");
+    assert_eq!(job.fault(), None, "the prepared job never refuses this lane's own producer");
+    job.begin_close();
+    while !matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {}
+}
+
 #[test]
 fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_send::<World3dBuildContext>();
@@ -1907,7 +1946,7 @@ fn pick_select_emits_numeric_world_pick_id() {
     state.bounds = inner;
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
     let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
     assert_eq!(action.action, "worldPick");
     let args = action.args.expect("args");
@@ -1937,7 +1976,7 @@ fn marquee_crossing_includes_partial_overlap_window_does_not() {
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let view_proj = camera.view_proj(1.0);
+    let view_proj = camera.view_proj(800.0, 800.0);
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
     let mut max_x = f32::NEG_INFINITY;
@@ -2085,7 +2124,7 @@ fn preview_survives_sync_when_scene_json_unchanged() {
 fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing() {
     let mut scene = scene_with_selection("{}");
     let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
-    page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 10, ..Default::default() }).unwrap();
+    page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 12, ..Default::default() }).unwrap();
     page.seal().unwrap();
     let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
     let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor).unwrap();
@@ -2106,7 +2145,7 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
     }
     let oracle: serde_json::Value = serde_json::from_str(&scene.world_3d.as_ref().unwrap().camera_json).expect("camera fixture");
     let vector = |key: &str| Vec3::new(oracle[key][0].as_f64().unwrap() as f32, oracle[key][1].as_f64().unwrap() as f32, oracle[key][2].as_f64().unwrap() as f32);
-    let expected = OrbitController::from_camera(&Camera3d { position: vector("position"), target: vector("target"), up: vector("up"), fov_y: oracle["fov"].as_f64().unwrap() as f32 * std::f32::consts::PI / 180.0, near: 0.1, far: 1000.0 }).to_camera();
+    let expected = OrbitController::from_camera(&Camera3d { position: vector("position"), target: vector("target"), up: vector("up"), fov_y: oracle["fov"].as_f64().unwrap() as f32 * std::f32::consts::PI / 180.0, near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR, far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR, projection: ui_wgpu::wgpu::CameraProjection3d::Perspective, zoom: oracle["zoom"].as_f64().unwrap_or(1.0) as f32 }).to_camera();
     let actual = typed.orbit.to_camera();
     assert_eq!(actual.position, expected.position);
     assert_eq!(actual.target, expected.target);
@@ -2367,7 +2406,7 @@ fn pick_viewport_uses_render_bounds_not_pick_clip_offset() {
     state.bounds = bounds;
     state.pick_bounds = clip;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
     let global_x = bounds.x + screen[0];
     let global_y = bounds.y + screen[1];
     let picked = pick_component_at(&state, global_x, global_y, bounds).expect("vertex pick respects render viewport");
@@ -2404,7 +2443,7 @@ fn pick_component_at_face_mode_uses_ray_pick() {
     let mesh_ref = state.meshes.get("mesh-1").expect("mesh");
     let tri = world_mesh_triangle(*mesh_ref, 0).expect("triangle");
     let centroid = mesh_vertex(*mesh_ref, tri[0]).expect("first vertex").add(mesh_vertex(*mesh_ref, tri[1]).expect("second vertex")).add(mesh_vertex(*mesh_ref, tri[2]).expect("third vertex")).scale(1.0 / 3.0);
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h).expect("face centroid projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), centroid, inner.w, inner.h).expect("face centroid projects");
     let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("face pick");
     assert_eq!(picked.0, "face");
     assert_eq!(picked.2, "obj-1");
@@ -2425,7 +2464,7 @@ fn pick_component_at_edge_mode_uses_ray_pick() {
     let a = Vec3::new(edge[0][0], edge[0][1], edge[0][2]);
     let b = Vec3::new(edge[1][0], edge[1][1], edge[1][2]);
     let mid = a.add(b).scale(0.5);
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), mid, inner.w, inner.h).expect("edge midpoint projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), mid, inner.w, inner.h).expect("edge midpoint projects");
     let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("edge pick");
     assert_eq!(picked.0, "edge");
     assert_eq!(picked.2, "obj-1");
@@ -2793,11 +2832,41 @@ fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching(
 
 //#endregion GlbAssetTests
 
+/// 📐️ LAW: the grid draws React's ONE band at `lodGridStepWorld`'s exact spacing, is sized by the
+/// camera's own fade radius rather than a fixed square, stays inside the far plane, and fades to
+/// zero alpha at its rim (`📓️w7b-presenter-one-frame-per-boot.md` §5,
+/// `📓️w8b-orthographic-camera-and-3d-parity.md` §3).
 #[test]
-fn lod_grid_lines_generate_for_near_camera() {
+fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
+    let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
+    let camera = OrbitController::default().to_camera();
     let mut lines = Vec::new();
-    append_lod_grid_lines(&mut lines, 2.0, 10.0, Vec3::ZERO, [0.5, 0.5, 0.5, 1.0]);
-    assert!(!lines.is_empty());
+    append_lod_grid_lines(&mut lines, 2.0, 10.0, Vec3::ZERO, &camera, viewport, [0.5, 0.5, 0.5, 1.0]);
+    assert!(!lines.is_empty(), "a near camera still gets a grid");
+
+    let half = lines.iter().flat_map(|vertex| [vertex.position[0].abs(), vertex.position[1].abs()]).fold(0.0_f32, f32::max);
+    assert!(half <= camera.far * 0.25 + 1e-3, "the whole grid sits inside the camera's far plane");
+    assert!(half < 12_000.0 * 0.5, "and is nowhere near the fixed square it used to draw");
+
+    let step = ui_wgpu::wgpu::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
+    let mut offsets: Vec<f32> = lines.iter().map(|vertex| vertex.position[1]).collect();
+    offsets.sort_by(|left, right| left.partial_cmp(right).expect("finite grid coordinates"));
+    offsets.dedup_by(|left, right| (*left - *right).abs() < 1e-4);
+    for pair in offsets.windows(2) {
+        let gap = pair[1] - pair[0];
+        assert!((gap / step - (gap / step).round()).abs() < 1e-3, "every row lands on React's band multiple, never on a clamped division");
+    }
+    assert!(lines.iter().any(|vertex| vertex.color[3] == 0.0), "the rim fades out instead of ending on a hard edge");
+
+    // 🔀️ The same law under a plan view: a parallel camera's fade radius comes from its zoomed
+    // pixel extent, so a `Top` pane gets a grid of its own instead of the perspective one's.
+    let parallel = ui_wgpu::wgpu::Camera3d { projection: ui_wgpu::wgpu::CameraProjection3d::Orthographic, zoom: 12.0, position: Vec3::new(0.0, 0.0, 9.45), up: Vec3::new(0.0, 1.0, 0.0), ..camera.clone() };
+    let mut parallel_lines = Vec::new();
+    append_lod_grid_lines(&mut parallel_lines, 2.0, 10.0, Vec3::ZERO, &parallel, viewport, [0.5, 0.5, 0.5, 1.0]);
+    assert!(!parallel_lines.is_empty(), "a plan pane draws a grid too");
+    let parallel_half = parallel_lines.iter().flat_map(|vertex| [vertex.position[0].abs(), vertex.position[1].abs()]).fold(0.0_f32, f32::max);
+    assert!(parallel_half <= camera.far * 0.25 + 1e-3);
+    assert!(parallel_lines.len() <= 8 * (WORLD_GRID_MAX_DIVISIONS as usize + 1), "and never submits more than the division ceiling allows");
 }
 
 //#region EnvironmentTests
@@ -2806,9 +2875,11 @@ fn environment_clear_color_uses_opaque_background() {
     let environment = WorldEnvironmentRecord { background: Some("#112233".into()), ..Default::default() };
     let theme_clear = Rgba::new(0.0, 0.0, 0.0, 1.0);
     let clear = environment_clear_color(&environment, theme_clear);
-    assert!((clear.r - (0x11 as f32 / 255.0)).abs() < 1e-3);
-    assert!((clear.g - (0x22 as f32 / 255.0)).abs() < 1e-3);
-    assert!((clear.b - (0x33 as f32 / 255.0)).abs() < 1e-3);
+    // 🎨️ Linear, not raw sRGB: the world pass renders into an sRGB view, so a wire colour is
+    // linearized on the way in exactly as React's `new Color(hex)` linearizes it.
+    assert!((clear.r - srgb_to_linear(0x11 as f32 / 255.0)).abs() < 1e-4);
+    assert!((clear.g - srgb_to_linear(0x22 as f32 / 255.0)).abs() < 1e-4);
+    assert!((clear.b - srgb_to_linear(0x33 as f32 / 255.0)).abs() < 1e-4);
 }
 
 #[test]
@@ -2894,7 +2965,7 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     apply_terrain_style_if_changed_state(&mut state);
-    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 };
+    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_wgpu::wgpu::CameraProjection3d::Perspective, zoom: 1.0 };
     let (tile_draws, evicted) = sync_terrain_state(&mut state, &camera);
     assert!(tile_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
     assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
@@ -3034,7 +3105,7 @@ fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
     state.bounds = inner;
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("object projects");
     let action = pick_select_action(&state, screen[0], screen[1], inner, true, false).expect("pick action");
     assert_eq!(action.action, "interactionSelect");
     let args = action.args.expect("args");
@@ -3071,7 +3142,7 @@ fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
     state.bounds = inner;
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("object projects");
     let action = pick_hover_action(&mut state, screen[0], screen[1], inner).expect("hover action");
     assert_eq!(action.action, "interactionHover");
     let args = action.args.expect("args");
@@ -3134,7 +3205,7 @@ fn pick_select_emits_bare_id_into_bound_app_domain_when_window_binds_one() {
     state.bounds = inner;
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("object projects");
     let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
     assert_eq!(action.action, "interactionSelect");
     let args = action.args.expect("args");
@@ -3155,7 +3226,7 @@ fn pick_hover_emits_bare_id_into_bound_app_domain() {
     state.bounds = inner;
     state.pick_bounds = inner;
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("object projects");
     let action = pick_hover_action(&mut state, screen[0], screen[1], inner).expect("hover action");
     let args = action.args.expect("args");
     assert_eq!(args["domainId"], json!("cad"));
@@ -3403,7 +3474,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     // 🎯️ Aim through the fixture camera's own target, which is the centre of the prism's base face
     // — the one point guaranteed both inside the solid and inside the 45° frustum.
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w / bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
     let hit = pick_instance_at(&state, screen[0], screen[1], bounds);
     assert_eq!(hit.as_deref(), Some(instance_id.as_str()), "the bridged geometry is what a world pick actually hits");
     let select = pick_select_action(&state, screen[0], screen[1], bounds, false, false).expect("pick emits an action");

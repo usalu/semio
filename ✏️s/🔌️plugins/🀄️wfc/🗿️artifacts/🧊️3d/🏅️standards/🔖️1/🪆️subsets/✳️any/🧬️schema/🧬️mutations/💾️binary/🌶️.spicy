@@ -1,0 +1,5 @@
+module Wfc3dMutations;
+
+public type Operation = unit {
+    payload: bytes &eod;
+};

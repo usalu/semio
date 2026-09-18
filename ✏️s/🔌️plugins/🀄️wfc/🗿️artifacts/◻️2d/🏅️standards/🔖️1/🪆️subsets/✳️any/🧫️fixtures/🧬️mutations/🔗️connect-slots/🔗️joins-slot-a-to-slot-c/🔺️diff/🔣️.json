@@ -1,0 +1,22 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [
+    [
+      1,
+      {
+        "id": "edge-ac",
+        "fromSlotId": "slot-a",
+        "toSlotId": "slot-c",
+        "relation": "adjacent"
+      }
+    ]
+  ],
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

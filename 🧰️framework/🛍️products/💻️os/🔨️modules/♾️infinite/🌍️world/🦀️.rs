@@ -13,7 +13,7 @@ use ui_wgpu::wgpu::{screen_select_components, screen_select_instances};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
 use ui_wgpu::wgpu::{
-    axis_rotate_angle, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    axis_rotate_angle, camera_grid_fade_distance, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera, CameraProjection3d,
     marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
     Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
     Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
@@ -263,6 +263,17 @@ impl World3dBuildContext {
         }
     }
 
+    /// 📤️ Moves ONE admitted world resource into the frame's prepared input per call.
+    ///
+    /// 🩸️ A raster producer must be BOUND to the input's `preview_generation` before it is pushed, on
+    /// this lane exactly as on the chrome lane (`🧊️renderer/🦀️.rs`'s `RasterUploads` phase). An unbound
+    /// producer carries `frame_generation: None`, and `PreparedRasterProducer::step` refuses it with
+    /// `raster producer generation is stale` — a fault `AppFramePreparation` turned into an EMPTY
+    /// `JobFault` and `ActiveFrameBuild` answered by cancelling its own token, with no fault recorded
+    /// anywhere. The world reference underlay is the only producer this lane publishes, so the shell
+    /// presented exactly ONE frame per boot: every build admitted after the plan image decoded died
+    /// silently in preparation (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    /// `📓️w7b-presenter-one-frame-per-boot.md` §1).
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path."))]
     pub fn append_step(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
         if let Some(rejected) = self.rejected.take() {
@@ -270,11 +281,14 @@ impl World3dBuildContext {
         }
         if let Some(index) = self.raster_producer_len.checked_sub(1) {
             self.raster_producer_len = index;
-            let Some(producer) = self.raster_producers[index].take() else { return Ok(false) };
+            let Some(mut producer) = self.raster_producers[index].take() else { return Ok(false) };
             let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else {
                 return Err(World3dBuildRejected::RasterProducer(producer));
             };
             if next > input.limits.max_upload_items {
+                return Err(World3dBuildRejected::RasterProducer(producer));
+            }
+            if !producer.bind_frame_generation(input.preview_generation) {
                 return Err(World3dBuildRejected::RasterProducer(producer));
             }
             if let Err(producer) = input.try_push_raster_producer(producer) {
@@ -1440,6 +1454,12 @@ pub struct World3dState {
     /// before its first mesh arrives), which is precisely the window the boot framing must still fire in.
     fit_framed_revision: Option<u32>,
     fit_seen_revision: Option<u32>,
+    /// 📷️ The content extent React's `WorldProjectionContentFrame` last framed a PARALLEL pane on,
+    /// so it re-frames when a tool grows the scene and never twice for the same one.
+    projection_frame_key: Option<u64>,
+    /// 📷️ The zoom that framing produced — a staged wire camera landing afterwards replaces the whole
+    /// orbit, so the latch has to notice its own framing being overwritten and re-apply it.
+    projection_frame_zoom: Option<f32>,
     /// 🔒️ The user has moved this camera since the live fit revision arrived — the latch that keeps a
     /// re-evaluation of the SAME document from yanking the view back
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
@@ -1713,6 +1733,8 @@ impl World3dState {
             scene_camera_digest: None,
             fit_framed_revision: None,
             fit_seen_revision: None,
+            projection_frame_key: None,
+            projection_frame_zoom: None,
             camera_user_moved: false,
             scene_selection_digest: None,
             scene_document_lanes_digest: None,
@@ -2955,7 +2977,7 @@ impl WorldMarqueePickCursor {
             return None;
         }
         let camera = state.orbit.to_camera();
-        let view_projection = camera.view_proj((viewport.w / viewport.h.max(1.0)).max(0.1));
+        let view_projection = camera.view_proj(viewport.w, viewport.h);
         let rectangle = state.selection_method != "lasso";
         let component_kind = match state.granularity.as_str() {
             "vertex" => Some(WorldComponentKind::Vertex),
@@ -4000,8 +4022,7 @@ impl WorldRayPickCursor {
     pub fn new(state: &World3dState, generation: u64, purpose: WorldRayPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-        let (origin, direction) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge: 0, best: None, complete: false, faulted: false })
     }
 
@@ -4240,8 +4261,7 @@ impl WorldObjectPickCursor {
     fn new(state: &World3dState, generation: u64, purpose: WorldObjectPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-        let (origin, direction) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, slot: 0, merge: 0, best: None, complete: false })
     }
 
@@ -4408,9 +4428,8 @@ impl WorldComponentPickCursor {
         }
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-        let view_projection = camera.view_proj(aspect);
-        let (origin, direction) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+        let view_projection = camera.view_proj(viewport.w, viewport.h);
+        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: state.interaction_revision, generation, purpose, kind, local_x, local_y, viewport, view_projection, origin, direction, slot: 0, current: None, topology: 0, merge: 0, best: None, complete: false })
     }
 
@@ -4810,8 +4829,7 @@ impl WorldGumballPickCursor {
                 return WorldInteractionStep::Pending;
             };
             let camera = state.orbit.to_camera();
-            let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-            let (origin, direction) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+            let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
             self.pivot = Some(pivot);
             self.origin = origin;
             self.direction = direction;
@@ -4974,8 +4992,7 @@ impl WorldGumballGesture {
             return WorldInteractionStep::Pending;
         };
         let camera = state.orbit.to_camera();
-        let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-        let (origin, direction) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
         let eye = gumball_eye(&camera, self.pivot);
         self.translate = Vec3::ZERO;
         self.angle = 0.0;
@@ -6338,7 +6355,7 @@ pub fn plan_world3d_wheel(state: &World3dState, generation: u64, delta: f32) -> 
     let action = WorldFlatAction {
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, WORLD3D_PERSPECTIVE_CAMERA_ZOOM, delta as f64, 0.0, 0.0],
+        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, world3d_camera_zoom(&camera), delta as f64, 0.0, 0.0],
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6364,7 +6381,7 @@ pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32
     let action = WorldFlatAction {
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, WORLD3D_PERSPECTIVE_CAMERA_ZOOM, dx as f64, operation, dy as f64],
+        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, world3d_camera_zoom(&camera), dx as f64, operation, dy as f64],
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6480,8 +6497,8 @@ pub fn publish_world3d_plan_step(
             // dispatch, the same trap React's own docstring records for a bare `projection` string.
             builder.number(Some("zoom"), action.numbers[6])?;
             builder.begin_array(Some("up"))?;
-            for value in WORLD3D_ORBIT_UP {
-                builder.number(None, value)?;
+            for value in [state.orbit.up.x, state.orbit.up.y, state.orbit.up.z] {
+                builder.number(None, f64::from(value))?;
             }
             builder.end_container()?;
             builder.end_container()?;
@@ -6853,7 +6870,9 @@ fn instance_chunk_visible(state: &World3dState, position: [f64; 3]) -> bool {
 
 //#region LodGrid
 const WORLD_LOD_EPSILON: f64 = 0.01;
-const WORLD_GRID_SIZE: f32 = 12_000.0;
+/// 📐️ The most divisions one LOD band may submit as real line geometry. A finer band is DROPPED
+/// rather than drawn at a distorted spacing — see [`append_lod_grid_lines`].
+const WORLD_GRID_MAX_DIVISIONS: i32 = 512;
 
 fn default_lod_record() -> WorldLodRecord {
     WorldLodRecord { automatic: true, manual: default_manual_lod(), distance_reference: default_distance_reference(), depth_variable: false, grid_factor: default_grid_factor(), show_grid: true, grid_datum: Some([0.0, 0.0, 0.0]) }
@@ -6861,7 +6880,7 @@ fn default_lod_record() -> WorldLodRecord {
 
 fn scene_lod(state: &World3dState) -> f64 {
     let camera = state.orbit.to_camera();
-    let distance = camera.position.sub(camera.target).length() as f64;
+    let distance = f64::from(lod_orbit_distance_for_camera(&camera, camera.position.sub(camera.target).length(), state.bounds.h));
     let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
     if state.lod.automatic || state.lod.depth_variable {
         auto_lod
@@ -6885,22 +6904,68 @@ fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod:
     logical_id.to_string()
 }
 
-fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_factor: f64, anchor: Vec3, base_color: [f32; 4]) {
-    for (step_world, opacity) in lod_progressive_grid_layers(lod, grid_factor) {
-        let step = step_world as f32;
-        let divs = ((WORLD_GRID_SIZE / step).round() as i32).clamp(2, 512);
-        let half = WORLD_GRID_SIZE * 0.5;
-        let step_size = WORLD_GRID_SIZE / divs as f32;
-        let color = [base_color[0], base_color[1], base_color[2], base_color[3] * opacity];
-        let z = anchor.z + 0.002;
-        for i in 0..=divs {
-            let offset = -half + i as f32 * step_size;
-            line_vertices.push(LineVertex3d { position: [anchor.x - half, anchor.y + offset, z], color });
-            line_vertices.push(LineVertex3d { position: [anchor.x + half, anchor.y + offset, z], color });
-            line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y - half, z], color });
-            line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y + half, z], color });
-        }
+/// 📐️ The world grid, drawn the way React's `WorldLodGridHelper` draws it: ONE band at
+/// `lodGridStepWorld`'s spacing, sized to `cameraGridFadeDistance` and faded over that same radius.
+///
+/// 🩸️ Two defects lived here. It first submitted a FIXED 12 000-unit square at every LOD band and
+/// clamped the divisions to 512, so the drawn spacing silently stopped being the band's spacing.
+/// W7b fixed the spacing but kept the four PROGRESSIVE bands, which React has no counterpart for —
+/// at the puzzle 3d boot camera that stacked 100 · 25 · 5 · 1-unit grids where React paints a single
+/// 10-unit one. React's grid is a shader plane with no finite edge; this is real line geometry, so
+/// the ONE deliberate deviation left is the [`WORLD_GRID_MAX_DIVISIONS`] ceiling: a radius past it
+/// is CLAMPED (and the fade curve clamped with it, so the rim still reaches alpha 0) instead of
+/// dropping the band and leaving the pane gridless
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w8b-orthographic-camera-and-3d-parity.md` §3).
+fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_factor: f64, anchor: Vec3, camera: &Camera3d, viewport: Rect, base_color: [f32; 4]) {
+    let Some(step_world) = lod_grid_step_world(lod, grid_factor) else { return };
+    let step = step_world as f32;
+    if !step.is_finite() || step <= 0.0 {
+        return;
     }
+    let fade = camera_grid_fade_distance(camera, anchor.z, step_world, viewport.w, viewport.h);
+    let divisions = ((fade * 2.0 / step).round() as i32).min(WORLD_GRID_MAX_DIVISIONS);
+    if divisions < 2 {
+        return;
+    }
+    let half = step * divisions as f32 * 0.5;
+    let z = anchor.z + 0.002;
+    for index in 0..=divisions {
+        let offset = -half + index as f32 * step;
+        let alpha = base_color[3] * lod_grid_fade_alpha(offset.abs(), half);
+        if alpha <= 0.0 {
+            continue;
+        }
+        let color = [base_color[0], base_color[1], base_color[2], alpha];
+        let rim = [color[0], color[1], color[2], 0.0];
+        line_vertices.push(LineVertex3d { position: [anchor.x - half, anchor.y + offset, z], color: rim });
+        line_vertices.push(LineVertex3d { position: [anchor.x, anchor.y + offset, z], color });
+        line_vertices.push(LineVertex3d { position: [anchor.x, anchor.y + offset, z], color });
+        line_vertices.push(LineVertex3d { position: [anchor.x + half, anchor.y + offset, z], color: rim });
+        line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y - half, z], color: rim });
+        line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y, z], color });
+        line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y, z], color });
+        line_vertices.push(LineVertex3d { position: [anchor.x + offset, anchor.y + half, z], color: rim });
+    }
+}
+
+/// 🎨️ React's `MESH_STYLE_PAINT` row, BAKED into the instance colour.
+///
+/// ⚖️ React does not tint a selected mesh — `GlbInstanceMesh` builds a whole new
+/// `MeshStandardMaterial` whose `color` IS the style's fill (`tokenVar("primary")` when selected,
+/// `semanticVar("hover-interactive-fill")` when hovered) and whose `emissiveIntensity` is the
+/// style's (`🌐️World3dHost/🟦️.tsx`). `WORLD3D_SHADER` reads the emissive half off the same two
+/// flags; the fill half has to happen here, because the shader knows no theme. The opacity the
+/// instance already carries is kept: it is the style's `opacity` column.
+fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, mut instance: Instance3d) -> Instance3d {
+    let fill = if instance.selected {
+        theme.celebrate[0]
+    } else if instance.hovered {
+        theme.row_hover
+    } else {
+        return instance;
+    };
+    instance.color = [fill.r, fill.g, fill.b, instance.color[3]];
+    instance
 }
 
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
@@ -9045,7 +9110,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
     let pivot = selection_centroid(state)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let extent = gumball_extent(camera.position.sub(pivot).length());
     let pick_radius = extent * 0.08;
     let eye = gumball_eye(&camera, pivot);
@@ -9341,17 +9406,49 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
 /// (`AppRuntime::frame`'s `pending_camera_dispatch_deadlines_ms`) can build the same `setCamera`
 /// action the pointer-release path below already dispatches — one orbit-to-action mapping, two
 /// trigger sites (immediate on release, debounced on wheel settle).
-/// 🔎️ Orthographic-zoom scalar of this surface's `setCamera` pose. The wgpu orbit is perspective-
-/// only (it carries `fov_y`, never an orthographic frustum), and React's `captureNavigationSnapshot`
-/// reports `camera instanceof ThreeOrthographicCamera ? camera.zoom : 1` — so a perspective pose
-/// dispatches the identity zoom on both renderers, and `orbitCameraZoomForProjection`'s 50 is only
-/// ever reached through a projection switch this surface does not expose yet.
-const WORLD3D_PERSPECTIVE_CAMERA_ZOOM: f64 = 1.0;
+/// 🔎️ The `zoom` scalar of a camera's `setCamera` pose — React's `captureNavigationSnapshot`:
+/// `camera instanceof ThreeOrthographicCamera ? camera.zoom : 1`. A perspective pane reports the
+/// identity whatever its camera carries; a parallel one reports the live frustum scale, which is the
+/// only number its wheel ever moves ([`OrbitController::zoom`]).
+fn world3d_camera_zoom(camera: &Camera3d) -> f64 {
+    if camera.projection.is_parallel() { f64::from(camera.zoom) } else { 1.0 }
+}
 
-/// 🧭️ The orbit's up vector — `OrbitController::to_camera` hard-codes Z-up, so the pose React
-/// reports from `camera.up` is this constant on the wgpu side; it rides the wire because
-/// `buildWorldCameraDispatchArgs` sends `up` whenever the reported pose carries one, and it does.
-const WORLD3D_ORBIT_UP: [f64; 3] = [0.0, 0.0, 1.0];
+/// 🔀️ Applies this pane's `Projection` switch to its orbit; `true` when the family actually moved,
+/// which is the caller's cue to queue the settle that publishes the new pose.
+///
+/// ⚖️ React's `handleProjectionKindChange` (`🌐️World3dHost/🟦️.tsx`) is view state only: it seeds
+/// `externalPendingProjectionSpec`, `WorldProjectionRig` remounts the pane on the other camera
+/// class, and the pose that reaches the plugin is the ordinary camera report. The mode-only
+/// transition keeps the eye exactly where it is (`worldProjectionTransitionPose`'s
+/// `orientationUnchanged` arm) and moves only the `zoom`: into the parallel family through
+/// `worldProjectionMatchedOrthoZoom`, so the apparent scale does not jump, and back out to the
+/// perspective identity.
+pub fn apply_world3d_projection(state: &mut World3dState, projection: CameraProjection3d) -> bool {
+    if state.orbit.projection == projection {
+        return false;
+    }
+    state.orbit.zoom = if projection.is_parallel() {
+        ui_wgpu::wgpu::world_projection_matched_ortho_zoom(state.orbit.fov_y.to_degrees(), state.orbit.distance, state.bounds.h)
+    } else {
+        1.0
+    };
+    state.orbit.projection = projection;
+    state.camera_user_moved = true;
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    true
+}
+
+/// 🕒️ Whether this surface has a camera intent waiting to publish — the settle a projection switch
+/// or a wheel queues.
+pub fn world3d_pending_camera_settle(state: &World3dState) -> bool {
+    state.interaction_authority.as_ref().is_some_and(|authority| authority.queue.len > 0)
+}
+
+/// 🔎️ This surface's live camera family, for the pane chip that reports it.
+pub fn world3d_camera_projection(state: &World3dState) -> CameraProjection3d {
+    state.orbit.projection
+}
 
 pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     let camera = state.orbit.to_camera();
@@ -9371,8 +9468,8 @@ pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
                     camera.target.y as f64,
                     camera.target.z as f64,
                 ],
-                "zoom": WORLD3D_PERSPECTIVE_CAMERA_ZOOM,
-                "up": WORLD3D_ORBIT_UP,
+                "zoom": world3d_camera_zoom(&camera),
+                "up": [f64::from(camera.up.x), f64::from(camera.up.y), f64::from(camera.up.z)],
             }
         })),
     }
@@ -9742,14 +9839,17 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 return World3dSnapshotApplyStep::Fault;
             }
         }
-        World3dSnapshotPageKind::Camera if item.number_len >= 10 => {
+        World3dSnapshotPageKind::Camera if item.number_len >= 12 => {
+            let projection = if item.numbers[11] >= 0.5 { CameraProjection3d::Orthographic } else { CameraProjection3d::Perspective };
             cursor.staged_orbit = Some(OrbitController::from_camera(&Camera3d {
                 position: Vec3::new(item.numbers[0] as f32, item.numbers[1] as f32, item.numbers[2] as f32),
                 target: Vec3::new(item.numbers[3] as f32, item.numbers[4] as f32, item.numbers[5] as f32),
                 up: Vec3::new(item.numbers[6] as f32, item.numbers[7] as f32, item.numbers[8] as f32),
                 fov_y: item.numbers[9] as f32 * std::f32::consts::PI / 180.0,
-                near: 0.1,
-                far: 1000.0,
+                near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
+                far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
+                projection,
+                zoom: item.numbers[10] as f32,
             }));
         }
         World3dSnapshotPageKind::Camera => {
@@ -9938,6 +10038,46 @@ struct World3dSceneCameraRecord {
     up: Option<[f64; 3]>,
     #[serde(default)]
     fov: Option<f64>,
+    #[serde(default)]
+    zoom: Option<f64>,
+    /// 📐️ The composed mode ⊗ orientation taxonomy object React's `parseWorldProjectionField`
+    /// reads. Only the family (`mode.kind`) and its `fov` reach the camera; the orientation is
+    /// already baked into the delivered `position`/`up`.
+    #[serde(default)]
+    projection: Option<World3dSceneProjectionRecord>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneProjectionRecord {
+    #[serde(default)]
+    mode: Option<World3dSceneProjectionModeRecord>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneProjectionModeRecord {
+    #[serde(default)]
+    kind: Option<String>,
+    #[serde(default)]
+    fov: Option<f64>,
+}
+
+impl World3dSceneCameraRecord {
+    /// 📐️ React's `worldProjectionFamily` over the delivered spec.
+    fn projection(&self) -> CameraProjection3d {
+        self.projection
+            .as_ref()
+            .and_then(|spec| spec.mode.as_ref())
+            .and_then(|mode| mode.kind.as_deref())
+            .map_or(CameraProjection3d::Perspective, CameraProjection3d::from_mode_kind)
+    }
+
+    /// 📐️ React's `worldProjectionPerspectiveFov` fallback chain: the record's own `fov`, else the
+    /// mode's, else the 45° `parseCameraState` default.
+    fn fov_degrees(&self) -> f64 {
+        self.fov.or_else(|| self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).and_then(|mode| mode.fov)).unwrap_or(45.0)
+    }
 }
 
 /// 🎯️ `World3dScene.fit_json` — the producer's "frame this document once" lane, with the delivered
@@ -9955,6 +10095,79 @@ struct World3dSceneFitRecord {
     bounds_min: Option<[f64; 3]>,
     #[serde(default)]
     bounds_max: Option<[f64; 3]>,
+}
+
+/// 📷️ React's `WorldProjectionContentFrame` — the one-shot framing a PARALLEL pane gets so a plan
+/// view opens on the whole sheet instead of a 478-world-unit slice of empty ground.
+///
+/// ⚖️ React mounts it for any pane whose wire camera carries a projection spec, but its own
+/// `frameWorldProjectionPose` only changes what a PARALLEL pane sees: the perspective branch would
+/// dolly the eye to `max(span · 1.5, 2)`, and the React reference plainly does not do that to the
+/// puzzle 3d `Perspective` pane — it keeps the delivered pose and lets the producer's fit lane
+/// ([`sync_world3d_scene_fit`], React's `WorldAutoFit`) own it. So this frames the parallel family
+/// only, which is the behaviour both renderers show
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w8b-orthographic-camera-and-3d-parity.md` §1.3).
+///
+/// The extent is React's `worldSceneContentBounds`: every non-provisional instance position plus
+/// every VISIBLE reference plane's footprint. `camera_user_moved` is the ownership latch — React's
+/// `viewportOwned`.
+fn sync_world3d_projection_content_frame(state: &mut World3dState) {
+    if !state.orbit.projection.is_parallel() || state.camera_user_moved {
+        return;
+    }
+    let Some((minimum, maximum)) = world3d_content_bounds(state) else { return };
+    let key = world3d_content_bounds_key(minimum, maximum);
+    if state.projection_frame_key == Some(key) && state.projection_frame_zoom == Some(state.orbit.zoom) {
+        return;
+    }
+    let framed = ui_wgpu::wgpu::frame_orbit_to_bounds(&state.orbit, minimum, maximum, state.bounds.w, state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
+    state.projection_frame_key = Some(key);
+    state.projection_frame_zoom = Some(framed.zoom);
+    state.orbit = framed;
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+}
+
+/// 📦️ React's `worldSceneContentBounds` — instance positions and visible reference footprints, with
+/// each axis given the same half-unit floor React's does.
+fn world3d_content_bounds(state: &World3dState) -> Option<([f32; 3], [f32; 3])> {
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    let mut any = false;
+    let mut expand = |point: [f64; 3]| {
+        for axis in 0..3 {
+            minimum[axis] = minimum[axis].min(point[axis]);
+            maximum[axis] = maximum[axis].max(point[axis]);
+        }
+        any = true;
+    };
+    for (id, position) in &state.instance_positions {
+        if state.provisional_instance_ids.contains(id) {
+            continue;
+        }
+        expand(*position);
+    }
+    for reference in state.references.iter().filter(|reference| !reference.hidden.unwrap_or(false)) {
+        let origin = reference.origin.unwrap_or([0.0; 3]);
+        let half = reference.width_world.unwrap_or(1.0).max(1e-3) * 0.5;
+        expand([origin[0] - half, origin[1] - half, origin[2]]);
+        expand([origin[0] + half, origin[1] + half, origin[2]]);
+    }
+    if !any || (0..3).any(|axis| !minimum[axis].is_finite() || !maximum[axis].is_finite()) {
+        return None;
+    }
+    let centre = [0, 1, 2].map(|axis| (minimum[axis] + maximum[axis]) * 0.5);
+    let half = [0, 1, 2].map(|axis| ((maximum[axis] - minimum[axis]) * 0.5).max(0.5));
+    Some(([0, 1, 2].map(|axis| (centre[axis] - half[axis]) as f32), [0, 1, 2].map(|axis| (centre[axis] + half[axis]) as f32)))
+}
+
+/// 🔑️ React's `worldSceneContentBoundsKey` — the identity that decides whether a framing is owed.
+fn world3d_content_bounds_key(minimum: [f32; 3], maximum: [f32; 3]) -> u64 {
+    let mut key = 0xcbf2_9ce4_8422_2325_u64;
+    for value in minimum.iter().chain(maximum.iter()) {
+        key ^= u64::from((value * 1e3).round() as i32 as u32);
+        key = key.wrapping_mul(0x0100_0000_01b3);
+    }
+    key
 }
 
 /// 🎯️ Frames this surface's orbit on the producer's published extent, ONCE per fit revision.
@@ -9977,13 +10190,13 @@ fn sync_world3d_scene_fit(state: &mut World3dState, fit_json: Option<&str>) {
     if (0..3).any(|axis| !minimum[axis].is_finite() || !maximum[axis].is_finite() || maximum[axis] < minimum[axis]) {
         return;
     }
-    let aspect = if state.bounds.h > 1.0 { state.bounds.w / state.bounds.h } else { 1.0 };
     let margin = fit.padding.unwrap_or(f64::from(ui_wgpu::wgpu::WORLD_FRAME_BOUNDS_MARGIN)) as f32;
     state.orbit = ui_wgpu::wgpu::frame_orbit_to_bounds(
         &state.orbit,
         [minimum[0] as f32, minimum[1] as f32, minimum[2] as f32],
         [maximum[0] as f32, maximum[1] as f32, maximum[2] as f32],
-        aspect,
+        state.bounds.w,
+        state.bounds.h,
         margin,
     );
     state.fit_framed_revision = Some(fit.revision);
@@ -10410,10 +10623,28 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
         let position = camera.position.unwrap_or([4.0, 4.0, 4.0]);
         let target = camera.target.unwrap_or([0.0; 3]);
         let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
+        let parallel = camera.projection().is_parallel();
         let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
         page.push_item(World3dSnapshotItem {
-            numbers: [position[0], position[1], position[2], target[0], target[1], target[2], up[0], up[1], up[2], camera.fov.unwrap_or(45.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            number_len: 10,
+            numbers: [
+                position[0],
+                position[1],
+                position[2],
+                target[0],
+                target[1],
+                target[2],
+                up[0],
+                up[1],
+                up[2],
+                camera.fov_degrees(),
+                camera.zoom.unwrap_or(1.0),
+                if parallel { 1.0 } else { 0.0 },
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+            ],
+            number_len: 12,
             ..Default::default()
         })?;
         page.seal()?;
@@ -10552,6 +10783,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
     sync_world3d_tool_run_trace(state, world);
     sync_world3d_scene_fit(state, world.fit_json.as_deref());
+    sync_world3d_projection_content_frame(state);
     sync_world3d_scene_selection(state, &world.selection_json);
     sync_world3d_scene_document_lanes(state, world);
     let lease = match world.snapshot {
@@ -10692,8 +10924,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     let light_dir = environment_light_dir(&state.environment);
     let terrain_draws = sync_terrain(state, gpu, &camera);
     update_visible_chunks(state, camera.position);
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(aspect);
+    let view_proj = camera.view_proj(inner.w, inner.h);
     let planes = frustum_planes(view_proj);
     let mut culled_draws = Vec::new();
     let mut provisional_draws = Vec::new();
@@ -10711,7 +10942,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             .iter()
             .enumerate()
             .filter_map(|(instance_index, instance)| {
-                let mut instance = instance.clone();
+                let mut instance = world3d_style_paint(theme, instance.clone());
                 instance.model = retained_gumball_preview_model(state, draw_index, instance_index, instance.model);
                 let position = state.instance_positions.get(&instance.id).copied().unwrap_or([0.0, 0.0, 0.0]);
                 if !instance_chunk_visible(state, position) {
@@ -10743,7 +10974,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     if state.lod.show_grid {
         let datum = state.lod.grid_datum.unwrap_or([0.0, 0.0, 0.0]);
         let anchor = grid_placement_anchor(camera.target, datum);
-        append_lod_grid_lines(&mut line_vertices, current_lod, state.lod.grid_factor, anchor, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
+        append_lod_grid_lines(&mut line_vertices, current_lod, state.lod.grid_factor, anchor, &camera, inner, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
     }
     append_component_overlays(state, &mut line_vertices);
     append_engagement_preview_lines(state, &mut line_vertices, [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
@@ -11716,7 +11947,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     }
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(aspect);
+    let view_proj = camera.view_proj(inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     let (meshes, draws) = legacy_geometry_fixture(state);
     let ids = if component_mode_active(state) {
@@ -11771,7 +12002,7 @@ fn gumball_drag_update(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, inner.w, inner.h);
     let pivot = state.gumball_pivot;
     let eye = gumball_eye(&camera, pivot);
     reset_gumball_preview(state);
@@ -11821,7 +12052,7 @@ fn start_gumball_drag(state: &mut World3dState, handle: GumballHandle, x: f32, y
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, inner.w, inner.h);
     let eye = gumball_eye(&camera, pivot);
     state.gumball_handle = Some(handle);
     state.gumball_pivot = pivot;
@@ -11842,7 +12073,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     let (local_x, local_y, rect) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (rect.w / rect.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(aspect);
+    let view_proj = camera.view_proj(rect.w, rect.h);
     let granularity = state.granularity.as_str();
     match granularity {
         "vertex" => {
@@ -11875,7 +12106,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
-            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = camera.ray_from_screen(local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -11916,7 +12147,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             return best.map(|(_, _, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
-            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = camera.ray_from_screen(local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -11947,7 +12178,7 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, f32, f32)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -12008,7 +12239,7 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     }
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(aspect);
+    let view_proj = camera.view_proj(inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     let (meshes, draws) = legacy_geometry_fixture(state);
     state.marquee_preview_ids = if component_mode_active(state) {
@@ -12028,7 +12259,7 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Optio
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -12050,7 +12281,7 @@ fn pick_surface_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, Vec3, Vec3)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -12186,7 +12417,7 @@ fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for vortex in &state.vortices {
         let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
@@ -12212,7 +12443,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     let plane_normal = Vec3::new(0.0, 0.0, 1.0);
     let mut best: Option<(f32, String)> = None;
     for reference in &state.references {
@@ -12270,8 +12501,7 @@ fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, p
 pub fn world3d_ground_plane_pick(state: &World3dState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
     if dir.z.abs() < 1e-5 {
         return None;
     }
@@ -12366,10 +12596,20 @@ fn parse_color(value: &str) -> [f32; 4] {
             let r = u8::from_str_radix(&expanded[0..2], 16).unwrap_or(148) as f32 / 255.0;
             let g = u8::from_str_radix(&expanded[2..4], 16).unwrap_or(163) as f32 / 255.0;
             let b = u8::from_str_radix(&expanded[4..6], 16).unwrap_or(184) as f32 / 255.0;
-            return [r, g, b, 1.0];
+            return [srgb_to_linear(r), srgb_to_linear(g), srgb_to_linear(b), 1.0];
         }
     }
-    [0.58, 0.64, 0.72, 1.0]
+    [srgb_to_linear(0.58), srgb_to_linear(0.64), srgb_to_linear(0.72), 1.0]
+}
+
+/// 🎨️ One sRGB channel in the LINEAR working space every world pipeline shades in.
+///
+/// 🩸️ `parse_color` used to hand raw sRGB bytes straight to the GPU. The world pass renders into an
+/// sRGB VIEW (`🧊️gpu/🦀️.rs`'s `color_target_format`), so those bytes were encoded a second time on
+/// write and every wire colour came out washed out against React, whose `new Color(hex)` linearizes
+/// through `ColorManagement` exactly like this. `Theme` was always linear; only this reader was not.
+fn srgb_to_linear(channel: f32) -> f32 {
+    if channel <= 0.04045 { channel / 12.92 } else { ((channel + 0.055) / 1.055).powf(2.4) }
 }
 
 //#region 📡️WorldAssetIoAuthority

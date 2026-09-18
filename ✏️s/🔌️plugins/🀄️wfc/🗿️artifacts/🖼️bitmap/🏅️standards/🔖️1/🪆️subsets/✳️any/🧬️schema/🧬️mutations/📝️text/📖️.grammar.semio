@@ -1,0 +1,8 @@
+dialect grammar
+grammar wfcbitmap.mutations
+extension wfcbitmap
+start line
+
+line = keyword [SP arguments]
+keyword = "change-seed" / "resize-input" / "set-input-pixels" / "add-palette-color" / "change-palette-color" / "remove-palette-color" / "resize-output" / "change-model" / "pin-pixel" / "unpin-pixel"
+arguments = OCTET+

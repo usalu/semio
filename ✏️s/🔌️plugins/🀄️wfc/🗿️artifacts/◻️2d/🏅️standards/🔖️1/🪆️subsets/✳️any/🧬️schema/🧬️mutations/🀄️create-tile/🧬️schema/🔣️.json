@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/create-tile/schema.json",
+  "title": "CreateTile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tile"
+  ],
+  "properties": {
+    "tile": {
+      "title": "Wfc2dTile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "weight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0
+        },
+        "media": {
+          "title": "Wfc2dTileMedia",
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Externally tagged: exactly one of Empty (the bare string), Bitmap, Vector or Image."
+        }
+      }
+    }
+  }
+}

@@ -2209,8 +2209,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2232,8 +2232,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2298,8 +2298,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2321,8 +2321,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2387,8 +2387,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2410,8 +2410,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2476,8 +2476,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2499,8 +2499,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2565,8 +2565,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2588,8 +2588,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -2654,8 +2654,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -4923,8 +4923,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -4946,8 +4946,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5012,8 +5012,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5035,8 +5035,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5101,8 +5101,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5124,8 +5124,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5190,8 +5190,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5213,8 +5213,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5279,8 +5279,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5302,8 +5302,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -5368,8 +5368,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7636,8 +7636,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7659,8 +7659,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7725,8 +7725,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7748,8 +7748,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7814,8 +7814,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7837,8 +7837,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7903,8 +7903,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7926,8 +7926,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -7992,8 +7992,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -8015,8 +8015,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -8081,8 +8081,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10212,8 +10212,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10235,8 +10235,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10301,8 +10301,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10324,8 +10324,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10390,8 +10390,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10413,8 +10413,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10479,8 +10479,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10502,8 +10502,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10568,8 +10568,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10591,8 +10591,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -10657,8 +10657,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -12924,8 +12924,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -12947,8 +12947,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13013,8 +13013,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13036,8 +13036,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13102,8 +13102,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13125,8 +13125,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13191,8 +13191,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13214,8 +13214,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13280,8 +13280,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13303,8 +13303,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13369,8 +13369,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -13488,6 +13488,25 @@
             },
             "group": "settings",
             "bodyKey": "framework.body.history",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.toolRun"
+            },
+            "label": {
+              "native": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              },
+              "reuse": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              }
+            },
+            "group": "details",
+            "bodyKey": "framework.body.toolRun",
             "children": []
           }
         ],
@@ -14097,7 +14116,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22,
+                    "size": 22.0,
                     "children": [
                       {
                         "kind": "window",
@@ -14108,7 +14127,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43,
+                    "size": 43.0,
                     "children": [
                       {
                         "kind": "window",
@@ -14119,7 +14138,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35,
+                    "size": 35.0,
                     "children": [
                       {
                         "kind": "window",
@@ -14140,7 +14159,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 55,
+                "size": 55.0,
                 "children": [
                   {
                     "kind": "window",
@@ -14151,7 +14170,7 @@
               },
               {
                 "kind": "stack",
-                "size": 45,
+                "size": 45.0,
                 "children": [
                   {
                     "kind": "window",
@@ -14208,8 +14227,8 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "generation.2d",
-          "documentMediaType": {
+          "artifactSchema": "generation.2d",
+          "artifactMediaType": {
             "class": "twoD",
             "form": "flow"
           },
@@ -15215,8 +15234,8 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "generation.2d",
-          "documentMediaType": {
+          "artifactSchema": "generation.2d",
+          "artifactMediaType": {
             "class": "data",
             "form": "value"
           },
@@ -16295,12 +16314,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -18130,8 +18149,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18153,8 +18172,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18219,8 +18238,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18242,8 +18261,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18308,8 +18327,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18331,8 +18350,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18397,8 +18416,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18420,8 +18439,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18486,8 +18505,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18509,8 +18528,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -18575,8 +18594,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -19662,12 +19681,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -21497,8 +21516,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21520,8 +21539,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21586,8 +21605,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21609,8 +21628,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21675,8 +21694,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21698,8 +21717,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21764,8 +21783,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21787,8 +21806,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21853,8 +21872,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21876,8 +21895,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -21942,8 +21961,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -22808,12 +22827,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -24643,8 +24662,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24666,8 +24685,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24732,8 +24751,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24755,8 +24774,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24821,8 +24840,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24844,8 +24863,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24910,8 +24929,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24933,8 +24952,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -24999,8 +25018,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -25022,8 +25041,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -25088,8 +25107,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -25813,12 +25832,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -27648,8 +27667,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27671,8 +27690,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27737,8 +27756,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27760,8 +27779,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27826,8 +27845,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27849,8 +27868,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27915,8 +27934,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -27938,8 +27957,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -28004,8 +28023,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -28027,8 +28046,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -28093,8 +28112,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -29178,12 +29197,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -31013,8 +31032,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31036,8 +31055,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31102,8 +31121,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31125,8 +31144,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31191,8 +31210,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31214,8 +31233,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31280,8 +31299,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31303,8 +31322,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31369,8 +31388,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31392,8 +31411,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31458,8 +31477,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -31581,6 +31600,25 @@
             },
             "group": "settings",
             "bodyKey": "framework.body.history",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.toolRun"
+            },
+            "label": {
+              "native": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              },
+              "reuse": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              }
+            },
+            "group": "details",
+            "bodyKey": "framework.body.toolRun",
             "children": []
           }
         ],
@@ -32543,7 +32581,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22,
+                    "size": 22.0,
                     "children": [
                       {
                         "kind": "window",
@@ -32554,7 +32592,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43,
+                    "size": 43.0,
                     "children": [
                       {
                         "kind": "window",
@@ -32565,7 +32603,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35,
+                    "size": 35.0,
                     "children": [
                       {
                         "kind": "window",
@@ -32586,7 +32624,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 68,
+                "size": 68.0,
                 "children": [
                   {
                     "kind": "window",
@@ -32597,7 +32635,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32,
+                "size": 32.0,
                 "children": [
                   {
                     "kind": "window",
@@ -32664,8 +32702,8 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "generation.3d",
-          "documentMediaType": {
+          "artifactSchema": "generation.3d",
+          "artifactMediaType": {
             "class": "threeD",
             "form": "flow"
           },
@@ -33368,12 +33406,12 @@
                           "value": "txt",
                           "label": {
                             "native": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             },
                             "reuse": {
-                              "en": "Semio Text (whole document)",
-                              "de": "Semio-Text (ganzes Dokument)"
+                              "en": "Semio Text (whole artifact)",
+                              "de": "Semio-Text (ganzes Artefakt)"
                             }
                           }
                         }
@@ -34993,8 +35031,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35016,8 +35054,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35082,8 +35120,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35105,8 +35143,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35171,8 +35209,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35194,8 +35232,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35260,8 +35298,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35283,8 +35321,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35349,8 +35387,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35372,8 +35410,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35438,8 +35476,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0,
-                      "step": 1,
+                      "min": 0.0,
+                      "step": 1.0,
                       "integer": true
                     },
                     "presentation": {
@@ -35500,6 +35538,25 @@
             },
             "group": "settings",
             "bodyKey": "framework.body.history",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.toolRun"
+            },
+            "label": {
+              "native": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              },
+              "reuse": {
+                "en": "Tool runs",
+                "de": "Werkzeugläufe"
+              }
+            },
+            "group": "details",
+            "bodyKey": "framework.body.toolRun",
             "children": []
           }
         ],
@@ -36636,2412 +36693,8 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "generation.3d",
-          "documentMediaType": {
-            "class": "data",
-            "form": "value"
-          },
-          "ports": [],
-          "exportFormats": [],
-          "importFormats": [],
-          "artifact": {
-            "id": "",
-            "name": "",
-            "dimension": "",
-            "componentKind": ""
-          }
-        }
-      },
-      {
-        "id": "s.assembly@1/*#editor",
-        "role": "editor",
-        "dialect": {
-          "artifactKind": "s.assembly",
-          "standard": "1",
-          "subset": "*"
-        },
-        "label": {
-          "native": {
-            "en": "Editor",
-            "de": "Editor"
-          },
-          "reuse": {
-            "en": "Editor",
-            "de": "Editor"
-          }
-        },
-        "breadcrumb": [
-          "semio",
-          "assembly"
-        ],
-        "iconId": "network",
-        "controllerId": "s.assembly@1/*#editor",
-        "modes": [
-          {
-            "id": "edit",
-            "label": {
-              "native": {
-                "en": "Edit",
-                "de": "Bearbeiten"
-              },
-              "reuse": {
-                "en": "Edit",
-                "de": "Bearbeiten"
-              }
-            },
-            "iconId": "pencil",
-            "tools": [],
-            "commands": []
-          }
-        ],
-        "defaultModeId": "edit",
-        "windowKinds": [
-          {
-            "id": "framework.window.tree",
-            "label": {
-              "native": {
-                "en": "Structure",
-                "de": "Struktur"
-              },
-              "reuse": {
-                "en": "Structure",
-                "de": "Struktur"
-              }
-            },
-            "bodyKey": "framework.window.tree",
-            "surfaceKind": "block-list",
-            "iconId": "list-tree",
-            "options": {
-              "engagement": {
-                "kind": "none"
-              }
-            },
-            "actions": [
-              {
-                "id": "set-node",
-                "label": {
-                  "native": {
-                    "en": "Set Node",
-                    "de": "Knoten setzen"
-                  },
-                  "reuse": {
-                    "en": "Set Node",
-                    "de": "Knoten setzen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "create-slot",
-                "label": {
-                  "native": {
-                    "en": "Create Slot",
-                    "de": "Slot erstellen"
-                  },
-                  "reuse": {
-                    "en": "Create Slot",
-                    "de": "Slot erstellen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "delete-slot",
-                "label": {
-                  "native": {
-                    "en": "Delete Slot",
-                    "de": "Slot löschen"
-                  },
-                  "reuse": {
-                    "en": "Delete Slot",
-                    "de": "Slot löschen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "create-rule",
-                "label": {
-                  "native": {
-                    "en": "Create Rule",
-                    "de": "Regel erstellen"
-                  },
-                  "reuse": {
-                    "en": "Create Rule",
-                    "de": "Regel erstellen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "delete-rule",
-                "label": {
-                  "native": {
-                    "en": "Delete Rule",
-                    "de": "Regel löschen"
-                  },
-                  "reuse": {
-                    "en": "Delete Rule",
-                    "de": "Regel löschen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "connect-slots",
-                "label": {
-                  "native": {
-                    "en": "Connect Slots",
-                    "de": "Slots verbinden"
-                  },
-                  "reuse": {
-                    "en": "Connect Slots",
-                    "de": "Slots verbinden"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "disconnect-slots",
-                "label": {
-                  "native": {
-                    "en": "Disconnect Slots",
-                    "de": "Slots trennen"
-                  },
-                  "reuse": {
-                    "en": "Disconnect Slots",
-                    "de": "Slots trennen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "change-weight",
-                "label": {
-                  "native": {
-                    "en": "Change Weight",
-                    "de": "Gewicht ändern"
-                  },
-                  "reuse": {
-                    "en": "Change Weight",
-                    "de": "Gewicht ändern"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "remove-weight",
-                "label": {
-                  "native": {
-                    "en": "Remove Weight",
-                    "de": "Gewicht entfernen"
-                  },
-                  "reuse": {
-                    "en": "Remove Weight",
-                    "de": "Gewicht entfernen"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "change-seed",
-                "label": {
-                  "native": {
-                    "en": "Change Seed",
-                    "de": "Seed ändern"
-                  },
-                  "reuse": {
-                    "en": "Change Seed",
-                    "de": "Seed ändern"
-                  }
-                },
-                "kind": "mutation",
-                "iconId": "sparkles",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "writes": [
-                      "artifact:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": true
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "whenDestructive"
-                  },
-                  "execution": {
-                    "preview": "diff",
-                    "undo": {
-                      "kind": "inverse"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": true,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "undo",
-                "label": {
-                  "native": {
-                    "en": "Undo",
-                    "de": "Rückgängig"
-                  },
-                  "reuse": {
-                    "en": "Undo",
-                    "de": "Rückgängig"
-                  }
-                },
-                "kind": "history",
-                "iconId": "undo-2",
-                "args": [],
-                "keys": "mod+z",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "redo",
-                "label": {
-                  "native": {
-                    "en": "Redo",
-                    "de": "Wiederholen"
-                  },
-                  "reuse": {
-                    "en": "Redo",
-                    "de": "Wiederholen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "redo-2",
-                "args": [],
-                "keys": "mod+shift+z",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "commitCheckpoint",
-                "label": {
-                  "native": {
-                    "en": "Commit Checkpoint",
-                    "de": "Checkpoint festschreiben"
-                  },
-                  "reuse": {
-                    "en": "Commit Checkpoint",
-                    "de": "Checkpoint festschreiben"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-commit",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "createAlternative",
-                "label": {
-                  "native": {
-                    "en": "Create Alternative",
-                    "de": "Alternative erstellen"
-                  },
-                  "reuse": {
-                    "en": "Create Alternative",
-                    "de": "Alternative erstellen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "switchAlternative",
-                "label": {
-                  "native": {
-                    "en": "Switch Alternative",
-                    "de": "Alternative wechseln"
-                  },
-                  "reuse": {
-                    "en": "Switch Alternative",
-                    "de": "Alternative wechseln"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "checkoutCheckpoint",
-                "label": {
-                  "native": {
-                    "en": "Checkout Checkpoint",
-                    "de": "Checkpoint auschecken"
-                  },
-                  "reuse": {
-                    "en": "Checkout Checkpoint",
-                    "de": "Checkpoint auschecken"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "revertToCommand",
-                "label": {
-                  "native": {
-                    "en": "Revert to Command",
-                    "de": "Auf Befehl zurücksetzen"
-                  },
-                  "reuse": {
-                    "en": "Revert to Command",
-                    "de": "Auf Befehl zurücksetzen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "clock",
-                "args": [
-                  {
-                    "id": "entrySeq",
-                    "label": {
-                      "native": {
-                        "en": "Entry",
-                        "de": "Eintrag"
-                      },
-                      "reuse": {
-                        "en": "Entry",
-                        "de": "Eintrag"
-                      }
-                    },
-                    "schema": {
-                      "kind": "number",
-                      "integer": false
-                    },
-                    "required": true
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "copy",
-                "label": {
-                  "native": {
-                    "en": "Copy",
-                    "de": "Kopieren"
-                  },
-                  "reuse": {
-                    "en": "Copy",
-                    "de": "Kopieren"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "copy",
-                "args": [],
-                "keys": "mod+c",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "cut",
-                "label": {
-                  "native": {
-                    "en": "Cut",
-                    "de": "Ausschneiden"
-                  },
-                  "reuse": {
-                    "en": "Cut",
-                    "de": "Ausschneiden"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "scissors",
-                "args": [],
-                "keys": "mod+x",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "paste",
-                "label": {
-                  "native": {
-                    "en": "Paste",
-                    "de": "Einfügen"
-                  },
-                  "reuse": {
-                    "en": "Paste",
-                    "de": "Einfügen"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "clipboard",
-                "args": [
-                  {
-                    "id": "anchor",
-                    "label": {
-                      "native": {
-                        "en": "Anchoring",
-                        "de": "Verankerung"
-                      },
-                      "reuse": {
-                        "en": "Anchoring",
-                        "de": "Verankerung"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string",
-                      "options": [
-                        {
-                          "value": "original",
-                          "label": {
-                            "native": {
-                              "en": "Original",
-                              "de": "Original"
-                            },
-                            "reuse": {
-                              "en": "Original",
-                              "de": "Original"
-                            }
-                          }
-                        },
-                        {
-                          "value": "middle",
-                          "label": {
-                            "native": {
-                              "en": "Middle",
-                              "de": "Mitte"
-                            },
-                            "reuse": {
-                              "en": "Middle",
-                              "de": "Mitte"
-                            }
-                          }
-                        },
-                        {
-                          "value": "centroid",
-                          "label": {
-                            "native": {
-                              "en": "Centroid",
-                              "de": "Schwerpunkt"
-                            },
-                            "reuse": {
-                              "en": "Centroid",
-                              "de": "Schwerpunkt"
-                            }
-                          }
-                        },
-                        {
-                          "value": "bottomLeft",
-                          "label": {
-                            "native": {
-                              "en": "Bottom Left",
-                              "de": "Unten links"
-                            },
-                            "reuse": {
-                              "en": "Bottom Left",
-                              "de": "Unten links"
-                            }
-                          }
-                        },
-                        {
-                          "value": "bottomRight",
-                          "label": {
-                            "native": {
-                              "en": "Bottom Right",
-                              "de": "Unten rechts"
-                            },
-                            "reuse": {
-                              "en": "Bottom Right",
-                              "de": "Unten rechts"
-                            }
-                          }
-                        },
-                        {
-                          "value": "topLeft",
-                          "label": {
-                            "native": {
-                              "en": "Top Left",
-                              "de": "Oben links"
-                            },
-                            "reuse": {
-                              "en": "Top Left",
-                              "de": "Oben links"
-                            }
-                          }
-                        },
-                        {
-                          "value": "topRight",
-                          "label": {
-                            "native": {
-                              "en": "Top Right",
-                              "de": "Oben rechts"
-                            },
-                            "reuse": {
-                              "en": "Top Right",
-                              "de": "Oben rechts"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "required": false,
-                    "default": "original"
-                  },
-                  {
-                    "id": "position",
-                    "label": {
-                      "native": {
-                        "en": "Position",
-                        "de": "Position"
-                      },
-                      "reuse": {
-                        "en": "Position",
-                        "de": "Position"
-                      }
-                    },
-                    "schema": {
-                      "kind": "vec3"
-                    },
-                    "required": false
-                  }
-                ],
-                "keys": "mod+v",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "recordTutorial",
-                "label": {
-                  "native": {
-                    "en": "Record Tutorial",
-                    "de": "Tutorial aufzeichnen"
-                  },
-                  "reuse": {
-                    "en": "Record Tutorial",
-                    "de": "Tutorial aufzeichnen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setHistoryCommandFilter",
-                "label": {
-                  "native": {
-                    "en": "Set History Filter",
-                    "de": "Verlaufsfilter festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set History Filter",
-                    "de": "Verlaufsfilter festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "list",
-                "args": [
-                  {
-                    "id": "value",
-                    "label": {
-                      "native": {
-                        "en": "Filter",
-                        "de": "Filter"
-                      },
-                      "reuse": {
-                        "en": "Filter",
-                        "de": "Filter"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string",
-                      "options": [
-                        {
-                          "value": "all",
-                          "label": {
-                            "native": {
-                              "en": "All",
-                              "de": "Alle"
-                            },
-                            "reuse": {
-                              "en": "All",
-                              "de": "Alle"
-                            }
-                          }
-                        },
-                        {
-                          "value": "withoutOperations",
-                          "label": {
-                            "native": {
-                              "en": "Without Operations",
-                              "de": "Ohne Operationen"
-                            },
-                            "reuse": {
-                              "en": "Without Operations",
-                              "de": "Ohne Operationen"
-                            }
-                          }
-                        },
-                        {
-                          "value": "onlyOperations",
-                          "label": {
-                            "native": {
-                              "en": "Only Operations",
-                              "de": "Nur Operationen"
-                            },
-                            "reuse": {
-                              "en": "Only Operations",
-                              "de": "Nur Operationen"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "required": false,
-                    "default": "all"
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "noteShellCommand",
-                "label": {
-                  "native": {
-                    "en": "Note Shell Command",
-                    "de": "Shell-Befehl vermerken"
-                  },
-                  "reuse": {
-                    "en": "Note Shell Command",
-                    "de": "Shell-Befehl vermerken"
-                  }
-                },
-                "kind": "shell",
-                "iconId": "book-open",
-                "args": [
-                  {
-                    "id": "commandId",
-                    "label": {
-                      "native": {
-                        "en": "Command",
-                        "de": "Befehl"
-                      },
-                      "reuse": {
-                        "en": "Command",
-                        "de": "Befehl"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": true
-                  },
-                  {
-                    "id": "label",
-                    "label": {
-                      "native": {
-                        "en": "Label",
-                        "de": "Bezeichnung"
-                      },
-                      "reuse": {
-                        "en": "Label",
-                        "de": "Bezeichnung"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": true
-                  },
-                  {
-                    "id": "detail",
-                    "label": {
-                      "native": {
-                        "en": "Detail",
-                        "de": "Detail"
-                      },
-                      "reuse": {
-                        "en": "Detail",
-                        "de": "Detail"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": false
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.navigate"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              }
-            ],
-            "utilities": [],
-            "interactions": [],
-            "capabilities": []
-          }
-        ],
-        "panelTabs": [
-          {
-            "kind": {
-              "kind": "app",
-              "id": "framework.panel.history"
-            },
-            "label": {
-              "native": {
-                "en": "History",
-                "de": "Verlauf"
-              },
-              "reuse": {
-                "en": "History",
-                "de": "Verlauf"
-              }
-            },
-            "group": "settings",
-            "bodyKey": "framework.body.history",
-            "children": []
-          }
-        ],
-        "keybindings": [
-          {
-            "keys": "mod+z",
-            "action": {
-              "controllerId": "s.assembly@1/*#editor",
-              "action": "undo"
-            }
-          },
-          {
-            "keys": "mod+shift+z",
-            "action": {
-              "controllerId": "s.assembly@1/*#editor",
-              "action": "redo"
-            }
-          },
-          {
-            "keys": "mod+c",
-            "action": {
-              "controllerId": "s.assembly@1/*#editor",
-              "action": "copy"
-            }
-          },
-          {
-            "keys": "mod+x",
-            "action": {
-              "controllerId": "s.assembly@1/*#editor",
-              "action": "cut"
-            }
-          },
-          {
-            "keys": "mod+v",
-            "action": {
-              "controllerId": "s.assembly@1/*#editor",
-              "action": "paste"
-            }
-          }
-        ],
-        "utilities": [],
-        "tools": [],
-        "commands": [],
-        "interactions": [],
-        "namedLayouts": [],
-        "defaultLayout": {
-          "root": {
-            "kind": "stack",
-            "children": [
-              {
-                "kind": "window",
-                "windowKindId": "framework.window.tree",
-                "title": "Structure"
-              }
-            ]
-          }
-        },
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
-        "tutorials": [],
-        "dialogs": [],
-        "mediaInputs": [],
-        "mediaOutputs": [],
-        "artifactKinds": [],
-        "config": {
-          "fields": []
-        },
-        "commandGrammar": {
-          "variants": []
-        },
-        "io": {
-          "documentSchema": "s.assembly",
-          "documentMediaType": {
-            "class": "data",
-            "form": "value"
-          },
-          "ports": [],
-          "exportFormats": [],
-          "importFormats": [],
-          "artifact": {
-            "id": "",
-            "name": "",
-            "dimension": "",
-            "componentKind": ""
-          }
-        }
-      },
-      {
-        "id": "s.assembly@1/*#viewer",
-        "role": "viewer",
-        "dialect": {
-          "artifactKind": "s.assembly",
-          "standard": "1",
-          "subset": "*"
-        },
-        "label": {
-          "native": {
-            "en": "Viewer",
-            "de": "Betrachter"
-          },
-          "reuse": {
-            "en": "Viewer",
-            "de": "Betrachter"
-          }
-        },
-        "breadcrumb": [
-          "semio",
-          "assembly"
-        ],
-        "iconId": "network",
-        "controllerId": "s.assembly@1/*#viewer",
-        "modes": [
-          {
-            "id": "view",
-            "label": {
-              "native": {
-                "en": "View",
-                "de": "Ansicht"
-              },
-              "reuse": {
-                "en": "View",
-                "de": "Ansicht"
-              }
-            },
-            "iconId": "eye",
-            "tools": [],
-            "commands": []
-          }
-        ],
-        "defaultModeId": "view",
-        "windowKinds": [
-          {
-            "id": "framework.window.tree",
-            "label": {
-              "native": {
-                "en": "Structure",
-                "de": "Struktur"
-              },
-              "reuse": {
-                "en": "Structure",
-                "de": "Struktur"
-              }
-            },
-            "bodyKey": "framework.window.tree",
-            "surfaceKind": "block-list",
-            "iconId": "list-tree",
-            "options": {
-              "engagement": {
-                "kind": "none"
-              }
-            },
-            "actions": [
-              {
-                "id": "undo",
-                "label": {
-                  "native": {
-                    "en": "Undo",
-                    "de": "Rückgängig"
-                  },
-                  "reuse": {
-                    "en": "Undo",
-                    "de": "Rückgängig"
-                  }
-                },
-                "kind": "history",
-                "iconId": "undo-2",
-                "args": [],
-                "keys": "mod+z",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "redo",
-                "label": {
-                  "native": {
-                    "en": "Redo",
-                    "de": "Wiederholen"
-                  },
-                  "reuse": {
-                    "en": "Redo",
-                    "de": "Wiederholen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "redo-2",
-                "args": [],
-                "keys": "mod+shift+z",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "commitCheckpoint",
-                "label": {
-                  "native": {
-                    "en": "Commit Checkpoint",
-                    "de": "Checkpoint festschreiben"
-                  },
-                  "reuse": {
-                    "en": "Commit Checkpoint",
-                    "de": "Checkpoint festschreiben"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-commit",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "createAlternative",
-                "label": {
-                  "native": {
-                    "en": "Create Alternative",
-                    "de": "Alternative erstellen"
-                  },
-                  "reuse": {
-                    "en": "Create Alternative",
-                    "de": "Alternative erstellen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "switchAlternative",
-                "label": {
-                  "native": {
-                    "en": "Switch Alternative",
-                    "de": "Alternative wechseln"
-                  },
-                  "reuse": {
-                    "en": "Switch Alternative",
-                    "de": "Alternative wechseln"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "checkoutCheckpoint",
-                "label": {
-                  "native": {
-                    "en": "Checkout Checkpoint",
-                    "de": "Checkpoint auschecken"
-                  },
-                  "reuse": {
-                    "en": "Checkout Checkpoint",
-                    "de": "Checkpoint auschecken"
-                  }
-                },
-                "kind": "history",
-                "iconId": "git-branch",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "revertToCommand",
-                "label": {
-                  "native": {
-                    "en": "Revert to Command",
-                    "de": "Auf Befehl zurücksetzen"
-                  },
-                  "reuse": {
-                    "en": "Revert to Command",
-                    "de": "Auf Befehl zurücksetzen"
-                  }
-                },
-                "kind": "history",
-                "iconId": "clock",
-                "args": [
-                  {
-                    "id": "entrySeq",
-                    "label": {
-                      "native": {
-                        "en": "Entry",
-                        "de": "Eintrag"
-                      },
-                      "reuse": {
-                        "en": "Entry",
-                        "de": "Eintrag"
-                      }
-                    },
-                    "schema": {
-                      "kind": "number",
-                      "integer": false
-                    },
-                    "required": true
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.write"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "copy",
-                "label": {
-                  "native": {
-                    "en": "Copy",
-                    "de": "Kopieren"
-                  },
-                  "reuse": {
-                    "en": "Copy",
-                    "de": "Kopieren"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "copy",
-                "args": [],
-                "keys": "mod+c",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "cut",
-                "label": {
-                  "native": {
-                    "en": "Cut",
-                    "de": "Ausschneiden"
-                  },
-                  "reuse": {
-                    "en": "Cut",
-                    "de": "Ausschneiden"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "scissors",
-                "args": [],
-                "keys": "mod+x",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "paste",
-                "label": {
-                  "native": {
-                    "en": "Paste",
-                    "de": "Einfügen"
-                  },
-                  "reuse": {
-                    "en": "Paste",
-                    "de": "Einfügen"
-                  }
-                },
-                "kind": "clipboard",
-                "iconId": "clipboard",
-                "args": [
-                  {
-                    "id": "anchor",
-                    "label": {
-                      "native": {
-                        "en": "Anchoring",
-                        "de": "Verankerung"
-                      },
-                      "reuse": {
-                        "en": "Anchoring",
-                        "de": "Verankerung"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string",
-                      "options": [
-                        {
-                          "value": "original",
-                          "label": {
-                            "native": {
-                              "en": "Original",
-                              "de": "Original"
-                            },
-                            "reuse": {
-                              "en": "Original",
-                              "de": "Original"
-                            }
-                          }
-                        },
-                        {
-                          "value": "middle",
-                          "label": {
-                            "native": {
-                              "en": "Middle",
-                              "de": "Mitte"
-                            },
-                            "reuse": {
-                              "en": "Middle",
-                              "de": "Mitte"
-                            }
-                          }
-                        },
-                        {
-                          "value": "centroid",
-                          "label": {
-                            "native": {
-                              "en": "Centroid",
-                              "de": "Schwerpunkt"
-                            },
-                            "reuse": {
-                              "en": "Centroid",
-                              "de": "Schwerpunkt"
-                            }
-                          }
-                        },
-                        {
-                          "value": "bottomLeft",
-                          "label": {
-                            "native": {
-                              "en": "Bottom Left",
-                              "de": "Unten links"
-                            },
-                            "reuse": {
-                              "en": "Bottom Left",
-                              "de": "Unten links"
-                            }
-                          }
-                        },
-                        {
-                          "value": "bottomRight",
-                          "label": {
-                            "native": {
-                              "en": "Bottom Right",
-                              "de": "Unten rechts"
-                            },
-                            "reuse": {
-                              "en": "Bottom Right",
-                              "de": "Unten rechts"
-                            }
-                          }
-                        },
-                        {
-                          "value": "topLeft",
-                          "label": {
-                            "native": {
-                              "en": "Top Left",
-                              "de": "Oben links"
-                            },
-                            "reuse": {
-                              "en": "Top Left",
-                              "de": "Oben links"
-                            }
-                          }
-                        },
-                        {
-                          "value": "topRight",
-                          "label": {
-                            "native": {
-                              "en": "Top Right",
-                              "de": "Oben rechts"
-                            },
-                            "reuse": {
-                              "en": "Top Right",
-                              "de": "Oben rechts"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "required": false,
-                    "default": "original"
-                  },
-                  {
-                    "id": "position",
-                    "label": {
-                      "native": {
-                        "en": "Position",
-                        "de": "Position"
-                      },
-                      "reuse": {
-                        "en": "Position",
-                        "de": "Position"
-                      }
-                    },
-                    "schema": {
-                      "kind": "vec3"
-                    },
-                    "required": false
-                  }
-                ],
-                "keys": "mod+v",
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.clipboard"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "recordTutorial",
-                "label": {
-                  "native": {
-                    "en": "Record Tutorial",
-                    "de": "Tutorial aufzeichnen"
-                  },
-                  "reuse": {
-                    "en": "Record Tutorial",
-                    "de": "Tutorial aufzeichnen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setHistoryCommandFilter",
-                "label": {
-                  "native": {
-                    "en": "Set History Filter",
-                    "de": "Verlaufsfilter festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set History Filter",
-                    "de": "Verlaufsfilter festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "list",
-                "args": [
-                  {
-                    "id": "value",
-                    "label": {
-                      "native": {
-                        "en": "Filter",
-                        "de": "Filter"
-                      },
-                      "reuse": {
-                        "en": "Filter",
-                        "de": "Filter"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string",
-                      "options": [
-                        {
-                          "value": "all",
-                          "label": {
-                            "native": {
-                              "en": "All",
-                              "de": "Alle"
-                            },
-                            "reuse": {
-                              "en": "All",
-                              "de": "Alle"
-                            }
-                          }
-                        },
-                        {
-                          "value": "withoutOperations",
-                          "label": {
-                            "native": {
-                              "en": "Without Operations",
-                              "de": "Ohne Operationen"
-                            },
-                            "reuse": {
-                              "en": "Without Operations",
-                              "de": "Ohne Operationen"
-                            }
-                          }
-                        },
-                        {
-                          "value": "onlyOperations",
-                          "label": {
-                            "native": {
-                              "en": "Only Operations",
-                              "de": "Nur Operationen"
-                            },
-                            "reuse": {
-                              "en": "Only Operations",
-                              "de": "Nur Operationen"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "required": false,
-                    "default": "all"
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "noteShellCommand",
-                "label": {
-                  "native": {
-                    "en": "Note Shell Command",
-                    "de": "Shell-Befehl vermerken"
-                  },
-                  "reuse": {
-                    "en": "Note Shell Command",
-                    "de": "Shell-Befehl vermerken"
-                  }
-                },
-                "kind": "shell",
-                "iconId": "book-open",
-                "args": [
-                  {
-                    "id": "commandId",
-                    "label": {
-                      "native": {
-                        "en": "Command",
-                        "de": "Befehl"
-                      },
-                      "reuse": {
-                        "en": "Command",
-                        "de": "Befehl"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": true
-                  },
-                  {
-                    "id": "label",
-                    "label": {
-                      "native": {
-                        "en": "Label",
-                        "de": "Bezeichnung"
-                      },
-                      "reuse": {
-                        "en": "Label",
-                        "de": "Bezeichnung"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": true
-                  },
-                  {
-                    "id": "detail",
-                    "label": {
-                      "native": {
-                        "en": "Detail",
-                        "de": "Detail"
-                      },
-                      "reuse": {
-                        "en": "Detail",
-                        "de": "Detail"
-                      }
-                    },
-                    "schema": {
-                      "kind": "string"
-                    },
-                    "required": false
-                  }
-                ],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "shell.navigate"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              }
-            ],
-            "utilities": [],
-            "interactions": [],
-            "capabilities": []
-          }
-        ],
-        "panelTabs": [
-          {
-            "kind": {
-              "kind": "app",
-              "id": "framework.panel.history"
-            },
-            "label": {
-              "native": {
-                "en": "History",
-                "de": "Verlauf"
-              },
-              "reuse": {
-                "en": "History",
-                "de": "Verlauf"
-              }
-            },
-            "group": "settings",
-            "bodyKey": "framework.body.history",
-            "children": []
-          }
-        ],
-        "keybindings": [
-          {
-            "keys": "mod+z",
-            "action": {
-              "controllerId": "s.assembly@1/*#viewer",
-              "action": "undo"
-            }
-          },
-          {
-            "keys": "mod+shift+z",
-            "action": {
-              "controllerId": "s.assembly@1/*#viewer",
-              "action": "redo"
-            }
-          },
-          {
-            "keys": "mod+c",
-            "action": {
-              "controllerId": "s.assembly@1/*#viewer",
-              "action": "copy"
-            }
-          },
-          {
-            "keys": "mod+x",
-            "action": {
-              "controllerId": "s.assembly@1/*#viewer",
-              "action": "cut"
-            }
-          },
-          {
-            "keys": "mod+v",
-            "action": {
-              "controllerId": "s.assembly@1/*#viewer",
-              "action": "paste"
-            }
-          }
-        ],
-        "utilities": [],
-        "tools": [],
-        "commands": [],
-        "interactions": [],
-        "namedLayouts": [],
-        "defaultLayout": {
-          "root": {
-            "kind": "stack",
-            "children": [
-              {
-                "kind": "window",
-                "windowKindId": "framework.window.tree",
-                "title": "Structure"
-              }
-            ]
-          }
-        },
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
-        "tutorials": [],
-        "dialogs": [],
-        "mediaInputs": [],
-        "mediaOutputs": [],
-        "artifactKinds": [],
-        "config": {
-          "fields": []
-        },
-        "commandGrammar": {
-          "variants": []
-        },
-        "io": {
-          "documentSchema": "s.assembly",
-          "documentMediaType": {
+          "artifactSchema": "generation.3d",
+          "artifactMediaType": {
             "class": "data",
             "form": "value"
           },
@@ -39071,7 +36724,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation2d.dsl v1\nschema=flow.hostSnapshot\ncamera {\n  x=0 y=0 zoom=1\n}\nwidgets {\n  input-slider id=slider label=\"Number\" value=3 min=0 max=10 step=0.1\n  neuron id=rect neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\n  params [key:TEXT value:BLOCK] {\n  }\n  output-preview id=preview expanded=[ ]\n  preview [key:TEXT value:BLOCK] {\n  }\n}\nlayout={\n  preview=x=240 y=-40 rect=x=120 y=-40 slider=x=40 y=-40\n}\nsynapses [id:TEXT wire:WIRE] {\n  s1 slider@number->rect@a\n  s2 rect@sum->preview\n}\ngenerations [id:TEXT name:TEXT values:MAP] {\n}\n",
+        "artifactJson": "semio procedural.generation2d.dsl v1\nschema=flow.fixture\ncamera {\n  x=0 y=0 zoom=1\n}\nwidgets {\n  input-slider id=slider label=\"Number\" value=3 min=0 max=10 step=0.1\n  neuron id=rect neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\n  params [key:TEXT value:BLOCK] {\n  }\n  output-preview id=preview expanded=[ ]\n  preview [key:TEXT value:BLOCK] {\n  }\n}\nlayout={\n  preview=x=240 y=-40 rect=x=120 y=-40 slider=x=40 y=-40\n}\nsynapses [id:TEXT wire:WIRE] {\n  s1 slider@number->rect@a\n  s2 rect@sum->preview\n}\ngenerations [id:TEXT name:TEXT values:MAP] {\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation2d",
           "standard": "1",
@@ -39091,7 +36744,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=94.75581571737445 y=-97.50833134679668 zoom=1.7844325616011099\n}\nlayout={\n  column-preview=x=237.4197774877085 y=-103.14518978933415 extrude=x=34.842068675720895 y=-154.18083645790136 extrusion-axis=x=-65.26327021036892 y=-116.45687403531778 height=x=-197.1913555449187 y=-102.70789997839545 profile=x=-64.49671116929301 y=-163.40310309861746 radius=x=-156.03796288966 y=-177.3373596163105 sides=x=-156.43467044109153 y=-155.28679730672846\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 height@number->extrusion-axis@z\n  e2 radius@number->profile@radius\n  e3 sides@number->profile@sides\n  e4 profile@wire->extrude@wire\n  e5 extrusion-axis@vectorOut->extrude@vector\n  e6 extrude@solid->column-preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"height\" label=\"Column Height\" value=6 min=0 max=10 step=0.5\n  input-slider id=\"radius\" label=\"Profile Radius\" value=0.5 min=0.1 max=2 step=0.05\n  input-slider id=\"sides\" label=\"Side Count\" value=6 min=3 max=12 step=1\n  neuron id=\"profile\" neuron-kind=brep.curve.polygon preview=true input-ports=[ \"radius\" \"sides\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrusion-axis\" neuron-kind=math.vector preview=true input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"column-preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=94.75581571737445 y=-97.50833134679668 zoom=1.7844325616011099\n}\nlayout={\n  column-preview=x=237.4197774877085 y=-103.14518978933415 extrude=x=34.842068675720895 y=-154.18083645790136 extrusion-axis=x=-65.26327021036892 y=-116.45687403531778 height=x=-197.1913555449187 y=-102.70789997839545 profile=x=-64.49671116929301 y=-163.40310309861746 radius=x=-156.03796288966 y=-177.3373596163105 sides=x=-156.43467044109153 y=-155.28679730672846\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 height@number->extrusion-axis@z\n  e2 radius@number->profile@radius\n  e3 sides@number->profile@sides\n  e4 profile@wire->extrude@wire\n  e5 extrusion-axis@vectorOut->extrude@vector\n  e6 extrude@solid->column-preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"height\" label=\"Column Height\" value=6 min=0 max=10 step=0.5\n  input-slider id=\"radius\" label=\"Profile Radius\" value=0.5 min=0.1 max=2 step=0.05\n  input-slider id=\"sides\" label=\"Side Count\" value=6 min=3 max=12 step=1\n  neuron id=\"profile\" neuron-kind=brep.curve.polygon preview=true input-ports=[ \"radius\" \"sides\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrusion-axis\" neuron-kind=math.vector preview=true input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"column-preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39111,7 +36764,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=140 y=-60 zoom=2.2\n}\nlayout={\n  distance=x=120 y=20 extrude=x=280 y=-40 height=x=40 y=-20 rect=x=120 y=-40 vector=x=200 y=20 volume=x=360 y=-40 width=x=40 y=-60\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->extrude@wire\n  e4 distance@number->vector@z\n  e5 vector@vectorOut->extrude@vector\n  e6 extrude@solid->volume@geometry\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=3 min=0.1 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  neuron id=\"volume\" neuron-kind=brep.measure.volume preview=false input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=140 y=-60 zoom=2.2\n}\nlayout={\n  distance=x=120 y=20 extrude=x=280 y=-40 height=x=40 y=-20 rect=x=120 y=-40 vector=x=200 y=20 volume=x=360 y=-40 width=x=40 y=-60\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->extrude@wire\n  e4 distance@number->vector@z\n  e5 vector@vectorOut->extrude@vector\n  e6 extrude@solid->volume@geometry\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=3 min=0.1 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  neuron id=\"volume\" neuron-kind=brep.measure.volume preview=false input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39131,7 +36784,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=236.23395167940356 y=-84.58346179033974 zoom=1.8417539215092311\n}\nlayout={\n  brep_bool_cut_5=x=273.87672971964196 y=-102.61212609570688 brep_measure_volume_2=x=351.6308736946091 y=-109.21856873190009 brep_prim3d_sphere_3=x=185.31861712806045 y=-119.2657196857918 brep_prim3d_torus_4=x=186.8402671208016 y=-79.66369132376984 preview_3=x=426.7737428942639 y=-99.84528083558972 slider_2=x=105.90625 y=-117.7890625\n}\nsynapses [id:TEXT wire:WIRE] {\n  e100 slider_2@number->brep_prim3d_sphere_3@radius\n  e101 brep_prim3d_sphere_3@solid->brep_bool_cut_5@a\n  e102 brep_prim3d_torus_4@solid->brep_bool_cut_5@b\n  e103 brep_bool_cut_5@solid->brep_measure_volume_2@geometry\n  e108 brep_measure_volume_2@volume->preview_3\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"slider_2\" label=\"Torus Major Radius\" value=2.2 min=0 max=10 step=0.1\n  neuron id=\"brep_prim3d_sphere_3\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_prim3d_torus_4\" neuron-kind=brep.prim3d.torus preview=false input-ports=[ \"major\" \"minor\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_bool_cut_5\" neuron-kind=brep.bool.cut preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_measure_volume_2\" neuron-kind=brep.measure.volume preview=true input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview_3\" preview [key:TEXT value:BLOCK] {\n    \"$schema\" {text=\"number\"}\n    \"value\" {decimal=37.73359174067349}\n  } expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=236.23395167940356 y=-84.58346179033974 zoom=1.8417539215092311\n}\nlayout={\n  brep_bool_cut_5=x=273.87672971964196 y=-102.61212609570688 brep_measure_volume_2=x=351.6308736946091 y=-109.21856873190009 brep_prim3d_sphere_3=x=185.31861712806045 y=-119.2657196857918 brep_prim3d_torus_4=x=186.8402671208016 y=-79.66369132376984 preview_3=x=426.7737428942639 y=-99.84528083558972 slider_2=x=105.90625 y=-117.7890625\n}\nsynapses [id:TEXT wire:WIRE] {\n  e100 slider_2@number->brep_prim3d_sphere_3@radius\n  e101 brep_prim3d_sphere_3@solid->brep_bool_cut_5@a\n  e102 brep_prim3d_torus_4@solid->brep_bool_cut_5@b\n  e103 brep_bool_cut_5@solid->brep_measure_volume_2@geometry\n  e108 brep_measure_volume_2@volume->preview_3\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"slider_2\" label=\"Torus Major Radius\" value=2.2 min=0 max=10 step=0.1\n  neuron id=\"brep_prim3d_sphere_3\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_prim3d_torus_4\" neuron-kind=brep.prim3d.torus preview=false input-ports=[ \"major\" \"minor\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_bool_cut_5\" neuron-kind=brep.bool.cut preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_measure_volume_2\" neuron-kind=brep.measure.volume preview=true input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview_3\" preview [key:TEXT value:BLOCK] {\n    \"$schema\" {text=\"number\"}\n    \"value\" {decimal=37.73359174067349}\n  } expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39151,7 +36804,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=120 y=-80 zoom=2\n}\nlayout={\n  box=x=80 y=-60 fillet=x=240 y=-60 preview=x=360 y=-60 radius=x=40 y=-100 size=x=40 y=-140\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->fillet@geometry\n  e5 radius@number->fillet@radius\n  e6 fillet@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"radius\" label=\"Fillet Radius\" value=0.15 min=0.01 max=0.5 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fillet\" neuron-kind=brep.solid.fillet preview=true input-ports=[ \"geometry\" \"radius\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=120 y=-80 zoom=2\n}\nlayout={\n  box=x=80 y=-60 fillet=x=240 y=-60 preview=x=360 y=-60 radius=x=40 y=-100 size=x=40 y=-140\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->fillet@geometry\n  e5 radius@number->fillet@radius\n  e6 fillet@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"radius\" label=\"Fillet Radius\" value=0.15 min=0.01 max=0.5 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fillet\" neuron-kind=brep.solid.fillet preview=true input-ports=[ \"geometry\" \"radius\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39171,7 +36824,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=140 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-80 fuse=x=280 y=-80 preview=x=400 y=-80 radius=x=40 y=-120 size=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 radius@number->sphere@radius\n  e2 size@number->box@width\n  e3 size@number->box@depth\n  e4 size@number->box@height\n  e5 sphere@solid->fuse@a\n  e6 box@solid->fuse@b\n  e7 fuse@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"radius\" label=\"Sphere Radius\" value=1.2 min=0.2 max=3 step=0.1\n  input-slider id=\"size\" label=\"Size\" value=1.5 min=0.5 max=4 step=0.1\n  neuron id=\"sphere\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fuse\" neuron-kind=brep.bool.fuse preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=140 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-80 fuse=x=280 y=-80 preview=x=400 y=-80 radius=x=40 y=-120 size=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 radius@number->sphere@radius\n  e2 size@number->box@width\n  e3 size@number->box@depth\n  e4 size@number->box@height\n  e5 sphere@solid->fuse@a\n  e6 box@solid->fuse@b\n  e7 fuse@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"radius\" label=\"Sphere Radius\" value=1.2 min=0.2 max=3 step=0.1\n  input-slider id=\"size\" label=\"Size\" value=1.5 min=0.5 max=4 step=0.1\n  neuron id=\"sphere\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fuse\" neuron-kind=brep.bool.fuse preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39191,7 +36844,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=120 y=-60 zoom=2.2\n}\nlayout={\n  rect=x=60 y=-60 face=x=200 y=-60 extrude=x=340 y=-60 height=x=60 y=-100 width=x=60 y=-120\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->face@wire\n  e4 face@face->extrude@face\n  e5 distance@number->vector@z\n  e6 vector@vectorOut->extrude@vector\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.5 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.5 max=6 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=4 min=0.5 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"face\" neuron-kind=brep.surf.planarFaceWire preview=false input-ports=[ \"wire\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.sweep.extrude preview=true input-ports=[ \"face\" \"vector\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=120 y=-60 zoom=2.2\n}\nlayout={\n  rect=x=60 y=-60 face=x=200 y=-60 extrude=x=340 y=-60 height=x=60 y=-100 width=x=60 y=-120\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->face@wire\n  e4 face@face->extrude@face\n  e5 distance@number->vector@z\n  e6 vector@vectorOut->extrude@vector\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.5 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.5 max=6 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=4 min=0.5 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"face\" neuron-kind=brep.surf.planarFaceWire preview=false input-ports=[ \"wire\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.sweep.extrude preview=true input-ports=[ \"face\" \"vector\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39211,7 +36864,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=100 y=-50 zoom=2.5\n}\nlayout={\n  rect=x=120 y=-80 width=x=40 y=-120 height=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.2 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.2 max=6 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=true input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=100 y=-50 zoom=2.5\n}\nlayout={\n  rect=x=120 y=-80 width=x=40 y=-120 height=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.2 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.2 max=6 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=true input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -39231,49 +36884,9 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.hostSnapshot\"\ncamera {\n  x=130 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-70 shell=x=260 y=-70 size=x=40 y=-110 thickness=x=40 y=-150\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->shell@geometry\n  e5 thickness@number->shell@thickness\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"thickness\" label=\"Shell Thickness\" value=0.2 min=0.05 max=0.8 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"shell\" neuron-kind=brep.solid.shell preview=true input-ports=[ \"geometry\" \"thickness\" \"openFaces\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.fixture\"\ncamera {\n  x=130 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-70 shell=x=260 y=-70 size=x=40 y=-110 thickness=x=40 y=-150\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->shell@geometry\n  e5 thickness@number->shell@thickness\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"thickness\" label=\"Shell Thickness\" value=0.2 min=0.05 max=0.8 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"shell\" neuron-kind=brep.solid.shell preview=true input-ports=[ \"geometry\" \"thickness\" \"openFaces\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
-          "standard": "1",
-          "subset": "*"
-        }
-      },
-      {
-        "id": "two-room-corridor",
-        "label": {
-          "native": {
-            "en": "Two Rooms And A Corridor",
-            "de": "Zwei Räume und ein Korridor"
-          },
-          "reuse": {
-            "en": "Two Rooms And A Corridor",
-            "de": "Zwei Räume und ein Korridor"
-          }
-        },
-        "iconId": "circle",
-        "artifactJson": "semio procedural.assembly.dsl v1\nschema=s.assembly seed=7 modules=[ child_id=room target=\"room!s.stdio.semio@v1/kit\" child_id=corridor target=\"corridor!s.stdio.semio@v1/kit\" ]\nslots [id:TEXT x:NUM y:NUM z:NUM pinned:TEXT] {\n  room-a 0 0 0 _\n  corridor 1 0 0 _\n  room-b 2 0 0 _\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT] {\n  edge-a-corridor room-a corridor\n  edge-corridor-b corridor room-b\n}\nweights [module-id:TEXT weight:NUM] {\n  room 2\n  corridor 1\n}\nrules [id:TEXT module-a-id:TEXT module-b-id:TEXT allowed:BOOL params:VAL] {\n  rule-room-corridor room corridor true {\n    kind=\"null\"\n  }\n  rule-room-room room room false {\n    kind=\"null\"\n  }\n  rule-corridor-corridor corridor corridor false {\n    kind=\"null\"\n  }\n}\n",
-        "dialect": {
-          "artifactKind": "s.assembly",
-          "standard": "1",
-          "subset": "*"
-        }
-      },
-      {
-        "id": "wall-roof-facade-strip",
-        "label": {
-          "native": {
-            "en": "Wall And Roof Facade Strip",
-            "de": "Wand-Dach-Fassadenstreifen"
-          },
-          "reuse": {
-            "en": "Wall And Roof Facade Strip",
-            "de": "Wand-Dach-Fassadenstreifen"
-          }
-        },
-        "iconId": "circle",
-        "artifactJson": "semio procedural.assembly.dsl v1\nschema=s.assembly seed=42 modules=[ child_id=wall target=\"wall!s.stdio.semio@v1/kit\" child_id=roof target=\"roof!s.stdio.semio@v1/kit\" ]\nslots [id:TEXT x:NUM y:NUM z:NUM pinned:TEXT] {\n  bay-0-ground 0 0 0 _\n  bay-1-ground 1 0 0 _\n  bay-0-top 0 0 1 _\n  bay-1-top 1 0 1 roof\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT] {\n  edge-ground-row bay-0-ground bay-1-ground\n  edge-top-row bay-0-top bay-1-top\n  edge-bay-0-stack bay-0-ground bay-0-top\n  edge-bay-1-stack bay-1-ground bay-1-top\n}\nweights [module-id:TEXT weight:NUM] {\n  wall 3\n  roof 1\n}\nrules [id:TEXT module-a-id:TEXT module-b-id:TEXT allowed:BOOL params:VAL] {\n  rule-wall-wall wall wall true {\n    kind=\"null\"\n  }\n  rule-wall-roof wall roof true {\n    kind=\"null\"\n  }\n  rule-roof-roof roof roof false {\n    kind=\"null\"\n  }\n}\n",
-        "dialect": {
-          "artifactKind": "s.assembly",
           "standard": "1",
           "subset": "*"
         }
@@ -39346,11 +36959,6 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "data.assembly"
-      }
-    },
-    {
-      "onArtifactKind": {
         "kind": "2d.generation"
       }
     },
@@ -39364,7 +36972,7 @@
     {
       "id": "artifacts.write",
       "scope": "plugin",
-      "reason": "persist generation2d/generation3d/assembly editor edits to the open document",
+      "reason": "persist generation2d/generation3d editor edits to the open document",
       "optional": false
     }
   ],
@@ -39503,6 +37111,25 @@
       {
         "kind": {
           "kind": "app",
+          "id": "framework.panel.toolRun"
+        },
+        "label": {
+          "native": {
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
+          },
+          "reuse": {
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
+          }
+        },
+        "group": "details",
+        "bodyKey": "framework.body.toolRun",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
           "id": "framework.panel.history"
         },
         "label": {
@@ -39598,20 +37225,20 @@
       {
         "kind": {
           "kind": "app",
-          "id": "framework.panel.history"
+          "id": "framework.panel.toolRun"
         },
         "label": {
           "native": {
-            "en": "History",
-            "de": "Verlauf"
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
           },
           "reuse": {
-            "en": "History",
-            "de": "Verlauf"
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
           }
         },
-        "group": "settings",
-        "bodyKey": "framework.body.history",
+        "group": "details",
+        "bodyKey": "framework.body.toolRun",
         "children": []
       },
       {
@@ -39636,36 +37263,21 @@
       {
         "kind": {
           "kind": "app",
-          "id": "framework.panel.history"
+          "id": "framework.panel.toolRun"
         },
         "label": {
           "native": {
-            "en": "History",
-            "de": "Verlauf"
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
           },
           "reuse": {
-            "en": "History",
-            "de": "Verlauf"
+            "en": "Tool runs",
+            "de": "Werkzeugläufe"
           }
         },
-        "group": "settings",
-        "bodyKey": "framework.body.history",
+        "group": "details",
+        "bodyKey": "framework.body.toolRun",
         "children": []
-      }
-    ],
-    "inferenceServices": [
-      {
-        "owner": "procedural",
-        "artifactKind": "s.procedural.assembly",
-        "artifactSchema": "s.assembly",
-        "artifactSchemaVersion": 1,
-        "documentSchema": "s.assembly",
-        "documentSchemaVersion": 1,
-        "inferenceSchema": "s.assembly.solve",
-        "inferenceSchemaVersion": 1,
-        "algorithmVersion": 1,
-        "policyVersion": 1,
-        "contributor": "procedural"
       }
     ],
     "ioEntries": [
@@ -40016,8 +37628,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "654a101291e33214bf6c95f857c3efdb801b100f4d71a774e3e24dbd37b99190",
-    "coreWasmSha256": "7330eb7340468e2ca4f5331a50d4d2e76dccbabcbc4c439dde8ea8eed3475eb1",
-    "descriptorSha256": "c05a54e6270cdf1f63f9111962d4aaa4ae24d32855c07f918d32e1f114b7389f"
+    "wasmSha256": "176a65b8977558c2ab5b25dd41d2e7c9477ac13b11f61846118b27e2c994d7cf",
+    "coreWasmSha256": "7974152b0ad8d5778a68e831fc3e3fd51a9409ad3137477fcf5b651319650e6b",
+    "descriptorSha256": "b0e4f2d908845f8a67afc922eeaf9fba8f7d25cc5b7ab42ad36a031cd6642ea4"
   }
 }

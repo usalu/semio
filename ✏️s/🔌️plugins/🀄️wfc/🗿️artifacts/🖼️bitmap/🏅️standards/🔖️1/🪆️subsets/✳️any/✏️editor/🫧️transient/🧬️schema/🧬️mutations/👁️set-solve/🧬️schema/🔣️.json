@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/transient/set-solve/schema.json",
+  "title": "SetSolve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contradiction", "outputWidth", "outputHeight"],
+  "properties": {
+    "outputPixels": { "type": ["string", "null"], "format": "base64" },
+    "contradiction": { "type": "boolean" },
+    "outputWidth": { "type": "integer", "minimum": 0 },
+    "outputHeight": { "type": "integer", "minimum": 0 }
+  }
+}

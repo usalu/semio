@@ -260,17 +260,33 @@ vertex WorldMeshVertexOut world3d_mesh_vertex_main(WorldMeshVertexIn in [[stage_
     return out;
 }
 
+constant float WORLD3D_RECIPROCAL_PI = 0.31830989;
+constant float WORLD3D_AMBIENT_INTENSITY = 1.15;
+constant float WORLD3D_HEMISPHERE_INTENSITY = 1.35;
+constant float3 WORLD3D_HEMISPHERE_GROUND = float3(0.32313, 0.35153, 0.40724);
+constant float WORLD3D_SELECTED_EMISSIVE = 0.35;
+constant float WORLD3D_HOVERED_EMISSIVE = 0.08;
+
+static inline float3 world3d_irradiance(float3 n) {
+    float hemisphere = 0.5 * dot(n, float3(0.0, 0.0, 1.0)) + 0.5;
+    float3 irradiance = float3(WORLD3D_AMBIENT_INTENSITY);
+    irradiance += mix(WORLD3D_HEMISPHERE_GROUND, float3(1.0), hemisphere) * WORLD3D_HEMISPHERE_INTENSITY;
+    irradiance += float3(2.4) * max(dot(n, normalize(float3(12.0, 18.0, 10.0))), 0.0);
+    irradiance += float3(1.2) * max(dot(n, normalize(float3(-14.0, -10.0, 6.0))), 0.0);
+    irradiance += float3(0.75) * max(dot(n, normalize(float3(0.0, 0.0, -16.0))), 0.0);
+    return irradiance;
+}
+
 fragment float4 world3d_mesh_fragment_main(WorldMeshVertexOut in [[stage_in]],
                                             constant WorldGlobals& globals [[buffer(2)]]) {
     float3 n = normalize(in.normal);
-    float diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.28);
-    float3 color = in.color.rgb * diffuse;
+    float emissive = 0.0;
     if (in.flags.x > 0.5) {
-        color = mix(color, float3(0.35, 0.75, 1.0), 0.65);
+        emissive = WORLD3D_SELECTED_EMISSIVE;
+    } else if (in.flags.y > 0.5) {
+        emissive = WORLD3D_HOVERED_EMISSIVE;
     }
-    if (in.flags.y > 0.5) {
-        color = mix(color, float3(1.0, 0.85, 0.35), 0.55);
-    }
+    float3 color = world3d_irradiance(n) * in.color.rgb * WORLD3D_RECIPROCAL_PI + in.color.rgb * emissive;
     return float4(color, in.color.a);
 }
 "#;

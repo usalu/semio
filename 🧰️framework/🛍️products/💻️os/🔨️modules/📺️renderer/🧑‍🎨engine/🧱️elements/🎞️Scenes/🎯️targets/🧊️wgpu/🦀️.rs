@@ -969,13 +969,11 @@ fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
     });
 }
 
-
-
-
-
-
-
-fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
+/// 🎬️ One scene-addressed action descriptor: the surface's own controller id, the action name and its
+/// JSON args projected into the DSL. The ONE builder every scene lane shares — `⚙️EngineCanvas`'s
+/// standalone test lane calls it too rather than keeping a second copy
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
+pub(crate) fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
@@ -1654,6 +1652,9 @@ pub struct SceneEngineHosts<'a> {
     pub window_id: &'a str,
 }
 
+/// 🍿️ The editor's own popup chrome, painted LAST so it lands over the composited
+/// `EditorHost` texture phase 6 staged — React's absolutely-positioned overlays inside the
+/// host element (`🧱️elements/✏️TextEditor/🟦️.tsx:503-608`).
 pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
     if cursor.phase() >= ENGINE_PHASE {
         match scene.component_kind {
@@ -1765,9 +1766,6 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
             }
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
-        // 🍿️ The editor's own popup chrome, painted LAST so it lands over the composited
-        // `EditorHost` texture phase 6 staged — React's absolutely-positioned overlays inside the
-        // host element (`🧱️elements/✏️TextEditor/🟦️.tsx:503-608`).
         9 => {
             if scene.component_kind != SurfaceKind::TextEditor {
                 return cursor.finish();
@@ -3061,6 +3059,10 @@ fn graph_timeline_avatar_initials(name: &str) -> String {
 /// elbows, a commit dot, author initials and the checkpoint's description per row. Row selection
 /// dispatches `checkoutCheckpoint` with `{ checkpointId }`, the payload `🌳️GraphTimelineHost/🟦️.tsx`
 /// hands `HistoryTable`'s `onSelectCheckpoint`.
+///
+/// 🪢️ `color-mix(in oklab, var(--muted-foreground) 40%, transparent)` on the lane guides and
+/// parent connectors in `graph-timeline-host.tsx` — a translucent line; opaque `theme.separator`
+/// previously read as visibly heavier than React's thin, faded rail.
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(history) = &scene.graph_timeline else {
@@ -3117,9 +3119,6 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
             }
         }
 
-        // 🪢️ `color-mix(in oklab, var(--muted-foreground) 40%, transparent)` on the lane guides and
-        // parent connectors in `graph-timeline-host.tsx` — a translucent line; opaque `theme.separator`
-        // previously read as visibly heavier than React's thin, faded rail.
         let guide_stroke = theme.separator.with_alpha(theme.separator.a * 0.4);
         for lane in 0..lane_count {
             if guides[row_index][lane] {
@@ -3734,6 +3733,17 @@ fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewpor
     }
 }
 
+/// 🗒️ `role === "meta"` (activeUtility bookkeeping) and `visible === false` records are
+/// non-visual — skip rendering entirely, matches `layers.filter(role !== "meta")` in
+/// `canvas-2d-host.tsx`'s `JsonLayersCanvasSession.renderFrame`.
+/// 🖼️ Generic bounds-rect (or `kind === "circle"`) draw record — resolves solid/gradient
+/// fill, blend-mode approximation, and stroke, matching `drawSceneNode`'s bounds-layer path.
+/// 🖊️ Overlay annotation: a two-pass selection highlight (soft outer glow + crisp amber ring)
+/// drawn on top of the shape, matches `drawBoundsLayer`'s `isSelected` glow+ring pair in
+/// `canvas-2d-host.tsx` (glow at +4px/width 5, ring at +0px/width 2.5, both amber).
+/// 🫙️ `layers.length === 0 → ctx.fillText("Empty canvas", -36, 0)` in
+/// `🧱️elements/📐️Canvas2dHost/🟦️.tsx`'s `renderFrame` — React counts the same `role !== "meta"`
+/// records this loop iterates, so the emptiness verdict matches without a second parse.
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
@@ -3764,9 +3774,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
     }
     for (index, layer) in layers.iter().enumerate() {
-        // 🗒️ `role === "meta"` (activeUtility bookkeeping) and `visible === false` records are
-        // non-visual — skip rendering entirely, matches `layers.filter(role !== "meta")` in
-        // `canvas-2d-host.tsx`'s `JsonLayersCanvasSession.renderFrame`.
         if !canvas_layer_should_render(layer) {
             continue;
         }
@@ -3825,8 +3832,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             ctx.draw.push_line(sx0, sy0, sx1, sy1, stroke, (2.0 * viewport.zoom).max(1.0));
             continue;
         }
-        // 🖼️ Generic bounds-rect (or `kind === "circle"`) draw record — resolves solid/gradient
-        // fill, blend-mode approximation, and stroke, matching `drawSceneNode`'s bounds-layer path.
         let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
         let w = (layer.width as f32 * viewport.zoom).max(8.0);
         let h = (layer.height as f32 * viewport.zoom).max(8.0);
@@ -3834,9 +3839,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         let is_circle = layer.kind == "circle";
         let fallback_fill = Rgba::new(theme.diagram_accent_fill.r + hue / 720.0, theme.diagram_accent_fill.g, theme.diagram_accent_fill.b, theme.diagram_accent_fill.a * opacity);
         render_canvas_shape_fill(ctx.draw, &viewport, inner, shape_rect, layer, opacity, fallback_fill, theme.diagram_shape_outline, theme.canvas_clear, is_circle);
-        // 🖊️ Overlay annotation: a two-pass selection highlight (soft outer glow + crisp amber ring)
-        // drawn on top of the shape, matches `drawBoundsLayer`'s `isSelected` glow+ring pair in
-        // `canvas-2d-host.tsx` (glow at +4px/width 5, ring at +0px/width 2.5, both amber).
         if layer.selected.unwrap_or(false) {
             if is_circle {
                 let cx = sx + w * 0.5;
@@ -3859,9 +3861,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             }
         }
     }
-    // 🫙️ `layers.length === 0 → ctx.fillText("Empty canvas", -36, 0)` in
-    // `🧱️elements/📐️Canvas2dHost/🟦️.tsx`'s `renderFrame` — React counts the same `role !== "meta"`
-    // records this loop iterates, so the emptiness verdict matches without a second parse.
     if !layers.iter().any(|layer| layer.role.as_deref() != Some("meta")) {
         draw_text(ctx, CANVAS_2D_EMPTY_LABEL, inner.x + inner.w * 0.5 - 36.0, inner.y + inner.h * 0.5, theme.font_size_small, theme.text_muted);
     }
@@ -5928,6 +5927,8 @@ fn draw_ink_image(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentScene
     draw_text(ctx, image_key, sx + 6.0, sy + h * 0.5, theme.font_size_small, theme.text_muted);
 }
 
+/// 🎨️ `bg-background/90` in `ink-canvas-host.tsx` — `theme.panel` (the app-chrome surface token)
+/// previously stood in for the canvas-item card token, which is `background`, not `panel`.
 fn draw_ink_item(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, block: &Value, camera: InkCameraF, inner: Rect, doc: &InkDocumentJson, selected: bool, hovered: bool) {
     let theme = ctx.theme;
     let kind = ink_item_kind(block);
@@ -5956,8 +5957,6 @@ fn draw_ink_item(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneN
         return;
     }
 
-    // 🎨️ `bg-background/90` in `ink-canvas-host.tsx` — `theme.panel` (the app-chrome surface token)
-    // previously stood in for the canvas-item card token, which is `background`, not `panel`.
     let bg = theme.background;
     ctx.draw.push_rounded([sx, sy, w.max(4.0), h.max(4.0)], bg.with_alpha(0.9), theme.border_radius.min(6.0));
 
@@ -6378,6 +6377,8 @@ pub fn tiled_map_pointer_move_into(surface_id: &str, controller_id: &str, inner:
 
 
 
+/// 🎯️ `method` is `"pick"` for a click and the marquee's own method for a drag — the exact
+/// split `emitFeatureSelection`'s two call sites make in `🧭️TiledMapHost/🟦️.tsx`.
 pub fn tiled_map_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     let state = scene_state(surface_id);
@@ -6432,8 +6433,6 @@ pub fn tiled_map_pointer_up_into(surface_id: &str, controller_id: &str, inner: R
                 });
                 return Ok(false);
             }
-            // 🎯️ `method` is `"pick"` for a click and the marquee's own method for a drag — the exact
-            // split `emitFeatureSelection`'s two call sites make in `🧭️TiledMapHost/🟦️.tsx`.
             let select_method = if state.map_marquee_active && distance >= MAP_MARQUEE_THRESHOLD_PX { method.as_str() } else { "pick" };
             write_tiled_map_selection(input, controller_id, surface_id, &positions, &routes, merge_mode, select_method, || {
                 mutate_scene_state(surface_id, |state| {
@@ -6583,6 +6582,12 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
     draw_text(ctx, message, bounds.x + (bounds.w - width) * 0.5, bounds.y + bounds.h * 0.5, size, theme.text_muted);
 }
 
+/// 🖼️ React's shot is an OFFSCREEN render through `iconRenderPort`, so its host has three visible
+/// states: the error text, the finished `<img>`, and `ui.host.rendering` while the promise is in
+/// flight (`🖼️IconRenderHost/🟦️.tsx:55-61`). This twin draws the GLB straight into the frame, so it
+/// used to have exactly one — a silently EMPTY shot frame for the whole time the mesh was being
+/// fetched, and forever if the fetch never landed. The residency of the one subject mesh is the
+/// same predicate: no lease yet is "rendering", a recorded snapshot fault is the error arm.
 /** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
 fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
     let Some(icon_render) = &scene.icon_render else {
@@ -6650,12 +6655,6 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         return render_icon_render_empty(bounds, ctx, "No shot");
     };
     infinite_world::world::render_world_3d(&synthetic_scene, frame, ctx, state, hosts.world_resources);
-    // 🖼️ React's shot is an OFFSCREEN render through `iconRenderPort`, so its host has three visible
-    // states: the error text, the finished `<img>`, and `ui.host.rendering` while the promise is in
-    // flight (`🖼️IconRenderHost/🟦️.tsx:55-61`). This twin draws the GLB straight into the frame, so it
-    // used to have exactly one — a silently EMPTY shot frame for the whole time the mesh was being
-    // fetched, and forever if the fetch never landed. The residency of the one subject mesh is the
-    // same predicate: no lease yet is "rendering", a recorded snapshot fault is the error arm.
     let status = icon_render_status(state.mesh_lease(&mesh_id).is_some(), state.snapshot_fault().is_some());
     if status != IconRenderStatus::Ready {
         let failed = status == IconRenderStatus::Failed;
@@ -6704,10 +6703,12 @@ fn render_icon_render_status(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, 
     draw_text(ctx, message, frame.x + (frame.w - width) * 0.5, frame.y + (frame.h + height) * 0.5, size, color);
 }
 
+/// 🖼️ 2px, matching `IconShotFrame`'s `border-2 border-accent` in `icon-render-host.tsx` —
+/// `theme.stroke_hairline` (1px) previously halved the frame width relative to React.
+/// 🏷️ `bg-background/80`, not `panel` — the badge chip sits on the transparent canvas frame in
+/// `icon-render-host.tsx`, not on a panel surface.
 fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, frame: Rect, request: &IconRenderRequestFields, shape: &str, footer: Option<&str>) {
     let theme = ctx.theme;
-    // 🖼️ 2px, matching `IconShotFrame`'s `border-2 border-accent` in `icon-render-host.tsx` —
-    // `theme.stroke_hairline` (1px) previously halved the frame width relative to React.
     let hair = 2.0_f32;
     ctx.draw.push_solid([frame.x, frame.y, frame.w, hair], theme.accent);
     ctx.draw.push_solid([frame.x, frame.y + frame.h - hair, frame.w, hair], theme.accent);
@@ -6722,8 +6723,6 @@ fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, 
     let badge_h = badge_text_h + pad * 2.0;
     let badge_x = frame.x + frame.w - badge_w - 4.0;
     let badge_y = frame.y + frame.h - badge_h - 4.0;
-    // 🏷️ `bg-background/80`, not `panel` — the badge chip sits on the transparent canvas frame in
-    // `icon-render-host.tsx`, not on a panel surface.
     ctx.draw.push_rounded([badge_x, badge_y, badge_w, badge_h], theme.background.with_alpha(0.8), 2.0);
     draw_text(ctx, &badge, badge_x + pad, badge_y + pad + badge_text_h * 0.8, badge_size, theme.text_muted);
 
@@ -7668,6 +7667,10 @@ pub fn text_editor_queue_menu_action(surface_id: &str, action: &str, x: f32, y: 
 /// verbs this target has no OS binding for (see [`text_editor_local_menu_action`]).
 const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "suggestCompletions", "selectToken", "selectLine", "selectAll", "commitRename"];
 
+/// ✏️ An armed rename input has KEYBOARD FOCUS, so it consumes every key: React's `<input>` is a
+/// real focused element and `onKeyDown` stops propagation. The draft text is tracked here rather
+/// than read back off `InputState::text_view` — that is a PAGED projection that is empty until the
+/// text pump has run, so a rename would have previewed the empty string on its first keystroke.
 /** @emoji ⌨️ The popup half of one keystroke, offered BEFORE the buffer sees it — React's
  * `onKeyDown` prelude (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`): `Ctrl/Cmd+Space` opens completions,
  * `F2` starts a rename, and while either popup is open its own arrow/commit/dismiss keys win over
@@ -7675,10 +7678,6 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
 pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let ui = text_editor_ui(&scene.surface_id);
     let accelerator = modifiers.ctrl || modifiers.meta;
-    // ✏️ An armed rename input has KEYBOARD FOCUS, so it consumes every key: React's `<input>` is a
-    // real focused element and `onKeyDown` stops propagation. The draft text is tracked here rather
-    // than read back off `InputState::text_view` — that is a PAGED projection that is empty until the
-    // text pump has run, so a rename would have previewed the empty string on its first keystroke.
     if let Some(draft) = ui.rename.as_ref() {
         match key {
             KeyAction::Escape => return Ok(text_editor_cancel_rename(scene)),

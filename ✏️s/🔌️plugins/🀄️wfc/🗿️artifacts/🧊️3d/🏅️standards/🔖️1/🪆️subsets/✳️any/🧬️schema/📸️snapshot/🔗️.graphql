@@ -1,0 +1,83 @@
+# 🧊️ wfc3d snapshot — the persisted WFC problem over an arbitrary 3d slot graph.
+
+type Color {
+  r: Int!
+  g: Int!
+  b: Int!
+  a: Int!
+}
+
+type Mesh {
+  positions: [Float!]!
+  indices: [Int!]!
+  color: Color
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type ArtifactChildHandle {
+  childId: String!
+  target: ArtifactRef!
+}
+
+type MeshChild {
+  child: ArtifactChildHandle!
+}
+
+union TileMedia3d = Mesh | MeshChild
+
+type Tile {
+  id: String!
+  label: String
+  weight: Float!
+  media: TileMedia3d!
+}
+
+type Slot3d {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  width: Float!
+  height: Float!
+  depth: Float!
+  pinnedTileId: String
+}
+
+type SlotEdge {
+  id: String!
+  fromSlotId: String!
+  toSlotId: String!
+  relation: String!
+}
+
+"""
+⛓️ One adjacency rule over an UNORDERED tile pair. The rules ARE the compatibility table — an
+ALLOW-LIST — so a pair no rule mentions is forbidden. `allowed: false` always beats an admitting
+rule, and a null `relation` states the rule for every relation at once.
+"""
+type GraphRule {
+  id: String!
+  tileAId: String!
+  tileBId: String!
+  relation: String
+  allowed: Boolean!
+}
+
+type Wfc3dSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  seed: Float! @state(class: ARTIFACT)
+  slots: [Slot3d!]! @state(class: ARTIFACT)
+  edges: [SlotEdge!]! @state(class: ARTIFACT)
+  tiles: [Tile!]! @state(class: ARTIFACT)
+  rules: [GraphRule!]! @state(class: ARTIFACT)
+}

@@ -40,11 +40,22 @@ fn empty_scene(surface_id: &str, controller_id: &str, kind: SurfaceKind) -> UiCo
 
 /// 🖼️ A two-pixel-layer raster document in the wire shape `RasterHost::sync_document_json` reads —
 /// the same `RasterSnapshot.layers` projection the raster plugin publishes.
+///
+/// 🧾️ `schema` and per-layer `mask` are REQUIRED keys of that wire, not omittable ones:
+/// `parse_document` refuses anything whose `schema` is not `"raster.document"`, and
+/// `LayerNodeJson::Pixel` declares `mask` as an `Option<MaskJson>` with no serde default. The attach
+/// path swallows the refusal (`let _ = host.sync_document_json(…)`,
+/// `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs:2801`), so a fixture missing either key leaves the host with
+/// NO layers — which reads downstream as "nothing is pickable anywhere in the viewport" rather than
+/// as a parse fault. The raster plugin's own snapshots carry both
+/// (`🖨️raster/…/📸️snapshot/⬅️before/🔣️.json`); this fixture carried neither
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 fn raster_document_json() -> String {
     json!({
+        "schema": "raster.document",
         "layers": [
-            { "kind": "pixel", "id": "base", "visible": true, "opacity": 1.0, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "width": 64, "height": 64 },
-            { "kind": "pixel", "id": "overlay", "visible": true, "opacity": 0.5, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "width": 64, "height": 64 }
+            { "kind": "pixel", "id": "base", "visible": true, "opacity": 1.0, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "mask": null, "width": 64, "height": 64 },
+            { "kind": "pixel", "id": "overlay", "visible": true, "opacity": 0.5, "blendMode": "normal", "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 }, "mask": null, "width": 64, "height": 64 }
         ]
     })
     .to_string()
@@ -68,9 +79,16 @@ fn paint2d_scene(surface_id: &str, active_utility: &str, selection: &[&str]) -> 
     scene
 }
 
+/// ✏️ A text-editor surface whose declared caret sits at the END of `buffer`, the way a host that has
+/// just loaded a document and focused it publishes one. The caret is part of the SCENE
+/// (`selectionJson`), not an editor default — React's `TextEditorHost` restores it from the same
+/// field — so a law about typing has to declare where the caret is instead of assuming zero
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration: the fixture said `{0,0}` while
+/// its own assertions read `"alpha!"` and a caret of 6).
 fn text_editor_scene(surface_id: &str, buffer: &str) -> UiComponentSceneNode {
     let mut scene = empty_scene(surface_id, "note", SurfaceKind::TextEditor);
-    scene.text_editor = Some(TextEditorScene::base(buffer.into(), Some("markdown".into()), Some(json!({ "start": 0, "end": 0 }).to_string())));
+    let caret = buffer.chars().count();
+    scene.text_editor = Some(TextEditorScene::base(buffer.into(), Some("markdown".into()), Some(json!({ "start": caret, "end": caret }).to_string())));
     scene
 }
 

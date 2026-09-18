@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/artifact/schema.json",
+  "title": "Grid3dArtifact",
+  "description": "The artifact facet — the persisted problem spec IS the artifact; nothing is derived into it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/snapshot/schema.json"
+    }
+  }
+}

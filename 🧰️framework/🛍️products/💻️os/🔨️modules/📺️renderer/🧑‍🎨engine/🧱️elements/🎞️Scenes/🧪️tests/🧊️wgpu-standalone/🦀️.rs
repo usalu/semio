@@ -22,17 +22,17 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     reservation.publish()
 }
 
+/// 🧪️ ⚙️EngineCanvas's own `#[cfg(test)] include!` sibling — where the 2026-09-08 sweep moved every
+/// wrapper that must not be production-capable, exactly as this file holds 🎞️Scenes'.
+/// 🧪️ This file itself: the `#[cfg(test)] include!` the production Scenes target splices in, and
+/// therefore where every helper that must NOT be production-capable now lives.
 #[cfg(test)]
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
     const SCENES_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
     const INTERPRETER_SOURCE: &str = include_str!("../../../🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
     const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
-    // 🧪️ ⚙️EngineCanvas's own `#[cfg(test)] include!` sibling — where the 2026-09-08 sweep moved every
-    // wrapper that must not be production-capable, exactly as this file holds 🎞️Scenes'.
     const ENGINE_CANVAS_STANDALONE: &str = include_str!("../../../⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs");
-    // 🧪️ This file itself: the `#[cfg(test)] include!` the production Scenes target splices in, and
-    // therefore where every helper that must NOT be production-capable now lives.
     const STANDALONE_SOURCE: &str = include_str!("🦀️.rs");
     assert!(!SCENES_SOURCE.contains(concat!("queue_", "event(")));
     assert!(!INTERPRETER_SOURCE.contains(concat!("queue_", "event(")));

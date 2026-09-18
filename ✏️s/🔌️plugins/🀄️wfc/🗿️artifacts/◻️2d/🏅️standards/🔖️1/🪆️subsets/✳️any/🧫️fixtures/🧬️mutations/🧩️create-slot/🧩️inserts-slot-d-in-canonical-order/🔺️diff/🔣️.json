@@ -1,0 +1,23 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [
+    [
+      3,
+      {
+        "id": "slot-d",
+        "x": 6.0,
+        "y": 0.0,
+        "width": 2.0,
+        "height": 2.0
+      }
+    ]
+  ],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

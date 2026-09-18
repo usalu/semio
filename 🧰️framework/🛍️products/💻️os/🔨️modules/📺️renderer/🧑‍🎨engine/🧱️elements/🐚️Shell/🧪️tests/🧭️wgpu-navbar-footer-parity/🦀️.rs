@@ -118,8 +118,13 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
 
     assert_eq!(shell.world_projection_template_id("pane-top"), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ a pane with no selection reads React's own `worldProjectionDefaults(\"threePoint\")` fallback");
     assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), "projection-three-point");
+    assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Perspective), "🔀️ the pane opens on its delivered family");
     press(&mut shell, "shell.projection.template.pane-top::orthographic".into());
     assert_eq!(shell.world_projection_template_id("pane-top"), "orthographic");
+    // 🔀️ The switch is not a label: it moves the pane's CAMERA onto the other family and queues the
+    // settle that publishes the new pose, exactly as React's remount does.
+    assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic), "🔀️ pressing a Parallel row makes the pane's camera parallel");
+    assert!(shell.world3d_states.get("pane-top").is_some_and(infinite_world::world::world3d_pending_camera_settle), "🔀️ and queues the camera settle that dispatches it");
     assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), "projection-orthographic", "🔀️ the chip wears the selected template's icon, as React's `worldProjectionSpecIconId(spec)` pane icon does");
     assert_eq!(shell.world_projection_template_id("pane-perspective"), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ the selection is per pane");
 
@@ -182,7 +187,7 @@ fn the_navbar_cluster_walks_to_completion_and_keeps_its_bands() {
     let ids: Vec<&str> = hits.iter().map(|(id, _)| id.as_str()).collect();
     eprintln!("[DEBUG] navbar x-order {:?}", hits.iter().map(|(id, rect)| (id, rect.x.round())).collect::<Vec<_>>());
     let fullscreen = hits.iter().position(|(id, _)| id == "ui.fullscreen.toggle").expect("🧭️ the navbar carries the fullscreen chip");
-    let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| id.starts_with("shell.panel.tab.top-left.")).map(|(index, _)| index).collect();
+    let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| shell.panel_tab_anchor(id) == Some(PanelAnchor::TopLeft)).map(|(index, _)| index).collect();
     assert!(!leading.is_empty(), "🧭️ top-left's tabs open the navbar: {ids:?}");
     assert!(leading.iter().all(|index| *index < fullscreen), "🧭️ and stay left of the trailing band: {ids:?}");
     assert!((hits[leading[0]].1.x - theme.padding_standard).abs() < 0.01, "🧭️ the leading band still opens at the navbar's own padding, with the logo cluster after it");
@@ -255,8 +260,14 @@ fn the_footer_pills_band_with_reacts_own_order() {
     assert!(sync < presence, "🔚️ the sync pill leads the presence pill: {ids:?}");
     assert!(!ids.contains(&"s-checkin"), "🔚️ React paints no footer check-in chip: {ids:?}");
 
-    let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| id.starts_with("shell.panel.tab.bottom-left.")).map(|(index, _)| index).collect();
-    let trailing: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| id.starts_with("shell.panel.tab.bottom-right.")).map(|(index, _)| index).collect();
+    // 🚦️ `s-sync-status` names TWO things here: React's bottom-left sync TAB, whose own folded chrome
+    // button IS the pill (`🏛️ShellHost/🟦️.tsx:9086`), and this renderer's separate footer pill, which
+    // W4a added because the tab alone painted nothing. Now that W7a publishes React's BARE tab ids
+    // both answer to the same id, so the band sets exclude it and the pill positions below pin it
+    // instead. The duplicate itself is a footer-lane hand-off (`📓️w7a-…` §5).
+    let band_tab = |shell: &ShellState, id: &String, anchor: PanelAnchor| id != "s-sync-status" && shell.panel_tab_anchor(id) == Some(anchor);
+    let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| band_tab(&shell, id, PanelAnchor::BottomLeft)).map(|(index, _)| index).collect();
+    let trailing: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| band_tab(&shell, id, PanelAnchor::BottomRight)).map(|(index, _)| index).collect();
     assert!(!leading.is_empty() && !trailing.is_empty(), "🔚️ both outer bands carry tabs: {ids:?}");
     assert!(leading.iter().all(|index| *index < sync), "🔚️ every bottom-left tab leads the sync pill, as React's `Display` leads `#s-sync-status`: {ids:?}");
     assert!(trailing.iter().all(|index| *index > presence), "🔚️ the presence pill leads every bottom-right tab, as React's `footerItems` places it: {ids:?}");

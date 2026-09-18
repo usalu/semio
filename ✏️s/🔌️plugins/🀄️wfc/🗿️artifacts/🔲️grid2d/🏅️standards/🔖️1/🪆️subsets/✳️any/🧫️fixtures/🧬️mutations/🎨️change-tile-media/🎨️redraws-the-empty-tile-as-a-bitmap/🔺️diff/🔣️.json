@@ -1,0 +1,47 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": null,
+  "height": null,
+  "cellWidth": null,
+  "cellHeight": null,
+  "periodicX": null,
+  "periodicY": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [
+    [
+      0,
+      {
+        "id": "empty",
+        "label": "Empty",
+        "weight": 2.0,
+        "media": {
+          "kind": "bitmap",
+          "width": 2,
+          "height": 2,
+          "palette": [
+            {
+              "r": 15,
+              "g": 23,
+              "b": 42,
+              "a": 255
+            },
+            {
+              "r": 148,
+              "g": 163,
+              "b": 184,
+              "a": 255
+            }
+          ],
+          "pixels": "AAEBAA=="
+        }
+      }
+    ]
+  ],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [],
+  "maskedUpserted": []
+}

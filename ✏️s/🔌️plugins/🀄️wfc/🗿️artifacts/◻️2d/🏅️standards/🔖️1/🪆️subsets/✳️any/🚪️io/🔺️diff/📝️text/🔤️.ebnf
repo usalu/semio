@@ -1,0 +1,3 @@
+(* 🔤️ derived from 📖️.grammar.semio — kebab rule names rendered in space case. *)
+diff = artifact mark, change, { change } ;
+change = scalar change | collection change ;

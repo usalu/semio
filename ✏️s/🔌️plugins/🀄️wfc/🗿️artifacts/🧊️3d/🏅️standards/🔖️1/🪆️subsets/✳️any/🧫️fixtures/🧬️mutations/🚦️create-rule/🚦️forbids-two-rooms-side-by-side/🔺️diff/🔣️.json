@@ -1,0 +1,1 @@
+{"schema":null,"seed":null,"slotsRemoved":[],"slotsUpserted":[],"edgesRemoved":[],"edgesUpserted":[],"tilesRemoved":[],"tilesUpserted":[],"rulesRemoved":[],"rulesUpserted":[[1,{"id":"rule-room-room","tileAId":"room","tileBId":"room","relation":"beside","allowed":false}]]}

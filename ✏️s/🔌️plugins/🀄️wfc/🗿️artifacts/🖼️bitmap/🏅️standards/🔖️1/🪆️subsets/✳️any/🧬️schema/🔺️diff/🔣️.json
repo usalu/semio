@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/diff.json",
+  "title": "BitmapDiff",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "seed": { "type": ["integer", "null"], "x-semio-state": "artifact" },
+    "inputWidth": { "type": ["integer", "null"], "x-semio-state": "artifact" },
+    "inputHeight": { "type": ["integer", "null"], "x-semio-state": "artifact" },
+    "inputPixels": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "inputRegions": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "title": "BitmapPixelRegion",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["x", "y", "width", "height", "pixels"],
+        "properties": {
+          "x": { "type": "integer", "minimum": 0 },
+          "y": { "type": "integer", "minimum": 0 },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "pixels": { "type": "string", "format": "base64" }
+        }
+      }
+    },
+    "palette": { "type": ["array", "null"], "x-semio-state": "artifact" },
+    "output": { "type": ["object", "null"], "x-semio-state": "artifact" },
+    "model": { "type": ["object", "null"], "x-semio-state": "artifact" },
+    "pinnedRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "pinnedUpserted": { "type": "array", "x-semio-state": "artifact" }
+  }
+}

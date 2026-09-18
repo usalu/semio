@@ -41,6 +41,7 @@ const engineTestSuites = [
   engineSuite("🧺️turn-patch-batch"),
   engineSuite("🎚️continuous-gesture-lane"),
   engineSuite("🎯️input-ledger"),
+  engineSuite("⌨️keybinding-glyphs"),
   engineSuite("🎯️world3d-pick-bounds"),
   engineSuite("📇️directory-home-bootstrap", "tsx"),
   engineSuite("📇️session-authority-notice", "tsx"),

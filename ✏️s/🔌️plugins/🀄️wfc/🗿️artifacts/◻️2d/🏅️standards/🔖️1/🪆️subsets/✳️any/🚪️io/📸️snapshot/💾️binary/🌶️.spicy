@@ -1,0 +1,15 @@
+module wfc2d_snapshot;
+
+public type Wfc2DSnapshot = unit {
+    magic: bytes &size=8;
+    format_major: uint16;
+    format_minor: uint16;
+    flags: uint32;
+    domain_tag: uint32;
+    header_crc32: uint32;
+    field_count: uint32;
+    field_id: uint32;
+    payload_length: uint32;
+    payload: bytes &size=self.payload_length;
+    body_crc32: uint32;
+};

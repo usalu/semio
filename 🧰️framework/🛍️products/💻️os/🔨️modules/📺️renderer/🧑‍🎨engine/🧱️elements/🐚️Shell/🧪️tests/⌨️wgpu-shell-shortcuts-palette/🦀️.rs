@@ -143,6 +143,15 @@ fn a_focused_content_field_swallows_every_shell_chord() {
 /// two of the eight rows existed (`mod+b`/`mod+shift+b`) and they flipped a whole side's visibility flag
 /// rather than an anchor, so no chord could ever reach the Display, Settings or Command anchors.
 /// An anchor carrying no tab is a witnessed no-op rather than an empty panel over the canvas.
+///
+/// 🎛️ The bottom-middle Command anchor is React's own home for the command panel, and `ctrl+alt+m` is
+/// React's own chord for it — neither existed on this renderer before this wave.
+///
+/// 🖥️ Bottom-left always carries the framework Display branch (React's `frameworkDisplayTabs` are
+/// framework chrome, not an app contribution), so its chord always has something to open — even for
+/// a fixture that declares no Display-group tab of its own.
+///
+/// 🧭️ An anchor NO source assigns a tab to stays shut: left-middle carries none in either renderer.
 #[test]
 fn each_panel_anchor_chord_toggles_its_own_anchor() {
     let mut shell = palette_shell();
@@ -162,20 +171,14 @@ fn each_panel_anchor_chord_toggles_its_own_anchor() {
     assert!(shell.anchor_open(PanelAnchor::TopRight), "mod+shift+b opens the top-right anchor");
     assert!(!shell.anchor_open(PanelAnchor::TopLeft), "without disturbing another anchor");
 
-    // 🎛️ The bottom-middle Command anchor is React's own home for the command panel, and `ctrl+alt+m` is
-    // React's own chord for it — neither existed on this renderer before this wave.
     press(&mut shell, "ctrl+alt+m", &mut input);
     assert!(shell.anchor_open(PanelAnchor::BottomMiddle), "ctrl+alt+m opens the bottom-middle Command anchor");
     assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.first().map(String::as_str), Some("framework.category.command"));
 
-    // 🖥️ Bottom-left always carries the framework Display branch (React's `frameworkDisplayTabs` are
-    // framework chrome, not an app contribution), so its chord always has something to open — even for
-    // a fixture that declares no Display-group tab of its own.
     press(&mut shell, "ctrl+alt+b", &mut input);
     assert!(shell.anchor_open(PanelAnchor::BottomLeft), "ctrl+alt+b opens the bottom-left Display anchor");
     assert_eq!(shell.anchor_state(PanelAnchor::BottomLeft).path.first().map(String::as_str), Some("framework.category.display"));
 
-    // 🧭️ An anchor NO source assigns a tab to stays shut: left-middle carries none in either renderer.
     let before = shell.open_anchors();
     press(&mut shell, "ctrl+alt+shift+m", &mut input);
     assert_eq!(shell.open_anchors(), before, "a chord for an empty anchor opens nothing");

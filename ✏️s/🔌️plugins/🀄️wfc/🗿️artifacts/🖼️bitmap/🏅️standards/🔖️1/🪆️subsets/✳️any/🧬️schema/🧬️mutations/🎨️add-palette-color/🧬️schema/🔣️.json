@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/add-palette-color/schema.json",
+  "title": "AddPaletteColor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "color"
+  ],
+  "properties": {
+    "index": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "color": {
+      "title": "BitmapColor",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "g", "b", "a"],
+      "properties": {
+        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "a": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    }
+  }
+}

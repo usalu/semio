@@ -227,6 +227,9 @@ fn apply_drop_tab_moves_window_to_target_corner() {
     assert_eq!(dock.active_window_id.as_deref(), Some("a"));
 }
 
+/// 🪟️ ONE merged top span, not one per tab: React's tab bar is `flex items-stretch justify-start`
+/// with no gap utility (`🎨️Canvas/🟦️.tsx:1108`), so adjacent chips form a single silhouette edge
+/// and the content clip is body + that one span.
 #[test]
 fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
@@ -242,15 +245,14 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
     dock.paint_chrome(&mut ctx, bounds, true);
     let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
-    // 🪟️ ONE merged top span, not one per tab: React's tab bar is `flex items-stretch justify-start`
-    // with no gap utility (`🎨️Canvas/🟦️.tsx:1108`), so adjacent chips form a single silhouette edge
-    // and the content clip is body + that one span.
     assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(2));
     assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
 }
 
 //#endregion SilhouetteContentTests
 
+/// 🏁️ `register_hit` only STAGES; `hit_at` resolves the PUBLISHED registry, so the frame build has
+/// to be promoted before the pointer authority can see either target.
 #[test]
 fn resize_hits_win_over_later_scroll_region() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
@@ -264,8 +266,6 @@ fn resize_hits_win_over_later_scroll_region() {
     input.register_hit(HitTarget { rect: canvas, event: None, control_id: Some("content.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
     dock.register_resize_hits(&mut ctx, canvas);
-    // 🏁️ `register_hit` only STAGES; `hit_at` resolves the PUBLISHED registry, so the frame build has
-    // to be promoted before the pointer authority can see either target.
     input.publish_hits();
     let hit = input.hit_at(200.0, 150.0).expect("split hit");
     assert_eq!(hit.kind, HitKind::DockSplit);
@@ -294,12 +294,13 @@ fn stack_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> Do
 /// 🩸️ The lane used to remove the window from the committed tree at drag promotion and then insert
 /// into the mutated tree; a drop that refused left the user's layout mutilated, and `apply_drop`'s
 /// own (second) removal always failed, which silently no-opped every cross-stack drop.
+///
+/// 🪟️ Three stacks so lifting `a` (the sole occupant of stack `[0]`) prunes that slot without
+/// also emptying the drop target — `b` shifts from `[1]` down to `[0]`, and `c` (the actual
+/// cross-stack drop target) shifts from `[2]` to `[1]`.
 #[test]
 fn apply_drop_tab_moves_window_across_stacks() {
     let mut dock = DockState::default();
-    // 🪟️ Three stacks so lifting `a` (the sole occupant of stack `[0]`) prunes that slot without
-    // also emptying the drop target — `b` shifts from `[1]` down to `[0]`, and `c` (the actual
-    // cross-stack drop target) shifts from `[2]` to `[1]`.
     dock.root = DockNode::Row(vec![(stack_with("a"), 0.34), (stack_with("b"), 0.33), (stack_with("c"), 0.33)]);
     let payload = tab_payload("a", vec![0], 0);
     let floating = dock.render_view(Some(&payload));
@@ -314,6 +315,10 @@ fn apply_drop_tab_moves_window_across_stacks() {
 
 /// 🎯️ An abandoned drag costs nothing: the committed tree is byte-identical before and after, which
 /// is what retires the `WindowLayout` snapshot the old eager-removal lane had to keep.
+///
+/// 🪟️ Lifting `a` leaves a one-child axis, which React's `collapseLayout` HOISTS — so the derived
+/// tree the pointer hit-tests is the bare stack at the ROOT path, and that is the path the drop
+/// carries. (The old drag lane collapsed on a prune-only rule and left the axis standing at `[0]`.)
 #[test]
 fn an_abandoned_tab_drag_leaves_the_committed_tree_untouched() {
     let mut dock = DockState::default();
@@ -332,9 +337,6 @@ fn apply_drop_tab_reinserts_into_originating_stack_at_new_index() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "a"), 1.0)]);
     let payload = tab_payload("a", vec![0], 0);
-    // 🪟️ Lifting `a` leaves a one-child axis, which React's `collapseLayout` HOISTS — so the derived
-    // tree the pointer hit-tests is the bare stack at the ROOT path, and that is the path the drop
-    // carries. (The old drag lane collapsed on a prune-only rule and left the axis standing at `[0]`.)
     let floating = dock.render_view(Some(&payload));
     assert_eq!(floating.root, stack_tabs(&["b", "c"], "b"));
     let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 2 };
@@ -342,13 +344,13 @@ fn apply_drop_tab_reinserts_into_originating_stack_at_new_index() {
     assert_eq!(dock.root, stack_tabs(&["b", "c", "a"], "a"));
 }
 
+/// 🪟️ Lifting the sole occupant of stack `a` prunes its slot and hoists `b` to the ROOT of the
+/// derived tree — so that is where the split lands, and the axis is rebuilt from scratch.
 #[test]
 fn apply_drop_tab_split_targets_the_post_removal_stack() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
     let payload = tab_payload("a", vec![0], 0);
-    // 🪟️ Lifting the sole occupant of stack `a` prunes its slot and hoists `b` to the ROOT of the
-    // derived tree — so that is where the split lands, and the axis is rebuilt from scratch.
     let zone = DockDropZone::Split { stack_path: vec![], side: DockSide::Right };
     assert!(dock.apply_drop(&payload, &zone));
     assert_eq!(dock.root, DockNode::Row(vec![(stack_with("b"), 0.5), (stack_with("a"), 0.5)]));
@@ -365,13 +367,13 @@ fn apply_drop_tab_root_split_builds_axis_pair() {
     assert_eq!(dock.root, DockNode::Row(vec![(stack_with("a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]));
 }
 
+/// 🪟️ A whole-stack drag lifts the stack NODE, tab order and all — `extractStackFromLayout`, not
+/// a window-by-window removal that had to be stitched back together around `tab_index`.
 #[test]
 fn apply_drop_stack_moves_whole_group_preserving_order_and_target_key() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "b"), 0.5), (stack_with("d"), 0.5)]);
     let payload = stack_payload("b", vec![0], 1);
-    // 🪟️ A whole-stack drag lifts the stack NODE, tab order and all — `extractStackFromLayout`, not
-    // a window-by-window removal that had to be stitched back together around `tab_index`.
     let floating = dock.render_view(Some(&payload));
     assert_eq!(floating.root, stack_with("d"), "the one remaining sibling hoists to the root");
     let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 0 };
@@ -957,6 +959,9 @@ fn split_resize_conserves_the_pair_total_and_floors_at_eight_percent() {
 /// ↔️ Resize gutters: React's `Resizable` separator is a thin visual line with a fat grab zone; wgpu
 /// pins the visual at 6 px and the hit at 20 px, centred on the seam, plus 10 px join-corner squares
 /// mirroring `modeJoinCornerSpecsForSeparator` (`🎨️Canvas/🟦️.tsx:515-580`).
+///
+/// 🎯️ `hit_at` resolves the last COMPLETE frame's registry; a walk that has only just staged its
+/// targets reads them back through `staged_hits` (`🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs:331-340`).
 #[test]
 fn split_resize_gutter_hit_is_twenty_pixels_centred_on_the_seam() {
     let dock = dock_with(even_layout(&["a".into(), "b".into()]), "a");
@@ -968,8 +973,6 @@ fn split_resize_gutter_hit_is_twenty_pixels_centred_on_the_seam() {
     let labels = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
     dock.register_resize_hits(&mut ctx, canvas);
-    // 🎯️ `hit_at` resolves the last COMPLETE frame's registry; a walk that has only just staged its
-    // targets reads them back through `staged_hits` (`🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs:331-340`).
     let hit = input.staged_hits().iter().find(|target| target.kind == HitKind::DockSplit).expect("split hit on the seam");
     assert_eq!(hit.control_id.as_deref(), Some("dock.split..0"));
     assert!((hit.rect.w - 20.0).abs() < 0.001, "20 px grab zone");

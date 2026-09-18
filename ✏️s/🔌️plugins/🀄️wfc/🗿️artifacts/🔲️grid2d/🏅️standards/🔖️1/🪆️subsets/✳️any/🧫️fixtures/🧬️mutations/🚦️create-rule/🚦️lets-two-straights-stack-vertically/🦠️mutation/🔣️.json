@@ -1,0 +1,11 @@
+{
+  "CreateRule": {
+    "rule": {
+      "id": "rule-bottom-straight-straight",
+      "tileAId": "straight",
+      "tileBId": "straight",
+      "direction": "BOTTOM",
+      "allowed": true
+    }
+  }
+}

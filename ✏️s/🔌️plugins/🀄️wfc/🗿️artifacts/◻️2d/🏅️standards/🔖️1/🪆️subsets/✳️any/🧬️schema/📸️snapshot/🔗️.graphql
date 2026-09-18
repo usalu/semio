@@ -1,0 +1,80 @@
+"""🎨 One straight-alpha sRGB colour, 0-255 per channel."""
+type Wfc2dColor {
+  r: Int!
+  g: Int!
+  b: Int!
+  a: Int!
+}
+
+"""✏️ One path command in tile space 0..1."""
+type Wfc2dPathSegment {
+  kind: String!
+  to: [Float!]
+  ctrl: [Float!]
+  ctrl1: [Float!]
+  ctrl2: [Float!]
+}
+
+"""🖍️ One filled/stroked subpath of a vector tile."""
+type Wfc2dVectorPath {
+  segments: [Wfc2dPathSegment!]!
+  fill: Wfc2dColor
+  stroke: Wfc2dColor
+  strokeWidth: Float!
+}
+
+"""🖼️ What a tile looks like: exactly one of the four variants is set."""
+type Wfc2dTileMedia {
+  empty: Boolean
+  bitmapWidth: Int
+  bitmapHeight: Int
+  bitmapPalette: [Wfc2dColor!]
+  bitmapPixels: String
+  vectorPaths: [Wfc2dVectorPath!]
+  imageChildId: String
+}
+
+"""🀄️ One placeable tile — the WFC pattern alphabet."""
+type Wfc2dTile {
+  id: String!
+  label: String
+  weight: Float!
+  media: Wfc2dTileMedia!
+}
+
+"""📍 One position the solver must fill."""
+type Wfc2dSlot {
+  id: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  pinnedTileId: String
+}
+
+"""🔗 One adjacency edge between two slots."""
+type Wfc2dSlotEdge {
+  id: String!
+  fromSlotId: String!
+  toSlotId: String!
+  relation: String!
+}
+
+"""⛓️ One adjacency permission between two tile ids."""
+type Wfc2dRule {
+  id: String!
+  tileAId: String!
+  tileBId: String!
+  relation: String
+  allowed: Boolean!
+}
+
+"""🌊️ The persisted WFC problem for an arbitrary 2D slot graph."""
+type Wfc2dSnapshot {
+  schema: String!
+  seed: Float!
+  slots: [Wfc2dSlot!]!
+  edges: [Wfc2dSlotEdge!]!
+  tiles: [Wfc2dTile!]!
+  rules: [Wfc2dRule!]!
+}

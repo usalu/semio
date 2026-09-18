@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "wfc2d-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "wfc2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "in-repo",
+      "testOnly": true,
+      "kind": "verified-native-second-implementation",
+      "rationale": "A wfc2d document is the INPUT to a wave-function-collapse solve, not its output: free-placed rectangular slots, an explicit adjacency edge list with named relation classes, a tile alphabet carrying inline 2D media, and a rule set, all under one seed. Every published WFC implementation surveyed computes a collapse from a model it builds itself and none of them carries the problem statement as a readable document, so none can confirm or refute this document algebra. The differential is therefore taken against an independent Python second implementation written from the normative JSON Schema leaves and the committed quintets, never from this repository's Rust.",
+      "nativeSecondImplementation": {
+        "path": "🧪️tests/🧩️mutate-wfc2d-1/🐍️.py",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "pypi",
+            "crates.io",
+            "npm"
+          ],
+          "candidatesConsidered": [
+            "mxgmn/WaveFunctionCollapse (reference C# implementation) — computes a collapse from its own in-memory model; carries no document format",
+            "wfc (crates.io) — overlapping-model solver only, no problem-spec carrier",
+            "wfc-rs / fast-wfc — same shape: solver, not a document"
+          ]
+        },
+        "fixtureCoverage": {
+          "vectors": 15,
+          "kinds": 15
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "wfc2d-1-any",
+      "capability": "wfc2d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-seed",
+          "sourceMutationDirectoryName": "🎲️change-seed",
+          "mutationDirectoryName": "change-seed",
+          "scenarios": [
+            {
+              "id": "reseeds-the-solve-from-7-to-99",
+              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-slot",
+          "sourceMutationDirectoryName": "🧩️create-slot",
+          "mutationDirectoryName": "create-slot",
+          "scenarios": [
+            {
+              "id": "inserts-slot-d-in-canonical-order",
+              "directoryName": "🧩️inserts-slot-d-in-canonical-order"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-slot",
+          "sourceMutationDirectoryName": "🕳️delete-slot",
+          "mutationDirectoryName": "delete-slot",
+          "scenarios": [
+            {
+              "id": "removes-slot-a-and-cascades-edge-ab",
+              "directoryName": "🚫️removes-slot-a-and-cascades-edge-ab"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-slot",
+          "sourceMutationDirectoryName": "↔️move-slot",
+          "mutationDirectoryName": "move-slot",
+          "scenarios": [
+            {
+              "id": "drags-slot-b-down",
+              "directoryName": "↔️drags-slot-b-down"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-slot",
+          "sourceMutationDirectoryName": "📐️resize-slot",
+          "mutationDirectoryName": "resize-slot",
+          "scenarios": [
+            {
+              "id": "widens-slot-b",
+              "directoryName": "📐️widens-slot-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-slots",
+          "sourceMutationDirectoryName": "🔗️connect-slots",
+          "mutationDirectoryName": "connect-slots",
+          "scenarios": [
+            {
+              "id": "joins-slot-a-to-slot-c",
+              "directoryName": "🔗️joins-slot-a-to-slot-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-slots",
+          "sourceMutationDirectoryName": "✂️disconnect-slots",
+          "mutationDirectoryName": "disconnect-slots",
+          "scenarios": [
+            {
+              "id": "severs-edge-ab",
+              "directoryName": "✂️severs-edge-ab"
+            }
+          ]
+        },
+        {
+          "mutationId": "pin-slot",
+          "sourceMutationDirectoryName": "📌️pin-slot",
+          "mutationDirectoryName": "pin-slot",
+          "scenarios": [
+            {
+              "id": "pins-slot-a-to-the-roof-tile",
+              "directoryName": "📌️pins-slot-a-to-the-roof-tile"
+            }
+          ]
+        },
+        {
+          "mutationId": "unpin-slot",
+          "sourceMutationDirectoryName": "🔓️unpin-slot",
+          "mutationDirectoryName": "unpin-slot",
+          "scenarios": [
+            {
+              "id": "releases-the-slot-c-pin",
+              "directoryName": "🔓️releases-the-slot-c-pin"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-tile",
+          "sourceMutationDirectoryName": "🀄️create-tile",
+          "mutationDirectoryName": "create-tile",
+          "scenarios": [
+            {
+              "id": "adds-the-window-tile",
+              "directoryName": "🀄️adds-the-window-tile"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tile",
+          "sourceMutationDirectoryName": "🗑️delete-tile",
+          "mutationDirectoryName": "delete-tile",
+          "scenarios": [
+            {
+              "id": "removes-the-wall-tile-and-cascades-rules-and-pins",
+              "directoryName": "🚫️removes-the-wall-tile-and-cascades-rules-and-pins"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tile-weight",
+          "sourceMutationDirectoryName": "⚖️change-tile-weight",
+          "mutationDirectoryName": "change-tile-weight",
+          "scenarios": [
+            {
+              "id": "raises-the-wall-tile-bias",
+              "directoryName": "⚖️raises-the-wall-tile-bias"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tile-media",
+          "sourceMutationDirectoryName": "🎨️change-tile-media",
+          "mutationDirectoryName": "change-tile-media",
+          "scenarios": [
+            {
+              "id": "repaints-the-roof-tile-as-a-raster",
+              "directoryName": "🎨️repaints-the-roof-tile-as-a-raster"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-rule",
+          "sourceMutationDirectoryName": "🚦️create-rule",
+          "mutationDirectoryName": "create-rule",
+          "scenarios": [
+            {
+              "id": "forbids-roof-over-roof",
+              "directoryName": "⛔️forbids-roof-over-roof"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-rule",
+          "sourceMutationDirectoryName": "❌delete-rule",
+          "mutationDirectoryName": "delete-rule",
+          "scenarios": [
+            {
+              "id": "removes-the-wall-wall-rule",
+              "directoryName": "🚫️removes-the-wall-wall-rule"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

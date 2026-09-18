@@ -1,0 +1,28 @@
+semio wfc.wfc3d.dsl v1
+schema=s.wfc.wfc3d seed=7
+slots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {
+  corridor 1 0 0 1 1 1 _
+  room-a 0 0 0 1 1 1 _
+  room-b 2 0 0 1 1 1 _
+}
+edges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {
+  edge-a-corridor room-a corridor beside
+  edge-corridor-b corridor room-b beside
+}
+tiles [id:TEXT label:TEXT weight:NUM media:VAL] {
+  corridor Corridor 1 {
+    color={
+      a=255 b=210 g=200 r=200
+    }
+    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
+  }
+  room Room 2 {
+    color={
+      a=255 b=100 g=140 r=180
+    }
+    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
+  }
+}
+rules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {
+  rule-room-corridor corridor room _ true
+}

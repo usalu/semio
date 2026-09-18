@@ -1,0 +1,11 @@
+{
+  "title": "Extract WFC Plugin",
+  "emoji": "🌊️",
+  "status": "open",
+  "description": "Extract wave function collapse from the procedural plugin (assembly artifact wfc-engine inference) into its own `✏️s/🔌️plugins/🌊️wfc` plugin with five artifacts: bitmap (overlapping-model input/output bitmap editor), 2d-grid (regular rectangular grid, fixed left/right/top/bottom neighbours, vector/bitmap tiles, grid canvas + 2d preview), 2d (arbitrary-neighbour graph, non-rectangular shape, graph-with-slots editor + 2d preview), 3d-grid (regular non-uniform box grid, six fixed neighbours, mesh tiles, grid box + 3d preview), 3d (arbitrary-neighbour graph, mesh tiles, graph-with-slots editor + 3d preview).",
+  "summary": "",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [
+    "⚪️d116069374be471c980e2979613b3206"
+  ]
+}

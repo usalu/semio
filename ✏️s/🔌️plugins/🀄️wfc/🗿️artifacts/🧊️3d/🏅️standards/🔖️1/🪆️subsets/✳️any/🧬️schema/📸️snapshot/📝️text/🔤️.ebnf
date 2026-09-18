@@ -1,0 +1,4 @@
+document = header , body ;
+header = "schema" , SP , "wfc.wfc3d.snapshot" , NL ;
+body = payload , [ NL ] ;
+payload = OCTET , { OCTET } ;

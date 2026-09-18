@@ -556,6 +556,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     while (true) {
       await macrotask();
       const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
+      if (diagnosticsStamp === true) console.debug(`[DEBUG] wgpu boot stage=${step.stage} phaseUs=${step.elapsedUs} progress=${step.progress}`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
         bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), suspensionLedger);

@@ -22,6 +22,7 @@ function testBootDescriptor(variant: string): WgpuBootDescriptor {
 
 /** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
+const TEST_HOST_PLATFORM = "MacIntel";
 
 /** @emoji 🧵️ A frame Worker whose own steps all fit their ceiling — this suite measures the UI isolate. */
 const ADMITTED_WORKER_STEPS: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
@@ -67,7 +68,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const continuations: Array<() => void> = [];
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
     ...(options.now ? { now: options.now } : {}),
     setTimer: (callback, delayMs) => (delayMs === 0 ? continuations.push(callback) : 0),
     clearTimer: () => {},

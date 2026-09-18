@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/snapshot.json",
+  "title": "Wfc3dSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edges",
+    "rules",
+    "schema",
+    "seed",
+    "slots",
+    "tiles"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "slots": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "depth",
+          "height",
+          "id",
+          "width",
+          "x",
+          "y",
+          "z"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "depth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pinnedTileId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fromSlotId",
+          "id",
+          "relation",
+          "toSlotId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fromSlotId": {
+            "type": "string"
+          },
+          "toSlotId": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tiles": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "media",
+          "weight"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "media": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "mesh"
+                  },
+                  "positions": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "indices": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "color": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "a",
+                      "b",
+                      "g",
+                      "r"
+                    ],
+                    "properties": {
+                      "r": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "g": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "b": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "a": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "child",
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "meshChild"
+                  },
+                  "child": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "childId",
+                      "target"
+                    ],
+                    "properties": {
+                      "childId": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allowed",
+          "id",
+          "tileAId",
+          "tileBId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tileAId": {
+            "type": "string"
+          },
+          "tileBId": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        },
+        "description": "One adjacency rule over an UNORDERED tile pair. The rules ARE the compatibility table — an ALLOW-LIST — so a pair no rule mentions is forbidden. `allowed: false` always beats an admitting rule, and an absent `relation` states the rule for every relation at once."
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/inference.json",
+  "title": "Grid2dInferenceCommit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignments", "contradiction", "entropy"],
+  "properties": {
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": [{ "type": "integer", "minimum": 0 }, { "type": "integer", "minimum": 0 }, { "type": "string" }]
+      }
+    },
+    "contradiction": { "type": "boolean" },
+    "entropy": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": [{ "type": "integer", "minimum": 0 }, { "type": "integer", "minimum": 0 }, { "type": "number" }]
+      }
+    }
+  }
+}

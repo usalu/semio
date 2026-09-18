@@ -11,6 +11,44 @@ const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱
 const PREPARED_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs");
 const ENGINE_CANVAS_SOURCE: &str = include_str!("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
 
+/// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
+/// else in the chain can: `AppFramePreparation` answers an empty `JobFault`, `ActiveFrameBuild`
+/// answers it by cancelling its own token, and the job layer then reports a bare `Cancelled`. One
+/// unnamed refusal per build is how the shell sat at one presented frame per boot with a silent
+/// console for a whole packet (`📓️w7b-presenter-one-frame-per-boot.md` §1).
+#[test]
+fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
+    let frame_job = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let prepare_at = frame_job.find("ActiveFramePhase::Prepare(preparation) => {").expect("the prepare phase");
+    let refused_at = prepare_at + frame_job[prepare_at..].find("StepOutcome::Cancelled | StepOutcome::Fault(_) =>").expect("the refused arm");
+    let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("ActiveFrameStep::Pending").expect("the refused arm ends on its own step")];
+    assert!(refused.contains("preparation.fault()"), "the refused arm reads the preparation's own fault");
+
+    for arm in ["self.fault = Some(\"prepared render job admission was refused\")", "self.fault = Some(\"prepared render job session admission was refused\")", "self.fault = Some(\"prepared render job lost its session\")", "self.fault = Some(\"prepared render job was cancelled\")"] {
+        assert!(LIBRARY_SOURCE.contains(arm), "every preparation refusal names itself: {arm}");
+    }
+    assert!(LIBRARY_SOURCE.contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
+}
+
+/// ⏱️ LAW: the renderer asset decode lane takes a bounded SHARE of one frame-transaction step and
+/// hands the rest back, so the shell keeps building and presenting frames while a GLB streams — which
+/// is what React does by keeping its loader off the render path entirely
+/// (`📓️w7b-presenter-one-frame-per-boot.md` §2).
+#[test]
+fn the_renderer_asset_decode_lane_spends_a_share_of_the_step_and_never_the_whole_one() {
+    assert_eq!(crate::RENDERER_ASSET_DECODE_SLICE_US.saturating_mul(2), semio_framework_job::INTERACTIVE_LANE_WALL_US, "the lane's share is exactly half the interactive wall slice");
+    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(Some(1_000)), Some(1_000 + crate::RENDERER_ASSET_DECODE_SLICE_US));
+    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(Some(u64::MAX)), Some(u64::MAX), "an about-to-wrap clock saturates instead of wrapping into the past");
+    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(None), None, "no clock spends no units at all");
+
+    let transaction = LIBRARY_SOURCE.split("fn step(&mut self, runtime: &RuntimeMailbox").nth(1).expect("the frame transaction step");
+    let start = transaction.find("if runtime.pump_renderer_asset_decode_step() {").expect("the decode branch");
+    let end = start + transaction[start..].find("if runtime.pump_native_asset()").expect("the decode branch ends before the native asset lane");
+    let pump = &transaction[start..end];
+    assert!(pump.contains("renderer_asset_decode_slice_deadline_us"), "the decode loop is bounded by the lane's own share");
+    assert!(!pump.contains("return AppFrameTransactionStep::Pending"), "and never returns before the transaction's own phases run");
+}
+
 #[test]
 fn product_library_has_no_executor_bridge() {
     assert!(!LIBRARY_SOURCE.contains(concat!("poll", "ster")));
@@ -182,6 +220,10 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && presenter_close < world_terminal
 }
 
+/// 🌍️ The retained decoder mounts every GLB scene root under the world frame (`glb_world_frame`,
+/// glTF's Y-up → the world's Z-up), which is React's `<group rotation={[π/2, 0, 0]}>` around
+/// `GlbInstanceMesh`. The legacy oracle decodes raw glTF space, so it is compared through the
+/// same rotation: `(x, y, z)` → `(x, -z, y)`.
 #[test]
 fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
     assert!(retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, ENGINE_CANVAS_SOURCE));
@@ -420,10 +462,6 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     while let Some(Mesh3dItem::U32(value)) = index_cursor.read_next().unwrap() {
         indices.push(value);
     }
-    // 🌍️ The retained decoder mounts every GLB scene root under the world frame (`glb_world_frame`,
-    // glTF's Y-up → the world's Z-up), which is React's `<group rotation={[π/2, 0, 0]}>` around
-    // `GlbInstanceMesh`. The legacy oracle decodes raw glTF space, so it is compared through the
-    // same rotation: `(x, y, z)` → `(x, -z, y)`.
     let world_frame = |values: &[f32]| -> Vec<f32> { values.chunks_exact(3).flat_map(|axis| [axis[0], -axis[2], axis[1]]).collect() };
     let legacy = semio_framework::mesh_from_glb(&valid).expect("legacy glTF oracle");
     assert_eq!(positions, world_frame(&legacy.positions));

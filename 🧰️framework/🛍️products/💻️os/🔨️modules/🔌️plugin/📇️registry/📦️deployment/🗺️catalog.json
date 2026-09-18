@@ -59,6 +59,7 @@
     { "pluginId": "stdio", "directoryName": "🗄️stdio" },
     { "pluginId": "trinity", "directoryName": "🔱️trinity" },
     { "pluginId": "vcs", "directoryName": "🌿️vcs" },
+    { "pluginId": "wfc", "directoryName": "🀄️wfc" },
     { "pluginId": "writer", "directoryName": "✒️writer" }
   ]
 }

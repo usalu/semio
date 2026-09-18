@@ -1,0 +1,18 @@
+{
+  "assignments": {
+    "corridor": "room",
+    "room-a": "corridor",
+    "room-b": "corridor"
+  },
+  "edges": 2,
+  "example": "two-room-corridor",
+  "rules": 1,
+  "satisfiable": true,
+  "schema": "s.wfc.wfc3d.example-outcome/v1",
+  "seed": 7,
+  "slots": 3,
+  "tiles": [
+    "corridor",
+    "room"
+  ]
+}

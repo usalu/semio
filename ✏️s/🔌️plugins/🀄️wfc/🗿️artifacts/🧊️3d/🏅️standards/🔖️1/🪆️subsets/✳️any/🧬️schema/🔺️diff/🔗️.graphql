@@ -1,0 +1,36 @@
+# 🔺️ wfc3d sparse structural delta — one scalar option per scalar field, one removed/upserted pair
+# per id-keyed collection. `*Upserted` carries the member's insertion index, which is what makes an
+# inverse position-exact.
+
+type Wfc3dDiff {
+  schema: String @state(class: ARTIFACT)
+  seed: Float @state(class: ARTIFACT)
+  slotsRemoved: [String!]! @state(class: ARTIFACT)
+  slotsUpserted: [Slot3dUpsert!]! @state(class: ARTIFACT)
+  edgesRemoved: [String!]! @state(class: ARTIFACT)
+  edgesUpserted: [SlotEdgeUpsert!]! @state(class: ARTIFACT)
+  tilesRemoved: [String!]! @state(class: ARTIFACT)
+  tilesUpserted: [TileUpsert!]! @state(class: ARTIFACT)
+  rulesRemoved: [String!]! @state(class: ARTIFACT)
+  rulesUpserted: [GraphRuleUpsert!]! @state(class: ARTIFACT)
+}
+
+type Slot3dUpsert {
+  index: Int!
+  value: Slot3d!
+}
+
+type SlotEdgeUpsert {
+  index: Int!
+  value: SlotEdge!
+}
+
+type TileUpsert {
+  index: Int!
+  value: Tile!
+}
+
+type GraphRuleUpsert {
+  index: Int!
+  value: GraphRule!
+}

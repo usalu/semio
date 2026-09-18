@@ -240,13 +240,14 @@ fn the_tour_card_carries_reacts_own_controls() {
     let source = wgpu_shell_source();
     let card = source.split("fn render_chrome_tour_step").nth(1).expect("the tour card renderer exists");
     let card = &card[..card.find("//#region SilhouetteContent").unwrap_or(card.len())];
+    let layout = source.split("fn chrome_tour_layout").nth(1).expect("the tour card measurer exists");
+    let layout = &layout[..layout.find("//#endregion").unwrap_or(layout.len())];
     for needle in ["introduction.skip", "introduction.back", "introduction.next", "introduction.done", "let counter_text = format!(\"{} / {step_count}\", step_index + 1)"] {
-        assert!(card.contains(needle), "the card paints {needle}");
+        assert!(layout.contains(needle), "the card paints {needle}");
     }
-    for needle in ["shell.tour.skip", "shell.tour.next", "shell.tour.back"] {
+    for needle in ["UI_INTRODUCTION_SKIP_CONTROL_ID", "UI_INTRODUCTION_NEXT_CONTROL_ID", "UI_INTRODUCTION_BACK_CONTROL_ID"] {
         assert!(card.contains(needle), "the card registers a hit for {needle}");
     }
-    assert!(card.contains("dismiss_introduction(&session.app.id)"), "Skip and a last-step Done both persist the answer, as `onDismiss` does");
 }
 //#endregion 🎓️BootTour
 

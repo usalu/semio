@@ -17,35 +17,6 @@ pub use super::draw_types::*;
 
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
-#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
-static DEBUG_MESH_SEEN: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-
-#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
-fn debug_world_probe_mesh(message: &str) {
-    use std::sync::atomic::Ordering;
-    if DEBUG_MESH_SEEN.fetch_add(1, Ordering::Relaxed) >= 4 {
-        return;
-    }
-    debug_world_probe(message);
-}
-
-#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
-fn debug_world_probe_line(message: &str) {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    static AFTER: AtomicU32 = AtomicU32::new(0);
-    if DEBUG_MESH_SEEN.load(Ordering::Relaxed) == 0 || AFTER.fetch_add(1, Ordering::Relaxed) >= 3 {
-        return;
-    }
-    debug_world_probe(message);
-}
-
-#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
-fn debug_world_probe(message: &str) {
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
-    #[cfg(not(target_arch = "wasm32"))]
-    eprintln!("{message}");
-}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -367,7 +338,7 @@ impl World3dTexturedGpuInstance {
 /// 🖼️ The one geometry every textured world draw uses: a unit XY quad centred on the model origin,
 /// with `v = 0` at `+y` so row 0 of the decoded image is its TOP — the orientation three.js gives a
 /// `PlaneGeometry` with a `flipY` texture, which is what React's reference underlay shows.
-const WORLD_PLANE_VERTICES: &[f32] = &[
+pub const WORLD_PLANE_VERTICES: &[f32] = &[
     -0.5, -0.5, 0.0, 0.0, 1.0, //
     0.5, -0.5, 0.0, 1.0, 1.0, //
     0.5, 0.5, 0.0, 1.0, 0.0, //
@@ -511,11 +482,6 @@ impl MeshGpuTable {
 
     pub fn get_versioned(&self, mesh_key: &str, version: u64) -> Option<&GpuMeshBuffers> {
         self.meshes.get(mesh_key, version)
-    }
-
-    #[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
-    pub fn debug_upload_cursor(&self) -> Option<(u32, u32, u32, u32)> {
-        self.upload.as_ref().map(|cursor| (cursor.vertex, cursor.schema.vertices, cursor.index, cursor.schema.indices))
     }
 
     pub fn ensure_mesh_step(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
@@ -3432,18 +3398,6 @@ impl UiPipelines {
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        debug_world_probe_mesh(&format!(
-            "[DEBUG] w5c mesh key={mesh_key} version={mesh_version} indices={} translucent={translucent} scale={scale} viewport={viewport:?} scissor={scene_scissor:?} surface={width}x{height} color={:?} flags={:?} model=[{:?},{:?},{:?},{:?}] view_proj={:?} light={:?}",
-            mesh.index_count,
-            gpu_instance.color,
-            gpu_instance.flags,
-            gpu_instance.model0,
-            gpu_instance.model1,
-            gpu_instance.model2,
-            gpu_instance.model3,
-            globals.view_proj,
-            globals.light_dir,
-        ));
         pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_pipeline(if translucent { &self.world_pipeline_translucent } else { &self.world_pipeline });
@@ -3561,14 +3515,6 @@ impl UiPipelines {
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        debug_world_probe_line(&format!(
-            "[DEBUG] w5c line scale={scale} viewport={viewport:?} scissor={scene_scissor:?} v0={:?}/{:?} v1={:?}/{:?} view_proj={:?}",
-            gpu_vertices[0].position,
-            gpu_vertices[0].color,
-            gpu_vertices[1].position,
-            gpu_vertices[1].color,
-            globals.view_proj,
-        ));
         pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_pipeline(&self.world_line_pipeline);

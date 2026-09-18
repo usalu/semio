@@ -245,12 +245,6 @@
     },
     {
       "plugin": "procedural",
-      "kind": "s.procedural.assembly",
-      "definition": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🦀️.rs",
-      "root": "✏️s/🔌️plugins/🌀️procedural/🦀️.rs"
-    },
-    {
-      "plugin": "procedural",
       "kind": "s.procedural.generation2d",
       "definition": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
       "root": "✏️s/🔌️plugins/🌀️procedural/🦀️.rs"
@@ -356,6 +350,12 @@
       "kind": "s.writer.writer",
       "definition": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
       "root": "✏️s/🔌️plugins/✒️writer/🦀️.rs"
+    },
+    {
+      "plugin": "wfc",
+      "kind": "s.wfc.wfc3d",
+      "definition": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🦀️.rs"
     }
   ]
 }

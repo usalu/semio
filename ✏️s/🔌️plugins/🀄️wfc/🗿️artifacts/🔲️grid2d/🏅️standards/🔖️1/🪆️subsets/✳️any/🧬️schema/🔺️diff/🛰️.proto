@@ -1,0 +1,43 @@
+syntax = "proto3";
+package semio.s.wfc.grid2d;
+
+import "snapshot.proto";
+
+message Grid2dTileRow {
+  uint64 index = 1;
+  WfcTile2d tile = 2;
+}
+
+message Grid2dRuleRow {
+  uint64 index = 1;
+  WfcAdjacencyRule2d rule = 2;
+}
+
+message Grid2dPinnedRow {
+  uint64 index = 1;
+  WfcPinnedCell2d cell = 2;
+}
+
+message Grid2dMaskedRow {
+  uint64 index = 1;
+  WfcCell2d cell = 2;
+}
+
+message Grid2dDiff {
+  optional string schema = 1;
+  optional uint64 seed = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+  optional double cell_width = 5;
+  optional double cell_height = 6;
+  optional bool periodic_x = 7;
+  optional bool periodic_y = 8;
+  repeated string tiles_removed = 9;
+  repeated Grid2dTileRow tiles_upserted = 10;
+  repeated string rules_removed = 11;
+  repeated Grid2dRuleRow rules_upserted = 12;
+  repeated string pinned_removed = 13;
+  repeated Grid2dPinnedRow pinned_upserted = 14;
+  repeated string masked_removed = 15;
+  repeated Grid2dMaskedRow masked_upserted = 16;
+}

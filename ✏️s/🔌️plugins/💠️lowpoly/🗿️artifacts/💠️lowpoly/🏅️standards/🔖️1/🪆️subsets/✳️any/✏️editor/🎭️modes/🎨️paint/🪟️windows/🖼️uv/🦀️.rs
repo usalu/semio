@@ -49,7 +49,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ The live chrome measures for this window — identical set to the Model window (see the master
 /// ticket's TEMPLATE.md §12.2 shared-options pattern).
 pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
-    lowpoly_window_measures(config, labels)
+    lowpoly_window_measures(config, labels, &crate::editor::lowpoly::options::select::SelectState::default())
 }
 //#endregion 🔖️Definition
 

@@ -1,0 +1,37 @@
+"""🔺️ One indexed slot upsert."""
+type Wfc2dSlotUpsert {
+  index: Int!
+  value: Wfc2dSlot!
+}
+
+"""🔺️ One indexed edge upsert."""
+type Wfc2dSlotEdgeUpsert {
+  index: Int!
+  value: Wfc2dSlotEdge!
+}
+
+"""🔺️ One indexed tile upsert."""
+type Wfc2dTileUpsert {
+  index: Int!
+  value: Wfc2dTile!
+}
+
+"""🔺️ One indexed rule upsert."""
+type Wfc2dRuleUpsert {
+  index: Int!
+  value: Wfc2dRule!
+}
+
+"""🔺️ A sparse, id-keyed structural delta over Wfc2dSnapshot."""
+type Wfc2dDiff {
+  schema: String
+  seed: Float
+  slotsRemoved: [String!]!
+  slotsUpserted: [Wfc2dSlotUpsert!]!
+  edgesRemoved: [String!]!
+  edgesUpserted: [Wfc2dSlotEdgeUpsert!]!
+  tilesRemoved: [String!]!
+  tilesUpserted: [Wfc2dTileUpsert!]!
+  rulesRemoved: [String!]!
+  rulesUpserted: [Wfc2dRuleUpsert!]!
+}

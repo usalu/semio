@@ -1,0 +1,20 @@
+{
+  "schema": null,
+  "seed": null,
+  "width": 2,
+  "height": 1,
+  "cellWidth": null,
+  "cellHeight": null,
+  "periodicX": null,
+  "periodicY": null,
+  "tilesRemoved": [],
+  "tilesUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": [],
+  "pinnedRemoved": [],
+  "pinnedUpserted": [],
+  "maskedRemoved": [
+    "2,1"
+  ],
+  "maskedUpserted": []
+}

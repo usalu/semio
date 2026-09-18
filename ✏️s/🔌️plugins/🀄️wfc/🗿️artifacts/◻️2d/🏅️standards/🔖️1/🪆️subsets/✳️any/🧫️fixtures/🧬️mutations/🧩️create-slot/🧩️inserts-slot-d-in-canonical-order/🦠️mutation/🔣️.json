@@ -1,0 +1,11 @@
+{
+  "CreateSlot": {
+    "slot": {
+      "id": "slot-d",
+      "x": 6.0,
+      "y": 0.0,
+      "width": 2.0,
+      "height": 2.0
+    }
+  }
+}

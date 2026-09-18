@@ -436,6 +436,31 @@
       "name": "note-react-attach",
       "url": "http://localhost:6080",
       "port": 6080
+    },
+    {
+      "name": "wfc-bitmap-react-attach",
+      "url": "http://localhost:6041",
+      "port": 6041
+    },
+    {
+      "name": "wfc-grid2d-react-attach",
+      "url": "http://localhost:6042",
+      "port": 6042
+    },
+    {
+      "name": "wfc-wfc2d-react-attach",
+      "url": "http://localhost:6043",
+      "port": 6043
+    },
+    {
+      "name": "wfc-grid3d-react-attach",
+      "url": "http://localhost:6044",
+      "port": 6044
+    },
+    {
+      "name": "wfc-wfc3d-react-attach",
+      "url": "http://localhost:6045",
+      "port": 6045
     }
   ]
 }

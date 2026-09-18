@@ -1,0 +1,11 @@
+// 🧬 s.wfc.grid3d — Protobuf mirror of the normative JSON Schema. Field numbers are stable and
+// follow the declaration order of the Rust records the schema is transcribed from.
+syntax = "proto3";
+
+package semio.s.wfc.grid3d.v1;
+
+import "snapshot.proto";
+
+message Grid3dArtifact {
+  Grid3dSnapshot snapshot = 1;
+}

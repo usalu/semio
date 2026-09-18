@@ -1,0 +1,11 @@
+{
+  "AddPaletteColor": {
+    "index": 2,
+    "color": {
+      "r": 200,
+      "g": 60,
+      "b": 60,
+      "a": 255
+    }
+  }
+}

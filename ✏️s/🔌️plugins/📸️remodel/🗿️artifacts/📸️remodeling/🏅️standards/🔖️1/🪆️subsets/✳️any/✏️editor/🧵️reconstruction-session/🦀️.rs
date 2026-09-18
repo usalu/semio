@@ -198,10 +198,12 @@ pub enum ReconstructionRunReason {
     InputsChanged,
     /// 🧭️ Matches of a pair dropped by the geometric verification (appended last: codes are ordinals).
     PairGeometryRejected,
+    /// 🌱️ No adjacent pair of frames could be solved for a relative pose; the run has no cameras.
+    SeedPairFailed,
 }
 
 impl ReconstructionRunReason {
-    pub const ALL: [Self; 28] = [
+    pub const ALL: [Self; 29] = [
         Self::FrameAccepted,
         Self::FrameSkipped,
         Self::FrameBlurred,
@@ -230,6 +232,7 @@ impl ReconstructionRunReason {
         Self::Resuming,
         Self::InputsChanged,
         Self::PairGeometryRejected,
+        Self::SeedPairFailed,
     ];
 
     pub fn code(self) -> u16 {
@@ -270,12 +273,13 @@ impl ReconstructionRunReason {
             Self::Resuming => "resuming",
             Self::InputsChanged => "inputsChanged",
             Self::PairGeometryRejected => "pairGeometryRejected",
+            Self::SeedPairFailed => "seedPairFailed",
         }
     }
 
     pub fn verdict(self) -> ToolRunVerdict {
         match self {
-            Self::FrameSkipped | Self::FrameBlurred | Self::MatchAmbiguous | Self::CameraRejected | Self::DenseTraceCapped | Self::MeshOutsideEnvelope | Self::SparseCapped | Self::PairGeometryRejected => ToolRunVerdict::Warning,
+            Self::FrameSkipped | Self::FrameBlurred | Self::MatchAmbiguous | Self::CameraRejected | Self::DenseTraceCapped | Self::MeshOutsideEnvelope | Self::SparseCapped | Self::PairGeometryRejected | Self::SeedPairFailed => ToolRunVerdict::Warning,
             Self::FrameUnreadable | Self::MatchAsymmetric | Self::PointsPruned | Self::TooFewFrames | Self::PipelineFailed | Self::RasterFailed | Self::InputsChanged => ToolRunVerdict::Danger,
             _ => ToolRunVerdict::Success,
         }
@@ -320,6 +324,7 @@ impl ReconstructionRunReason {
             Self::Resuming => LocalizedLabel::native("Resumed after {0} decisions", "Nach {0} Entscheidungen fortgesetzt"),
             Self::InputsChanged => LocalizedLabel::native("Frames, parameters or calibration changed since the run started; {0} provisional changes withdrawn", "Bilder, Parameter oder Kalibrierung haben sich seit dem Start geändert; {0} vorläufige Änderungen zurückgezogen"),
             Self::PairGeometryRejected => LocalizedLabel::native("Frames {0} and {1}: {2} matches inconsistent with the pair's epipolar geometry dropped", "Bilder {0} und {1}: {2} Zuordnungen ohne epipolare Konsistenz verworfen"),
+            Self::SeedPairFailed => LocalizedLabel::native("No adjacent frames share enough consistent matches to solve a first camera pair; the run registers no cameras", "Keine benachbarten Bilder teilen genug konsistente Zuordnungen für ein erstes Kamerapaar; der Lauf registriert keine Kameras"),
         }
     }
 }
@@ -699,7 +704,7 @@ impl ProductPreparation {
             }
             ProductPhase::Mesh => {
                 self.phase = ProductPhase::Geo;
-                let Some(mesh) = engine.take_mesh() else { return ProductYield::Working };
+                let Some(mesh) = engine.take_mesh().filter(|mesh| !mesh.indices.is_empty()) else { return ProductYield::Working };
                 let (vertices, triangles) = ((mesh.positions.len() / 3) as u64, (mesh.indices.len() / 3) as u64);
                 if !mesh_is_within_resolution_envelope(&mesh) {
                     return ProductYield::Step(ReconstructionRunReason::MeshOutsideEnvelope, vec![vertices, triangles]);
@@ -760,6 +765,11 @@ impl ProductPreparation {
             ProductPhase::Commit => {
                 self.phase = ProductPhase::Done;
                 let trajectory = (!self.trajectory.is_empty()).then(|| CameraTrajectory { poses: std::mem::take(&mut self.trajectory) });
+                if self.sparse.is_none() && trajectory.is_none() && self.mesh.is_none() {
+                    // 🌱️ A run that registered no camera has nothing to publish: no edit, no
+                    // placeholder replaced, the trace explains why (`seedPairFailed`).
+                    return ProductYield::Done;
+                }
                 ProductYield::Op(commit_reconstruction(CommitReconstruction { sparse: self.sparse.take(), trajectory, mesh: self.mesh.take(), geo: self.geo.take(), qc: self.qc.take(), assets: std::mem::take(&mut self.assets) }))
             }
             ProductPhase::Done => ProductYield::Done,
@@ -976,6 +986,7 @@ impl ReconstructionRunJob {
                     self.upsert(camera_trace_key(frame), ReconstructionRunReason::CameraRejected, ToolRunTraceSubject::Entity { entity: frame as u64 });
                     self.step(ReconstructionRunReason::CameraRejected, &[frame as u64]);
                 }
+                EngineObservation::SeedPairFailed { .. } => self.step(ReconstructionRunReason::SeedPairFailed, &[]),
                 EngineObservation::PointTriangulated { track, point } => {
                     triangulated += 1;
                     self.count(ReconstructionRunCounter::SparsePoints, 1);

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/mutation/change-periodicity/schema.json",
+  "title": "ChangePeriodicity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "periodicX",
+    "periodicY"
+  ],
+  "properties": {
+    "periodicX": {
+      "type": "boolean"
+    },
+    "periodicY": {
+      "type": "boolean"
+    }
+  }
+}

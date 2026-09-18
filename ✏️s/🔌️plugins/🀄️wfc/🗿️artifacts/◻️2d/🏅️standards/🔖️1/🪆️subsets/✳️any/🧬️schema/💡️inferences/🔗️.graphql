@@ -1,0 +1,18 @@
+"""💡️ One solved slot assignment."""
+type Wfc2dAssignment {
+  slotId: String!
+  tileId: String!
+}
+
+"""💡️ One slot's pre-propagation Shannon entropy."""
+type Wfc2dEntropyEntry {
+  slotId: String!
+  entropy: Float!
+}
+
+"""💡️ The `s.wfc.wfc2d.solve` commit — never persisted on the snapshot."""
+type Wfc2dInferenceCommit {
+  assignments: [Wfc2dAssignment!]!
+  contradiction: Boolean!
+  entropy: [Wfc2dEntropyEntry!]!
+}

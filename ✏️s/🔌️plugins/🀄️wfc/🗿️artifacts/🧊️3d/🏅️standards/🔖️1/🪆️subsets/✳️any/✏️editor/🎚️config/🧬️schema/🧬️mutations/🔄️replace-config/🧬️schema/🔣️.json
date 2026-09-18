@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/config/mutation/replace-config/schema.json",
+  "title": "ReplaceConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config"
+  ],
+  "properties": {
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activeTileId",
+        "cameraX",
+        "cameraY",
+        "cameraZoom"
+      ],
+      "properties": {
+        "cameraX": {
+          "type": "number"
+        },
+        "cameraY": {
+          "type": "number"
+        },
+        "cameraZoom": {
+          "type": "number"
+        },
+        "activeTileId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

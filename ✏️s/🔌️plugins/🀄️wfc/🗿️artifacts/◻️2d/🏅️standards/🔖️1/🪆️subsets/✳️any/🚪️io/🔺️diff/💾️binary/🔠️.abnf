@@ -1,0 +1,6 @@
+; 🔠️ wfc2d.diff record framing, one record per document.
+wfc2d-diff-record = wfc2d-diff-magic wfc2d-diff-header wfc2d-diff-payload wfc2d-diff-footer
+wfc2d-diff-magic = %x0A %x0D %x34 %x7D %x3F %xF8 %x53 %x89
+wfc2d-diff-header = 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET 4OCTET
+wfc2d-diff-payload = *OCTET
+wfc2d-diff-footer = 4OCTET

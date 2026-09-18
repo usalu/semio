@@ -1,3 +1,0 @@
-; abnf procedural.assembly.mutations
-operation = payload
-payload = *OCTET

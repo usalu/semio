@@ -1655,7 +1655,7 @@ fn preview_payload_has_meshes_and_instances() {
         near: 0.1,
         far: 1000.0,
     };
-    let view_proj = camera.view_proj(0.6);
+    let view_proj = camera.view_proj(600.0, 1000.0);
     let planes = frustum_planes(view_proj);
     let mut visible = 0usize;
     for instance in instances {

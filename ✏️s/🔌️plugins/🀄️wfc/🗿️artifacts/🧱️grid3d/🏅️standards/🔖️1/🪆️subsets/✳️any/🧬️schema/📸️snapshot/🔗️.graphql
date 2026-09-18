@@ -1,0 +1,103 @@
+# 🧬 s.wfc.grid3d — GraphQL mirror of the normative JSON Schema. Field names and optionality are
+# transcribed one-for-one; GraphQL has no untagged union of objects, so `Grid3dTileMedia` is a real
+# `union` over the two tagged members the JSON Schema's `oneOf` declares.
+
+type Grid3dColor {
+  r: Int!
+  g: Int!
+  b: Int!
+  a: Int!
+}
+
+type Grid3dMesh {
+  positions: [Float!]!
+  indices: [Int!]!
+  color: Grid3dColor
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type ArtifactChildHandle {
+  childId: String!
+  target: ArtifactRef!
+}
+
+type Grid3dTileMediaMesh {
+  mesh: Grid3dMesh!
+}
+
+type Grid3dTileMediaMeshChild {
+  child: ArtifactChildHandle!
+}
+
+union Grid3dTileMedia = Grid3dTileMediaMesh | Grid3dTileMediaMeshChild
+
+type Grid3dTile {
+  id: String!
+  label: String
+  weight: Float!
+  media: Grid3dTileMedia!
+}
+
+enum Grid3dDirection {
+  LEFT
+  RIGHT
+  FRONT
+  BACK
+  BOTTOM
+  TOP
+}
+
+enum Grid3dAxis {
+  X
+  Y
+  Z
+}
+
+type Grid3dRule {
+  id: String!
+  tileAId: String!
+  tileBId: String!
+  direction: Grid3dDirection!
+  allowed: Boolean!
+}
+
+type Grid3dPinnedCell {
+  x: Int!
+  y: Int!
+  z: Int!
+  tileId: String!
+}
+
+type Grid3dCell {
+  x: Int!
+  y: Int!
+  z: Int!
+}
+
+type Grid3dSnapshot {
+  schema: String!
+  seed: Int!
+  width: Int!
+  height: Int!
+  depth: Int!
+  cellSizesX: [Float!]!
+  cellSizesY: [Float!]!
+  cellSizesZ: [Float!]!
+  periodicX: Boolean!
+  periodicY: Boolean!
+  periodicZ: Boolean!
+  tiles: [Grid3dTile!]!
+  rules: [Grid3dRule!]!
+  pinned: [Grid3dPinnedCell!]!
+  masked: [Grid3dCell!]!
+}

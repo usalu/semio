@@ -1,0 +1,445 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/diff/schema.json",
+  "title": "Grid3dDiff",
+  "description": "A sparse, key-keyed structural delta over Grid3dSnapshot. Every lane is stated explicitly, an untouched scalar as null and an untouched collection as an empty array.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "seed",
+    "width",
+    "height",
+    "depth",
+    "cellSizesX",
+    "cellSizesY",
+    "cellSizesZ",
+    "periodicX",
+    "periodicY",
+    "periodicZ",
+    "tilesRemoved",
+    "tilesUpserted",
+    "rulesRemoved",
+    "rulesUpserted",
+    "pinnedRemoved",
+    "pinnedUpserted",
+    "maskedRemoved",
+    "maskedUpserted"
+  ],
+  "properties": {
+    "schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "seed": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "width": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "height": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "depth": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "cellSizesX": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "cellSizesY": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "cellSizesZ": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "periodicX": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "periodicY": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "periodicZ": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "tilesRemoved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tilesUpserted": {
+      "type": "array",
+      "items": {
+        "title": "Grid3dTileUpsert",
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "title": "Grid3dTile",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "weight",
+              "media"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "media": {
+                "title": "Grid3dTileMedia",
+                "description": "Tagged by `kind`: inline `mesh` geometry, or a `meshChild` handle into s.stdio.semio@v1/mesh.",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "mesh"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "mesh"
+                      },
+                      "mesh": {
+                        "title": "Grid3dMesh",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "positions",
+                          "indices"
+                        ],
+                        "properties": {
+                          "positions": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "description": "xyz triples in the tile-space unit box 0..1"
+                          },
+                          "indices": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "color": {
+                            "title": "Grid3dColor",
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "r",
+                              "g",
+                              "b",
+                              "a"
+                            ],
+                            "properties": {
+                              "r": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              },
+                              "g": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              },
+                              "b": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              },
+                              "a": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "child"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "meshChild"
+                      },
+                      "child": {
+                        "title": "ArtifactChildHandle",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "childId",
+                          "target"
+                        ],
+                        "properties": {
+                          "childId": {
+                            "type": "string"
+                          },
+                          "target": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "artifactId",
+                              "dialect"
+                            ],
+                            "properties": {
+                              "artifactId": {
+                                "type": "string"
+                              },
+                              "dialect": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "artifactKind",
+                                  "standard",
+                                  "subset"
+                                ],
+                                "properties": {
+                                  "artifactKind": {
+                                    "type": "string"
+                                  },
+                                  "standard": {
+                                    "type": "string"
+                                  },
+                                  "subset": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "rulesRemoved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rulesUpserted": {
+      "type": "array",
+      "items": {
+        "title": "Grid3dRuleUpsert",
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "title": "Grid3dRule",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "tileAId",
+              "tileBId",
+              "direction",
+              "allowed"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "tileAId": {
+                "type": "string"
+              },
+              "tileBId": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "LEFT",
+                  "RIGHT",
+                  "FRONT",
+                  "BACK",
+                  "BOTTOM",
+                  "TOP"
+                ]
+              },
+              "allowed": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "pinnedRemoved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pinnedUpserted": {
+      "type": "array",
+      "items": {
+        "title": "Grid3dPinnedUpsert",
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "title": "Grid3dPinnedCell",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "z",
+              "tileId"
+            ],
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "z": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "tileId": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "maskedRemoved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maskedUpserted": {
+      "type": "array",
+      "items": {
+        "title": "Grid3dMaskedUpsert",
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "title": "Grid3dCell",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "z": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

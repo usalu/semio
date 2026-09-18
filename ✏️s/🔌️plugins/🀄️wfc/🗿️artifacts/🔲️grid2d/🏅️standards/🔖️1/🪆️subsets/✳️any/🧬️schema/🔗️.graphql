@@ -1,0 +1,5 @@
+# 🧬️ s.wfc.grid2d artifact facet — the persisted WFC problem for a regular 2D grid.
+
+type Grid2dArtifact {
+  snapshot: Grid2dSnapshot!
+}

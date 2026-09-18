@@ -1,0 +1,7 @@
+# 💡️ Bitmap solve inference — the collapsed output, the verdict and the prior entropy map.
+
+type BitmapInferenceCommit {
+  pixels: String!
+  contradiction: Boolean!
+  entropy: [Float!]!
+}

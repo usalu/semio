@@ -117,7 +117,6 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "webgp
 js-sys = { version = "0.3.83", optional = true }
 wasm-bindgen = { version = "0.2.106", optional = true }
 web-sys = { version = "0.3.98", optional = true, features = [
-    "console",
     "Window",
     "Navigator",
     "Clipboard",

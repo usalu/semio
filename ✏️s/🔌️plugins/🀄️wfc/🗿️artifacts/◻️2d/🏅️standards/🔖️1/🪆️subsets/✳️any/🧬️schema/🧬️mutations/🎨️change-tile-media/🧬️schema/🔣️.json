@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/change-tile-media/schema.json",
+  "title": "ChangeTileMedia",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tileId",
+    "media"
+  ],
+  "properties": {
+    "tileId": {
+      "type": "string"
+    },
+    "media": {
+      "title": "Wfc2dTileMedia",
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Externally tagged: exactly one of Empty (the bare string), Bitmap, Vector or Image."
+    }
+  }
+}

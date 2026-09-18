@@ -1,0 +1,145 @@
+//! 🔗️ Connectivity and reachability constraints, checked exactly at completion via a small
+//! hand-rolled union-find (`graph_core`'s own union-find lives in a private region of that
+//! crate, so this crate owns a minimal one rather than reaching into it).
+
+use crate::bitset::PatternSet;
+use crate::constraint::{AdjacencyView, Constraint, PatternSelector};
+use crate::domain::DomainStore;
+use crate::error::ConstraintError;
+use crate::ids::{NodeId, PatternId};
+use crate::model::CompiledModel;
+use crate::weights::WeightTable;
+
+// #region 🔖️UnionFind
+struct UnionFind {
+    parent: Vec<usize>,
+    rank: Vec<u8>,
+}
+
+impl UnionFind {
+    fn new(n: usize) -> Self {
+        Self { parent: (0..n).collect(), rank: vec![0; n] }
+    }
+
+    fn find(&mut self, x: usize) -> usize {
+        if self.parent[x] != x {
+            self.parent[x] = self.find(self.parent[x]);
+        }
+        self.parent[x]
+    }
+
+    fn union(&mut self, a: usize, b: usize) {
+        let (ra, rb) = (self.find(a), self.find(b));
+        if ra == rb {
+            return;
+        }
+        match self.rank[ra].cmp(&self.rank[rb]) {
+            std::cmp::Ordering::Less => self.parent[ra] = rb,
+            std::cmp::Ordering::Greater => self.parent[rb] = ra,
+            std::cmp::Ordering::Equal => {
+                self.parent[rb] = ra;
+                self.rank[ra] += 1;
+            }
+        }
+    }
+}
+// #endregion 🔖️UnionFind
+
+// #region 🔖️Connectivity
+/// 🔗️ Requires that every node whose assigned pattern matches `selector` forms exactly one
+/// connected component (using the solver's own adjacency — two selected nodes are connected iff
+/// there is a path between them through other selected nodes).
+#[derive(Clone, Debug)]
+pub struct ConnectivityConstraint {
+    pub selector: PatternSelector,
+    model: CompiledModel,
+}
+
+impl ConnectivityConstraint {
+    pub fn new(model: CompiledModel, selector: PatternSelector) -> Self {
+        Self { selector, model }
+    }
+}
+
+impl Constraint for ConnectivityConstraint {
+    fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+        Ok(Vec::new())
+    }
+
+    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+        let selected: Vec<usize> = (0..assignment.len()).filter(|&n| self.selector.matches(&self.model, assignment[n])).collect();
+        if selected.len() <= 1 {
+            return Ok(());
+        }
+        let mut uf = UnionFind::new(assignment.len());
+        for &n in &selected {
+            for &m in adjacency.neighbors(NodeId::from_index(n)) {
+                if self.selector.matches(&self.model, assignment[m.index()]) {
+                    uf.union(n, m.index());
+                }
+            }
+        }
+        let root = uf.find(selected[0]);
+        if selected.iter().all(|&n| uf.find(n) == root) {
+            Ok(())
+        } else {
+            Err(format!("connectivity constraint: {} selected nodes do not form one connected component", selected.len()))
+        }
+    }
+}
+// #endregion 🔖️Connectivity
+
+// #region 🔖️Reachability
+/// 🔗️ Requires that every node in `to` is reachable from every node in `from`, moving only through
+/// nodes whose assigned pattern matches `selector` (endpoints themselves must also match).
+#[derive(Clone, Debug)]
+pub struct ReachabilityConstraint {
+    pub from: Vec<NodeId>,
+    pub to: Vec<NodeId>,
+    pub selector: PatternSelector,
+    model: CompiledModel,
+}
+
+impl ReachabilityConstraint {
+    pub fn new(model: CompiledModel, from: Vec<NodeId>, to: Vec<NodeId>, selector: PatternSelector) -> Self {
+        Self { from, to, selector, model }
+    }
+}
+
+impl Constraint for ReachabilityConstraint {
+    fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+        Ok(Vec::new())
+    }
+
+    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+        for &start in &self.from {
+            if !self.selector.matches(&self.model, assignment[start.index()]) {
+                return Err(format!("reachability constraint: source node {start} is not itself selected"));
+            }
+            let mut visited = vec![false; assignment.len()];
+            let mut stack = vec![start];
+            visited[start.index()] = true;
+            while let Some(n) = stack.pop() {
+                for &m in adjacency.neighbors(n) {
+                    if !visited[m.index()] && self.selector.matches(&self.model, assignment[m.index()]) {
+                        visited[m.index()] = true;
+                        stack.push(m);
+                    }
+                }
+            }
+            for &target in &self.to {
+                if !visited[target.index()] {
+                    return Err(format!("reachability constraint: {target} is not reachable from {start}"));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+// #endregion 🔖️Reachability
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+// #endregion 🔖️Tests

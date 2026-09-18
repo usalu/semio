@@ -19,6 +19,7 @@ use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleP
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
+use swash::zeno::{Cap as ZenoCap, Join as ZenoJoin, Mask as ZenoMask, Stroke as ZenoStroke, Style as ZenoStyle, Transform as ZenoTransform};
 use swash::FontRef as SwashFontRef;
 
 /// 🔠️ One packed glyph. `atlas_*`/`width`/`height` are ATLAS TEXELS — device pixels, because the
@@ -273,6 +274,70 @@ static BITMAP_FONT: [[u8; 8]; 95] = [
     [0x31, 0x6B, 0x46, 0x00, 0x00, 0x00, 0x00, 0x00],
 ];
 
+//#region 🔣️SymbolFace
+
+/// 🔣️ The chord/arrow symbols the UI writes and **no face this repo ships can draw**, authored here
+/// as stroked outlines rather than fetched as a font.
+///
+/// 🩸️ The navbar role chips painted `Editor □□□□E` where React paints `Editor ⌘⌥E`: a cmap sweep of
+/// every `🖼️assets/🔤️fonts` outline (Anta latin/latin-ext/math/symbols, Kelly Slab, Share Tech Mono
+/// and all 12 Noto Emoji buckets) answers ZERO faces for U+2318, U+2325, U+21E7, U+2303, U+238B,
+/// U+21B5, U+232B, U+2326 and U+2190..U+2193 — Google's `symbols` subset deliberately skips the
+/// Miscellaneous-Technical keyboard block, and none of these carries emoji presentation. React falls
+/// back to the host's system UI font; this atlas registers `system_fonts: false` on purpose (one
+/// deterministic, self-contained collection on every platform and in the browser worker), so the
+/// only honest answer is to OWN the outlines. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W8a.
+///
+/// 📐️ Paths are SVG path data in [`SYMBOL_EM_UNITS`] per em, **baseline at `y = 0` with y growing
+/// DOWNWARD**, so a cap-height stroke runs from `-620` to `0` and every glyph sits on the same
+/// baseline the shaped faces do. They are stroked (never filled) at [`SYMBOL_STROKE_UNITS`], which
+/// is what keeps them legible at `--text-xs` where a filled counter would close up.
+const SYMBOL_FACE: [(char, &str); 12] = [
+    ('\u{2318}', "M170 -620C231 -620 280 -571 280 -510C280 -449 231 -400 170 -400C109 -400 60 -449 60 -510C60 -571 109 -620 170 -620ZM530 -620C591 -620 640 -571 640 -510C640 -449 591 -400 530 -400C469 -400 420 -449 420 -510C420 -571 469 -620 530 -620ZM170 -260C231 -260 280 -211 280 -150C280 -89 231 -40 170 -40C109 -40 60 -89 60 -150C60 -211 109 -260 170 -260ZM530 -260C591 -260 640 -211 640 -150C640 -89 591 -40 530 -40C469 -40 420 -89 420 -150C420 -211 469 -260 530 -260ZM170 -400H530M170 -260H530M280 -510V-150M420 -510V-150"),
+    ('\u{2325}', "M60 -600H230L410 -60H620M460 -600H620"),
+    ('\u{2303}', "M90 -230L340 -520L590 -230"),
+    ('\u{21E7}', "M330 -620L620 -330H480V-60H180V-330H40Z"),
+    ('\u{238B}', "M330 -560C457 -560 560 -457 560 -330C560 -203 457 -100 330 -100C203 -100 100 -203 100 -330M330 -330L120 -540M120 -430V-540H230"),
+    ('\u{21B5}', "M580 -560V-180H120M240 -300L120 -180L240 -60"),
+    ('\u{232B}', "M230 -540H600V-120H230L40 -330ZM320 -450L500 -210M500 -450L320 -210"),
+    ('\u{2326}', "M410 -540H40V-120H410L600 -330ZM140 -450L320 -210M320 -450L140 -210"),
+    ('\u{2190}', "M600 -330H60M250 -160L60 -330L250 -500"),
+    ('\u{2192}', "M60 -330H600M410 -160L600 -330L410 -500"),
+    ('\u{2191}', "M330 -60V-600M150 -420L330 -600L510 -420"),
+    ('\u{2193}', "M330 -600V-60M150 -240L330 -60L510 -240"),
+];
+
+/// 📐️ Design units per em [`SYMBOL_FACE`]'s paths are authored in.
+const SYMBOL_EM_UNITS: f32 = 1000.0;
+
+/// 🖊️ Stroke weight of a [`SYMBOL_FACE`] glyph, in design units — roughly Anta's own stem at the
+/// same size, so a chord badge reads as one run rather than as text plus hairlines.
+const SYMBOL_STROKE_UNITS: f32 = 78.0;
+
+/// 📏️ Side bearing a [`SYMBOL_FACE`] glyph carries on each side, in design units. The advance is the
+/// measured ink plus both bearings, so `measure_text` and the painter agree by construction instead
+/// of through a hand-declared per-glyph advance that could drift from the outline.
+const SYMBOL_SIDE_BEARING_UNITS: f32 = 60.0;
+
+/// 🔣️ [`SYMBOL_FACE`]'s outline for `ch`, if this face owns it.
+fn symbol_face_path(ch: char) -> Option<&'static str> {
+    SYMBOL_FACE.iter().find(|(symbol, _)| *symbol == ch).map(|(_, path)| *path)
+}
+
+/// 🫥 Whether `ch` is a format control a text run CARRIES but never paints — variation selectors,
+/// the joiners, the bidi marks, the soft hyphen, the word joiner and the BOM.
+///
+/// 🩸️ This repo spells every emoji with a trailing U+FE0F (`⌘️`, `🧪️`), and the chord table is no
+/// exception: `format_keybinding_shortcut` answers `⌘️⌥️E`, five codepoints. Shaping each one alone
+/// against the Anta-first stack resolved U+FE0F to Anta's own `.notdef`, so the navbar chip painted
+/// FOUR boxes for two symbols. A default-ignorable codepoint is a zero-advance, zero-ink glyph in
+/// every browser; it is one here too.
+fn is_zero_width_format_char(ch: char) -> bool {
+    matches!(ch, '\u{00ad}' | '\u{180e}' | '\u{200b}'..='\u{200f}' | '\u{2060}'..='\u{2064}' | '\u{fe00}'..='\u{fe0f}' | '\u{feff}')
+}
+
+//#endregion 🔣️SymbolFace
+
 /// 🧩️ How a `FontAtlas` resolves and rasterizes glyphs. `Bitmap` is the deterministic,
 /// dependency-free 8×16 ASCII fallback used by `FontAtlas::builtin()`; `Shaped` runs the full
 /// parley/fontique/swash pipeline against a registered `fontique::Collection`.
@@ -511,13 +576,62 @@ impl FontAtlas {
         self.glyphs.get(&key).expect("glyph inserted")
     }
 
+    /// 🔍️ Resolution order, and the ONE place it is written down: a default-ignorable format control
+    /// is blank and zero-advance; a [`SYMBOL_FACE`] codepoint is drawn from this crate's own outlines
+    /// (no shipped face carries one, in EITHER mode, on native or wasm); everything else goes to the
+    /// atlas mode's own pipeline.
     fn rasterize_glyph(&mut self, key: (char, u32)) {
         let (ch, device_size_px) = key;
+        if is_zero_width_format_char(ch) {
+            let glyph = self.blank_glyph();
+            self.pack_glyph(key, glyph);
+            return;
+        }
+        if let Some(glyph) = symbol_face_path(ch).and_then(|path| self.rasterize_symbol_glyph(path, device_size_px as f32)) {
+            self.pack_glyph(key, glyph);
+            return;
+        }
         let glyph = match self.mode {
             AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch),
             AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, device_size_px as f32),
         };
         self.pack_glyph(key, glyph);
+    }
+
+    /// 🫥 A glyph that occupies no atlas texels and moves the pen by nothing.
+    fn blank_glyph(&self) -> RasterizedGlyph {
+        RasterizedGlyph { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, advance: 0.0, raster_scale: self.raster_scale, is_color: false }
+    }
+
+    /// 🔣️ Rasterizes one [`SYMBOL_FACE`] outline at DEVICE `size_px` through `zeno` — swash's own
+    /// path rasterizer, already in this target's graph, so owning these glyphs adds no dependency.
+    /// `zeno`'s `Placement::top` is the bitmap's top edge in the path's y-DOWN space (negative above
+    /// the baseline), which is the sign-flipped twin of swash's; both land in `GlyphEntry` as the
+    /// baseline-to-bitmap-bottom bearing every paint call site reads.
+    fn rasterize_symbol_glyph(&self, path: &str, size_px: f32) -> Option<RasterizedGlyph> {
+        let scale = size_px / SYMBOL_EM_UNITS;
+        if !scale.is_finite() || scale <= 0.0 {
+            return None;
+        }
+        let mut stroke = ZenoStroke::new(SYMBOL_STROKE_UNITS);
+        stroke.join(ZenoJoin::Round);
+        stroke.cap(ZenoCap::Round);
+        let (bitmap, placement) = ZenoMask::new(path).style(ZenoStyle::Stroke(stroke)).transform(Some(ZenoTransform::scale(scale, scale))).format(SwashFormat::Alpha).render();
+        if placement.width == 0 || placement.height == 0 {
+            return None;
+        }
+        let raster_scale = self.raster_scale;
+        let bearing = (SYMBOL_SIDE_BEARING_UNITS * scale).round().max(1.0);
+        Some(RasterizedGlyph {
+            bitmap,
+            width: placement.width,
+            height: placement.height,
+            bearing_x: bearing / raster_scale,
+            bearing_y: -(placement.top as f32 + placement.height as f32) / raster_scale,
+            advance: (placement.width as f32 + bearing * 2.0) / raster_scale,
+            raster_scale,
+            is_color: false,
+        })
     }
 
     /// 🧵️ Resolves `ch` to a font + glyph id by running a single-codepoint `parley::Layout`. This

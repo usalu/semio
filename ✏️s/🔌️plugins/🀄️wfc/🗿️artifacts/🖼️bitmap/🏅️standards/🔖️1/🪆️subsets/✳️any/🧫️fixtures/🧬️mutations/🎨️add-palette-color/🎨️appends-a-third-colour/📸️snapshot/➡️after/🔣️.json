@@ -1,0 +1,40 @@
+{
+  "schema": "s.wfc.bitmap",
+  "seed": 7,
+  "input": {
+    "width": 4,
+    "height": 3,
+    "palette": [
+      {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 255
+      },
+      {
+        "r": 255,
+        "g": 255,
+        "b": 255,
+        "a": 255
+      },
+      {
+        "r": 200,
+        "g": 60,
+        "b": 60,
+        "a": 255
+      }
+    ],
+    "pixels": "AAEBAAEAAAEAAQEA"
+  },
+  "output": {
+    "width": 6,
+    "height": 4,
+    "periodic": false
+  },
+  "model": {
+    "patternSize": 2,
+    "symmetry": 1,
+    "periodicInput": true
+  },
+  "pinned": []
+}

@@ -1,6 +1,13 @@
 #[cfg(target_arch = "wasm32")]
 fn main() {}
 
+/// 🧭️ The per-navigation boot axes, the native twin of the browser's
+/// `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` (`🧭️boot-descriptor/🟦️.ts`), so
+/// `--plugin cad --example concrete-forest` opens natively what
+/// `?plugin=cad&example=concrete-forest` opens in the browser. The per-SERVER axes (locks, brand,
+/// default example, pinned app) are already seeded from `SEMIO_*` process env by
+/// `resolve_environment_boot_descriptor`, exactly as React's serve seeds `VITE_SEMIO_*`; a flag
+/// named here wins over its seed. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1d.
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
     use semio_framework_os_renderer_wgpu::{run_native, run_smoke};
@@ -86,13 +93,6 @@ fn main() {
         }
         std::process::exit(status);
     }
-    // 🧭️ The per-navigation boot axes, the native twin of the browser's
-    // `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` (`🧭️boot-descriptor/🟦️.ts`), so
-    // `--plugin cad --example concrete-forest` opens natively what
-    // `?plugin=cad&example=concrete-forest` opens in the browser. The per-SERVER axes (locks, brand,
-    // default example, pinned app) are already seeded from `SEMIO_*` process env by
-    // `resolve_environment_boot_descriptor`, exactly as React's serve seeds `VITE_SEMIO_*`; a flag
-    // named here wins over its seed. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1d.
     let mut descriptor = semio_framework_os_renderer_wgpu::boot_descriptor();
     let plugin_filter = arg_value("--plugin").unwrap_or_else(|| "studio".to_string());
     descriptor.plugin_variant = plugin_filter.clone();

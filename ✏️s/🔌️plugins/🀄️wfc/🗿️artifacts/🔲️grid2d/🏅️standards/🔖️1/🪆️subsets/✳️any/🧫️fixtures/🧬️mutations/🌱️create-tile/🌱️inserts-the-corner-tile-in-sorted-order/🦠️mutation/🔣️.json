@@ -1,0 +1,13 @@
+{
+  "CreateTile": {
+    "tile": {
+      "id": "corner",
+      "label": "Corner",
+      "weight": 1.0,
+      "media": {
+        "kind": "vector",
+        "paths": []
+      }
+    }
+  }
+}

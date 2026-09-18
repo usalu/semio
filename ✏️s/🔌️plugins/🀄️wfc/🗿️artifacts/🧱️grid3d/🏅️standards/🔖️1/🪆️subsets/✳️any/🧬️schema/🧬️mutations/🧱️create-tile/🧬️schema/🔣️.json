@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/mutation/create-tile/schema.json",
+  "title": "CreateTile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tile"
+  ],
+  "properties": {
+    "tile": {
+      "title": "Grid3dTile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "weight",
+        "media"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "media": {
+          "$comment": "Grid3dTileMedia — tagged by `kind`.",
+          "type": "object"
+        }
+      }
+    }
+  }
+}

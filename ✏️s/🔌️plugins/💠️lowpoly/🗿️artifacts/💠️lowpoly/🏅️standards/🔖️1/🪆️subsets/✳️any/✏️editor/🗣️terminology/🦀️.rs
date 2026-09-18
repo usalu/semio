@@ -58,6 +58,10 @@ semio_framework_plugin::app_labels! {
         subtractive: native_en "Subtractive", native_de "Subtraktiv", reuse_en "Subtractive", reuse_de "Subtraktiv";
         invertive: native_en "Invertive", native_de "Invertierend", reuse_en "Invertive", reuse_de "Invertierend";
         brush_group: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
+        gumball: native_en "Gumball", native_de "Gumball", reuse_en "Gumball", reuse_de "Gumball";
+        gumball_move: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
+        gumball_rotate: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
+        gumball_scale: native_en "Scale", native_de "Skalieren", reuse_en "Scale", reuse_de "Skalieren";
     }
 }
 

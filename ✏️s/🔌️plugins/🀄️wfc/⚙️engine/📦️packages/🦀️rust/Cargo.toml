@@ -1,0 +1,26 @@
+[package]
+name = "semio-s-plugin-wfc-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared wave function collapse engine for the wfc plugin artifacts"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

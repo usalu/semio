@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.procedural.assembly.inference;
-
-message AssemblyInferenceCommit {
-  map<string, string> assignments = 1;
-}
