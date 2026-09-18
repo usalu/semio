@@ -847,6 +847,41 @@ function WasmGraphSurface({
     }
   }, [dispatch]);
 
+  /** 🕹️ The graph's own EDITED shape — node ids/positions and wire endpoints, and deliberately not the
+   * camera, the selection or the hover. A gesture that only panned, zoomed or picked leaves this
+   * string identical, which is what lets a pointer-up commit be sent ONLY when the user really changed
+   * the graph (ticket 26/09/18/EXTRACT-WFC-PLUGIN: until this existed, dragging a node or drawing a
+   * wire on the wasm node-graph surface reached no plugin at all — `commitGraphFixture` was called
+   * from the align chrome and nowhere else, so every drag was silently discarded on pointer-up). */
+  const graphEditSignature = useCallback((): string | null => {
+    const session = sessionRef.current;
+    if (!session?.hostSnapshotJson) return null;
+    try {
+      const snapshot = JSON.parse(session.hostSnapshotJson()) as {
+        readonly nodes?: readonly { readonly id?: string; readonly x?: number; readonly y?: number }[];
+        readonly edges?: readonly { readonly id?: string; readonly source?: string; readonly target?: string }[];
+      };
+      const nodes = (snapshot.nodes ?? []).map((entry) => [entry.id, entry.x, entry.y]);
+      const edges = (snapshot.edges ?? []).map((entry) => [entry.id, entry.source, entry.target]);
+      return JSON.stringify([nodes, edges]);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  /** 🕹️ The signature captured at pointer-DOWN, so a commit is decided against the graph as it was
+   * before THIS gesture rather than against whatever the session laid out at load. */
+  const gestureSignatureRef = useRef<string | null>(null);
+
+  const commitGraphFixtureIfEdited = useCallback(() => {
+    const before = gestureSignatureRef.current;
+    gestureSignatureRef.current = null;
+    if (before === null) return;
+    const after = graphEditSignature();
+    if (after === null || after === before) return;
+    commitGraphFixture();
+  }, [commitGraphFixture, graphEditSignature]);
+
   const pickInteraction = useCanvasPickInteraction({
     resolveTargetsAtClient: (client) => {
       const session = sessionRef.current;
@@ -953,6 +988,7 @@ function WasmGraphSurface({
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerDown(client);
+          gestureSignatureRef.current = graphEditSignature();
           session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
           session.renderFrame();
           paintOverlays();
@@ -976,6 +1012,7 @@ function WasmGraphSurface({
           session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
           session.renderFrame();
           emitInteractionState();
+          commitGraphFixtureIfEdited();
         }}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
         onWheel={(event) => {

@@ -1,7 +1,5 @@
 //! ✏️ Wires document editing with gestures owned by each concrete canvas window.
 
-#[path = "🧵️retained/🦀️.rs"]
-mod retained;
 #[path = "🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🦀️.rs"]
 pub mod window_transient;
 
@@ -146,11 +144,20 @@ semio_framework_plugin::app_commands! {
 pub struct ReasoningWiresPlayApp;
 
 //#region 🧵️RetainedCommands
-const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"];
+/// 🧵️ Every verb the shell may dispatch is a retained tool: `validate_ui_dispatch_classification`
+/// refuses anything not classified `Migrated`, and `Migrated` in turn only survives the guest's
+/// `interactive-job.catalog-incomplete` boot check when this list, the publication contracts and the
+/// `bounded_first_step_tool_proofs!` row below name the same ids.
+const WIRES_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "addNode", "addRelationship", "deleteSelection", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"];
 const WIRES_RETAINED_PAYLOAD_SCHEMA: &str = "reasoning.wires.tool-command.v1";
 const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
 const WIRES_RETAINED_WORK_ITEMS: usize = 1_048_576;
+const WIRES_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
 const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addRelationship", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
@@ -163,11 +170,79 @@ fn wires_retained_contract() -> ToolExecutionContract {
 
 fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
+        WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => Some(1),
         WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerDown(payload) if payload.id.as_ref().is_none_or(|id| id.len() <= 1_024) && payload.x.is_finite() && payload.y.is_finite() => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerMove(payload) if payload.is_finite() => Some(1),
         WiresCommand::NodeGraphViewport(payload) if payload.viewport.validate().is_ok() => Some(1),
         _ => None,
+    }
+}
+
+/// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `WiresCommand` every
+/// dispatch path already speaks. `ArtifactApp::command_from_action`'s default refuses EVERY id
+/// (`app.command.unsupported`), so without this bridge the boot `setActiveExample`, every
+/// Actions-pane row and every canvas gesture died before reaching `WiresCommand::dispatch`.
+fn wires_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<WiresCommand, Fault> {
+    let entries: &[(String, dsl::DslValue)] = match args {
+        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
+    let text = |keys: &[&str], fallback: &str| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(other) => dsl::json::to_json_string(other),
+        None => fallback.to_string(),
+    };
+    let number = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Number(value)) => value.as_f64(),
+        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<f64>().unwrap_or_default(),
+        _ => 0.0,
+    };
+    let flag = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Bool(value)) => *value,
+        Some(dsl::DslValue::String(raw)) => raw == "true",
+        _ => false,
+    };
+    match action {
+        "setActiveExample" => Ok(WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
+        "addNode" => Ok(WiresCommand::AddNode(add_node::AddNode { kind: text(&["kind", "value"], "identity") })),
+        "addRelationship" => Ok(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: text(&["kind", "value"], "relates-to") })),
+        "deleteSelection" => Ok(WiresCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+        "canvasPointerDown" => Ok(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+            id: lookup(&["id"]).and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { None }),
+            x: number(&["x"]),
+            y: number(&["y"]),
+        })),
+        "canvasPointerMove" => Ok(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: number(&["x"]), y: number(&["y"]), samples: Vec::new() })),
+        "canvasPointerUp" => Ok(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: flag(&["cancelled"]) })),
+        "nodeGraphViewport" => Ok(WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
+            viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]), y: number(&["y"]), zoom: if lookup(&["zoom"]).is_some() { number(&["zoom"]) } else { 1.0 } },
+        })),
+        other => Err(Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("wires.unhandled-action"),
+            format!("action '{other}' is not one of this app's declared verbs (setActiveExample/addNode/addRelationship/deleteSelection/canvasPointer*/nodeGraphViewport)"),
+        )),
+    }
+}
+
+/// 🧵️ One-shot reducer for the document verbs — the retained-tool shape of the very dispatch the
+/// app already performs, so the bounded job and the batch path stay the same code.
+fn wires_retained_document_reduce(
+    command: &WiresCommand,
+    snapshot: &WiresSnapshot,
+    config: &NoConfig,
+    history: &semio_framework_plugin::HistoryView,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
+    operation: &AppOperationContext,
+) -> Result<Emit<WiresMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    match command {
+        WiresCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, interaction),
+        _ => command.dispatch(&doc, &ConfigView { snapshot: config, window: None }),
     }
 }
 
@@ -427,8 +502,24 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
+
+    /// 🏗️ Admits the whole-document replacement `reset_wires_document_effect` emits for every
+    /// example switch. The trait default refuses the envelope, so the host answered every
+    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load
+    /// boundary and the picked example never reached the canvas.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::MINDMAP_WIRES_SCHEMA, operation, generation))
+    }
+    /// 🧾️ Publishes every artifact-lane mutation kind through the framework's generic bounded
+    /// one-item cursor (the `dag`/`trinity` shape). The bespoke `🧵️retained` cursor admitted only
+    /// `MoveNode`, so `addNode`, `addRelationship`, `deleteSelection` and `setActiveExample` all
+    /// died at the publication authority with `Wires retained publication only admits MoveNode`.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(retained::factory())
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("wires-artifact-retained", WIRES_ARTIFACT_MUTATION_MAXIMUM_BYTES))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -475,7 +566,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1_048_576, 16_384, 7_500),
-        tools: ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"]
+        tools: ["setActiveExample", "addNode", "addRelationship", "deleteSelection", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -493,7 +584,15 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         if wires_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("wires-command-payload-too-large"));
         }
-        let work = Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_cursor: 0, field_cursor: 0, visited: 0, consumed: false, matched_node: None, node_x: None, node_y: None });
+        // 🧵️ The four gesture verbs walk the canvas incrementally through `WiresWindowDragWork`; the
+        // four document verbs are one-shot reducers, so they take the framework's bounded one-step
+        // work over `WiresCommand::dispatch` instead of a bespoke cursor.
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match *request.command {
+            WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {
+                Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
+            }
+            _ => Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_cursor: 0, field_cursor: 0, visited: 0, consumed: false, matched_node: None, node_x: None, node_y: None }),
+        };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -537,6 +636,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
     fn command_id(command: &WiresCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<WiresCommand, Fault> {
+        wires_command_from_action(action, args)
     }
 
     /// 🕹️ `deleteSelection` reads the "graph" interaction domain directly (bypassing the
@@ -654,10 +757,10 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
         .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addRelationship", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addRelationship", InteractiveJobClassification::Migrated)
+        .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)

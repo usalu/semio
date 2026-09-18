@@ -2,5 +2,5 @@
 export interface SetPageMediaBoxMutation {
   mutation: 'setPageMediaBox';
   index: number;
-  mediaBox: unknown[];
+  mediaBox: [number, number, number, number];
 }

@@ -1,0 +1,6 @@
+# 📝️ Direct set-annotation GraphQL payload.
+input SetAnnotationMutationInput {
+  index: Int
+  at: Int
+  annotation: PdfAnnotationInput
+}

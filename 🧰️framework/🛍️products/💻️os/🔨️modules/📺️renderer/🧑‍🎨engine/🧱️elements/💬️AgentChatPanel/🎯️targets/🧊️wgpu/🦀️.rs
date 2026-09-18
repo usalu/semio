@@ -1,31 +1,38 @@
-//! 💬️ wgpu twin of the `💬️AgentChatPanel` element (`🟦️.tsx`, 30 lines) — the OS shell's chat dock:
-//! a header carrying the panel title and the `🚦️AgentPresence` indicator, over the chat transcript.
+//! 💬️ wgpu twin of the `💬️AgentChatPanel` element (`🟦️.tsx`) — the OS shell's agent dock: a header
+//! carrying the panel title and the `🚦️AgentPresence` indicator, over the LIVE agent conversation.
 //!
-//! 🧩️ Scope, stated plainly: the header half is real here (it is chrome, and the wgpu shell paints
-//! chrome directly), the transcript half is not. React's body is `BasicChatPanel`, an arbitrary
-//! React subtree hosted inside a panel through `Tree`'s `emptyState` escape hatch
-//! (`📌️ChromePanels/🟦️.tsx:1376-1391`). The wgpu panel pipeline has no such hatch — panel content is
-//! exclusively `UiNode`/`UiTree` rendered by the fixed-credit `MountedLayout` engine — so a
-//! transcript cannot be projected until the content-projection packet lands (shell audit §5,
-//! recommendation 7, which names `RightPanelKind::Chat` as its own forcing case). The header
-//! therefore also renders the empty-transcript line, so the panel is never blank.
+//! 🧩️ Split of ownership, stated plainly: this module owns the header band (chrome, which the wgpu
+//! shell paints directly) and the empty-transcript line it shows while the feed has nothing in it.
+//! The feed itself is a `UiNode` tree the shell assembles from
+//! `crate::agent_bridge::AgentBridgeState::conversation` — `🐚️Shell/🎯️targets/🧊️wgpu`'s
+//! `build_agent_chat_ui`/`agent_chat_entry_node` — because panel content in this renderer is
+//! exclusively `UiNode`/`UiTree` rendered by the fixed-credit `MountedLayout` engine, never an
+//! arbitrary subtree like React's `Tree` `emptyState` escape hatch admits.
+//!
+//! 🌉️ Its rows come from the same bridge frames React's panel reads: `GatewayToShell::AgentToolCall`
+//! and `AgentToolResult` from the gateway's own `tools/call` dispatch, `ApprovalRequested`/
+//! `ApprovalResolved` from its approval gate, and `ShellToGateway::AgentMessage` for every turn the
+//! human types back. Nothing here is generated locally.
 
 use crate::agent_bridge::{agent_label, AgentBridgePresence, AgentBridgeStatus};
 use crate::agent_presence::{agent_presence_color, agent_presence_text, agent_presence_tone, AGENT_PRESENCE_DOT_PX, AGENT_PRESENCE_GAP_PX};
 use ui_wgpu::wgpu::{Locale, Rect, Rgba, Theme};
 
 //#region 🔖️AgentChatPanel
-/// 🆔️ The chat panel tab this element fills — `BasicChatPanel id="framework.chat"` on the React side.
+/// 🆔️ The chat panel tab this element fills — `framework.chat` on the React side.
 pub const AGENT_CHAT_PANEL_ID: &str = "framework.chat";
 
 pub fn agent_chat_panel_title(locale: Locale) -> String {
     agent_label("Chat", "Chat", locale)
 }
 
-/// 💬️ Shown while the transcript has nothing in it — and, today, whenever the transcript cannot be
-/// projected at all (see the module docstring).
+/// 💬️ Shown while the conversation has nothing in it — React's `os.agent.chat.empty`, word for word.
 pub fn agent_chat_empty_text(locale: Locale) -> String {
-    agent_label("No messages yet", "Noch keine Nachrichten", locale)
+    agent_label(
+        "No agent activity yet. Messages you send appear here, along with every tool the agent runs.",
+        "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug.",
+        locale,
+    )
 }
 
 /// 📐️ The header band at the top of the chat panel — `border-b px-single py-single` on the React

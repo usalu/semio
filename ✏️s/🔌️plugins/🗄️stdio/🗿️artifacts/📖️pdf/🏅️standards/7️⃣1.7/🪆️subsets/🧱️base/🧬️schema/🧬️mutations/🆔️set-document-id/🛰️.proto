@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_document_id;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🆔️ Direct set-document-id protobuf payload.
+message SetDocumentIdMutation {
+  repeated bytes id = 1;
+}

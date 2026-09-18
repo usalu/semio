@@ -11,7 +11,7 @@ use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::{
-    world3d_camera_json, world3d_scene, world3d_selection_json, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, UiAssemblyResult, UtilityDefinition, WindowKindDefinition, WindowOptions, WorldSunConfig,
+    world3d_camera_json, world3d_scene, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, UiAssemblyResult, UtilityDefinition, WindowKindDefinition, WindowOptions, WorldSunConfig,
 };
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
 
@@ -25,6 +25,18 @@ pub const UTILITY_MASK: &str = "mask";
 pub const INTERACTION_DOMAIN: &str = "wfc.grid3d.cells";
 pub const INTERACTION_GRANULARITY_CELL: &str = "cell";
 pub const HOVER_CHANNEL: &str = "wfc.grid3d.cell";
+/// 🖱️ The plugin-private instance-pick verb `World3dHost` dispatches for a scene that declares NO
+/// `domainId` — `{ids:[<instance id>], merge}`. It is what carries a cell key back to the app while a
+/// WRITING utility is armed; the framework's own `interactionSelect` only ever writes selection state.
+pub const ACTION_WORLD_SELECT: &str = "worldSelect";
+/// 📚️ The navbar example picker's verb. The shell dispatches it at boot against the FOCUSED window's
+/// kind, so a kind has to declare it or the whole picker is refused as `undeclared-action`.
+pub const ACTION_SET_ACTIVE_EXAMPLE: &str = "setActiveExample";
+/// 🖱️ The host's DOMAINLESS hover verb, the twin of `worldSelect`. An undeclared one is refused once
+/// per pointer move, so a window that ever runs domainless has to declare it.
+pub const ACTION_SET_HOVER: &str = "setHover";
+/// 🖱️ The domainless lane's clear/component pick — dispatched when a click hits no instance at all.
+pub const ACTION_WORLD_PICK: &str = "worldPick";
 //#endregion 🔖️Constants
 
 //#region 🔖️Utilities
@@ -64,6 +76,10 @@ pub fn interaction() -> semio_framework_plugin::InteractionDefinition {
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::grid3d::create_grid3d_editor`.
+/// 📝️ Staged argument forms. A palette row with no form is dispatched with an EMPTY argument bag,
+/// so the bridge refuses it (`wfc.grid3d.action.missing-argument`) — declaring the verb is only half
+/// of making it reachable. They must be attached HERE: the app builder's `action_args` searches only
+/// app-scope actions, never a window kind's own, and silently drops what it cannot find.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
@@ -98,12 +114,49 @@ pub fn definition() -> WindowKindDefinition {
         ActionDefinition::bounded_catalog("unmaskCell", LocalizedLabel::native("Unmask Cell", "Zelle einblenden"), ActionKind::Mutation),
         ActionDefinition::bounded_catalog("setActiveTile", LocalizedLabel::native("Arm Tile", "Kachel wählen"), ActionKind::Mutation),
         ActionDefinition::bounded_catalog("pickCell", LocalizedLabel::native("Pick Cell", "Zelle wählen"), ActionKind::Mutation),
+        ActionDefinition::bounded_catalog(ACTION_WORLD_SELECT, LocalizedLabel::native("Pick Cell In World", "Zelle in der Welt wählen"), ActionKind::Mutation),
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(ACTION_SET_HOVER, LocalizedLabel::native("Set Hover", "Hover festlegen"), ActionKind::View) },
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(ACTION_WORLD_PICK, LocalizedLabel::native("World Pick", "Weltauswahl"), ActionKind::View) },
         ActionDefinition::bounded_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera setzen"), ActionKind::Mutation),
+        ActionDefinition::bounded_catalog(ACTION_SET_ACTIVE_EXAMPLE, LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation),
     ]);
     for action in &mut definition.actions {
         action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        action.args = action_args(&action.id);
     }
     definition
+}
+
+/// 📝️ The staged form one verb declares. The example argument is a SELECT over the manifest's own
+/// append-only roster, so a pane can never stage an id this artifact publishes no example for.
+fn action_args(action_id: &str) -> Vec<ActionArgDef> {
+    let coordinate = |id: &'static str, label: &'static str| ActionArgDef::number(id, LocalizedLabel::native(label, label)).required().default_value(&0.0);
+    let cell = || vec![coordinate("x", "X"), coordinate("y", "Y"), coordinate("z", "Z")];
+    let tile = || ActionArgDef::text("tileId", LocalizedLabel::native("Tile", "Kachel")).required();
+    match action_id {
+        "changeSeed" => vec![ActionArgDef::number("seed", LocalizedLabel::native("Seed", "Seed")).required().default_value(&0.0)],
+        "resizeGrid" => vec![
+            ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&1.0),
+            ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required().default_value(&1.0),
+            ActionArgDef::number("depth", LocalizedLabel::native("Depth", "Tiefe")).required().default_value(&1.0),
+        ],
+        "setActiveTile" => vec![tile()],
+        "pickCell" => vec![ActionArgDef::text("cellId", LocalizedLabel::native("Cell", "Zelle")).required()],
+        "pinCell" => {
+            let mut args = cell();
+            args.push(tile());
+            args
+        }
+        "unpinCell" | "maskCell" | "unmaskCell" => cell(),
+        ACTION_SET_ACTIVE_EXAMPLE => vec![ActionArgDef::select(
+            "exampleId",
+            LocalizedLabel::native("Example", "Beispiel"),
+            crate::examples::sources().iter().map(|source| ActionArgOption::new(source.id().to_string(), source.label().clone())).collect(),
+        )
+        .required()
+        .default_value(&crate::examples::blocks::ID)],
+        _ => Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -131,19 +184,40 @@ pub fn framed_camera(document: &Grid3dSnapshot, config: &Grid3dWindowConfig) -> 
 //#region 🔖️Render
 /// 🧱️ One instanced `World3d` scene over the whole cell grid. `selection_json` reports the armed
 /// utility's current cell so the host paints it without the document ever storing hover state.
-pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+///
+/// 🖱️ `utility` picks the PICK LANE, because a click means two different things here. Under `select`
+/// the scene declares its `domainId` and `World3dHost` routes the hit through the framework verbs
+/// `interactionSelect`/`interactionHover`, which write selection and nothing else. Under `pin`/`mask`
+/// a click is an EDIT, and a framework selection write can never become one: the scene then declares
+/// no domain, so the host falls back to its plugin-private lane and dispatches
+/// `worldSelect {ids:[<cell key>]}`, which this app bridges onto `pickCell`. The granularity has to be
+/// spelled for that fallback — `World3dHost` reads `mesh`/`object` as "address the hit by ARRAY INDEX"
+/// and dispatches `worldPick` instead, which would hand the app a number in place of a cell key.
+pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> UiAssemblyResult<BuiltNode> {
+    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene(document, config, selected, hovered, utility))
+}
+
+/// 🧱️ The scene `render` paints, minted separately so the pick-lane law can be asserted on the real
+/// struct instead of on a rendered node's debug text.
+pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> semio_framework_ui::wgpu::World3dScene {
     let (position, target) = framed_camera(document, config);
-    let scene = semio_framework_ui::wgpu::World3dScene {
-        domain_id: Some(INTERACTION_DOMAIN.into()),
+    let writes = utility == UTILITY_PIN || utility == UTILITY_MASK;
+    semio_framework_ui::wgpu::World3dScene {
+        domain_id: (!writes).then(|| INTERACTION_DOMAIN.into()),
+        domain_granularity_id: (!writes).then(|| INTERACTION_GRANULARITY_CELL.into()),
         ..world3d_scene(
             world3d_camera_json(position, target, 45.0),
             scene_internals::grid_meshes_json(document),
             scene_internals::grid_instances_json(document),
-            world3d_selection_json("interactionSelect", selected, hovered),
+            semio_framework_plugin::world3d_selection_json_with_granularity(
+                if writes { ACTION_WORLD_SELECT } else { "interactionSelect" },
+                selected,
+                hovered,
+                Some(INTERACTION_GRANULARITY_CELL),
+            ),
             &WorldSunConfig::default(),
         )
-    };
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    }
 }
 //#endregion 🔖️Render
 

@@ -2505,14 +2505,15 @@ class SetupScript extends BundleScript {
   }
 }
 
+/** 🎛️ The default sqlite-only dev loop runs on the crate's default features (`sqlite` +
+ * `native-artifact-execution`); a leading `all-features` segment opts into the full
+ * directory-backend matrix (sqlite/postgres/neo4j drivers linked) that the `test-all-features`
+ * nx target names, whose `postgres` laws additionally need a live Docker daemon. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    // 🎛️ `--all-features` so a plain `bun ./📜️script.ts test` covers the full old 5-crate baseline
-    // (directory core + sqlite/postgres/neo4j backends + the bin's own WS/REST suite) in one run —
-    // `postgres`'s own tests still need a live Docker daemon regardless of this flag (pre-existing,
-    // not a regression from the merge).
-    runCargoTestBudgeted(["semio-hub"], this.repoRoot, ["--all-features", ...rest]);
+    const allFeatures = rest[0] === "all-features";
+    runCargoTestBudgeted(["semio-hub"], this.repoRoot, [...(allFeatures ? ["--all-features"] : []), ...(allFeatures ? rest.slice(1) : rest)]);
   }
 }
 
@@ -6565,9 +6566,8 @@ async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<
       service.contributor === "gis" &&
       service.artifactKind === descriptor.artifactKind &&
       service.artifactSchema === "s.gis.gismap" &&
-      service.documentSchema === descriptor.artifactSchema &&
       service.dependsOn.length === 0 &&
-      [service.artifactSchemaVersion, service.documentSchemaVersion, service.inferenceSchemaVersion, service.algorithmVersion, service.policyVersion].every((version) => version === 1);
+      [service.artifactSchemaVersion, service.inferenceSchemaVersion, service.algorithmVersion, service.policyVersion].every((version) => version === 1);
     if (accepted !== test.accepted) throw new Error(`catalog selection mismatch: ${test.name}`);
   }
   console.log(`inference-catalog-projection-oracle: exact=${fixture.cases.length}; no native provider or route authority`);
@@ -8227,7 +8227,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
       profileId: "local-stdio-gis-open-v1",
       packageId: "semio:gis",
       artifactKind: "s.gis.gismap",
-      documentSchema: "gis.map",
+      artifactSchema: "gis.map",
       parentDialect: "s.gis.gismap@1/*",
       surfaceId: "s.gis.gismap@1/*#editor",
       grantedMode: "read-write-observe",
@@ -8286,7 +8286,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
   assert(validate(fixture), "collaboration contract drifted from its pinned specification");
   const approval = JSON.parse(readFileSync(join(repoRoot, fixture.prerequisites.approvalFixture), "utf8"));
   const browser = JSON.parse(readFileSync(join(repoRoot, fixture.prerequisites.browserFixture), "utf8"));
-  for (const key of ["packageId", "artifactKind", "documentSchema", "surfaceId", "grantedMode", "serviceId"]) {
+  for (const key of ["packageId", "artifactKind", "artifactSchema", "surfaceId", "grantedMode", "serviceId"]) {
     assert.equal(fixture.selection[key], approval.binding[key]);
     assert(equal(fixture.selection[key], approval.binding[key]));
   }
@@ -8544,7 +8544,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   assert.deepEqual(fixture.publicationFiles, ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"]);
   assert.deepEqual(fixture.descriptorPreviewCases, [
     { id: "first-selected-descriptor-invalid", packageIndex: 1, previews: [] },
-    { id: "second-selected-descriptor-invalid", packageIndex: 0, previews: ["semio:fixture-base"] },
+    { id: "second-selected-descriptor-invalid", packageIndex: 0, previews: [] },
   ]);
   assert.deepEqual(fixture.consumerCatalogCases, [
     { change: "exact", accepted: true }, { change: "missing", accepted: false }, { change: "duplicate", accepted: false },

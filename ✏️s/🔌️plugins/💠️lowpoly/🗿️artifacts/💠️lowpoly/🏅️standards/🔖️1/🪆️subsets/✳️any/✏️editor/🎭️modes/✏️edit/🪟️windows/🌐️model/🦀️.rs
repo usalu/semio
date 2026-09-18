@@ -52,6 +52,8 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
     "exportMesh",
     "loadMeshRequest",
     "importMeshFile",
+    "deleteSelection",
+    "duplicateObject",
 ];
 //#endregion 🔖️Constants
 

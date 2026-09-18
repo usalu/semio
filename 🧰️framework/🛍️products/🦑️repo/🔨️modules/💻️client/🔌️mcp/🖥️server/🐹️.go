@@ -413,7 +413,7 @@ func (session *Session) route(ctx context.Context, request Request) (any, *RPCEr
 			return nil, rpcError(CodeInvalidRequest, "already initialized")
 		}
 		var params InitializeParams
-		if err := DecodeParams(request.Params, &params); err != nil || params.ProtocolVersion == "" || params.ClientInfo.Name == "" || params.ClientInfo.Version == "" {
+		if err := DecodeOpenParams(request.Params, &params); err != nil || params.ProtocolVersion == "" || params.ClientInfo.Name == "" || params.ClientInfo.Version == "" {
 			return nil, rpcError(CodeInvalidParams, "invalid initialize params")
 		}
 		session.mu.Lock()

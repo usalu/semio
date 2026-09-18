@@ -6,6 +6,7 @@ use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
 use crate::wgpu::flex::{FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint};
 use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_item_height, tree_node_height, tree_section_header_height, tree_section_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
+use crate::wgpu::text::{is_wrap_space, may_break_between};
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
 
@@ -228,8 +229,10 @@ impl RetainedAtlasCandidate {
 /// advances alone — the worker thread holds no tree and no font atlas. This is CSS's own reading of
 /// a text run inside a flex item: `MaxContent` is the whole run on one line, `MinContent` is the
 /// widest unbreakable word (the floor a flex item may shrink to before it overflows), and a
-/// `Definite` width is first-fit greedy wrapping at space/newline break opportunities, which is what
-/// a browser resolves simple Latin runs to. A trailing space never pushes a line over the edge.
+/// `Definite` width is first-fit greedy wrapping at [`may_break_between`]'s own CSS break
+/// opportunities — the SAME predicate the atlas wrap and the retained painter use, so a flex item
+/// sized here and a paragraph painted there can no longer disagree about where a line ends. A
+/// trailing space hangs and never pushes a line over the edge.
 fn measure_text(nodes: &ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>, glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>, previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>, index: usize, constraint: MeasureConstraint) -> (f32, f32) {
     let Some(node) = nodes.get(index) else { return (0.0, 0.0) };
     let (start, end) = (node.glyph_start, node.glyph_end);
@@ -242,43 +245,52 @@ fn measure_text(nodes: &ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CR
     match constraint {
         MeasureConstraint::MaxContent => ((start..end).map(advance).sum(), line),
         MeasureConstraint::MinContent => {
-            let (mut widest, mut word) = (0.0_f32, 0.0_f32);
+            let (mut widest, mut run) = (0.0_f32, 0.0_f32);
             for cursor in start..end {
-                if matches!(scalar(cursor), ' ' | '\n' | '\t') {
-                    widest = widest.max(word);
-                    word = 0.0;
-                } else {
-                    word += advance(cursor);
+                let ch = scalar(cursor);
+                if ch == '\n' || is_wrap_space(ch) || (cursor > start && may_break_between(scalar(cursor - 1), ch)) {
+                    widest = widest.max(run);
+                    run = 0.0;
+                }
+                if ch != '\n' && !is_wrap_space(ch) {
+                    run += advance(cursor);
                 }
             }
-            (widest.max(word), line)
+            (widest.max(run), line)
         }
         MeasureConstraint::Definite(available) => {
-            let (mut widest, mut placed, mut word, mut space, mut lines) = (0.0_f32, 0.0_f32, 0.0_f32, 0.0_f32, 1_usize);
+            let (mut widest, mut placed, mut run, mut ink, mut lines) = (0.0_f32, 0.0_f32, 0.0_f32, 0.0_f32, 1_usize);
             for cursor in start..end {
-                match scalar(cursor) {
-                    '\n' => {
-                        widest = widest.max(placed + space + word);
-                        (placed, word, space) = (0.0, 0.0, 0.0);
-                        lines += 1;
-                    }
-                    ' ' | '\t' => {
-                        placed += space + word;
-                        word = 0.0;
-                        space = advance(cursor);
-                    }
-                    _ => {
-                        word += advance(cursor);
-                        if placed > 0.0 && placed + space + word > available {
-                            widest = widest.max(placed);
-                            (placed, space) = (0.0, 0.0);
-                            lines += 1;
-                        }
-                    }
+                let ch = scalar(cursor);
+                if ch == '\n' {
+                    widest = widest.max(ink);
+                    (placed, run, ink) = (0.0, 0.0, 0.0);
+                    lines += 1;
+                    continue;
                 }
+                if cursor > start && placed + run > 0.0 && may_break_between(scalar(cursor - 1), ch) {
+                    placed += run;
+                    run = 0.0;
+                }
+                let advance = advance(cursor);
+                if is_wrap_space(ch) {
+                    placed += run + advance;
+                    run = 0.0;
+                    continue;
+                }
+                if placed + run > 0.0 && placed + run + advance > available {
+                    widest = widest.max(ink);
+                    if placed > 0.0 {
+                        placed = 0.0;
+                    } else {
+                        run = 0.0;
+                    }
+                    lines += 1;
+                }
+                run += advance;
+                ink = placed + run;
             }
-            widest = widest.max(placed + space + word);
-            (widest, line * lines as f32)
+            (widest.max(ink), line * lines as f32)
         }
     }
 }
@@ -487,8 +499,12 @@ impl MountedLayoutJob {
             }),
             UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
             UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
-            UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Button(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height },
+            UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
+            UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => {
+                LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None }
+            }
             UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
+            UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
             _ => LayoutNodeKind::Leaf,
         };
         let index = self.nodes.len();
@@ -527,7 +543,7 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::DepthCredits);
             return (0, 0);
         }
-        if matches!(kind, LayoutNodeKind::Text) {
+        if matches!(kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
             self.text_node = Some(index);
             self.text_byte = 0;
             self.text_glyph_start = self.glyphs.len();
@@ -549,6 +565,7 @@ impl MountedLayoutJob {
         };
         let value = match tree.node(input.id).map(|node| &node.spec.0) {
             Some(UiNode::Text(text)) => text.value.as_str(),
+            Some(UiNode::Button(button)) => button.label.as_str(),
             _ => {
                 self.fault = Some(MountedLayoutFault::Stale);
                 return (0, 0);
@@ -746,7 +763,7 @@ impl MountedLayoutJob {
         };
         let index = self.collect_cursor;
         self.collect_cursor += 1;
-        if matches!(input.kind, LayoutNodeKind::Text) {
+        if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
             if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
                 self.rejected_line = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);

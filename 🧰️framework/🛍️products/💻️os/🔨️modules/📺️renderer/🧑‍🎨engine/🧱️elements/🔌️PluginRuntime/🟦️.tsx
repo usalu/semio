@@ -70,6 +70,7 @@ import { OwnedUiPatchIntake, retainedUiIntakeStepCeiling } from "../📃️UiDoc
 import {
   ActivationRegistry,
   type ActivationReason,
+  activationReasonForAppId,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
   type PluginDispatchHintV1,
@@ -3044,7 +3045,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       };
       const opening = Promise.resolve().then(async () => {
         requireOpening();
-        await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+        await registry.activate(pluginId, actorId, activationReasonForAppId(appId));
         requireOpening();
         eventSeq += 1;
         const lease = shardClient.captureInstanceLifecycle(actorId, instanceId);
@@ -3650,6 +3651,54 @@ export function setPluginRuntimeActor(actor: string): void {
 }
 //#endregion 🔖️ActorIdentity
 
+//#region 🔖️HistorySnapshotRetry
+/** 🧮️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — how many times a history
+ * snapshot read may be re-issued against the one guest refusal that is transient by construction.
+ * `plugin_exchange`'s `ReadHistory` arm reaches the instance cell through `try_lock`
+ * (`🔨️modules/🔌️plugin/🦀️.rs:35395`/`:35681`), so a snapshot read that lands while the SAME instance
+ * is already mid-turn is refused with `instance busy or poisoned: N` rather than queued behind it. A
+ * refusal therefore carries no `HistorySnapshot` frame at all, which is the literal condition the old
+ * code reported as `missing HistorySnapshot frame` — a sentence that named the symptom and discarded
+ * the guest's own fault text, so every `📓️final-summary.md` reading of it blamed the hub's
+ * `document_ws_v1` bootstrap for a frame the hub never sends. Four attempts covers one guest turn. */
+const PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS = 4;
+
+/** ⏱️ The first backoff step of the ladder above; each further attempt doubles it (25, 50, 100 ms),
+ * so an exhausted ladder has waited 175 ms — longer than a guest turn's 8 ms ceiling by two orders of
+ * magnitude, and still bounded, which is the whole point: `🏛️ShellHost`'s history effects are
+ * edge-triggered and never re-armed by their own callers, so an exhausted ladder must surface the real
+ * fault instead of spinning. */
+const PLUGIN_INSTANCE_BUSY_BACKOFF_MS = 25;
+
+/** 🚦️ True only for the transient `try_lock` refusal, never for a real app fault. Anything else — a
+ * poisoned document, a rejected projection, a guest trap — is terminal and must be raised on the first
+ * reply rather than hidden behind three more round trips. */
+function isPluginInstanceBusyFaultV1(message: string): boolean {
+  return /instance busy or poisoned/u.test(message);
+}
+
+/** 🧾️ Reads one instance's whole history projection, retrying a bounded number of times against a
+ * transient `instance busy` refusal and raising the guest's own fault text on anything else. `delay`
+ * is injectable so the renderer's own test drives the ladder without real timers. */
+async function readHistoryWithBoundedRetryV1(
+  channel: AppChannelClient,
+  instanceId: number,
+  delay: (ms: number) => Promise<void> = (ms) => new Promise<void>((resolve) => { setTimeout(resolve, ms); }),
+): Promise<HistoryPatch> {
+  let refusal = "";
+  for (let attempt = 0; attempt < PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS; attempt += 1) {
+    const frames = await channel.readHistory();
+    const snapshot = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in candidate);
+    if (snapshot) return decodePackWire(new Uint8Array(snapshot.HistorySnapshot.history_patch), "$.historyPatch") as HistoryPatch;
+    const errorFrame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in candidate);
+    refusal = errorFrame ? faultDisplayMessage(errorFrame.Error.fault, decodePackValue) : `no HistorySnapshot and no Error frame among ${frames.length} reply frame(s)`;
+    if (!errorFrame || !isPluginInstanceBusyFaultV1(refusal)) break;
+    if (attempt + 1 < PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS) await delay(PLUGIN_INSTANCE_BUSY_BACKOFF_MS * 2 ** attempt);
+  }
+  throw new Error(`[DEBUG] readHistory(${instanceId}) failed: ${refusal}`);
+}
+//#endregion 🔖️HistorySnapshotRetry
+
 /** 📡️ Wraps the framework-core `PluginWasmHandle` (the `enqueue`/`outcomes` turn ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
@@ -3723,12 +3772,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // longer exist on the wire regardless (channel v12), so there is no fallback command to send here.
     refreshUi: async () => ({}),
     contextMenu: async (instanceId, request, viewState) => performContextMenu(requireChannel(instanceId), request, viewState),
-    readHistory: async (instanceId) => {
-      const frames = await requireChannel(instanceId).readHistory();
-      const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in candidate);
-      if (!frame) throw new Error("[DEBUG] readHistory: missing HistorySnapshot frame");
-      return decodePackWire(new Uint8Array(frame.HistorySnapshot.history_patch), "$.historyPatch") as HistoryPatch;
-    },
+    readHistory: async (instanceId) => readHistoryWithBoundedRetryV1(requireChannel(instanceId), instanceId),
     applyMutations: async (instanceId, mutationsPack) => {
       const envelopes = decodeMutationEnvelopesPack(mutationsPack);
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
@@ -4331,7 +4375,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, createRetainedUiCloseLadderV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgressAt, pluginLoadRemainingMs, beginPluginLoadV1, endPluginLoadV1, pluginLoadsInFlightV1, withPluginLoadInFlightV1, notePluginLoadProgressForInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, PLUGIN_OPERATION_OWED_SLICE_MS, retainedUiRefreshEffects, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation, uiPatchAdmissionRoundsV1 };
+  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, createRetainedUiCloseLadderV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgressAt, pluginLoadRemainingMs, beginPluginLoadV1, endPluginLoadV1, pluginLoadsInFlightV1, withPluginLoadInFlightV1, notePluginLoadProgressForInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, isPluginInstanceBusyFaultV1, readHistoryWithBoundedRetryV1, PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS, PLUGIN_INSTANCE_BUSY_BACKOFF_MS, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, PLUGIN_OPERATION_OWED_SLICE_MS, retainedUiRefreshEffects, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation, uiPatchAdmissionRoundsV1 };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

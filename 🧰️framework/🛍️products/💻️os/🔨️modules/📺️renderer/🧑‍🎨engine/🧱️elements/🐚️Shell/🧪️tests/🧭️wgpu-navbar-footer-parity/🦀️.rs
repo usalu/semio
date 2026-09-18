@@ -40,7 +40,11 @@ fn paint_pane_chips(shell: &mut ShellState, theme: &Theme, window: Rect) -> Vec<
             break;
         }
     }
-    input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect()
+    // 🎯️ A chip's hit row is DEFERRED to `pane_overlay_hits` and registered after the panels
+    // (`ShellChromeFramePhase::PaneOverlayHits`), so the pane's own overlay outranks a panel floating
+    // over it — the ledger this reads is the one that walk drains.
+    let _ = input.staged_hits();
+    shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect()
 }
 
 //#region 🎯️HitTargetLaw
@@ -72,7 +76,7 @@ fn every_painted_pane_chip_registers_a_hit_target() {
         }
         assert!(ids.contains(&control_id), "🎯️ {chip:?} is painted, so it must be hit-testable — registered ids: {ids:?}");
     }
-    assert!(ids.contains(&"shell.projection.fold.pane-top".to_string()), "🎯️ the Projection chip's own id is React's constant `…pane.fold`: {ids:?}");
+    assert!(ids.contains(&"framework.worldOrbit.projection.paneTop.pane.fold".to_string()), "🎯️ the Projection chip wears React's own pane id, `world3dProjectionPaneElementId` + `…pane.fold`: {ids:?}");
 }
 
 /// 🔀️ **The projection-fold law.** Pressing the chip flips THAT pane's own fold and nothing else —
@@ -130,6 +134,95 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
 
     press(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ the same id folds it again");
+}
+
+/// 🛑️ **The overlay-press law.** A press on a pane's OWN overlay chip belongs to the shell, never to
+/// the engine surface the chip is painted over — React gets this for free because a `Pane` chip is a
+/// DOM button in a layer above the `<canvas>` and the canvas never sees the press at all.
+///
+/// 🩸️ `pointer_press_belongs_to_shell_chrome` matched on chrome KINDS alone, and a pane chip is
+/// `HitKind::Toggle`. So `🧊️renderer/🦀️.rs`'s press path handed every chip inside a world pane's
+/// rect to `enqueue_world3d_event` and returned before `handle_shell_hit` ran: `Actions`, `Search`,
+/// `Window Options`, `Utilities` and `Projection` all painted, all hit-tested, and all dispatched
+/// NOTHING. Measured live at 1440×900 (`📓️w9b-projection-pane-framing-grid-materials.md` §1): one
+/// `wgpu-shell pointer button` line for the whole click, `down=false`, and a hit ledger frozen at 43
+/// rows through ten retries.
+#[test]
+fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
+    let mut shell = world_pane_shell();
+    shell.window_measures_documents.clear();
+    let chrome = |control_id: &str, kind: HitKind| {
+        let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None };
+        ShellState::pointer_press_belongs_to_shell_chrome(Some(&hit))
+    };
+    for (chip, folded, disabled) in shell.window_pane_chips("pane-top") {
+        if disabled {
+            continue;
+        }
+        let control_id = chip.control_id("pane-top", folded);
+        assert!(chrome(&control_id, HitKind::Toggle), "🛑️ {chip:?}'s press is the shell's: {control_id}");
+    }
+    assert!(chrome("shell.projection.template.pane-top::orthographic", HitKind::DropdownItem), "🛑️ and so is a row of the body it opens");
+    assert!(chrome("ui.introduction.skip", HitKind::Button), "🛑️ the tour veil still owns every pointer while it blocks");
+
+    assert!(!chrome("pane-top", HitKind::World3d), "🛑️ the surface's OWN region is never chrome");
+    assert!(!chrome("pane-top", HitKind::ScrollRegion), "🛑️ nor its scroll region");
+    assert!(!chrome("pane-top.vfs.chevron.root", HitKind::Generic), "🛑️ nor a target the SURFACE minted under its own id — every scene keys its targets by `surface_id` (`🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs`)");
+    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "🛑️ empty canvas is nobody's press");
+}
+
+/// ⏱️ **The one-frame-body law.** An unfolded projection pane publishes its WHOLE taxonomy inside one
+/// bounded run of the chrome walk — every row a hit, every row on the one measured column, and the
+/// run under [`WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES`].
+///
+/// 🩸️ The body measured `world_projection_column_width` — a walk of all 15 labels — once per ROW,
+/// so one worker turn paid 225 `FontAtlas::measure_text` calls to answer the same number 15 times,
+/// and a pane too short for the taxonomy abandoned the body on its FIRST row instead of clamping to
+/// its own inset, which paints nothing at all (`📓️w8b` §7.2's live "no row within 14 s").
+#[test]
+fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
+    let theme = Theme::light();
+    let mut atlas = FontAtlas::builtin();
+    let column = world_projection_column_width(&mut atlas, &theme);
+    let body = |shell: &mut ShellState, window: Rect| {
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut cursor = ShellChromeChildCursor::default();
+        let mut opportunities = 0_usize;
+        while opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
+            opportunities += 1;
+            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+                break;
+            }
+        }
+        (opportunities, input.staged_hits().to_vec())
+    };
+
+    let mut shell = world_pane_shell();
+    shell.projection_pane_folded.insert("pane-top".into(), false);
+    let (opportunities, rows) = body(&mut shell, Rect::new(0.0, 0.0, 800.0, 600.0));
+    assert!(opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, "⏱️ the body terminates well inside its own budget, it does not exhaust it: {opportunities}");
+    assert_eq!(rows.len(), WORLD_PROJECTION_TEMPLATES.len(), "⏱️ and publishes every row of React's taxonomy");
+    for (row, template) in rows.iter().zip(WORLD_PROJECTION_TEMPLATES) {
+        let indent = f32::from(template.depth) * theme.tree_indent_per_level;
+        let expected = 800.0 - theme.panel_inset - column + indent;
+        assert!((row.rect.x - expected).abs() < 0.5, "⏱️ every row hangs off ONE measured column trailing edge, indented per level: {} at {} wanted {expected}", template.id, row.rect.x);
+    }
+    let heights: Vec<f32> = rows.iter().map(|row| row.rect.y).collect();
+    assert!(heights.windows(2).all(|pair| pair[1] > pair[0]), "⏱️ and reads top-down in React's declared order: {heights:?}");
+
+    // 🧭️ A pane too short for 15 rows clamps to its own inset and still paints every row it can —
+    // it never abandons the body, which is what left the live pane blank.
+    let mut short = world_pane_shell();
+    short.projection_pane_folded.insert("pane-top".into(), false);
+    let (_, clamped) = body(&mut short, Rect::new(0.0, 0.0, 800.0, theme.control_height * 6.0));
+    assert!(!clamped.is_empty(), "🧭️ a short pane still paints the rows that fit");
+    assert!(clamped.len() < WORLD_PROJECTION_TEMPLATES.len(), "🧭️ and only the rows that fit");
+    for row in &clamped {
+        assert!(row.rect.y >= theme.panel_inset - 0.5, "🧭️ every painted row stays inside the pane: {:?}", row.rect.y);
+    }
 }
 //#endregion 🎯️HitTargetLaw
 

@@ -101,10 +101,20 @@ const COLLAB_E2E_STEP_NAMES = [
   "#s-presence-peers shows 2 peers in both shells",
   "user1 checks in with a message; history shows it and the space table's updated column moves for both",
   "admin: /admin/api/connections lists both connections with their surfaces; /admin returns HTML",
+  "user1's keystroke reaches user2's editor within ONE ServerFrame::Commands round trip",
   "hub restarts against the same OS_HUB_DATA; user2 reloads and the space + artifact are still there",
+  "an edit typed while the hub is down survives the restart and reaches user2 via resume-token/frontier",
 ] as const;
 
 type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean; readonly detail: string };
+
+/** 📡️ A live tally of the `ServerFrame::Commands` frames one page's DOCUMENT sockets have received.
+ * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — the audit's §7 step 3 asks for a
+ * round-trip bound, not just "the text turned up eventually", so the harness has to be able to count
+ * the frames that carry it. A server frame is `lane: u8 | tag: u8 | fields…`
+ * (`📡️replication/📡️wire/🦀️.rs`'s `encode_server_frame`) and `Commands` is tag `3`; the directory
+ * socket is excluded by path, since its command relay is a different lane entirely. */
+type CollabCommandFrameCounter = { count: number };
 
 /** 📁️ Ticket folder — scratch logs/screenshots for this lane's own probes, per the worker-brief. */
 function collabOutDir(): string {
@@ -128,6 +138,31 @@ function collabScanPort(envVar: string, taken: Set<number>): number {
     return port;
   }
   throw new Error(`collab e2e: no free port in ${COLLAB_E2E_PORT_MIN}-${COLLAB_E2E_PORT_MAX} for ${envVar}`);
+}
+
+/** 🗄️ The hub's `OS_HUB_DATA` for this run: a fresh temp directory by default, so the event-sourced
+ * directory this scenario asserts against starts empty and STEP 1's "a NEW row appeared" is a real
+ * claim. `S_COLLAB_TRUSTED_CATALOG` seeds that fresh directory with an already-published
+ * `trusted-catalog/` copied from a warm hub data root: the hub rebuilds the trusted stdio+GIS bundle
+ * from source whenever that subtree is missing (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`'s
+ * `materializeTrustedStdioGisBundle`, two `wasm-release` component builds into PRIVATE `--target-dir`s
+ * that share nothing with the workspace cargo cache), which costs more than the rest of the run put
+ * together and measures nothing this scenario is about. Only the catalog is copied — never spaces,
+ * documents, sessions or presence. `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate
+ * warm-state run. */
+function collabHubDataDir(): string {
+  const explicit = process.env.S_COLLAB_HUB_DATA;
+  if (explicit) {
+    mkdirSync(explicit, { recursive: true });
+    return explicit;
+  }
+  const dir = mkdtempSync(join(tmpdir(), "semio-collab-hub-"));
+  const seed = process.env.S_COLLAB_TRUSTED_CATALOG;
+  if (seed && existsSync(join(seed, "trusted-catalog"))) {
+    cpSync(join(seed, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
+    console.log(`[collab-e2e] seeded the hub's trusted stdio+GIS catalog from ${seed}`);
+  }
+  return dir;
 }
 
 /** 🚀️ Spawns the real hub (`bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts dev`, i.e. `cargo run` against the
@@ -305,6 +340,48 @@ async function collabScreenshot(page: import("playwright").Page, label: string):
   }
 }
 
+/** 🔢️ The `ServerFrame` tag byte for `Commands`, mirrored from `encode_server_frame`'s own match arm
+ * (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`, `out.push(3)`). */
+const COLLAB_SERVER_FRAME_COMMANDS_TAG = 3;
+
+/** 📡️ Attaches a `ServerFrame::Commands` tally to every document socket `page` opens from now on.
+ * Only `/spaces/{id}/documents/{id}/socket/v1` counts — the directory socket carries the space/artifact
+ * listing lane, whose frames would otherwise inflate the round-trip bound STEP 8 asserts. */
+function collabCountCommandFrames(page: import("playwright").Page): CollabCommandFrameCounter {
+  const counter: CollabCommandFrameCounter = { count: 0 };
+  page.on("websocket", (ws) => {
+    const url = ws.url();
+    if (url.includes("/directory/") || !url.includes("/documents/") || !url.includes("/socket/v1")) return;
+    ws.on("framereceived", (frame) => {
+      const payload = frame.payload;
+      if (typeof payload === "string" || payload.length < 2) return;
+      if (payload[1] === COLLAB_SERVER_FRAME_COMMANDS_TAG) counter.count += 1;
+    });
+  });
+  return counter;
+}
+
+/** ⏳️ Polls `editor` until it shows `text`, returning how many `ServerFrame::Commands` frames the page
+ * received between the call and the moment the text was first observed. Throws with the last value it
+ * saw when the budget runs out, so a failure names what the editor actually held. */
+async function collabWaitForEditorText(
+  page: import("playwright").Page,
+  editor: import("playwright").Locator,
+  counter: CollabCommandFrameCounter,
+  text: string,
+  deadlineMs: number,
+): Promise<number> {
+  const before = counter.count;
+  const deadline = Date.now() + deadlineMs;
+  let seen = "";
+  while (Date.now() < deadline) {
+    seen = (await editor.inputValue().catch(() => editor.innerText().catch(() => ""))) ?? "";
+    if (seen.includes(text)) return counter.count - before;
+    await page.waitForTimeout(100);
+  }
+  throw new Error(`timeout waiting for ${JSON.stringify(text)} in the peer's editor (last seen: ${JSON.stringify(seen.slice(-200))}, ${counter.count - before} Commands frame(s) received meanwhile)`);
+}
+
 //#endregion 🔖️CollabE2eDom
 
 /** 🎬️ The whole 8-step scenario, run against two already-booted `s` react dev servers and a live hub.
@@ -314,6 +391,7 @@ async function collabRunScenario(
   user1: import("playwright").Page,
   user2: import("playwright").Page,
   hubBaseUrl: string,
+  user2Commands: CollabCommandFrameCounter,
 ): Promise<{ readonly results: CollabStepOutcome[]; readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
   const results: CollabStepOutcome[] = [];
   const record = (step: number, pass: boolean, detail: string): void => {
@@ -531,6 +609,39 @@ async function collabRunScenario(
     record(7, false, error instanceof Error ? error.message : String(error));
   }
 
+  // STEP 8
+  if (spaceId && artifactId) {
+    try {
+      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      const row1 = user1.locator(`[data-row-id="artifact:${artifactId}"]`);
+      await collabWaitForRow(user1, "artifact", artifactId, 30_000);
+      await row1.getByTitle(/open/i).click();
+      const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
+      const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
+      await editor1.waitFor({ state: "visible", timeout: 30_000 });
+      spaceE2eAssert((await editor2.count()) > 0, "user2 has no editable text surface open — STEP 8 measures a round trip between two OPEN editors (see STEP 4)");
+      const marker = `r${Date.now() % 100_000}`;
+      await editor1.click();
+      await editor1.type(marker);
+      const frames = await collabWaitForEditorText(user2, editor2, user2Commands, marker, 30_000);
+      spaceE2eAssert(
+        frames >= 1,
+        `user2's editor showed ${JSON.stringify(marker)} without a single ServerFrame::Commands frame arriving — the two editors are not the same hub-synced document`,
+      );
+      spaceE2eAssert(
+        frames <= marker.length,
+        `user1's edit took ${frames} ServerFrame::Commands frames to reach user2 for ${marker.length} typed character(s) — more than one relay round trip per keystroke means the tail is being re-sent rather than relayed`,
+      );
+      record(8, true, `user1's ${marker.length}-keystroke edit reached user2 in ${frames} ServerFrame::Commands frame(s)`);
+    } catch (error) {
+      await collabScreenshot(user1, "step8-user1");
+      await collabScreenshot(user2, "step8-user2");
+      record(8, false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    record(8, false, "skipped — no space/artifact id from earlier steps");
+  }
+
   return { results, spaceId, artifactId };
 }
 
@@ -546,37 +657,75 @@ async function collabRunRestartStep(opts: {
   readonly hubDaemon: SpawnDaemonHandle;
   readonly hubPort: number;
   readonly hubDataDir: string;
+  readonly user1: import("playwright").Page;
   readonly user2: import("playwright").Page;
+  readonly user2Commands: CollabCommandFrameCounter;
   readonly spaceId: string | undefined;
   readonly artifactId: string | undefined;
 }): Promise<SpawnDaemonHandle> {
   if (!opts.spaceId || !opts.artifactId) {
-    opts.record(8, false, "skipped — no space/artifact id from earlier steps");
+    opts.record(9, false, "skipped — no space/artifact id from earlier steps");
+    opts.record(10, false, "skipped — no space/artifact id from earlier steps");
     return opts.hubDaemon;
   }
+  let liveHub = opts.hubDaemon;
+  /** ✍️ The in-flight edit STEP 10 owns: typed into user1's OPEN editor while the hub is dead, so it is
+   * committed to the local ledger and queued in the `ArtifactActor` outbox with no `ServerFrame::Ack`
+   * behind it. `undefined` when there was no open editor to type into, which STEP 10 reports honestly
+   * rather than passing on a vacuous truth. */
+  let inFlightMarker: string | undefined;
   try {
-    opts.hubDaemon.kill();
+    const editor1 = opts.user1.locator('textarea, [contenteditable="true"]').first();
+    const hasEditor = (await editor1.count()) > 0;
+    liveHub.kill();
     // 🧵️ We hold the hub's own `child` handle — await its `exit` event via 🔖️PollHelpers's
     // `awaitChildExit` instead of polling `exitCode` (THE RULE above). Same 30s budget as before.
-    const exited = await awaitChildExit(opts.hubDaemon.child, 30_000);
+    const exited = await awaitChildExit(liveHub.child, 30_000);
     spaceE2eAssert(exited === "exited", "hub process did not exit within 30s of being killed");
     const portFreed = await awaitTcpReady("127.0.0.1", opts.hubPort, { deadlineMs: 30_000, intervalMs: 250, mode: "closed" });
     spaceE2eAssert(portFreed === "ready", `port ${opts.hubPort} never freed up after the hub exited`);
-    const newHubDaemon = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
+    if (hasEditor) {
+      inFlightMarker = `o${Date.now() % 100_000}`;
+      await editor1.click();
+      await editor1.type(inFlightMarker);
+    }
+    liveHub = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
     await opts.user2.reload({ waitUntil: "domcontentloaded" });
     await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
     await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 60_000);
-    opts.record(8, true, `hub restarted against the same OS_HUB_DATA (${opts.hubDataDir}) on the same port; user2 still sees space ${opts.spaceId} and artifact ${opts.artifactId} after reload`);
-    return newHubDaemon;
+    opts.record(9, true, `hub restarted against the same OS_HUB_DATA (${opts.hubDataDir}) on the same port; user2 still sees space ${opts.spaceId} and artifact ${opts.artifactId} after reload`);
   } catch (error) {
-    await collabScreenshot(opts.user2, "step8-user2");
-    opts.record(8, false, error instanceof Error ? error.message : String(error));
-    return opts.hubDaemon;
+    await collabScreenshot(opts.user2, "step9-user2");
+    opts.record(9, false, error instanceof Error ? error.message : String(error));
+    opts.record(10, false, "skipped — the hub never came back up");
+    return liveHub;
   }
+  try {
+    spaceE2eAssert(
+      inFlightMarker !== undefined,
+      "user1 had no open editor at restart time, so nothing was ever in flight — STEP 10 needs STEP 3/4's editor surface to exist before it can prove a resume",
+    );
+    const row2 = opts.user2.locator(`[data-row-id="artifact:${opts.artifactId}"]`);
+    await row2.getByTitle(/open/i).click();
+    const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
+    await editor2.waitFor({ state: "visible", timeout: 30_000 });
+    const frames = await collabWaitForEditorText(opts.user2, editor2, opts.user2Commands, inFlightMarker!, 120_000);
+    spaceE2eAssert(frames >= 1, `user2 showed the offline edit ${JSON.stringify(inFlightMarker)} without any ServerFrame::Commands frame — it cannot have travelled through the restarted hub`);
+    opts.record(
+      10,
+      true,
+      `user1's edit ${JSON.stringify(inFlightMarker)}, typed while the hub was down and never acknowledged, was relayed to user2 after the restart in ${frames} ServerFrame::Commands frame(s) — the resume-token/frontier path carried it rather than dropping it`,
+    );
+  } catch (error) {
+    await collabScreenshot(opts.user1, "step10-user1");
+    await collabScreenshot(opts.user2, "step10-user2");
+    opts.record(10, false, error instanceof Error ? error.message : String(error));
+  }
+  return liveHub;
 }
 
 /** 🎬️ Orchestrates the full harness: port scan, temp data dirs, hub boot, plugin prebuild, two `s`
- * react dev servers, two independent Playwright browser contexts, the 8-step scenario, and teardown of
+ * react dev servers, two independent Playwright browser contexts, the 10-step scenario, and teardown of
  * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
  * lines plus a final summary, and sets a non-zero exit code if any step failed. */
 async function runCollabE2eVerify(): Promise<void> {
@@ -587,7 +736,7 @@ async function runCollabE2eVerify(): Promise<void> {
   const user2Port = collabScanPort("S_COLLAB_USER2_PORT", taken);
   console.log(`[collab-e2e] ports: hub=${hubPort} user1=${user1Port} user2=${user2Port}`);
 
-  const hubDataDir = mkdtempSync(join(tmpdir(), "semio-collab-hub-"));
+  const hubDataDir = collabHubDataDir();
   const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
   const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
 
@@ -622,7 +771,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] hub failed to boot — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 8; step++) record(step, false, `blocked — hub never became ready: ${message}`);
+      for (let step = 1; step <= 10; step++) record(step, false, `blocked — hub never became ready: ${message}`);
       throw error;
     }
 
@@ -631,7 +780,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] plugin prebuild failed — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 8; step++) record(step, false, `blocked — plugin prebuild failed: ${message}`);
+      for (let step = 1; step <= 10; step++) record(step, false, `blocked — plugin prebuild failed: ${message}`);
       throw error;
     }
 
@@ -644,7 +793,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] a shell dev server never booted — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 8; step++) record(step, false, `blocked — shells did not boot: ${message}`);
+      for (let step = 1; step <= 10; step++) record(step, false, `blocked — shells did not boot: ${message}`);
       throw error;
     }
 
@@ -689,6 +838,7 @@ async function runCollabE2eVerify(): Promise<void> {
     };
     attachBrowserDiagnostics(user1Page, "user1");
     attachBrowserDiagnostics(user2Page, "user2");
+    const user2Commands = collabCountCommandFrames(user2Page);
 
     await user1Page.goto(`http://127.0.0.1:${user1Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
@@ -697,10 +847,10 @@ async function runCollabE2eVerify(): Promise<void> {
     await user1Page.waitForTimeout(2_000);
     await user2Page.waitForTimeout(2_000);
 
-    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl);
+    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl, user2Commands);
     for (const outcome of scenario.results) results.push(outcome);
 
-    hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+    hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
 
     const ignorableGpuFragments = ["NoCompatibleDevice"];
     const criticalErrors = pageErrors.filter((message) => !ignorableGpuFragments.some((fragment) => message.includes(fragment)));
@@ -715,4 +865,4 @@ async function runCollabE2eVerify(): Promise<void> {
   if (passed !== results.length) process.exitCode = 1;
 }
 
-export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, CollabStepOutcome, collabClickToolbarButton, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabRowIds, collabRunRestartStep, collabRunScenario, collabScanPort, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForNewRow, collabWaitForRow, runCollabE2eVerify };
+export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, CollabCommandFrameCounter, CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabRowIds, collabRunRestartStep, collabRunScenario, collabScanPort, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForRow, runCollabE2eVerify };

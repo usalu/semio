@@ -1164,6 +1164,10 @@ export interface Taxonomy {
   readonly testImplementationFileKindIds: readonly string[];
   readonly testLegacyDirectoryNames: readonly string[];
   readonly testFixtureLegacyDirectoryNames: readonly string[];
+  /** 🧪️ Canonical tests directory name (`🧪️tests`) — the owner-local home of every test case. */
+  readonly testsDirName: string;
+  /** 🧫️ Canonical test-fixture directory name (`🧫️fixtures`) — opaque input data owned by the tests beside it. */
+  readonly testFixturesDirName: string;
   readonly testExamplesDirName: string;
   readonly testOraclesDirName: string;
   readonly testObsoleteCategoryStems: readonly string[];

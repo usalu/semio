@@ -71,3 +71,18 @@ async fn drawing_document_to_svg_bridges_shape_text_image_and_gradient_nodes_thr
     let json_error = drawing_document_json_to_svg(&dsl::DslValue::object([("bad".to_string(), dsl::DslValue::Bool(true))]));
     assert!(json_error.is_err());
 }
+
+/// 📖️ The declared `s.draw.drawing → s.stdio.pdf@1.4` io row is a real hop now: fed the document's
+/// native pack it answers PDF bytes, not the old "not yet implemented" refusal.
+#[semio_framework_async_macros::async_test]
+async fn declared_pdf_serializer_entry_answers_a_pdf_for_the_native_pack() {
+    use semio_framework::io_schema::{IoPayload, IoResult};
+    let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == "s.stdio.pdf").expect("the pdf serializer row is declared");
+    let mut doc = default_drawing_document("hop", None);
+    doc.layers.push(create_drawing_shape_layer_rect("Rect"));
+    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as store::ArtifactPack>::encode_pack(&doc)));
+    let outcome = result.expect("the pdf hop runs");
+    let IoPayload::Binary(bytes) = &outcome.value else { panic!("pdf is a binary payload") };
+    assert!(bytes.starts_with(b"%PDF-1.4\n"), "{:?}", &bytes[..16]);
+    assert!(semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::decode_pdf(bytes).is_ok());
+}

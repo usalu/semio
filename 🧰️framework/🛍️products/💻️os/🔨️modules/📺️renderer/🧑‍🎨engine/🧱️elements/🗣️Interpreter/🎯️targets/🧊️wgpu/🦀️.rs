@@ -2073,7 +2073,17 @@ struct DumpMeshSurface {
     /// 📦️ The union of every published mesh's bounds, which is what a camera fit must frame.
     bbox_min: Option<[f64; 3]>,
     bbox_max: Option<[f64; 3]>,
+    /// 🎥️ The WIRE camera — what the guest last published in `World3dScene.camera_json`.
     camera: Option<Value>,
+    /// 🎥️ The LIVE orbit — what this surface is actually looking through THIS frame, in the same
+    /// `setCamera` shape as `camera` so the two are directly diffable, plus the projection family
+    /// the orbit is in.
+    ///
+    /// 🩸️ Without it the dump answers the wire camera for both halves, so every local camera move —
+    /// an orbit, a wheel, a `Projection` pane switch — is invisible to a probe: a switch to
+    /// `Orthographic` reported the delivered perspective pose, unchanged, and looked like a dead
+    /// control (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.5).
+    live_camera: Option<Value>,
     selected: Vec<String>,
     hovered: Option<String>,
 }
@@ -2529,6 +2539,7 @@ fn mesh_stats_for_scene(scene: &UiComponentSceneNode, rect: [f32; 4]) -> Option<
         bbox_min: union.map(|(min, _)| min),
         bbox_max: union.map(|(_, max)| max),
         camera: serde_json::from_str::<Value>(&world.camera_json).ok(),
+        live_camera: world_camera_ledger_row(&scene.surface_id),
         selected: selection.as_ref().and_then(|selection| selection.get("ids")).and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default(),
         hovered: selection.as_ref().and_then(|selection| selection.get("hoveredId")).and_then(Value::as_str).map(str::to_string),
     })
@@ -2618,6 +2629,13 @@ struct DumpDispatchedAction {
     seq: u64,
     controller_id: String,
     action: String,
+    /// 🪪️ React's `InputOriginV1` — `user` for a control press, `gesture` for a pointer/camera stream
+    /// an engine surface derived from raw input. The DOM host's input ledger records it on every row
+    /// (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`), and a probe that reads one shape from both renderers
+    /// cannot tell a world drag from a navbar click without it: before this the parity probe stamped
+    /// every wgpu row `"shell"` by hand (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    /// `🐍️parity-interact-probe.mjs`).
+    origin: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     window_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2625,15 +2643,57 @@ struct DumpDispatchedAction {
     at_ms: f64,
 }
 
+/// 🪟️ One surface the shell carries this frame, at the LEVEL React's DOM states through
+/// `data-level` — the missing half of a surface-delta comparison. A probe reading React sees a
+/// window, a docked panel and a dialog as three different things (`[data-window-id]`,
+/// `[data-level="panel"]`, `[data-level="dialog"]`); the wgpu shell models a panel AS a window, so
+/// without this census every panel a step opened read as a new window and no step involving a panel
+/// could ever match (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w9c-behaviour-parity-run-2.md` steps 3–8).
+///
+/// `element_id` is React's OWN id for that surface — `panelTabElementId(tabId)` for a panel — so the
+/// two renderers name the same surface with the same string rather than with two conventions a probe
+/// would have to translate.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpSurface {
+    id: String,
+    level: String,
+    element_id: String,
+}
+
 #[derive(Default)]
 struct ChromeLedger {
     hits: Vec<DumpHitTarget>,
+    surfaces: Vec<DumpSurface>,
     generation: u64,
     actions: std::collections::VecDeque<DumpDispatchedAction>,
     next_seq: u64,
 }
 
 static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new();
+
+/// 🎥️ The LIVE orbit of every world surface that painted this frame, keyed by surface id — the
+/// diagnostics twin of [`CHROME_LEDGER`], and for the same reason: `dumpMeshStats` reaches only
+/// `UI_ENGINE`, while the orbit lives on the shell's `world3d_states`, so the shell has to hand it
+/// over at the one point per frame where it holds both the surface id and the state.
+static WORLD_CAMERA_LEDGER: WorkerCell<std::collections::BTreeMap<String, Value>> = WorkerCell::new();
+
+/** 🎥️ Records ONE world surface's live orbit. Called once per surface per painted frame from
+ * `🎞️Scenes/🎯️targets/🧊️wgpu`'s world3d render, gated on runtime diagnostics exactly as the chrome
+ * ledger is, so a production frame pays nothing. */
+pub fn note_world3d_live_camera(surface_id: &str, camera: Value) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
+    WORLD_CAMERA_LEDGER.borrow_mut().insert(surface_id.to_string(), camera);
+}
+
+/// 🎥️ The live orbit this surface last recorded, if diagnostics were on when it painted.
+#[cfg(any(target_arch = "wasm32", test))]
+fn world_camera_ledger_row(surface_id: &str) -> Option<Value> {
+    WORLD_CAMERA_LEDGER.borrow().get(surface_id).cloned()
+}
 
 /// ⏱️ Wall clock for the ledger's stamps. The renderer wasm runs inside a DEDICATED WORKER, which owns
 /// no `window` and therefore no `window.performance` — `js_sys::Date::now()` is the one clock both
@@ -2692,22 +2752,48 @@ fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[ui_wgpu::wgpu::HitTarg
     ledger.generation += 1;
 }
 
-/** 🎬️ Records ONE dispatched action. `🐚️Shell/🎯️targets/🧊️wgpu`'s `dispatch_action` is the single
- * funnel every chrome press, keybinding, command-palette entry, panel row and retained body action
- * crosses, so the ledger is the target's complete answer to "what did that click do". */
-pub fn note_dispatched_action(action: &ActionDescriptor) {
+/** 🪟️ Replaces the published surface census — `(surface id, level, React's element id)` per live
+ * surface, from the SAME complete chrome walk that publishes the hit registry, so the two can never
+ * describe different frames. See [`DumpSurface`] for why a level is what makes the census worth
+ * publishing at all. */
+pub fn note_chrome_surfaces(surfaces: &[(String, &'static str, String)]) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
     }
-    ledger_push_action(&mut CHROME_LEDGER.borrow_mut(), action);
+    ledger_publish_surfaces(&mut CHROME_LEDGER.borrow_mut(), surfaces);
+}
+
+/// 🪟️ The pure half of `note_chrome_surfaces`, bounded by the registry's own row ceiling and sorted,
+/// so a probe diffs two censuses without re-sorting them and a frame that reorders its walk does not
+/// read as a surface change.
+fn ledger_publish_surfaces(ledger: &mut ChromeLedger, surfaces: &[(String, &'static str, String)]) {
+    let mut rows: Vec<DumpSurface> = surfaces.iter().take(CHROME_HIT_CAPACITY).map(|(id, level, element_id)| DumpSurface { id: id.clone(), level: (*level).to_string(), element_id: element_id.clone() }).collect();
+    rows.sort_by(|left, right| left.level.cmp(&right.level).then_with(|| left.id.cmp(&right.id)));
+    rows.dedup();
+    ledger.surfaces = rows;
+}
+
+/** 🎬️ Records ONE dispatched action. `🐚️Shell/🎯️targets/🧊️wgpu`'s `dispatch_action` is the single
+ * funnel every chrome press, keybinding, command-palette entry, panel row and retained body action
+ * crosses, so the ledger is the target's complete answer to "what did that click do". */
+pub fn note_dispatched_action(action: &ActionDescriptor, origin: &str) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
+    ledger_push_action(&mut CHROME_LEDGER.borrow_mut(), action, origin);
 }
 
 /// 🎬️ The pure half of `note_dispatched_action`: mints the next `seq` and trims the oldest entry past
 /// `CHROME_ACTION_CAPACITY`, so the ledger's footprint is fixed however long a session runs.
-fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor) {
-    let window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework::DslValue::as_str).map(str::to_string);
+fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor, origin: &str) {
+    let window_id = action
+        .args
+        .as_ref()
+        .and_then(|args| args.get("windowId").or_else(|| args.get("surfaceId")))
+        .and_then(semio_framework::DslValue::as_str)
+        .map(str::to_string);
     ledger.next_seq += 1;
-    let entry = DumpDispatchedAction { seq: ledger.next_seq, controller_id: action.controller_id.clone(), action: action.action.clone(), window_id, args: chrome_action_args(action), at_ms: chrome_ledger_now_ms() };
+    let entry = DumpDispatchedAction { seq: ledger.next_seq, controller_id: action.controller_id.clone(), action: action.action.clone(), origin: origin.to_string(), window_id, args: chrome_action_args(action), at_ms: chrome_ledger_now_ms() };
     ledger.actions.push_back(entry);
     while ledger.actions.len() > CHROME_ACTION_CAPACITY {
         ledger.actions.pop_front();
@@ -2723,6 +2809,7 @@ struct DumpChrome {
     #[serde(skip_serializing_if = "Option::is_none")]
     window_id: Option<String>,
     hits: Vec<DumpHitTarget>,
+    surfaces: Vec<DumpSurface>,
     actions: Vec<DumpDispatchedAction>,
 }
 
@@ -2735,7 +2822,11 @@ fn project_chrome_dump(ledger: &ChromeLedger, requested: Option<&str>, armed: bo
         Some(id) => ledger.hits.iter().filter(|hit| hit.window_id.as_deref().is_none_or(|owner| owner == id)).cloned().collect(),
         None => ledger.hits.clone(),
     };
-    DumpChrome { armed, generation: ledger.generation, window_id: named, hits, actions: ledger.actions.iter().cloned().collect() }
+    let surfaces = match &named {
+        Some(id) => ledger.surfaces.iter().filter(|surface| &surface.id == id).cloned().collect(),
+        None => ledger.surfaces.clone(),
+    };
+    DumpChrome { armed, generation: ledger.generation, window_id: named, hits, surfaces, actions: ledger.actions.iter().cloned().collect() }
 }
 //#endregion 🎯️ChromeLedger
 

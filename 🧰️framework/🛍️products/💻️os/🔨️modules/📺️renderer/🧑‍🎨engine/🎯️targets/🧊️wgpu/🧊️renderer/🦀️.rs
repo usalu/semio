@@ -156,12 +156,13 @@ use infinite_world::world::{world3d_asset_cancellation_requested, WORLD_ASSET_RE
 use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use infinite_world::world::apply_reference_image_bytes;
+use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use program_bridge::load_wasm_plugins;
 #[cfg(target_arch = "wasm32")]
 use program_bridge::parse_plugin_entries;
-use shell::ShellState;
+use shell::{PointerCapture, PointerHitOwner, ShellState};
 use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -7024,17 +7025,22 @@ pub(crate) mod kernel_runtime {
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
-            // broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's).
+            // broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's). It rides
+            // behind the declared `Activate` this app id justifies (`activation_turn_event`), so a
+            // guest woken by an artifact kind learns WHICH kind before it opens anything.
             let open = Event::InstanceOpen {
                 request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
-                app_id: semio_framework::kernel::AppInstanceId(app_id),
+                app_id: semio_framework::kernel::AppInstanceId(app_id.clone()),
                 actor: "local".to_string(),
                 config: Vec::new(),
                 assets: Vec::new(),
                 capabilities: Vec::new(),
                 quotas: QuotaSchema::default(),
             };
-            self.run_turn(actor, instance_id, vec![open]).await?;
+            let mut first_turn = Vec::with_capacity(2);
+            first_turn.extend(semio_framework_plugin_host::activation::activation_turn_event(&app_id));
+            first_turn.push(open);
+            self.run_turn(actor, instance_id, first_turn).await?;
             // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): descriptor-driven
             // native cascade — M6's own acceptance wording, "activating a parent brings up its N
             // extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
@@ -9899,7 +9905,11 @@ impl RuntimeApply {
                     interaction.shell.pump_directory_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
-                    if let Err(error) = interaction.shell.dispatch_action(action).await {
+                    // 🪪️ Every action on this lane came out of an engine surface's bounded input
+                    // authority — a world pane's hover/pick/camera, a board's or a map's twin — so it
+                    // is `gesture` provenance, never a control press. React stamps the same origin on
+                    // the same rows (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`'s `InputOriginV1`).
+                    if let Err(error) = interaction.shell.dispatch_gesture_action(action).await {
                         log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
                         // 🧯️ WGPU-RENDERER-REACT-PARITY packet W1j: a failed gesture is React's
                         // transient-notice case (viewer-read-only / mutation-rejected / render
@@ -10935,7 +10945,18 @@ impl RuntimeMailbox {
         }
         self.try_lock()
             .ok()
-            .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_asset_decode_pending)))
+            .and_then(|runtime| {
+                runtime.interaction.as_ref().map(|interaction| {
+                    // 🥽️ A brush-mesh page run is the same shape of work: one page leaves per frame,
+                    // so a surface mid-announcement has to keep its own frames coming or the guest
+                    // never receives the collision geometry its brush utilities test against.
+                    interaction
+                        .shell
+                        .world3d_states
+                        .values()
+                        .any(|state| infinite_world::world::world3d_asset_decode_pending(state) || infinite_world::world::world3d_brush_mesh_announce_pending(state))
+                })
+            })
             .unwrap_or(false)
     }
 
@@ -11394,6 +11415,12 @@ pub(crate) struct AppInteractionState {
     last_pointer_y: f32,
     pointer_down: bool,
     pointer_button: i16,
+    /// 🎯️ The layer that owns the pointer SEQUENCE in flight — set on the press from
+    /// [`ShellState::pointer_owner_at`] and cleared on the release. React gets this from the DOM: the
+    /// element a `pointerdown` resolved to receives the whole gesture, so a press that landed on
+    /// chrome keeps every move and the release away from the canvas underneath it, whatever the
+    /// pointer travels over in between.
+    pointer_capture: PointerCapture,
     modifiers: PointerModifiers,
     wheel: AppWheel,
     space_pressed: bool,
@@ -11934,6 +11961,9 @@ pub(crate) struct FrameTransaction {
     board_authority_cursor: usize,
     world3d_authority_cursor: usize,
     scene_camera_cursor: scenes::SceneCameraDispatchCursor,
+    /// 🥽️ How many world surfaces this frame has already offered a `registerBrushMesh` step — a
+    /// plain index into `world3d_states`, so the phase owns no closable authority.
+    brush_mesh_cursor: usize,
     build_cursor: Option<FrameBuildCursor>,
     finish_cursor: Option<FrameFinishCursor>,
     after_chrome: Option<AppFrameAfterChrome>,
@@ -11991,6 +12021,7 @@ pub(crate) enum FrameTransactionStage {
 
 enum AppFrameTransactionPhase {
     SceneCamera,
+    BrushMesh,
     Build,
     InputEvents,
     FrameDeferred,
@@ -12020,6 +12051,7 @@ impl FrameTransaction {
             board_authority_cursor: 0,
             world3d_authority_cursor: 0,
             scene_camera_cursor: scenes::SceneCameraDispatchCursor::begin(app_now_ms()),
+            brush_mesh_cursor: 0,
             build_cursor: None,
             finish_cursor: None,
             after_chrome: None,
@@ -12100,7 +12132,7 @@ impl FrameTransaction {
                 }
                 scenes::SceneCameraDispatchStep::Complete => {
                     self.stage = FrameTransactionStage::RouteIntents;
-                    self.phase = AppFrameTransactionPhase::Build;
+                    self.phase = AppFrameTransactionPhase::BrushMesh;
                     AppFrameTransactionStep::Pending
                 }
                 scenes::SceneCameraDispatchStep::Fault(fault) => {
@@ -12109,6 +12141,29 @@ impl FrameTransaction {
                     AppFrameTransactionStep::Fault
                 }
             },
+            // 🥽️ ONE `registerBrushMesh` per world surface per frame — React's `BrushMeshRegistrar`
+            // announces a loaded GLB's collision geometry to the puzzle guest per window instance,
+            // and `drainPuzzle3dBrushMeshQueue` keeps exactly one page outstanding while a first
+            // upload runs. The wgpu host dispatched nothing at all, so the guest's brush and
+            // volume-brush utilities had no collision body on this renderer (ticket
+            // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-…-missing.md` §6 family B). The row is
+            // `gesture` provenance like every other surface-derived action on this lane.
+            AppFrameTransactionPhase::BrushMesh => {
+                let Some(surface) = app.shell.world3d_states.keys().nth(self.brush_mesh_cursor).cloned() else {
+                    self.phase = AppFrameTransactionPhase::Build;
+                    return AppFrameTransactionStep::Pending;
+                };
+                self.brush_mesh_cursor = self.brush_mesh_cursor.saturating_add(1);
+                let action = app.shell.world3d_states.get_mut(surface.as_str()).and_then(infinite_world::world::step_world3d_brush_mesh_announce);
+                if let Some(action) = action {
+                    if let Err(_action) = app.frame_actions.try_push(action) {
+                        runtime.record_frame_fault("frame brush mesh action credits exceeded");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                }
+                AppFrameTransactionStep::Pending
+            }
             AppFrameTransactionPhase::Build => {
                 if self.build_cursor.is_none() {
                     let Some(presentation_witness) = runtime.presentation_witness_for(self.generation.0) else {
@@ -12388,11 +12443,25 @@ impl FrameTransaction {
                 }
                 let surface_id = surface_id.to_owned();
                 let AppInteractionState { shell, input, .. } = interaction;
+                // 🚧️🚪️ A modal layer OPENING clears the hover the pane published, with no pointer
+                // move of its own. React's overlays take pointer events the instant they mount, so
+                // r3f raises `onPointerOut` there and then — its `context-menu` step journals the
+                // clear inside the step that opened the menu. This renderer only handed a surface its
+                // leave on the next MOVE (W12a), so the clear rode along to the next step that moved
+                // the pointer at all: the stray `interactionHover targets:[]` in
+                // `example-picker-open`, ten steps and six keyboard chords later
+                // (`🗑️generated/w12c-parity-run-19/steps.json` step 33, ticket 26/09/17 packet
+                // W13c §1). Idempotent by construction — the clear retires the published hover, so
+                // the predicate answers `false` on every later frame the layer stays open.
+                let modal = shell.pointer_input_is_modal();
                 let Some(state) = shell.world3d_states.get_mut(&surface_id) else {
                     runtime.record_frame_fault("world3d authority surface order lost ownership");
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
                 };
+                if modal && world3d_hover_clear_is_owed(state) && enqueue_world3d_event(state, WorldInteractionIntent::pointer_leave(state.bounds.x - 1.0, state.bounds.y - 1.0)).is_err() {
+                    input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
                 let Some(generation) = world3d_interaction_front_generation(state) else {
                     self.world3d_authority_cursor += 1;
                     return AppFrameTransactionStep::Pending;
@@ -12428,8 +12497,8 @@ impl FrameTransaction {
                 let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
+                let propagates = interaction.shell.wheel_reaches_scene_surface(x, y, &interaction.input, &interaction.theme);
                 let gate = interaction.input.hit_at(x, y);
-                let propagates = ShellState::wheel_propagates_to_scene_surface(gate);
                 log_debug(&format!(
                     "[DEBUG] wheel apply x={x:.1} y={y:.1} delta={delta} hit={:?} control={:?} propagates={propagates} owed={owes_another_application}",
                     gate.map(|hit| hit.kind),
@@ -13059,7 +13128,7 @@ struct AppPresentStallWatch {
 /// shape alone aborts a healthy present: measured on 6118 as
 /// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
 /// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>);
+type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>, (u32, u32, usize));
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
 /// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
@@ -13081,7 +13150,7 @@ fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: App
     if watch.steps != APP_PRESENT_STALL_STEPS {
         return None;
     }
-    Some(format!("phase={:?} engine={} upload={} gpu-cursor={:?}", signature.0, signature.1, signature.2, signature.3))
+    Some(format!("phase={:?} engine={} upload={} gpu-cursor={:?} upload-progress={:?}", signature.0, signature.1, signature.2, signature.3, signature.4))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -13383,8 +13452,8 @@ impl AppPresenter {
     /// 🐕️ One watchdog tick over the pending presentation: `Some(shape)` exactly once, on the step the
     /// cursor has answered [`APP_PRESENT_STALL_STEPS`] consecutive non-advancing `Pending`s. See
     /// [`AppPresentStallWatch`].
-    fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor) -> Option<String> {
-        note_present_stall_signature(watch, (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)))
+    fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor, upload_progress: (u32, u32, usize)) -> Option<String> {
+        note_present_stall_signature(watch, (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress))
     }
 
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
@@ -13502,12 +13571,13 @@ impl AppPresenter {
 
     /// 🎬️ Advances the pending presentation by exactly one phase.
     ///
-    /// **Freshness is decided ONCE, at admission.** `AppPresentPhase::BeginGpu` reads
-    /// `presentation_authority.current()` and hands it to `begin_prepared`/`begin_prepared_offscreen`,
-    /// whose `PreparedRenderGate::validate` refuses a packet whose `scene_revision`/`preview_generation`
-    /// does not match that live pair; the same pair is then frozen into the cursor's
-    /// `RasterTextureWitness`. Every later phase therefore compares against THAT witness and never
-    /// against `presentation_authority.current()` again: the authority is a moving target — `OsHost`
+    /// **Freshness is decided ONCE, by the BUILD.** `AppPresentPhase::BeginGpu` reads
+    /// `presentation_authority.admitted()` — the pair the frame build declared when it minted its
+    /// `FrameBuildCursor`, never the live `current()` — and hands it to
+    /// `begin_prepared`/`begin_prepared_offscreen`, whose `PreparedRenderGate::validate` refuses a
+    /// packet whose `scene_revision`/`preview_generation` does not match that admitted pair; the same
+    /// pair is then frozen into the cursor's `RasterTextureWitness`. Every later phase therefore
+    /// compares against THAT witness and never against the authority again: it is a moving target — `OsHost`
     /// re-publishes `observe_presentation_input_generation(frame_generation)` on every
     /// `build_and_publish_snapshot`, and `🌐️browser-worker`'s `enqueueBatch` additionally rebases
     /// `frame_generation` onto the UI isolate's input generation — so a presentation that legitimately
@@ -13536,11 +13606,12 @@ impl AppPresenter {
             }
             return Ok(AppPresentStep::Idle);
         }
+        let upload_progress = self.gpu.prepared_upload_progress();
         let Some(cursor) = self.pending.as_mut() else {
             self.stall = AppPresentStallWatch::default();
             return Ok(AppPresentStep::Idle);
         };
-        if let Some(shape) = Self::note_present_stall(&mut self.stall, cursor) {
+        if let Some(shape) = Self::note_present_stall(&mut self.stall, cursor, upload_progress) {
             log_debug(&format!("[DEBUG] os_host present stalled {shape} retained-fault={:?}", self.retained_fault));
             if !matches!(cursor.phase, AppPresentPhase::Aborted) {
                 if self.retained_fault.is_none() {
@@ -13734,7 +13805,17 @@ impl AppPresenter {
                     return Ok(AppPresentStep::Pending);
                 }
                 let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() else { return Ok(AppPresentStep::Pending) };
-                match self.gpu.prepared_present_step(packet, gpu_cursor) {
+                let outcome = self.gpu.prepared_present_step(packet, gpu_cursor);
+                // 🧷️ A prepared world draw whose mesh is not resident is SKIPPED, never fatal — the
+                // parity behaviour of React, which renders nothing until its loader resolves. It is
+                // still a residency-law breach on the build side, so it is reported on the transition
+                // rather than swallowed (`retain_ensured_world_draws`, `📓️w11a-…`).
+                if let Some((key, version)) = self.gpu.take_missing_world_mesh() {
+                    log_debug_once_per_transition("present-missing-world-mesh", true, &format!("[DEBUG] os_host prepared world mesh was not resident, draw skipped: key={key} version={version}"));
+                } else {
+                    log_debug_once_per_transition("present-missing-world-mesh", false, "[DEBUG] os_host prepared world mesh residency restored");
+                }
+                match outcome {
                     Ok(true) => cursor.phase = AppPresentPhase::CloseGpu,
                     Ok(false) => {}
                     Err(error) => {
@@ -13962,6 +14043,21 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
         RendererAssetSealStep::Refused(detail) => return Err(format!("native renderer HTTP asset could not seal its exact byte claim: {detail}")),
     }
     Ok(())
+}
+
+/// 🩺️ Names the LANE a refused world resource came from, instead of reporting one message for all
+/// four. A frame fault kills the page, so the message is the whole post-mortem a probe gets: the
+/// generic wording cost a full rebuild-and-rerun cycle to tell a raster ledger exhaustion (what it
+/// actually was) from a mesh, eviction or upload overflow (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md`). The raster admission
+/// carries its OWN refusal, so that one is named exactly.
+fn world_rejection_fault(rejected: &infinite_world::world::World3dBuildRejected) -> &'static str {
+    match rejected {
+        infinite_world::world::World3dBuildRejected::Upload(_) => "frame world upload admission exceeded fixed credits",
+        infinite_world::world::World3dBuildRejected::RasterProducer(_) => "frame world raster producer admission exceeded fixed credits",
+        infinite_world::world::World3dBuildRejected::RasterAdmission(rejected) => rejected.fault(),
+        infinite_world::world::World3dBuildRejected::Eviction(_) => "frame world eviction admission exceeded fixed credits",
+    }
 }
 
 impl AppRuntime {
@@ -14252,8 +14348,9 @@ impl AppRuntime {
                     Ok(true) => cursor.phase = FrameBuildPhase::IconTransfer,
                     Ok(false) => {}
                     Err(rejected) => {
+                        let fault = world_rejection_fault(&rejected);
                         cursor.world_rejected = Some(rejected);
-                        return FrameBuildBoundaryStep::Fault("frame world resource admission exceeded fixed credits");
+                        return FrameBuildBoundaryStep::Fault(fault);
                     }
                 }
             }
@@ -14515,7 +14612,17 @@ impl AppInteractionState {
         self.text_cancel_pending = true;
     }
 
+    /// ⌨️ `mod+z` belongs to a FOCUSED text control, and to nothing else.
+    ///
+    /// 🩸️ It used to belong to the text buffer whenever that buffer held any undo state at all — and
+    /// the buffer keeps its state after a control loses focus, so once the journey had opened the pane's
+    /// Search box, every later `mod+z` was swallowed here and the shell's own undo chord (which
+    /// dispatches `undo` to the app, exactly as React does) never ran (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` steps 27–28).
     fn undo_text_operation(&mut self) -> bool {
+        if self.input.focused_id.is_none() {
+            return false;
+        }
         let Some(cursor) = self.input.text_buffer.undo() else { return false };
         self.input.cursor_pos = cursor.min(self.input.text_buffer.len());
         true
@@ -14616,6 +14723,27 @@ impl AppInteractionState {
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
+        // 🎯️ ONE owner per pointer sequence. The press resolves it once and the release consumes it,
+        // so a gesture that began on chrome ends on chrome — React's DOM target capture, which is why
+        // pressing a navbar panel tab, a pane chip, a window cap or the split gutter never produced an
+        // `interactionHover`/`interactionSelect` in the reference journal while wgpu produced both on
+        // every one of them (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+        // `📓️w11a-prepared-world-mesh-missing.md` §6 family A). The shell's chrome is painted INSIDE a
+        // pane's rect — the top-right panel's tabs at `+1380,57.6` and the pane chips at `+6.4,57.6`
+        // both sit over `puzzle3d-main-*@…+3,54` — so `bounds.contains` alone can never answer it.
+        let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };
+        // 🪟️ React's window activation is a CAPTURE-phase handler on the window element
+        // (`🪟️Window/🟦️.tsx`'s `onPointerDownCapture`), so it runs before the press is routed to
+        // anything inside — the window's own chrome or the scene canvas filling its body alike.
+        if down {
+            self.shell.activate_window_under_pointer(x, y);
+        }
+        if owner == PointerHitOwner::Chrome {
+            if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+                log_debug(&format!("pointer failed: {err}"));
+            }
+            return;
+        }
         if !down {
             let map_had_active_drag = self.shell.tiled_map_states.keys().any(|surface_id| scenes::tiled_map_drag_active(surface_id));
             for (surface_id, surface) in &self.shell.tiled_map_states {
@@ -14673,31 +14801,39 @@ impl AppInteractionState {
             }
             return;
         }
-        // 🛑️ The shell's OWN overlay chrome sits inside an engine surface's rect — the World3d
-        // compute-status pill and its cancel control are anchored at `bounds.x + gap`. Claiming the
-        // press for the surface on `bounds.contains` alone made every one of those controls
-        // unpressable: the release path calls the shell first, but `handle_shell_hit` fires on the
-        // PRESS, so the only phase that reached the shell was the one it ignores. Measured on 6118 as
-        // a cancel control that paints, hit-tests and dispatches nothing
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
-        if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {
+        // 🖱️📋️ A PLAIN secondary press on a world pane is the context menu's, not the surface's —
+        // React's orbit map binds the right button to nothing unmodified and to pan/orbit under
+        // Shift/Alt (`resolveWorldOrbitRightMouseAction`), and its `onContextMenu` handler opens the
+        // menu straight off the host element. The shell's `open_context_menu` already fills a World3d
+        // surface's `hits`/`selection` from `world3d_context_menu_surface`; it simply never ran,
+        // because a `HitKind::World3d` target is not chrome and the press was handed to the surface
+        // instead. So the wgpu pane answered a right-click with a dead `worldContextMenuAt` verb and
+        // no menu at all (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+        // `📓️w10a-world-interaction-journal-parity.md`).
+        //
+        // 🩸️ It used to RETURN here, so the pane itself received no press at all — and React's does:
+        // `onContextMenu` opens the menu off the host `<div>` while the very same `pointerdown` still
+        // reaches the `<canvas>` under it, where R3F answers it with the selection
+        // `plan_world3d_non_primary_press_pick` is the twin of. React's `context-menu` step journals
+        // `interactionSelect`; the wgpu pane journalled none
+        // (`🗑️generated/w12c-parity-run-19/steps.json` step 23, ticket 26/09/17 packet W13c §1).
+        // The menu opens AND the surface is pressed, in that order, exactly as the DOM delivers them.
+        let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));
+        if over_world && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
             if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
-            return;
         }
-        let mut world_consumed = false;
-        for state in self.shell.world3d_states.values_mut() {
-            if !state.bounds.contains(x, y) {
-                continue;
+        if over_world {
+            for state in self.shell.world3d_states.values_mut() {
+                if !state.bounds.contains(x, y) {
+                    continue;
+                }
+                if enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).is_err() {
+                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return;
+                }
             }
-            world_consumed = true;
-            if enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).is_err() {
-                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                return;
-            }
-        }
-        if world_consumed {
             return;
         }
         for (surface_id, surface) in &self.shell.node_graph_states {
@@ -14761,14 +14897,49 @@ impl AppInteractionState {
         self.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
         log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
+        // 🖱️ A live shell-chrome drag CAPTURES the pointer, exactly as React's resize handle does with
+        // `setPointerCapture`: the shell above has already applied this move to the split it is
+        // dragging, and the surfaces the pointer happens to sweep over must not also receive it.
+        //
+        // 🩸️ They did. Dragging the dock's split gutter travels straight across the pane on its right,
+        // so every move was ALSO enqueued into that pane's world — one intent per move, each carrying
+        // the gutter's own huge delta — and the retained interaction authority answered `Fault`, which
+        // is a frame fault, which kills the page (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+        // `📓️w9c-behaviour-parity-run-2.md` step 15, run 3's `world3d retained interaction authority
+        // faulted`).
+        if ShellState::drag_captures_pointer(&self.input.drag) {
+            return;
+        }
+        // 🚪️ A move the CHROME owns — because the sequence was captured by a press on chrome, or
+        // because this point is over a panel, a menu, the tour or a pane's own chips — leaves every
+        // engine surface instead of reaching it. React's canvas receives no `pointermove` at all
+        // while a DOM layer above it is under the pointer; what it does receive is r3f's
+        // `onPointerOut`, which clears the hover it published. So does this: a surface with a
+        // published hover is handed exactly one [`WorldInteractionIntent::pointer_leave`], and a
+        // surface with none is handed nothing at all.
+        let chrome_owns_pointer = self.pointer_capture.owner_of_move(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) == PointerHitOwner::Chrome;
         for state in self.shell.world3d_states.values_mut() {
-            if !state.bounds.contains(x, y) {
+            let reaches_surface = state.bounds.contains(x, y) && !chrome_owns_pointer;
+            let intent = if reaches_surface {
+                WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)
+            } else if world3d_hover_is_published(state) {
+                WorldInteractionIntent::pointer_leave(x, y)
+            } else {
                 continue;
-            }
-            if enqueue_world3d_event(state, WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)).is_err() {
+            };
+            if enqueue_world3d_event(state, intent).is_err() {
                 self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 return;
             }
+        }
+        if chrome_owns_pointer {
+            for (surface_id, surface) in &self.shell.board2d_states {
+                if let Err(fault) = scenes::puzzle_board_pointer_leave_into(surface_id, &surface.controller_id, modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
+            }
+            return;
         }
         for (surface_id, surface) in &self.shell.node_graph_states {
             if surface.bounds.contains(x, y) {
@@ -14827,7 +14998,9 @@ impl AppInteractionState {
 
 
 /// 🩺️ Rate-limited `[DEBUG] ` trace of one World3d surface's MESH INGEST, taken where the frame
-/// transaction actually drives it rather than where the chrome paints it.
+/// transaction actually drives it rather than where the chrome paints it. Behind the runtime
+/// diagnostics switch like every other per-frame census (`🎞️Scenes`' own `world3d surface=…`), so a
+/// boot with diagnostics off carries no world chatter at all.
 ///
 /// ⚖️ A retained window republishes its cached paint while its revision is unchanged, so
 /// `render_world_3d` — and with it the only existing world3d console line — runs once per DOCUMENT,
@@ -14845,10 +15018,12 @@ fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3d
     if seen % WORLD3D_INGEST_TRACE_STRIDE != 0 {
         return;
     }
-    log_debug(&format!("world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
+    log_debug_diagnostic(&format!("[DEBUG] world3d ingest surface={surface_id} stage={stage} steps={seen} {}", state.ingest_census()));
 }
 
-/// 🕹️ One `[DEBUG] ` line per INTENT, not per authority step.
+/// 🕹️ One `[DEBUG] ` line per INTENT, not per authority step, and only while the runtime diagnostics
+/// switch is armed — an orbit drag raises one intent per pointer move, so an ungated pair per intent
+/// is per-frame chatter on exactly the gesture whose latency this ticket measures.
 ///
 /// ⚖️ The authority answers `Pending` for as many turns as a ray-cast needs triangles, so a
 /// per-step trace drowns the console while a per-frame one misses the single turn that decides the
@@ -14866,7 +15041,7 @@ fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::Wo
                 return;
             }
             PENDING.store(0, std::sync::atomic::Ordering::Relaxed);
-            log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} enter g={generation} {}", state.interaction_census()));
+            log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} enter g={generation} {}", state.interaction_census()));
         }
         // 🐌️ An intent that never terminates is the one failure this trace exists for: the authority
         // answers `Pending` and the frame transaction re-enters the same phase forever, so without a
@@ -14885,10 +15060,10 @@ fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::Wo
                 hasher.finish()
             };
             if CENSUS.swap(digest, std::sync::atomic::Ordering::Relaxed) != digest || pending % WORLD3D_INTERACTION_STUCK_STRIDE == 0 {
-                log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} step g={generation} pending={pending} {census}"));
+                log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} step g={generation} pending={pending} {census}"));
             }
         }
-        Some(step) => log_debug(&format!("[DEBUG] world3d interaction surface={surface_id} leave g={generation} step={step:?} {}", state.interaction_census())),
+        Some(step) => log_debug_diagnostic(&format!("[DEBUG] world3d interaction surface={surface_id} leave g={generation} step={step:?} {}", state.interaction_census())),
     }
 }
 
@@ -14960,6 +15135,7 @@ async fn boot_runtime(
             last_pointer_y: 0.0,
             pointer_down: false,
             pointer_button: 0,
+            pointer_capture: PointerCapture::default(),
             modifiers: PointerModifiers::default(),
             wheel: AppWheel::default(),
             space_pressed: false,

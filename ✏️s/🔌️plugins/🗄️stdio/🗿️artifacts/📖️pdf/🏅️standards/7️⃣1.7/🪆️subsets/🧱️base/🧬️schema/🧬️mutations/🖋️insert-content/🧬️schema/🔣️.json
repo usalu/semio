@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-content/schema.json",
+  "title": "InsertContent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "at",
+    "content"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "at": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "content": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOp"
+      }
+    },
+    "mutation": {
+      "const": "insertContent",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

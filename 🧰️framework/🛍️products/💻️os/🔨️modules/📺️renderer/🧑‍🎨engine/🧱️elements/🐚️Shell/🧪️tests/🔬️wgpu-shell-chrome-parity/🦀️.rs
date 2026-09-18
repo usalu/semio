@@ -580,9 +580,10 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
     // 🩺️ The renderer's press path must actually consult it, BEFORE the world3d claim — a predicate
-    // nothing calls is exactly the shape the defect had.
-    let guard = "if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {";
-    let claim = "        let mut world_consumed = false;";
+    // nothing calls is exactly the shape the defect had. The question is now asked ONCE per pointer
+    // sequence, through the capture (packet W12a), so the anchor is that single line.
+    let guard = "let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };";
+    let claim = "        let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));";
     let press = WGPU_RENDERER_SOURCE.rfind(guard).expect("the renderer press path consults the predicate");
     let world = WGPU_RENDERER_SOURCE[press..].find(claim).expect("the world3d claim follows it");
     assert!(world > 0, "the shell-chrome question is asked BEFORE a surface may claim the press");

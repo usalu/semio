@@ -95,10 +95,9 @@ pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, steps, edges)` read back
 /// off the composed content child's working scene. It belongs to the subset rather than to a test
 /// adapter, because what counts as this document's meaning is this subset's ruling, not a case's.
-/// The content handle is deliberately absent: `sequence_content_child_handle` content-addresses
-/// exactly this step/edge pair through `std`'s deliberately unspecified `DefaultHasher`, so
-/// projecting it would compare the same content twice and pin a value the standard library does not
-/// promise.
+/// The content handle is deliberately absent: `sequence_content_child_handle` mints one constant
+/// `(child_id, target)` pair and carries this step/edge pair on its local owner, so projecting it
+/// would compare the same content twice and add nothing this projection does not already state.
 pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
     let scene = crate::sequence_working_scene(snapshot);
     dsl::os_pack::to_json_string(&SequenceHostSnapshot { schema: snapshot.schema.clone(), steps: scene.steps, edges: scene.edges })

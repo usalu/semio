@@ -1,0 +1,65 @@
+{
+  "$comment": "📜️ One SHELL-chrome journey step per case, with the action journal each renderer publishes for it. `react` is MEASURED, never designed: it is the per-step `actions` of the 2026-09-18 side-by-side parity run (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w12c-parity-run-19/steps.json`), as action ids in order. `wgpu` is the contract this shell answers, and every row where the two differ carries `why`. The twin of `🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json`, which owns the world surface's own rows; this file owns the dock/chord rows the shell itself journals. `control` is the id the probe's resolution ladder lands on, so a row is reproducible without the probe.",
+  "steps": [
+    {
+      "id": "window-cap-focus",
+      "control": "dock.tab.0.puzzle3d-main-top.focus",
+      "react": [],
+      "wgpu": [],
+      "commands": [],
+      "why": "React's Focus chip is `dock.activateWindow(tab.id)` plus `dock.toggleMaximize(stackPath)` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1076-1086`). The maximize is local state `🏛️ShellHost/🟦️.tsx` notes NOWHERE — it declares no `shell.windowMaximize` command at all — and the activation is journaled separately by `handleActiveWindowChange` (`:10392`), which fires only on a real change. In the journey the clicked window is already active, so the step is silent on both renderers."
+    },
+    {
+      "id": "window-cap-close",
+      "control": "dock.tab.0.puzzle3d-main-top.close",
+      "react": [],
+      "wgpu": ["noteShellCommand"],
+      "commands": ["shell.windowClose"],
+      "why": "The ONE row where this shell deliberately does not match the measured React column. React's `closeWindow` → `onWindowClose` notes `shell.windowClose` with the closed window (`🏛️ShellHost/🟦️.tsx:10530-10531`) — the note that makes the entry invertible. React journaled nothing in run 19 because its cap chip is OCCLUDED: its Catalogue panel paints from y≈28 over the left stack's cap row at y=32..61, so the click lands on the panel (`📓️w13a-dock-close-reopen-journals.md` §4, `🗑️generated/w12c-parity-run-19/react/15-split-gutter-drag.png`). Zero `shell.windowClose` in 104589 React console lines and both windows alive until step 36. Owner of the divergence: the panel-anchor lane, not the dock."
+    },
+    {
+      "id": "window-reopen",
+      "control": "dock.tab..puzzle3d-main-perspective",
+      "react": [],
+      "wgpu": [],
+      "commands": [],
+      "why": "There is no reopen verb on either renderer. The probe resolves 'the dock tab' by scanning the published control rows, and the row it lands on must not be destructive: React's scan lands on the `mode-dock-tabbar` container (`pointer-events-none`, so the click falls through) and this shell's lands on the survivor's SELECT target, already active. Before W13a the chips were published before the select target and the scan landed on `….close`, closing the last world pane and leaving `docked=0` for every step below."
+    },
+    {
+      "id": "context-menu-dismiss",
+      "react": ["engagementAbort"],
+      "wgpu": ["engagementAbort"],
+      "why": ""
+    },
+    {
+      "id": "chord-escape",
+      "react": ["engagementAbort"],
+      "wgpu": ["engagementAbort"],
+      "why": ""
+    },
+    {
+      "id": "example-picker-dismiss",
+      "react": ["engagementAbort"],
+      "wgpu": ["engagementAbort"],
+      "why": ""
+    },
+    {
+      "id": "chord-undo",
+      "react": ["undo", "shell.windowActivate"],
+      "wgpu": ["undo", "shell.windowActivate"],
+      "why": ""
+    },
+    {
+      "id": "chord-redo",
+      "react": ["redo", "shell.windowActivate"],
+      "wgpu": ["redo", "shell.windowActivate"],
+      "why": ""
+    },
+    {
+      "id": "role-editor",
+      "react": ["setActiveExample", "noteShellCommand"],
+      "wgpu": ["setActiveExample"],
+      "why": "UNRESOLVED. React's `role-editor` journals one extra `noteShellCommand` (run 19 `seq 274`, origin `user`, dispatch window `puzzle3d-main-top`) and its `role-viewer` journals none. The command id is not recoverable from run 19 — `InputLedgerRecordV1` carries no args (`🏛️ShellHost/🎯️input-ledger/🟦️.ts:163`) — and the two candidates that fit (`shell.windowActivate` on the editor landing, `shell.panelTab` on the two panels the editor mount restores) need different fixes. This shell's witness refuses an instance-crossing landing on purpose (`window_activation_is_user_v1`), which is what keeps `role-viewer` silent; relaxing it would break that row instead. Settle it by carrying the noted command id into the ledger record and re-running the probe."
+    }
+  ]
+}

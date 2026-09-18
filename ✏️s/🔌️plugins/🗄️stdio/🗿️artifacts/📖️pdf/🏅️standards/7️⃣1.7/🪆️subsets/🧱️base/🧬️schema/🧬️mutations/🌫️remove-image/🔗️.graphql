@@ -1,0 +1,4 @@
+# 🌫️ Direct remove-image GraphQL payload.
+input RemoveImageMutationInput {
+  id: String
+}

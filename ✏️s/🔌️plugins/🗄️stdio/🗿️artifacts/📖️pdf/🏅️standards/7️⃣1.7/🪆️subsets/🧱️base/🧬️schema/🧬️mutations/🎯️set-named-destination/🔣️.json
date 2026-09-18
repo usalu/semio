@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎯️set-named-destination",
+  "semanticKind": "set-named-destination",
+  "displayName": "Set Named Destination",
+  "emoji": "🎯️",
+  "aggregateVariant": "SetNamedDestination",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-named-destination",
+  "binaryTag": 43,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

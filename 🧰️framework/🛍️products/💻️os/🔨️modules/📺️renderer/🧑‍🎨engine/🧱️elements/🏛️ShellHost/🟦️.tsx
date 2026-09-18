@@ -42,7 +42,10 @@ import {
   type AppRouterManifest,
   type ArtifactDialect,
   type ArtifactKindChoice,
+  artifactKindActivationOwner,
   dialectCoordinate,
+  parseDialectCoordinate,
+  parseSurfaceAppId,
   decodeArtifactKindChoice,
   EMPTY_OPENING_PREFERENCES,
   foldOpeningPreferences,
@@ -493,6 +496,8 @@ import {
   isOsCommandAddress,
   keyboardEventMatchesChord,
   loadPluginModuleResilient,
+  pluginInstallBandTextV1,
+  pluginInstallCancelTextV1,
   makeEffectDispatchOne,
   mergeRecordPreservingIdentity,
   mergeUiDirtyScopeV1,
@@ -2514,6 +2519,10 @@ function FrameworkOsShellInner({
   }, []);
   const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean, publish?: boolean) => Promise<PreparedArtifactOpeningTarget | null>>(async () => null);
   const resolveArtifactOpeningRelayRef = useRef<(actionId: string, args: unknown) => ResolvedArtifactOpeningRelay | null>(() => null);
+  /** 🎬️ The hub's "open an artifact whose plugin has never been loaded" resolution — see
+   * {@link installActivationOwnerAndResolve}. Sync resolution stays on
+   * {@link resolveArtifactOpeningRelayRef}; only this one may install. */
+  const resolveArtifactOpeningWithActivationRef = useRef<(actionId: string, args: unknown) => Promise<ResolvedArtifactOpeningRelay | null>>(async () => null);
   const openReadySpaceArtifactCreationRef = useRef<(requestId: string) => void>(() => {});
   const spaceArtifactCreationOwnersRef = useRef(new Map<string, SpaceArtifactCreationOwnerV1>());
   const [spaceArtifactCreationUi, setSpaceArtifactCreationUi] = useState<ArtifactCreationProgressUiStateV1>({});
@@ -2768,6 +2777,11 @@ function FrameworkOsShellInner({
    * both calls would independently acquire a module lease, race their `UPSERT_LOADED_PLUGIN` dispatches,
    * and leak whichever lease lost the race (nothing left holding a reference to release it). */
   const pluginOpInFlightRef = useRef<Set<string>>(new Set());
+  /** 🛑️ The abort of every install currently in flight, by pluginId — what the install band's cancel
+   * control fires. A ref, not reducer state: nothing renders from it (the band renders from
+   * `pluginStatusById`'s own `"installing"`), and an abort must reach the exact load that is running
+   * rather than whatever a render pass last captured. */
+  const pluginInstallAbortsRef = useRef<Map<string, AbortController>>(new Map());
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
@@ -3649,9 +3663,14 @@ function FrameworkOsShellInner({
       if (!entry) return "missing-registry";
       pluginOpInFlightRef.current.add(pluginId);
       dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "installing" });
+      // 🛑️ One abort per install, registered while it runs so the install band's cancel control has
+      // something to fire. `"installing"` is already the phase the band reads; this is the half that
+      // was missing — a long-running phase nobody could stop.
+      const abort = new AbortController();
+      pluginInstallAbortsRef.current.set(pluginId, abort);
       try {
         const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
-        const handle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        const handle = await loadPluginModuleResilient(pluginId, moduleUrl, abort.signal);
         if (!handle) {
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
@@ -3678,10 +3697,22 @@ function FrameworkOsShellInner({
         return "loaded";
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
+        if (pluginInstallAbortsRef.current.get(pluginId) === abort) pluginInstallAbortsRef.current.delete(pluginId);
       }
     },
     [registry, pluginSource, primaryPluginId, establishPrimaryWithShardRetry, appId, recordPluginArtifactRebuiltAt],
   );
+
+  /** 🎬️ Every plugin whose install is running right now, from the SAME `"installing"` status the
+   * install path already dispatches — no second notion of "an install is happening" to keep in sync. */
+  const installingPluginIds = useMemo(() => Object.keys(pluginStatusById).filter((pluginId) => pluginStatusById[pluginId] === "installing").sort(), [pluginStatusById]);
+
+  /** 🛑️ Stops every install currently in flight — what the install band's one cancel control does.
+   * Each aborted load settles as a refusal through `loadPluginModuleResilient`'s own `null`, so the
+   * plugin lands in `"failed"` exactly as any other refused install would, with no second path. */
+  const cancelPluginInstalls = useCallback(() => {
+    for (const abort of pluginInstallAbortsRef.current.values()) abort.abort();
+  }, []);
 
   /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
    * `PluginHost::hot_swap_plugin` contract (validate → destroy affected instances → swap → recreate the
@@ -5718,7 +5749,7 @@ function FrameworkOsShellInner({
             }
           } else if (actionId === "os.open-artifact" || actionId === "os.open-artifact-with") {
             try {
-              const opening = resolveArtifactOpeningRelayRef.current(actionId, argsRecord);
+              const opening = await resolveArtifactOpeningWithActivationRef.current(actionId, argsRecord);
               if (!opening) {
                 console.warn("[os-shell] replayShellCommand: artifact router is not ready", args);
                 continue;
@@ -7762,6 +7793,43 @@ function FrameworkOsShellInner({
   const pinnedAppFor = useCallback((dialect: ArtifactDialect, role: AppRole): AppRef | undefined => openingPreferences.defaults.find((entry) => dialectCoordinate(entry.dialect) === dialectCoordinate(dialect) && entry.role === role)?.app, [openingPreferences]);
   resolveArtifactOpeningRelayRef.current = (actionId, args) => (appRouter ? resolveArtifactOpeningRelay(actionId, args, appRouter, openingPreferences) : null);
 
+  /**
+   * 🎬️ The hub half of `os.open-artifact`: a session that has never loaded the kind's owner has no
+   * router entry for it, so the sync relay throws `surface.unknown-dialect` — not because the artifact
+   * is unopenable, but because nobody who could open it is resident. The owner comes from the catalog's
+   * declared `on-artifact-kind:` rows ({@link artifactKindActivationOwner}), which exist without any
+   * manifest; this installs it, rebuilds the router over the freshly loaded set (the `appRouter` memo
+   * this closure captured is a render behind `installPlugin`'s dispatch) and resolves once more. One
+   * install, one retry: a second miss is a real routing gap and surfaces as the original fault.
+   */
+  const installActivationOwnerAndResolve = useCallback(async (actionId: string, args: unknown): Promise<ResolvedArtifactOpeningRelay | null> => {
+    const resolveNow = resolveArtifactOpeningRelayRef.current;
+    try {
+      return resolveNow(actionId, args);
+    } catch (relayError) {
+      const record = args && typeof args === "object" && !Array.isArray(args) ? (args as Readonly<Record<string, unknown>>) : undefined;
+      const artifactRef = typeof record?.artifactRef === "string" ? record.artifactRef : "";
+      let artifactKind = "";
+      try {
+        artifactKind = (artifactRef.includes("#") ? parseSurfaceAppId(artifactRef).dialect : parseDialectCoordinate(artifactRef)).artifactKind;
+      } catch {
+        throw relayError;
+      }
+      const owner = artifactKindActivationOwner(PLUGIN_CATALOG, artifactKind);
+      if (owner === undefined || loadedPluginsRef.current.some((entry) => entry.handle.pluginId === owner)) throw relayError;
+      const outcome = await installPlugin(owner);
+      if (outcome !== "loaded" && outcome !== "already-loaded") throw relayError;
+      const installed = AppRouter.build(loadedPluginsRef.current.map((entry): AppRouterManifest => ({
+        pluginId: entry.handle.pluginId,
+        apps: entry.manifest.apps as unknown as Record<string, unknown>[],
+        artifactKinds: entry.manifest.artifactKinds,
+        dependencies: entry.manifest.dependencies,
+      })));
+      return resolveArtifactOpeningRelay(actionId, args, installed, openingPreferences);
+    }
+  }, [installPlugin, openingPreferences]);
+  resolveArtifactOpeningWithActivationRef.current = installActivationOwnerAndResolve;
+
   /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
    * `transactionPrepare`/`transactionCommit`/`transactionUndo`/`transactionRedo` and (as of ticket
    * `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` lane K2)
@@ -7923,7 +7991,7 @@ function FrameworkOsShellInner({
     void runArtifactCreationReadyOpeningV1<PreparedArtifactOpeningTarget, DocumentOpeningReceiptV1>({
       current,
       prepare: async () => {
-        const opening = resolveArtifactOpeningRelayRef.current("os.open-artifact", openingArgs);
+        const opening = await resolveArtifactOpeningWithActivationRef.current("os.open-artifact", openingArgs);
         if (opening === null) return null;
         const target = await openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current, false);
         return target === null ? null : { ...target, expectedCatalogGenerationId: openingOwner.expectedCatalogGenerationId };
@@ -8555,8 +8623,8 @@ function FrameworkOsShellInner({
   marketplaceHostRef.current = marketplaceHost;
   const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost]);
   const frameworkChatTab = useMemo(
-    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} />),
-    [agentBridge.presence, agentBridge.status],
+    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} />),
+    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage],
   );
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
@@ -10223,7 +10291,6 @@ function FrameworkOsShellInner({
             iconId: windowIconsById[spawned.id] ?? windowKind?.iconId ?? "app-window",
             title: wireLabel(appBreadcrumb(spawnedApp ? resolveAppBreadcrumb(spawnedApp, uiTerminology) : spawned.breadcrumb)),
             fill: true,
-            showControls: true,
             measures: chrome?.measures,
             measuresFolded: measuresFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             engagement: chrome?.engagement,
@@ -10254,7 +10321,6 @@ function FrameworkOsShellInner({
         iconId: windowIconsById[kind.id] ?? kind.iconId,
         title: wireLabel(windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale)),
         fill: true,
-        showControls: true,
         measures: chrome.measures,
         measuresFolded: measuresFoldedFor(kind.id, kind.id),
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
@@ -10295,7 +10361,6 @@ function FrameworkOsShellInner({
           iconId: windowIconsById[instance.id] ?? kind.iconId,
           title: wireLabel(windowTitlesById[instance.id] ?? instance.title),
           fill: true,
-          showControls: true,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(instance.id, instance.windowKindId),
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
@@ -10941,6 +11006,23 @@ function FrameworkOsShellInner({
               {transientNotice.message}
               <button type="button" className="ml-single underline" onClick={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })}>
                 {shellLabel("ui.common.close")}
+              </button>
+            </div>
+          ) : null}
+          {/* 🎬️ The lazy plugin install — the one long-running phase the shell itself owns. It sits
+           * under the notice slot so an install that also raised a notice shows both, and its control
+           * is a real cancel (every in-flight load aborts and lands in `"failed"`), not a dismiss. */}
+          {installingPluginIds.length > 0 ? (
+            <div
+              role="status"
+              aria-live="polite"
+              data-semio-plugin-install=""
+              data-plugin-install-ids={installingPluginIds.join(",")}
+              className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double -translate-x-1/2 rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm"
+            >
+              {pluginInstallBandTextV1(installingPluginIds, uiLocale)}
+              <button type="button" className="ml-single underline" data-semio-plugin-install-cancel="" onClick={cancelPluginInstalls}>
+                {pluginInstallCancelTextV1(uiLocale)}
               </button>
             </div>
           ) : null}

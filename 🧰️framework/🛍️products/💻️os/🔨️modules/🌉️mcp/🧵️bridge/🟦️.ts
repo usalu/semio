@@ -206,7 +206,8 @@ export type ShellToGateway =
   | { variant: "shellCommandResult"; inReplyTo: bigint; ok: boolean; fault: string | null }
   | { variant: "approval"; approvalId: string; decision: ApprovalDecision; note: string | null }
   | { variant: "ping" }
-  | { variant: "bye" };
+  | { variant: "bye" }
+  | { variant: "agentMessage"; messageId: string; text: string };
 
 export function encodeShellToGateway(frame: ShellToGateway): Uint8Array {
   const writer = new Writer();
@@ -259,6 +260,11 @@ export function encodeShellToGateway(frame: ShellToGateway): Uint8Array {
     case "bye":
       writer.u8(8);
       break;
+    case "agentMessage":
+      writer.u8(9);
+      writer.string(frame.messageId);
+      writer.string(frame.text);
+      break;
   }
   return writer.finish();
 }
@@ -299,6 +305,9 @@ export function decodeShellToGateway(bytes: Uint8Array): ShellToGateway {
     case 8:
       frame = { variant: "bye" };
       break;
+    case 9:
+      frame = { variant: "agentMessage", messageId: reader.string(), text: reader.string() };
+      break;
     default:
       throw new Error(`bridge frame: unknown ShellToGateway tag ${tag}`);
   }
@@ -316,7 +325,9 @@ export type GatewayToShell =
   | { variant: "approvalResolved"; approvalId: string; decision: ApprovalDecision }
   | { variant: "agentPresence"; active: boolean; label: string; invocationId: string | null }
   | { variant: "pong" }
-  | { variant: "bye"; reason: string };
+  | { variant: "bye"; reason: string }
+  | { variant: "agentToolCall"; invocationId: string; toolName: string; arguments: string }
+  | { variant: "agentToolResult"; invocationId: string; toolName: string; ok: boolean; summary: string };
 
 export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
   const writer = new Writer();
@@ -361,6 +372,19 @@ export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
       writer.u8(7);
       writer.string(frame.reason);
       break;
+    case "agentToolCall":
+      writer.u8(8);
+      writer.string(frame.invocationId);
+      writer.string(frame.toolName);
+      writer.string(frame.arguments);
+      break;
+    case "agentToolResult":
+      writer.u8(9);
+      writer.string(frame.invocationId);
+      writer.string(frame.toolName);
+      writer.bool(frame.ok);
+      writer.string(frame.summary);
+      break;
   }
   return writer.finish();
 }
@@ -393,6 +417,12 @@ export function decodeGatewayToShell(bytes: Uint8Array): GatewayToShell {
       break;
     case 7:
       frame = { variant: "bye", reason: reader.string() };
+      break;
+    case 8:
+      frame = { variant: "agentToolCall", invocationId: reader.string(), toolName: reader.string(), arguments: reader.string() };
+      break;
+    case 9:
+      frame = { variant: "agentToolResult", invocationId: reader.string(), toolName: reader.string(), ok: reader.bool(), summary: reader.string() };
       break;
     default:
       throw new Error(`bridge frame: unknown GatewayToShell tag ${tag}`);

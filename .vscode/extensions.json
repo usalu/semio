@@ -31,7 +31,6 @@
     "rust-lang.rust-analyzer",
     "golang.go",
     "github.copilot-chat",
-    "anthropic.claude-code",
     "openai.chatgpt",
     "mermaidchart.vscode-mermaid-chart",
     "gruntfuggly.todo-tree",

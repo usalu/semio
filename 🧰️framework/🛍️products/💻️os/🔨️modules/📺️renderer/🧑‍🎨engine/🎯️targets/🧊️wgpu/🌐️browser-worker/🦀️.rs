@@ -651,6 +651,7 @@ impl BrowserRendererBootstrap {
                 last_pointer_y: 0.0,
                 pointer_down: false,
                 pointer_button: 0,
+                pointer_capture: crate::shell::PointerCapture::default(),
                 modifiers: PointerModifiers::default(),
                 wheel: crate::AppWheel::default(),
                 space_pressed: false,

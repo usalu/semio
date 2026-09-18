@@ -49,14 +49,15 @@ fn http_options_round_trip_without_a_credential_carrier() {
     assert_eq!(options.bind, "127.0.0.1");
 }
 
-/// 🎯️ `tools/list` is 26 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
-/// + 5 `🗿️artifact` + 2 `💡️inference` + 4 `🖥️ui`. Ticket 26/08/29/AI-MCP-END-TO-END retired the
-/// last stub, so there is no longer a "declared but unimplemented" bucket to assert against.
+/// 🎯️ `tools/list` is 27 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
+/// + 5 `🗿️artifact` + 3 `💡️inference` (discovery pair + the general `inference_run` execution route)
+/// + 4 hub-backed `💡️inference` jobs + 4 `🖥️ui`. Ticket 26/08/29/AI-MCP-END-TO-END retired the last
+/// stub, so there is no longer a "declared but unimplemented" bucket to assert against.
 #[test]
 fn tools_list_is_the_full_real_gateway_surface() {
     let server = fixture_server();
     let tools = server.tools.list();
-    assert_eq!(tools.len(), 26, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
+    assert_eq!(tools.len(), 27, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
     for name in GATEWAY_TOOL_NAMES {
         assert!(tools.iter().any(|tool| tool.name == name), "missing tool {name}");
     }
@@ -96,7 +97,7 @@ fn capabilities_describe_tool_call_returns_the_full_definition() {
 #[test]
 fn context_resolve_tool_call_returns_a_context_summary_with_the_catalog_hash() {
     let server = fixture_server();
-    let catalog = build_catalog();
+    let catalog = fixture_catalog();
     let result = server.tools.call("context_resolve", serde_json::json!({ "principal": "agent:local" })).expect("known tool name resolves");
     assert!(!result.is_error);
     assert_eq!(result.structured_content.unwrap()["catalogHash"], catalog.hash);
@@ -128,7 +129,7 @@ fn the_tool_census_matches_the_registry_exactly() {
 #[test]
 fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-    let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
     let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
     assert!(!result.is_error, "{result:?}");
     let structured = result.structured_content.expect("structured content");
@@ -141,7 +142,7 @@ fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope
 #[test]
 fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None); // no scopes granted
-    let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
     let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
     assert!(result.is_error);
     assert_eq!(result.structured_content.as_ref().unwrap()["code"], "PERMISSION_DENIED");
@@ -150,7 +151,7 @@ fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks
 #[test]
 fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-    let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
     let prepared = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).unwrap();
     let handle = prepared.structured_content.unwrap()["preparedHandle"].as_str().unwrap().to_string();
     let invoked = server.tools.call("action_invoke", serde_json::json!({ "preparedActionHandle": handle })).expect("known tool name resolves");

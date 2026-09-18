@@ -3,7 +3,7 @@
   "publicationFiles": ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"],
   "descriptorPreviewCases": [
     { "id": "first-selected-descriptor-invalid", "packageIndex": 1, "previews": [] },
-    { "id": "second-selected-descriptor-invalid", "packageIndex": 0, "previews": ["semio:fixture-base"] }
+    { "id": "second-selected-descriptor-invalid", "packageIndex": 0, "previews": [] }
   ],
   "selectedClosure": [
     { "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0" },

@@ -2,13 +2,264 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json",
   "title": "PdfSnapshot",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "declaredVersion": {
+      "type": "string"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfPage"
+      }
+    },
+    "fonts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfFont"
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfImage"
+      }
+    },
+    "forms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfFormXObject"
+      }
+    },
+    "extGStates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfExtGState"
+      }
+    },
+    "shadings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfShading"
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfPattern"
+      }
+    },
+    "colorSpaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfNamedColorSpace"
+      }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfNamedProperties"
+      }
+    },
+    "outlines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfOutlineItem"
+      }
+    },
+    "namedDestinations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfNamedDestination"
+      }
+    },
+    "pageLabels": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfPageLabelRange"
+      }
+    },
+    "embeddedFiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfEmbeddedFile"
+      }
+    },
+    "outputIntents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfOutputIntent"
+      }
+    },
+    "acroForm": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfAcroForm"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "optionalContent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfOptionalContent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pageLayout": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfPageLayout"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pageMode": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfPageMode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "viewerPreferences": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfViewerPreferences"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "openAction": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfOpenAction"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "language": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "markInfo": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfMarkInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "metadata": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "documentId": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "encryption": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfEncryption"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "info": {
+      "$ref": "#/$defs/PdfInfo"
+    },
+    "catalogExtra": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfDictEntry"
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfIndirectObject"
+      }
+    },
+    "trailer": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PdfDictEntry"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "declaredVersion",
+    "pages",
+    "fonts",
+    "images",
+    "forms",
+    "extGStates",
+    "shadings",
+    "patterns",
+    "colorSpaces",
+    "properties",
+    "outlines",
+    "namedDestinations",
+    "pageLabels",
+    "embeddedFiles",
+    "outputIntents",
+    "info",
+    "catalogExtra",
+    "objects",
+    "trailer"
+  ],
   "$defs": {
     "ObjRef": {
       "type": "object",
-      "required": [
-        "num",
-        "gen"
-      ],
       "properties": {
         "num": {
           "type": "integer",
@@ -18,14 +269,2676 @@
           "type": "integer",
           "minimum": 0
         }
+      },
+      "required": [
+        "num",
+        "gen"
+      ]
+    },
+    "PdfAcroForm": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfFormField"
+          }
+        },
+        "needAppearances": {
+          "type": "boolean"
+        },
+        "signatureFlags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "defaultAppearance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quadding": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defaultFonts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
       }
+    },
+    "PdfAction": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/PdfActionKind"
+        },
+        "next": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfAction"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "PdfActionKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "goTo"
+            },
+            "destination": {
+              "$ref": "#/$defs/PdfDestination"
+            }
+          },
+          "required": [
+            "kind",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "goToRemote"
+            },
+            "file": {
+              "$ref": "#/$defs/PdfFileSpecification"
+            },
+            "destination": {
+              "$ref": "#/$defs/PdfDestination"
+            },
+            "newWindow": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "file",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "goToEmbedded"
+            },
+            "destination": {
+              "$ref": "#/$defs/PdfDestination"
+            },
+            "newWindow": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "launch"
+            },
+            "file": {
+              "$ref": "#/$defs/PdfFileSpecification"
+            },
+            "newWindow": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "file"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "thread"
+            },
+            "file": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFileSpecification"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "thread": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "thread"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "uri"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "isMap": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "uri",
+            "isMap"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "sound"
+            },
+            "sound": {
+              "type": "string"
+            },
+            "volume": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "synchronous": {
+              "type": "boolean"
+            },
+            "repeat": {
+              "type": "boolean"
+            },
+            "mix": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "sound",
+            "synchronous",
+            "repeat",
+            "mix"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "movie"
+            },
+            "annotation": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operation": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "hide"
+            },
+            "annotations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "hide": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "annotations",
+            "hide"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "submitForm"
+            },
+            "url": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "flags": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "url",
+            "fields",
+            "flags"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "resetForm"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "flags": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "fields",
+            "flags"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "importData"
+            },
+            "file": {
+              "$ref": "#/$defs/PdfFileSpecification"
+            }
+          },
+          "required": [
+            "kind",
+            "file"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "javaScript"
+            },
+            "script": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "script"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "setOptionalContentState"
+            },
+            "states": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "preserveRadioButtons": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "states",
+            "preserveRadioButtons"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "rendition"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "transition"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "goTo3dView"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "subtype": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "subtype",
+            "entries"
+          ]
+        }
+      ]
+    },
+    "PdfAnnotation": {
+      "type": "object",
+      "properties": {
+        "rect": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "kind": {
+          "$ref": "#/$defs/PdfAnnotationKind"
+        },
+        "contents": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "border": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfBorderStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "appearance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfAppearance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "appearanceState": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "markup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfMarkupAnnotation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optionalContent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "structParent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "rect",
+        "kind"
+      ]
+    },
+    "PdfAnnotationKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "open": {
+              "type": "boolean"
+            },
+            "icon": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "state": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stateModel": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "open"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "link"
+            },
+            "action": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfAction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "destination": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfDestination"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "highlight": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "freeText"
+            },
+            "defaultAppearance": {
+              "type": "string"
+            },
+            "quadding": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "callout": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "lineEnding": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "richText": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "defaultAppearance",
+            "quadding"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "lineEndings": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "leaderLength": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "points",
+            "caption"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "square"
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rectDifferences": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rectDifferences": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "polygon"
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "vertices"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "polyLine"
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "lineEndings": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "vertices"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "highlight"
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "underline"
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "squiggly"
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "strikeOut"
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "stamp"
+            },
+            "icon": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "caret"
+            },
+            "rectDifferences": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "symbol": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ink"
+            },
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "paths"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "popup"
+            },
+            "parent": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "open": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "open"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fileAttachment"
+            },
+            "file": {
+              "$ref": "#/$defs/PdfFileSpecification"
+            },
+            "icon": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "file"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "sound"
+            },
+            "sound": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "icon": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "sound"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "movie"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "movie": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "activation": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PdfDictEntry"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "movie"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "widget"
+            },
+            "field": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "highlight": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "characteristics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "action": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfAction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "additionalActions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "characteristics",
+            "additionalActions"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "screen"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "characteristics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "action": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfAction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "additionalActions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "characteristics",
+            "additionalActions"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "printerMark"
+            },
+            "markStyle": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "colorants": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "colorants"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "trapNet"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "watermark"
+            },
+            "fixedPrint": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PdfDictEntry"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "threeD"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "redact"
+            },
+            "quadPoints": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "interiorColor": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "overlayText": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "repeat": {
+              "type": "boolean"
+            },
+            "defaultAppearance": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "quadding": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "quadPoints",
+            "repeat",
+            "quadding"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "subtype": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "subtype",
+            "entries"
+          ]
+        }
+      ]
+    },
+    "PdfAppearance": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "$ref": "#/$defs/PdfAppearanceEntry"
+        },
+        "rollover": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfAppearanceEntry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "down": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfAppearanceEntry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "normal"
+      ]
+    },
+    "PdfAppearanceEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "single"
+            },
+            "form": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "form"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "states"
+            },
+            "states": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfAppearanceState"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "states"
+          ]
+        }
+      ]
+    },
+    "PdfAppearanceState": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "form": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "form"
+      ]
+    },
+    "PdfBaseEncoding": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "winAnsi",
+        "macRoman",
+        "macExpert"
+      ]
+    },
+    "PdfBorderStyle": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radii": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "width"
+      ]
+    },
+    "PdfCMap": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "predefined"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "embedded"
+            },
+            "cmap": {
+              "$ref": "#/$defs/PdfEmbeddedCMap"
+            }
+          },
+          "required": [
+            "kind",
+            "cmap"
+          ]
+        }
+      ]
+    },
+    "PdfCcittParameters": {
+      "type": "object",
+      "properties": {
+        "k": {
+          "type": "integer"
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blackIs1": {
+          "type": "boolean"
+        },
+        "encodedByteAlign": {
+          "type": "boolean"
+        },
+        "endOfLine": {
+          "type": "boolean"
+        },
+        "endOfBlock": {
+          "type": "boolean"
+        },
+        "damagedRowsBeforeError": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PdfCharProc": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfOp"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "content"
+      ]
+    },
+    "PdfCidFont": {
+      "type": "object",
+      "properties": {
+        "trueType": {
+          "type": "boolean"
+        },
+        "baseFont": {
+          "type": "string"
+        },
+        "systemInfo": {
+          "$ref": "#/$defs/PdfCidSystemInfo"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/PdfFontDescriptor"
+        },
+        "defaultWidth": {
+          "type": "number"
+        },
+        "widths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfCidWidthRun"
+          }
+        },
+        "defaultVertical": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verticalMetrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfCidVerticalRun"
+          }
+        },
+        "cidToGid": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfCidToGid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "program": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfFontProgram"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "trueType",
+        "baseFont",
+        "descriptor"
+      ]
+    },
+    "PdfCidMapping": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "char"
+            },
+            "code": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cid": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "code",
+            "cid"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "range"
+            },
+            "low": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "high": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cid": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "low",
+            "high",
+            "cid"
+          ]
+        }
+      ]
+    },
+    "PdfCidSystemInfo": {
+      "type": "object",
+      "properties": {
+        "registry": {
+          "type": "string"
+        },
+        "ordering": {
+          "type": "string"
+        },
+        "supplement": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "registry",
+        "ordering",
+        "supplement"
+      ]
+    },
+    "PdfCidToGid": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "identity"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "data"
+          ]
+        }
+      ]
+    },
+    "PdfCidVerticalRun": {
+      "type": "object",
+      "properties": {
+        "startCid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      },
+      "required": [
+        "startCid",
+        "metrics"
+      ]
+    },
+    "PdfCidWidthRun": {
+      "type": "object",
+      "properties": {
+        "startCid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "widths": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "startCid",
+        "widths"
+      ]
+    },
+    "PdfCodespaceRange": {
+      "type": "object",
+      "properties": {
+        "byteWidth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "byteWidth",
+        "low",
+        "high"
+      ]
+    },
+    "PdfColorSpace": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "deviceGray"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "deviceRgb"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "deviceCmyk"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "calGray"
+            },
+            "whitePoint": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "blackPoint": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "gamma": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "whitePoint"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "calRgb"
+            },
+            "whitePoint": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "blackPoint": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "gamma": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "matrix": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 9,
+                  "maxItems": 9
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "whitePoint"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "lab"
+            },
+            "whitePoint": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "blackPoint": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "whitePoint"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "iccBased"
+            },
+            "components": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "profile": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "alternate": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfColorSpace"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "components",
+            "profile"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "indexed"
+            },
+            "base": {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            "hival": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lookup": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "base",
+            "hival",
+            "lookup"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "separation"
+            },
+            "name": {
+              "type": "string"
+            },
+            "alternate": {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            "tintTransform": {
+              "$ref": "#/$defs/PdfFunction"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "alternate",
+            "tintTransform"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "deviceN"
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "alternate": {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            "tintTransform": {
+              "$ref": "#/$defs/PdfFunction"
+            },
+            "attributes": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PdfDictEntry"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "names",
+            "alternate",
+            "tintTransform"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "pattern"
+            },
+            "base": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfColorSpace"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        }
+      ]
+    },
+    "PdfDate": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offsetMinutes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "year"
+      ]
+    },
+    "PdfDecimal": {
+      "type": "object",
+      "properties": {
+        "negative": {
+          "type": "boolean"
+        },
+        "coefficient": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "negative",
+        "coefficient",
+        "scale"
+      ]
+    },
+    "PdfDestination": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "page"
+            },
+            "page": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fit": {
+              "$ref": "#/$defs/PdfDestinationFit"
+            }
+          },
+          "required": [
+            "kind",
+            "page",
+            "fit"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "remotePage"
+            },
+            "page": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fit": {
+              "$ref": "#/$defs/PdfDestinationFit"
+            }
+          },
+          "required": [
+            "kind",
+            "page",
+            "fit"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        }
+      ]
+    },
+    "PdfDestinationFit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "xyz"
+            },
+            "left": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "top": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "zoom": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fit"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitHorizontal"
+            },
+            "top": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitVertical"
+            },
+            "left": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitRectangle"
+            },
+            "rect": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitBoundingBox"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitBoundingBoxHorizontal"
+            },
+            "top": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fitBoundingBoxVertical"
+            },
+            "left": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
     },
     "PdfDictEntry": {
       "type": "object",
-      "required": [
-        "key",
-        "value"
-      ],
       "properties": {
         "key": {
           "type": "string"
@@ -33,120 +2946,1772 @@
         "value": {
           "$ref": "#/$defs/PdfObject"
         }
-      }
-    },
-    "PdfDecimal": {
-      "type": "object",
+      },
       "required": [
-        "negative",
-        "coefficient",
-        "scale"
-      ],
+        "key",
+        "value"
+      ]
+    },
+    "PdfEmbeddedCMap": {
+      "type": "object",
       "properties": {
-        "negative": {
+        "name": {
+          "type": "string"
+        },
+        "vertical": {
           "type": "boolean"
         },
-        "coefficient": {
-          "type": "string",
-          "pattern": "^[0-9]+$"
+        "codespace": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfCodespaceRange"
+          }
         },
-        "scale": {
+        "mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfCidMapping"
+          }
+        },
+        "useCmap": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "PdfEmbeddedFile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mimeType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "creationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modificationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationship": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "listed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "fileName",
+        "data"
+      ]
+    },
+    "PdfEncodingDifference": {
+      "type": "object",
+      "properties": {
+        "code": {
           "type": "integer",
           "minimum": 0
+        },
+        "glyph": {
+          "type": "string"
         }
-      }
-    },
-    "PdfPredictor": {
-      "type": "object",
+      },
       "required": [
-        "predictor",
-        "colors",
-        "bitsPerComponent",
-        "columns"
-      ],
-      "properties": {
-        "predictor": {
-          "type": "integer"
-        },
-        "colors": {
-          "type": "integer"
-        },
-        "bitsPerComponent": {
-          "type": "integer"
-        },
-        "columns": {
-          "type": "integer"
-        }
-      }
+        "code",
+        "glyph"
+      ]
     },
-    "PdfStreamFilter": {
+    "PdfEncryption": {
       "type": "object",
-      "required": [
-        "kind"
-      ],
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "flate",
-            "asciiHex",
-            "ascii85",
-            "runLength"
+        "algorithm": {
+          "$ref": "#/$defs/PdfEncryptionAlgorithm"
+        },
+        "permissions": {
+          "type": "integer"
+        },
+        "userPassword": {
+          "type": "string"
+        },
+        "ownerPassword": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
-        "predictor": {
-          "$ref": "#/$defs/PdfPredictor"
+        "encryptMetadata": {
+          "type": "boolean"
         }
-      }
-    },
-    "PdfObject": {
-      "type": "object",
+      },
       "required": [
-        "kind"
-      ],
+        "algorithm"
+      ]
+    },
+    "PdfEncryptionAlgorithm": {
+      "type": "string",
+      "enum": [
+        "rc4_40",
+        "rc4_128",
+        "aes128",
+        "aes256"
+      ]
+    },
+    "PdfExtGState": {
+      "type": "object",
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "null",
-            "bool",
-            "int",
-            "real",
-            "str",
-            "name",
-            "array",
-            "dict",
-            "ref",
-            "stream"
+        "id": {
+          "type": "string"
+        },
+        "lineWidth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
-        "value": {},
-        "dict": {
+        "lineCap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfLineCap"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lineJoin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfLineJoin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "miterLimit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderingIntent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overprintStroke": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overprintFill": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overprintMode": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "font": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blendMode": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "softMask": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSoftMask"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strokeAlpha": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fillAlpha": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alphaIsShape": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strokeAdjust": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "flatness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "smoothness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "textKnockout": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "PdfFileSpecification": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "path"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "embedded"
+            },
+            "file": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "file"
+          ]
+        }
+      ]
+    },
+    "PdfFont": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/PdfFontKind"
+        },
+        "toUnicode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfToUnicode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "PdfFontDescriptor": {
+      "type": "object",
+      "properties": {
+        "fontName": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fontBbox": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "italicAngle": {
+          "type": "number"
+        },
+        "ascent": {
+          "type": "number"
+        },
+        "descent": {
+          "type": "number"
+        },
+        "capHeight": {
+          "type": "number"
+        },
+        "stemV": {
+          "type": "number"
+        },
+        "stemH": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "xHeight": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leading": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "avgWidth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxWidth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missingWidth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontFamily": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontStretch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontWeight": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "charSet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "fontName"
+      ]
+    },
+    "PdfFontKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "type1"
+            },
+            "baseFont": {
+              "type": "string"
+            },
+            "encoding": {
+              "$ref": "#/$defs/PdfSimpleEncoding"
+            },
+            "firstChar": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "widths": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "descriptor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFontDescriptor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "program": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFontProgram"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "baseFont",
+            "encoding",
+            "firstChar",
+            "widths"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "trueType"
+            },
+            "baseFont": {
+              "type": "string"
+            },
+            "encoding": {
+              "$ref": "#/$defs/PdfSimpleEncoding"
+            },
+            "firstChar": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "widths": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "descriptor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFontDescriptor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "program": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFontProgram"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "baseFont",
+            "encoding",
+            "firstChar",
+            "widths"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "type3"
+            },
+            "fontMatrix": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "fontBbox": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "encoding": {
+              "$ref": "#/$defs/PdfSimpleEncoding"
+            },
+            "firstChar": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "widths": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "charProcs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfCharProc"
+              }
+            },
+            "descriptor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFontDescriptor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "fontMatrix",
+            "fontBbox",
+            "encoding",
+            "firstChar",
+            "widths",
+            "charProcs"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "type0"
+            },
+            "baseFont": {
+              "type": "string"
+            },
+            "cmap": {
+              "$ref": "#/$defs/PdfCMap"
+            },
+            "descendant": {
+              "$ref": "#/$defs/PdfCidFont"
+            }
+          },
+          "required": [
+            "kind",
+            "baseFont",
+            "cmap",
+            "descendant"
+          ]
+        }
+      ]
+    },
+    "PdfFontProgram": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "type1"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "length1": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "length2": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "length3": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "data",
+            "length1",
+            "length2",
+            "length3"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "trueType"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "cff"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "cidCff"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "openType"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "data"
+          ]
+        }
+      ]
+    },
+    "PdfFormField": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/PdfFormFieldKind"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "alternateName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mappingName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defaultAppearance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quadding": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfFormField"
+          }
+        },
+        "additionalActions": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfDictEntry"
           }
         },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ]
+    },
+    "PdfFormFieldKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "button"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "defaultValue": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "options"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "defaultValue": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "maxLength": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "richValue": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "choice"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "defaultValues": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "topIndex": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "values",
+            "defaultValues",
+            "options"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "signature"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PdfDictEntry"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "container"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "PdfFormXObject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bbox": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfOp"
+          }
+        },
+        "group": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfTransparencyGroup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optionalContent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "structParent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "bbox"
+      ]
+    },
+    "PdfFunction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "sampled"
+            },
+            "domain": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "size": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "bitsPerSample": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "order": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "encode": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "decode": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "domain",
+            "range",
+            "size",
+            "bitsPerSample",
+            "samples"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "exponential"
+            },
+            "domain": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "range": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "c0": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "c1": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "n": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "domain",
+            "c0",
+            "c1",
+            "n"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "stitching"
+            },
+            "domain": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "range": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "functions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfFunction"
+              }
+            },
+            "bounds": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "encode": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "domain",
+            "functions",
+            "bounds",
+            "encode"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "postScript"
+            },
+            "domain": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "code": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "domain",
+            "range",
+            "code"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "functions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfFunction"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "functions"
+          ]
+        }
+      ]
+    },
+    "PdfImage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colorSpace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bitsPerComponent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "imageMask": {
+          "type": "boolean"
+        },
+        "decode": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "interpolate": {
+          "type": "boolean"
+        },
+        "codec": {
+          "$ref": "#/$defs/PdfImageCodec"
+        },
         "data": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
-        "filters": {
+        "softMask": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "softMaskInData": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mask": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfImageMask"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matte": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optionalContent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "structParent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfStreamFilter"
+            "$ref": "#/$defs/PdfDictEntry"
           }
         }
-      }
+      },
+      "required": [
+        "id",
+        "width",
+        "height",
+        "data"
+      ]
+    },
+    "PdfImageCodec": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "raw"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dct"
+            },
+            "colorTransform": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "jpx"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ccitt"
+            },
+            "parameters": {
+              "$ref": "#/$defs/PdfCcittParameters"
+            }
+          },
+          "required": [
+            "kind",
+            "parameters"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "jbig2"
+            },
+            "globals": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "PdfImageMask": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "stencil"
+            },
+            "image": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "image"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "colorKey"
+            },
+            "ranges": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "ranges"
+          ]
+        }
+      ]
     },
     "PdfIndirectObject": {
       "type": "object",
-      "required": [
-        "id",
-        "value"
-      ],
       "properties": {
         "id": {
           "$ref": "#/$defs/ObjRef"
@@ -154,15 +4719,1971 @@
         "value": {
           "$ref": "#/$defs/PdfObject"
         }
+      },
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "PdfInfo": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modificationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trapped": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
       }
+    },
+    "PdfInlineImage": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bitsPerComponent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colorSpace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imageMask": {
+          "type": "boolean"
+        },
+        "decode": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "interpolate": {
+          "type": "boolean"
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfStreamFilter"
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "data"
+      ]
+    },
+    "PdfLineCap": {
+      "type": "string",
+      "enum": [
+        "butt",
+        "round",
+        "square"
+      ]
+    },
+    "PdfLineJoin": {
+      "type": "string",
+      "enum": [
+        "miter",
+        "round",
+        "bevel"
+      ]
+    },
+    "PdfMarkInfo": {
+      "type": "object",
+      "properties": {
+        "marked": {
+          "type": "boolean"
+        },
+        "userProperties": {
+          "type": "boolean"
+        },
+        "suspects": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PdfMarkupAnnotation": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "popup": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "richContents": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inReplyTo": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replyType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PdfNamedColorSpace": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "colorSpace": {
+          "$ref": "#/$defs/PdfColorSpace"
+        }
+      },
+      "required": [
+        "name",
+        "colorSpace"
+      ]
+    },
+    "PdfNamedDestination": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "destination": {
+          "$ref": "#/$defs/PdfDestination"
+        }
+      },
+      "required": [
+        "name",
+        "destination"
+      ]
+    },
+    "PdfNamedProperties": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "entries"
+      ]
+    },
+    "PdfObject": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "value": {
+              "$ref": "#/$defs/PdfDecimal"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "name"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfObject"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dict"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "value": {
+              "$ref": "#/$defs/ObjRef"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "stream"
+            },
+            "dict": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "filters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfStreamFilter"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "dict",
+            "data",
+            "filters"
+          ]
+        }
+      ]
+    },
+    "PdfOp": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setLineWidth"
+            },
+            "width": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "width"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setLineCap"
+            },
+            "cap": {
+              "$ref": "#/$defs/PdfLineCap"
+            }
+          },
+          "required": [
+            "op",
+            "cap"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setLineJoin"
+            },
+            "join": {
+              "$ref": "#/$defs/PdfLineJoin"
+            }
+          },
+          "required": [
+            "op",
+            "join"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setMiterLimit"
+            },
+            "limit": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "limit"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setDash"
+            },
+            "array": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "phase": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "array",
+            "phase"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setRenderingIntent"
+            },
+            "intent": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "intent"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFlatness"
+            },
+            "flatness": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "flatness"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setExtGState"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "save"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "restore"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "transform"
+            },
+            "matrix": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            }
+          },
+          "required": [
+            "op",
+            "matrix"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "moveTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "lineTo"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "curveTo"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "x3": {
+              "type": "number"
+            },
+            "y3": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x1",
+            "y1",
+            "x2",
+            "y2",
+            "x3",
+            "y3"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "curveToInitial"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "x3": {
+              "type": "number"
+            },
+            "y3": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x2",
+            "y2",
+            "x3",
+            "y3"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "curveToFinal"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x3": {
+              "type": "number"
+            },
+            "y3": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x1",
+            "y1",
+            "x3",
+            "y3"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "closePath"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "rectangle"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "stroke"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "closeStroke"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "fill"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "fillEvenOdd"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "fillStroke"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "fillStrokeEvenOdd"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "closeFillStroke"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "closeFillStrokeEvenOdd"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "endPath"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "clip"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "clipEvenOdd"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "beginText"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "endText"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setCharSpacing"
+            },
+            "spacing": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "spacing"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setWordSpacing"
+            },
+            "spacing": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "spacing"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setHorizontalScale"
+            },
+            "scale": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "scale"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setLeading"
+            },
+            "leading": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "leading"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFont"
+            },
+            "name": {
+              "type": "string"
+            },
+            "size": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "name",
+            "size"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setTextRenderingMode"
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "op",
+            "mode"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setTextRise"
+            },
+            "rise": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "rise"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "moveText"
+            },
+            "tx": {
+              "type": "number"
+            },
+            "ty": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "tx",
+            "ty"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "moveTextSetLeading"
+            },
+            "tx": {
+              "type": "number"
+            },
+            "ty": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "tx",
+            "ty"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setTextMatrix"
+            },
+            "matrix": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            }
+          },
+          "required": [
+            "op",
+            "matrix"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "nextLine"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "showText"
+            },
+            "text": {
+              "$ref": "#/$defs/PdfTextString"
+            }
+          },
+          "required": [
+            "op",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "showTextArray"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfTextArrayItem"
+              }
+            }
+          },
+          "required": [
+            "op",
+            "items"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "nextLineShowText"
+            },
+            "text": {
+              "$ref": "#/$defs/PdfTextString"
+            }
+          },
+          "required": [
+            "op",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "nextLineShowTextSpaced"
+            },
+            "wordSpacing": {
+              "type": "number"
+            },
+            "charSpacing": {
+              "type": "number"
+            },
+            "text": {
+              "$ref": "#/$defs/PdfTextString"
+            }
+          },
+          "required": [
+            "op",
+            "wordSpacing",
+            "charSpacing",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setGlyphWidth"
+            },
+            "wx": {
+              "type": "number"
+            },
+            "wy": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "wx",
+            "wy"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setGlyphWidthAndBox"
+            },
+            "wx": {
+              "type": "number"
+            },
+            "wy": {
+              "type": "number"
+            },
+            "llx": {
+              "type": "number"
+            },
+            "lly": {
+              "type": "number"
+            },
+            "urx": {
+              "type": "number"
+            },
+            "ury": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "wx",
+            "wy",
+            "llx",
+            "lly",
+            "urx",
+            "ury"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeColorSpace"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillColorSpace"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeColor"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "op",
+            "components"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeColorN"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "pattern": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "components"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillColor"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "op",
+            "components"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillColorN"
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "pattern": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "components"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeGray"
+            },
+            "gray": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "gray"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillGray"
+            },
+            "gray": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "gray"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeRgb"
+            },
+            "r": {
+              "type": "number"
+            },
+            "g": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "r",
+            "g",
+            "b"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillRgb"
+            },
+            "r": {
+              "type": "number"
+            },
+            "g": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "r",
+            "g",
+            "b"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setStrokeCmyk"
+            },
+            "c": {
+              "type": "number"
+            },
+            "m": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "k": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "c",
+            "m",
+            "y",
+            "k"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "setFillCmyk"
+            },
+            "c": {
+              "type": "number"
+            },
+            "m": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "k": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "c",
+            "m",
+            "y",
+            "k"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "paintShading"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "paintXObject"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "inlineImage"
+            },
+            "image": {
+              "$ref": "#/$defs/PdfInlineImage"
+            }
+          },
+          "required": [
+            "op",
+            "image"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "markedContentPoint"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "tag"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "markedContentPointWithProperties"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "properties": {
+              "$ref": "#/$defs/PdfPropertyList"
+            }
+          },
+          "required": [
+            "op",
+            "tag",
+            "properties"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "beginMarkedContent"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "tag"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "beginMarkedContentWithProperties"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "properties": {
+              "$ref": "#/$defs/PdfPropertyList"
+            }
+          },
+          "required": [
+            "op",
+            "tag",
+            "properties"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "endMarkedContent"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "beginCompatibility"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "endCompatibility"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "unknown"
+            },
+            "operator": {
+              "type": "string"
+            },
+            "operands": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfObject"
+              }
+            }
+          },
+          "required": [
+            "op",
+            "operator",
+            "operands"
+          ]
+        }
+      ]
+    },
+    "PdfOpenAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "destination"
+            },
+            "destination": {
+              "$ref": "#/$defs/PdfDestination"
+            }
+          },
+          "required": [
+            "kind",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "action"
+            },
+            "action": {
+              "$ref": "#/$defs/PdfAction"
+            }
+          },
+          "required": [
+            "kind",
+            "action"
+          ]
+        }
+      ]
+    },
+    "PdfOptionalContent": {
+      "type": "object",
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfOptionalContentGroup"
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "baseStateOff": {
+          "type": "boolean"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "off": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfObject"
+          }
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      }
+    },
+    "PdfOptionalContentGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "intent": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "PdfOutlineItem": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDestination"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfOutlineItem"
+          }
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "title"
+      ]
+    },
+    "PdfOutputIntent": {
+      "type": "object",
+      "properties": {
+        "subtype": {
+          "type": "string"
+        },
+        "conditionIdentifier": {
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registryName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "info": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "subtype",
+        "conditionIdentifier"
+      ]
     },
     "PdfPage": {
       "type": "object",
-      "required": [
-        "mediaBox",
-        "rotate",
-        "text"
-      ],
       "properties": {
         "mediaBox": {
           "type": "array",
@@ -173,87 +6694,1264 @@
           "maxItems": 4
         },
         "cropBox": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 4,
-          "maxItems": 4
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bleedBox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trimBox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artBox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "rotate": {
           "type": "integer"
         },
-        "text": {
-          "type": "string"
+        "userUnit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfOp"
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfAnnotation"
+          }
+        },
+        "group": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfTransparencyGroup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thumbnail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "structParents": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transition": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additionalActions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
         }
-      }
+      },
+      "required": [
+        "mediaBox"
+      ]
     },
-    "PdfInfo": {
+    "PdfPageLabelRange": {
       "type": "object",
       "properties": {
-        "title": {
+        "startIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfPageLabelStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prefix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "startIndex"
+      ]
+    },
+    "PdfPageLabelStyle": {
+      "type": "string",
+      "enum": [
+        "decimal",
+        "romanUpper",
+        "romanLower",
+        "lettersUpper",
+        "lettersLower"
+      ]
+    },
+    "PdfPageLayout": {
+      "type": "string",
+      "enum": [
+        "singlePage",
+        "oneColumn",
+        "twoColumnLeft",
+        "twoColumnRight",
+        "twoPageLeft",
+        "twoPageRight"
+      ]
+    },
+    "PdfPageMode": {
+      "type": "string",
+      "enum": [
+        "useNone",
+        "useOutlines",
+        "useThumbs",
+        "fullScreen",
+        "useOc",
+        "useAttachments"
+      ]
+    },
+    "PdfPattern": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         },
-        "author": {
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "kind": {
+          "$ref": "#/$defs/PdfPatternKind"
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "PdfPatternKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "tiling"
+            },
+            "paintType": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tilingType": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bbox": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "xStep": {
+              "type": "number"
+            },
+            "yStep": {
+              "type": "number"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfOp"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "paintType",
+            "tilingType",
+            "bbox",
+            "xStep",
+            "yStep",
+            "content"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "shading"
+            },
+            "shading": {
+              "type": "string"
+            },
+            "extGState": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "shading"
+          ]
+        }
+      ]
+    },
+    "PdfPredictor": {
+      "type": "object",
+      "properties": {
+        "predictor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bitsPerComponent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "predictor",
+        "colors",
+        "bitsPerComponent",
+        "columns"
+      ]
+    },
+    "PdfPropertyList": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "inline"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "entries"
+          ]
+        }
+      ]
+    },
+    "PdfShading": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         },
-        "subject": {
-          "type": "string"
+        "colorSpace": {
+          "$ref": "#/$defs/PdfColorSpace"
         },
-        "keywords": {
-          "type": "string"
+        "kind": {
+          "$ref": "#/$defs/PdfShadingKind"
         },
-        "creator": {
-          "type": "string"
+        "background": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "producer": {
-          "type": "string"
+        "bbox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "antiAlias": {
+          "type": "boolean"
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "colorSpace",
+        "kind"
+      ]
+    },
+    "PdfShadingKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "functionBased"
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "matrix": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 6,
+                  "maxItems": 6
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "function": {
+              "$ref": "#/$defs/PdfFunction"
+            }
+          },
+          "required": [
+            "kind",
+            "function"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "axial"
+            },
+            "coords": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "function": {
+              "$ref": "#/$defs/PdfFunction"
+            },
+            "extend": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "kind",
+            "coords",
+            "function",
+            "extend"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "radial"
+            },
+            "coords": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "function": {
+              "$ref": "#/$defs/PdfFunction"
+            },
+            "extend": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "kind",
+            "coords",
+            "function",
+            "extend"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "mesh"
+            },
+            "shadingType": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bitsPerCoordinate": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bitsPerComponent": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bitsPerFlag": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "verticesPerRow": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "decode": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "function": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFunction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "shadingType",
+            "bitsPerCoordinate",
+            "bitsPerComponent",
+            "decode",
+            "data"
+          ]
+        }
+      ]
+    },
+    "PdfSimpleEncoding": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfBaseEncoding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "differences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfEncodingDifference"
+          }
         }
       }
-    }
-  },
-  "type": "object",
-  "required": [
-    "schema",
-    "declaredVersion",
-    "pages",
-    "info",
-    "objects",
-    "trailer"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
     },
-    "declaredVersion": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "PdfSoftMask": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "alpha"
+            },
+            "group": {
+              "type": "string"
+            },
+            "transfer": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFunction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "group"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "luminosity"
+            },
+            "group": {
+              "type": "string"
+            },
+            "backdrop": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transfer": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfFunction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "group"
+          ]
+        }
+      ]
     },
-    "pages": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/PdfPage"
+    "PdfStreamFilter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "flate"
+            },
+            "predictor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfPredictor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "lzw"
+            },
+            "predictor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfPredictor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "earlyChange": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "earlyChange"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "asciiHex"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ascii85"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "runLength"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dct"
+            },
+            "colorTransform": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "jpx"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ccitt"
+            },
+            "parameters": {
+              "$ref": "#/$defs/PdfCcittParameters"
+            }
+          },
+          "required": [
+            "kind",
+            "parameters"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "jbig2"
+            },
+            "globals": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "crypt"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "PdfTextArrayItem": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "codes"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "adjust"
+            },
+            "amount": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "amount"
+          ]
+        }
+      ]
+    },
+    "PdfTextString": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "codes"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ]
+        }
+      ]
+    },
+    "PdfToUnicode": {
+      "type": "object",
+      "properties": {
+        "byteWidth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfToUnicodeMapping"
+          }
+        }
       },
-      "x-semio-state": "artifact"
+      "required": [
+        "byteWidth"
+      ]
     },
-    "info": {
-      "$ref": "#/$defs/PdfInfo",
-      "x-semio-state": "artifact"
+    "PdfToUnicodeMapping": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "char"
+            },
+            "code": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "code",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "range"
+            },
+            "low": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "high": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "low",
+            "high",
+            "text"
+          ]
+        }
+      ]
     },
-    "objects": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/PdfIndirectObject"
-      },
-      "x-semio-state": "artifact"
+    "PdfTransparencyGroup": {
+      "type": "object",
+      "properties": {
+        "colorSpace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfColorSpace"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "isolated": {
+          "type": "boolean"
+        },
+        "knockout": {
+          "type": "boolean"
+        }
+      }
     },
-    "trailer": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/PdfDictEntry"
-      },
-      "x-semio-state": "artifact"
+    "PdfViewerPreferences": {
+      "type": "object",
+      "properties": {
+        "hideToolbar": {
+          "type": "boolean"
+        },
+        "hideMenubar": {
+          "type": "boolean"
+        },
+        "hideWindowUi": {
+          "type": "boolean"
+        },
+        "fitWindow": {
+          "type": "boolean"
+        },
+        "centerWindow": {
+          "type": "boolean"
+        },
+        "displayDocTitle": {
+          "type": "boolean"
+        },
+        "nonFullScreenPageMode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfPageMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "viewArea": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "viewClip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "printArea": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "printClip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "printScaling": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duplex": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pickTrayByPdfSize": {
+          "type": "boolean"
+        },
+        "printPageRange": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "numCopies": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfDictEntry"
+          }
+        }
+      }
     }
   }
 }

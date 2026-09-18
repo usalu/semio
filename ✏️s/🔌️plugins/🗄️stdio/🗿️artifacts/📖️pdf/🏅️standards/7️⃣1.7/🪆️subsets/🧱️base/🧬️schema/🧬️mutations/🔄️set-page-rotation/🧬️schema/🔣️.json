@@ -15,8 +15,7 @@
     },
     "rotation": {
       "type": "integer",
-      "minimum": 0,
-      "maximum": 65535
+      "minimum": 0
     },
     "mutation": {
       "const": "setPageRotation",

@@ -165,6 +165,14 @@ impl store::ArtifactPack for ModuleRenderPayload {
     }
 }
 
+/// 🧒️ Composition view of the module payload — every field is a scalar or the untyped `params`
+/// escape hatch, so this block-kind module owns no child artifacts and links to none.
+impl store::os_schema_composition::ArtifactCompositionFields for ModuleRenderPayload {
+    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
 //#endregion 🔖️ArtifactCodec
 
 fn default_params_field() -> DslValue {
@@ -670,7 +678,14 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             // 📝️ Only the interchange `format` is a user-facing panel choice; the import `data` payload
             // arrives through the host file-open callback, so it is deliberately not a declared arg.
             .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()]).await
-            .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]).await,
+            .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]).await
+            // 🧵️ Every declared action needs an explicit phase-8 disposition: `validate_interactive_job_classification`
+            // rejects the `Unclassified` default, `App::try_from_builder` turns that into a `PluginAssemblyError`, and
+            // the guest then ships the `assembly-failed` manifest stub — which made the whole `playbook` activation die
+            // in `materialize dev`'s descriptor probe. These two verbs own no bounded tool-job factory here, so
+            // `BatchOnlyPendingRewrite` is the truthful disposition until one exists.
+            .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::BatchOnlyPendingRewrite).await
+            .action_interactive_job(ACTION_IMPORT_SOLID, InteractiveJobClassification::BatchOnlyPendingRewrite).await,
     )
     .await
 }
@@ -685,6 +700,12 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssembly
         .label("Playbook Module Procedural")
         .version("0.1.0")
         .package_id("semio:playbook-module-procedural")
+        // 🔗️ `MODULE_APP_ID` binds this surface to the `s.playbook.procedural` artifact kind, whose
+        // canonical owner is `playbook`; `surface_dependency_breaches` refuses a manifest that
+        // contributes a foreign surface without naming that owner, and the refusal arrives as the
+        // `assembly-failed` stub that killed the whole `playbook` activation in `materialize dev`.
+        // The sibling `ExtensionBundle` already declared the same edge — the plugin bundle did not.
+        .depends_on("playbook", VersionReq::parse("^0.1.0").expect("declared playbook version"))
         .foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA)
         .document_app::<ModuleApp>(resolve_ready(create_module_app())?)
         .try_build()

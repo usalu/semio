@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-font/schema.json",
+  "title": "RemoveFont",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "removeFont",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

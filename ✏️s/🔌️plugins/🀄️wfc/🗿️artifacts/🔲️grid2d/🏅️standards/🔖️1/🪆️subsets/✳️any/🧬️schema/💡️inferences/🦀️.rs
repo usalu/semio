@@ -236,6 +236,8 @@ impl Grid2dInferenceJob {
         self.snapshot.masked.iter().any(|cell| cell.x == x && cell.y == y)
     }
 
+    /// 🕳️ An inactive cell still owns a domain in the job's dense state, so it is
+    /// pinned to the placeholder pattern 0 and simply omitted from the commit.
     fn advance_compile(&mut self) -> Result<(), String> {
         match self.stage {
             Grid2dInferenceStage::Tiles => {
@@ -317,8 +319,6 @@ impl Grid2dInferenceJob {
                     }
                     self.cursor += 1;
                 } else if self.cursor < pinned_count + self.snapshot.masked.len() {
-                    // 🕳️ An inactive cell still owns a domain in the job's dense state, so it is
-                    // pinned to the placeholder pattern 0 and simply omitted from the commit.
                     let cell = self.snapshot.masked[self.cursor - pinned_count];
                     let topology = self.topology.as_ref().expect("grid topology");
                     if let Some(node) = topology.node_at(cell.x as usize, cell.y as usize) {
@@ -449,6 +449,13 @@ impl Grid2dInferenceJob {
 }
 
 impl semio_framework_job::InteractiveJob for Grid2dInferenceJob {
+    /// ♻️ Take the child's own final state before its pages are released, then run the
+    /// close ladder: every job must be closed before it is dropped.
+    /// 🩺 An unsatisfiable grid is an OUTCOME, never an error: the child publishes
+    /// `wfc-unsatisfiable` as a fault, and this facet turns it into the
+    /// contradiction verdict its own commit is contracted to carry.
+    /// ♻️ The restore's own commit candidate owns retained pages; a `RetainedJobPayload`
+    /// that reaches `Drop` without a one-page close panics the worker outright.
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         use semio_framework_job::StepOutcome;
         if context.is_cancelled() {
@@ -481,8 +488,6 @@ impl semio_framework_job::InteractiveJob for Grid2dInferenceJob {
                 Grid2dInferenceStage::Restore => {
                     let mut outcome = self.restore.as_mut().expect("restore job").step(context);
                     if matches!(outcome, StepOutcome::Complete(_)) {
-                        // ♻️ The restore's own commit candidate owns retained pages; a `RetainedJobPayload`
-                        // that reaches `Drop` without a one-page close panics the worker outright.
                         wfc::job::retire_outcome(&mut outcome);
                         self.child = self.restore.as_mut().expect("restore job").take_job();
                         if let Some(mut restore) = self.restore.take() {
@@ -500,17 +505,12 @@ impl semio_framework_job::InteractiveJob for Grid2dInferenceJob {
                             self.child_commit = self.child.as_mut().expect("WFC child").take_completed_commit();
                             self.contradiction = self.child_commit.is_none();
                         }
-                        // 🩺 An unsatisfiable grid is an OUTCOME, never an error: the child publishes
-                        // `wfc-unsatisfiable` as a fault, and this facet turns it into the
-                        // contradiction verdict its own commit is contracted to carry.
                         StepOutcome::Fault(fault) if wfc::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
                             self.child_commit = None;
                             self.contradiction = true;
                         }
                         _ => return outcome,
                     }
-                    // ♻️ Take the child's own final state before its pages are released, then run the
-                    // close ladder: every job must be closed before it is dropped.
                     if let StepOutcome::Complete(candidate) = &mut outcome {
                         self.final_checkpoint = Some(std::mem::replace(&mut candidate.state, semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)));
                     }

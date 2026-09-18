@@ -34,6 +34,19 @@ impl Default for Grid2dWindowConfig {
     }
 }
 
+/// 🎥️ The camera a pane actually draws and hit-tests with. An untouched camera sits at the world
+/// ORIGIN, which parks the whole grid in the viewport's lower-right quadrant — the same
+/// "an unset cursor must fall back to a real entry" law the active tile obeys — so a pane whose
+/// camera has never been written centres on the authored grid instead. Both the renderer and
+/// `grid::cell_at` read this, so a click and the pixel under it can never disagree.
+pub fn effective_camera(document: &crate::schema::snapshot::Grid2dSnapshot, config: &Grid2dWindowConfig) -> (f64, f64, f64) {
+    let zoom = if config.camera_zoom > 0.0 { config.camera_zoom } else { 1.0 };
+    if config.camera_x == 0.0 && config.camera_y == 0.0 {
+        return (f64::from(document.width) * document.cell_width * 0.5, f64::from(document.height) * document.cell_height * 0.5, zoom);
+    }
+    (config.camera_x, config.camera_y, zoom)
+}
+
 /// 🫧️ Per-pane scratch that must never reach the document: the hovered cell under the pointer.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

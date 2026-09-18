@@ -16,6 +16,30 @@ const MAX_BITMAP_PIXEL_RECTS: usize = 64;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
+/// 🖱️ The pointer/camera vocabulary `Canvas2dHost` dispatches at any canvas surface unprompted —
+/// declared here so a hover over a READ-ONLY pane is inert instead of `refused: undeclared-action`.
+/// Restated rather than imported: this file must not reach into `crate::editor`.
+pub const CANVAS_ACTIONS: [&str; 6] = ["setActiveExample", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "setCamera"];
+
+fn canvas_actions() -> Vec<semio_framework_plugin::ActionDefinition> {
+    let labels = [
+        ("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen")),
+        ("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt")),
+        ("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt")),
+        ("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger gelöst")),
+        ("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick")),
+        ("setCamera", LocalizedLabel::native("Sync Camera", "Kamera abgleichen")),
+    ];
+    labels
+        .into_iter()
+        .map(|(id, label)| {
+            let mut action = semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, semio_framework_plugin::ActionKind::View) };
+            action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+            action
+        })
+        .collect()
+}
+
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::grid2d::create_grid2d_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
@@ -25,7 +49,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "preview".into(),
         options: WindowOptions::default(),
-        actions: Vec::new(),
+        actions: canvas_actions(),
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,

@@ -429,11 +429,7 @@ const ORIENTATIONS_PER_UNIT: usize = 8;
 /// registered frame and every registration after the fifth starved.
 const CANDIDATE_SUPPRESSION_RADIUS: u32 = 3;
 
-/// 🎯️ Candidates the whole level keeps after suppression, as a multiple of the target count and
-/// spread evenly over the row bands (never fewer than this many per band), so an adversarial image
-/// (every pixel a corner) cannot make the final spread's work unbounded.
-const CANDIDATE_MULTIPLE_OF_TARGET: usize = 4;
-const MIN_CANDIDATES_PER_BAND: usize = 8;
+
 
 impl BoundedDetectionPreparation {
     /// 🧭️ Detection over `levels` pyramid levels of `base`, aiming at `target_count` keypoints.
@@ -575,10 +571,10 @@ impl BoundedDetectionPreparation {
                         }
                     }
                 }
-                let bands = height.div_ceil(rows).max(1) as usize;
-                let per_band = (CANDIDATE_MULTIPLE_OF_TARGET * self.target_count).div_ceil(bands).max(MIN_CANDIDATES_PER_BAND);
-                found.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
-                found.truncate(per_band);
+                // No per-band cap: the suppression already bounds a level's candidates to one per
+                // `(radius + 1)²` pixels whatever the image (a cap sized from the band count once
+                // cut dense rows of real corners at one-row bands and changed the keypoints with
+                // the step size), and the spread below is linear in that count.
                 self.candidates[level].extend(found);
                 if end == height {
                     self.harris = None;

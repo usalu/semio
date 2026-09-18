@@ -3,7 +3,7 @@
 use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::{
     diff::{self, PdfDiff},
-    snapshot::PdfSnapshot,
+    snapshot::*,
 };
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -13,18 +13,20 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetPageContent {
     pub index: usize,
-    pub text: String,
+    pub content: Vec<PdfOp>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetPageContent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-content", kind: "set-page-content", record: "Set" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_content(self.index, &self.text))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        let _ = base;
+        MutationOutcome::new(diff::diff_set_page_content(base, self.index, &self.content))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageContent(SetPageContent { index: self.index, text: page.text.clone() })).into_iter().collect()
+        let _ = base;
+        base.pages.get(self.index).map(|page| PdfMutation::SetPageContent(SetPageContent { index: self.index, content: page.content.clone() })).into_iter().collect()
     }
 
     fn label(&self) -> String {

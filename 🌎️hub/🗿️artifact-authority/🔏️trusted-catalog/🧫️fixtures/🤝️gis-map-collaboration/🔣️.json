@@ -9,7 +9,7 @@
     "profileId": "local-stdio-gis-open-v1",
     "packageId": "semio:gis",
     "artifactKind": "s.gis.gismap",
-    "documentSchema": "gis.map",
+    "artifactSchema": "gis.map",
     "parentDialect": "s.gis.gismap@1/*",
     "surfaceId": "s.gis.gismap@1/*#editor",
     "grantedMode": "read-write-observe",

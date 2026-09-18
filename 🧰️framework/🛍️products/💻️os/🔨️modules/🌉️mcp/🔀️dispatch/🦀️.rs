@@ -79,6 +79,27 @@ pub enum AppCommand {
     TransactionRollback { txn_id: String },
     TransactionUndo { group_id: String },
     TransactionRedo { group_id: String },
+    Infer(InferCommand),
+}
+
+/// 💡️ One plugin-declared inference execution — the `Infer` command's whole payload, kept as its own
+/// struct so the variant stays readable and so a caller that already resolved a declared inference
+/// row (`crate::inference::DeclaredInference`) can build it field-for-field. `plugin_id` is the
+/// plugin whose guest actually owns the route (the row's `contributor`, which equals `owner` for an
+/// owner-authored inference): `RoutingArtifactChannel` reads it directly rather than decoding a
+/// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
+/// exactly what `semio_framework_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
+/// carries — this port never invents one of its own.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InferCommand {
+    pub plugin_id: String,
+    pub artifact_kind: String,
+    pub inference_schema: String,
+    pub revision: u64,
+    pub generation: u64,
+    pub cancellation_id: String,
+    pub work_units: u64,
+    pub canonical_payload: Vec<u8>,
 }
 
 /// 📥️ Replies — [`AppFrame::Error`] is a COMMAND-level (business) failure (e.g. generation-mismatch,
@@ -93,6 +114,10 @@ pub enum AppFrame {
     TransactionRolledBack { txn_id: String },
     TransactionUndone { group_id: String },
     TransactionRedone { group_id: String },
+    /// 💡️ The guest's own inference result, exactly as its `artifact-infer` job returned it:
+    /// `payload` is the result wire's `canonicalPayload` bytes and `complete` its `complete` flag.
+    /// Never a host-synthesised value — a guest that refuses answers [`AppFrame::Error`] instead.
+    Inferred { inference_schema: String, complete: bool, payload: Vec<u8> },
     Error(Fault),
 }
 
@@ -105,6 +130,16 @@ pub enum AppFrame {
 pub struct Fault {
     pub code: String,
     pub message: String,
+}
+
+/// 💡️ What [`ActionAdapter::run_inference`] hands back — the guest's own result payload and its
+/// `complete` flag, plus the `inferenceSchema` the guest echoed (asserted equal to the requested one
+/// by the real router before it ever reaches here).
+#[derive(Clone, Debug, PartialEq)]
+pub struct InferenceOutcome {
+    pub inference_schema: String,
+    pub complete: bool,
+    pub payload: Vec<u8>,
 }
 
 /// 🔌️ The narrow port `ActionAdapter` drives — this packet's brief §3.1 names this exact shape.
@@ -226,6 +261,17 @@ impl MockInstanceState {
             AppCommand::TransactionRedo { group_id } => {
                 self.generation += 1;
                 AppFrame::TransactionRedone { group_id }
+            }
+            // 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an
+            // instance whose generation has moved past the request's is a real staleness rejection
+            // (the same `validate_commit` rule the real router enforces); otherwise the request's own
+            // canonical payload comes back as the result payload, so a test can assert the request
+            // really travelled the port without this double ever claiming to have computed anything.
+            AppCommand::Infer(command) => {
+                if command.generation != self.generation {
+                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.generation, self.generation) });
+                }
+                AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: command.canonical_payload }
             }
         }
     }
@@ -448,6 +494,25 @@ impl ActionAdapter {
     /// 🎫️ The one shared handle table, for a facet that mints or resolves session-owned handles.
     pub fn handles(&self) -> &Arc<HandleTable> {
         &self.handles
+    }
+
+    /// 💡️ Runs one plugin-declared inference over the SAME [`ArtifactChannel`] every mutation
+    /// already travels — the general execution route that replaces `channel.not-wired` for every
+    /// declared inference service, not just the one hub-backed GIS Map job. This adapter adds no
+    /// interpretation of its own: it serialises the command onto the channel and maps the reply
+    /// frame, so a guest rejection surfaces as that guest's own [`Fault`] through [`map_fault`] and
+    /// a wrong-shaped reply is a loud `Internal`, never a fabricated value.
+    pub fn run_inference(&self, instance: u32, command: InferCommand) -> Result<InferenceOutcome, GatewayError> {
+        let requested_schema = command.inference_schema.clone();
+        let mut channel = self.channel.lock().expect("artifact channel lock poisoned");
+        let frames = channel.exchange(instance, vec![AppCommand::Infer(command)]).map_err(|fault| map_fault(&fault))?;
+        drop(channel);
+        match frames.into_iter().next() {
+            Some(AppFrame::Inferred { inference_schema, complete, payload }) => Ok(InferenceOutcome { inference_schema, complete, payload }),
+            Some(AppFrame::Error(fault)) => Err(map_fault(&fault)),
+            Some(other) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{requested_schema}` answered with {other:?} instead of an inference result"))),
+            None => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{requested_schema}` produced no reply frame"))),
+        }
     }
 
     /// 🔌 Binds the sole workspace-owned remote history implementation before serving tools.

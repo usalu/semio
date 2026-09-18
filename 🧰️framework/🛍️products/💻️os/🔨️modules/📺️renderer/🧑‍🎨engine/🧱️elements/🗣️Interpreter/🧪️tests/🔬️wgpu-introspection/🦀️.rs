@@ -243,23 +243,29 @@ fn chrome_hit_rows_carry_absolute_rect_kind_and_only_body_rows_name_a_window() {
 }
 
 /// 🎬️ Every dispatch is one entry with a monotonic `seq`, its `windowId` lifted out of the arguments,
-/// and the ledger never grows past `CHROME_ACTION_CAPACITY` however long a session runs.
+/// its `origin` carried the way React's input ledger carries one, and the ledger never grows past
+/// `CHROME_ACTION_CAPACITY` however long a session runs.
 #[test]
 fn chrome_action_ledger_mints_monotonic_seq_and_stays_bounded() {
     let mut ledger = ChromeLedger::default();
-    ledger_push_action(&mut ledger, &chrome_action("framework", "togglePanel", Some(serde_json::json!({"panelId": "artifact", "windowId": "puzzle3d-scene"}))));
+    ledger_push_action(&mut ledger, &chrome_action("framework", "togglePanel", Some(serde_json::json!({"panelId": "artifact", "windowId": "puzzle3d-scene"}))), "user");
     assert_eq!(ledger.actions.len(), 1);
     assert_eq!(ledger.actions[0].seq, 1);
     assert_eq!(ledger.actions[0].controller_id, "framework");
     assert_eq!(ledger.actions[0].action, "togglePanel");
     assert_eq!(ledger.actions[0].window_id.as_deref(), Some("puzzle3d-scene"), "the window an action addresses is lifted out of its arguments");
+    assert_eq!(ledger.actions[0].origin, "user", "a control press is `user` provenance, exactly as React's input ledger records it");
     assert!(ledger.actions[0].args.as_deref().is_some_and(|args| args.contains("\"artifact\"")), "the arguments are published as JSON text, got {:?}", ledger.actions[0].args);
 
+    ledger_push_action(&mut ledger, &chrome_action("puzzle3d", "setCamera", Some(serde_json::json!({"surfaceId": "puzzle3d-main-perspective"}))), "gesture");
+    assert_eq!(ledger.actions[1].origin, "gesture", "a pointer/camera stream an engine surface derived is `gesture`, the one origin React never toasts");
+    assert_eq!(ledger.actions[1].window_id.as_deref(), Some("puzzle3d-main-perspective"), "a surface-addressed row still names the window a probe scopes by");
+
     for _ in 0..CHROME_ACTION_CAPACITY + 16 {
-        ledger_push_action(&mut ledger, &chrome_action("puzzle3d", "setCamera", None));
+        ledger_push_action(&mut ledger, &chrome_action("puzzle3d", "setCamera", None), "gesture");
     }
     assert_eq!(ledger.actions.len(), CHROME_ACTION_CAPACITY, "the ledger is a ring, not a leak");
-    assert_eq!(ledger.actions.back().map(|entry| entry.seq), Some(CHROME_ACTION_CAPACITY as u64 + 17), "seq keeps counting past the trim so a probe can diff across steps");
+    assert_eq!(ledger.actions.back().map(|entry| entry.seq), Some(CHROME_ACTION_CAPACITY as u64 + 18), "seq keeps counting past the trim so a probe can diff across steps");
     assert!(ledger.actions.front().map(|entry| entry.seq).is_some_and(|seq| seq > 1), "the oldest entries are the ones that fall off");
 }
 
@@ -302,4 +308,29 @@ fn chrome_dump_window_filter_keeps_chrome_and_reports_the_diagnostics_gate() {
     assert!(!scoped.armed, "an unarmed page says so rather than answering an empty registry");
     assert_eq!(project_chrome_dump(&ledger, Some(""), true).hits.len(), 3, "an empty window id is no filter at all");
 }
+/// 🪟️ The surface census is what makes two shells comparable: every row carries the LEVEL React's DOM
+/// states and React's own element id for that surface. Rows are sorted and deduplicated, so a frame
+/// that walks its chrome in another order never reads as a surface change, and a named read answers
+/// only that surface.
+#[test]
+fn chrome_surface_census_publishes_react_levels_sorted_and_deduplicated() {
+    let census = vec![
+        ("puzzle3d-main-top".to_string(), "window", "puzzle3d-main-top".to_string()),
+        ("framework.panel.artifact".to_string(), "panel", "framework.panelTab.framework.panel.artifact".to_string()),
+        ("puzzle3d-main-top".to_string(), "window", "puzzle3d-main-top".to_string()),
+        ("ui.introduction".to_string(), "dialog", "ui.introduction".to_string()),
+    ];
+    let mut ledger = ChromeLedger::default();
+    ledger_publish_surfaces(&mut ledger, &census);
+    assert_eq!(ledger.surfaces.iter().map(|surface| (surface.level.as_str(), surface.id.as_str())).collect::<Vec<_>>(), vec![("dialog", "ui.introduction"), ("panel", "framework.panel.artifact"), ("window", "puzzle3d-main-top")], "one row per surface, level first");
+    assert_eq!(ledger.surfaces[1].element_id, "framework.panelTab.framework.panel.artifact", "a panel is named by React's `panelTabElementId`, never by the window instance the shell keeps it in");
+
+    let dump = project_chrome_dump(&ledger, None, true);
+    assert_eq!(dump.surfaces.len(), 3);
+    let scoped = project_chrome_dump(&ledger, Some("framework.panel.artifact"), true);
+    assert_eq!(scoped.surfaces.len(), 1, "a named read answers that surface alone");
+    ledger_publish_surfaces(&mut ledger, &[]);
+    assert!(ledger.surfaces.is_empty(), "a walk that carries no surface publishes none, rather than retaining the last frame's");
+}
+
 //#endregion 🎯️ChromeLedgerLaws

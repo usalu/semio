@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_color_space;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🌈️ Direct set-color-space protobuf payload.
+message SetColorSpaceMutation {
+  PdfNamedColorSpace color_space = 1;
+}

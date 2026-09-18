@@ -26,17 +26,33 @@ how the client opens, with a single handler layer beneath. Do not "simplify" thi
 
 ## Surface
 
-Twenty stable tools; the long tail of plugin capabilities is reached through the catalog rather than
+Twenty-seven stable tools; the long tail of plugin capabilities is reached through the catalog rather than
 by advertising thousands of tools:
 
 - discovery — `capabilities_search`, `capabilities_describe`, `context_resolve`
 - authoring — `action_prepare`, `action_invoke`, `action_cancel`, `transaction_begin|commit|rollback`
 - history — `history_undo`, `history_redo`
 - artifacts — `artifact_create|open|validate|export|snapshot`
+- inference — `inference_list`, `inference_get`, `inference_run` (any plugin-declared inference
+  service, executed in that plugin's own guest), plus the hub-backed job quartet
+  `inference_submit|events|cancel|approve`
 - jobs / UI — `job_get`, `job_cancel`, `ui_focus`, `ui_reveal`
 
 Resources are `semio://…` URIs (workspace, artifact + schema/snapshot/selection/validation/history/diff,
-window, ui/active-context, capability, plugin, extension, transaction, job, audit).
+window, ui/active-context, ui/agent-messages, capability, plugin, extension, transaction, job, audit).
+
+## No model provider — the agent is the client, not a dependency
+
+There is no LLM or model-provider client in this crate, and there will not be one: CLAUDE.md forbids
+runtime dependencies on external libraries, and no model credential exists anywhere in this repo. "AI
+integration" here means the opposite direction — the OS exposes itself as a controllable substrate to
+whichever external agent the developer already runs (Claude Code, Codex, …) over MCP, and that agent
+drives the ordinary action → mutation → VCS → backbone path like any other principal. `inference_run`
+is not an exception: it executes a **plugin's own declared inference service** (a native/wasm
+computation the plugin ships, e.g. GIS Map's geometry pass or WFC's solver), never a call to a model
+provider. The in-shell agent panel is a *view and a steering surface* for that external agent — it
+renders the live `tools/call` traffic and sends the human's turns back over `/bridge` — not a chat
+client that talks to a model itself.
 
 ## Mutation protocol
 

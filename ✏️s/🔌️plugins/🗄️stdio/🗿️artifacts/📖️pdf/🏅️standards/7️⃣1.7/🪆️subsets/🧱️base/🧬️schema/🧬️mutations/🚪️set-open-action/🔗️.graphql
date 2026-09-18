@@ -1,0 +1,4 @@
+# 🚪️ Direct set-open-action GraphQL payload.
+input SetOpenActionMutationInput {
+  action: PdfOpenActionInput
+}

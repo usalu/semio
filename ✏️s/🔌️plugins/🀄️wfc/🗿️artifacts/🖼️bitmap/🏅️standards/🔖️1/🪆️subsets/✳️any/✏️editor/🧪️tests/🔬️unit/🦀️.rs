@@ -71,6 +71,8 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
     }
 }
 
+/// 🩺 `remove-palette-color` and `unpin-pixel` are legitimately refused against the boot
+/// example — every colour is painted and nothing is pinned — but a refusal must SAY so.
 #[test]
 fn every_dispatched_mutation_either_moves_the_boot_example_or_says_why_not() {
     let base = <BitmapEditor as ArtifactEditor>::initial_snapshot();
@@ -80,8 +82,6 @@ fn every_dispatched_mutation_either_moves_the_boot_example_or_says_why_not() {
         let mut snapshot = base.clone();
         crate::mutations::apply_bitmap_mutation(&mut snapshot, &mutation).unwrap_or_else(|error| panic!("'{kind}' applies to the boot example: {error}"));
         if snapshot == base {
-            // 🩺 `remove-palette-color` and `unpin-pixel` are legitimately refused against the boot
-            // example — every colour is painted and nothing is pinned — but a refusal must SAY so.
             assert!(!outcome.messages().is_empty(), "'{kind}' changed nothing and raised no diagnostic");
         }
     }
@@ -162,8 +162,87 @@ fn the_stroke_verbs_are_declared_migrated_and_answered() {
     let window = definition.window_kinds.iter().find(|window| window.id == input::WFC_BITMAP_WINDOW_INPUT).expect("the input window is declared");
     for verb in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         let action = window.actions.iter().find(|action| action.id == verb).unwrap_or_else(|| panic!("'{verb}' is not catalogued"));
-        assert_eq!(action.semantics.execution.interactive_job, semio_framework::InteractiveJobClassification::Migrated, "'{verb}' would be dispatch-dead");
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "'{verb}' would be dispatch-dead");
     }
     assert_eq!(BITMAP_STROKE_COALESCE_KEY, "wfc-bitmap-stroke");
 }
 //#endregion 🖌️Gesture
+
+//#region 🚚️LiveDispatch
+/// ✉️ The transient's own envelope must be publishable. `print_dsl` is what the framework's transient
+/// publication calls, and a NON-DOTTED envelope id made its own `expect` PANIC the guest the first
+/// time a solve was published — trapping every later dispatch in the live shell. Found on the
+/// playground, not by any test that existed before this one.
+#[test]
+fn the_solve_transient_prints_and_packs_its_own_envelope() {
+    use crate::editor::bitmap::transient::BitmapTransient;
+    let transient = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 2, 1])), contradiction: false, output_width: 2, output_height: 2 };
+    let text = <BitmapTransient as store::ArtifactDsl>::print_dsl(&transient);
+    assert!(text.starts_with("semio wfc.bitmaptransient.dsl v1"), "unexpected transient preamble: {:?}", text.lines().next());
+    assert_eq!(<BitmapTransient as store::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
+    let packed = <BitmapTransient as store::ArtifactPack>::encode_pack(&transient);
+    assert_eq!(<BitmapTransient as store::ArtifactPack>::decode_pack(&packed).expect("the transient unpacks"), transient);
+}
+
+/// 🫧️ The `Solve` verb's own transient write really carries a collapse — not a uniform square, not a
+/// contradiction — for the boot example. This is the payload the output window renders.
+#[test]
+fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
+    use crate::editor::bitmap::transient::BitmapTransientMutation;
+    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let BitmapTransientMutation::SetSolve(solve) = BitmapEditor::solve_transient(&snapshot).expect("the boot example's solve runs");
+    assert!(!solve.contradiction, "the boot example must collapse");
+    assert_eq!((solve.output_width, solve.output_height), (snapshot.output.width, snapshot.output.height));
+    let pixels = crate::schema::snapshot::decode_base64(solve.output_pixels.as_deref().expect("a solved output")).expect("the commit decodes");
+    assert_eq!(pixels.len(), (snapshot.output.width as usize) * (snapshot.output.height as usize));
+    assert!(pixels.iter().any(|index| *index != pixels[0]), "a uniform square is not a collapse");
+}
+
+/// 🌉️ Every action the manifest declares must bridge through `command_from_action` to the command
+/// whose id it is. `VcsArtifactApp::dispatch_action` resolves EVERY host action that way, so a
+/// missing arm is a dispatch-dead verb no classification audit can see.
+#[test]
+fn every_declared_action_bridges_to_the_command_it_names() {
+    for action in BITMAP_TOOL_IDS {
+        let command = <BitmapEditor as ArtifactEditor>::command_from_action(action, None).unwrap_or_else(|error| panic!("action '{action}' does not bridge: {}", error.message));
+        assert_eq!(bitmap_command_id(&command), *action, "action '{action}' bridged to the wrong command");
+    }
+    assert!(<BitmapEditor as ArtifactEditor>::command_from_action("no-such-action", None).is_err());
+}
+
+/// 🧾️ The retained roster is ONE list spelled in four places — the command channel's `TOOL_JOB_IDS`,
+/// the owned factory's `TOOL_IDS`, its publication contracts and the bounded-first-step proofs. The
+/// framework joins all four at registration and fails closed on any disagreement.
+#[test]
+fn the_retained_tool_roster_agrees_with_itself_and_with_the_manifest() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::TOOL_JOB_IDS, BITMAP_TOOL_IDS);
+    assert_eq!(<BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, BITMAP_TOOL_IDS);
+    let contracts: Vec<&str> = <BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(contracts, BITMAP_TOOL_IDS.to_vec());
+    assert!(<BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().all(|contract| !contract.lanes.is_empty()));
+    let proofs: Vec<&str> = <BitmapEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(semio_framework_plugin::ArtifactBoundedFirstStepProof::tool_id).collect();
+    assert_eq!(proofs, BITMAP_TOOL_IDS.to_vec());
+
+    let definition = create_bitmap_editor();
+    let declared: std::collections::BTreeSet<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
+    for action in BITMAP_TOOL_IDS {
+        assert!(declared.contains(*action), "retained tool '{action}' is not declared by any window kind");
+    }
+}
+
+/// 🎬️ The example picker's verb is declared, classified and offers both bundled examples — the exact
+/// three facts the shell's boot announcement and navbar combobox need.
+#[test]
+fn the_example_picker_verb_is_declared_with_both_examples() {
+    let definition = create_bitmap_editor();
+    for window in &definition.window_kinds {
+        let action = window.actions.iter().find(|action| action.id == "setActiveExample").unwrap_or_else(|| panic!("window '{}' does not declare setActiveExample", window.id));
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+        let arg = action.args.first().unwrap_or_else(|| panic!("window '{}' offers setActiveExample no example argument", window.id));
+        assert_eq!(arg.id, "exampleId");
+        assert!(arg.required);
+        assert_eq!(arg.default.as_ref().and_then(dsl::DslValue::as_str), Some(set_active_example::BITMAP_EXAMPLE_BOOT_ID));
+    }
+}
+//#endregion 🚚️LiveDispatch

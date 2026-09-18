@@ -118,12 +118,57 @@ fn placeholder_geometry() -> (Vec<f64>, Vec<u32>) {
     }
 }
 
+/// 📐️ Area-weighted vertex normals over the triangle list — ONE per position, so the buffer the host
+/// binds has the same vertex count as `positions`.
+///
+/// 🩹 A catalogue entry that shipped an EMPTY `normals` array bound a zero-length `normal` attribute
+/// at item size 3, and every instanced draw of that mesh died in the GL with
+/// `glDrawElements: Vertex buffer is not big enough for the draw call` — the solved boxes reached the
+/// pane as bare edges and never as bodies. A degenerate mesh (all triangles collinear) falls back to
+/// `+Z` rather than to zeros, because a zero normal is the same crash with a different cause.
+pub fn vertex_normals(positions: &[f64], indices: &[u32]) -> Vec<f64> {
+    let vertices = positions.len() / 3;
+    let mut normals = vec![0.0f64; vertices * 3];
+    for triangle in indices.chunks(3) {
+        let (Some(a), Some(b), Some(c)) = (triangle.first(), triangle.get(1), triangle.get(2)) else { continue };
+        let corner = |index: &u32| -> Option<[f64; 3]> {
+            let base = (*index as usize).checked_mul(3)?;
+            Some([*positions.get(base)?, *positions.get(base + 1)?, *positions.get(base + 2)?])
+        };
+        let (Some(pa), Some(pb), Some(pc)) = (corner(a), corner(b), corner(c)) else { continue };
+        let u = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
+        let v = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
+        let face = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+        for index in [a, b, c] {
+            let base = (*index as usize) * 3;
+            if base + 2 < normals.len() {
+                normals[base] += face[0];
+                normals[base + 1] += face[1];
+                normals[base + 2] += face[2];
+            }
+        }
+    }
+    for normal in normals.chunks_mut(3) {
+        let length = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+        if length > f64::EPSILON {
+            normal[0] /= length;
+            normal[1] /= length;
+            normal[2] /= length;
+        } else {
+            normal[2] = 1.0;
+        }
+    }
+    normals
+}
+
+/// 🥽️ One catalogue entry. `colors` is RGB, three floats per vertex: the host binds the `color`
+/// attribute at item size 3, so a straight RGBA copy shifts every vertex' colour by one channel.
 fn mesh_entry(id: &str, positions: &[f64], indices: &[u32], color: Option<[f64; 4]>) -> Value {
     let colors: Vec<f64> = match color {
-        Some(rgba) => positions.chunks(3).flat_map(|_| rgba).collect(),
+        Some(rgba) => positions.chunks(3).flat_map(|_| [rgba[0], rgba[1], rgba[2]]).collect(),
         None => Vec::new(),
     };
-    json!({ "id": id, "data": { "positions": positions, "normals": Vec::<f64>::new(), "colors": colors, "indices": indices, "uvs": Vec::<f64>::new() } })
+    json!({ "id": id, "data": { "positions": positions, "normals": vertex_normals(positions, indices), "colors": colors, "indices": indices, "uvs": Vec::<f64>::new() } })
 }
 
 /// 🥽️ The SMALL mesh catalogue: one entry per distinct tile plus the shared placeholder. Never one

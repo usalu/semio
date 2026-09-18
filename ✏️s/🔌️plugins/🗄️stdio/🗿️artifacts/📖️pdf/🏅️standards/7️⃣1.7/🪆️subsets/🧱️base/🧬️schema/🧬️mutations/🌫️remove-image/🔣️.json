@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌫️remove-image",
+  "semanticKind": "remove-image",
+  "displayName": "Remove Image",
+  "emoji": "🌫️",
+  "aggregateVariant": "RemoveImage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-image",
+  "binaryTag": 27,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

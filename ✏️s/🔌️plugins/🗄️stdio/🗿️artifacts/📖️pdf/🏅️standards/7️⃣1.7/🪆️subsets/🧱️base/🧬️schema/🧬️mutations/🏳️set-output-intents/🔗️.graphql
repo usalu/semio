@@ -1,0 +1,4 @@
+# 🏳️ Direct set-output-intents GraphQL payload.
+input SetOutputIntentsMutationInput {
+  intents: [PdfOutputIntentInput!]
+}

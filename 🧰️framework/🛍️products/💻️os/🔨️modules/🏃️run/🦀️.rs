@@ -2012,7 +2012,10 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             capabilities: Vec::new(),
             quotas: QuotaSchema::default(),
         };
-        let _ = self.run_turn(actor, vec![open_event]).await?;
+        let mut first_turn = Vec::with_capacity(2);
+        first_turn.extend(semio_framework_plugin_host::activation::activation_turn_event(app_id));
+        first_turn.push(open_event);
+        let _ = self.run_turn(actor, first_turn).await?;
         Ok(instance_handle)
     }
 

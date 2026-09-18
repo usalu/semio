@@ -46,6 +46,17 @@ const SETTLE_TURN_BUDGET: usize = 512;
 /// 📐️ One wasm page — the tolerance the guest-growth law admits over the whole idle window.
 const IDLE_GROWTH_CEILING_BYTES: isize = 65_536;
 
+/// 🔒️ `IDLE_TURN_HEAP_WITNESS` counts allocations PROCESS-WIDE and the typed-operation authority is
+/// process-wide too, so two laws measuring at the same time read each other's bytes and each other's
+/// contention (`settled(contended)` turns, 9 106 B/turn where one law alone measures 0). The default
+/// harness runs exactly these two laws on two threads, so each takes this lock for the whole of its
+/// boot-and-measure window.
+static IDLE_MEASUREMENT: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn measurement_lease() -> std::sync::MutexGuard<'static, ()> {
+    IDLE_MEASUREMENT.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 fn idle_budget() -> Budget {
     Budget { fuel: 1_000_000, deadline_ms: 60_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
@@ -147,6 +158,7 @@ fn assert_idle(label: &str, reading: IdleReading) {
 /// settles, and grows the heap by at most one page. One idle authority, five artifacts.
 #[semio_framework_async_macros::async_test]
 async fn every_wfc_editor_idles_settled_and_retains_nothing() {
+    let _measurement = measurement_lease();
     for (index, (label, app_id)) in WFC_EDITORS.into_iter().enumerate() {
         let runtime = boot(app_id, IDLE_INSTANCES[index]).await;
         let reading = measure_idle(&runtime, label).await;
@@ -161,6 +173,7 @@ async fn every_wfc_editor_idles_settled_and_retains_nothing() {
 /// would otherwise grow a fixed linear memory without bound.
 #[semio_framework_async_macros::async_test]
 async fn an_unacknowledged_open_retains_nothing_per_turn() {
+    let _measurement = measurement_lease();
     let runtime = WfcRuntime::new();
     install_plugin_bundle_result(&runtime, semio_s_plugin_wfc::plugin());
     turn(&runtime, vec![open_event(WFC_EDITORS[1].1, UNACKNOWLEDGED_INSTANCE)]).await.lifecycle_receipt.expect("open publishes Captured");

@@ -191,14 +191,25 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
 fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     let case = gesture("orbit-completes-into-one-setcamera");
     let mut state = fixture_state();
-    let mut plan = plan_world3d_wheel(&state, 1, 20.0).expect("bounded wheel plan");
+    let mut plan = plan_world3d_wheel(&state, 1, 200.0).expect("bounded wheel plan");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 1, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
         turns += 1;
         assert!(turns < 64, "bounded publication terminates");
     }
-    let action = take_actions(&mut input).into_iter().next().expect("a camera gesture publishes an action");
+    // 🧭️ The zoom itself publishes nothing — the wire report is the SETTLE's, one per gesture, the
+    // trailing debounce React's `dispatchWorldCameraDebounced` keeps (`WorldCameraSync`).
+    assert!(take_actions(&mut input).is_empty(), "a navigation step never publishes per move");
+    let mut settle = plan_world3d_camera_settle(&state, 2).expect("a moved camera owes one settle");
+    let mut turns = 0;
+    while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut settle, 2, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
+        turns += 1;
+        assert!(turns < 64, "bounded settle terminates");
+    }
+    let published = take_actions(&mut input);
+    assert_eq!(published.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec!["noteWorldNavigation", "setCamera"], "the un-debounced navigation report lands ahead of the debounced camera report, exactly as React journals it");
+    let action = published.into_iter().nth(1).expect("a camera gesture publishes its report");
     assert_eq!(action.action, case["expect"]["action"].as_str().expect("action id"));
     // 🪟️ `windowId`, never `surfaceId`: the shell resolves `ActionAddress::window_instance_id` from
     // this argument, and a World3d surface IS keyed by its window instance id.

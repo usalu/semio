@@ -1210,6 +1210,11 @@ export type PluginCatalogTarget = {
    * `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for
    * {@link PluginGraph} to validate presence/cycles and compute load order. */
   readonly dependsOn?: readonly string[];
+  /** 🎬️ The declared activation events in `📓️design-abi.md` §2's dash-separated string form
+   * (`on-artifact-kind:<kind>`, `on-command:<id>`, `on-file-type:<ext>`, …). Read by
+   * {@link artifactKindActivationOwner}: the host resolves which plugin opens an artifact kind from
+   * these rows alone, with no manifest and no wasm module loaded. */
+  readonly activationEvents?: readonly string[];
 };
 
 /** 🗂️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
@@ -1235,6 +1240,48 @@ export interface PluginCatalog {
   readonly playgrounds: readonly PlaygroundCatalogTarget[];
   moduleUrl(pluginId: string): string;
   extensionModuleUrl(pluginId: string): string;
+}
+
+/** 🎬️ The `on-artifact-kind:` prefix `📓️design-abi.md` §2 gives `ActivationEvent::OnArtifactKind`. */
+export const ON_ARTIFACT_KIND_ACTIVATION_PREFIX = "on-artifact-kind:";
+
+/** 🧩️ The `on-extension-request:` prefix `📓️design-abi.md` §2 gives
+ * `ActivationEvent::OnExtensionRequest` — its payload is the extension point that pulled the actor
+ * up, which for the `registerCatalog` cascade is the parent plugin id. */
+export const ON_EXTENSION_REQUEST_ACTIVATION_PREFIX = "on-extension-request:";
+
+/**
+ * 🎬️ The plugin an artifact kind activates, from declared activation events alone — the one
+ * resolution path that works BEFORE the owner's manifest exists, which is exactly the hub case:
+ * {@link AppRouter} can only route kinds whose plugin is already loaded, so a `s` session that has
+ * never touched `cad` has no router entry for `s.cad.cad` and {@link resolveOpeningApp} throws
+ * `surface.unknown-dialect`. Catalog rows carry both kind namespaces a descriptor declares (the
+ * crate's own `ArtifactKindSpec.id` and the artifact kind its app surfaces name), each claimed by
+ * exactly one owner, so this answers "install which plugin?" for either spelling. Ties — two
+ * unrelated crates claiming one kind — resolve to the first by ascending `pluginId`, matching the
+ * router's own deterministic ordering rather than picking arbitrarily.
+ */
+export function artifactKindActivationOwner(catalog: PluginCatalog, artifactKind: string): string | undefined {
+  if (artifactKind === "") return undefined;
+  const event = `${ON_ARTIFACT_KIND_ACTIVATION_PREFIX}${artifactKind}`;
+  let owner: string | undefined;
+  for (const target of [...catalog.plugins, ...catalog.extensions]) {
+    if (!(target.activationEvents ?? []).includes(event)) continue;
+    if (owner === undefined || target.pluginId.localeCompare(owner) < 0) owner = target.pluginId;
+  }
+  return owner;
+}
+
+/** 🎬️ The {@link ActivationReason} an app id justifies: a role-suffixed surface app id names the
+ * artifact kind the actor is being activated for, so it activates `on-artifact-kind:<kind>` with the
+ * kind the id itself carries; anything else (a bare landing/host app id, an extension's request
+ * actor) stays `manual`. */
+export function activationReasonForAppId(appId: string): ActivationReason {
+  try {
+    return `${ON_ARTIFACT_KIND_ACTIVATION_PREFIX}${parseSurfaceAppId(appId).dialect.artifactKind}`;
+  } catch {
+    return "manual";
+  }
 }
 //#endregion 🗂️PluginCatalog
 
@@ -2078,7 +2125,34 @@ export function registerPluginBackboneRoute(documentId: string, relay: (uri: str
  * encoding lives in the pure `semio-framework-actor` crate — packet A1); this registry only needs a
  * stable key for shard routing and residency bookkeeping, same as `ShardClient` itself.
  */
-export type ActivationReason = "on-command" | "on-view-visible" | "on-file-type" | "on-artifact-kind" | "on-extension-request" | "on-startup-finished" | "manual";
+/** 🎬️ Why an actor is being activated, in `📓️design-abi.md` §2's own dash-separated declaration
+ * grammar — the SAME spelling a plugin's `activationEvents` row carries, so a declared
+ * `on-artifact-kind:s.cad.cad` row and the reason an open of that kind activates its owner with are
+ * one string, not two vocabularies. The payload-bearing forms mirror the WIT `activation-event`
+ * variant's single-string payload exactly; `manual` is the host's own trigger and has no WIT variant,
+ * so it reaches no guest (see {@link activationEventEnvelope}). */
+export type ActivationReason =
+  | `on-command:${string}`
+  | `on-view-visible:${string}`
+  | `on-file-type:${string}`
+  | `on-artifact-kind:${string}`
+  | `on-extension-request:${string}`
+  | "on-startup-finished"
+  | "manual";
+
+/** 🎬️ The WIT `event::activate` an {@link ActivationReason} justifies, in the `{kind, payload}`
+ * envelope shape `🟨️shard-worker.js` lifts into the guest's own `{tag, val}` variant — this is the
+ * whole bridge from a declared activation event to what the guest's `activate` actually receives.
+ * `manual` and an unparseable reason answer `undefined`: the WIT variant has no case for them, so the
+ * honest delivery is no event at all rather than an invented one. `instance` is `0` at activation
+ * time by construction — no instance is open yet, and the guest routes `activate` per actor, not per
+ * instance. */
+export function activationEventEnvelope(reason: ActivationReason, instance = 0): ShardEventEnvelope | undefined {
+  if (reason === "on-startup-finished") return { kind: "activate", payload: { instance, reason: { tag: reason } } };
+  const separator = reason.indexOf(":");
+  if (separator <= 0) return undefined;
+  return { kind: "activate", payload: { instance, reason: { tag: reason.slice(0, separator), val: reason.slice(separator + 1) } } };
+}
 
 export interface ActivationManifestEntry {
   readonly pluginId: string;
@@ -2341,14 +2415,24 @@ export class ActivationRegistry {
 
   //#region ▶️Activate
   /** ▶️ `events::activation-event` → `Kernel::activate`. Cascades to every registered extension of
-   * `pluginId` — see `activateExtensionsOf`. */
-  async activate(pluginId: string, actorId: string, _reason: ActivationReason): Promise<void> {
+   * `pluginId` — see `activateExtensionsOf`.
+   *
+   * 🎬️ `reason` is not bookkeeping: the guest's own `activate` event IS this reason
+   * ({@link activationEventEnvelope}), queued on `Maintenance` the moment the actor is resident so an
+   * `on-artifact-kind:<kind>` install tells the guest WHICH kind woke it before any instance opens.
+   * A `manual` activation has no WIT variant and therefore queues nothing — the host's own trigger is
+   * not a declared activation event and must not be dressed up as one. The extension cascade below
+   * activates each child `on-extension-request:<parent>`, the declared event that names exactly what
+   * pulled it up. */
+  async activate(pluginId: string, actorId: string, reason: ActivationReason): Promise<void> {
     const manifest = this.manifests.get(pluginId);
     if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = await this.loadAssets(manifest.moduleUrl);
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
     this.markResident(actorId, pluginId);
+    const activation = activationEventEnvelope(reason);
+    if (activation) this.enqueueTurn(actorId, "Maintenance", [activation]);
     await this.activateExtensionsOf(pluginId, actorId);
   }
 
@@ -2385,6 +2469,8 @@ export class ActivationRegistry {
         const assets = await this.loadAssets(manifest.moduleUrl);
         await this.shardClient.activate(childActorId, manifest.moduleUrl, scopedCaps, this.defaultBudget, assets);
         this.markResident(childActorId, extensionId);
+        const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${pluginId}`);
+        if (activation) this.enqueueTurn(childActorId, "Maintenance", [activation]);
         children.push(childActorId);
       } catch (error) {
       }
@@ -2811,7 +2897,8 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
         try {
           listener(JSON.parse(data) as PluginSourceEvent);
         } catch (error) {
-                  }
+          console.warn(`[DEBUG] plugin source "dev" dropped a malformed watch frame from ${watchUrl}`, error);
+        }
       });
     },
   };

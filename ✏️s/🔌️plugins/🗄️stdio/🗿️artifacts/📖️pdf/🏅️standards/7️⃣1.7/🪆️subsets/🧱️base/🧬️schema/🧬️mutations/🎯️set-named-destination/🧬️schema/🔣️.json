@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-named-destination/schema.json",
+  "title": "SetNamedDestination",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "destination"
+  ],
+  "properties": {
+    "destination": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedDestination"
+    },
+    "mutation": {
+      "const": "setNamedDestination",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

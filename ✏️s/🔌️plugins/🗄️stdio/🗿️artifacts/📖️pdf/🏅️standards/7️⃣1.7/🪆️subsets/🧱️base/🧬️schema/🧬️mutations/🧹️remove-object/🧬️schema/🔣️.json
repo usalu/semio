@@ -9,33 +9,11 @@
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/ObjRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
     },
     "mutation": {
       "const": "removeObject",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "ObjRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "num",
-        "gen"
-      ],
-      "properties": {
-        "num": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "gen": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
-        }
-      }
     }
   }
 }

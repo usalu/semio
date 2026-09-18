@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_pdf_1_7.mutation.move_page;
 
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
 // 🔀️ Direct move-page protobuf payload.
 message MovePageMutation {
   uint64 from = 1;

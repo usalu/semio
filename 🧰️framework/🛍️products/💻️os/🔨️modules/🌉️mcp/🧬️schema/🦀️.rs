@@ -675,8 +675,26 @@ pub fn artifact_create_template_input_shape() -> serde_json::Value {
 
 pub fn artifact_create_template_input_schema(template_ids: &[String]) -> serde_json::Value {
     let mut schema = artifact_create_template_input_shape();
-    schema["properties"]["template"] = serde_json::json!({ "type": "string", "enum": template_ids.iter().map(|id| serde_json::Value::String(id.clone())).collect::<Vec<_>>() });
+    schema["properties"]["template"] = artifact_create_template_property(template_ids);
     wire("artifact.create", "input", schema)
+}
+
+/// 🌱️ The enumerated `template` argument every declared `ExampleDefinition` in the installed
+/// registry folds into — `<plugin_id>:<example_id>`, `📋️master.md` §3.2's "`examples` → the
+/// `artifact.create` template enum".
+pub fn artifact_create_template_property(template_ids: &[String]) -> serde_json::Value {
+    serde_json::json!({ "type": "string", "enum": template_ids.iter().map(|id| serde_json::Value::String(id.clone())).collect::<Vec<_>>() })
+}
+
+/// 🌱️ Grafts [`artifact_create_template_property`] onto an existing `artifact.create` input schema,
+/// so the ONE canonical `artifact.create` capability (the `artifact_create` tool's own, with its
+/// real `artifactId`/`kind`/`initial` arguments) carries the declared template enum instead of a
+/// second capability claiming the same id with a different shape.
+pub fn with_artifact_create_templates(mut schema: serde_json::Value, template_ids: &[String]) -> serde_json::Value {
+    if let Some(properties) = schema.get_mut("properties").and_then(serde_json::Value::as_object_mut) {
+        properties.insert("template".to_string(), artifact_create_template_property(template_ids));
+    }
+    schema
 }
 //#endregion 🔖️CatalogToolSchemas
 
@@ -770,7 +788,131 @@ pub fn inference_job_output_shape() -> serde_json::Value {
 pub fn inference_job_output_schema(capability_id: &str) -> serde_json::Value {
     wire(capability_id, "output", inference_job_output_shape())
 }
+
+/// 📐️ `inference.run` — the general plugin-declared inference execution route. `payload` is the
+/// caller's canonical request body for the plugin's own inference schema; `pluginId`/`artifactId`
+/// are optional disambiguators when a kind declares rows from more than one contributor.
+pub fn inference_run_input_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "artifactKind": { "type": "string" },
+            "inferenceSchema": { "type": "string" },
+            "pluginId": { "type": "string" },
+            "artifactId": { "type": "string" },
+            "payload": {},
+            "revision": { "type": "integer", "minimum": 0 },
+            "generation": { "type": "integer", "minimum": 0 },
+            "cancellationId": { "type": "string" },
+            "workUnits": { "type": "integer", "minimum": 1 },
+        },
+        "required": ["artifactKind", "inferenceSchema"],
+        "additionalProperties": false,
+    })
+}
+
+pub fn inference_run_input_schema() -> serde_json::Value {
+    wire("inference.run", "input", inference_run_input_shape())
+}
+
+pub fn inference_run_output_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "jobId": { "type": "string" },
+            "status": { "type": "string" },
+            "artifactKind": { "type": "string" },
+            "inferenceSchema": { "type": "string" },
+            "pluginId": { "type": "string" },
+            "cancellationId": { "type": "string" },
+            "complete": { "type": "boolean" },
+            "payload": {},
+            "payloadBytes": { "type": "integer", "minimum": 0 },
+        },
+        "required": ["jobId", "status", "artifactKind", "inferenceSchema"],
+    })
+}
+
+pub fn inference_run_output_schema() -> serde_json::Value {
+    wire("inference.run", "output", inference_run_output_shape())
+}
 //#endregion 🔖️InferenceToolSchemas
+
+//#region 🔖️ArtifactInferenceWire
+/// 💡️ `wireVersion` of the guest `artifact-inference-request`/`-result` pair this scope mirrors —
+/// the same constant the guest SDK publishes as `ARTIFACT_INFERENCE_WIRE_VERSION`. The router
+/// rejects a result whose `wireVersion` does not echo the request's, so a bump on either side is a
+/// loud failure rather than a silent reinterpretation.
+pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
+
+/// ⏱️ Finite host-enforced inference work limits — field-for-field the guest's own
+/// `artifact-inference-budget`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactInferenceBudgetV1 {
+    pub allocation_bytes: u64,
+    pub work_units: u64,
+    pub recursion_depth: u32,
+}
+
+/// 🗃️ Requested or actual inference cache behaviour — the guest's own closed vocabulary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum ArtifactInferenceCacheModeV1 {
+    Cold,
+    Incremental,
+    Bypass,
+}
+
+/// 💡️ The request `semio_framework_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a
+/// CLIENT of that router here, so this export is an explicit MIRROR of the router's own private
+/// `InferenceRouteRequest` (which that crate does not export), never a second authority. The router
+/// re-checks every identity field against its registered route and against the guest's echo before
+/// any result is publishable, so a drift between this mirror and the router is a decode failure at
+/// the first call, not a silently wrong answer.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactInferenceRequestV1 {
+    pub wire_version: u32,
+    pub owner: String,
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub artifact_schema_version: u32,
+    pub inference_schema: String,
+    pub inference_schema_version: u32,
+    pub algorithm_version: u32,
+    pub policy_version: u32,
+    pub revision: u64,
+    pub generation: u64,
+    pub source_dialect: String,
+    pub policy: Vec<u8>,
+    pub budgets: ArtifactInferenceBudgetV1,
+    pub cancellation_id: String,
+    pub previous_state: Option<Vec<u8>>,
+    pub requested_cache_mode: ArtifactInferenceCacheModeV1,
+    pub canonical_payload: Vec<u8>,
+    pub dependencies: Vec<(String, Vec<u8>)>,
+}
+
+/// 💡️ The subset of the guest's `artifact-inference-result` this gateway reads back. The guest wire
+/// carries more (diagnostics, provenance, validity, quality); those belong to the plugin's own
+/// domain contract and the router has ALREADY asserted that every identity field echoes the request
+/// exactly before this decode runs, so mirroring them here would duplicate an authority this scope
+/// does not own. Unknown fields are therefore accepted and ignored — deliberately, not by oversight.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactInferenceResultV1 {
+    pub wire_version: u32,
+    pub owner: String,
+    pub artifact_kind: String,
+    pub inference_schema: String,
+    pub revision: u64,
+    pub generation: u64,
+    pub complete: bool,
+    pub actual_cache_mode: ArtifactInferenceCacheModeV1,
+    pub canonical_payload: Vec<u8>,
+}
+//#endregion 🔖️ArtifactInferenceWire
 
 //#region 🔖️HubMirror
 /// 🔢️ `^[0-9a-f]{n}$` — the lower-hex pattern `🌎️hub`'s own schemas spell out literally and
@@ -882,6 +1024,12 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
         ("InferenceJobHandleInput", inference_job_handle_input_shape()),
         ("InferenceApproveInput", inference_approve_input_shape()),
         ("InferenceJobOutput", inference_job_output_shape()),
+        ("InferenceRunInput", inference_run_input_shape()),
+        ("InferenceRunOutput", inference_run_output_shape()),
+        ("ArtifactInferenceBudgetV1", serde_json::to_value(schema_for!(ArtifactInferenceBudgetV1)).expect("ArtifactInferenceBudgetV1 schema")),
+        ("ArtifactInferenceCacheModeV1", serde_json::to_value(schema_for!(ArtifactInferenceCacheModeV1)).expect("ArtifactInferenceCacheModeV1 schema")),
+        ("ArtifactInferenceRequestV1", serde_json::to_value(schema_for!(ArtifactInferenceRequestV1)).expect("ArtifactInferenceRequestV1 schema")),
+        ("ArtifactInferenceResultV1", serde_json::to_value(schema_for!(ArtifactInferenceResultV1)).expect("ArtifactInferenceResultV1 schema")),
         ("GisMapInferenceApprovalRequestV1", gis_map_inference_approval_request_schema()),
     ];
     for (_, schema) in entries.iter_mut() {
@@ -1037,8 +1185,12 @@ const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), type
 /// 🏷️ `$defs` of `🔣️.json`, which `🧪️Tests::the_json_mirror_publishes_exactly_the_registry_exports`
 /// pins to [`schemas`]; `🧪️Tests::the_scope_export_declaration_matches_the_registry` pins this list to
 /// the same set, so a new registry entry cannot be published without being resolvable.
-const EXPORTS: [SchemaExport; 62] = [
+const EXPORTS: [SchemaExport; 68] = [
     SchemaExport { id: "ActionInvokeInput", leaves: LEAVES },
+    SchemaExport { id: "ArtifactInferenceBudgetV1", leaves: LEAVES },
+    SchemaExport { id: "ArtifactInferenceCacheModeV1", leaves: LEAVES },
+    SchemaExport { id: "ArtifactInferenceRequestV1", leaves: LEAVES },
+    SchemaExport { id: "ArtifactInferenceResultV1", leaves: LEAVES },
     SchemaExport { id: "ActionPrepareInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactCreateInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactCreateOutput", leaves: LEAVES },
@@ -1074,6 +1226,8 @@ const EXPORTS: [SchemaExport; 62] = [
     SchemaExport { id: "InferenceJobOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceListInput", leaves: LEAVES },
     SchemaExport { id: "InferenceListOutput", leaves: LEAVES },
+    SchemaExport { id: "InferenceRunInput", leaves: LEAVES },
+    SchemaExport { id: "InferenceRunOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceSubmitInput", leaves: LEAVES },
     SchemaExport { id: "InvocationReport", leaves: LEAVES },
     SchemaExport { id: "InvocationStatus", leaves: LEAVES },

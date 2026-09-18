@@ -1,0 +1,4 @@
+# 🗃️ Direct remove-embedded-file GraphQL payload.
+input RemoveEmbeddedFileMutationInput {
+  id: String
+}

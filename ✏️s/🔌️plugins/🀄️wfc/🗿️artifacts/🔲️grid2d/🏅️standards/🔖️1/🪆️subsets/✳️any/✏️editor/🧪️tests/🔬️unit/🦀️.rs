@@ -43,7 +43,7 @@ fn the_grid_pane_declares_every_mutation_action_as_a_migrated_verb() {
         assert!(window.actions.iter().any(|action| &action.id == id), "{id} is not clickable in the grid pane");
     }
     for action in &window.actions {
-        assert_eq!(action.semantics.execution.interactive_job, semio_framework::InteractiveJobClassification::Migrated, "{} would be hard-dead in the interactive app", action.id);
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} would be hard-dead in the interactive app", action.id);
     }
 }
 
@@ -70,12 +70,49 @@ fn the_grid_pane_arms_exactly_the_three_declared_utilities() {
 /// by the shell, never through an app's own command channel.
 #[test]
 fn every_authored_action_id_maps_back_to_a_typed_command() {
-    const AUTHORED: &[&str] = &["pick-cell", "set-active-tile", "set-camera", "set-grid-visible", "set-grid-snap-enabled", "set-grid-factor", "solve"];
+    const AUTHORED: &[&str] = &[
+        "pick-cell",
+        "set-active-tile",
+        "set-camera",
+        "set-grid-visible",
+        "set-grid-snap-enabled",
+        "set-grid-factor",
+        "solve",
+        "setActiveExample",
+        "canvasPointerDown",
+        "canvasPointerMove",
+        "canvasPointerUp",
+        "canvasDoubleClick",
+        "setCamera",
+    ];
     let definition = create_grid2d_editor();
     let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for id in crate::mutations::KINDS.iter().copied().chain(AUTHORED.iter().copied()) {
         assert!(declared.iter().any(|declared| declared == id), "{id} is declared by no pane");
         <Grid2dEditor as ArtifactEditor>::command_from_action(id, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+    }
+}
+
+/// 🎯️ The proof catalog, the wire's tool-job ids and the command roster are ONE declaration: a
+/// verb missing from `TOOL_JOB_IDS` is refused `interactive-job.missing-factory` at every UI
+/// dispatch, and a verb missing from the window manifest is dropped before that.
+#[test]
+fn every_tool_job_id_is_a_declared_migrated_verb_with_a_command() {
+    assert_eq!(GRID2D_TOOL_IDS, <Grid2dEditorCommand as protocol::OpBinary>::TOOL_JOB_IDS);
+    let definition = create_grid2d_editor();
+    for id in GRID2D_TOOL_IDS {
+        let action = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter())
+            .find(|action| &action.id == id)
+            .unwrap_or_else(|| panic!("{id} is a tool-job id no window declares"));
+        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{id}");
+        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        assert_eq!(grid2d_command_id(&command), *id, "the command a verb decodes to must answer that verb's own id");
+    }
+    for kind in crate::mutations::KINDS {
+        assert!(GRID2D_TOOL_IDS.contains(kind), "{kind} has no retained tool proof and would be dispatch-dead");
     }
 }
 
@@ -100,6 +137,84 @@ fn the_command_channel_round_trips_through_its_binary_op_form() {
 #[test]
 fn the_boot_document_is_the_first_bundled_example() {
     assert_eq!(<Grid2dEditor as ArtifactEditor>::initial_snapshot(), crate::examples::grid2d::pipes::document());
+}
+
+/// 🗃️ The navbar switcher's verb resolves every bundled id and refuses anything else, so a picker
+/// row can never open a blank document.
+#[test]
+fn the_example_switcher_resolves_exactly_the_bundled_ids() {
+    for source in crate::examples::grid2d::sources() {
+        assert!(example_document(source.id()).is_some(), "{} is offered by the picker but resolves to no document", source.id());
+    }
+    assert_eq!(example_document("pipes"), Some(crate::examples::grid2d::pipes::document()));
+    assert!(example_document("not-an-example").is_none());
+}
+
+/// 🌱️ Switching example replaces the whole document through `Effect::LoadDocument`: no artifact
+/// mutation exists for it, so no history patch is journalled and `canUndo` stays exactly where it
+/// was — re-picking the boot example is not an edit.
+#[test]
+fn switching_example_loads_a_document_instead_of_journalling_an_edit() {
+    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::DslValue::Object(vec![("exampleId".into(), dsl::DslValue::String("terrain".into()))]))).expect("decode");
+    assert_eq!(command, Grid2dEditorCommand::SetActiveExample { example_id: "terrain".into() });
+    assert_eq!(
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::DslValue::Object(vec![("id".into(), dsl::DslValue::String("pipes".into()))]))).expect("decode"),
+        Grid2dEditorCommand::SetActiveExample { example_id: "pipes".into() },
+        "the navbar's alternative argument spelling decodes to the same command"
+    );
+    let effect = reset_document_effect(&crate::examples::grid2d::pipes::document());
+    assert!(matches!(effect, semio_framework::kernel::Effect::LoadDocument { .. }), "a document swap rides LoadDocument, never a mutation");
+}
+
+/// 🖱️ A press on the grid surface runs the armed utility on exactly the cell under the pointer; the
+/// `select` utility only picks, and a press outside the authored grid resolves to no cell at all.
+#[test]
+fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
+    let document = crate::examples::grid2d::pipes::document();
+    let config = Grid2dWindowConfig::default();
+    let centre = grid::cell_at(&document, &config, 400.0, 300.0, 800.0, 600.0).expect("the pane centre is a cell");
+    assert_eq!(centre, (document.width / 2, document.height / 2));
+    let pinned = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_PIN, centre.0, centre.1).expect("pick").expect("the pin utility edits");
+    assert_eq!(pinned.1, format!("Pin cell ({}, {})", centre.0, centre.1));
+    let masked = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_MASK, 5, 5).expect("pick").expect("the mask utility edits");
+    assert_eq!(masked.1, "Unmask cell (5, 5)", "an already masked cell toggles back");
+    assert!(Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_SELECT, 1, 1).expect("pick").is_none(), "the select utility only picks");
+    assert_eq!(grid::cell_at(&document, &config, 1.0, 1.0, 800.0, 600.0), None, "a press beside the grid picks nothing");
+    assert!(!grid::owns_surface(preview::SURFACE_ID), "a press on the read-only preview surface never edits");
+    assert_eq!(
+        <Grid2dEditor as ArtifactEditor>::command_from_action(
+            "canvasPointerDown",
+            Some(&dsl::DslValue::Object(vec![
+                ("surfaceId".into(), dsl::DslValue::String(grid::SURFACE_ID.into())),
+                ("x".into(), dsl::DslValue::Number(dsl::Number::Float(400.0))),
+                ("y".into(), dsl::DslValue::Number(dsl::Number::Float(300.0))),
+                ("width".into(), dsl::DslValue::Number(dsl::Number::Float(800.0))),
+                ("height".into(), dsl::DslValue::Number(dsl::Number::Float(600.0))),
+            ]))
+        )
+        .expect("decode"),
+        Grid2dEditorCommand::CanvasPointerDown { surface_id: grid::SURFACE_ID.into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }
+    );
+}
+
+/// 🎥️ The canvas host syncs its camera as one nested object; the palette form states the scalars
+/// flat. They are two commands on purpose — a dispatch is refused when a command's own id is not
+/// the action it was admitted under — but they write the same camera.
+#[test]
+fn both_camera_spellings_decode_to_their_own_command() {
+    let nested = dsl::DslValue::Object(vec![(
+        "camera".into(),
+        dsl::DslValue::Object(vec![("x".into(), dsl::DslValue::Number(dsl::Number::Float(4.0))), ("y".into(), dsl::DslValue::Number(dsl::Number::Float(5.0))), ("zoom".into(), dsl::DslValue::Number(dsl::Number::Float(2.0)))]),
+    )]);
+    assert_eq!(
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", Some(&nested)).expect("decode"),
+        Grid2dEditorCommand::SyncCamera { x: 4.0, y: 5.0, zoom: 2.0 }
+    );
+    let flat = dsl::DslValue::Object(vec![("x".into(), dsl::DslValue::Number(dsl::Number::Float(4.0))), ("y".into(), dsl::DslValue::Number(dsl::Number::Float(5.0))), ("zoom".into(), dsl::DslValue::Number(dsl::Number::Float(2.0)))]);
+    assert_eq!(
+        <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", Some(&flat)).expect("decode"),
+        Grid2dEditorCommand::SetCamera { x: 4.0, y: 5.0, zoom: 2.0 }
+    );
 }
 
 #[test]

@@ -542,7 +542,13 @@ impl MutationDag {
 /// @emoji 🏔️ Runtime/wire twin of `os_spr::history::FrontierSummary` — the shape `db` and
 /// `framework/sync` exchange without a full history-log decode. Deliberately NOT unified with the
 /// durable-log-derived version: they serve different layers (live runtime state vs on-disk log).
-#[derive(Clone, Debug, PartialEq)]
+/// 🌱️ Carries serde's derives alongside the hand-written `ToValue`/`FromValue` twin below, the same
+/// transitional shape every sibling wire type in `📡️wire` holds: `server`'s CQRS contract embeds this
+/// struct inside serde-derived envelopes (`CommandEnvelope.causal_frontier`, `CommandOutcome`,
+/// `QueryConsistency::AtFrontier`, `QueryResult`), a bound only a real derive can satisfy. `serde` is
+/// an unconditional dependency of this crate, so the derive adds nothing to any target, wasm included.
+/// No `#[serde(rename_all = …)]`, matching the `ToValue` twin's snake_case field names byte-for-byte.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FrontierSummary {
     pub document_id: crate::ids::ArtifactId,
     pub head_edit_ordinal: u64,

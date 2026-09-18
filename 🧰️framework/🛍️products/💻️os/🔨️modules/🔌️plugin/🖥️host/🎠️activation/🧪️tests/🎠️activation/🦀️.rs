@@ -64,3 +64,29 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         eprintln!("[DEBUG] activation ownership case={} admitted={} kernel-retained={} drops={}", row["id"], result.is_ok(), kernel.actor_record(actor).await.is_some(), row["drops"]);
     }
 }
+
+/// ⚖️ LAW: the reason an artifact-kind open activates a plugin with reaches the GUEST. An app id that
+/// names a kind derives `OnArtifactKind` with that exact kind, a bare host app id derives nothing,
+/// and the event `kernel_event_to_wit` hands `reactor.poll` is the WIT `activate` carrying the same
+/// kind string — the declared→WIT bridge, now with a producer at both native activation sites.
+#[semio_framework_async_macros::async_test]
+async fn artifact_kind_app_ids_reach_the_guest_as_the_declared_activation_event() {
+    use semio_framework::kernel::ActivationEvent as DeclaredEvent;
+    assert_eq!(activation_event_for_app_id("s.beta.sheet@1/*#editor"), Some(DeclaredEvent::OnArtifactKind { kind: "s.beta.sheet".into() }));
+    assert_eq!(activation_event_for_app_id("s.cad.cad@1/*#viewer"), Some(DeclaredEvent::OnArtifactKind { kind: "s.cad.cad".into() }));
+    assert_eq!(activation_event_for_app_id("home"), None, "a bare landing app id declares no activation event");
+    assert_eq!(activation_event_for_app_id("s.beta.sheet@1/*"), None, "a coordinate without a role suffix is not a surface id");
+    assert!(activation_turn_event("home").is_none());
+    let event = activation_turn_event("s.beta.sheet@1/*#editor").expect("a surface app id produces one Activate event");
+    match crate::component::kernel_event_to_wit(&event, 7).await {
+        crate::component::wit_events::Event::Activate(activate) => {
+            assert_eq!(activate.instance, 7);
+            match activate.reason {
+                crate::component::wit_events::ActivationEvent::OnArtifactKind(kind) => assert_eq!(kind, "s.beta.sheet"),
+                _ => panic!("the guest must receive on-artifact-kind, not another activation-event case"),
+            }
+        }
+        _ => panic!("activation_turn_event must marshal onto the WIT activate event"),
+    }
+    eprintln!("[DEBUG] activation reason reaches the guest: s.beta.sheet@1/*#editor -> on-artifact-kind(s.beta.sheet)");
+}

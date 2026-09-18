@@ -1466,3 +1466,36 @@ fn visible_tile_count_never_exceeds_max_visible_tile_requests() {
     }
 }
 // #endregion 🔖️MercatorOracleFixture
+
+// #region 🔖️W14aTempRepro
+const W14A_GIS2D_FIXTURE: &str = include_str!("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/w14a-gis2d-map-fixture.json");
+
+#[test]
+fn w14a_gis2d_first_paint_repro() {
+    eprintln!("w14a: new");
+    let mut host = super::MapHost::new();
+    eprintln!("w14a: set_size");
+    host.set_size(1434, 814, 1.0);
+    eprintln!("w14a: sync_map_json bytes={}", W14A_GIS2D_FIXTURE.len());
+    host.sync_map_json(W14A_GIS2D_FIXTURE).expect("fixture parses");
+    eprintln!("w14a: set_render_mode combined");
+    host.set_render_mode("combined");
+    host.set_vector_style("colored");
+    host.set_lod_mode("automatic");
+    eprintln!("w14a: set_camera 0,0,1");
+    host.set_camera(0.0, 0.0, 1.0);
+    eprintln!("w14a: camera={}", host.camera_json());
+    eprintln!("w14a: pick_raster_tile_zoom");
+    let z = host.pick_raster_tile_zoom();
+    eprintln!("w14a: raster z={z}");
+    let vz = host.pick_vector_tile_zoom();
+    eprintln!("w14a: vector z={vz}");
+    eprintln!("w14a: visible raster tiles={}", visible_tiles(&host.camera, &host.viewport, z).len());
+    eprintln!("w14a: prepare_visible_tiles");
+    host.prepare_visible_tiles();
+    eprintln!("w14a: build_vector_scene");
+    let scene = host.build_vector_scene();
+    eprintln!("w14a: scene built, done");
+    drop(scene);
+}
+// #endregion 🔖️W14aTempRepro

@@ -1,0 +1,13 @@
+{
+  "title": "OS Hub Collaboration AI End To End",
+  "emoji": "🌐️",
+  "status": "open",
+  "description": "Complete the repo's single goal end to end: a working os s frontend with all plugins and artifacts, a working server hub backend (db, presence, auth), working multi-user collaboration over the hub, and working AI integration over MCP. Coordinated from a Fable 5.1 main session with Opus 5 workers and Sonnet 5 auditors; other agents work concurrently on other logical parts of the same files.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪4b70029f-4ce5-4b32-b3a7-7facba4939f0"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-18).",
+  "summary": "",
+  "files": []
+}

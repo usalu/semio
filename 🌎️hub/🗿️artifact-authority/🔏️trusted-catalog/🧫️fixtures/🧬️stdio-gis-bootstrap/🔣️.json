@@ -17,7 +17,7 @@
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
-        "executionProtocol": { "appChannelVersion": 15 },
+        "executionProtocol": { "appChannelVersion": 17 },
         "browserActor": {
           "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
           "path":"packages/gis/browser/closed-actor.mjs", "byteLength":3,
@@ -39,7 +39,7 @@
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
-        "executionProtocol": { "appChannelVersion": 15 },
+        "executionProtocol": { "appChannelVersion": 17 },
         "browserActor": { "kind":"none" },
         "codecCount": 26,
         "targetCount": 0

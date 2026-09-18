@@ -1,0 +1,5 @@
+# 📏️ Direct set-page-user-unit GraphQL payload.
+input SetPageUserUnitMutationInput {
+  index: Int
+  userUnit: Float
+}

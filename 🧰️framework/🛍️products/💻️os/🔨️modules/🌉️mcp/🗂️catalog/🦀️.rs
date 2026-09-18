@@ -336,6 +336,35 @@ fn is_framework_injected_action(action: &manifest::ActionDefinition) -> bool {
     matches!(action.kind, manifest::ActionKind::History | manifest::ActionKind::Clipboard | manifest::ActionKind::Interaction) || FRAMEWORK_VIEW_SHELL_ACTION_IDS.contains(&action.id.as_str())
 }
 
+/// 🎬️ One entry per distinct verb an app declares across all of its window kinds, in declaration
+/// order, each paired with the FIRST window kind that declares it. An app's window kinds are views
+/// onto one action registry — every plugin in the installed registry repeats its whole roster in
+/// every window kind (`note` 54 verbs × 2 kinds, `architect` 39 × 5, `norm` 240 × 15) — so an action
+/// id is a verb of the APP, not of a window, and collapsing them here is what makes
+/// `<plugin>.<app>.<verb>` a unique capability id at all. The retained window kind is deliberately a
+/// concrete declaring kind rather than a `"*"` marker: it is the `window_kind_id` a dispatch has to
+/// address (`ActionAddress.window_kind_id`, checked against the guest's own
+/// `registry.window_action`), which `"*"` could not satisfy. Two window kinds declaring the same id
+/// with DIFFERENT definitions stay a real collision, reported as
+/// [`CatalogError::DuplicateCapabilityId`].
+fn app_action_verbs(app: &manifest::AppDefinition) -> Result<Vec<(&manifest::ActionDefinition, &str)>, CatalogError> {
+    let mut verbs: Vec<(&manifest::ActionDefinition, &str)> = Vec::new();
+    let mut seen: BTreeMap<&str, &manifest::ActionDefinition> = BTreeMap::new();
+    for window_kind in app.window_kinds.iter() {
+        for action in &window_kind.actions {
+            match seen.get(action.id.as_str()) {
+                Some(declared) if *declared == action => continue,
+                Some(_) => return Err(CatalogError::DuplicateCapabilityId(format!("{}.{}", app.id, action.id))),
+                None => {
+                    seen.insert(action.id.as_str(), action);
+                    verbs.push((action, window_kind.id.as_str()));
+                }
+            }
+        }
+    }
+    Ok(verbs)
+}
+
 /// 🕹️ Every framework-injected action reachable from `apps`, deduped by id (first occurrence wins —
 /// every app resolves the identical `ActionDefinition` for a given framework id, since none of these
 /// take app-specific data into their manifest shape) — compiled into `framework.<action.id>`
@@ -747,16 +776,14 @@ pub fn compile(source: &CatalogSource, locale: Locale, terminology: Terminology)
             let app_id = app.id.clone();
             let artifact_kind = app.dialect.artifact_kind.clone();
 
-            for window_kind in app.window_kinds.iter() {
-                for action in &window_kind.actions {
-                    if is_framework_injected_action(action) {
-                        continue;
-                    }
-                    let id = format!("{plugin_id}.{app_id}.{}", action.id);
-                    let owner = CapabilityOwner::Plugin { plugin_id: plugin_id.clone(), app_id: Some(app_id.clone()), window_kind_id: Some(window_kind.id.clone()), mode_id: None };
-                    let source_ref = CapabilitySource::Action { plugin_id: plugin_id.clone(), app_id: app_id.clone(), window_kind_id: window_kind.id.clone(), action_id: action.id.clone() };
-                    insert_capability(&mut entries, capability_from_action(&id, owner, Some(artifact_kind.clone()), action, source_ref, locale, terminology))?;
+            for (action, window_kind_id) in app_action_verbs(app)? {
+                if is_framework_injected_action(action) {
+                    continue;
                 }
+                let id = format!("{plugin_id}.{app_id}.{}", action.id);
+                let owner = CapabilityOwner::Plugin { plugin_id: plugin_id.clone(), app_id: Some(app_id.clone()), window_kind_id: Some(window_kind_id.to_string()), mode_id: None };
+                let source_ref = CapabilitySource::Action { plugin_id: plugin_id.clone(), app_id: app_id.clone(), window_kind_id: window_kind_id.to_string(), action_id: action.id.clone() };
+                insert_capability(&mut entries, capability_from_action(&id, owner, Some(artifact_kind.clone()), action, source_ref, locale, terminology))?;
             }
 
             for command in &app.commands {
@@ -816,12 +843,6 @@ pub fn compile(source: &CatalogSource, locale: Locale, terminology: Terminology)
         dialog_ids.dedup();
         insert_capability(&mut entries, ui_dialog_open_capability(&dialog_ids))?;
     }
-    if !template_ids.is_empty() {
-        template_ids.sort();
-        template_ids.dedup();
-        insert_capability(&mut entries, artifact_create_capability(&template_ids))?;
-    }
-
     for command in &source.os_commands {
         insert_capability(&mut entries, capability_from_os_command(command, locale, terminology))?;
     }
@@ -831,6 +852,20 @@ pub fn compile(source: &CatalogSource, locale: Locale, terminology: Terminology)
     }
     for capability in &source.gateway {
         insert_capability(&mut entries, capability.clone())?;
+    }
+
+    // 🌱️ `artifact.create` has exactly ONE definition in a compiled catalog: `🗿️artifact`'s own
+    // invocable `artifact_create` tool when the source carries it (the live gateway always does),
+    // otherwise this module's catalog-only projection. The declared templates are an ARGUMENT of
+    // that verb, never a second capability wearing its id — which is what made a live catalog with
+    // both sources refuse to compile at all (`duplicate capability id: artifact.create`).
+    if !template_ids.is_empty() {
+        template_ids.sort();
+        template_ids.dedup();
+        match entries.get_mut("artifact.create") {
+            Some(capability) => capability.input_schema = crate::schema::with_artifact_create_templates(capability.input_schema.clone(), &template_ids),
+            None => insert_capability(&mut entries, artifact_create_capability(&template_ids))?,
+        }
     }
 
     let sorted: Vec<CapabilityDefinition> = entries.into_values().collect();

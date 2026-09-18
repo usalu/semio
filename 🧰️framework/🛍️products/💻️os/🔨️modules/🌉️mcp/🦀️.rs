@@ -27,6 +27,13 @@ pub use crate::search::*;
 pub use crate::transport::*;
 pub use crate::ui::*;
 pub use crate::workspace::*;
+// 🧫️ Test-only: `🧪️tests/🧱️source-builders` is a `#[cfg(test)] pub(crate) mod` on the crate root
+// (`📦️packages/🦀️rust/🦀️.rs`), and this crate's own test modules reach its builders unqualified
+// through this root (`crate::note_descriptor()`, `note_and_cad_source()`) exactly as they reach every
+// other facet above. Restored after a repo-wide sweep dropped it and left `📇️registry`/`🧪️tests`'
+// own `#[cfg(test)]` modules unresolvable — not a new export, and invisible to any non-test build.
+#[cfg(test)]
+pub use crate::source_builders::*;
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the glob re-exports
 // above already bring every facet's public items into this module's namespace unqualified (matching
 // this file's pre-existing convention — `StdioTransport`/`GatewayError`/`HttpTransportOptions` below
@@ -240,7 +247,7 @@ fn context_resolve_handler(catalog: &Catalog, counter: &std::sync::atomic::Atomi
 /// stubs (`artifact.*`, `job.*`, `ui.*`), so this is now purely a census: there is no such thing
 /// as a declared-but-unimplemented tool here any more. A tool's PRESENCE never depends on which
 /// progressive-enhancement tier the server is running in; only a call's RESULT does.
-pub const GATEWAY_TOOL_NAMES: [&str; 26] = [
+pub const GATEWAY_TOOL_NAMES: [&str; 27] = [
     "capabilities_search",
     "capabilities_describe",
     "context_resolve",
@@ -259,6 +266,7 @@ pub const GATEWAY_TOOL_NAMES: [&str; 26] = [
     "artifact_export",
     "inference_list",
     "inference_get",
+    "inference_run",
     "inference_submit",
     "inference_events",
     "inference_cancel",
@@ -493,9 +501,21 @@ pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: Ag
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
+    let label = principal.label.clone();
     let tools = build_tool_registry(catalog.clone(), actions, principal, None, bridge.clone());
-    let resources = WorkspaceResourceRegistry::new(catalog).with_bridge(bridge);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::Null(NullBackend)))
+    let resources = WorkspaceResourceRegistry::new(catalog).with_bridge(bridge.clone());
+    let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::Null(NullBackend)));
+    publishing_agent_conversation(server, bridge, &label)
+}
+
+/// 💬️ Publishes this server's real `tools/call` traffic onto the shell bridge, when there IS a
+/// bridge. Factored out because both server constructors need the identical two lines, and because
+/// "no bridge slot" must stay a silent, ordinary tier rather than a branch each caller re-invents.
+fn publishing_agent_conversation(server: McpServer, bridge: Option<BridgeSlot>, label: &str) -> McpServer {
+    match bridge {
+        Some(slot) => server.publishing_conversation_to(std::sync::Arc::new(crate::bridge::AgentConversation::new(slot, label))),
+        None => server,
+    }
 }
 
 /// 🏗️ Convenience default used by every pre-existing P1a/P1b/P2 test and by anywhere a live backend
@@ -524,9 +544,11 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
     actions.bind_history_undo_port(workspace.clone());
+    let label = principal.label.clone();
     let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: bridge.clone() };
-    let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)))
+    let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge.clone());
+    let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)));
+    publishing_agent_conversation(server, bridge, &label)
 }
 
 /// 🔄 Rebuilds the discovery projection for every list/call observation. A Hub binding that is

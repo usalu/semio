@@ -60,7 +60,7 @@ fn paint_panel(surface: &str, document: &UiDocumentLease) -> PaintedPanel {
         assert!(done || !cursor.terminal_is_fault(), "the panel paint faulted in phase {}", cursor.phase_name());
         done
     });
-    assert!(complete, "the panel paint completed within its opportunity ceiling");
+    assert!(complete, "the panel paint completed within its opportunity ceiling (parked in {})", cursor.phase_name());
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
     crate::interpreter::register_retained_hit_targets(surface, &mut input);
     PaintedPanel { input, instances }
@@ -131,9 +131,18 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     assert!(shell.chrome_build.content_has_focus(surface), "keyboard focus lands in the ToolRun panel");
     assert_eq!(focused[..2], ["framework.toolRun.1.toolRunPause".to_string(), "framework.toolRun.1.toolRunAbort".to_string()], "Tab walks the enabled run buttons in order and skips the disabled ones: {focused:?}");
     assert!(!focused.iter().any(|key| key.ends_with("toolRunStep")), "a disabled run button never takes focus: {focused:?}");
-    for _ in 0..focused.len() - 1 {
-        crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+    let mut wrapped = None;
+    for _ in 0..=focused.len() {
+        let commands = crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+        wrapped = commands.iter().find_map(|command| match command {
+            ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
+            _ => None,
+        });
+        if wrapped.as_deref().is_some_and(|key| key.ends_with("toolRunPause")) {
+            break;
+        }
     }
+    assert_eq!(wrapped.as_deref(), Some("framework.toolRun.1.toolRunPause"), "Tab wraps past the last enabled button back onto the first");
     crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
     assert_eq!(dispatched(&mut painted.input), vec![serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0.0 })], "Enter on the focused Pause button dispatches the run's pause");
     while !document.close_step() {}

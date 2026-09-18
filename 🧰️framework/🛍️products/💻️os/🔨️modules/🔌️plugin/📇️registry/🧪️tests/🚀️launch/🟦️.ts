@@ -17,7 +17,7 @@ describe("plugin registry generator preview targets", () => {
     const expected = Object.entries(taxonomy.generatorContracts).filter((entry): entry is [string, GeneratorContract & { readonly previewTarget: string }] => typeof entry[1].previewTarget === "string");
     const previewOrder = [
       ["actor-typegen", 206.01], ["assets-build", 206.02], ["async-typegen", 206.03],
-      ["dev-distribution-bundle", 206.035],
+      ["dev-distribution-bundle", 206.035], ["flow-browser-package", 206.037],
       ["framework-manifest", 206.04], ["graph-catalog", 206.05], ["jco-package-adapter", 206.055],
       ["playground-session", 206.057],
       ["plugin-registry", 206.06], ["print-latex-tokens", 206.07], ["report-actor-network", 206.075], ["scale-fixture", 206.08],

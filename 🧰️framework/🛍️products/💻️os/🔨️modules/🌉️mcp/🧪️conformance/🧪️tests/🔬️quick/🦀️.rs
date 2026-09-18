@@ -44,9 +44,10 @@ fn unknown_scope_is_flagged() {
 #[test]
 fn bare_action_id_grammar_violation_is_flagged() {
     let mut catalog = compiled();
-    let mut capability = catalog.entries[0].clone();
+    let index = catalog.entries.iter().position(|entry| matches!(entry.owner, CapabilityOwner::Plugin { .. })).expect("the note+cad fixture always compiles plugin-owned capabilities");
+    let mut capability = catalog.entries[index].clone();
     capability.id = crate::catalog::CapabilityRef("bareActionId".to_string());
-    catalog.entries[0] = capability;
+    catalog.entries[index] = capability;
     let findings = check(&catalog);
     assert!(findings.iter().any(|finding| finding.message.contains("must start with")));
 }

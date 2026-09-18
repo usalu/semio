@@ -1056,6 +1056,46 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>,
     Ok(entries)
 }
 
+/// 🚪️ Whether this isolate installs the frame Worker's lazy plugin door. The page-hosted embeddable
+/// boot (`🎬️renderer-boot/🟦️.ts`) installs no door at all, so the shell must refuse a lazy install
+/// there instead of awaiting a call it can never make.
+#[cfg(target_arch = "wasm32")]
+pub fn js_plugin_install_door_available() -> bool {
+    js_plugin_install_door("semioWgpuInstallPlugin").is_some()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn js_plugin_install_door(name: &str) -> Option<Function> {
+    Reflect::get(&js_sys::global(), &JsValue::from_str(name)).ok().and_then(|value| value.dyn_into::<Function>().ok())
+}
+
+/// 🧩️ The browser twin of `load_wasm_plugins`: ONE plugin, on demand, through the frame Worker's own
+/// module loader. The boot plan eager-mounts the variant's plugins, but a hub asked to open an
+/// artifact kind whose owner was outside that plan — or whose mount faulted and was skipped by
+/// `mountPluginHandles`'s per-plugin isolation — has no other way to reach a module, because the wasm
+/// renderer cannot fetch one itself. `semioWgpuInstallPlugin` answers the SAME
+/// `pluginHandleForBridge` handle the eager mount produces, so [`ProgramBridgeEntry::from_js`] stays
+/// the one admission for both paths and no second handle shape exists to keep in sync.
+#[cfg(target_arch = "wasm32")]
+pub async fn install_js_plugin(plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
+    let door = js_plugin_install_door("semioWgpuInstallPlugin").ok_or_else(|| "this isolate installs no semioWgpuInstallPlugin door".to_string())?;
+    let result = door.call1(&JsValue::NULL, &JsValue::from_str(plugin_id)).map_err(|error| format!("plugin {plugin_id}: {}", describe_js_rejection(&error)))?;
+    let handle = match result.dyn_ref::<js_sys::Promise>() {
+        Some(promise) => JsFuture::from(promise.clone()).await.map_err(|error| format!("plugin {plugin_id}: {}", describe_js_rejection(&error)))?,
+        None => result,
+    };
+    ProgramBridgeEntry::from_js(plugin_id.to_string(), handle).map_err(|error| format!("plugin {plugin_id}: {error}"))
+}
+
+/// 🛑️ Withdraws an in-flight [`install_js_plugin`] request so its awaited promise settles now rather
+/// than at the end of a module fetch nothing can abort. Answers whether a request was actually
+/// withdrawn — `false` for an isolate with no door, and for a request that had already settled.
+#[cfg(target_arch = "wasm32")]
+pub fn cancel_js_plugin_install(plugin_id: &str) -> bool {
+    let Some(door) = js_plugin_install_door("semioWgpuCancelPluginInstall") else { return false };
+    door.call1(&JsValue::NULL, &JsValue::from_str(plugin_id)).ok().and_then(|value| value.as_bool()).unwrap_or(false)
+}
+
 //#region 🏠️🧳️PluginHostConfig
 // 🐛️ `generated_plugin_hosts` is declared at the crate root (below, outside this inline `program_bridge`
 // module) and re-exported here — a `#[path]` file-module declared *inside* an inline `mod` block resolves
@@ -1064,7 +1104,7 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>,
 // lexically cancelled out) to actually exist; no number of `../../../🌉️ProgramBridge/🎯️targets`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
+pub use crate::generated_plugin_hosts::{is_space_mode, resolve_artifact_kind_activation_owner, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, PLUGIN_ARTIFACT_KIND_ACTIVATIONS};
 //#endregion 🏠️🧳️PluginHostConfig
 
 pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) -> Vec<ProgramBridgeEntry> {

@@ -141,7 +141,7 @@ impl HttpAdmission {
         match self {
             Self::Credential(credential) => credential.authorizes_capability(candidate),
             #[cfg(test)]
-            Self::HostSnapshot(expected) => constant_time_eq(candidate.as_bytes(), expected),
+            Self::Fixture(expected) => constant_time_eq(candidate.as_bytes(), expected),
         }
     }
 
@@ -1126,7 +1126,10 @@ impl HttpTransportState {
             | crate::bridge::ShellToGateway::ShellStatePatch { .. }
             | crate::bridge::ShellToGateway::Instances { .. }
             | crate::bridge::ShellToGateway::ShellCommandResult { .. }
-            | crate::bridge::ShellToGateway::Approval { .. }) => {
+            | crate::bridge::ShellToGateway::Approval { .. }
+            // 💬️ A human turn typed at the agent is recorded exactly like every other shell→gateway
+            // observation: onto its own connection, for `semio://ui/agent-messages` to drain.
+            | crate::bridge::ShellToGateway::AgentMessage { .. }) => {
                 let Some(id) = connection.bridge.id else { return ConnectionTurn::Terminal(HttpTerminalReason::Malformed) };
                 self.consume_websocket_ingress(connection, consumed);
                 self.bridge.record(id, message);

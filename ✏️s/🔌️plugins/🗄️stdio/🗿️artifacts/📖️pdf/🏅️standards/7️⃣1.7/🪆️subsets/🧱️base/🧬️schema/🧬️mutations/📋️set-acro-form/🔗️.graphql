@@ -1,0 +1,4 @@
+# 📋️ Direct set-acro-form GraphQL payload.
+input SetAcroFormMutationInput {
+  form: PdfAcroFormInput
+}

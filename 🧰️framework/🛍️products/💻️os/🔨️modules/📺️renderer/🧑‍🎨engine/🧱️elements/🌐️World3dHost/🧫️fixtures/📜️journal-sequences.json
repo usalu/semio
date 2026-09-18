@@ -1,0 +1,181 @@
+{
+  "$comment": "📜️ One world-pane journey step per case, with the ACTION JOURNAL each renderer publishes for it, in order. `react` is measured, not designed: it is the per-step `actions` of the 2026-09-18 side-by-side parity run (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/parity-run-2/steps.json`), filtered to the world surface's own controller. `wgpu` is the contract `♾️infinite/🌍️world`'s retained interaction authority answers, and every place the two differ carries `why`. The gesture is the parity probe's own (`🐍️parity-interact-probe.mjs`): a drag is one move onto the aim point, a press, eight interpolated moves and a release; a wheel is one move and one `-360` tick; a click is one move, a press and a release at the same point.",
+  "surface": {
+    "aim": [
+      280.0,
+      180.0
+    ],
+    "dragTo": [
+      460.0,
+      270.0
+    ],
+    "panTo": [
+      140.0,
+      220.0
+    ],
+    "wheelDelta": -360.0
+  },
+  "steps": [
+    {
+      "id": "orbit-drag",
+      "gesture": {
+        "kind": "drag",
+        "button": 0,
+        "to": "dragTo"
+      },
+      "react": [
+        "interactionHover",
+        "noteShellCommand",
+        "interactionSelect",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "interactionSelect",
+        "setCamera",
+        "interactionHover"
+      ],
+      "camera": "unmoved",
+      "why": "The LEFT button drives no camera at all on either renderer — React's `resolveWorldOrbitMouseButtonsIdle` answers `LEFT: null`, and `plan_world3d_drag` refuses button 0 — so a left drag marquees and the release owes only the unconditional camera report, never a `noteWorldNavigation`. `noteShellCommand` is the shell's own row for the step and not the world surface's: it is the `shell.windowActivate` history note React's `🪟️Window/🟦️.tsx` arms from a capture-phase `onPointerDownCapture` on the whole window element, so the press into the pane BODY activates the window that owns it. The wgpu shell had no press-into-a-body activation site at all until ticket 26/09/17 packet W13c added `activate_window_under_pointer`; the note itself is `arm_window_activation_note`'s, from packet W10b. The trailing hover is the drag's own: the pointer ENDED 180px away from where it started, and a hover publishes on a change of target (r3f's `onPointerOver`/`onPointerOut`, this lane's `local_hover_id` gate)."
+    },
+    {
+      "id": "pan-drag",
+      "gesture": {
+        "kind": "drag",
+        "button": 1,
+        "to": "panTo"
+      },
+      "react": [
+        "interactionHover",
+        "interactionSelect",
+        "interactionSelect",
+        "noteWorldNavigation",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "interactionSelect",
+        "noteWorldNavigation",
+        "setCamera",
+        "interactionHover"
+      ],
+      "camera": "panned",
+      "why": "The MIDDLE press publishes a selection on BOTH renderers. React reaches it through R3F rather than through a handler of its own: `🌐️World3dHost/🟦️.tsx`'s `handlePointerDown` returns immediately for `event.button !== 0`, but the `<Canvas>`'s `onPointerMissed={handleEmptyClick}` is raised on a `pointerdown` that resolved no event-handling object — for any button — and again on the click, and `handleEmptyClick` publishes `interactionSelect` over the hovered target or an empty selection. A primary press arms the marquee, whose `wasMarqueeDragRef` swallows the first of the two calls; a middle press arms nothing, so React journals TWO. This lane publishes ONE — the same `WorldRayPickPurpose::Instance` pick a primary click runs, through `plan_world3d_non_primary_press_pick` — because a second selection of the same target is a duplicate, not parity, and the probe's verdict is set-based. The camera half is unchanged: a middle drag pans, so the settle owes `noteWorldNavigation` then one debounced `setCamera`."
+    },
+    {
+      "id": "zoom-wheel",
+      "gesture": {
+        "kind": "wheel"
+      },
+      "react": [
+        "interactionHover",
+        "noteWorldNavigation",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "noteWorldNavigation",
+        "setCamera"
+      ],
+      "camera": "zoomed",
+      "why": "Identical up to the trailing hover, which both renderers publish only when the moved camera actually changed what is under the pointer. A dolly along the view axis keeps the pointer on its own target, so the single-instance law scene reports no change; React's measured scene has neighbours to move across."
+    },
+    {
+      "id": "pick-instance",
+      "gesture": {
+        "kind": "click",
+        "button": 0
+      },
+      "react": [
+        "interactionHover",
+        "interactionSelect",
+        "interactionSelect",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "interactionSelect",
+        "setCamera"
+      ],
+      "camera": "unmoved",
+      "why": "One pick is one selection. React's second `interactionSelect` is the same r3f down/missed pair as `pan-drag`'s."
+    },
+    {
+      "id": "context-menu",
+      "gesture": {
+        "kind": "click",
+        "button": 2
+      },
+      "react": [
+        "interactionSelect",
+        "interactionSelect",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "interactionSelect",
+        "setCamera"
+      ],
+      "camera": "unmoved",
+      "why": "Neither renderer publishes a menu VERB — React deleted `contextMenuAt` when the target moved onto the menu request, and this lane deleted its `worldContextMenuAt` twin with it; the menu is the shell's, opened on the press from `world3d_context_menu_surface`'s hits/selection. The press ALSO reaches the surface, as React's does: `onContextMenu` opens the menu off the host `<div>` while the same `pointerdown` still reaches the `<canvas>` under it, so the right press publishes the same selection `pan-drag`'s middle press does (the renderer's ingress stopped returning after the shell menu — ticket 26/09/17 packet W13c). The leading hover is the pane's FIRST, which the law scene always owes; in the probe's journey the preceding `pick-instance` step already published it for this very target and both renderers dedupe on the published target (r3f's `onPointerOver`, this lane's `local_hover_id`), which is why React journals none here."
+    },
+    {
+      "id": "modal-open",
+      "gesture": {
+        "kind": "modal"
+      },
+      "react": [
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover"
+      ],
+      "camera": "unmoved",
+      "why": "A modal layer OPENING — a context menu, a dropdown, a dialog, the tour — clears the hover the pane published, with no pointer move of its own. React's overlays take pointer events the instant they mount, so r3f raises `onPointerOut` there and then and `dispatchInstanceHover(null)` lands inside the step that opened the layer. This lane answers the same: while `pointer_input_is_modal()` holds, a surface that still publishes a hover is handed one `WorldInteractionPhase::PointerLeave` and nothing else, and the clear retires the hover so no later frame repeats it. Before ticket 26/09/17 packet W13c the clear waited for the next MOVE, so it rode along to whatever step moved the pointer next — the stray `interactionHover targets:[]` in `example-picker-open`, ten steps and six keyboard chords after the menu that caused it."
+    },
+    {
+      "id": "coalesced-drag",
+      "gesture": {
+        "kind": "drag",
+        "button": 1,
+        "to": "panTo",
+        "coalesce": true
+      },
+      "react": [
+        "interactionHover",
+        "interactionSelect",
+        "noteWorldNavigation",
+        "setCamera",
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover",
+        "interactionSelect",
+        "noteWorldNavigation",
+        "setCamera",
+        "interactionHover"
+      ],
+      "camera": "panned",
+      "why": "The SAME gesture as `pan-drag`, with its eight moves delivered without the authority stepping in between — which is what the live page does: the frame worker drains its input queue far faster than the retained authority answers it, and `🗑️generated/w12c-parity-run-19/wgpu/console.txt` measured `queued=10` in front of one eight-move drag, ten full pick/plan turns for one gesture. React never sees a move per DOM event either — `🚚️browser-frame-transport/🟦️.ts`'s `enqueueReplaceable` keeps ONE sample per pointer identity per animation frame and the host's hover dispatcher \"keeps at most one outstanding and coalesces the rest onto the latest target\". So this queue folds a fresh move onto the one already waiting at its tail: `dx`/`dy` accumulate and `x`/`y` take the newest sample, which is exact for classification — the journal, its order and the settled camera are IDENTICAL to `pan-drag`'s. Folding is refused for a LASSO marquee and a live paint stroke, whose gestures read the samples themselves, and never onto the FRONT, which a live cursor may already be stepping."
+    },
+    {
+      "id": "chrome-press",
+      "gesture": {
+        "kind": "leave"
+      },
+      "react": [
+        "interactionHover"
+      ],
+      "wgpu": [
+        "interactionHover"
+      ],
+      "camera": "unmoved",
+      "why": "A pointer that moves onto the shell's chrome — a navbar panel tab, a pane chip, a window cap, the split gutter, an open dropdown — leaves this surface. React's chrome is a DOM layer above the `<canvas>`, so the canvas receives no move, no press and no release for the whole sequence, and the one thing it does receive is r3f's `onPointerOut`, which re-publishes `dispatchInstanceHover` with no target. This lane answers the same with one `WorldInteractionPhase::PointerLeave`: the published hover's clear, and nothing else — no `interactionSelect` (the release never arrives) and no `setCamera` (there is no gesture to settle). A leave over a surface that publishes no hover journals nothing at all. Before ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W12a the press reached the pane under the chrome and the journal carried `interactionHover` + `interactionSelect` with EMPTY targets, i.e. every chrome click also cleared the world selection (`📓️w11a-prepared-world-mesh-missing.md` §6 family A)."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🚪️set-open-action",
+  "semanticKind": "set-open-action",
+  "displayName": "Set Open Action",
+  "emoji": "🚪️",
+  "aggregateVariant": "SetOpenAction",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-open-action",
+  "binaryTag": 52,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

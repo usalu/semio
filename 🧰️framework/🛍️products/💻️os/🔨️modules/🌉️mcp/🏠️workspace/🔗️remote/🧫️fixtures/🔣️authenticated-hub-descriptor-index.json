@@ -41,12 +41,7 @@
       "responses": [
         {
           "status": 200,
-          "body": {
-            "userId": "user-a",
-            "email": "a@example.invalid",
-            "displayName": "A",
-            "expiresAt": 900000
-          }
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"external\"}"
         },
         {
           "status": 200,
@@ -66,12 +61,7 @@
       "responses": [
         {
           "status": 200,
-          "body": {
-            "userId": "user-a",
-            "email": "a@example.invalid",
-            "displayName": "A",
-            "expiresAt": 900000
-          }
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"external\"}"
         },
         {
           "status": 200,
@@ -95,12 +85,7 @@
       "responses": [
         {
           "status": 200,
-          "body": {
-            "userId": "user-a",
-            "email": "a@example.invalid",
-            "displayName": "A",
-            "expiresAt": 900000
-          }
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"external\"}"
         },
         {
           "status": 200,

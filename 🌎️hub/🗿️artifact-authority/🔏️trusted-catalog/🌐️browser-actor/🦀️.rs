@@ -7,7 +7,7 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum TrustedBundleBrowserActorV1 {
-    None,
+    None {},
     ClosedBrowserActor {
         schema: String,
         codegen_policy: String,
@@ -30,7 +30,7 @@ fn actor_byte_length<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Resul
 impl TrustedBundleBrowserActorV1 {
     pub(super) fn identity(&self) -> DocumentOpenBrowserActorV1 {
         match self {
-            Self::None => DocumentOpenBrowserActorV1::None,
+            Self::None {} => DocumentOpenBrowserActorV1::None,
             Self::ClosedBrowserActor { schema, codegen_policy, sha256, source_component_sha256, source_descriptor_byte_sha256, policy_sha256, import_interfaces, .. } => DocumentOpenBrowserActorV1::ClosedBrowserActor {
                 schema: schema.clone(),
                 codegen_policy: codegen_policy.clone(),
@@ -45,7 +45,7 @@ impl TrustedBundleBrowserActorV1 {
 
     pub(super) fn file(&self) -> Option<TrustedBundleFileV1> {
         match self {
-            Self::None => None,
+            Self::None {} => None,
             Self::ClosedBrowserActor { path, byte_length, sha256, .. } => Some(TrustedBundleFileV1 { path: path.clone(), byte_length: *byte_length, sha256: sha256.clone() }),
         }
     }
@@ -66,7 +66,7 @@ impl TrustedBundleBrowserActorV1 {
 
     pub(super) fn append_generation(&self, output: &mut Vec<u8>) -> Result<(), AuthorityError> {
         match self {
-            Self::None => append_document_open_catalog_field(output, b"none"),
+            Self::None {} => append_document_open_catalog_field(output, b"none"),
             Self::ClosedBrowserActor { schema, codegen_policy, path, byte_length, sha256, source_component_sha256, source_descriptor_byte_sha256, policy_sha256, import_interfaces } => {
                 for value in ["closed-browser-actor", schema, codegen_policy, path] {
                     append_document_open_catalog_field(output, value.as_bytes())?;

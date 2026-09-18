@@ -81,10 +81,10 @@ fn pane_chips_match_the_react_pane_fixture() {
         assert_eq!(chip.icon_id(), declared["icon"].as_str().expect("chip icon"), "🪟️ {name} icon");
         assert_eq!(shell_chrome_string(chip.label_key(), false), declared["label"]["en"].as_str().expect("chip label en"), "🪟️ {name} label (en)");
         assert_eq!(shell_chrome_string(chip.label_key(), true), declared["label"]["de"].as_str().expect("chip label de"), "🪟️ {name} label (de)");
-        let expected = declared["controlId"].as_str().expect("chip control id").replace("{windowId}", "pane-top");
+        let expected = declared["controlId"].as_str().expect("chip control id").replace("{windowSegment}", "paneTop");
         assert_eq!(chip.control_id("pane-top", true), expected, "🪟️ {name} folded control id");
         if let Some(open) = declared["controlIdOpen"].as_str() {
-            assert_eq!(chip.control_id("pane-top", false), open.replace("{windowId}", "pane-top"), "🪟️ {name} unfolded control id");
+            assert_eq!(chip.control_id("pane-top", false), open.replace("{windowSegment}", "paneTop"), "🪟️ {name} unfolded control id");
         }
     }
 }
@@ -166,7 +166,7 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
 
 /// 🎛️ **The fold-round-trip pin.** The Window Options chip is registered on BOTH sides of the fold, so
 /// a rail that defaults folded is still reachable, and the ids are exactly the
-/// `shell.measures.unfold.*`/`shell.measures.fold.*` the shell already dispatches. Painted through the
+/// `framework.window.<segment>.measures.{unfold,fold}` React mints. Painted through the
 /// real chip row, so the glass region and the hit come from the code the boot runs.
 ///
 /// 🩸️ Nothing painted this chip with a LABEL at all: the pre-parity renderer drew a bare `settings-2`
@@ -186,18 +186,19 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
                 break;
             }
         }
-        (input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>(), draw.glass_regions.len())
+        // 🎯️ Deferred to `pane_overlay_hits` — see `ShellChromeFramePhase::PaneOverlayHits`.
+        (shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>(), draw.glass_regions.len())
     };
     let mut shell = split_pane_shell();
     shell.measures_folded.insert("pane-top".into(), true);
     shell.window_measures_documents.clear();
     let (folded_ids, glass) = paint(&mut shell);
     assert_eq!(glass, WindowPaneChip::ALL.len() - 1, "🪟️ every mounted chip is its own glass region (no world surface, so no projection chip)");
-    assert!(!folded_ids.iter().any(|id| id.starts_with("shell.measures.")), "🎛️ a window that projects no measures mounts the chip DISABLED and registers no hit");
+    assert!(!folded_ids.iter().any(|id| id.starts_with("framework.window.paneTop.measures.")), "🎛️ a window that projects no measures mounts the chip DISABLED and registers no hit");
     shell.measures_folded.insert("pane-top".into(), false);
     assert!(!shell.measures_rail_folded("pane-top"));
-    assert_eq!(WindowPaneChip::WindowOptions.control_id("pane-top", false), "shell.measures.fold.pane-top");
-    assert!(folded_ids.iter().any(|id| id == "shell.action.fold.pane-top"), "🎛️ the enabled chips do register their hits: {folded_ids:?}");
+    assert_eq!(WindowPaneChip::WindowOptions.control_id("pane-top", false), "framework.window.paneTop.measures.fold");
+    assert!(folded_ids.iter().any(|id| id == "framework.window.paneTop.engagement.toggle"), "🎛️ the enabled chips do register their hits: {folded_ids:?}");
 }
 
 /// 🎯️ **The dispatch pin.** Each chip's control id flips ONLY its own window's state — the fold
@@ -215,14 +216,110 @@ fn each_pane_chip_dispatches_its_own_window_state() {
     assert!(!shell.window_actions_folded("pane-top") && shell.window_actions_folded("pane-perspective"), "🎯️ Actions unfolds only its own pane");
     press(&mut shell, WindowPaneChip::Search.control_id("pane-perspective", true));
     assert!(!shell.window_actions_folded("pane-perspective"), "🎯️ Search drives the same `actionsFolded` its pane's Actions chip does");
-    assert_eq!(shell.active_window_id.as_deref(), Some("pane-perspective"), "🎯️ opening a pane's search focuses that pane, which is what scopes the palette to it");
-    assert!(shell.search_open && matches!(shell.overlay_state, OverlayState::Search));
+    assert_eq!(shell.active_window_id.as_deref(), Some("pane-perspective"), "🎯️ pressing any chip activates its own window, as React's `onPointerDownCapture` → `onActivate` does");
+    assert!(!shell.search_open && matches!(shell.overlay_state, OverlayState::None), "🎯️ and it opens the WINDOW's search pane, never the shell's centred `⌘K` palette");
     press(&mut shell, WindowPaneChip::Utilities.control_id("pane-top", true));
     assert!(!shell.utility_bar_folded("pane-top") && shell.utility_bar_folded("pane-perspective"), "🎯️ Utilities unfolds only its own pane");
     press(&mut shell, WindowPaneChip::Utilities.control_id("pane-top", false));
     assert!(shell.utility_bar_folded("pane-top"), "🎯️ the unfolded chip carries the fold id");
     press(&mut shell, WindowPaneChip::WindowOptions.control_id("pane-perspective", true));
     assert!(!shell.measures_rail_folded("pane-perspective") && shell.measures_rail_folded("pane-top"), "🎯️ Window Options unfolds only its own pane");
+}
+
+/// 🪟️ **The stacking law.** A pane chip's hit row is NOT registered where it is painted: it is held in
+/// `pane_overlay_hits` and flushed in its own chrome phase, which runs after the window BODIES and
+/// BEFORE the docked panels. `InputState::hit_at` resolves in reverse registration order, so that one
+/// order is React's whole three-level stack: `--z-window: 10` under `--z-pane: 20` under
+/// `--z-panel: 30` (`🖱️ui/🎨️styling/🖌️ui/🎨️.css:834-836`). A chip therefore takes the pointer from
+/// the world surface it is painted over, and a docked panel floating over the chip takes it back —
+/// React says so where it mounts them: "window pane toggles stay on their authored anchors behind
+/// anchored chrome panels; panels paint above `z-window` and occlude overlap without shifting pane
+/// chrome" (`🪟️Window/🟦️.tsx:200`).
+///
+/// 🩸️ The rows used to be flushed AFTER the panels, which made a covered chip outrank the panel over
+/// it. Measured on the React reference with the Catalogue panel open over the top pane, pressing
+/// `framework.window.puzzle3dMainTop.{engagement,search}.toggle` journalled the catalogue row's own
+/// `addObjectKind` and left every fold closed (`🗑️generated/parity-run-12/steps.json` steps 9-10) —
+/// the press never reaches the chip there, and on this renderer it did
+/// (`📓️w12d-pane-chip-ids-and-projection-toggle.md` §1).
+#[test]
+fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_that_occlude_it() {
+    let theme = Theme::light();
+    let window = Rect::new(0.0, 0.0, 800.0, 600.0);
+    let mut shell = split_pane_shell();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut cursor = ShellChromeChildCursor::default();
+    for _ in 0..4096 {
+        if shell.paint_window_pane_chips_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+            break;
+        }
+    }
+    assert!(input.staged_hits().is_empty(), "🪟️ painting a chip registers NOTHING where it paints");
+    let deferred: Vec<String> = shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect();
+    assert!(deferred.iter().any(|id| id == &WindowPaneChip::Actions.control_id("pane-top", true)), "🪟️ the Actions chip's row is held for its own registration phase: {deferred:?}");
+    assert!(shell.pane_overlay_hits.iter().all(|hit| hit.kind == HitKind::Toggle && hit.rect.w > 0.0), "🪟️ and it is a complete row, not a placeholder");
+
+    // 🎯️ The window's own body row is already registered when the chips are flushed, so a chip
+    // outranks the surface it floats on.
+    let body = HitTarget { rect: window, event: None, control_id: Some("pane-top".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None };
+    input.register_hit(body);
+    let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default() };
+    let mut overlay = DrawList::default();
+    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    for _ in 0..4096 {
+        shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world_resources);
+        if !matches!(frame.phase, ShellChromeFramePhase::PaneOverlayHits) {
+            break;
+        }
+    }
+    assert!(matches!(frame.phase, ShellChromeFramePhase::Panels), "🪟️ the chips' rows are flushed BEFORE the panels that occlude them, never after");
+    assert!(shell.pane_overlay_hits.is_empty(), "🪟️ and the whole held row is drained in that one phase");
+    let registered: Vec<String> = input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
+    let chip_index = registered.iter().position(|id| id == &WindowPaneChip::Actions.control_id("pane-top", true)).expect("🪟️ the Actions chip registered its row");
+    let body_index = registered.iter().position(|id| id == "pane-top").expect("🪟️ the window body registered its own row");
+    assert!(body_index < chip_index, "🪟️ the body is registered first, so `hit_at`'s reverse scan answers the chip over it: {registered:?}");
+    let chip_rect = input.staged_hits()[chip_index].rect;
+    let centre = (chip_rect.x + chip_rect.w * 0.5, chip_rect.y + chip_rect.h * 0.5);
+    let frame_rows: Vec<HitTarget<ActionDescriptor>> = input.staged_hits().to_vec();
+    input.publish_hits();
+    assert_eq!(input.hit_at(centre.0, centre.1).and_then(|hit| hit.control_id.clone()), Some(WindowPaneChip::Actions.control_id("pane-top", true)), "🪟️ and a point on the chip answers the chip, not the body under it");
+    // 📑️ The docked panels are walked AFTER this phase, so the very same point answers the PANEL —
+    // React's `z-panel: 30` over `z-pane: 20`.
+    for row in frame_rows {
+        input.register_hit(row);
+    }
+    input.register_hit(HitTarget { rect: window, event: None, control_id: Some("framework.panelTab.framework.panel.catalogue".into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
+    input.publish_hits();
+    assert_eq!(
+        input.hit_at(centre.0, centre.1).and_then(|hit| hit.control_id.clone()),
+        Some("framework.panelTab.framework.panel.catalogue".to_string()),
+        "📑️ a panel floating over a chip takes the pointer from it, exactly as React's stacking does"
+    );
+}
+
+/// 🆔️ **The id round-trip law.** Every chip's published id decodes back to the very window instance and
+/// chip it was minted for, and only for a window this shell actually carries. React resolves its chips
+/// through closures; a canvas renderer has nothing but the id, so the id has to be BOTH React's exact
+/// spelling and losslessly resolvable — `elementIdSegment` is not invertible, so the segment is matched
+/// against the live instances instead (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w9c-behaviour-parity-run-2.md` steps 9–12).
+#[test]
+fn every_pane_chip_id_decodes_back_to_its_own_window_and_chip() {
+    let shell = split_pane_shell();
+    for chip in WindowPaneChip::ALL {
+        for folded in [true, false] {
+            let id = chip.control_id("pane-top", folded);
+            assert!(id.starts_with("framework."), "🆔️ {chip:?} publishes React's namespace, never a shell-private one: {id}");
+            assert_eq!(shell.window_pane_chip_target(&id), Some(("pane-top".to_string(), chip)), "🆔️ {id} decodes to its own window and chip");
+            assert_eq!(shell.window_pane_chip_target(&chip.control_id("pane-perspective", folded)), Some(("pane-perspective".to_string(), chip)), "🆔️ and the sibling pane is never confused with it");
+        }
+    }
+    assert_eq!(shell.window_pane_chip_target("framework.window.paneGone.engagement.toggle"), None, "🆔️ a window this shell no longer carries resolves to nothing");
+    assert_eq!(shell.window_pane_chip_target("framework.window.paneTop.windowControls.close"), None, "🆔️ and a window control is not a pane chip");
+    assert_eq!(shell.window_pane_chip_target("framework.window.paneTop.pane.fold"), None, "🆔️ the projection fold is only a projection fold under its own parent id");
 }
 
 /// 🧰️ **The utilities-move pin.** A pane's Utilities rail derives the app's utilities scoped to THAT
@@ -337,4 +434,174 @@ fn an_unfolded_pane_utility_rail_paints_inside_its_own_pane() {
         assert!((rect.y + rect.h - (body.y + body.h - theme.panel_inset)).abs() < 0.01, "🧰️ {id} rides the pane's bottom row");
     }
     eprintln!("[DEBUG] pane {window_id} utility rail {painted:?}");
+}
+
+/// 🎛️ **The fold-independence law.** One chip press flips ONE fold. React gives every `Pane` its own
+/// `useState(true)` and couples exactly two of them — `Actions` and `Search` share `actionsFolded`
+/// (`setEngagementBarFolded`, `🪟️Window/🟦️.tsx:373`/`:388`) — so no chip closes another pane's rail,
+/// and no chip opens or closes a SURFACE.
+///
+/// 🩸️ The packet that opened this lane read run 14's React column as "the projection toggle closes
+/// three surfaces". It does not: React resolves no control for the journey's `projection.toggle` key
+/// at all (it spells that chip `framework.worldOrbit.projection.<segment>.pane.fold`), and the three
+/// surfaces that vanished in that one run were the React host remounting mid-journey — ten earlier
+/// runs record the same step as `absent` with an empty delta
+/// (`🗑️generated/parity-run-{1..12}/steps.json`, `📓️w12d-pane-chip-ids-and-projection-toggle.md` §5).
+#[test]
+fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
+    let fixture = pane_fixture();
+    let shared: Vec<WindowPaneChip> = fixture["paneFolds"]["sharedFold"].as_array().expect("fixture shared fold").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
+    let independent: Vec<WindowPaneChip> = fixture["paneFolds"]["independentFolds"].as_array().expect("fixture independent folds").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
+    assert!(fixture["paneFolds"]["surfacesMovedByAnyChip"].as_array().expect("fixture surface moves").is_empty(), "🎛️ the fixture states that no chip moves a surface");
+    let folds = |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
+    let press = |shell: &mut ShellState, chip: WindowPaneChip, window_id: &str| {
+        let control_id = chip.control_id(window_id, match chip {
+            WindowPaneChip::Actions | WindowPaneChip::Search => shell.window_actions_folded(window_id),
+            WindowPaneChip::WindowOptions => shell.measures_rail_folded(window_id),
+            WindowPaneChip::Utilities => shell.utility_bar_folded(window_id),
+            WindowPaneChip::Projection => shell.projection_pane_folded(window_id),
+        });
+        let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
+        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
+    };
+    for chip in WindowPaneChip::ALL {
+        let mut shell = split_pane_shell();
+        let surfaces_before = shell.chrome_surface_census();
+        let before = folds(&shell, "pane-top");
+        press(&mut shell, chip, "pane-top");
+        let after = folds(&shell, "pane-top");
+        let moved = [after.0 != before.0, after.1 != before.1, after.2 != before.2, after.3 != before.3];
+        let expected = [shared.contains(&chip), chip == WindowPaneChip::WindowOptions, chip == WindowPaneChip::Utilities, chip == WindowPaneChip::Projection];
+        assert_eq!(moved, expected, "🎛️ {chip:?} flips its OWN fold and no other: {before:?} -> {after:?}");
+        assert_eq!(folds(&shell, "pane-perspective"), (true, true, true, true), "🎛️ and never the sibling pane's");
+        assert_eq!(shell.chrome_surface_census(), surfaces_before, "🎛️ {chip:?} opens and closes no surface");
+        assert!(!shell.search_open && matches!(shell.overlay_state, OverlayState::None), "🎛️ and raises no shell overlay");
+    }
+    let mut shell = split_pane_shell();
+    for chip in &shared {
+        press(&mut shell, *chip, "pane-top");
+    }
+    assert!(shell.window_actions_folded("pane-top"), "🎛️ the two chips that SHARE a fold toggle the same flag: two presses return it");
+    for chip in &independent {
+        assert!(!shared.contains(chip), "🎛️ a fold is shared or independent, never both");
+    }
+}
+
+/// 🧰️ **The rail-census law.** Unfolding the `Utilities` chip publishes exactly what React's unfolded
+/// `Pane` names: the chip flipping to its `…utilityBar.fold` id, and ONE row per enabled utility leaf
+/// carrying that leaf's own framework element id. Folding it again removes precisely those rows.
+///
+/// ⚖️ React's DOM census counts 14 further `data-slot` scaffolding nodes on the same gesture
+/// (`ribbon-zone`, `inline-label`, …). They name no control and are not published here — the same
+/// reading `📓️w9c-behaviour-parity-run-2.md` §3 established for the panels.
+#[test]
+fn unfolding_the_utilities_chip_publishes_reacts_own_rail_census() {
+    let fixture = pane_fixture();
+    let census = &fixture["utilityRailCensus"];
+    assert!(census["leafElementIdIsUtilityId"].as_bool().expect("fixture leaf id rule"), "🧰️ React names a leaf by its utility id");
+    let theme = Theme::light();
+    let mut shell = split_pane_shell();
+    let mut atlas = FontAtlas::builtin();
+    let panes = planned_panes(&mut shell, &theme, &mut atlas, 1440.0, 900.0);
+    let (window_id, body) = panes.first().cloned().expect("the split plans a first pane");
+    let published = |shell: &mut ShellState| {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut chips = ShellChromeChildCursor::default();
+        for _ in 0..4096 {
+            if shell.paint_window_pane_chips_step(&mut chips, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
+                break;
+            }
+        }
+        let mut rail = ShellChromeChildCursor::default();
+        for _ in 0..4096 {
+            if shell.paint_window_utilities_step(&mut rail, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
+                break;
+            }
+        }
+        let mut ids: Vec<String> = shell.pane_overlay_hits.drain(..).chain(input.staged_hits().iter().cloned()).filter_map(|hit| hit.control_id.clone()).collect();
+        ids.sort();
+        ids
+    };
+    let folded = published(&mut shell);
+    shell.utility_bar_folded.insert(window_id.clone(), false);
+    let unfolded = published(&mut shell);
+    let added: Vec<&String> = unfolded.iter().filter(|id| !folded.contains(id)).collect();
+    let removed: Vec<&String> = folded.iter().filter(|id| !unfolded.contains(id)).collect();
+    let session = shell.session.clone().expect("fixture session");
+    let leaves: Vec<String> = shell
+        .derive_window_utility_nodes(&session, &window_id)
+        .into_iter()
+        .filter_map(|node| match node {
+            UtilityNode::Toggle { id, .. } | UtilityNode::Button { id, .. } => Some(id),
+            _ => None,
+        })
+        .collect();
+    assert!(!leaves.is_empty(), "🧰️ the fixture app declares utilities to publish");
+    let mut expected_added: Vec<String> = census["addedControlIds"].as_array().expect("fixture added ids").iter().map(|id| id.as_str().expect("added id").replace("{windowSegment}", &semio_framework::element_id_segment(&window_id))).collect();
+    expected_added.extend(leaves.iter().map(|id| format!("{WINDOW_UTILITY_RAIL_PARENT}toggle.{id}")));
+    expected_added.sort();
+    let mut added_owned: Vec<String> = added.into_iter().cloned().collect();
+    added_owned.sort();
+    assert_eq!(added_owned, expected_added, "🧰️ unfolding publishes the fold chip and one row per utility leaf, and nothing else");
+    let expected_removed: Vec<String> = census["removedControlIds"].as_array().expect("fixture removed ids").iter().map(|id| id.as_str().expect("removed id").replace("{windowSegment}", &semio_framework::element_id_segment(&window_id))).collect();
+    assert_eq!(removed.into_iter().cloned().collect::<Vec<String>>(), expected_removed, "🧰️ and the unfold chip is the only row it takes away");
+    for leaf in &leaves {
+        assert!(expected_added.iter().any(|id| id.ends_with(&format!(".{leaf}"))), "🧰️ every published row is tailed by React's own element id for that utility: {leaf}");
+    }
+}
+
+/// 🧰️ **The rail-routing law.** A utility row is painted INSIDE a world pane's rect, so — like the
+/// pane chips before it — a press on one only reaches the shell if the ownership predicate claims its
+/// id. It carries the `framework.utility.` routing namespace for exactly that reason; without it every
+/// press on `Transform`/`Brush` was handed to `enqueue_world3d_event` and the utility never armed
+/// (`📓️w12d-pane-chip-ids-and-projection-toggle.md` §3).
+#[test]
+fn a_pane_utility_row_is_claimed_by_the_shell_and_not_by_the_world_under_it() {
+    let rect = Rect::new(10.0, 10.0, 80.0, 24.0);
+    for (control_id, kind) in [(format!("{WINDOW_UTILITY_RAIL_PARENT}toggle.pane.brush"), HitKind::Toggle), (format!("{WINDOW_UTILITY_RAIL_PARENT}button.pane.undo"), HitKind::Button), (format!("{WINDOW_UTILITY_RAIL_PARENT}collection.group"), HitKind::Button)] {
+        let hit = HitTarget { rect, event: None, control_id: Some(control_id.clone()), kind, drag_axis: None, drag_data: None };
+        assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&hit)), "🧰️ {control_id} is chrome, not surface");
+    }
+    let world = HitTarget { rect, event: None, control_id: Some("pane-top".into()), kind: HitKind::World3d, drag_axis: None, drag_data: None };
+    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&world)), "🌍️ and the surface under the rail still owns its own presses");
+}
+
+/// 🪪️ **The window-control law.** Neither renderer publishes a window control GROUP in this shell: the
+/// dock hands its windows no `onClose`/`onMaximize`/`onOpenInNewWindow` (focus and close live on the
+/// dock TAB), and React mints the group only when it carries a control — so
+/// `framework.window.<segment>.windowControls` names nothing on either side.
+///
+/// 🩸️ React used to mint it unconditionally from `showControls`, publishing an empty 2px-wide box in
+/// every DOM census (`🗑️generated/w11a-parity-run-14/steps.json` step `pane-chip-windowcontrols`,
+/// `rect: [524, 65, 2, 16]`) that a canvas renderer could only ever report as `absent`. The prop is
+/// gone (`🪟️Window/🟦️.tsx:270`).
+#[test]
+fn no_window_publishes_an_empty_window_control_group() {
+    let fixture = pane_fixture();
+    let controls = &fixture["windowControls"];
+    assert!(!controls["publishedInShell"].as_bool().expect("fixture window-control rule"), "🪪️ the fixture states the OS shell mints no window control group");
+    let group = controls["controlId"].as_str().expect("fixture window-control id").replace("{windowSegment}", "paneTop");
+    let theme = Theme::light();
+    let window = Rect::new(0.0, 0.0, 800.0, 600.0);
+    let mut shell = split_pane_shell();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut cursor = ShellChromeChildCursor::default();
+    for _ in 0..4096 {
+        if shell.paint_window_pane_chips_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+            break;
+        }
+    }
+    let ids: Vec<String> = shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).chain(input.staged_hits().iter().filter_map(|hit| hit.control_id.clone())).collect();
+    assert!(!ids.iter().any(|id| id.contains(".windowControls")), "🪪️ a pane publishes no window control row: {ids:?}");
+    assert_eq!(shell.window_pane_chip_target(&group), None, "🪪️ and the group id resolves to no pane chip either");
+    for item in controls["items"].as_array().expect("fixture window-control items") {
+        let id = format!("{group}.{}", item.as_str().expect("window control item"));
+        assert_eq!(shell.window_pane_chip_target(&id), None, "🪪️ {id} is a window control, never a pane chip");
+    }
 }

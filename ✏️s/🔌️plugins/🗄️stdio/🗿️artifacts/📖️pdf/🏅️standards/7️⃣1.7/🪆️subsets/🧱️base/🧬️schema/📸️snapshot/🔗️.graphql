@@ -1,13 +1,86 @@
-# 🧬️ PdfSnapshot (1.7) schema — real object-graph model.
+# 🧬️ PdfSnapshot — GraphQL facet of s.stdio.pdf.1.7 (snapshot), generated from the Rust model.
+scalar JSON
 
-type ObjRef {
-  num: Int!
-  gen: Int!
+type PdfSnapshot {
+  schema: String!
+  declaredVersion: String!
+  pages: [PdfPage!]!
+  fonts: [PdfFont!]!
+  images: [PdfImage!]!
+  forms: [PdfFormXObject!]!
+  extGStates: [PdfExtGState!]!
+  shadings: [PdfShading!]!
+  patterns: [PdfPattern!]!
+  colorSpaces: [PdfNamedColorSpace!]!
+  properties: [PdfNamedProperties!]!
+  outlines: [PdfOutlineItem!]!
+  namedDestinations: [PdfNamedDestination!]!
+  pageLabels: [PdfPageLabelRange!]!
+  embeddedFiles: [PdfEmbeddedFile!]!
+  outputIntents: [PdfOutputIntent!]!
+  acroForm: PdfAcroForm
+  optionalContent: PdfOptionalContent
+  pageLayout: PdfPageLayout
+  pageMode: PdfPageMode
+  viewerPreferences: PdfViewerPreferences
+  openAction: PdfOpenAction
+  language: String
+  markInfo: PdfMarkInfo
+  metadata: String
+  documentId: [[Int!]!]
+  encryption: PdfEncryption
+  info: PdfInfo!
+  catalogExtra: [PdfDictEntry!]!
+  objects: [PdfIndirectObject!]!
+  trailer: [PdfDictEntry!]!
 }
 
 type PdfDictEntry {
   key: String!
   value: PdfObject!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfObject {
+  kind: String!
+  value: Boolean
+  dict: [PdfDictEntry!]
+  data: [Int!]
+  filters: [PdfStreamFilter!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfStreamFilter {
+  kind: String!
+  predictor: PdfPredictor
+  earlyChange: Boolean
+  colorTransform: Int
+  parameters: PdfCcittParameters
+  globals: [Int!]
+  name: String
+}
+
+type PdfCcittParameters {
+  k: Int
+  columns: Int
+  rows: Int
+  blackIs1: Boolean
+  encodedByteAlign: Boolean
+  endOfLine: Boolean
+  endOfBlock: Boolean
+  damagedRowsBeforeError: Int
+}
+
+type PdfPredictor {
+  predictor: Int!
+  colors: Int!
+  bitsPerComponent: Int!
+  columns: Int!
+}
+
+type ObjRef {
+  num: Int!
+  gen: Int!
 }
 
 type PdfDecimal {
@@ -16,50 +89,9 @@ type PdfDecimal {
   scale: Int!
 }
 
-type PdfPredictor { predictor: Int! colors: Int! bitsPerComponent: Int! columns: Int! }
-type PdfStreamFilter { kind: PdfStreamFilterKind! predictor: PdfPredictor }
-enum PdfStreamFilterKind { FLATE ASCII_HEX ASCII_85 RUN_LENGTH }
-
-"""ISO 32000-1 §7.3 COS object grammar, including streams. Exactly the kind-specific field(s)
-matching `kind` are populated. `str` is a byte string (not necessarily UTF-8)."""
-type PdfObject {
-  kind: PdfObjectKind!
-  boolValue: Boolean
-  intValue: Int
-  realValue: PdfDecimal
-  strValue: [Int!]
-  nameValue: String
-  arrayValue: [PdfObject!]
-  dictValue: [PdfDictEntry!]
-  refValue: ObjRef
-  streamDict: [PdfDictEntry!]
-  streamData: [Int!]
-  streamFilters: [PdfStreamFilter!]
-}
-
-enum PdfObjectKind {
-  NULL
-  BOOL
-  INT
-  REAL
-  STR
-  NAME
-  ARRAY
-  DICT
-  REF
-  STREAM
-}
-
 type PdfIndirectObject {
   id: ObjRef!
   value: PdfObject!
-}
-
-type PdfPage {
-  mediaBox: [Float!]!
-  cropBox: [Float!]
-  rotate: Int!
-  text: String!
 }
 
 type PdfInfo {
@@ -69,13 +101,1660 @@ type PdfInfo {
   keywords: String
   creator: String
   producer: String
+  creationDate: PdfDate
+  modificationDate: PdfDate
+  trapped: String
+  extra: [PdfDictEntry!]
 }
 
-type PdfSnapshot {
-  schema: String! @state(class: ARTIFACT)
-  declaredVersion: String! @state(class: ARTIFACT)
-  pages: [PdfPage!]! @state(class: ARTIFACT)
-  info: PdfInfo! @state(class: ARTIFACT)
-  objects: [PdfIndirectObject!]! @state(class: ARTIFACT)
-  trailer: [PdfDictEntry!]! @state(class: ARTIFACT)
+type PdfDate {
+  year: Int!
+  month: Int
+  day: Int
+  hour: Int
+  minute: Int
+  second: Int
+  offsetMinutes: Int
+}
+
+type PdfEncryption {
+  algorithm: PdfEncryptionAlgorithm!
+  permissions: Int
+  userPassword: String
+  ownerPassword: String
+  encryptMetadata: Boolean
+}
+
+enum PdfEncryptionAlgorithm {
+  RC4_40
+  RC4_128
+  AES128
+  AES256
+}
+
+type PdfMarkInfo {
+  marked: Boolean
+  userProperties: Boolean
+  suspects: Boolean
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfOpenAction {
+  kind: String!
+  destination: PdfDestination
+  action: PdfAction
+}
+
+type PdfAction {
+  kind: PdfActionKind!
+  next: [PdfAction!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfActionKind {
+  kind: String!
+  destination: PdfDestination
+  file: PdfFileSpecification
+  newWindow: Boolean
+  thread: Int
+  uri: String
+  isMap: Boolean
+  sound: String
+  volume: Float
+  synchronous: Boolean
+  repeat: Boolean
+  mix: Boolean
+  annotation: String
+  operation: String
+  annotations: [String!]
+  hide: Boolean
+  name: String
+  url: String
+  fields: [String!]
+  flags: Int
+  script: String
+  states: [PdfDictEntry!]
+  preserveRadioButtons: Boolean
+  entries: [PdfDictEntry!]
+  subtype: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfFileSpecification {
+  kind: String!
+  path: String
+  file: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfDestination {
+  kind: String!
+  page: Int
+  fit: PdfDestinationFit
+  name: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfDestinationFit {
+  kind: String!
+  left: Float
+  top: Float
+  zoom: Float
+  rect: [Float!]
+}
+
+type PdfViewerPreferences {
+  hideToolbar: Boolean
+  hideMenubar: Boolean
+  hideWindowUi: Boolean
+  fitWindow: Boolean
+  centerWindow: Boolean
+  displayDocTitle: Boolean
+  nonFullScreenPageMode: PdfPageMode
+  direction: String
+  viewArea: String
+  viewClip: String
+  printArea: String
+  printClip: String
+  printScaling: String
+  duplex: String
+  pickTrayByPdfSize: Boolean
+  printPageRange: [Int!]
+  numCopies: Int
+  extra: [PdfDictEntry!]
+}
+
+enum PdfPageMode {
+  USE_NONE
+  USE_OUTLINES
+  USE_THUMBS
+  FULL_SCREEN
+  USE_OC
+  USE_ATTACHMENTS
+}
+
+enum PdfPageLayout {
+  SINGLE_PAGE
+  ONE_COLUMN
+  TWO_COLUMN_LEFT
+  TWO_COLUMN_RIGHT
+  TWO_PAGE_LEFT
+  TWO_PAGE_RIGHT
+}
+
+type PdfOptionalContent {
+  groups: [PdfOptionalContentGroup!]
+  name: String
+  baseStateOff: Boolean
+  on: [String!]
+  off: [String!]
+  order: [PdfObject!]
+  extra: [PdfDictEntry!]
+}
+
+type PdfOptionalContentGroup {
+  id: String!
+  name: String!
+  intent: [String!]
+  usage: [PdfDictEntry!]
+}
+
+type PdfAcroForm {
+  fields: [PdfFormField!]
+  needAppearances: Boolean
+  signatureFlags: Int
+  defaultAppearance: String
+  quadding: Int
+  defaultFonts: [String!]
+  extra: [PdfDictEntry!]
+}
+
+type PdfFormField {
+  name: String!
+  kind: PdfFormFieldKind!
+  flags: Int
+  alternateName: String
+  mappingName: String
+  defaultAppearance: String
+  quadding: Int
+  widgets: [[Int!]!]
+  children: [PdfFormField!]
+  additionalActions: [PdfDictEntry!]
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfFormFieldKind {
+  kind: String!
+  value: String
+  defaultValue: String
+  options: [String!]
+  maxLength: Int
+  richValue: String
+  values: [String!]
+  defaultValues: [String!]
+  topIndex: Int
+}
+
+type PdfOutputIntent {
+  subtype: String!
+  conditionIdentifier: String!
+  condition: String
+  registryName: String
+  info: String
+  profile: [Int!]
+}
+
+type PdfEmbeddedFile {
+  id: String!
+  fileName: String!
+  description: String
+  mimeType: String
+  data: [Int!]!
+  creationDate: PdfDate
+  modificationDate: PdfDate
+  relationship: String
+  listed: Boolean
+}
+
+type PdfPageLabelRange {
+  startIndex: Int!
+  style: PdfPageLabelStyle
+  prefix: String
+  start: Int
+}
+
+enum PdfPageLabelStyle {
+  DECIMAL
+  ROMAN_UPPER
+  ROMAN_LOWER
+  LETTERS_UPPER
+  LETTERS_LOWER
+}
+
+type PdfNamedDestination {
+  name: String!
+  destination: PdfDestination!
+}
+
+type PdfOutlineItem {
+  title: String!
+  destination: PdfDestination
+  action: PdfAction
+  color: [Float!]
+  italic: Boolean
+  bold: Boolean
+  open: Boolean
+  children: [PdfOutlineItem!]
+  extra: [PdfDictEntry!]
+}
+
+type PdfNamedProperties {
+  name: String!
+  entries: [PdfDictEntry!]!
+}
+
+type PdfNamedColorSpace {
+  name: String!
+  colorSpace: PdfColorSpace!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfColorSpace {
+  kind: String!
+  whitePoint: [Float!]
+  blackPoint: [Float!]
+  gamma: Float
+  matrix: [Float!]
+  range: [Float!]
+  components: Int
+  profile: [Int!]
+  alternate: PdfColorSpace
+  base: PdfColorSpace
+  hival: Int
+  lookup: [Int!]
+  name: String
+  tintTransform: PdfFunction
+  names: [String!]
+  attributes: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfFunction {
+  kind: String!
+  domain: [Float!]
+  range: [Float!]
+  size: [Int!]
+  bitsPerSample: Int
+  order: Int
+  encode: [Float!]
+  decode: [Float!]
+  samples: [Int!]
+  c0: [Float!]
+  c1: [Float!]
+  n: Float
+  functions: [PdfFunction!]
+  bounds: [Float!]
+  code: String
+}
+
+type PdfPattern {
+  id: String!
+  matrix: [Float!]
+  kind: PdfPatternKind!
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfPatternKind {
+  kind: String!
+  paintType: Int
+  tilingType: Int
+  bbox: [Float!]
+  xStep: Float
+  yStep: Float
+  content: [PdfOp!]
+  shading: String
+  extGState: String
+}
+
+"""Tagged union: exactly the fields of the variant `op` names are populated."""
+type PdfOp {
+  op: String!
+  width: Float
+  cap: PdfLineCap
+  join: PdfLineJoin
+  limit: Float
+  array: [Float!]
+  phase: Float
+  intent: String
+  flatness: Float
+  name: String
+  matrix: [Float!]
+  x: Float
+  y: Float
+  x1: Float
+  y1: Float
+  x2: Float
+  y2: Float
+  x3: Float
+  y3: Float
+  height: Float
+  spacing: Float
+  scale: Float
+  leading: Float
+  size: Float
+  mode: Int
+  rise: Float
+  tx: Float
+  ty: Float
+  text: PdfTextString
+  items: [PdfTextArrayItem!]
+  wordSpacing: Float
+  charSpacing: Float
+  wx: Float
+  wy: Float
+  llx: Float
+  lly: Float
+  urx: Float
+  ury: Float
+  components: [Float!]
+  pattern: String
+  gray: Float
+  r: Float
+  g: Float
+  b: Float
+  c: Float
+  m: Float
+  k: Float
+  image: PdfInlineImage
+  tag: String
+  properties: PdfPropertyList
+  operator: String
+  operands: [PdfObject!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfPropertyList {
+  kind: String!
+  name: String
+  entries: [PdfDictEntry!]
+}
+
+type PdfInlineImage {
+  width: Int!
+  height: Int!
+  bitsPerComponent: Int
+  colorSpace: PdfColorSpace
+  imageMask: Boolean
+  decode: [Float!]
+  interpolate: Boolean
+  filters: [PdfStreamFilter!]
+  data: [Int!]!
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfTextString {
+  kind: String!
+  text: String
+  bytes: [Int!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfTextArrayItem {
+  kind: String!
+  text: String
+  bytes: [Int!]
+  amount: Float
+}
+
+enum PdfLineJoin {
+  MITER
+  ROUND
+  BEVEL
+}
+
+enum PdfLineCap {
+  BUTT
+  ROUND
+  SQUARE
+}
+
+type PdfShading {
+  id: String!
+  colorSpace: PdfColorSpace!
+  kind: PdfShadingKind!
+  background: [Float!]
+  bbox: [Float!]
+  antiAlias: Boolean
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfShadingKind {
+  kind: String!
+  domain: [Float!]
+  matrix: [Float!]
+  function: PdfFunction
+  coords: [Float!]
+  extend: [Boolean!]
+  shadingType: Int
+  bitsPerCoordinate: Int
+  bitsPerComponent: Int
+  bitsPerFlag: Int
+  verticesPerRow: Int
+  decode: [Float!]
+  data: [Int!]
+}
+
+type PdfExtGState {
+  id: String!
+  lineWidth: Float
+  lineCap: PdfLineCap
+  lineJoin: PdfLineJoin
+  miterLimit: Float
+  dash: [JSON!]
+  renderingIntent: String
+  overprintStroke: Boolean
+  overprintFill: Boolean
+  overprintMode: Int
+  font: [JSON!]
+  blendMode: [String!]
+  softMask: PdfSoftMask
+  strokeAlpha: Float
+  fillAlpha: Float
+  alphaIsShape: Boolean
+  strokeAdjust: Boolean
+  flatness: Float
+  smoothness: Float
+  textKnockout: Boolean
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfSoftMask {
+  kind: String!
+  group: String
+  transfer: PdfFunction
+  backdrop: [Float!]
+}
+
+type PdfFormXObject {
+  id: String!
+  bbox: [Float!]!
+  matrix: [Float!]
+  content: [PdfOp!]
+  group: PdfTransparencyGroup
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntry!]
+}
+
+type PdfTransparencyGroup {
+  colorSpace: PdfColorSpace
+  isolated: Boolean
+  knockout: Boolean
+}
+
+type PdfImage {
+  id: String!
+  width: Int!
+  height: Int!
+  colorSpace: PdfColorSpace
+  bitsPerComponent: Int
+  imageMask: Boolean
+  decode: [Float!]
+  interpolate: Boolean
+  codec: PdfImageCodec
+  data: [Int!]!
+  softMask: String
+  softMaskInData: Int
+  mask: PdfImageMask
+  matte: [Float!]
+  intent: String
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfImageMask {
+  kind: String!
+  image: String
+  ranges: [Int!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfImageCodec {
+  kind: String!
+  colorTransform: Int
+  parameters: PdfCcittParameters
+  globals: [Int!]
+}
+
+type PdfFont {
+  id: String!
+  kind: PdfFontKind!
+  toUnicode: PdfToUnicode
+  extra: [PdfDictEntry!]
+}
+
+type PdfToUnicode {
+  byteWidth: Int!
+  mappings: [PdfToUnicodeMapping!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfToUnicodeMapping {
+  kind: String!
+  code: Int
+  text: String
+  low: Int
+  high: Int
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfFontKind {
+  kind: String!
+  baseFont: String
+  encoding: PdfSimpleEncoding
+  firstChar: Int
+  widths: [Float!]
+  descriptor: PdfFontDescriptor
+  program: PdfFontProgram
+  fontMatrix: [Float!]
+  fontBbox: [Float!]
+  charProcs: [PdfCharProc!]
+  cmap: PdfCMap
+  descendant: PdfCidFont
+}
+
+type PdfCidFont {
+  trueType: Boolean!
+  baseFont: String!
+  systemInfo: PdfCidSystemInfo
+  descriptor: PdfFontDescriptor!
+  defaultWidth: Float
+  widths: [PdfCidWidthRun!]
+  defaultVertical: [Float!]
+  verticalMetrics: [PdfCidVerticalRun!]
+  cidToGid: PdfCidToGid
+  program: PdfFontProgram
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfFontProgram {
+  kind: String!
+  data: [Int!]
+  length1: Int
+  length2: Int
+  length3: Int
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfCidToGid {
+  kind: String!
+  data: [Int!]
+}
+
+type PdfCidVerticalRun {
+  startCid: Int!
+  metrics: [[Float!]!]!
+}
+
+type PdfCidWidthRun {
+  startCid: Int!
+  widths: [Float!]!
+}
+
+type PdfFontDescriptor {
+  fontName: String!
+  flags: Int
+  fontBbox: [Float!]
+  italicAngle: Float
+  ascent: Float
+  descent: Float
+  capHeight: Float
+  stemV: Float
+  stemH: Float
+  xHeight: Float
+  leading: Float
+  avgWidth: Float
+  maxWidth: Float
+  missingWidth: Float
+  fontFamily: String
+  fontStretch: String
+  fontWeight: Float
+  charSet: String
+  extra: [PdfDictEntry!]
+}
+
+type PdfCidSystemInfo {
+  registry: String!
+  ordering: String!
+  supplement: Int!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfCMap {
+  kind: String!
+  name: String
+  cmap: PdfEmbeddedCMap
+}
+
+type PdfEmbeddedCMap {
+  name: String!
+  vertical: Boolean
+  codespace: [PdfCodespaceRange!]
+  mappings: [PdfCidMapping!]
+  useCmap: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfCidMapping {
+  kind: String!
+  code: Int
+  cid: Int
+  low: Int
+  high: Int
+}
+
+type PdfCodespaceRange {
+  byteWidth: Int!
+  low: Int!
+  high: Int!
+}
+
+type PdfCharProc {
+  name: String!
+  content: [PdfOp!]!
+}
+
+type PdfSimpleEncoding {
+  base: PdfBaseEncoding
+  differences: [PdfEncodingDifference!]
+}
+
+type PdfEncodingDifference {
+  code: Int!
+  glyph: String!
+}
+
+enum PdfBaseEncoding {
+  STANDARD
+  WIN_ANSI
+  MAC_ROMAN
+  MAC_EXPERT
+}
+
+type PdfPage {
+  mediaBox: [Float!]!
+  cropBox: [Float!]
+  bleedBox: [Float!]
+  trimBox: [Float!]
+  artBox: [Float!]
+  rotate: Int
+  userUnit: Float
+  content: [PdfOp!]
+  annotations: [PdfAnnotation!]
+  group: PdfTransparencyGroup
+  thumbnail: String
+  structParents: Int
+  transition: [PdfDictEntry!]
+  duration: Float
+  metadata: String
+  additionalActions: [PdfDictEntry!]
+  extra: [PdfDictEntry!]
+}
+
+type PdfAnnotation {
+  rect: [Float!]!
+  kind: PdfAnnotationKind!
+  contents: String
+  name: String
+  modified: String
+  flags: Int
+  border: PdfBorderStyle
+  color: [Float!]
+  appearance: PdfAppearance
+  appearanceState: String
+  markup: PdfMarkupAnnotation
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntry!]
+}
+
+type PdfMarkupAnnotation {
+  title: String
+  popup: Int
+  opacity: Float
+  richContents: String
+  creationDate: PdfDate
+  inReplyTo: Int
+  subject: String
+  replyType: String
+  intent: String
+}
+
+type PdfAppearance {
+  normal: PdfAppearanceEntry!
+  rollover: PdfAppearanceEntry
+  down: PdfAppearanceEntry
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfAppearanceEntry {
+  kind: String!
+  form: String
+  states: [PdfAppearanceState!]
+}
+
+type PdfAppearanceState {
+  state: String!
+  form: String!
+}
+
+type PdfBorderStyle {
+  width: Float!
+  style: String
+  dash: [Float!]
+  radii: [Float!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfAnnotationKind {
+  kind: String!
+  open: Boolean
+  icon: String
+  state: String
+  stateModel: String
+  action: PdfAction
+  destination: PdfDestination
+  highlight: String
+  quadPoints: [Float!]
+  defaultAppearance: String
+  quadding: Int
+  callout: [Float!]
+  lineEnding: String
+  richText: String
+  points: [Float!]
+  lineEndings: [String!]
+  interiorColor: [Float!]
+  leaderLength: Float
+  caption: Boolean
+  rectDifferences: [Float!]
+  vertices: [Float!]
+  symbol: String
+  paths: [[Float!]!]
+  parent: Int
+  file: PdfFileSpecification
+  sound: [PdfDictEntry!]
+  title: String
+  movie: [PdfDictEntry!]
+  activation: [PdfDictEntry!]
+  field: String
+  characteristics: [PdfDictEntry!]
+  additionalActions: [PdfDictEntry!]
+  markStyle: String
+  colorants: [PdfDictEntry!]
+  entries: [PdfDictEntry!]
+  fixedPrint: [PdfDictEntry!]
+  overlayText: String
+  repeat: Boolean
+  subtype: String
+}
+
+input PdfSnapshotInput {
+  schema: String!
+  declaredVersion: String!
+  pages: [PdfPageInput!]!
+  fonts: [PdfFontInput!]!
+  images: [PdfImageInput!]!
+  forms: [PdfFormXObjectInput!]!
+  extGStates: [PdfExtGStateInput!]!
+  shadings: [PdfShadingInput!]!
+  patterns: [PdfPatternInput!]!
+  colorSpaces: [PdfNamedColorSpaceInput!]!
+  properties: [PdfNamedPropertiesInput!]!
+  outlines: [PdfOutlineItemInput!]!
+  namedDestinations: [PdfNamedDestinationInput!]!
+  pageLabels: [PdfPageLabelRangeInput!]!
+  embeddedFiles: [PdfEmbeddedFileInput!]!
+  outputIntents: [PdfOutputIntentInput!]!
+  acroForm: PdfAcroFormInput
+  optionalContent: PdfOptionalContentInput
+  pageLayout: PdfPageLayoutInput
+  pageMode: PdfPageModeInput
+  viewerPreferences: PdfViewerPreferencesInput
+  openAction: PdfOpenActionInput
+  language: String
+  markInfo: PdfMarkInfoInput
+  metadata: String
+  documentId: [[Int!]!]
+  encryption: PdfEncryptionInput
+  info: PdfInfoInput!
+  catalogExtra: [PdfDictEntryInput!]!
+  objects: [PdfIndirectObjectInput!]!
+  trailer: [PdfDictEntryInput!]!
+}
+
+input PdfDictEntryInput {
+  key: String!
+  value: PdfObjectInput!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfObjectInput {
+  kind: String!
+  value: Boolean
+  dict: [PdfDictEntryInput!]
+  data: [Int!]
+  filters: [PdfStreamFilterInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfStreamFilterInput {
+  kind: String!
+  predictor: PdfPredictorInput
+  earlyChange: Boolean
+  colorTransform: Int
+  parameters: PdfCcittParametersInput
+  globals: [Int!]
+  name: String
+}
+
+input PdfCcittParametersInput {
+  k: Int
+  columns: Int
+  rows: Int
+  blackIs1: Boolean
+  encodedByteAlign: Boolean
+  endOfLine: Boolean
+  endOfBlock: Boolean
+  damagedRowsBeforeError: Int
+}
+
+input PdfPredictorInput {
+  predictor: Int!
+  colors: Int!
+  bitsPerComponent: Int!
+  columns: Int!
+}
+
+input ObjRefInput {
+  num: Int!
+  gen: Int!
+}
+
+input PdfDecimalInput {
+  negative: Boolean!
+  coefficient: String!
+  scale: Int!
+}
+
+input PdfIndirectObjectInput {
+  id: ObjRefInput!
+  value: PdfObjectInput!
+}
+
+input PdfInfoInput {
+  title: String
+  author: String
+  subject: String
+  keywords: String
+  creator: String
+  producer: String
+  creationDate: PdfDateInput
+  modificationDate: PdfDateInput
+  trapped: String
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfDateInput {
+  year: Int!
+  month: Int
+  day: Int
+  hour: Int
+  minute: Int
+  second: Int
+  offsetMinutes: Int
+}
+
+input PdfEncryptionInput {
+  algorithm: PdfEncryptionAlgorithmInput!
+  permissions: Int
+  userPassword: String
+  ownerPassword: String
+  encryptMetadata: Boolean
+}
+
+input PdfMarkInfoInput {
+  marked: Boolean
+  userProperties: Boolean
+  suspects: Boolean
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfOpenActionInput {
+  kind: String!
+  destination: PdfDestinationInput
+  action: PdfActionInput
+}
+
+input PdfActionInput {
+  kind: PdfActionKindInput!
+  next: [PdfActionInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfActionKindInput {
+  kind: String!
+  destination: PdfDestinationInput
+  file: PdfFileSpecificationInput
+  newWindow: Boolean
+  thread: Int
+  uri: String
+  isMap: Boolean
+  sound: String
+  volume: Float
+  synchronous: Boolean
+  repeat: Boolean
+  mix: Boolean
+  annotation: String
+  operation: String
+  annotations: [String!]
+  hide: Boolean
+  name: String
+  url: String
+  fields: [String!]
+  flags: Int
+  script: String
+  states: [PdfDictEntryInput!]
+  preserveRadioButtons: Boolean
+  entries: [PdfDictEntryInput!]
+  subtype: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfFileSpecificationInput {
+  kind: String!
+  path: String
+  file: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfDestinationInput {
+  kind: String!
+  page: Int
+  fit: PdfDestinationFitInput
+  name: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfDestinationFitInput {
+  kind: String!
+  left: Float
+  top: Float
+  zoom: Float
+  rect: [Float!]
+}
+
+input PdfViewerPreferencesInput {
+  hideToolbar: Boolean
+  hideMenubar: Boolean
+  hideWindowUi: Boolean
+  fitWindow: Boolean
+  centerWindow: Boolean
+  displayDocTitle: Boolean
+  nonFullScreenPageMode: PdfPageModeInput
+  direction: String
+  viewArea: String
+  viewClip: String
+  printArea: String
+  printClip: String
+  printScaling: String
+  duplex: String
+  pickTrayByPdfSize: Boolean
+  printPageRange: [Int!]
+  numCopies: Int
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfOptionalContentInput {
+  groups: [PdfOptionalContentGroupInput!]
+  name: String
+  baseStateOff: Boolean
+  on: [String!]
+  off: [String!]
+  order: [PdfObjectInput!]
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfOptionalContentGroupInput {
+  id: String!
+  name: String!
+  intent: [String!]
+  usage: [PdfDictEntryInput!]
+}
+
+input PdfAcroFormInput {
+  fields: [PdfFormFieldInput!]
+  needAppearances: Boolean
+  signatureFlags: Int
+  defaultAppearance: String
+  quadding: Int
+  defaultFonts: [String!]
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfFormFieldInput {
+  name: String!
+  kind: PdfFormFieldKindInput!
+  flags: Int
+  alternateName: String
+  mappingName: String
+  defaultAppearance: String
+  quadding: Int
+  widgets: [[Int!]!]
+  children: [PdfFormFieldInput!]
+  additionalActions: [PdfDictEntryInput!]
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfFormFieldKindInput {
+  kind: String!
+  value: String
+  defaultValue: String
+  options: [String!]
+  maxLength: Int
+  richValue: String
+  values: [String!]
+  defaultValues: [String!]
+  topIndex: Int
+}
+
+input PdfOutputIntentInput {
+  subtype: String!
+  conditionIdentifier: String!
+  condition: String
+  registryName: String
+  info: String
+  profile: [Int!]
+}
+
+input PdfEmbeddedFileInput {
+  id: String!
+  fileName: String!
+  description: String
+  mimeType: String
+  data: [Int!]!
+  creationDate: PdfDateInput
+  modificationDate: PdfDateInput
+  relationship: String
+  listed: Boolean
+}
+
+input PdfPageLabelRangeInput {
+  startIndex: Int!
+  style: PdfPageLabelStyleInput
+  prefix: String
+  start: Int
+}
+
+input PdfNamedDestinationInput {
+  name: String!
+  destination: PdfDestinationInput!
+}
+
+input PdfOutlineItemInput {
+  title: String!
+  destination: PdfDestinationInput
+  action: PdfActionInput
+  color: [Float!]
+  italic: Boolean
+  bold: Boolean
+  open: Boolean
+  children: [PdfOutlineItemInput!]
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfNamedPropertiesInput {
+  name: String!
+  entries: [PdfDictEntryInput!]!
+}
+
+input PdfNamedColorSpaceInput {
+  name: String!
+  colorSpace: PdfColorSpaceInput!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfColorSpaceInput {
+  kind: String!
+  whitePoint: [Float!]
+  blackPoint: [Float!]
+  gamma: Float
+  matrix: [Float!]
+  range: [Float!]
+  components: Int
+  profile: [Int!]
+  alternate: PdfColorSpaceInput
+  base: PdfColorSpaceInput
+  hival: Int
+  lookup: [Int!]
+  name: String
+  tintTransform: PdfFunctionInput
+  names: [String!]
+  attributes: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfFunctionInput {
+  kind: String!
+  domain: [Float!]
+  range: [Float!]
+  size: [Int!]
+  bitsPerSample: Int
+  order: Int
+  encode: [Float!]
+  decode: [Float!]
+  samples: [Int!]
+  c0: [Float!]
+  c1: [Float!]
+  n: Float
+  functions: [PdfFunctionInput!]
+  bounds: [Float!]
+  code: String
+}
+
+input PdfPatternInput {
+  id: String!
+  matrix: [Float!]
+  kind: PdfPatternKindInput!
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfPatternKindInput {
+  kind: String!
+  paintType: Int
+  tilingType: Int
+  bbox: [Float!]
+  xStep: Float
+  yStep: Float
+  content: [PdfOpInput!]
+  shading: String
+  extGState: String
+}
+
+"""Tagged union: exactly the fields of the variant `op` names are populated."""
+input PdfOpInput {
+  op: String!
+  width: Float
+  cap: PdfLineCapInput
+  join: PdfLineJoinInput
+  limit: Float
+  array: [Float!]
+  phase: Float
+  intent: String
+  flatness: Float
+  name: String
+  matrix: [Float!]
+  x: Float
+  y: Float
+  x1: Float
+  y1: Float
+  x2: Float
+  y2: Float
+  x3: Float
+  y3: Float
+  height: Float
+  spacing: Float
+  scale: Float
+  leading: Float
+  size: Float
+  mode: Int
+  rise: Float
+  tx: Float
+  ty: Float
+  text: PdfTextStringInput
+  items: [PdfTextArrayItemInput!]
+  wordSpacing: Float
+  charSpacing: Float
+  wx: Float
+  wy: Float
+  llx: Float
+  lly: Float
+  urx: Float
+  ury: Float
+  components: [Float!]
+  pattern: String
+  gray: Float
+  r: Float
+  g: Float
+  b: Float
+  c: Float
+  m: Float
+  k: Float
+  image: PdfInlineImageInput
+  tag: String
+  properties: PdfPropertyListInput
+  operator: String
+  operands: [PdfObjectInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfPropertyListInput {
+  kind: String!
+  name: String
+  entries: [PdfDictEntryInput!]
+}
+
+input PdfInlineImageInput {
+  width: Int!
+  height: Int!
+  bitsPerComponent: Int
+  colorSpace: PdfColorSpaceInput
+  imageMask: Boolean
+  decode: [Float!]
+  interpolate: Boolean
+  filters: [PdfStreamFilterInput!]
+  data: [Int!]!
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfTextStringInput {
+  kind: String!
+  text: String
+  bytes: [Int!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfTextArrayItemInput {
+  kind: String!
+  text: String
+  bytes: [Int!]
+  amount: Float
+}
+
+input PdfShadingInput {
+  id: String!
+  colorSpace: PdfColorSpaceInput!
+  kind: PdfShadingKindInput!
+  background: [Float!]
+  bbox: [Float!]
+  antiAlias: Boolean
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfShadingKindInput {
+  kind: String!
+  domain: [Float!]
+  matrix: [Float!]
+  function: PdfFunctionInput
+  coords: [Float!]
+  extend: [Boolean!]
+  shadingType: Int
+  bitsPerCoordinate: Int
+  bitsPerComponent: Int
+  bitsPerFlag: Int
+  verticesPerRow: Int
+  decode: [Float!]
+  data: [Int!]
+}
+
+input PdfExtGStateInput {
+  id: String!
+  lineWidth: Float
+  lineCap: PdfLineCapInput
+  lineJoin: PdfLineJoinInput
+  miterLimit: Float
+  dash: [JSON!]
+  renderingIntent: String
+  overprintStroke: Boolean
+  overprintFill: Boolean
+  overprintMode: Int
+  font: [JSON!]
+  blendMode: [String!]
+  softMask: PdfSoftMaskInput
+  strokeAlpha: Float
+  fillAlpha: Float
+  alphaIsShape: Boolean
+  strokeAdjust: Boolean
+  flatness: Float
+  smoothness: Float
+  textKnockout: Boolean
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfSoftMaskInput {
+  kind: String!
+  group: String
+  transfer: PdfFunctionInput
+  backdrop: [Float!]
+}
+
+input PdfFormXObjectInput {
+  id: String!
+  bbox: [Float!]!
+  matrix: [Float!]
+  content: [PdfOpInput!]
+  group: PdfTransparencyGroupInput
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfTransparencyGroupInput {
+  colorSpace: PdfColorSpaceInput
+  isolated: Boolean
+  knockout: Boolean
+}
+
+input PdfImageInput {
+  id: String!
+  width: Int!
+  height: Int!
+  colorSpace: PdfColorSpaceInput
+  bitsPerComponent: Int
+  imageMask: Boolean
+  decode: [Float!]
+  interpolate: Boolean
+  codec: PdfImageCodecInput
+  data: [Int!]!
+  softMask: String
+  softMaskInData: Int
+  mask: PdfImageMaskInput
+  matte: [Float!]
+  intent: String
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfImageMaskInput {
+  kind: String!
+  image: String
+  ranges: [Int!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfImageCodecInput {
+  kind: String!
+  colorTransform: Int
+  parameters: PdfCcittParametersInput
+  globals: [Int!]
+}
+
+input PdfFontInput {
+  id: String!
+  kind: PdfFontKindInput!
+  toUnicode: PdfToUnicodeInput
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfToUnicodeInput {
+  byteWidth: Int!
+  mappings: [PdfToUnicodeMappingInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfToUnicodeMappingInput {
+  kind: String!
+  code: Int
+  text: String
+  low: Int
+  high: Int
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfFontKindInput {
+  kind: String!
+  baseFont: String
+  encoding: PdfSimpleEncodingInput
+  firstChar: Int
+  widths: [Float!]
+  descriptor: PdfFontDescriptorInput
+  program: PdfFontProgramInput
+  fontMatrix: [Float!]
+  fontBbox: [Float!]
+  charProcs: [PdfCharProcInput!]
+  cmap: PdfCMapInput
+  descendant: PdfCidFontInput
+}
+
+input PdfCidFontInput {
+  trueType: Boolean!
+  baseFont: String!
+  systemInfo: PdfCidSystemInfoInput
+  descriptor: PdfFontDescriptorInput!
+  defaultWidth: Float
+  widths: [PdfCidWidthRunInput!]
+  defaultVertical: [Float!]
+  verticalMetrics: [PdfCidVerticalRunInput!]
+  cidToGid: PdfCidToGidInput
+  program: PdfFontProgramInput
+  extra: [PdfDictEntryInput!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfFontProgramInput {
+  kind: String!
+  data: [Int!]
+  length1: Int
+  length2: Int
+  length3: Int
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfCidToGidInput {
+  kind: String!
+  data: [Int!]
+}
+
+input PdfCidVerticalRunInput {
+  startCid: Int!
+  metrics: [[Float!]!]!
+}
+
+input PdfCidWidthRunInput {
+  startCid: Int!
+  widths: [Float!]!
+}
+
+input PdfFontDescriptorInput {
+  fontName: String!
+  flags: Int
+  fontBbox: [Float!]
+  italicAngle: Float
+  ascent: Float
+  descent: Float
+  capHeight: Float
+  stemV: Float
+  stemH: Float
+  xHeight: Float
+  leading: Float
+  avgWidth: Float
+  maxWidth: Float
+  missingWidth: Float
+  fontFamily: String
+  fontStretch: String
+  fontWeight: Float
+  charSet: String
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfCidSystemInfoInput {
+  registry: String!
+  ordering: String!
+  supplement: Int!
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfCMapInput {
+  kind: String!
+  name: String
+  cmap: PdfEmbeddedCMapInput
+}
+
+input PdfEmbeddedCMapInput {
+  name: String!
+  vertical: Boolean
+  codespace: [PdfCodespaceRangeInput!]
+  mappings: [PdfCidMappingInput!]
+  useCmap: String
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfCidMappingInput {
+  kind: String!
+  code: Int
+  cid: Int
+  low: Int
+  high: Int
+}
+
+input PdfCodespaceRangeInput {
+  byteWidth: Int!
+  low: Int!
+  high: Int!
+}
+
+input PdfCharProcInput {
+  name: String!
+  content: [PdfOpInput!]!
+}
+
+input PdfSimpleEncodingInput {
+  base: PdfBaseEncodingInput
+  differences: [PdfEncodingDifferenceInput!]
+}
+
+input PdfEncodingDifferenceInput {
+  code: Int!
+  glyph: String!
+}
+
+input PdfPageInput {
+  mediaBox: [Float!]!
+  cropBox: [Float!]
+  bleedBox: [Float!]
+  trimBox: [Float!]
+  artBox: [Float!]
+  rotate: Int
+  userUnit: Float
+  content: [PdfOpInput!]
+  annotations: [PdfAnnotationInput!]
+  group: PdfTransparencyGroupInput
+  thumbnail: String
+  structParents: Int
+  transition: [PdfDictEntryInput!]
+  duration: Float
+  metadata: String
+  additionalActions: [PdfDictEntryInput!]
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfAnnotationInput {
+  rect: [Float!]!
+  kind: PdfAnnotationKindInput!
+  contents: String
+  name: String
+  modified: String
+  flags: Int
+  border: PdfBorderStyleInput
+  color: [Float!]
+  appearance: PdfAppearanceInput
+  appearanceState: String
+  markup: PdfMarkupAnnotationInput
+  optionalContent: String
+  structParent: Int
+  extra: [PdfDictEntryInput!]
+}
+
+input PdfMarkupAnnotationInput {
+  title: String
+  popup: Int
+  opacity: Float
+  richContents: String
+  creationDate: PdfDateInput
+  inReplyTo: Int
+  subject: String
+  replyType: String
+  intent: String
+}
+
+input PdfAppearanceInput {
+  normal: PdfAppearanceEntryInput!
+  rollover: PdfAppearanceEntryInput
+  down: PdfAppearanceEntryInput
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfAppearanceEntryInput {
+  kind: String!
+  form: String
+  states: [PdfAppearanceStateInput!]
+}
+
+input PdfAppearanceStateInput {
+  state: String!
+  form: String!
+}
+
+input PdfBorderStyleInput {
+  width: Float!
+  style: String
+  dash: [Float!]
+  radii: [Float!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+input PdfAnnotationKindInput {
+  kind: String!
+  open: Boolean
+  icon: String
+  state: String
+  stateModel: String
+  action: PdfActionInput
+  destination: PdfDestinationInput
+  highlight: String
+  quadPoints: [Float!]
+  defaultAppearance: String
+  quadding: Int
+  callout: [Float!]
+  lineEnding: String
+  richText: String
+  points: [Float!]
+  lineEndings: [String!]
+  interiorColor: [Float!]
+  leaderLength: Float
+  caption: Boolean
+  rectDifferences: [Float!]
+  vertices: [Float!]
+  symbol: String
+  paths: [[Float!]!]
+  parent: Int
+  file: PdfFileSpecificationInput
+  sound: [PdfDictEntryInput!]
+  title: String
+  movie: [PdfDictEntryInput!]
+  activation: [PdfDictEntryInput!]
+  field: String
+  characteristics: [PdfDictEntryInput!]
+  additionalActions: [PdfDictEntryInput!]
+  markStyle: String
+  colorants: [PdfDictEntryInput!]
+  entries: [PdfDictEntryInput!]
+  fixedPrint: [PdfDictEntryInput!]
+  overlayText: String
+  repeat: Boolean
+  subtype: String
 }

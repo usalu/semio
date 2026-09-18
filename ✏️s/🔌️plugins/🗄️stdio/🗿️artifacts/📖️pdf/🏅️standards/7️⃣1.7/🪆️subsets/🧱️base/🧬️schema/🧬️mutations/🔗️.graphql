@@ -1,4 +1,4 @@
-# 🧬️ PDF 1.7/Any direct mutation aggregate.
+# 🧬️ PDF 1.7/base direct mutation aggregate.
 input PdfMutationInput {
   insertPage: InsertPageMutationInput
   removePage: RemovePageMutationInput
@@ -16,4 +16,48 @@ input PdfMutationInput {
   movePage: MovePageMutationInput
   setPageContent: SetPageContentMutationInput
   setPageRotation: SetPageRotationMutationInput
+  setPageBox: SetPageBoxMutationInput
+  setPageUserUnit: SetPageUserUnitMutationInput
+  insertContent: InsertContentMutationInput
+  removeContent: RemoveContentMutationInput
+  replaceContent: ReplaceContentMutationInput
+  insertAnnotation: InsertAnnotationMutationInput
+  removeAnnotation: RemoveAnnotationMutationInput
+  setAnnotation: SetAnnotationMutationInput
+  setFont: SetFontMutationInput
+  removeFont: RemoveFontMutationInput
+  setImage: SetImageMutationInput
+  removeImage: RemoveImageMutationInput
+  setForm: SetFormMutationInput
+  removeForm: RemoveFormMutationInput
+  setExtGState: SetExtGStateMutationInput
+  removeExtGState: RemoveExtGStateMutationInput
+  setShading: SetShadingMutationInput
+  removeShading: RemoveShadingMutationInput
+  setPattern: SetPatternMutationInput
+  removePattern: RemovePatternMutationInput
+  setColorSpace: SetColorSpaceMutationInput
+  removeColorSpace: RemoveColorSpaceMutationInput
+  setProperties: SetPropertiesMutationInput
+  removeProperties: RemovePropertiesMutationInput
+  setEmbeddedFile: SetEmbeddedFileMutationInput
+  removeEmbeddedFile: RemoveEmbeddedFileMutationInput
+  setOutlines: SetOutlinesMutationInput
+  setNamedDestination: SetNamedDestinationMutationInput
+  removeNamedDestination: RemoveNamedDestinationMutationInput
+  setPageLabels: SetPageLabelsMutationInput
+  setOutputIntents: SetOutputIntentsMutationInput
+  setAcroForm: SetAcroFormMutationInput
+  setOptionalContent: SetOptionalContentMutationInput
+  setPageLayout: SetPageLayoutMutationInput
+  setPageMode: SetPageModeMutationInput
+  setViewerPreferences: SetViewerPreferencesMutationInput
+  setOpenAction: SetOpenActionMutationInput
+  setLanguage: SetLanguageMutationInput
+  setMarkInfo: SetMarkInfoMutationInput
+  setMetadata: SetMetadataMutationInput
+  setDocumentId: SetDocumentIdMutationInput
+  setEncryption: SetEncryptionMutationInput
+  setCatalogEntry: SetCatalogEntryMutationInput
+  removeCatalogEntry: RemoveCatalogEntryMutationInput
 }

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_page_box;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🖼️ Direct set-page-box protobuf payload.
+message SetPageBoxMutation {
+  uint64 index = 1;
+  PdfPageBox kind = 2;
+  repeated double rect = 3;
+}

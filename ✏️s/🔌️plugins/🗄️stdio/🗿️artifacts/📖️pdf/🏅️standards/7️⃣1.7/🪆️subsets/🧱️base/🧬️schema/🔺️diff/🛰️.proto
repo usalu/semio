@@ -1,132 +1,307 @@
 syntax = "proto3";
 package semio.s_stdio_pdf_1_7.diff;
 
-import "s_stdio_pdf_1_7_snapshot.proto"; // ObjRef, PdfObject, PdfInfo, PdfPage
+import "../📸️snapshot/🛰️.proto";
 
-message PdfPageDiff {
-  repeated double media_box = 1; // empty = unchanged
-  repeated double crop_box = 2;  // empty + has_crop_box=false = unchanged; empty + true = cleared
-  bool has_crop_box = 3;
-  optional int32 rotate = 4;
-  optional string text = 5;
+message PdfDiff {
+  optional string declared_version = 1;
+  PdfPagesDiff pages = 2;
+  PdfKeyedDiffPdfFont fonts = 3;
+  PdfKeyedDiffPdfImage images = 4;
+  PdfKeyedDiffPdfFormXObject forms = 5;
+  PdfKeyedDiffPdfExtGState ext_g_states = 6;
+  PdfKeyedDiffPdfShading shadings = 7;
+  PdfKeyedDiffPdfPattern patterns = 8;
+  PdfKeyedDiffPdfNamedColorSpace color_spaces = 9;
+  PdfKeyedDiffPdfNamedProperties properties = 10;
+  PdfIndexedDiffPdfOutlineItem outlines = 11;
+  PdfIndexedDiffPdfNamedDestination named_destinations = 12;
+  PdfIndexedDiffPdfPageLabelRange page_labels = 13;
+  PdfKeyedDiffPdfEmbeddedFile embedded_files = 14;
+  PdfIndexedDiffPdfOutputIntent output_intents = 15;
+  PdfSetPdfAcroForm acro_form = 16;
+  PdfSetPdfOptionalContent optional_content = 17;
+  PdfSetPdfPageLayout page_layout = 18;
+  PdfSetPdfPageMode page_mode = 19;
+  PdfSetPdfViewerPreferences viewer_preferences = 20;
+  PdfSetPdfOpenAction open_action = 21;
+  PdfSetString language = 22;
+  PdfSetPdfMarkInfo mark_info = 23;
+  PdfSetString metadata = 24;
+  PdfSetArrVec_u8x2 document_id = 25;
+  PdfSetPdfEncryption encryption = 26;
+  PdfInfo info = 27;
+  PdfDictDiff catalog_extra = 28;
+  PdfObjectsDiff objects = 29;
+  PdfDictDiff trailer = 30;
 }
 
-message PdfPageModified {
-  uint64 index = 1;
-  PdfPageDiff diff = 2;
-}
-message PdfPageAdded {
-  uint64 index = 1;
-  semio.s_stdio_pdf_1_7.snapshot.PdfPage page = 2;
-}
-message PdfPagesDiff {
-  repeated uint64 removed = 1;
-  repeated PdfPageModified modified = 2;
-  repeated PdfPageAdded added = 3;
-}
-
-message PdfDictModified {
-  string key = 1;
-  PdfValueDiff diff = 2;
-}
-message PdfDictAdded {
-  uint64 index = 1;
-  string key = 2;
-  semio.s_stdio_pdf_1_7.snapshot.PdfObject item = 3;
-}
-// Name-keyed Dict/Stream.dict/trailer triple -- reused verbatim for PdfDiff.trailer.
 message PdfDictDiff {
   repeated string removed = 1;
   repeated PdfDictModified modified = 2;
   repeated PdfDictAdded added = 3;
 }
 
-message PdfArrayModified {
+message PdfDictAdded {
   uint64 index = 1;
+  string key = 2;
+  PdfObject item = 3;
+}
+
+message PdfDictModified {
+  string key = 1;
   PdfValueDiff diff = 2;
 }
-message PdfArrayAdded {
-  uint64 index = 1;
-  semio.s_stdio_pdf_1_7.snapshot.PdfObject item = 2;
+
+message PdfValueDiff {
+  string kind = 1;
+  PdfObject value = 2;
+  PdfArrayDiff diff = 3;
+  PdfDictDiff dict = 4;
+  optional bytes data = 5;
+  repeated PdfStreamFilter filters = 6;
 }
+
 message PdfArrayDiff {
   repeated uint64 removed = 1;
   repeated PdfArrayModified modified = 2;
   repeated PdfArrayAdded added = 3;
 }
 
-// Recursive diff mirroring PdfObject's shape. REPLACE is the fallback for a node-KIND change.
-message PdfValueDiff {
-  enum Kind {
-    REPLACE = 0;
-    BOOL = 1;
-    INT = 2;
-    REAL = 3;
-    STR = 4;
-    NAME = 5;
-    REF = 6;
-    ARRAY = 7;
-    DICT = 8;
-    STREAM = 9;
-  }
-  Kind kind = 1;
-  semio.s_stdio_pdf_1_7.snapshot.PdfObject replace_value = 2;
-  bool bool_value = 3;
-  int64 int_value = 4;
-  semio.s_stdio_pdf_1_7.snapshot.PdfDecimal real_value = 5;
-  bytes str_value = 6;
-  string name_value = 7;
-  semio.s_stdio_pdf_1_7.snapshot.ObjRef ref_value = 8;
-  PdfArrayDiff array_diff = 9;
-  PdfDictDiff dict_diff = 10;
-  PdfDictDiff stream_dict = 11;
-  bytes stream_data = 12;
-  bool stream_has_filters = 13;
-  repeated semio.s_stdio_pdf_1_7.snapshot.PdfStreamFilter stream_filters = 14;
+message PdfArrayAdded {
+  uint64 index = 1;
+  PdfObject item = 2;
 }
 
-message PdfObjectModified {
-  semio.s_stdio_pdf_1_7.snapshot.ObjRef id = 1;
+message PdfArrayModified {
+  uint64 index = 1;
   PdfValueDiff diff = 2;
 }
-message PdfObjectAdded {
-  uint64 index = 1;
-  semio.s_stdio_pdf_1_7.snapshot.ObjRef id = 2;
-  semio.s_stdio_pdf_1_7.snapshot.PdfObject value = 3;
-}
-// (id,gen)-keyed objects triple.
+
 message PdfObjectsDiff {
-  repeated semio.s_stdio_pdf_1_7.snapshot.ObjRef removed = 1;
+  repeated ObjRef removed = 1;
   repeated PdfObjectModified modified = 2;
   repeated PdfObjectAdded added = 3;
 }
 
-message PdfPathSegment {
-  enum Kind {
-    ARRAY_INDEX = 0;
-    DICT_KEY = 1;
-  }
-  Kind kind = 1;
-  uint64 index = 2;
-  string key = 3;
+message PdfObjectAdded {
+  uint64 index = 1;
+  ObjRef id = 2;
+  PdfObject value = 3;
 }
 
-message PdfDiff {
-  optional string declared_version = 1;
-  semio.s_stdio_pdf_1_7.snapshot.PdfInfo info = 2;
-  PdfPagesDiff pages = 3;
-  PdfObjectsDiff objects = 4;
-  PdfDictDiff trailer = 5;
+message PdfObjectModified {
+  ObjRef id = 1;
+  PdfValueDiff diff = 2;
 }
 
-message ObjRef {
-  int64 num = 1;
-  int64 gen = 2;
+message PdfSetPdfEncryption {
+  string kind = 1;
+  PdfEncryption value = 2;
 }
 
-message PdfPage {
+message PdfSetArrVec_u8x2 {
+  string kind = 1;
+  repeated bytes value = 2;
+}
+
+message PdfSetString {
+  string kind = 1;
+  optional string value = 2;
+}
+
+message PdfSetPdfMarkInfo {
+  string kind = 1;
+  PdfMarkInfo value = 2;
+}
+
+message PdfSetPdfOpenAction {
+  string kind = 1;
+  PdfOpenAction value = 2;
+}
+
+message PdfSetPdfViewerPreferences {
+  string kind = 1;
+  PdfViewerPreferences value = 2;
+}
+
+message PdfSetPdfPageMode {
+  string kind = 1;
+  PdfPageMode value = 2;
+}
+
+message PdfSetPdfPageLayout {
+  string kind = 1;
+  PdfPageLayout value = 2;
+}
+
+message PdfSetPdfOptionalContent {
+  string kind = 1;
+  PdfOptionalContent value = 2;
+}
+
+message PdfSetPdfAcroForm {
+  string kind = 1;
+  PdfAcroForm value = 2;
+}
+
+message PdfIndexedDiffPdfOutputIntent {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfIndexedItemT {
+  uint64 index = 1;
+  T value = 2;
+}
+
+message PdfKeyedDiffPdfEmbeddedFile {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedItemT {
+  string key = 1;
+  T value = 2;
+}
+
+message PdfIndexedDiffPdfPageLabelRange {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfIndexedDiffPdfNamedDestination {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfIndexedDiffPdfOutlineItem {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfNamedProperties {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfNamedColorSpace {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfPattern {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfShading {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfExtGState {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfFormXObject {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfImage {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfKeyedDiffPdfFont {
+  repeated string removed = 1;
+  repeated PdfKeyedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfPagesDiff {
+  repeated uint64 removed = 1;
+  repeated PdfPageModified modified = 2;
+  repeated PdfPageAdded added = 3;
+}
+
+message PdfPageAdded {
+  uint64 index = 1;
+  PdfPage page = 2;
+}
+
+message PdfPageModified {
+  uint64 index = 1;
+  PdfPageDiff diff = 2;
+}
+
+message PdfPageDiff {
   repeated double media_box = 1;
-  repeated double crop_box = 2;
-  optional int64 rotate = 3;
-  optional string text = 4;
+  PdfSetPdfRect crop_box = 2;
+  PdfSetPdfRect bleed_box = 3;
+  PdfSetPdfRect trim_box = 4;
+  PdfSetPdfRect art_box = 5;
+  optional int32 rotate = 6;
+  PdfSetf64 user_unit = 7;
+  PdfIndexedDiffPdfOp content = 8;
+  PdfIndexedDiffPdfAnnotation annotations = 9;
+  PdfSetPdfTransparencyGroup group = 10;
+  PdfSetString thumbnail = 11;
+  PdfSetu32 struct_parents = 12;
+  PdfSetVec_PdfDictEntry transition = 13;
+  PdfSetf64 duration = 14;
+  PdfSetString metadata = 15;
+  repeated PdfDictEntry additional_actions = 16;
+  PdfDictDiff extra = 17;
+}
+
+message PdfSetf64 {
+  string kind = 1;
+  optional double value = 2;
+}
+
+message PdfSetVec_PdfDictEntry {
+  string kind = 1;
+  repeated PdfDictEntry value = 2;
+}
+
+message PdfSetu32 {
+  string kind = 1;
+  optional uint32 value = 2;
+}
+
+message PdfSetPdfTransparencyGroup {
+  string kind = 1;
+  PdfTransparencyGroup value = 2;
+}
+
+message PdfIndexedDiffPdfAnnotation {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfIndexedDiffPdfOp {
+  repeated uint64 removed = 1;
+  repeated PdfIndexedItemT modified = 2;
+  repeated PdfIndexedItemT added = 3;
+}
+
+message PdfSetPdfRect {
+  string kind = 1;
+  repeated double value = 2;
 }

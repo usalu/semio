@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-user-unit/schema.json",
+  "title": "SetPageUserUnit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "userUnit": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mutation": {
+      "const": "setPageUserUnit",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

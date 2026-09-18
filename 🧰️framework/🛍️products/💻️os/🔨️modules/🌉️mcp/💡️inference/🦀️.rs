@@ -58,6 +58,21 @@ pub struct DeclaredInference {
     pub depends_on: Vec<String>,
 }
 
+impl DeclaredInference {
+    /// 🧭️ The plugin whose guest actually answers this row — the `contributor` (which equals
+    /// `owner` for an owner-authored inference, and names the contributing plugin for a row
+    /// contributed onto a dependency's artifact kind, exactly the id
+    /// `ArtifactInferenceRouter::register_plugin` is called with). Falls back to `owner` only for a
+    /// descriptor old enough to have shipped without the field at all.
+    pub fn route_plugin_id(&self) -> &str {
+        if self.contributor.is_empty() {
+            &self.owner
+        } else {
+            &self.contributor
+        }
+    }
+}
+
 impl From<&semio_framework::ContributedInferenceMetadata> for DeclaredInference {
     fn from(metadata: &semio_framework::ContributedInferenceMetadata) -> Self {
         Self {
@@ -152,13 +167,20 @@ pub fn lookup_inference(declared: &[DeclaredInference], inference_schema: &str) 
     }
 }
 
-/// 💡️ The one real gap standing between a declared inference and a live value: retryable, since a
-/// later packet wiring a real `artifact-infer` channel command (the inference analogue of W3's
-/// mutation wiring) turns this into a real read with zero change to the discovery path above.
+/// 💡️ Why a bare READ of a declared inference still cannot answer a value: `inference_get` and the
+/// `semio://artifact/{id}/inference/{field}` resource carry no canonical request body, and an
+/// inference is a computation over one — the guest has nothing to run against. Execution itself is
+/// no longer missing: `inference_run` (`AppCommand::Infer` →
+/// `semio_framework_plugin_host::ArtifactInferenceRouter`) runs any declared service for real. This
+/// stays retryable because a later packet that caches a document-derived canonical payload per
+/// artifact turns this exact read into a hit with no change to the discovery path above.
 fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{}/{}` is declared but no artifact-infer route is wired through this workspace's plugin channel yet (channel.not-wired)", item.artifact_kind, item.inference_schema))
-        .with_details(serde_json::json!({ "artifactKind": item.artifact_kind, "inferenceSchema": item.inference_schema, "owner": item.owner }))
-        .retryable()
+    GatewayError::new(
+        GatewayErrorCode::PluginUnavailable,
+        format!("`{}/{}` is declared and executable, but a bare read carries no canonical request payload to run it against — call `inference_run` with `payload` instead", item.artifact_kind, item.inference_schema),
+    )
+    .with_details(serde_json::json!({ "artifactKind": item.artifact_kind, "inferenceSchema": item.inference_schema, "owner": item.owner, "runWith": "inference_run", "pluginId": item.route_plugin_id() }))
+    .retryable()
 }
 
 fn no_such_service_error(schema: &str, inference_schema: &str) -> GatewayError {
@@ -227,10 +249,11 @@ fn inference_get_capability() -> CapabilityDefinition {
     inference_capability("inference.get", "inference_get", "Get Inference", "Reads one declared inference field for an artifact — a typed, retryable gap until a real artifact-infer route is wired.", inference_get_input_schema(), inference_get_output_schema())
 }
 
-/// 💡️ The inference capabilities, folded into `CatalogSource.gateway` by root wiring — same pattern
-/// as `🦀️.rs`'s own `core_tool_capabilities()`.
+/// 💡️ The plugin-declared inference capabilities — discovery (`inference_list`/`inference_get`) and
+/// the general execution route (`inference_run`) — folded into `CatalogSource.gateway` by root
+/// wiring, same pattern as `🦀️.rs`'s own `core_tool_capabilities()`.
 pub fn inference_capabilities() -> Vec<CapabilityDefinition> {
-    vec![inference_list_capability(), inference_get_capability()]
+    vec![inference_list_capability(), inference_get_capability(), inference_run_capability()]
 }
 //#endregion 🔖️Capabilities
 
@@ -373,7 +396,7 @@ pub fn inference_resources(workspace: Option<&Arc<HeadlessWorkspace>>) -> Vec<Re
 /// boundary is a `serde_json::Value`, and a hub field this client does not know about is a loud
 /// decode failure rather than a silently-dropped one.
 pub const GIS_MAP_INFERENCE_SERVICE_ID: &str = "s.gis.gismap.inference";
-pub const GIS_MAP_INFERENCE_DOCUMENT_SCHEMA: &str = "gis.map";
+pub const GIS_MAP_INFERENCE_ARTIFACT_SCHEMA: &str = "gis.map";
 pub const GIS_MAP_INFERENCE_ARTIFACT_KIND: &str = "s.gis.gismap";
 pub const GIS_MAP_INFERENCE_REQUEST_SCHEMA: &str = "semio.hub.inference-request/v1";
 pub const GIS_MAP_INFERENCE_APPROVAL_SCHEMA: &str = "semio.hub.inference-approval/v1";
@@ -1110,6 +1133,17 @@ fn inference_scope_ids() -> Vec<semio_framework::manifest::kernel::CapabilityId>
     vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string()), semio_framework::manifest::kernel::CapabilityId("artifacts.write".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())]
 }
 
+/// 📝️ The resources one hub inference job capability really writes — a Mutation that names none is
+/// a conformance error, and these three name exactly what they touch: the owner's durable hub job
+/// row, plus the bound document for the one capability (`inference.approve`) that actually commits.
+fn inference_job_writes(id: &str) -> Vec<semio_framework::manifest::ResourceSelector> {
+    match id {
+        "inference.submit" | "inference.cancel" => vec![semio_framework::manifest::ResourceSelector::new("job:{self}")],
+        "inference.approve" => vec![semio_framework::manifest::ResourceSelector::new("job:{self}"), semio_framework::manifest::ResourceSelector::new("artifact:{self}")],
+        _ => Vec::new(),
+    }
+}
+
 fn inference_job_capability(id: &str, tool_name: &str, title: &str, description: &str, kind: CapabilityKind, scopes: Vec<semio_framework::manifest::kernel::CapabilityId>, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
     CapabilityDefinition {
         id: CapabilityRef(id.to_string()),
@@ -1122,7 +1156,7 @@ fn inference_job_capability(id: &str, tool_name: &str, title: &str, description:
         use_when: vec!["run the hub's GIS Map inference over a bound document".to_string(), "watch, cancel or approve a hub inference job".to_string()],
         input_schema,
         output_schema,
-        effects: semio_framework::manifest::CapabilityEffects { external: true, ..Default::default() },
+        effects: semio_framework::manifest::CapabilityEffects { external: true, writes: inference_job_writes(id), ..Default::default() },
         policy: semio_framework::manifest::CapabilityPolicy { scopes, approval: semio_framework::manifest::ApprovalMode::Never },
         execution: Default::default(),
         exposure: ToolExposure::Direct { tool_name: tool_name.to_string() },
@@ -1184,7 +1218,38 @@ pub fn inference_approve_capability() -> CapabilityDefinition {
     )
 }
 
-/// 💡️ The four hub-backed inference job capabilities, folded into `CatalogSource.gateway`.
+/// 💡️ The general plugin-declared inference execution capability — the one that is NOT hub-bound.
+/// Every inference service any installed plugin declares is reachable through it, routed to that
+/// plugin's own guest by `ArtifactInferenceRouter` (`🏠️workspace`'s `PluginArtifactChannel`), so
+/// this is the tool that retires the blanket `channel.not-wired` gap. Expensive by construction, so
+/// it always mints a job handle: progress is readable with `job_get` and cancellation is requested
+/// with `job_cancel`, the same plugin-agnostic registry every other long-running gateway job uses.
+pub fn inference_run_capability() -> CapabilityDefinition {
+    CapabilityDefinition {
+        id: CapabilityRef("inference.run".to_string()),
+        version: 1,
+        owner: CapabilityOwner::Gateway,
+        kind: CapabilityKind::Job,
+        title: "Run Declared Inference".to_string(),
+        description: "Runs one plugin-declared inference service in its own plugin's guest and returns the guest's own result, plus a job handle whose progress is readable with `job_get` and cancellable with `job_cancel`. — Führt einen von einem Plugin deklarierten Inferenzdienst im Gast dieses Plugins aus und liefert dessen eigenes Ergebnis sowie ein Auftrags-Handle, dessen Fortschritt mit `job_get` gelesen und mit `job_cancel` abgebrochen werden kann.".to_string(),
+        artifact_kind: None,
+        use_when: vec!["run a plugin's own inference".to_string(), "compute a declared inference value".to_string()],
+        input_schema: crate::schema::inference_run_input_schema(),
+        output_schema: crate::schema::inference_run_output_schema(),
+        effects: Default::default(),
+        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())], approval: semio_framework::manifest::ApprovalMode::Never },
+        execution: Default::default(),
+        exposure: ToolExposure::Direct { tool_name: "inference_run".to_string() },
+        presentation: CapabilityPresentation { icon_id: Some("brain".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
+        examples: Vec::new(),
+        source: CapabilitySource::Gateway,
+    }
+}
+
+/// 💡️ The four hub-backed inference job capabilities, folded into `CatalogSource.gateway`. The
+/// general plugin-declared execution route (`inference_run`) is NOT one of them: it crosses no
+/// network, needs no hub binding, and belongs with the plugin-declared family
+/// ([`inference_capabilities`]).
 pub fn inference_job_capabilities() -> Vec<CapabilityDefinition> {
     vec![inference_submit_capability(), inference_events_capability(), inference_cancel_capability(), inference_approve_capability()]
 }
@@ -1397,15 +1462,143 @@ fn inference_approve_handler(context: &InferenceToolContext<'_>, arguments: serd
     }
 }
 
-/// 💡️ Registers the four hub-backed inference job tools. Like every other tool in this crate they
-/// are ALWAYS present in `tools/list`; only a call's result varies by whether an authenticated hub
-/// binding exists, and every call is first gated by the connection's own granted MCP scopes.
+/// 📦️ The canonical request body one `inference_run` call carries into the guest. The gateway never
+/// interprets it: whatever JSON the caller supplies is encoded as UTF-8 JSON and handed to the
+/// plugin's own inference schema verbatim, because only that plugin's guest understands its own
+/// canonical payload (the same host-opaque rule `🏠️workspace`'s module doc states for documents).
+fn inference_run_payload_bytes(arguments: &serde_json::Value) -> Vec<u8> {
+    match arguments.get("payload") {
+        None | Some(serde_json::Value::Null) => b"{}".to_vec(),
+        Some(value) => serde_json::to_vec(value).unwrap_or_else(|_| b"{}".to_vec()),
+    }
+}
+
+/// 🔎️ The guest's result bytes, projected for the tool reply: a UTF-8 JSON body becomes structured
+/// `payload`, anything else is reported by length alone rather than guessed at.
+fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::Value> {
+    std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok())
+}
+
+/// 💡️ Runs one declared inference for real. Discovery, routing and execution are all plugin-agnostic
+/// — no plugin id is hardcoded, and a kind whose rows come from several contributors is
+/// disambiguated by the caller's optional `pluginId` rather than by a silent first-match.
+fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_json::Value) -> CallToolResult {
+    let capability = inference_run_capability();
+    if let Err(error) = authorize_inference(context.policy, context.principal, &capability) {
+        return CallToolResult::tool_error(&error);
+    }
+    let Some(artifact_kind) = arguments.get("artifactKind").and_then(serde_json::Value::as_str) else {
+        return CallToolResult::tool_error(&inference_input_invalid("artifactKind is required"));
+    };
+    let Some(inference_schema) = arguments.get("inferenceSchema").and_then(serde_json::Value::as_str) else {
+        return CallToolResult::tool_error(&inference_input_invalid("inferenceSchema is required"));
+    };
+    let Some(workspace) = context.workspace else {
+        return CallToolResult::tool_error(&workspace_binding_required("inference_run"));
+    };
+    let declared = match declared_inferences_for_workspace(workspace) {
+        Ok(declared) => declared,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
+    let requested_plugin = arguments.get("pluginId").and_then(serde_json::Value::as_str);
+    let matches: Vec<&DeclaredInference> = declared
+        .iter()
+        .filter(|item| item.artifact_kind == artifact_kind && item.inference_schema == inference_schema && requested_plugin.is_none_or(|plugin_id| item.route_plugin_id() == plugin_id))
+        .collect();
+    let item = match matches.as_slice() {
+        [] => return CallToolResult::tool_error(&no_such_service_error(artifact_kind, inference_schema)),
+        [single] => (*single).clone(),
+        several => {
+            let owners: Vec<&str> = several.iter().map(|item| item.route_plugin_id()).collect();
+            return CallToolResult::tool_error(
+                &GatewayError::new(GatewayErrorCode::InputInvalid, format!("`{artifact_kind}/{inference_schema}` is declared by {} plugins — name one with `pluginId`", owners.len())).with_details(serde_json::json!({ "pluginIds": owners })),
+            );
+        }
+    };
+
+    let cancellation_id = arguments.get("cancellationId").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(mint_inference_request_id);
+    let command = crate::actions::InferCommand {
+        plugin_id: item.route_plugin_id().to_string(),
+        artifact_kind: item.artifact_kind.clone(),
+        inference_schema: item.inference_schema.clone(),
+        revision: arguments.get("revision").and_then(serde_json::Value::as_u64).unwrap_or(0),
+        generation: arguments.get("generation").and_then(serde_json::Value::as_u64).unwrap_or(0),
+        cancellation_id: cancellation_id.clone(),
+        work_units: arguments.get("workUnits").and_then(serde_json::Value::as_u64).unwrap_or(INFERENCE_DEFAULT_WORK_UNITS),
+        canonical_payload: inference_run_payload_bytes(&arguments),
+    };
+
+    let jobs = crate::ui::job_registry();
+    let job_id = jobs.begin("inference.run");
+    jobs.report_progress(&job_id, 0.05, Some(format!("routing `{}/{}` to `{}`", command.artifact_kind, command.inference_schema, command.plugin_id)));
+    let base = serde_json::json!({
+        "jobId": job_id,
+        "artifactKind": item.artifact_kind,
+        "inferenceSchema": item.inference_schema,
+        "pluginId": item.route_plugin_id(),
+        "cancellationId": cancellation_id,
+    });
+    // 🛑️ Cooperative cancellation, at the two points this handler genuinely owns: before the guest
+    // is ever dispatched, and again once it returns. The SAME `cancellationId` also travels on the
+    // wire, where the guest's own `semio.infer` loop polls it — so a cancel issued mid-run is
+    // observed by the guest, not silently ignored, even though this synchronous call cannot itself
+    // be interrupted.
+    if jobs.is_cancel_requested(&job_id) {
+        jobs.mark_cancelled(&job_id);
+        return CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled before dispatch") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))));
+    }
+    jobs.report_progress(&job_id, 0.35, Some("running in the plugin's guest".to_string()));
+    match context.actions.run_inference(INFERENCE_ROUTED_INSTANCE, command) {
+        Ok(outcome) => {
+            if jobs.is_cancel_requested(&job_id) {
+                jobs.mark_cancelled(&job_id);
+                return CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))));
+            }
+            let structured = merge_inference_run_fields(
+                base,
+                serde_json::json!({ "status": "SUCCEEDED", "complete": outcome.complete, "payload": inference_run_result_value(&outcome.payload), "payloadBytes": outcome.payload.len() }),
+            );
+            jobs.succeed(&job_id, structured.clone());
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("`{}` produced {} byte(s) (complete: {})", outcome.inference_schema, outcome.payload.len(), outcome.complete) }], Some(structured))
+        }
+        Err(error) => {
+            jobs.fail(&job_id, error.clone());
+            CallToolResult::tool_error(&error.with_details(serde_json::json!({ "jobId": job_id, "artifactKind": item.artifact_kind, "inferenceSchema": item.inference_schema, "pluginId": item.route_plugin_id() })))
+        }
+    }
+}
+
+/// 🧩️ Folds the terminal fields onto the invariant ones — one object, built once, so the tool reply
+/// and the job registry's own retained result are literally the same value.
+fn merge_inference_run_fields(mut base: serde_json::Value, extra: serde_json::Value) -> serde_json::Value {
+    if let (Some(base_map), Some(extra_map)) = (base.as_object_mut(), extra.as_object()) {
+        for (key, value) in extra_map {
+            base_map.insert(key.clone(), value.clone());
+        }
+    }
+    base
+}
+
+/// ⏱️ The default work-unit budget one `inference_run` grants when the caller names none — the same
+/// order of magnitude `job_infer`'s own user-visible lane clamps to.
+const INFERENCE_DEFAULT_WORK_UNITS: u64 = 1_024;
+
+/// 🔢️ `RoutingArtifactChannel` resolves an inference's plugin from the command's own `pluginId`, so
+/// the `instance` slot the mutation protocol encodes carries no meaning here — a fixed, documented
+/// zero rather than a fabricated per-capability slot.
+const INFERENCE_ROUTED_INSTANCE: u32 = 0;
+
+/// 💡️ Registers the four hub-backed inference job tools plus the general `inference_run` execution
+/// route. Like every other tool in this crate they are ALWAYS present in `tools/list`; only a call's
+/// result varies by whether a workspace/hub binding exists, and every call is first gated by the
+/// connection's own granted MCP scopes.
 pub fn register_inference_job_tools(registry: &mut InMemoryToolRegistry, workspace: Option<Arc<HeadlessWorkspace>>, actions: Arc<crate::actions::ActionAdapter>, principal: AgentPrincipal, session: crate::handles::SessionHandle) {
-    let definitions: [(CapabilityDefinition, &str, fn(&InferenceToolContext<'_>, serde_json::Value) -> CallToolResult); 4] = [
+    let definitions: [(CapabilityDefinition, &str, fn(&InferenceToolContext<'_>, serde_json::Value) -> CallToolResult); 5] = [
         (inference_submit_capability(), "inference_submit", inference_submit_handler),
         (inference_events_capability(), "inference_events", inference_events_handler),
         (inference_cancel_capability(), "inference_cancel", inference_cancel_handler),
         (inference_approve_capability(), "inference_approve", inference_approve_handler),
+        (inference_run_capability(), "inference_run", inference_run_handler),
     ];
     for (capability, tool_name, handler) in definitions {
         let tool = tool_from_capability(&capability, tool_name);

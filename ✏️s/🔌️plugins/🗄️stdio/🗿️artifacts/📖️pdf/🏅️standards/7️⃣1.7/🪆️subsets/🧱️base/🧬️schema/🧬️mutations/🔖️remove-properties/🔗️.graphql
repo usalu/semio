@@ -1,0 +1,4 @@
+# 🔖️ Direct remove-properties GraphQL payload.
+input RemovePropertiesMutationInput {
+  name: String
+}

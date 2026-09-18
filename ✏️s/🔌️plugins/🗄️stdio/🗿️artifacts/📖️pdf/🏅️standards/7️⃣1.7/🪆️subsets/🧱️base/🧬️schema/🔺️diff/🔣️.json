@@ -2,111 +2,372 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json",
   "title": "PdfDiff",
-  "$defs": {
-    "PdfPageDiff": {
-      "type": "object",
-      "properties": {
-        "mediaBox": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "cropBox": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "number"
-          }
-        },
-        "rotate": {
-          "type": "integer"
-        },
-        "text": {
+  "type": "object",
+  "properties": {
+    "declaredVersion": {
+      "anyOf": [
+        {
           "type": "string"
+        },
+        {
+          "type": "null"
         }
-      }
+      ]
     },
-    "PdfPageModified": {
+    "pages": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfPagesDiff"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fonts": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfFont"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "images": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfImage"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "forms": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfFormXObject"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extGStates": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfExtGState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "shadings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfShading"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "patterns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfPattern"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "colorSpaces": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfNamedColorSpace"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "properties": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfNamedProperties"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outlines": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfIndexedDiffPdfOutlineItem"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "namedDestinations": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfIndexedDiffPdfNamedDestination"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pageLabels": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfIndexedDiffPdfPageLabelRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "embeddedFiles": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfKeyedDiffPdfEmbeddedFile"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outputIntents": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfIndexedDiffPdfOutputIntent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "acroForm": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfAcroForm"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "optionalContent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfOptionalContent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pageLayout": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfPageLayout"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pageMode": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfPageMode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "viewerPreferences": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfViewerPreferences"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "openAction": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfOpenAction"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "language": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "markInfo": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfMarkInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "metadata": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "documentId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetArrVec_u8x2"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "encryption": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfSetPdfEncryption"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "info": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "catalogExtra": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfDictDiff"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "objects": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfObjectsDiff"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "trailer": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PdfDictDiff"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "PdfArrayAdded": {
       "type": "object",
-      "required": [
-        "index",
-        "diff"
-      ],
       "properties": {
         "index": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
-        "diff": {
-          "$ref": "#/$defs/PdfPageDiff"
+        "item": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
-      }
-    },
-    "PdfPageAdded": {
-      "type": "object",
+      },
       "required": [
         "index",
-        "page"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer"
-        },
-        "page": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage"
-        }
-      }
+        "item"
+      ]
     },
-    "PdfPagesDiff": {
+    "PdfArrayDiff": {
       "type": "object",
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfPageModified"
+            "$ref": "#/$defs/PdfArrayModified"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfPageAdded"
+            "$ref": "#/$defs/PdfArrayAdded"
           }
         }
       }
     },
-    "PdfDictModified": {
+    "PdfArrayModified": {
       "type": "object",
-      "required": [
-        "key",
-        "diff"
-      ],
       "properties": {
-        "key": {
-          "type": "string"
+        "index": {
+          "type": "integer",
+          "minimum": 0
         },
         "diff": {
           "$ref": "#/$defs/PdfValueDiff"
         }
-      }
+      },
+      "required": [
+        "index",
+        "diff"
+      ]
     },
     "PdfDictAdded": {
       "type": "object",
-      "required": [
-        "index",
-        "key",
-        "item"
-      ],
       "properties": {
         "index": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "key": {
           "type": "string"
@@ -114,7 +375,12 @@
         "item": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
-      }
+      },
+      "required": [
+        "index",
+        "key",
+        "item"
+      ]
     },
     "PdfDictDiff": {
       "type": "object",
@@ -139,124 +405,409 @@
         }
       }
     },
-    "PdfArrayModified": {
+    "PdfDictModified": {
       "type": "object",
-      "required": [
-        "index",
-        "diff"
-      ],
       "properties": {
-        "index": {
-          "type": "integer"
+        "key": {
+          "type": "string"
         },
         "diff": {
           "$ref": "#/$defs/PdfValueDiff"
         }
-      }
-    },
-    "PdfArrayAdded": {
-      "type": "object",
+      },
       "required": [
-        "index",
-        "item"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer"
-        },
-        "item": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
-        }
-      }
+        "key",
+        "diff"
+      ]
     },
-    "PdfArrayDiff": {
+    "PdfIndexedDiffPdfAnnotation": {
       "type": "object",
       "properties": {
         "removed": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
         "modified": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfArrayModified"
+            "$ref": "#/$defs/PdfIndexedItemT"
           }
         },
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PdfArrayAdded"
+            "$ref": "#/$defs/PdfIndexedItemT"
           }
         }
       }
     },
-    "PdfValueDiff": {
+    "PdfIndexedDiffPdfNamedDestination": {
       "type": "object",
-      "required": [
-        "kind"
-      ],
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "replace",
-            "bool",
-            "int",
-            "real",
-            "str",
-            "name",
-            "ref",
-            "array",
-            "dict",
-            "stream"
-          ]
-        },
-        "value": {},
-        "diff": {},
-        "dict": {
-          "$ref": "#/$defs/PdfDictDiff"
-        },
-        "data": {
+        "removed": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           }
         },
-        "filters": {
+        "modified": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfStreamFilter"
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
           }
         }
       }
     },
-    "PdfObjectModified": {
+    "PdfIndexedDiffPdfOp": {
       "type": "object",
-      "required": [
-        "id",
-        "diff"
-      ],
       "properties": {
-        "id": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
-        "diff": {
-          "$ref": "#/$defs/PdfValueDiff"
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
         }
       }
+    },
+    "PdfIndexedDiffPdfOutlineItem": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfIndexedDiffPdfOutputIntent": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfIndexedDiffPdfPageLabelRange": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfIndexedItemT": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/T"
+        }
+      },
+      "required": [
+        "index",
+        "value"
+      ]
+    },
+    "PdfKeyedDiffPdfEmbeddedFile": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfExtGState": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfFont": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfFormXObject": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfImage": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfNamedColorSpace": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfNamedProperties": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfPattern": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedDiffPdfShading": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfKeyedItemT"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfIndexedItemT"
+          }
+        }
+      }
+    },
+    "PdfKeyedItemT": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/T"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
     },
     "PdfObjectAdded": {
       "type": "object",
-      "required": [
-        "index",
-        "id",
-        "value"
-      ],
       "properties": {
         "index": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "id": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
@@ -264,7 +815,27 @@
         "value": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
-      }
+      },
+      "required": [
+        "index",
+        "id",
+        "value"
+      ]
+    },
+    "PdfObjectModified": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+        },
+        "diff": {
+          "$ref": "#/$defs/PdfValueDiff"
+        }
+      },
+      "required": [
+        "id",
+        "diff"
+      ]
     },
     "PdfObjectsDiff": {
       "type": "object",
@@ -289,49 +860,903 @@
         }
       }
     },
-    "PdfPathSegment": {
+    "PdfPageAdded": {
       "type": "object",
-      "required": [
-        "kind"
-      ],
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "arrayIndex",
-            "dictKey"
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "page": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage"
+        }
+      },
+      "required": [
+        "index",
+        "page"
+      ]
+    },
+    "PdfPageDiff": {
+      "type": "object",
+      "properties": {
+        "mediaBox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
           ]
         },
-        "index": {
-          "type": "integer"
+        "cropBox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfRect"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "key": {
-          "type": "string"
+        "bleedBox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfRect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trimBox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfRect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artBox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfRect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "userUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetf64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfIndexedDiffPdfOp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "annotations": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfIndexedDiffPdfAnnotation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "group": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfTransparencyGroup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thumbnail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "structParents": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetu32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetVec_PdfDictEntry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetf64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additionalActions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfDictEntry"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfDictDiff"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
-    }
-  },
-  "type": "object",
-  "properties": {
-    "declaredVersion": {
-      "type": "string",
-      "x-semio-state": "artifact"
     },
-    "info": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo",
-      "x-semio-state": "artifact"
+    "PdfPageModified": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/PdfPageDiff"
+        }
+      },
+      "required": [
+        "index",
+        "diff"
+      ]
     },
-    "pages": {
-      "$ref": "#/$defs/PdfPagesDiff",
-      "x-semio-state": "artifact"
+    "PdfPagesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfPageModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfPageAdded"
+          }
+        }
+      }
     },
-    "objects": {
-      "$ref": "#/$defs/PdfObjectsDiff",
-      "x-semio-state": "artifact"
+    "PdfSetArrVec_u8x2": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
     },
-    "trailer": {
-      "$ref": "#/$defs/PdfDictDiff",
-      "x-semio-state": "artifact"
+    "PdfSetPdfAcroForm": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAcroForm"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfEncryption": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfEncryption"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfMarkInfo": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfMarkInfo"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfOpenAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOpenAction"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfOptionalContent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOptionalContent"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfPageLayout": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPageLayout"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfPageMode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPageMode"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfRect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfTransparencyGroup": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfTransparencyGroup"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfViewerPreferences": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfViewerPreferences"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetString": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetVec_PdfDictEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfDictEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetf64": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetu32": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfValueDiff": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "replace"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfDecimal"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "name"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "diff": {
+              "$ref": "#/$defs/PdfArrayDiff"
+            }
+          },
+          "required": [
+            "kind",
+            "diff"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dict"
+            },
+            "diff": {
+              "$ref": "#/$defs/PdfDictDiff"
+            }
+          },
+          "required": [
+            "kind",
+            "diff"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "stream"
+            },
+            "dict": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfDictDiff"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "data": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "filters": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfStreamFilter"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
     }
   }
 }

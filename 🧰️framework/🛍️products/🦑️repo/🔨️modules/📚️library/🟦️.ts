@@ -148,9 +148,10 @@ export function resolveCliBin(root = getWorkspaceRoot()): string {
   return defaultCliBin(root);
 }
 
+/** 🗃️ The MCP server is build output, so it lives in the marked repository cache and never in the tree. */
 function defaultMcpBin(root: string): string {
   const win = process.platform === "win32";
-  return join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client", win ? "mcp.exe" : "mcp");
+  return join(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", win ? "semio-repo-mcp.exe" : "semio-repo-mcp");
 }
 
 /** 🔌️Resolves the native repo MCP binary without colliding with the repo CLI executable. */
@@ -2675,11 +2676,20 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * `Profiler.startPreciseCoverage`, which Bun's `node:inspector` shim doesn't implement (observed: "Coverage
  * APIs are not supported"); non-coverage runs keep using bun for its faster startup.
  */
-/** 🧪️ Builds Vitest argv without overriding the owning config's no-test policy. */
+/** 🧪️ Builds Vitest argv without overriding the owning config's no-test policy.
+ *
+ * 🩸️ `--config` is passed ABSOLUTE. Every call site writes the path relative to its own bundle root
+ * (the shape `runVitestConfigArgumentTokens` scans for), but vitest 4 resolves a relative `--config`
+ * against the root it detects — this repo's own root — not the working directory it was launched in.
+ * `@semio-tech/framework:test` was the caught case: its `../../🧪️tests/🎚️config/🟦️.ts` resolved to
+ * `<repo parent>/🧪️tests/🎚️config/🟦️.ts`, esbuild could not load it, and the run reported
+ * "No test files found, exiting with code 1" — with the config silently absent, so its `includeSource`
+ * never collected the kernel's in-source suites. Resolving here keeps the relative literals at the call
+ * sites and makes the launched cwd authoritative again. */
 export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
   const coverageArgs = collectingCoverage ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`] : [];
   const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
-  return [vitestBin, "run", "--config", config, ...vitestLevelArgs(), ...coverageArgs, ...segments];
+  return [vitestBin, "run", "--config", isAbsolute(config) ? config : resolve(bundleRoot, config), ...vitestLevelArgs(), ...coverageArgs, ...segments];
 }
 
 export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> {

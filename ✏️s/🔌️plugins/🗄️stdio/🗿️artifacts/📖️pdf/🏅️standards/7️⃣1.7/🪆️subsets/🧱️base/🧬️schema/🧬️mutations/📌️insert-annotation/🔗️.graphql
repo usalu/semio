@@ -1,0 +1,6 @@
+# 📌️ Direct insert-annotation GraphQL payload.
+input InsertAnnotationMutationInput {
+  index: Int
+  at: Int
+  annotation: PdfAnnotationInput
+}

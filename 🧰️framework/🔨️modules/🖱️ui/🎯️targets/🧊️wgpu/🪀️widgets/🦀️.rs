@@ -557,26 +557,11 @@ pub fn draw_text_wrapped<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, 
     lines.len() as f32 * line_h
 }
 
+/// ✂️ The owned-line view of [`FontAtlas::wrap_lines`] — CSS greedy word wrap, with each line's
+/// hanging trailing spaces trimmed because they paint no ink. It used to `split_whitespace`, which
+/// collapsed interior runs of spaces and knew nothing of hyphens or ideographs.
 pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut current = String::new();
-    for word in text.split_whitespace() {
-        let trial = if current.is_empty() { word.to_string() } else { format!("{current} {word}") };
-        let (w, _) = atlas.measure_text(&trial, size);
-        if w > max_width && !current.is_empty() {
-            lines.push(current);
-            current = word.to_string();
-        } else {
-            current = trial;
-        }
-    }
-    if !current.is_empty() {
-        lines.push(current);
-    }
-    if lines.is_empty() {
-        lines.push(String::new());
-    }
-    lines
+    atlas.wrap_lines(text, max_width, size).into_iter().map(|line| text[line].trim_end_matches(crate::wgpu::text::is_wrap_space).to_string()).collect()
 }
 
 /// 🅰️ [`draw_text_on`] at a chosen weight. A [`crate::wgpu::text::TextWeight::Semibold`] run is

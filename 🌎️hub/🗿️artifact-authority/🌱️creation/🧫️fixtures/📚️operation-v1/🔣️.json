@@ -294,7 +294,7 @@
   },
   "receipt": {
     "ready": {
-      "documentId": "artifact-11223344556677889900aabbccddeeff",
+      "artifactId": "artifact-11223344556677889900aabbccddeeff",
       "kindId": "s.gis.map",
       "artifactSchema": "gis.map",
       "parentDialect": {

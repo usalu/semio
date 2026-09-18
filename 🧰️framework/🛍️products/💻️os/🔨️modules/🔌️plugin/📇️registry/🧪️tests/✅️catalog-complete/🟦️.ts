@@ -12,6 +12,9 @@ import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEP
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { auditInteractiveJobClassificationDrift } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PLUGIN_CATALOG } from "../../🟦️.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
 import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
@@ -69,7 +72,7 @@ describe("handpicked module deployment directories", () => {
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);
     expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);
-    expect(catalog.modules).toHaveLength(59);
+    expect(catalog.modules).toHaveLength(60);
     const ids = JSON.parse(readFileSync(join(import.meta.dirname, "../../🤖️generated/🔌️plugins.json"), "utf8")).map((entry: { pluginId: string }) => entry.pluginId);
     expect(catalog.modules.map((entry: { pluginId: string }) => entry.pluginId)).toEqual(ids);
     const identities = new Set<string>();
@@ -464,21 +467,21 @@ describe("strict plugin catalog completion", () => {
     expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
-  it("independently enumerates the 59 real manifests and the known 17 missing source pairs", () => {
+  it("independently enumerates the 60 real manifests and the known 16 missing source pairs", () => {
     const audit = auditPluginCatalogSources();
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
-    expect(audit.manifestCount).toBe(59);
-    expect(audit.order).toHaveLength(59);
+    expect(audit.manifestCount).toBe(60);
+    expect(audit.order).toHaveLength(60);
     // 🔗️ `dependsOn` is the DECLARED runtime-actor set, never the crate's Cargo library links:
     // `sequence` links four `semio-s-plugin-imperative-*` rlibs and `raster` links `stdio`'s codecs,
     // and none of those crates' actors has to be loaded for them to run.
     expect(audit.entries.find(({ pluginId }) => pluginId === "sequence")?.dependsOn).toEqual([]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "raster")?.dependsOn).toEqual([]);
-    expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing"]);
+    expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing", "flow-extension-bim", "flow-extension-brep", "flow-extension-dictionary", "flow-extension-list", "flow-extension-logic", "flow-extension-math", "flow-extension-primitive", "flow-extension-text"]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
     expect(missing).toEqual([
-      "block", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio", "trinity",
+      "block", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio",
     ]);
   }, 120_000);
 
@@ -542,5 +545,22 @@ describe("strict plugin catalog completion", () => {
     const options = examplesForApp(admitted.examples ?? [], editor as { dialect?: { artifactKind: string; standard: string; subset: string } });
     expect(options.map((row) => row.id)).toEqual(["demo"]);
     expect(options[0]?.artifactJson?.includes("curation.curation.dsl")).toBe(true);
+  });
+
+  it("resolves a non-empty, dependency-fault-free boot plan for every registered playground variant — the wgpu frame Worker resolves this graph itself at boot, so an empty plan is a dead playground", () => {
+    const faults = PLAYGROUND_BUILD_TARGETS.map((row) => ({ variant: row.variant, boot: resolvePlaygroundBoot(PLUGIN_CATALOG, row.variant) }))
+      .filter(({ boot }) => boot.plugins.length === 0 || boot.dependencyErrors.length > 0)
+      .map(({ variant, boot }) => `${variant}: ${boot.plugins.length} plugins, ${JSON.stringify(boot.dependencyErrors)}`);
+    expect(faults, faults.join("\n")).toEqual([]);
+  });
+
+  it("keeps host plugin and extension edges one-way: an extension declares its host in `depends-on`, the host declares the contribution topic in `consumes` and never names the extension back", () => {
+    const extensions = new Set(PLUGIN_CATALOG.extensions.map((target) => target.pluginId));
+    const backEdges = PLUGIN_CATALOG.plugins.flatMap((target) =>
+      (target.dependsOn ?? [])
+        .filter((pluginId) => extensions.has(pluginId) && (PLUGIN_CATALOG.extensions.find((row) => row.pluginId === pluginId)?.dependsOn ?? []).includes(target.pluginId))
+        .map((pluginId) => `${target.pluginId} → ${pluginId} → ${target.pluginId}`),
+    );
+    expect(backEdges, backEdges.join("\n")).toEqual([]);
   });
 });

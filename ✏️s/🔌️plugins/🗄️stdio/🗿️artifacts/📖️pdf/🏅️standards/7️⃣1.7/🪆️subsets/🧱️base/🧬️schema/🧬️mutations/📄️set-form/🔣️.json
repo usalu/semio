@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📄️set-form",
+  "semanticKind": "set-form",
+  "displayName": "Set Form",
+  "emoji": "📄️",
+  "aggregateVariant": "SetForm",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-form",
+  "binaryTag": 28,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

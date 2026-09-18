@@ -447,6 +447,82 @@ pub fn world_projection_ortho_zoom(half_width: f32, half_height: f32, viewport_w
     zoom_x.min(zoom_y).max(1e-3)
 }
 
+/// 📐️ The six cardinal views React's `WorldProjectionSpec` orientation can name
+/// (`worldProjectionCardinalLook`, `🎨️r3f/🟦️.tsx`). `plan` is React's own alias for `top`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WorldCardinalView {
+    Top,
+    Bottom,
+    Front,
+    Back,
+    Left,
+    Right,
+}
+
+impl WorldCardinalView {
+    /// 🔤️ The wire spelling React authors (`orientation.view`), with `plan` folded onto `top`.
+    pub fn from_wire(view: &str) -> Option<Self> {
+        match view {
+            "top" | "plan" => Some(Self::Top),
+            "bottom" => Some(Self::Bottom),
+            "front" => Some(Self::Front),
+            "back" => Some(Self::Back),
+            "left" => Some(Self::Left),
+            "right" => Some(Self::Right),
+            _ => None,
+        }
+    }
+}
+
+/// 📐️ React's `WorldProjectionSpec["orientation"]` reduced to what the framing reads: which cardinal
+/// view a pane is locked to, or a free one.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum WorldProjectionOrientation {
+    Cardinal(WorldCardinalView),
+    #[default]
+    Free,
+}
+
+/// 📐️ React's `worldProjectionViewHalfExtent` (`🎨️r3f/🟦️.tsx`) VERBATIM: the half-width/height of a
+/// content box in the projection's own view plane, read off the box's CARDINAL half-extent.
+///
+/// ⚖️ A cardinal view takes the two axes its plane spans — `(hx, hy)` for top/bottom, `(hx, hz)` for
+/// front/back, `(hy, hz)` for left/right. A FREE oblique (any variant but `military`) takes
+/// `(hx, hz)`. Everything else — axonometric, a free perspective — takes the ISOTROPIC span
+/// `max(hx, hy, hz)` on both axes, because a box seen down a corner has no stable view plane to
+/// measure in and React refuses to pretend otherwise.
+///
+/// 🩸️ The wgpu twin used [`screen_half_extent`] instead — the eight corners projected onto the live
+/// camera's screen basis. The two agree for an exactly cardinal camera and DIVERGE for every other
+/// orientation, which is precisely the set the projection pane can now select
+/// (`📓️w9b-projection-pane-framing-grid-materials.md` §2).
+pub fn world_projection_view_half_extent(orientation: WorldProjectionOrientation, oblique_off_axis: bool, half_extent: [f32; 3]) -> (f32, f32) {
+    let [hx, hy, hz] = half_extent;
+    if let WorldProjectionOrientation::Cardinal(view) = orientation {
+        return match view {
+            WorldCardinalView::Front | WorldCardinalView::Back => (hx, hz),
+            WorldCardinalView::Left | WorldCardinalView::Right => (hy, hz),
+            WorldCardinalView::Top | WorldCardinalView::Bottom => (hx, hy),
+        };
+    }
+    if oblique_off_axis {
+        return (hx, hz);
+    }
+    let span = hx.max(hy).max(hz);
+    (span, span)
+}
+
+/// 📷️ React's `frameWorldProjectionPose` for a PARALLEL pane: the content box's view-plane half
+/// extent through [`world_projection_view_half_extent`], then [`world_projection_ortho_zoom`] into
+/// drei's pixel frustum. The look direction is the pane's own — React rebuilds it from the spec,
+/// and this renderer is already sitting on the pose that spec delivered.
+pub fn frame_projection_orbit_to_bounds(orbit: &OrbitController, orientation: WorldProjectionOrientation, oblique_off_axis: bool, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, padding: f32) -> OrbitController {
+    let center = vec3_new_m((minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5);
+    let half_extent = [0, 1, 2].map(|axis| (maximum[axis] - minimum[axis]) * 0.5);
+    let (half_width, half_height) = world_projection_view_half_extent(orientation, oblique_off_axis, half_extent);
+    OrbitController { target: center, zoom: world_projection_ortho_zoom(half_width, half_height, width, height, padding.max(1.0)), ..orbit.clone() }
+}
+
 /// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
 /// framing rule the wgpu world surface and its React twin (`world3dFrameOrbitToBounds`) both obey.
 ///

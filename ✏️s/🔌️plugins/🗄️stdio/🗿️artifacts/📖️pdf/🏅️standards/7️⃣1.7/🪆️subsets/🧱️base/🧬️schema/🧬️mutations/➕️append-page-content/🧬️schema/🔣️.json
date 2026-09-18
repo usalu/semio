@@ -6,15 +6,18 @@
   "additionalProperties": false,
   "required": [
     "index",
-    "text"
+    "content"
   ],
   "properties": {
     "index": {
       "type": "integer",
       "minimum": 0
     },
-    "text": {
-      "type": "string"
+    "content": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOp"
+      }
     },
     "mutation": {
       "const": "appendPageContent",

@@ -33,9 +33,9 @@ const ownKeys = (value: object, expected: string[]): boolean =>
 
 /** 🧮️ Every classified lowpoly verb: 46 since 2026-09-08 (`setActiveUtility` became framework-owned,
  * `setFixtureJson` became `replaceSnapshotJson`) plus the three 2026-09-18 media verbs
- * (`exportMesh`/`loadMeshRequest`/`importMeshFile`). The source's `.action_interactive_job` count is
+ * (`exportMesh`/`loadMeshRequest`/`importMeshFile`) and the two object verbs (`deleteSelection`/`duplicateObject`). The source's `.action_interactive_job` count is
  * checked against the fixture below, so this literal only pins the fixture's own shape. */
-const LOWPOLY_CLASSIFIED_ROUTES = 49;
+const LOWPOLY_CLASSIFIED_ROUTES = 51;
 
 const validateOwnedFixture = (value: unknown): value is Fixture => {
   if (typeof value !== "object" || value === null || !ownKeys(value, ["version", "owner", "maximumPollMicros", "maximumRawBytes", "maximumWorkItems", "artifactStoreMaximumBytes", "configStoreMaximumBytes", "routes"])) return false;

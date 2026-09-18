@@ -331,6 +331,26 @@ fn panel_anchor_snapshot_reports_the_open_anchor_and_its_active_leaf() {
     assert_eq!(shell.panel_anchor_snapshot(PanelAnchor::BottomLeft), PanelAnchorSnapshot::default(), "a folded anchor reports nothing");
 }
 
+/// 🪟️ **The surface-census law.** What `dumpChrome` publishes beside the hit registry: this frame's
+/// dock panes at WINDOW level and every open anchor's active tab at PANEL level, under React's own
+/// `panelTabElementId`. A probe comparing two shells reads this instead of the engine's window list,
+/// which cannot tell a docked panel from a pane here because a panel IS a window instance to this
+/// renderer (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md`).
+#[test]
+fn the_chrome_surface_census_separates_panes_from_docked_panels() {
+    let mut shell = fixture_dock_shell();
+    shell.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(0.0, 54.0, 600.0, 900.0)), ("puzzle3d-main-perspective".to_string(), Rect::new(600.0, 54.0, 600.0, 900.0))];
+    assert_eq!(
+        shell.chrome_surface_census(),
+        vec![("puzzle3d-main-top".to_string(), "window", "puzzle3d-main-top".to_string()), ("puzzle3d-main-perspective".to_string(), "window", "puzzle3d-main-perspective".to_string())],
+        "🪟️ a shell with no open anchor publishes its panes and nothing else"
+    );
+    shell.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
+    let census = shell.chrome_surface_census();
+    assert_eq!(census.iter().filter(|(_, level, _)| *level == "panel").map(|(id, _, element)| (id.as_str(), element.as_str())).collect::<Vec<_>>(), vec![("fixture.workbench", "framework.panelTab.fixture.workbench")], "🪟️ the open anchor's ACTIVE TAB is the panel, named the way React names it");
+    assert_eq!(census.iter().filter(|(_, level, _)| *level == "window").count(), 2, "🪟️ and opening a panel adds no window");
+}
+
 /// 🧭️ Every anchor opens INDEPENDENTLY — the whole point of the packet. The former model could only
 /// ever have one left and one right panel open at a time.
 #[test]
@@ -799,25 +819,92 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
 //#endregion 🎛️StagedCommandForm
 
 //#region 💬️AgentChatTranscript
-/// 💬️ The chat panel's BODY, not just W1j's header: two seeded assistant lines, then the user's line
-/// and a local echo per send, and Send disabled on a blank draft — React's `BasicChatPanel` exactly.
-#[test]
-fn the_chat_panel_paints_a_transcript_and_echoes_each_send() {
+/// 🌉️ Opens the bridge the way a transport does — a `Welcome` frame — so the panel is in its
+/// connected state and the composer is live.
+fn welcomed_shell() -> ShellState {
     let mut shell = fresh_state();
-    assert_eq!(shell.agent_chat_messages.len(), 2, "💬️ two seeded assistant lines, so the panel is never blank");
-    assert!(shell.agent_chat_messages.iter().all(|message| message.role == "assistant"));
-    shell.send_agent_chat_draft();
-    assert_eq!(shell.agent_chat_messages.len(), 2, "💬️ a blank draft sends nothing");
-    shell.agent_chat_draft = "  hello  ".into();
-    shell.send_agent_chat_draft();
-    assert_eq!(shell.agent_chat_messages.len(), 4, "💬️ the user's line plus the local echo");
-    assert_eq!(shell.agent_chat_messages[2].role, "user");
-    assert_eq!(shell.agent_chat_messages[2].body, "hello", "💬️ trimmed, React's own `trimmed`");
+    let welcome = crate::agent_bridge::GatewayToShell::Welcome { bridge_version: crate::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
+    shell.apply_agent_bridge_frame(&welcome.encode()).expect("a Welcome frame decodes");
+    shell
+}
+
+/// 💬️ Every text line the chat panel's own subtree paints, in order — the feed's readable content.
+fn chat_panel_lines(node: &UiNode, out: &mut Vec<String>) {
+    match node {
+        UiNode::Text(text) => out.push(text.value.as_str().to_string()),
+        UiNode::Stack(stack) => stack.children.iter().for_each(|child| chat_panel_lines(child, out)),
+        _ => {}
+    }
+}
+
+/// 🆔️ The ids of the conversation rows directly under the panel root.
+fn chat_entry_ids(root: &UiNode) -> Vec<String> {
+    let UiNode::Stack(panel) = root else { panic!("💬️ the chat panel root is a stack") };
+    panel.children.iter().filter_map(|child| if let UiNode::Stack(stack) = child { stack.id.clone() } else { None }).collect()
+}
+
+/// 💬️ LAW: a bridge `AgentToolCall` frame — the one the gateway emits from its own `tools/call`
+/// dispatch — becomes a conversation row in the wgpu panel model, and the matching `AgentToolResult`
+/// folds its summary into that SAME row rather than opening a second one. This is the parity the wgpu
+/// renderer owed React's `💬️AgentChatPanel` feed; nothing here is generated locally.
+#[test]
+fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
+    let mut shell = welcomed_shell();
+    assert!(chat_entry_ids(&shell.build_agent_chat_ui()).is_empty(), "💬️ no bridge activity, no rows");
+
+    let call = crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
+    shell.apply_agent_bridge_frame(&call.encode()).expect("an AgentToolCall frame decodes");
+    let running = shell.build_agent_chat_ui();
+    assert_eq!(chat_entry_ids(&running), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ the tool call is one addressable row");
+    let mut lines = Vec::new();
+    chat_panel_lines(&running, &mut lines);
+    assert!(lines.contains(&"Tool call".to_string()), "💬️ the translated role noun leads the row: {lines:?}");
+    assert!(lines.contains(&"Running…".to_string()), "💬️ a call with no result yet is running: {lines:?}");
+    assert!(lines.contains(&"artifact_open".to_string()), "💬️ the real tool name: {lines:?}");
+    assert!(lines.contains(&"{\"artifactId\":\"doc-1\"}".to_string()), "💬️ and its real arguments: {lines:?}");
+    assert!(panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &running).is_ok(), "💬️ the conversation projects as publishable panel records");
+
+    let result = crate::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
+    shell.apply_agent_bridge_frame(&result.encode()).expect("an AgentToolResult frame decodes");
+    let settled = shell.build_agent_chat_ui();
+    assert_eq!(chat_entry_ids(&settled), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ one row per invocation, never two");
+    let mut settled_lines = Vec::new();
+    chat_panel_lines(&settled, &mut settled_lines);
+    assert!(settled_lines.contains(&"Done".to_string()), "💬️ the state chip settles: {settled_lines:?}");
+    assert!(settled_lines.contains(&"Result: opened doc-1".to_string()), "💬️ the summary folds into the call's own row: {settled_lines:?}");
+}
+
+/// 💬️ The composer: a turn typed here leaves as a real `ShellToGateway::AgentMessage` and is echoed
+/// into the same feed, a blank draft sends nothing, and with no socket open the draft is KEPT rather
+/// than silently swallowed — React's `sendAgentMessage` contract, returning `false`.
+#[test]
+fn the_chat_composer_sends_one_agent_message_per_turn_and_keeps_an_unsendable_draft() {
+    let mut offline = fresh_state();
+    offline.agent_chat_draft = "hello".into();
+    assert!(!offline.send_agent_chat_draft(), "💬️ no socket, nothing sent");
+    assert_eq!(offline.agent_chat_draft, "hello", "💬️ and the human's text is not discarded");
+
+    let mut shell = welcomed_shell();
+    let _ = shell.take_agent_bridge_outbox();
+    assert!(!shell.send_agent_chat_draft(), "💬️ a blank draft sends nothing");
+    shell.agent_chat_draft = "  move it  ".into();
+    assert!(shell.send_agent_chat_draft(), "💬️ a connected shell sends");
     assert!(shell.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
-    assert!(shell.agent_chat_messages[3].body.contains("hello"), "💬️ the echo quotes the preview");
-    let records = panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &shell.build_agent_chat_ui()).expect("the transcript projects");
-    assert!(records.iter().any(|record| record.key.as_str().contains("framework.chat.draft")), "💬️ the draft box is part of the published body");
-    assert!(records.iter().any(|record| record.key.as_str().contains("framework.chat.send")), "💬️ so is Send");
+    let outbox = shell.take_agent_bridge_outbox();
+    assert_eq!(outbox.len(), 1, "💬️ exactly one frame per turn");
+    match crate::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
+        crate::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
+        other => panic!("💬️ expected an AgentMessage, got {other:?}"),
+    }
+    let panel = shell.build_agent_chat_ui();
+    assert!(chat_entry_ids(&panel).iter().any(|id| id.starts_with("framework.chat.entry.userMessage.")), "💬️ the turn is echoed into the feed");
+    let mut lines = Vec::new();
+    chat_panel_lines(&panel, &mut lines);
+    assert!(lines.contains(&"You".to_string()) && lines.contains(&"move it".to_string()), "💬️ under the translated role noun: {lines:?}");
+    let UiNode::Stack(root) = &panel else { panic!("💬️ the chat panel root is a stack") };
+    assert!(root.children.iter().any(|node| matches!(node, UiNode::Input(input) if input.id == "framework.chat.draft")), "💬️ the draft box is part of the published body");
+    assert!(root.children.iter().any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref() == Some("framework.chat.send"))), "💬️ so is Send");
+    assert!(panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &panel).is_ok(), "💬️ and the whole body projects");
 }
 //#endregion 💬️AgentChatTranscript
 

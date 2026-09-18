@@ -3,6 +3,13 @@
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

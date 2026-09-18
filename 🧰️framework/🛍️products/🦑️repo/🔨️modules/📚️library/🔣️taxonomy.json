@@ -759,7 +759,7 @@
     },
     "remaining-package-purity-history-v1": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
-      "sha256": "49087f2dee618c3c8392ce3bc25c348af87d5380fe16523ed61ee6c02448f577",
+      "sha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -19974,7 +19974,7 @@
       "expires": null
     },
     "dev-plugin-component-reasoning-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_mindmap_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact emitted mind-map JavaScript companion",
       "configurability": "unconfigurable",
@@ -19985,7 +19985,7 @@
       "expires": null
     },
     "dev-plugin-component-reasoning-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_mindmap_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact emitted mind-map TypeScript declaration",
       "configurability": "unconfigurable",
@@ -19996,7 +19996,7 @@
       "expires": null
     },
     "dev-plugin-component-reasoning-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_mindmap_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/💡️reasoning/semio_s_plugin_reasoning_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact mind-map core module URL emitted by JCO",
       "configurability": "unconfigurable",
@@ -28620,6 +28620,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
@@ -28736,6 +28737,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",

@@ -64,7 +64,9 @@
       { "code": 23, "id": "pipelineFailed", "verdict": "danger", "args": ["stage"], "en": "Reconstruction failed in stage {0}", "de": "Rekonstruktion in Stufe {0} fehlgeschlagen" },
       { "code": 24, "id": "rasterFailed", "verdict": "danger", "args": [], "en": "A terrain raster could not be encoded", "de": "Ein Geländeraster konnte nicht kodiert werden" },
       { "code": 25, "id": "resuming", "verdict": "success", "args": ["decisions"], "en": "Resumed after {0} decisions", "de": "Nach {0} Entscheidungen fortgesetzt" },
-      { "code": 26, "id": "inputsChanged", "verdict": "danger", "args": ["ops"], "en": "Frames, parameters or calibration changed since the run started; {0} provisional changes withdrawn", "de": "Bilder, Parameter oder Kalibrierung haben sich seit dem Start geändert; {0} vorläufige Änderungen zurückgezogen" }
+      { "code": 26, "id": "inputsChanged", "verdict": "danger", "args": ["ops"], "en": "Frames, parameters or calibration changed since the run started; {0} provisional changes withdrawn", "de": "Bilder, Parameter oder Kalibrierung haben sich seit dem Start geändert; {0} vorläufige Änderungen zurückgezogen" },
+      { "code": 27, "id": "pairGeometryRejected", "verdict": "warning", "args": ["frameA", "frameB", "dropped"], "en": "Frames {0} and {1}: {2} matches inconsistent with the pair's epipolar geometry dropped", "de": "Bilder {0} und {1}: {2} Zuordnungen ohne epipolare Konsistenz verworfen" },
+      { "code": 28, "id": "seedPairFailed", "verdict": "warning", "args": [], "en": "No adjacent frames share enough consistent matches to solve a first camera pair; the run registers no cameras", "de": "Keine benachbarten Bilder teilen genug konsistente Zuordnungen für ein erstes Kamerapaar; der Lauf registriert keine Kameras" }
     ],
     "checkpoint": {
       "bytes": 84,

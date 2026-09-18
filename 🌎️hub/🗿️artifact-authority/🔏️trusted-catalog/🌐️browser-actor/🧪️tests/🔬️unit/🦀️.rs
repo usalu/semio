@@ -25,7 +25,7 @@ fn trusted_browser_actor_metadata_and_generation_match_neutral_corpus() {
             assert!(!public.contains("path") && !public.contains("byteLength"));
         }
     }
-    for (actor, expected) in [(serde_json::from_value::<TrustedBundleBrowserActorV1>(fixture["closed"].clone()).unwrap(), &fixture["encodingSha256"]), (TrustedBundleBrowserActorV1::None, &fixture["noneEncodingSha256"])] {
+    for (actor, expected) in [(serde_json::from_value::<TrustedBundleBrowserActorV1>(fixture["closed"].clone()).unwrap(), &fixture["encodingSha256"]), (TrustedBundleBrowserActorV1::None {}, &fixture["noneEncodingSha256"])] {
         let mut bytes = Vec::new();
         actor.append_generation(&mut bytes).unwrap();
         assert_eq!(directory::os_directory::hex_lower(&Sha256::digest(&bytes)), expected.as_str().unwrap());

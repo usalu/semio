@@ -81,6 +81,15 @@ fn production_surface_authority_has_no_hash_map_or_structural_deref() {
 /// slots are heap-first rather than an inline `[T; N]` field — and then constructs them on a thread
 /// holding only the fixture's `boundedThreadStackBytes`. `Builder::stack_size` overrides
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
+///
+/// 🧾️ `elementSizeBytes`/`ownerSizeBytes` are a RECEIPT, not a ceiling. `World3dState` is the surface
+/// payload of a live element and every field added to it moves both numbers — `brush_mesh_run:
+/// Option<WorldBrushMeshRun>` moved the slot from 22 752 to 22 920 bytes and the owner from 48 608 to
+/// 48 944. A mismatch therefore says "the payload grew, re-measure and recommit the receipt"; what the
+/// law actually defends is the two invariants around the numbers: the owner stays far smaller than
+/// `capacity × elementSizeBytes` (so the slots live on the heap and not in an inline `[T; N]` field),
+/// and the whole table still constructs inside `boundedThreadStackBytes`. Recommitting the measured
+/// pair is the correct response; widening the guard or dropping the table from the fixture is not.
 #[test]
 fn admitted_surface_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");

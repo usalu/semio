@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🪡️remove-pattern",
+  "semanticKind": "remove-pattern",
+  "displayName": "Remove Pattern",
+  "emoji": "🪡️",
+  "aggregateVariant": "RemovePattern",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-pattern",
+  "binaryTag": 35,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

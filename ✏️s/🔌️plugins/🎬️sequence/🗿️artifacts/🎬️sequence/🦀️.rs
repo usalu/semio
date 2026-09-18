@@ -241,17 +241,19 @@ pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (V
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the sequence content — same `(child_id,
 /// target)` for identical `(steps, edges)`, a different pair once the content actually changes;
-/// mirrors flow's `flow_content_child_handle`/writer's `document_child_handle`.
+/// mirrors flow's `flow_content_child_handle`. The digest is the handle's `artifact_id` as much as
+/// its `child_id`: `ChildRestoreProjection::child` refuses any member whose two ids differ
+/// (`InvalidReference`), which aborts the guest inside `ArtifactApp::genesis_child_pack` before the
+/// first window renders.
 pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
     let content_json = dsl::os_pack::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("sequence-content-{content_hash:016x}");
+    let child_id = format!("sequence-content-{:016x}", hasher.finish());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "sequence-content".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
@@ -288,6 +290,24 @@ pub fn sequence_working_scene(snapshot: &SequenceSnapshot) -> SequenceWorkingSce
 pub fn sequence_content_child_with_owner(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceContentChild {
     let handle = sequence_content_child_handle(&steps, &edges);
     handle.with_local_owner(std::sync::Arc::new(SequenceWorkingScene { steps, edges }))
+}
+
+/// 🌱️ Packs the `content` member this document derives, for the two hosts that ship a parent
+/// envelope with no members at all: the genesis store and the react shell's `loadDocumentPair`
+/// (which sends `members: []`). Without it the member is never opened, `ChildContentView` stays
+/// empty and every `sequence_working_scene_from_children` call faults
+/// `sequence-content-child-dialect-required` before a single window publishes.
+pub fn genesis_sequence_child_pack(document: &SequenceSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    if slot != "content" || child_id != document.content.child_id {
+        return None;
+    }
+    let genesis = neural_engine::ColdOwner::new(crate::snapshot::schema::default_snapshot());
+    if genesis.content.child_id != child_id {
+        return None;
+    }
+    let scene = neural_engine::ColdOwner::new(sequence_working_scene_for_handle(&genesis.content)?);
+    Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&sequence_content_snapshot_from_working(&scene.steps, &scene.edges)))
 }
 
 /// 🔺️ Shared diff builder every mutation triad's `🔺️diff` leaf calls after computing its own new

@@ -33,6 +33,11 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     // machinery ingests what `subscribe` reports, mirroring how a real shell would.
     let shell_envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
     let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
+    // 🏭️ The shell store needs the SAME owners the agent's own probe installs
+    // (`ensure_probe_artifact`): without them an ingested remote edit is refused with
+    // `ValidationFailed("edit history insertion requires its exact mutation retirement factory")`,
+    // so this side could never observe what the agent committed.
+    shell_store.install_document_store_owners_exact(probe_store_owners());
     shell_store.attach_backbone(store::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
 
     agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).await.expect("agent commits headlessly");
@@ -40,20 +45,27 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): the agent's
     // own actor persists ASYNCHRONOUSLY, on its own thread — `ensure_probe_artifact` returns as
     // soon as the LOCAL store applied the mutation, before the bytes are necessarily on disk yet.
-    // Wait for the REAL persisted event (`FolderEventLogStorage::read`, the exact same pattern
-    // `🏪️store/🔄️sync/🦀️.rs`'s own `folder_external_edit_delivers_remote_operations`
-    // test uses) before expecting the shell's side to see anything.
+    // Wait for the REAL persisted bytes before expecting the shell's side to see anything.
+    // 🗃️ The persisted artefact is a recursive DOCUMENT ARCHIVE, not a bare pack+spr snapshot: the
+    // actor's only folder writer is `persist_write_archive` (`🏪️store/🔄️sync/🦀️.rs`), which appends
+    // `DOCUMENT_ARCHIVE_PUT_EVENT` rows — `FolderEventLogStorage::write`'s `DOCUMENT_PUT_EVENT` has
+    // no producer on this lane at all, so waiting on `read` here waited for an event that can never
+    // arrive. `read_archive` is the same key, the kind this lane really writes.
     let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     let write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
-        if matches!(storage.read("shared-doc").await, Ok(Some(_))) {
-            break;
+    let seeded_archive = loop {
+        if let Ok(Some(archive)) = storage.read_archive("shared-doc").await {
+            break archive;
         }
         if tokio::time::Instant::now() >= write_deadline {
-            panic!("agent's commit never reached disk within 5s");
+            panic!(
+                "agent's commit never reached disk within 5s; log is {:?} bytes, document ids {:?}",
+                std::fs::metadata(dir.path().join(".semio").join("events.semio")).map(|meta| meta.len()),
+                storage.document_ids().await
+            );
         }
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
-    }
+    };
     // 🪲️ Same root cause, second half: the shell's `notify` watcher IS real and IS wired
     // (`install_watcher`, `📡️spr/🔄️sync`'s own module doc) — but `🏪️store/🔄️sync`'s OWN test
     // suite deliberately does not rely on OS-level filesystem-event timing for determinism
@@ -75,11 +87,15 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     // `Closed` bug (this test's real structural defect) is fixed above; this margin absorbs
     // shared-box latency instead of re-hiding a broken channel behind a bigger number.
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
+    let mut seen: Vec<String> = Vec::new();
     loop {
         match tokio::time::timeout_at(deadline, shell_events.recv()).await {
             Ok(Ok(store::sync::ArtifactEvent::RemoteMutations { envelopes })) if !envelopes.is_empty() => break,
-            Ok(Ok(_other)) => continue,
-            other => panic!("no RemoteMutations before the 20s deadline: {other:?}"),
+            Ok(Ok(other)) => {
+                seen.push(format!("{other:?}").chars().take(120).collect::<String>());
+                continue;
+            }
+            other => panic!("no RemoteMutations before the 20s deadline: {other:?}; saw {seen:?}"),
         }
     }
     shell_store.tick().await.expect("shell ingests the propagated edit");
@@ -92,8 +108,8 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     agent.apply_probe_mutation("shared-doc", serde_json::json!({ "from": "agent", "revision": 2 })).await.expect("agent commits a second real mutation");
     let second_write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     loop {
-        match storage.read("shared-doc").await {
-            Ok(Some((pack, _spr))) if !pack.is_empty() => break,
+        match storage.read_archive("shared-doc").await {
+            Ok(Some(archive)) if archive != seeded_archive => break,
             _ => {}
         }
         if tokio::time::Instant::now() >= second_write_deadline {
@@ -112,6 +128,10 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     }
     shell_store.tick().await.expect("shell ingests the second propagated edit");
     assert_eq!(shell_store.snapshot().expect("shell snapshot").0["revision"], 2, "the shell observes the agent's second real headless commit too");
+    // 🚪️ Both real stores are drained to `ArtifactStore::drop`'s terminal-empty witness before this
+    // test's frame unwinds; dropping either one live aborts the whole process in its destructor.
+    shell_host.close("shared-doc");
+    close_probe_store_to_terminal(shell_store);
 }
 
 /// 🎫️ W3: real, honest round trips for all six `PluginArtifactChannel` mutation verbs against

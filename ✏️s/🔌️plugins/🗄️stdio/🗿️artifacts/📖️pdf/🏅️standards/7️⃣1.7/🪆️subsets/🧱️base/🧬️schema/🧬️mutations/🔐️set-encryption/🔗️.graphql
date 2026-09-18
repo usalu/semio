@@ -1,0 +1,4 @@
+# 🔐️ Direct set-encryption GraphQL payload.
+input SetEncryptionMutationInput {
+  encryption: PdfEncryptionInput
+}

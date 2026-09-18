@@ -362,6 +362,13 @@ impl BoundedActionBuilder {
         self.push_leaf(key, FlatValue::Number(Number::Float(value)))
     }
 
+    /// 🔢️ Whole-number leaf — an id, count or index the wire must carry WITHOUT the `.0` a float
+    /// carrier keeps, which is what React's `readonly number[]` selection payloads serialize to
+    /// (`🌐️World3dHost/🟦️.tsx:3236`, `:6984`).
+    pub fn integer(&mut self, key: Option<&str>, value: i64) -> Result<(), BoundedActionFault> {
+        self.push_leaf(key, FlatValue::Number(Number::Int(value)))
+    }
+
     pub fn string(&mut self, key: Option<&str>, value: &str) -> Result<(), BoundedActionFault> {
         self.live()?;
         if value.len() > ACTION_STRING_BYTE_CAPACITY {

@@ -92,7 +92,13 @@ const BITMAP_ENCODE_CHUNK: usize = 1_024;
 /// over a minute that way, measured). A large fuel budget per step keeps every step bounded while
 /// letting one call do a whole propagation wave.
 const HEADLESS_FUEL_PER_STEP: u64 = 4_096;
-const HEADLESS_STEP_BUDGET_US: u64 = 50_000;
+/// ⏱️ STRICTLY below `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8 000 µs). A session step
+/// that aims past the ceiling reports a contract violation on EVERY step, and four consecutive
+/// violations quarantine the whole session with `job-session.terminal-fault` — which is what a 50 ms
+/// budget did to every live solve in the react shell while the native tests stayed green (a test
+/// binary installs no monotonic clock, so it records no violation at all). The budget bounds one step,
+/// never the whole collapse: the driver resumes until the job is terminal.
+const HEADLESS_STEP_BUDGET_US: u64 = 4_000;
 const PARENT_PREVIEW_UNIT_INTERVAL: u64 = 16;
 const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 //#endregion 🔖️Admission
@@ -288,6 +294,9 @@ impl BitmapInferenceJob {
         (0..model.pattern_count()).map(engine::ids::PatternId::from_index).find(|pattern| decoder.anchor_tile(*pattern).get() == color)
     }
 
+    /// 🩺 A colour that is never a pattern's ANCHOR cannot be asked for: the decoder
+    /// reads an assignment back through the anchor convention, so a pin on such a
+    /// colour is unsatisfiable by construction and is reported rather than dropped.
     fn advance_compile(&mut self) -> Result<(), String> {
         match self.stage {
             BitmapInferenceStage::Sample => {
@@ -322,9 +331,6 @@ impl BitmapInferenceJob {
                     if pin.x >= self.snapshot.output.width || pin.y >= self.snapshot.output.height {
                         return Err("bitmap-inference-pin-outside-output".into());
                     }
-                    // 🩺 A colour that is never a pattern's ANCHOR cannot be asked for: the decoder
-                    // reads an assignment back through the anchor convention, so a pin on such a
-                    // colour is unsatisfiable by construction and is reported rather than dropped.
                     let pattern = self.pattern_for_color(pin.color).ok_or("bitmap-inference-unreachable-pin")?;
                     let node = engine::ids::NodeId::from_index((pin.y as usize) * (self.snapshot.output.width as usize) + pin.x as usize);
                     self.fixed.push((node, pattern));
@@ -483,6 +489,10 @@ impl BitmapInferenceJob {
 }
 
 impl semio_framework_job::InteractiveJob for BitmapInferenceJob {
+    /// 🩺 `WfcJob` reports an exhausted search as a `wfc-unsatisfiable` FAULT. For this
+    /// artifact that is an ANSWER, not a failure: the classic overlapping model asks
+    /// "does this sample tile that output", and "no" is the verdict the output window
+    /// shows. Every other fault stays a fault.
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         use semio_framework_job::StepOutcome;
         if context.is_cancelled() {
@@ -527,10 +537,6 @@ impl semio_framework_job::InteractiveJob for BitmapInferenceJob {
                 }
                 BitmapInferenceStage::Solve => {
                     let mut outcome = self.child.as_mut().expect("WFC child").step(context);
-                    // 🩺 `WfcJob` reports an exhausted search as a `wfc-unsatisfiable` FAULT. For this
-                    // artifact that is an ANSWER, not a failure: the classic overlapping model asks
-                    // "does this sample tile that output", and "no" is the verdict the output window
-                    // shows. Every other fault stays a fault.
                     if let StepOutcome::Fault(fault) = &outcome {
                         if engine::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" {
                             engine::job::retire_outcome(&mut outcome);

@@ -886,7 +886,7 @@ pub fn allocate_operation_id() -> OperationId {
 pub fn allocate_operation_id_in_slot(slots: u64, slot: u64) -> OperationId {
     assert!(slots != 0 && slot < slots, "an operation slot must address one residue class of a fixed owner table");
     let advance = |next: u64| next + (slots + slot - next % slots) % slots;
-    OperationId(advance(NEXT_OPERATION_ID.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |next| Some(advance(next) + 1)).expect("operation id allocation never rejects its own update")))
+    OperationId(advance(NEXT_OPERATION_ID.try_update(Ordering::SeqCst, Ordering::SeqCst, |next| Some(advance(next) + 1)).expect("operation id allocation never rejects its own update")))
 }
 //#endregion 🪪️Operation
 

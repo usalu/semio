@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-form/schema.json",
+  "title": "SetForm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "form"
+  ],
+  "properties": {
+    "form": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfFormXObject"
+    },
+    "mutation": {
+      "const": "setForm",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

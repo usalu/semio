@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌈️set-color-space",
+  "semanticKind": "set-color-space",
+  "displayName": "Set Color Space",
+  "emoji": "🌈️",
+  "aggregateVariant": "SetColorSpace",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-color-space",
+  "binaryTag": 36,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

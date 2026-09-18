@@ -401,6 +401,12 @@ fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &HashMap
     for &(ai, bi) in hab.keys() {
         touching[bi].push(ai);
     }
+    // 🎲️ The hash map's key order is random per process; the reduction below accumulates in this
+    // order, so without sorting two runs of one problem differ at rounding level — and a
+    // reconstruction that adjusts its bundle then meshes differently from one run to the next.
+    for cameras in &mut touching {
+        cameras.sort_unstable();
+    }
     let mut hbb_damped: Vec<MatD> = Vec::with_capacity(num_b);
     for bi in 0..num_b {
         let bd = hbb[bi].rows;
@@ -550,6 +556,186 @@ pub fn schur_lm(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<VecD>,
 /// 📊️ The marginal covariance diagonal blocks computed during `result`'s final accepted iteration.
 pub fn camera_covariances(result: &SchurResult) -> &[MatD] {
     &result.a_block_covariance_diagonals
+}
+
+/// 🧮️ [`accumulate_bipartite`] spread over calls: `Jᵀ W J` and `Jᵀ W r` per block plus the robust
+/// cost, `term_budget` residual terms at a time, so a worker step never evaluates more terms than
+/// its budget however large the problem.
+pub struct BipartiteAccumulator {
+    haa: Vec<MatD>,
+    hbb: Vec<MatD>,
+    hab: HashMap<(usize, usize), MatD>,
+    ga: Vec<VecD>,
+    gb: Vec<VecD>,
+    cost: f64,
+    cursor: usize,
+}
+
+impl BipartiteAccumulator {
+    fn new(problem: &impl BipartiteResiduals) -> Self {
+        let (ad, bd) = (problem.a_block_dim(), problem.b_block_dim());
+        Self {
+            haa: (0..problem.num_a_blocks()).map(|_| MatD::zeros(ad, ad)).collect(),
+            hbb: (0..problem.num_b_blocks()).map(|_| MatD::zeros(bd, bd)).collect(),
+            hab: HashMap::new(),
+            ga: (0..problem.num_a_blocks()).map(|_| VecD::zeros(ad)).collect(),
+            gb: (0..problem.num_b_blocks()).map(|_| VecD::zeros(bd)).collect(),
+            cost: 0.0,
+            cursor: 0,
+        }
+    }
+
+    /// `true` once every term is accumulated.
+    fn advance(&mut self, problem: &impl BipartiteResiduals, a_params: &[VecD], b_params: &[VecD], loss: &RobustLoss, term_budget: usize) -> bool {
+        let (ad, bd) = (problem.a_block_dim(), problem.b_block_dim());
+        let terms = problem.residual_terms();
+        let end = self.cursor.saturating_add(term_budget.max(1)).min(terms.len());
+        for term in &terms[self.cursor..end] {
+            let (r, ja, jb) = problem.evaluate(a_params, b_params, term);
+            let r2 = r.dot(&r);
+            let w = loss.weight(r2);
+            self.cost += loss.rho(r2);
+            if let Some(ai) = term.a_index {
+                add_weighted_gram(&mut self.haa[ai], &ja, w);
+                add_weighted_jt_r(&mut self.ga[ai], &ja, &r, w);
+            }
+            if let Some(bi) = term.b_index {
+                add_weighted_gram(&mut self.hbb[bi], &jb, w);
+                add_weighted_jt_r(&mut self.gb[bi], &jb, &r, w);
+            }
+            if let (Some(ai), Some(bi)) = (term.a_index, term.b_index) {
+                let entry = self.hab.entry((ai, bi)).or_insert_with(|| MatD::zeros(ad, bd));
+                add_weighted_cross(entry, &ja, &jb, w);
+            }
+        }
+        self.cursor = end;
+        end == terms.len()
+    }
+
+    fn gradient_infinity_norm(&self) -> f64 {
+        self.ga.iter().map(VecD::norm_inf).fold(0.0_f64, f64::max).max(self.gb.iter().map(VecD::norm_inf).fold(0.0_f64, f64::max))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SchurLmPhase {
+    /// Accumulating the normal equations at the current parameters.
+    Base,
+    /// One damped Schur step at the current damping.
+    Solve,
+    /// Accumulating the normal equations at the candidate parameters, to accept or reject the step.
+    Candidate,
+    Done,
+}
+
+/// 🎯️ [`schur_lm`] spread over worker steps: the same Nielsen-damped Gauss–Newton iterations, with
+/// the two full passes over the residual terms that each iteration needs (the normal equations at
+/// the current and at the candidate parameters) accumulated `term_budget` terms per call and the
+/// reduced camera solve as its own call. An accepted candidate's accumulation becomes the next
+/// iteration's base, so an accepted iteration costs one pass over the terms, a rejected one the
+/// candidate pass only. A 36-camera / 1 800-point bundle whose single iteration ran 5 s in one
+/// unit of a debug build now spends ~90 units of a few milliseconds.
+pub struct SchurLmPreparation {
+    pub a_params: Vec<VecD>,
+    pub b_params: Vec<VecD>,
+    lambda: f64,
+    nu: f64,
+    iterations: usize,
+    converged: bool,
+    phase: SchurLmPhase,
+    base: BipartiteAccumulator,
+    candidate: Option<(Vec<VecD>, Vec<VecD>, Vec<VecD>, Vec<VecD>, BipartiteAccumulator)>,
+}
+
+impl SchurLmPreparation {
+    pub fn new(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<VecD>, cfg: &LmConfig) -> Self {
+        Self { a_params: a0, b_params: b0, lambda: cfg.initial_lambda, nu: 2.0, iterations: 0, converged: false, phase: SchurLmPhase::Base, base: BipartiteAccumulator::new(problem), candidate: None }
+    }
+
+    /// 🎚️ The damping the schedule stands at.
+    pub fn lambda(&self) -> f64 {
+        self.lambda
+    }
+
+    pub fn converged(&self) -> bool {
+        self.converged
+    }
+
+    pub fn iterations(&self) -> usize {
+        self.iterations
+    }
+
+    /// One bounded unit; `true` once the adjustment is done (converged, out of iterations, or the
+    /// damping exhausted).
+    pub fn advance(&mut self, problem: &impl BipartiteResiduals, cfg: &LmConfig, term_budget: usize) -> bool {
+        let ad = problem.a_block_dim();
+        let num_a = self.a_params.len();
+        match self.phase {
+            SchurLmPhase::Base => {
+                if self.base.advance(problem, &self.a_params, &self.b_params, &cfg.loss, term_budget) {
+                    if self.base.gradient_infinity_norm() <= cfg.tol_grad {
+                        self.converged = true;
+                        self.phase = SchurLmPhase::Done;
+                    } else {
+                        self.phase = SchurLmPhase::Solve;
+                    }
+                }
+            }
+            SchurLmPhase::Solve => {
+                if self.iterations >= cfg.max_iters {
+                    self.phase = SchurLmPhase::Done;
+                    return true;
+                }
+                self.iterations += 1;
+                let Some((da, db, _)) = schur_step(ad, num_a, &self.base.haa, &self.base.hbb, &self.base.hab, &self.base.ga, &self.base.gb, self.lambda) else {
+                    self.lambda *= self.nu;
+                    self.nu *= 2.0;
+                    if self.lambda > 1e15 {
+                        self.phase = SchurLmPhase::Done;
+                    }
+                    return self.phase == SchurLmPhase::Done;
+                };
+                let dx_norm = (da.iter().map(|v| v.dot(v)).sum::<f64>() + db.iter().map(|v| v.dot(v)).sum::<f64>()).sqrt();
+                if dx_norm <= cfg.tol_dx {
+                    self.converged = true;
+                    self.phase = SchurLmPhase::Done;
+                    return true;
+                }
+                let a_new: Vec<VecD> = self.a_params.iter().zip(da.iter()).map(|(a, d)| a.add(d)).collect();
+                let b_new: Vec<VecD> = self.b_params.iter().zip(db.iter()).map(|(b, d)| b.add(d)).collect();
+                self.candidate = Some((a_new, b_new, da, db, BipartiteAccumulator::new(problem)));
+                self.phase = SchurLmPhase::Candidate;
+            }
+            SchurLmPhase::Candidate => {
+                let (a_new, b_new, _, _, accumulator) = self.candidate.as_mut().expect("a candidate step");
+                if !accumulator.advance(problem, a_new, b_new, &cfg.loss, term_budget) {
+                    return false;
+                }
+                let (a_new, b_new, da, db, accumulator) = self.candidate.take().expect("a candidate step");
+                let predicted = 0.5 * (self.base.haa.iter().zip(da.iter()).zip(self.base.ga.iter()).map(|((h, d), g)| quadratic_gain(h, g, d, self.lambda)).sum::<f64>() + self.base.hbb.iter().zip(db.iter()).zip(self.base.gb.iter()).map(|((h, d), g)| quadratic_gain(h, g, d, self.lambda)).sum::<f64>());
+                let actual = self.base.cost - accumulator.cost;
+                let rho = if predicted.abs() < 1e-300 { 0.0 } else { actual / predicted };
+                if rho > 0.0 {
+                    self.a_params = a_new;
+                    self.b_params = b_new;
+                    self.base = accumulator;
+                    self.lambda *= (1.0 - (2.0 * rho - 1.0).powi(3)).max(1.0 / 3.0);
+                    self.nu = 2.0;
+                    if self.base.gradient_infinity_norm() <= cfg.tol_grad {
+                        self.converged = true;
+                        self.phase = SchurLmPhase::Done;
+                        return true;
+                    }
+                } else {
+                    self.lambda *= self.nu;
+                    self.nu *= 2.0;
+                }
+                self.phase = if self.iterations >= cfg.max_iters { SchurLmPhase::Done } else { SchurLmPhase::Solve };
+            }
+            SchurLmPhase::Done => {}
+        }
+        self.phase == SchurLmPhase::Done
+    }
 }
 // #endregion 🔖️SchurBundle
 

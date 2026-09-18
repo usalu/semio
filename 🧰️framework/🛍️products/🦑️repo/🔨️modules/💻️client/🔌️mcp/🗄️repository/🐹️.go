@@ -139,6 +139,47 @@ func (repository ClientRepository) Call(ctx context.Context, name string, raw js
 			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid section_extract arguments"}
 		}
 		result = client.ToolExtract(params.SourceFile, params.SourceSection, params.TargetFile)
+	case "goal_open":
+		var params struct {
+			Title        string `json:"title"`
+			Description  string `json:"description"`
+			Prompt       string `json:"prompt"`
+			DueDate      string `json:"due_date"`
+			LLM          string `json:"llm"`
+			Client       string `json:"client"`
+			Parent       string `json:"parent"`
+			Milestone    string `json:"milestone"`
+			NoManagement bool   `json:"no_management"`
+		}
+		if err := DecodeParams(raw, &params); err != nil || params.Title == "" || params.Prompt == "" {
+			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid goal_open arguments"}
+		}
+		result = client.ToolGoalCreate(params.Title, params.Description, params.Prompt, params.DueDate, params.LLM, params.Client, params.NoManagement, params.Parent, params.Milestone)
+	case "goal_close":
+		var params struct {
+			ID           string `json:"id"`
+			Summary      string `json:"summary"`
+			NoManagement bool   `json:"no_management"`
+		}
+		if err := DecodeParams(raw, &params); err != nil || params.ID == "" || params.Summary == "" {
+			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid goal_close arguments"}
+		}
+		result = client.ToolGoalClose(params.ID, params.Summary, params.NoManagement)
+	case "goal_reopen":
+		var params struct {
+			ID           string `json:"id"`
+			Prompt       string `json:"prompt"`
+			LLM          string `json:"llm"`
+			Client       string `json:"client"`
+			Title        string `json:"title"`
+			Description  string `json:"description"`
+			DueDate      string `json:"due_date"`
+			NoManagement bool   `json:"no_management"`
+		}
+		if err := DecodeParams(raw, &params); err != nil || params.ID == "" || params.Prompt == "" || params.LLM == "" || params.Client == "" {
+			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid goal_reopen arguments"}
+		}
+		result = client.ToolGoalReopen(params.ID, params.Prompt, params.LLM, params.Client, params.Title, params.Description, params.DueDate, params.NoManagement)
 	default:
 		return RepositoryResult{}, &HandlerError{Code: -32010, Message: "tool not found"}
 	}
@@ -300,6 +341,9 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile cli
 		{Name: "section_move", Description: "Rename or move a section.", InputSchema: object(map[string]Schema{"file": stringField("Source file."), "old_name": stringField("Current section."), "new_name": stringField("New section.")}, "file", "old_name", "new_name")},
 		{Name: "file_integrate", Description: "Integrate a source file into a target section.", InputSchema: object(map[string]Schema{"source": stringField("Source file."), "target_section": stringField("Target section."), "target_file": stringField("Target file."), "target_parent_section": stringField("Optional parent section.")}, "source", "target_section", "target_file")},
 		{Name: "section_extract", Description: "Extract a section into a target file.", InputSchema: object(map[string]Schema{"source_file": stringField("Source file."), "source_section": stringField("Source section."), "target_file": stringField("Target file.")}, "source_file", "source_section", "target_file")},
+		{Name: "goal_open", Description: "Open a repository goal.", InputSchema: object(map[string]Schema{"title": stringField("Goal title."), "description": stringField("Goal description."), "prompt": stringField("Goal prompt."), "due_date": stringField("YYYY-MM-DD due date."), "llm": stringField("Model."), "client": stringField("Agent client."), "parent": stringField("Parent goal id."), "milestone": stringField("Management milestone."), "no_management": booleanField("Skip management integration.")}, "title", "prompt")},
+		{Name: "goal_close", Description: "Close a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "summary": stringField("Completion summary."), "no_management": booleanField("Skip management integration.")}, "id", "summary")},
+		{Name: "goal_reopen", Description: "Reopen a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "prompt": stringField("Additional goal prompt."), "llm": stringField("Model."), "client": stringField("Agent client."), "title": stringField("Updated title."), "description": stringField("Updated description."), "due_date": stringField("YYYY-MM-DD due date."), "no_management": booleanField("Skip management integration.")}, "id", "prompt", "llm", "client")},
 	}
 	for _, schema := range tools {
 		name := schema.Name

@@ -16,6 +16,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -136,6 +137,86 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 	}
 	if _, err := resolveMCPProfile([]string{"mcp", "client"}, func(string) (string, bool) { return "", false }); err == nil {
 		t.Fatal("legacy CLI delegation arguments must be rejected")
+	}
+}
+
+// 🤝️The handshake fixture is owned by the `🔌️mcp` module (both twins read the same file), so this
+// implementation never restates the contract it must satisfy.
+type lenientHandshakeFixture struct {
+	Schema                   string          `json:"schema"`
+	RequestedProtocolVersion string          `json:"requestedProtocolVersion"`
+	ClientInfo               json.RawMessage `json:"clientInfo"`
+	Capabilities             json.RawMessage `json:"capabilities"`
+	Expected                 struct {
+		Accepted              bool     `json:"accepted"`
+		ProtocolVersionEchoed bool     `json:"protocolVersionEchoed"`
+		ServerVersion         string   `json:"serverVersion"`
+		Capabilities          []string `json:"capabilities"`
+	} `json:"expected"`
+}
+
+func TestInitializeAdmitsForwardExtensibleClientFrames(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🤝️initialize-lenient.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture lenientHandshakeFixture
+	if err := decodeExact(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if fixture.Schema != "semio.repo.mcp.handshake/1" || !fixture.Expected.Accepted {
+		t.Fatalf("unexpected handshake fixture identity: %#v", fixture)
+	}
+	server, err := NewRepositoryServer(&testRepository{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session, err := server.Connect("lenient", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":%q,"capabilities":%s,"clientInfo":%s}}`, fixture.RequestedProtocolVersion, fixture.Capabilities, fixture.ClientInfo)
+	response, err := session.Dispatch(context.Background(), []byte(payload))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var envelope Response
+	if err := json.Unmarshal(response, &envelope); err != nil {
+		t.Fatal(err)
+	}
+	if envelope.Error != nil {
+		t.Fatalf("forward-extensible initialize was rejected: %s", response)
+	}
+	var initialized InitializeResult
+	if err := json.Unmarshal(envelope.Result, &initialized); err != nil {
+		t.Fatal(err)
+	}
+	if fixture.Expected.ProtocolVersionEchoed && initialized.ProtocolVersion != fixture.RequestedProtocolVersion {
+		t.Fatalf("negotiated protocol got=%q want=%q", initialized.ProtocolVersion, fixture.RequestedProtocolVersion)
+	}
+	if initialized.ServerInfo.Version != fixture.Expected.ServerVersion {
+		t.Fatalf("server version got=%q want=%q", initialized.ServerInfo.Version, fixture.Expected.ServerVersion)
+	}
+	present := map[string]bool{"prompts": initialized.Capabilities.Prompts != nil, "resources": initialized.Capabilities.Resources != nil, "tools": initialized.Capabilities.Tools != nil}
+	for _, capability := range fixture.Expected.Capabilities {
+		if !present[capability] {
+			t.Fatalf("server capability %q was not advertised", capability)
+		}
+	}
+	strict, err := NewRepositoryServer(&testRepository{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	strictSession, err := strict.Connect("strict", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	strictResponse, err := strictSession.Dispatch(context.Background(), []byte(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ticket_open","arguments":{},"unknownField":1}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(strictResponse, []byte(`"error"`)) {
+		t.Fatalf("frames other than initialize must stay strictly decoded: %s", strictResponse)
 	}
 }
 

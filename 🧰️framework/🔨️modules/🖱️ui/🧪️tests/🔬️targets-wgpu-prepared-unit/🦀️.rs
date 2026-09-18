@@ -2,13 +2,35 @@
 use super::*;
 use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, drive_step, root_cancel_token};
 
-static ATLAS_TEST_LOCK: Mutex<()> = Mutex::new(());
+static PREPARED_PROCESS_TEST_LOCK: Mutex<()> = Mutex::new(());
 
-fn atlas_test_guard() -> std::sync::MutexGuard<'static, ()> {
-    match ATLAS_TEST_LOCK.lock() {
+/// 🔒️ EVERY law in this case takes this guard, first statement, no exceptions.
+///
+/// The prepared ladder's credits are PROCESS-wide by design — `PREPARED_RENDER_PROCESS_PERMITS`, the
+/// atlas page pool and the four abandonment rings `drain_abandoned_preparations` drains are one
+/// budget for the whole binary, because that is the budget a real process has. A law that reads a
+/// process counter (`PREPARED_RENDER_PROCESS_PERMITS.load(..) == 0`) or counts retirement grants
+/// therefore measures every other law that is running at the same time, and under `cargo test` with
+/// more than one test thread it flakes: `packet_drop_retires_nested_backings_and_permit_scalars_separately`
+/// and `pending_presenter_witness_rejects_superseding_packet_with_exact_owner` were the two that
+/// showed it (`📓️w9a`), but only eleven of this case's thirty-nine laws took the lock, so ANY of the
+/// other twenty-eight could have been the perturber. Serialising the whole case is what makes the
+/// measurements mean what they say, and it costs nothing: none of these laws blocks.
+///
+/// Holding the lock is only half of it. An owner a law drops lands in an ABANDONMENT ring and keeps
+/// its permits until something grants it a close step, so a law that ends with owners still queued
+/// hands the next one an already-spent budget (`prepared render process permits exhausted (held items
+/// 4/64 …)`). The guard therefore drains both rings before it hands the lock back: every law starts
+/// from a quiescent process, whatever the law before it left behind and whatever order the runner
+/// picked.
+fn prepared_process_guard() -> std::sync::MutexGuard<'static, ()> {
+    let guard = match PREPARED_PROCESS_TEST_LOCK.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(),
-    }
+    };
+    drain_abandoned_preparations();
+    drain_abandoned_atlases();
+    guard
 }
 
 fn drain_abandoned_atlases() {
@@ -77,6 +99,7 @@ fn retire_raster_upload(mut upload: PreparedRenderUpload) {
 
 #[test]
 fn paged_raster_producer_advances_one_page_and_moves_page_identity() {
+    let _guard = prepared_process_guard();
     let source = vec![7; PREPARED_RASTER_PAGE_BYTES * 2];
     let source_pointer = source.as_ptr();
     let (mut producer, published_key) = PreparedRasterProducer::try_admit("two-pages".into(), source, 4_096, 2).expect("exact two-page admission");
@@ -99,6 +122,7 @@ fn paged_raster_producer_advances_one_page_and_moves_page_identity() {
 
 #[test]
 fn stale_generation_does_not_consume_a_prepared_raster_page() {
+    let _guard = prepared_process_guard();
     let (mut producer, _) = PreparedRasterProducer::try_admit("stale".into(), vec![3; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page admission");
     assert!(producer.bind_frame_generation(11));
     let retained = producer.source.len();
@@ -112,6 +136,7 @@ fn stale_generation_does_not_consume_a_prepared_raster_page() {
 
 #[test]
 fn raster_cap_plus_one_rejects_the_exact_source_before_page_allocation() {
+    let _guard = prepared_process_guard();
     let source = vec![5; PREPARED_RASTER_PAGE_BYTES + 4];
     let pointer = source.as_ptr();
     let mut rejected = PreparedRasterProducer::try_admit("wide".into(), source, 4_097, 1).expect_err("row cap plus one");
@@ -123,7 +148,7 @@ fn raster_cap_plus_one_rejects_the_exact_source_before_page_allocation() {
 
 #[test]
 fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let height = 33_554_433_u32;
     let byte_len = 33_554_433_usize;
@@ -142,7 +167,7 @@ fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
 
 #[test]
 fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let source = [9_u8; 32];
     let mut pages = match PreparedAtlasPages::try_new(4, 2, 4, source.len()) {
@@ -164,7 +189,7 @@ fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
 
 #[test]
 fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let mut owners: [Option<PreparedAtlasPages>; PREPARED_ATLAS_PROCESS_ITEMS] = std::array::from_fn(|_| None);
     for owner in &mut owners {
@@ -183,7 +208,7 @@ fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
 
 #[test]
 fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let mut owner = match PreparedAtlasPages::try_new(4, 2, 4, 32) {
         Ok(owner) => owner,
@@ -202,7 +227,7 @@ fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
 
 #[test]
 fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let source = vec![3_u8; PREPARED_ATLAS_PAGE_BYTES + 1];
     let mut owner = match PreparedAtlasPages::try_new(1, u32::try_from(source.len()).unwrap_or(u32::MAX), 1, source.len()) {
@@ -225,7 +250,7 @@ fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
 
 #[test]
 fn atlas_allocation_refusal_preserves_the_packed_permit_ledger() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let before = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
     assert!(matches!(PreparedAtlasPages::try_new(0, 1, 4, 4), Err("atlas dimensions do not fit fixed page credits")));
@@ -234,7 +259,7 @@ fn atlas_allocation_refusal_preserves_the_packed_permit_ledger() {
 
 #[test]
 fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let handles = std::array::from_fn::<_, 8, _>(|_| {
         std::thread::spawn(|| match PreparedAtlasPages::try_new(1, 1, 1, 1) {
@@ -257,6 +282,7 @@ fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
 
 #[test]
 fn raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization() {
+    let _guard = prepared_process_guard();
     let reservation = PreparedRasterReservation::try_reserve("item-exact".into()).expect("initial exact reservation");
     let reservation = reservation.claim(4_096, 1_024).expect("sixteen MiB operation claim");
     let mut rejected = reservation.reject("test retirement", Vec::new());
@@ -272,6 +298,7 @@ fn raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization() {
 
 #[test]
 fn raster_simultaneous_source_decode_peak_exact_and_plus_one() {
+    let _guard = prepared_process_guard();
     let height = 1_023usize;
     let decoded_bytes = PREPARED_RASTER_PAGE_BYTES * height;
     let page_slot_bytes = size_of::<PreparedRasterPage>() * height;
@@ -293,6 +320,7 @@ fn raster_simultaneous_source_decode_peak_exact_and_plus_one() {
 
 #[test]
 fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
+    let _guard = prepared_process_guard();
     let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
     let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
     let retained_pointer = retained_source.as_ptr();
@@ -320,6 +348,7 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
 /// translucent, mirroring React's `renderOrder` of -10 (reference plane), -5 (grid) and 0 (model).
 #[test]
 fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under() {
+    let _guard = prepared_process_guard();
     use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ScenePass3d, SceneDraw3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
     let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
@@ -363,6 +392,7 @@ fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under()
 /// (`📓️w7b-presenter-one-frame-per-boot.md` §1).
 #[test]
 fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
+    let _guard = prepared_process_guard();
     let (unbound, _) = PreparedRasterProducer::try_admit("unbound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(unbound).is_ok());
@@ -386,6 +416,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
 
 #[test]
 fn raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one() {
+    let _guard = prepared_process_guard();
     let mut ledger = PreparedRasterLedger::default();
     let item = ledger.reserve(PREPARED_RASTER_PRODUCER_ITEMS, 1).expect("exact aggregate items");
     assert!(ledger.reserve(1, 0).is_none(), "aggregate item cap plus one");
@@ -408,6 +439,7 @@ fn raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one() {
 
 #[test]
 fn raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant() {
+    let _guard = prepared_process_guard();
     let (mut first, _) = PreparedRasterProducer::try_admit("first".into(), vec![1; PREPARED_RASTER_PAGE_BYTES * 2], 4_096, 2).expect("first admission");
     let first_epoch = first.pages.as_ref().expect("first pages").source_generation();
     assert!(first.bind_frame_generation(3));
@@ -427,6 +459,7 @@ fn raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant() {
 
 #[test]
 fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
+    let _guard = prepared_process_guard();
     let (mut producer, _) = PreparedRasterProducer::try_admit("governed".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(producer.bind_frame_generation(3));
     let source_pointer = producer.source.as_ptr();
@@ -453,6 +486,7 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
 
 #[test]
 fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
+    let _guard = prepared_process_guard();
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 }).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
@@ -471,6 +505,7 @@ fn assert_send<T: Send>() {}
 
 #[test]
 fn prepared_packet_is_send_owned_data() {
+    let _guard = prepared_process_guard();
     assert_send::<PreparedRenderPacket>();
     assert_send::<PreparedRenderJob>();
     assert_send::<PreparedRenderReceiver>();
@@ -482,6 +517,7 @@ fn prepared_packet_is_send_owned_data() {
 
 #[test]
 fn receiver_survives_worker_ownership_of_the_job() {
+    let _guard = prepared_process_guard();
     let job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 1);
     let receiver = job.receiver().expect("prepared receiver clone");
     std::thread::spawn(move || {
@@ -506,6 +542,7 @@ fn receiver_survives_worker_ownership_of_the_job() {
 
 #[test]
 fn preparation_yields_at_the_configured_item_budget() {
+    let _guard = prepared_process_guard();
     let mut draw = DrawList::default();
     draw.layers.extend((0..4).map(|_| DrawLayer::default()));
     let input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
@@ -519,6 +556,7 @@ fn preparation_yields_at_the_configured_item_budget() {
 
 #[test]
 fn preparation_completes_across_bounded_steps() {
+    let _guard = prepared_process_guard();
     let mut draw = DrawList::default();
     draw.layers.extend((0..2).map(|_| DrawLayer::default()));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
@@ -533,6 +571,7 @@ fn preparation_completes_across_bounded_steps() {
 
 #[test]
 fn preparation_rejects_a_stale_generation_before_publication() {
+    let _guard = prepared_process_guard();
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 2, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
     let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
@@ -557,6 +596,7 @@ async fn preparation_observes_cancellation_without_replacing_a_packet() {
 
 #[test]
 fn stale_packet_rejection_preserves_the_last_valid_packet() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let witness = gate.stage_presented(packet(7, 3)).ok().expect("first presenter witness");
     assert!(gate.acknowledge_presented(witness).expect("first presenter acknowledgement").is_empty());
@@ -567,12 +607,14 @@ fn stale_packet_rejection_preserves_the_last_valid_packet() {
 
 #[test]
 fn generation_rejection_happens_before_presentation() {
+    let _guard = prepared_process_guard();
     let gate = PreparedRenderGate::default();
     assert!(matches!(gate.validate(&packet(7, 2), 7, 3), Err(PreparedRenderRejection::StaleGeneration { .. })));
 }
 
 #[test]
 fn device_loss_retains_the_last_valid_packet() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let witness = gate.stage_presented(packet(7, 3)).ok().expect("presenter witness");
     let _ = gate.acknowledge_presented(witness).expect("presenter acknowledgement");
@@ -581,6 +623,7 @@ fn device_loss_retains_the_last_valid_packet() {
 
 #[test]
 fn presenter_ack_is_exact_one_shot_and_preserves_old_until_acknowledged() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let first = gate.stage_presented(packet(7, 3)).ok().expect("first presenter witness");
     let _ = gate.acknowledge_presented(first).expect("first acknowledgement");
@@ -601,6 +644,7 @@ fn presenter_ack_is_exact_one_shot_and_preserves_old_until_acknowledged() {
 
 #[test]
 fn missing_ack_and_abort_return_the_exact_candidate_without_replacing_last_valid() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let first = gate.stage_presented(packet(7, 3)).ok().expect("first presenter witness");
     let _ = gate.acknowledge_presented(first).expect("first acknowledgement");
@@ -613,6 +657,7 @@ fn missing_ack_and_abort_return_the_exact_candidate_without_replacing_last_valid
 
 #[test]
 fn pending_presenter_witness_rejects_superseding_packet_with_exact_owner() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let _pending = gate.stage_presented(packet(7, 3)).ok().expect("pending presenter witness");
     let mut superseding = packet(8, 4);
@@ -633,6 +678,7 @@ fn pending_presenter_witness_rejects_superseding_packet_with_exact_owner() {
 
 #[test]
 fn gate_close_requires_pending_and_last_valid_packet_handback_before_terminal_scalars() {
+    let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let witness = gate.stage_presented(packet(7, 3)).ok().expect("presenter witness");
     let _ = gate.acknowledge_presented(witness).expect("presenter acknowledgement");
@@ -647,6 +693,7 @@ fn gate_close_requires_pending_and_last_valid_packet_handback_before_terminal_sc
 
 #[test]
 fn upload_byte_cap_faults_before_packet_publication() {
+    let _guard = prepared_process_guard();
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
@@ -660,6 +707,7 @@ fn upload_byte_cap_faults_before_packet_publication() {
 
 #[test]
 fn eviction_byte_cap_faults_before_packet_publication() {
+    let _guard = prepared_process_guard();
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
@@ -673,6 +721,7 @@ fn eviction_byte_cap_faults_before_packet_publication() {
 
 #[test]
 fn draw_item_cap_faults_before_packet_publication() {
+    let _guard = prepared_process_guard();
     let mut draw = DrawList::default();
     draw.layers[0].ui_instances.push(crate::wgpu::draw_types::UiInstance::solid([0.0; 4], crate::wgpu::theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
     let mut input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
@@ -687,7 +736,7 @@ fn draw_item_cap_faults_before_packet_publication() {
 
 #[test]
 fn input_drop_hands_back_exact_process_permits_for_incremental_close() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert_ne!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
@@ -704,7 +753,7 @@ fn input_drop_hands_back_exact_process_permits_for_incremental_close() {
 
 #[test]
 fn worker_panic_hands_back_the_exact_job_and_mailbox_owners() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 1);
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
@@ -724,7 +773,7 @@ fn worker_panic_hands_back_the_exact_job_and_mailbox_owners() {
 
 #[test]
 fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let mut owner = packet(7, 3);
     owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], crate::wgpu::theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
@@ -740,6 +789,7 @@ fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
 
 #[test]
 fn fixed_command_pages_reject_max_plus_one_without_consuming_the_owner() {
+    let _guard = prepared_process_guard();
     let mut commands = PreparedRenderCommandPages::default();
     for source in 0..PREPARED_RENDER_COMMAND_PAGES * PREPARED_RENDER_COMMAND_PAGE_ITEMS {
         let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Tessellate, source, digest: source as u64, draw_cursor: Some(DrawMeasureCursor::Complete), packet_overlay: false };
@@ -761,7 +811,7 @@ fn fixed_command_pages_reject_max_plus_one_without_consuming_the_owner() {
 
 #[test]
 fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
-    let _guard = atlas_test_guard();
+    let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let mut draw = DrawList::default();
     draw.push_solid([0.0, 0.0, 4.0, 4.0], crate::wgpu::theme::Rgba::new(0.0, 1.0, 0.0, 1.0));

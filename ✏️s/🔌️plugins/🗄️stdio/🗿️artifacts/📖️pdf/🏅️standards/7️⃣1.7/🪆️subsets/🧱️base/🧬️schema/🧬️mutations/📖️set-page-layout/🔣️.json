@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📖️set-page-layout",
+  "semanticKind": "set-page-layout",
+  "displayName": "Set Page Layout",
+  "emoji": "📖️",
+  "aggregateVariant": "SetPageLayout",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-page-layout",
+  "binaryTag": 49,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

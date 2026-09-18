@@ -34,7 +34,7 @@
       "componentBlake3": "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
       "descriptorByteSha256": "9e947f6cfaa646c5d850bec654a830a2acde56bac227395b7ab76f2c5ef54545",
       "executionProtocol": {
-        "appChannelVersion": 15
+        "appChannelVersion": 17
       }
     },
     "artifact": {
@@ -142,7 +142,7 @@
       "componentBlake3": "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
       "descriptorByteSha256": "9e947f6cfaa646c5d850bec654a830a2acde56bac227395b7ab76f2c5ef54545",
       "executionProtocol": {
-        "appChannelVersion": 15
+        "appChannelVersion": 17
       }
     },
     "component": {

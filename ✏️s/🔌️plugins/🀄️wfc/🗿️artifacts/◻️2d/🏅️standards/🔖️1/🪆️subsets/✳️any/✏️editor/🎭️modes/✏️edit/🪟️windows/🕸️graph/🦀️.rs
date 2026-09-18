@@ -21,7 +21,7 @@
 
 use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::{
-    scene_surface, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions,
+    scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions,
 };
 use store::Viewport2d;
 
@@ -79,6 +79,35 @@ impl Default for GraphCamera {
 //#endregion 🔖️View
 
 //#region 🔖️Definition
+/// 🏷️ One action row plus the argument form the Actions pane stages for it. A verb that names an
+/// entity and offers NO form is dispatched with an EMPTY id the moment its row is activated — the
+/// caller then either mints an edit against nothing or is refused, and either way the pane reads as
+/// inert. Every argument here is artifact-agnostic (ids and plain numbers), so `wfc3d` still copies
+/// this file verbatim.
+fn action(id: &'static str, en: &'static str, de: &'static str, args: Vec<ActionArgDef>) -> ActionDefinition {
+    ActionDefinition { args, ..ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation) }
+}
+
+fn slot_arg() -> ActionArgDef {
+    ActionArgDef::text("id", LocalizedLabel::native("Slot", "Slot")).required()
+}
+
+fn x_arg() -> ActionArgDef {
+    ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(&0.0)
+}
+
+fn y_arg() -> ActionArgDef {
+    ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(&0.0)
+}
+
+fn width_arg() -> ActionArgDef {
+    ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).default_value(&1.0)
+}
+
+fn height_arg() -> ActionArgDef {
+    ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).default_value(&1.0)
+}
+
 /// 🧱️ Stitched into the editor manifest by the artifact's own `create_*_editor`. Every verb is
 /// `Migrated`: a `BatchOnly` verb never reaches interactive dispatch and would be dead in the pane.
 pub fn definition() -> WindowKindDefinition {
@@ -90,15 +119,20 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "network".into(),
         options: WindowOptions::default(),
         actions: vec![
-            ActionDefinition::bounded_catalog("create-slot", LocalizedLabel::native("Create Slot", "Slot erstellen"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("delete-slot", LocalizedLabel::native("Delete Slot", "Slot löschen"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("move-slot", LocalizedLabel::native("Move Slot", "Slot verschieben"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("resize-slot", LocalizedLabel::native("Resize Slot", "Slot skalieren"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("connect-slots", LocalizedLabel::native("Connect Slots", "Slots verbinden"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("disconnect-slots", LocalizedLabel::native("Disconnect Slots", "Slots trennen"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("pin-slot", LocalizedLabel::native("Pin Slot", "Slot festlegen"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("unpin-slot", LocalizedLabel::native("Unpin Slot", "Slot freigeben"), ActionKind::Mutation),
-            ActionDefinition::bounded_catalog("change-seed", LocalizedLabel::native("Change Seed", "Seed ändern"), ActionKind::Mutation),
+            action("create-slot", "Create Slot", "Slot erstellen", vec![slot_arg(), x_arg(), y_arg(), width_arg(), height_arg()]),
+            action("delete-slot", "Delete Slot", "Slot löschen", vec![slot_arg()]),
+            action("move-slot", "Move Slot", "Slot verschieben", vec![slot_arg(), x_arg(), y_arg()]),
+            action("resize-slot", "Resize Slot", "Slot skalieren", vec![slot_arg(), width_arg(), height_arg()]),
+            action("connect-slots", "Connect Slots", "Slots verbinden", vec![
+                ActionArgDef::text("id", LocalizedLabel::native("Adjacency", "Nachbarschaft")).required(),
+                ActionArgDef::text("fromSlotId", LocalizedLabel::native("From Slot", "Von Slot")).required(),
+                ActionArgDef::text("toSlotId", LocalizedLabel::native("To Slot", "Zu Slot")).required(),
+                ActionArgDef::text("relation", LocalizedLabel::native("Relation", "Relation")),
+            ]),
+            action("disconnect-slots", "Disconnect Slots", "Slots trennen", vec![ActionArgDef::text("id", LocalizedLabel::native("Adjacency", "Nachbarschaft")).required()]),
+            action("pin-slot", "Pin Slot", "Slot festlegen", vec![slot_arg(), ActionArgDef::text("tileId", LocalizedLabel::native("Tile", "Kachel"))]),
+            action("unpin-slot", "Unpin Slot", "Slot freigeben", vec![slot_arg()]),
+            action("change-seed", "Change Seed", "Seed ändern", vec![ActionArgDef::number("seed", LocalizedLabel::native("Seed", "Seed")).default_value(&0.0)]),
         ],
         utilities: Vec::new(),
         params_schema: None,

@@ -1,0 +1,5 @@
+# 🗂️ Direct set-catalog-entry GraphQL payload.
+input SetCatalogEntryMutationInput {
+  key: String
+  value: PdfObjectInput
+}

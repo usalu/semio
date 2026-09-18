@@ -392,7 +392,7 @@ impl ErasedSnapshotRetirement for DagSnapshotRetirement {
 
 impl Drop for DagSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "DAG snapshot retirement dropped before terminal-empty");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "DAG snapshot retirement dropped before terminal-empty");
     }
 }
 

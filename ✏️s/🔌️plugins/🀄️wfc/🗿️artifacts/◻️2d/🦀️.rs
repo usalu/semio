@@ -473,7 +473,9 @@ pub mod examples {
 }
 //#endregion 📚️Examples
 
-// ---- Shims: flat access from the artifact root, mirroring assembly/generation2d ----
+/// 🪞️ Flat access from the artifact root, mirroring the sibling wfc artifacts: the subset's schema
+/// tree reached as `crate::schema`, with the shims below doing the same for diff, mutations and
+/// inferences.
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }

@@ -105,22 +105,44 @@ fn parse_args() -> Result<Mode, String> {
 }
 //#endregion 🔖️Args
 
+/// 🏷️ Exact hub-authority carriers the OS/hub processes export by name — `S_USER`/`VITE_S_USER`
+/// (`🏛️ShellHost`'s identity pin), `S_HUB_URL`/`VITE_S_HUB_URL` (`🌐️vite`'s hub origin define) and
+/// `S_SESSION` (the local-bootstrap session pin). Every one of them is stripped by
+/// `🌎️hub/🔐️auth/📤️credential-delivery`'s `sealedDirectChildEnvironment`, so seeing one here means
+/// this process was NOT spawned through the sealing path.
+const PROTECTED_CREDENTIAL_NAMES: [&str; 6] = ["S_USER", "VITE_S_USER", "S_HUB_URL", "VITE_S_HUB_URL", "S_SESSION", "VITE_S_SESSION"];
+
+/// 🧱 Transport-credential carriers that are authority by their own bare name, whatever sets them.
+const PROTECTED_CREDENTIAL_HEADER_NAMES: [&str; 2] = ["AUTHORIZATION", "COOKIE"];
+
+/// 🔤️ The only namespaces whose variables this OS product mints; a credential-shaped suffix under
+/// one of them is a hub carrier, while the same word under a foreign namespace is not.
+const PROTECTED_CREDENTIAL_NAMESPACES: [&str; 2] = ["S_", "VITE_S_"];
+
+/// 🚨️ Credential-shaped suffixes, matched only inside a namespace above.
+const PROTECTED_CREDENTIAL_MARKERS: [&str; 7] = ["TOKEN", "SESSION", "CREDENTIAL", "BEARER", "CAPABILITY", "AUTHORIZATION", "COOKIE"];
+
+/// 🔍️ Decides whether one already-upper-cased variable name carries hub authority. Deliberately NOT
+/// a bare substring scan of the whole environment: a host harness that names its own benign
+/// variables `CLAUDE_CODE_SESSION_ID`, `TMUX_SESSION`, `GH_TOKEN` or `VSCODE_SESSION_ID` carries no
+/// hub credential, and rejecting those made this binary unusable as the child of every session
+/// oriented client — which is the one client `.mcp.json` exists for.
+fn protected_credential_environment_name(key: &str) -> bool {
+    PROTECTED_CREDENTIAL_NAMES.contains(&key)
+        || PROTECTED_CREDENTIAL_HEADER_NAMES.contains(&key)
+        || PROTECTED_CREDENTIAL_NAMESPACES
+            .iter()
+            .filter_map(|namespace| key.strip_prefix(namespace))
+            .any(|suffix| PROTECTED_CREDENTIAL_MARKERS.iter().any(|marker| suffix.contains(marker)))
+}
+
 fn protected_credential_environment_is_absent() -> bool {
     std::env::vars_os().all(|(key, value)| {
         let key = key.to_string_lossy().to_ascii_uppercase();
         if key == "S_LOCAL_CREDENTIAL_FD" {
             return value == "3";
         }
-        !(key == "S_USER"
-                || key == "VITE_S_USER"
-                || key == "S_HUB_URL"
-                || key.contains("TOKEN")
-                || key.contains("SESSION")
-                || key.contains("CREDENTIAL")
-                || key.contains("BEARER")
-                || key.contains("CAPABILITY")
-                || key.contains("AUTHORIZATION")
-                || key.contains("COOKIE"))
+        !protected_credential_environment_name(&key)
     })
 }
 

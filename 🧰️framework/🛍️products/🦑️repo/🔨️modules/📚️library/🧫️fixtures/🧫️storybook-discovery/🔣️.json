@@ -631,22 +631,6 @@
       ]
     },
     {
-      "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️basic-chat-panel/🧪️.story.tsx",
-      "title": "🖱️ui⚛️react/BasicChatPanel",
-      "stories": [
-        {
-          "exportName": "Default",
-          "id": "🖱️ui⚛️react-basicchatpanel--default",
-          "name": "Default"
-        },
-        {
-          "exportName": "Narrow",
-          "id": "🖱️ui⚛️react-basicchatpanel--narrow",
-          "name": "Narrow Panel"
-        }
-      ]
-    },
-    {
       "path": "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️canvas-pick-menu/🧪️.story.tsx",
       "title": "🖱️ui⚛️react/CanvasPickMenu",
       "stories": [

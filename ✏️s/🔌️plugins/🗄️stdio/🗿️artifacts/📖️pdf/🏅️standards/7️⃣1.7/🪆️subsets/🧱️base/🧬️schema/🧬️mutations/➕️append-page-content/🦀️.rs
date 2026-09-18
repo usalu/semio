@@ -1,10 +1,9 @@
 //! ➕️ Authoritative PDF mutation payload, diff, inverse, and tests for `append-page-content`.
 
-use super::set_page_content::SetPageContent;
 use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::{
     diff::{self, PdfDiff},
-    snapshot::PdfSnapshot,
+    snapshot::*,
 };
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -14,22 +13,24 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct AppendPageContent {
     pub index: usize,
-    pub text: String,
+    pub content: Vec<PdfOp>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for AppendPageContent {
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "page-content", kind: "append-page-content", record: "Added" };
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "append", entity: "page-content", kind: "append-page-content", record: "Append" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_append_page_content(base, self.index, &self.text))
+        let _ = base;
+        MutationOutcome::new(diff::diff_append_page_content(base, self.index, &self.content))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageContent(SetPageContent { index: self.index, text: page.text.clone() })).into_iter().collect()
+        let _ = base;
+        base.pages.get(self.index).map(|page| PdfMutation::RemoveContent(super::remove_content::RemoveContent { index: self.index, at: page.content.len(), count: self.content.len() })).into_iter().collect()
     }
 
     fn label(&self) -> String {
-        format!("Append content to page {}", self.index)
+        format!("Append {} operators to page {}", self.content.len(), self.index)
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,4 @@
+# 🪡️ Direct remove-pattern GraphQL payload.
+input RemovePatternMutationInput {
+  id: String
+}

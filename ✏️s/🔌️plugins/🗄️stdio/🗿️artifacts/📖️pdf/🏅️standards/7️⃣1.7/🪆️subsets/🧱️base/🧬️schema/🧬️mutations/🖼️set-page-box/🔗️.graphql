@@ -1,0 +1,6 @@
+# 🖼️ Direct set-page-box GraphQL payload.
+input SetPageBoxMutationInput {
+  index: Int
+  kind: PdfPageBoxInput
+  rect: [Float!]
+}

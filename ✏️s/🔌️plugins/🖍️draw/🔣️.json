@@ -227,6 +227,51 @@
                 }
               },
               {
+                "id": "exportDocument",
+                "label": {
+                  "native": {
+                    "en": "Export PDF",
+                    "de": "PDF exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export PDF",
+                    "de": "PDF exportieren"
+                  }
+                },
+                "kind": "view",
+                "iconId": "download",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "setSnapshot",
                 "label": {
                   "native": {
@@ -4262,8 +4307,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "96dbcc67696fca90c4b46115326bdfc7596e06b74591deced4ada5905b8c3bfa",
-    "coreWasmSha256": "dca757b7998ed42b04fa9f2c9093bd5164ca71254d55880f7d9b19fd5608fc26",
-    "descriptorSha256": "360b2aba3d02229dff60c524d2a193f8953a3dc5dd44c447ddb0719608e226b8"
+    "wasmSha256": "ccb6e62ab9c486fd7584bc5e210f8b662c3c652941f6b5e9e35a5188df8a1a2f",
+    "coreWasmSha256": "2e3cc2eafe2b473a9dc97319e3222408597496f656fafbb31d8f43f6cd7a9029",
+    "descriptorSha256": "678827e7281ae37528a68dac78c4594ace5397124f3a69a79cba38115857e1b2"
   }
 }

@@ -34851,7 +34851,7 @@ pub mod plugin_runtime {
             clear();
             return (RuntimeCloseStatus::Ready, 0);
         }
-        let stalled = stalled_steps.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |seen| Some(seen.saturating_add(1))).unwrap_or(u8::MAX).saturating_add(1);
+        let stalled = stalled_steps.try_update(Ordering::SeqCst, Ordering::SeqCst, |seen| Some(seen.saturating_add(1))).unwrap_or(u8::MAX).saturating_add(1);
         let Some(now_us) = now_us else { return (RuntimeCloseStatus::Ready, 0) };
         let since_us = match stall_since_us.compare_exchange(0, now_us.max(1), Ordering::SeqCst, Ordering::SeqCst) {
             Ok(_) => now_us.max(1),

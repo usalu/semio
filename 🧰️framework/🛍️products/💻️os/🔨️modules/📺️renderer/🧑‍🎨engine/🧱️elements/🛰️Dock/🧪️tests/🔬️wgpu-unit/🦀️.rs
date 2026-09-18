@@ -861,6 +861,58 @@ fn dock_tab_hits_register_only_reacts_two_actions() {
     assert!(!ids.iter().any(|id| id.ends_with(".focus")), "React hides Focus when the canvas holds one window");
 }
 
+/// 📑️ ⚖️ LAW: a tab publishes its SELECT target before its action chips, and its chips left to right
+/// (`focus`, `close`, `drag`) — React's own DOM order (`🎨️Canvas/🟦️.tsx:1034-1100`: the
+/// `<button role="tab">` label, then `mode-dock-tab-focus`, `mode-dock-tab-close`, then the
+/// `DragHandle`).
+///
+/// 🩸️ The chips were published FIRST, so the first `dock.tab.…` row of a stack was its destructive
+/// `close` chip. The parity probe's `window-reopen` step resolves "the dock tab" by scanning the
+/// published rows in order: on React it landed on the `mode-dock-tabbar` container and did nothing,
+/// here it landed on `dock.tab..puzzle3d-main-perspective.close` and closed the LAST world pane, after
+/// which every window-owned chord was a hinted no-op against an empty dock
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w12c-parity-run-19/steps.json` step 18).
+#[test]
+fn a_tabs_select_target_is_published_before_its_destructive_chips() {
+    let labels = HashMap::from([("a".to_string(), "A".to_string()), ("b".to_string(), "B".to_string())]);
+    let two = dock_with(stack_tabs(&["a", "b"], "a"), "a");
+    let ids = painted_tab_control_ids(&two, &labels);
+    let first = ids.first().map(String::as_str);
+    assert_eq!(first, Some("dock.tab..a"), "📑️ the first dock tab row a stack publishes is a SELECT target, never a close chip: {ids:?}");
+    for window_id in ["a", "b"] {
+        let position = |suffix: &str| ids.iter().position(|id| *id == format!("dock.tab..{window_id}{suffix}")).unwrap_or_else(|| panic!("📑️ {window_id}{suffix} is registered: {ids:?}"));
+        let select = position("");
+        assert!(select < position(".focus"), "📑️ {window_id}: select precedes Focus");
+        assert!(position(".focus") < position(".close"), "📑️ {window_id}: Focus precedes Close, left to right");
+        assert!(position(".close") < position(".drag"), "📑️ {window_id}: Close precedes the grip");
+    }
+    assert!(!ids.iter().take_while(|id| !id.ends_with("..a")).any(|id| id.ends_with(".close")), "📑️ no close chip is published before the tab it belongs to");
+}
+
+/// 🈳️ ⚖️ LAW: a stack holding NO tabs still answers a DROP body — React's `WindowChrome` keeps
+/// rendering for an empty stack, which is how a dragged window is dropped back into an emptied dock —
+/// but it owns no window and no silhouette, because React's `activeDescriptor` is `undefined` there
+/// and its `stackBody` renders nothing (`🎨️Canvas/🟦️.tsx:1176`/`:1212`).
+///
+/// 🩸️ The silhouette was keyed by the stack's `active` tab unconditionally, so closing the last window
+/// minted a `""`-keyed window: the engine-surface census reported `windows=["", "tool.fill", …]`, the
+/// chrome census published a `window:` surface, and the body registered a full-bounds
+/// `HitKind::ScrollRegion` with an EMPTY control id over the whole canvas
+/// (`📓️w12c-chords-and-camera-live.md` §4.3).
+#[test]
+fn an_emptied_stack_keeps_its_drop_body_and_owns_no_window() {
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let labels = HashMap::from([("a".to_string(), "A".to_string())]);
+    let mut dock = dock_with(stack_tabs(&["a"], "a"), "a");
+    assert!(dock.close_window("a"), "🪟️ the last window closes");
+    let (bodies, silhouettes) = dock.stack_body_rects_with_silhouettes(Rect::new(0.0, 0.0, 600.0, 400.0), &theme, &labels, &mut atlas);
+    assert_eq!(bodies.len(), 1, "🈳️ the emptied root stack is still a drop body");
+    assert_eq!(bodies[0].2, "", "🈳️ …and names no window");
+    assert!(silhouettes.is_empty(), "🈳️ an empty stack owns no silhouette — React draws no window there");
+    assert!(dock.collect_window_ids().is_empty(), "🈳️ and the dock holds no window id at all");
+}
+
 /// 📑️ `modeDockTabClassName` caps a tab at `max-w-[12rem]` and truncates its label
 /// (`🎛️chrome-control-presentation/🟦️.ts:35`) — a long title must never widen the tab bar.
 #[test]

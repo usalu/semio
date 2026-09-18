@@ -1,0 +1,4 @@
+# 📖️ Direct set-page-layout GraphQL payload.
+input SetPageLayoutMutationInput {
+  layout: PdfPageLayoutInput
+}

@@ -3,7 +3,7 @@
   "cases": [
     {
       "document": "checker",
-      "description": "Four 24×24 checker frames on one stream sampled at stride 1: every frame is accepted, all candidate matches pass, the seed pair registers two cameras and the run completes with the mesh content leaves and one commit.",
+      "description": "Four identical 24×24 checker frames on one stream sampled at stride 1: every frame is accepted, the few candidates match, but four copies of one image give the seed pair no baseline to solve — the run records `seedPairFailed`, registers no camera, and completes with nothing to publish (no content, no commit).",
       "final": "complete",
       "verdictPrefix": [
         "success:frameAccepted",
@@ -17,18 +17,80 @@
         "success:matchAccepted",
         "success:matchAccepted",
         "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
         "success:matchAccepted"
       ],
-      "verdicts": 1490,
+      "verdicts": 14,
       "counters": {
+        "cameras": 0,
+        "densePoints": 0,
         "framesAccepted": 4,
         "framesRejected": 0,
-        "keypoints": 644,
-        "matchesAccepted": 966,
+        "keypoints": 4,
+        "matchesAccepted": 6,
         "matchesRejected": 0,
-        "cameras": 2,
-        "sparsePoints": 0,
-        "densePoints": 512
+        "sparsePoints": 0
+      },
+      "stagesVisited": [
+        "ingest",
+        "features",
+        "matching",
+        "poses",
+        "bundle",
+        "fusion",
+        "products"
+      ],
+      "appendContentOps": 0,
+      "commitReconstructionOps": 0,
+      "lastStep": {
+        "args": [
+          0
+        ],
+        "kind": "success",
+        "reason": "resultReady"
+      }
+    },
+    {
+      "document": "orbit-short",
+      "description": "The first eight views of the committed calibrated orbit ingested at 160 px: every frame is accepted, matches are accepted, ratio-rejected, cross-check-rejected and geometry-rejected, all eight cameras register, the sparse cloud, the dense fusion and a mesh are produced, and the run completes with the content leaves and one commit.",
+      "final": "complete",
+      "verdictPrefix": [
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted"
+      ],
+      "verdicts": 8466,
+      "counters": {
+        "cameras": 8,
+        "densePoints": 512,
+        "framesAccepted": 8,
+        "framesRejected": 0,
+        "keypoints": 2513,
+        "matchesAccepted": 1492,
+        "matchesRejected": 6733,
+        "sparsePoints": 416
       },
       "stagesVisited": [
         "ingest",
@@ -43,17 +105,17 @@
       "appendContentOps": 6,
       "commitReconstructionOps": 1,
       "lastStep": {
-        "kind": "success",
-        "reason": "resultReady",
         "args": [
           7
-        ]
+        ],
+        "kind": "success",
+        "reason": "resultReady"
       }
     },
     {
       "document": "synthetic-orbit",
-      "description": "The committed ten-frame calibrated orbit: every frame is accepted, match candidates are accepted, rejected by the ratio test and rejected by the cross check, frames 2..9 cannot register, and surface extraction exceeds the interactive mesh envelope so the run faults with nothing provisional kept.",
-      "final": "faulted",
+      "description": "The committed thirty-six-view calibrated orbit: every frame is accepted, all thirty-six cameras register around the loop, the sparse cloud (capped to the durable 512 points on publication), the dense fusion and a mesh are produced, and the run completes with the content leaves and one commit.",
+      "final": "complete",
       "verdictPrefix": [
         "success:frameAccepted",
         "success:frameAccepted",
@@ -65,31 +127,31 @@
         "success:frameAccepted",
         "success:frameAccepted",
         "success:frameAccepted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "success:featuresExtracted",
-        "warning:matchAmbiguous",
-        "success:matchAccepted",
-        "danger:matchAsymmetric",
-        "warning:matchAmbiguous"
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted"
       ],
-      "verdicts": 22563,
+      "verdicts": 118579,
       "counters": {
-        "framesAccepted": 10,
+        "cameras": 15,
+        "densePoints": 512,
+        "framesAccepted": 36,
         "framesRejected": 0,
-        "keypoints": 5120,
-        "matchesAccepted": 1146,
-        "matchesRejected": 21382,
-        "cameras": 2,
-        "sparsePoints": 5,
-        "densePoints": 0
+        "keypoints": 11310,
+        "matchesAccepted": 15060,
+        "matchesRejected": 113133,
+        "sparsePoints": 711
       },
       "stagesVisited": [
         "ingest",
@@ -99,16 +161,16 @@
         "bundle",
         "dense",
         "fusion",
-        "surface"
+        "products"
       ],
-      "appendContentOps": 0,
-      "commitReconstructionOps": 0,
+      "appendContentOps": 7,
+      "commitReconstructionOps": 1,
       "lastStep": {
-        "kind": "danger",
-        "reason": "pipelineFailed",
         "args": [
           8
-        ]
+        ],
+        "kind": "success",
+        "reason": "resultReady"
       }
     }
   ],
@@ -118,7 +180,7 @@
     "everyTickCarriesEvidence": true
   },
   "resume": {
-    "document": "checker",
+    "document": "orbit-short",
     "checkpointIndex": 5,
     "firstResumedStep": "resuming"
   },
@@ -127,7 +189,7 @@
     "targetUs": 2000,
     "unitDocuments": [
       "checker",
-      "synthetic-orbit"
+      "orbit-short"
     ],
     "coldRuns": 2
   }

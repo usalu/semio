@@ -1,13 +1,35 @@
 {
-  "$comment": "🪟️ The per-pane overlay rows React paints inside every window body, and the footer composition that is left once the wgpu-only utility rail is gone. Geometry source: React's `Pane` (🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9922) positioned by `anchorPositionStyle` (:6864) — a corner anchor insets `--spacing-single` on BOTH its edges, a middle anchor centres on that axis; mount source: 🪟️Window/🟦️.tsx:320-412 plus the world projection pane portalled through `usePaneSlot` (🌐️World3dHost/🟦️.tsx:5210). Measured on the React reference at 1440×900 for the puzzle3d two-pane split (📓️w3b-chip-text-and-footer-dock.md §5, read off `getBoundingClientRect`): pane top row y=64 `Actions` left / `Search` centred / `Window Options` right, pane bottom row y=710 `Utilities` left / `Projection` right.",
+  "$comment": "🪟️ The per-pane overlay rows React paints inside every window body. `controlId` is React's OWN id — both renderers mint one spelling, `{windowSegment}` being `elementIdSegment(windowId)`, and the footer composition that is left once the wgpu-only utility rail is gone. Geometry source: React's `Pane` (🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9922) positioned by `anchorPositionStyle` (:6864) — a corner anchor insets `--spacing-single` on BOTH its edges, a middle anchor centres on that axis; mount source: 🪟️Window/🟦️.tsx:320-412 plus the world projection pane portalled through `usePaneSlot` (🌐️World3dHost/🟦️.tsx:5210). Measured on the React reference at 1440×900 for the puzzle3d two-pane split (📓️w3b-chip-text-and-footer-dock.md §5, read off `getBoundingClientRect`): pane top row y=64 `Actions` left / `Search` centred / `Window Options` right, pane bottom row y=710 `Utilities` left / `Projection` right.",
   "viewport": { "width": 1440, "height": 900 },
   "paneChips": [
-    { "chip": "actions", "anchor": "top-left", "icon": "play", "label": { "en": "Actions", "de": "Aktionen" }, "controlId": "shell.action.fold.{windowId}", "react": "framework.window.{windowId}.engagement.toggle", "mounted": "always" },
-    { "chip": "search", "anchor": "top-middle", "icon": "search", "label": { "en": "Search", "de": "Suchen" }, "controlId": "shell.window.search.toggle.{windowId}", "react": "framework.window.{windowId}.search.toggle", "mounted": "always" },
-    { "chip": "windowOptions", "anchor": "top-right", "icon": "settings-2", "label": { "en": "Window Options", "de": "Fensteroptionen" }, "controlId": "shell.measures.unfold.{windowId}", "controlIdOpen": "shell.measures.fold.{windowId}", "react": "framework.window.{windowId}.measures.unfold", "mounted": "always", "disabledWithoutBody": true },
-    { "chip": "utilities", "anchor": "bottom-left", "icon": "hammer", "label": { "en": "Utilities", "de": "Werkzeuge" }, "controlId": "shell.utilityBar.unfold.{windowId}", "controlIdOpen": "shell.utilityBar.fold.{windowId}", "react": "framework.window.{windowId}.utilityBar.unfold", "mounted": "always", "disabledWithoutBody": true },
-    { "chip": "projection", "anchor": "bottom-right", "icon": "projection-three-point", "label": { "en": "Projection", "de": "Projektion" }, "controlId": "shell.projection.fold.{windowId}", "controlIdOpen": "shell.projection.fold.{windowId}", "react": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "mounted": "withWorldSurface", "disabledWithoutBody": false }
+    { "chip": "actions", "anchor": "top-left", "icon": "play", "label": { "en": "Actions", "de": "Aktionen" }, "controlId": "framework.window.{windowSegment}.engagement.toggle", "mounted": "always" },
+    { "chip": "search", "anchor": "top-middle", "icon": "search", "label": { "en": "Search", "de": "Suchen" }, "controlId": "framework.window.{windowSegment}.search.toggle", "mounted": "always" },
+    { "chip": "windowOptions", "anchor": "top-right", "icon": "settings-2", "label": { "en": "Window Options", "de": "Fensteroptionen" }, "controlId": "framework.window.{windowSegment}.measures.unfold", "controlIdOpen": "framework.window.{windowSegment}.measures.fold", "mounted": "always", "disabledWithoutBody": true },
+    { "chip": "utilities", "anchor": "bottom-left", "icon": "hammer", "label": { "en": "Utilities", "de": "Werkzeuge" }, "controlId": "framework.window.{windowSegment}.utilityBar.unfold", "controlIdOpen": "framework.window.{windowSegment}.utilityBar.fold", "mounted": "always", "disabledWithoutBody": true },
+    { "chip": "projection", "anchor": "bottom-right", "icon": "projection-three-point", "label": { "en": "Projection", "de": "Projektion" }, "controlId": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "controlIdOpen": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "mounted": "withWorldSurface", "disabledWithoutBody": false }
   ],
+  "paneFolds": {
+    "$comment": "🎛️ What ONE chip press does to the pane, read off React's own state: every `Pane` holds its own `useState(true)` (🪟️Window/🟦️.tsx:169 measures, :176 utilityBar, :183 actions; `WorldOrbitProjectionSwitchPane`'s at 🌐️World3dHost/🟦️.tsx:5225), so the folds are INDEPENDENT — no chip closes another pane, and none of them opens or closes a SURFACE. The one coupling React authors is `setEngagementBarFolded` (:373/:388): the Actions pane and the Search pane share one `actionsFolded`, so either chip moves both. Measured on the React reference over ten runs: `pane-chip-utilitybar-unfold` removes no surface and `pane-chip-projection-toggle` moves nothing at all (🗑️generated/parity-run-{1..12}/steps.json, 📓️w12d-pane-chip-ids-and-projection-toggle.md §5).",
+    "sharedFold": ["actions", "search"],
+    "independentFolds": ["windowOptions", "utilities", "projection"],
+    "surfacesMovedByAnyChip": [],
+    "shellOverlayOpenedByAnyChip": null,
+    "activatesOwnWindow": true
+  },
+  "utilityRailCensus": {
+    "$comment": "🧰️ What unfolding the `Utilities` chip publishes, measured on the React reference (🗑️generated/parity-run-12/steps.json step `pane-chip-utilitybar-unfold`, 337 → 355 controls). Of React's 20 added rows, 14 are `data-slot` scaffolding its DOM census counts and no canvas renderer publishes (window-chrome-cap/gap/body-surface, utility-bar-body, ribbon-zone/group/item/row, toggle-group, inline-label ×4); the ones that NAME something are the chip flipping to its fold id, the rail root, and ONE row per enabled utility leaf, each carrying that leaf's framework element id.",
+    "addedControlIds": ["framework.window.{windowSegment}.utilityBar.fold"],
+    "removedControlIds": ["framework.window.{windowSegment}.utilityBar.unfold"],
+    "railRootElementId": "ui.utilities.{windowId}",
+    "leafElementIdIsUtilityId": true,
+    "scaffoldingSlots": ["window-chrome-body-surface", "utility-bar-body", "ribbon-zone", "ribbon-group", "ribbon-item", "ribbon-row", "toggle-group", "window-chrome-cap", "window-chrome-gap", "inline-label"]
+  },
+  "windowControls": {
+    "$comment": "🪪️ React's own window control group (🪟️Window/🟦️.tsx:276) — `external`, `maximize` and `close`, each rendered only when its callback is handed in. `ModeWindowDescriptor` OMITS all three (🎨️Canvas/🟦️.tsx:75) and the OS shell passes none, keeping focus and close on the dock TAB, so in this product the group carries NOTHING and is not published at all. It used to be minted unconditionally from `showControls`, which put an empty 2px-wide box carrying `framework.window.{windowSegment}.windowControls` in every DOM census (measured `rect: [524, 65, 2, 16]`, 🗑️generated/w11a-parity-run-14/steps.json step `pane-chip-windowcontrols`) while adding no control and no action.",
+    "controlId": "framework.window.{windowSegment}.windowControls",
+    "items": ["external", "maximize", "close"],
+    "publishedInShell": false
+  },
   "paneAnchorInsets": {
     "$comment": "🧭️ anchorPositionStyle's edges per anchor — `middle` centres on that axis. Both renderers resolve the inset distance from the same --spacing-single / PANEL_INSET_UI_SPACING token.",
     "top-left": ["left", "top"],

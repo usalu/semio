@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧠️ `@semio-tech/reasoning-mindmap-plugin` router: `bun ./📜️script.ts test`. */
+/** 🧠️ `@semio-tech/reasoning-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
@@ -7,7 +7,7 @@ import { describePluginComponent } from "../../../../../🧰️framework/🛍️
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-s-plugin-reasoning-mindmap"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-s-plugin-reasoning"], this.repoRoot, rest);
   }
 }
 
@@ -16,7 +16,7 @@ class TestScript extends BundleScript {
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
 class DescribeScript extends BundleScript {
   run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-reasoning-mindmap", join(this.root, "..", "..")));
+    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-reasoning", join(this.root, "..", "..")));
   }
 }
 

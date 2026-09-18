@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "tsBuildInfoFile": "node_modules/.cache/framework-typecheck.tsbuildinfo"
+  },
+  "include": [
+    "./🟦️.ts",
+    "./📜️script.ts",
+    "../🦀️rust/📜️script.ts",
+    "../../🔨️modules/**/*.ts",
+    "../../🔨️modules/**/*.tsx",
+    "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts"
+  ],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/storybook-static/**", "**/🗑️generated/**"]
+}

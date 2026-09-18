@@ -78,6 +78,7 @@ fn sample_shell_frames() -> Vec<ShellToGateway> {
         ShellToGateway::Approval { approval_id: "appr_2".into(), decision: ApprovalDecision::Deny, note: None },
         ShellToGateway::Ping,
         ShellToGateway::Bye,
+        ShellToGateway::AgentMessage { message_id: "msg_1".into(), text: "translate the selection by one metre".into() },
     ]
 }
 
@@ -92,6 +93,8 @@ fn sample_gateway_frames() -> Vec<GatewayToShell> {
         GatewayToShell::AgentPresence { active: false, label: "".into(), invocation_id: None },
         GatewayToShell::Pong,
         GatewayToShell::Bye { reason: "shutdown".into() },
+        GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "action_invoke".into(), arguments: "{\"capabilityId\":\"cad.viewport.translateSelection\"}".into() },
+        GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "action_invoke".into(), ok: true, summary: "moved 1 object".into() },
     ]
 }
 
@@ -181,7 +184,7 @@ fn bounded_shell_decoder_and_materializer_advance_incrementally() {
     assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
     assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
     assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
-    assert_eq!(decoder.cursor, 9, "one preflight grant may consume only one scalar token");
+    assert_eq!(decoder.cursor, 13, "one preflight grant may consume only one scalar token: tag u8 + revision u64 + the length u32, never the 16 KiB body behind it");
 }
 
 #[test]
@@ -481,8 +484,8 @@ fn every_fixture_round_trips_through_the_rust_codec() {
             other => panic!("unknown fixture direction: {other}"),
         }
     }
-    assert_eq!(shell_to_gateway_count, 11, "fixtures must cover every ShellToGateway variant instance");
-    assert_eq!(gateway_to_shell_count, 9, "fixtures must cover every GatewayToShell variant instance");
+    assert_eq!(shell_to_gateway_count, 12, "fixtures must cover every ShellToGateway variant instance");
+    assert_eq!(gateway_to_shell_count, 11, "fixtures must cover every GatewayToShell variant instance");
 }
 
 fn encode_hex(bytes: &[u8]) -> String {

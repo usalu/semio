@@ -7,9 +7,12 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, F
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-/// 🧬️ Manifest `.example` id for the metabolism fixture — shared by `SetActiveExample`'s payload check
-/// and `crate::editor::wires::create_wires_app`'s `.example(...)` registration.
-pub const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = "metabolism";
+/// 🧬️ Manifest `.example` id for the metabolism fixture. The subset registers exactly one example
+/// — `crate::examples::demo` (`ID = "demo"`), whose asset IS the metabolism DSL — so this is that
+/// module's id, not the literal `"metabolism"` the check used to compare against: the shell only
+/// ever dispatches a registered id, so the old literal made every boot `setActiveExample` silently
+/// load the EMPTY document instead of the example the combobox names.
+pub const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = crate::examples::demo::ID;
 
 //#region 🔖️SetActiveExample
 //#endregion 🔖️SetActiveExample

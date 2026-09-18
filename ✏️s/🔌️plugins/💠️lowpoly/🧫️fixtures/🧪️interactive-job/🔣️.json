@@ -363,6 +363,32 @@
       "blocker": null
     },
     {
+      "toolId": "deleteSelection",
+      "classification": "migrated",
+      "lanes": [
+        "artifact",
+        "transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
+    },
+    {
+      "toolId": "duplicateObject",
+      "classification": "migrated",
+      "lanes": [
+        "artifact",
+        "config",
+        "transient"
+      ],
+      "preparation": [
+        "Artifact",
+        "Config"
+      ],
+      "blocker": null
+    },
+    {
       "toolId": "engagementSubmit",
       "classification": "migrated",
       "lanes": [

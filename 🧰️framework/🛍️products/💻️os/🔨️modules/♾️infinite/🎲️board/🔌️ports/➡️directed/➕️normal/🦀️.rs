@@ -655,7 +655,7 @@ pub mod board_host {
 
     impl Drop for BoardFillSnapshot {
         fn drop(&mut self) {
-            assert!(self.nodes.terminal_is_empty() && self.handles.terminal_is_empty() && self.kinds.terminal_is_empty() && self.rules.terminal_is_empty(), "Puzzle2d fill snapshot must transfer or close every exact page before Drop");
+            assert!((self.nodes.terminal_is_empty() && self.handles.terminal_is_empty() && self.kinds.terminal_is_empty() && self.rules.terminal_is_empty()) || std::thread::panicking(), "Puzzle2d fill snapshot must transfer or close every exact page before Drop");
         }
     }
 

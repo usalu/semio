@@ -1,6 +1,6 @@
 import { fileURLToPath as testFileUrlToPath } from "node:url";
-const testSourceUrl = new URL("../../🧹️fixture-sweep/📜️script.ts", import.meta.url);
-/** 🧭️ Independent preservation oracle for the fleet-only test-package extraction. */
+const sweepRoot = testFileUrlToPath(new URL("../../🧹️fixture-sweep/", import.meta.url));
+/** 🧭️ Independent preservation oracle for the kernel-only M5 conformance test package. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
@@ -10,7 +10,6 @@ import Ajv2020 from "ajv/dist/2020";
 
 const read = (path: string): string => readFileSync(path, "utf8");
 const sha = (text: string): string => createHash("sha256").update(text).digest("hex");
-const marker = "//#region 🔖️ExampleAssetDiscovery";
 const kernelPath = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust";
 const sourcePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep";
 
@@ -21,7 +20,8 @@ interface FixtureSweepReceipt {
 }
 
 interface FixtureSweepEvidence {
-  readonly summary: string;
+  readonly grammar: string;
+  readonly protocol: string;
   readonly coverage: string;
 }
 
@@ -32,33 +32,37 @@ interface FixtureSweepLawGroup {
 }
 
 export function fixtureSweepLawGroup(): FixtureSweepLawGroup {
-  const fixture = JSON.parse(read(testFileUrlToPath(new URL("../../../🧹️fixture-sweep/🧫️fixtures/🔣️.json", import.meta.url))));
+  const fixture = JSON.parse(read(join(sweepRoot, "🧫️fixtures/🔣️.json")));
   return { package: fixture.package, target: { kind: "test", name: fixture.target }, laws: fixture.laws };
 }
 
 function assertFixtureSweepOutput(output: string, assertions: number): FixtureSweepEvidence {
-  const sweep = [...output.matchAll(/\[dsl-fixture-sweep\] (\d+) example dir\(s\), (\d+) \.semio fixture file\(s\) found, (\d+) law-check\(s\) run across (\d+) registered app kind\(s\), (\d+) unmapped fixture\(s\)/gu)];
-  const coverage = [...output.matchAll(/example asset coverage: (\d+) slug\(s\) on new 🖼️assets layout, (\d+) soft-skipped mid-migration/gu)];
-  assert.equal(assertions, 2, "the native runner must execute both fixture-sweep laws");
-  assert.equal(sweep.length, 1, "one actual fleet sweep summary is required");
-  assert.equal(coverage.length, 1, "one actual asset coverage summary is required");
-  assert(Number(sweep[0]![1]) > 0 && Number(sweep[0]![2]) > 0 && Number(sweep[0]![3]) > 0, "an empty or all-unmapped fleet cannot pass");
-  assert.equal(Number(sweep[0]![4]), 54, "the native sweep must cover every registered app kind");
-  assert(Number(coverage[0]![1]) > 0, "all-soft-skipped asset coverage cannot pass");
-  return { summary: sweep[0]![0], coverage: coverage[0]![0] };
+  const grammar = [...output.matchAll(/\[dsl-fixture-sweep\] m5 grammar auto-discovery: (\d+) facet\(s\) found, (\d+) checked, (\d+) soft-skipped, (\d+) stdio-exempt soft failure\(s\), (\d+) hard failure\(s\)/gu)];
+  const protocol = [...output.matchAll(/\[dsl-fixture-sweep\] m5 protocol auto-discovery: (\d+) facet\(s\) found, (\d+) checked, (\d+) soft-skipped, (\d+) stdio-exempt-or-known-gap soft failure\(s\), (\d+) hard failure\(s\)/gu)];
+  const coverage = [...output.matchAll(/\[dsl-fixture-sweep\] m5 production coverage auto-discovery: (\d+) facet\(s\) found, (\d+) checked, (\d+) stdio-exempt soft failure\(s\), (\d+) hard failure\(s\)/gu)];
+  assert.equal(assertions, fixtureSweepLawGroup().laws.length, "the native runner must execute every declared M5 law");
+  assert.equal(grammar.length, 1, "one actual grammar auto-discovery summary is required");
+  assert.equal(protocol.length, 1, "one actual protocol auto-discovery summary is required");
+  assert.equal(coverage.length, 1, "one actual production coverage summary is required");
+  assert(Number(grammar[0]![1]) > 0 && Number(grammar[0]![2]) > 0, "an empty or all-soft-skipped grammar sweep cannot pass");
+  assert(Number(protocol[0]![1]) > 0 && Number(protocol[0]![2]) > 0, "an empty or all-soft-skipped protocol sweep cannot pass");
+  assert(Number(coverage[0]![1]) > 0 && Number(coverage[0]![2]) > 0, "an empty or all-soft-skipped production coverage sweep cannot pass");
+  assert.equal(Number(grammar[0]![5]) + Number(protocol[0]![5]) + Number(coverage[0]![4]), 0, "a hard failure cannot be reported by a passing law");
+  return { grammar: grammar[0]![0], protocol: protocol[0]![0], coverage: coverage[0]![0] };
 }
 
 /** 🧭️ Verifies native law receipts without placing domain parsing inside the package command leaf. */
 export function assertFixtureSweepLawCoverage(receipts: readonly FixtureSweepReceipt[]): void {
   assert.equal(receipts.length, 1, "one exact fixture-sweep receipt is required");
   const receipt = receipts[0]!;
-  const output = [0, 1].map(index => [".stdout", ".stderr"].map(suffix => readFileSync(join(receipt.artifactDir, `law-${index}${suffix}`), "utf8")).join("\n")).join("\n");
+  const laws = fixtureSweepLawGroup().laws;
+  const output = laws.map((_law, index) => [".stdout", ".stderr"].map(suffix => readFileSync(join(receipt.artifactDir, `law-${index}${suffix}`), "utf8")).join("\n")).join("\n");
   const evidence = assertFixtureSweepOutput(output, receipt.assertions);
-  console.log(`[DEBUG] ${evidence.summary}; ${evidence.coverage}; exact assertions=2; executable=${receipt.sha256}; evidence=${receipt.artifactDir}`);
+  console.log(`[DEBUG] ${evidence.grammar}; ${evidence.protocol}; ${evidence.coverage}; exact assertions=${laws.length}; executable=${receipt.sha256}; evidence=${receipt.artifactDir}`);
 }
 
 function repoRoot(): string {
-  let root = testFileUrlToPath(new URL(".", testSourceUrl));
+  let root = sweepRoot;
   while (!existsSync(join(root, "nx.json"))) {
     const parent = dirname(root);
     assert.notEqual(parent, root, "repository root is required");
@@ -113,58 +117,63 @@ export function testFixtureSweepReportContract(): void {
 export async function testFixtureSweepExtraction(): Promise<void> {
   const root = repoRoot();
   testFixtureSweepReportContract();
-  const fixture = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧫️fixtures/🔣️.json")));
-  const document = JSON.parse(read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧬️schema/🔣️.json")));
+  const fixture = JSON.parse(read(join(sweepRoot, "🧫️fixtures/🔣️.json")));
+  const document = JSON.parse(read(join(sweepRoot, "🧬️schema/🔣️.json")));
   const sweepAjv = new Ajv({ strict: true, allErrors: true });
   sweepAjv.addSchema(document);
   const validate = sweepAjv.getSchema(`${document.$id}#/$defs/DslFixtureSweepExtractionV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const oldKernel = read(join(root, kernelPath, "Cargo.toml"));
-  const retained = read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🦀️.rs"));
   assert(!oldKernel.includes("dsl-fixture-sweep-full"), "fleet feature must leave the kernel");
-  const packageDir = join(testFileUrlToPath(new URL(".", testSourceUrl)), "📦️packages/🦀️rust");
+  const packageDir = join(sweepRoot, "📦️packages/🦀️rust");
   const manifest = Bun.TOML.parse(read(join(packageDir, "Cargo.toml"))) as any;
   const kernel = Bun.TOML.parse(oldKernel) as any;
-  const source = read(join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧪️tests/🧹️fixture-sweep/🦀️.rs"));
-  assert(source.startsWith("//! 🧭️ Full-fleet example laws; public kernel APIs and production providers only.\n\n#[cfg(test)]\nmod tests"), "the extracted module has no additional feature or ignore guard");
-  const body = source.slice(source.indexOf("mod tests")).replaceAll("semio_framework_os_kernel::", "crate::").trimEnd() + "\n\n";
-  const retainedBody = retained.slice(retained.indexOf(marker));
+  const targetPath = resolve(packageDir, manifest.test[0].path);
+  const target = read(targetPath);
+  assert(target.startsWith("//! 🧭️ Kernel-only M5 grammar, protocol and fixture-discovery conformance.\n"), "the mounted target keeps its kernel-only charter");
+  const mounts = [...target.matchAll(/#\[path = "([^"]+)"\]\s*\n\s*mod (\w+);/gu)].map(match => ({ name: match[2]!, path: match[1]! }));
+  const laws: string[] = [];
+  for (const mount of mounts) {
+    const body = read(resolve(targetPath, "..", mount.path));
+    for (const match of body.matchAll(/#\[semio_framework_async_macros::async_test\]\s*\nasync fn (\w+)\(/gu)) laws.push(`${mount.name}::${match[1]}`);
+  }
+  const dependencies = Object.entries(manifest.dependencies as Record<string, any>);
   const observed = {
-    module: sha(body), retained: sha(retainedBody),
-    registry: body.split("//#region 🔖️Registry")[1]!.split("//#endregion")[0]!.split("\n").filter(line => /^\s*\("/u.test(line)).map(line => line.trim()),
-    laws: [...body.matchAll(/async fn (repo_wide_\w+)/gu)].map(match => `tests::${match[1]}`),
-    dependencies: Object.entries(manifest.dependencies).filter(([alias]) => alias !== "semio-framework-os-kernel").map(([alias, dependency]: [string, any]) => ({ alias, package: dependency.package ?? alias, path: relative(root, resolve(packageDir, dependency.path)), features: dependency.features ?? [], defaultFeatures: dependency["default-features"] ?? true, optional: dependency.optional ?? false })),
-    kernelDependencies: Object.keys(kernel["dev-dependencies"]),
+    module: sha(target), targetPath: relative(root, targetPath).replaceAll("\\", "/"), mounts, laws: laws.sort(),
+    workspaceDependencies: dependencies.filter(([, dependency]) => dependency.workspace === true).map(([alias]) => alias).sort(),
+    pathDependencies: dependencies.filter(([, dependency]) => dependency.workspace !== true).map(([alias, dependency]: [string, any]) => ({ alias, package: dependency.package ?? alias, path: relative(root, resolve(packageDir, dependency.path)).replaceAll("\\", "/"), features: dependency.features ?? [], defaultFeatures: dependency["default-features"] ?? true, optional: dependency.optional ?? false })),
+    kernelDependencies: Object.keys(kernel["dev-dependencies"]).sort(),
     kernelFeature: Object.hasOwn(kernel.features, "dsl-fixture-sweep-full"),
-    kernelMount: read(join(root, kernelPath, "🦀️.rs")).includes('#[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🦀️.rs"]'),
-    ignored: /#\[ignore/u.test(body),
+    kernelMount: read(join(root, kernelPath, "🦀️.rs")).includes(`#[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🧪️tests/🧹️fixture-sweep/🦀️.rs"]`),
+    ignored: /#\[ignore/u.test(target),
   };
   const expected = {
-    ...observed, module: fixture.moduleSha256, retained: fixture.retainedSha256, registry: fixture.registry, laws: fixture.laws,
-    dependencies: fixture.dependencies.map((dependency: object) => ({ ...dependency, optional: false })),
-    kernelDependencies: ["semio-framework-async-macros"], kernelFeature: false, kernelMount: true, ignored: false,
+    ...observed, module: fixture.moduleSha256, targetPath: fixture.targetPath, mounts: fixture.mounts, laws: fixture.laws,
+    workspaceDependencies: fixture.workspaceDependencies,
+    pathDependencies: fixture.pathDependencies.map((dependency: object) => ({ ...dependency, optional: false })),
+    kernelDependencies: fixture.kernelDependencies, kernelFeature: false, kernelMount: true, ignored: false,
   };
   const exact = new Ajv({ strict: true }).compile({ const: expected });
-  assert.deepEqual(observed, expected, "entire fleet registry, test/discovery bytes, dependencies and kernel-only tests are preserved");
+  assert.deepEqual(observed, expected, "the mounted target, its module mounts, laws, dependency edges and kernel-only boundary are preserved");
   assert(exact(observed));
-  for (const [name, text, digest] of [["fleet", body, fixture.moduleSha256], ["kernel", retainedBody, fixture.retainedSha256]]) {
-    const independent = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))).toString("hex");
-    assert.equal(independent, digest, name);
-  }
+  const independent = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(target))).toString("hex");
+  assert.equal(independent, fixture.moduleSha256, "module");
   const mutations: Record<string, (value: typeof observed) => void> = {
-    "missing-dependency": value => { value.dependencies.pop(); },
-    "extra-dependency": value => { value.dependencies.push({ ...value.dependencies[0]!, alias: "extra" }); },
-    "changed-package": value => { value.dependencies[0]!.package = "wrong"; },
-    "optional-dependency": value => { value.dependencies[0]!.optional = true; },
-    "changed-features": value => { value.dependencies[0]!.features = ["wrong"]; },
-    "missing-registry": value => { value.registry.pop(); },
-    "duplicate-registry": value => { value.registry.push(value.registry[0]!); },
-    "changed-registry": value => { value.registry[0] = "wrong"; },
-    "reordered-registry": value => { value.registry.reverse(); },
+    "missing-path-dependency": value => { value.pathDependencies.pop(); },
+    "extra-path-dependency": value => { value.pathDependencies.push({ ...value.pathDependencies[0]!, alias: "extra" }); },
+    "changed-package": value => { value.pathDependencies[0]!.package = "wrong"; },
+    "optional-dependency": value => { value.pathDependencies[0]!.optional = true; },
+    "changed-features": value => { value.pathDependencies[0]!.features = ["wrong"]; },
+    "missing-workspace-dependency": value => { value.workspaceDependencies.pop(); },
+    "duplicate-workspace-dependency": value => { value.workspaceDependencies.push(value.workspaceDependencies[0]!); },
+    "changed-workspace-dependency": value => { value.workspaceDependencies[0] = "wrong"; },
+    "reordered-workspace-dependency": value => { value.workspaceDependencies.reverse(); },
+    "missing-mount": value => { value.mounts.pop(); },
+    "changed-mount-path": value => { value.mounts[0]!.path = "../🔬️wrong/🦀️.rs"; },
     "missing-law": value => { value.laws.pop(); },
     "ignored-law": value => { value.ignored = true; },
     "changed-module": value => { value.module = "0".repeat(64); },
-    "changed-kernel-tests": value => { value.retained = "0".repeat(64); },
+    "moved-target": value => { value.targetPath = "🧰️framework/🔣️wrong.rs"; },
     "kernel-fleet-edge": value => { value.kernelDependencies.push("stdio"); },
     "kernel-feature": value => { value.kernelFeature = true; },
     "missing-kernel-mount": value => { value.kernelMount = false; },
@@ -179,12 +188,14 @@ export async function testFixtureSweepExtraction(): Promise<void> {
   assert.equal(manifest.package.name, fixture.package);
   assert.equal(manifest.test.length, 1);
   assert.equal(manifest.test[0].name, fixture.target);
-  assert.equal(resolve(packageDir, manifest.test[0].path), join(testFileUrlToPath(new URL(".", testSourceUrl)), "🧪️tests/🧹️fixture-sweep/🦀️.rs"));
-  assert.equal(resolve(packageDir, manifest.dependencies["semio-framework-os-kernel"].path), join(root, kernelPath));
-  assert(!manifest.dependencies["semio-framework-os-kernel"].optional);
+  assert.equal(targetPath, join(sweepRoot, "🧪️tests/🧹️fixture-sweep/🦀️.rs"));
+  assert.equal(resolve(packageDir, "../../../../../📦️packages/🦀️rust"), join(root, kernelPath));
+  assert.equal(manifest.dependencies["semio-framework-os-kernel"].workspace, true);
   assert.equal(manifest.features, undefined);
   assert.equal(manifest["dev-dependencies"], undefined);
-  for (const dependency of fixture.dependencies) assert(existsSync(join(root, dependency.path, "Cargo.toml")), `dependency owner exists: ${dependency.alias}`);
+  for (const dependency of fixture.pathDependencies) assert(existsSync(join(root, dependency.path, "Cargo.toml")), `dependency owner exists: ${dependency.alias}`);
+  const workspace = Bun.TOML.parse(read(join(root, "Cargo.toml"))) as any;
+  for (const alias of fixture.workspaceDependencies) assert(Object.hasOwn(workspace.workspace.dependencies, alias), `workspace dependency is declared: ${alias}`);
   const runner = read(join(packageDir, "📜️script.ts"));
   assert(runner.includes('RUST_TEST_NOCAPTURE: "1"') && runner.includes("runExactCargoLaws"), "real counts and exact native terminals remain observable");
   const project = JSON.parse(read(join(packageDir, "📋️project.json")));
@@ -194,9 +205,8 @@ export async function testFixtureSweepExtraction(): Promise<void> {
   assert(JSON.parse(read(join(root, domain, "📚️library/🔣️taxonomy.json"))).testPhases.includes("dsl"));
   const router = read(join(root, domain, "🧪️test/📜️script.ts"));
   assert(router.includes('.register("dsl", DslScript)') && router.includes('"@semio-tech/dsl-fixture-sweep-rs:test"'), "the root DSL phase routes to the dedicated fleet leaf");
-  const workspace = Bun.TOML.parse(read(join(root, "Cargo.toml"))) as any;
   assert.equal(workspace.workspace.members.filter((path: string) => path === `${sourcePath}/📦️packages/🦀️rust`).length, 1);
   const inventory = exampleInventory(root);
   assert(inventory.directories.length > 0 && inventory.files.length > 0, "fixture discovery cannot be empty");
-  console.log(`[DEBUG] DSL extraction oracle: 54 registry rows, 28 moved fleet edges, 1 retained/shared async macro, 2 preserved laws, ${fixture.cases.length} hostile cases; ${inventory.directories.length} example directories, ${inventory.files.length} asset-first .semio files, discovery SHA-256 ${sha(JSON.stringify(inventory))}; native law-check/unmapped counts pending execution`);
+  console.log(`[DEBUG] DSL extraction oracle: ${observed.mounts.length} mounted M5 modules, ${observed.laws.length} preserved laws, ${observed.workspaceDependencies.length} workspace edges, ${observed.pathDependencies.length} path edges, ${fixture.cases.length} hostile cases; ${inventory.directories.length} example directories, ${inventory.files.length} asset-first .semio files, discovery SHA-256 ${sha(JSON.stringify(inventory))}; native law counts pending execution`);
 }

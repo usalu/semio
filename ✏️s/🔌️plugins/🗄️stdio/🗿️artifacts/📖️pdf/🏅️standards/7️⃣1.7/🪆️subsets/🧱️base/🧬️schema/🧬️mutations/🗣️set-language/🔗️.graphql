@@ -1,0 +1,4 @@
+# 🗣️ Direct set-language GraphQL payload.
+input SetLanguageMutationInput {
+  language: String
+}

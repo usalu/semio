@@ -476,14 +476,20 @@ export type SemanticColors = {
   readonly edgeHover: string;
 };
 
-/** 🎨️ Maps mesh style palette fills/lines onto World3d semantic overlay colors — edge hover uses line paint so coplanar edges stay distinct from face hover fill. */
+/** 🎨️ Maps mesh style palette fills/lines onto World3d semantic overlay colors — edge hover uses line paint so coplanar edges stay distinct from face hover fill.
+ *
+ * 🖱️ Component hover (a face/edge/vertex under the pointer) paints with the `highlighted` style — the
+ * theme's SECONDARY token — not the `hovered` instance style: that one resolves to
+ * `--hover-interactive-fill` = `--border-normal-color`, a grey a half-transparent overlay over the grey
+ * mesh could not be told from the mesh at all (lowpoly face/vertex hover, 2026-09-18). Primary stays
+ * selection, secondary is hover, and both are theme-owned. */
 export function semanticColorsFromPalette(palette: MeshStylePalette): SemanticColors {
   return {
     mesh: palette.neutral.meshColor,
     edge: palette.neutral.lineColor,
     select: palette.selected.lineColor,
-    hover: palette.hovered.meshColor,
-    edgeHover: palette.hovered.lineColor,
+    hover: palette.highlighted.meshColor,
+    edgeHover: palette.highlighted.lineColor,
   };
 }
 
@@ -2489,6 +2495,10 @@ function gumballKindForTransformMode(transformMode: string | undefined, handleKi
 
 const GUMBALL_TRANSFORM_EPSILON = 1e-6;
 
+/** 📍️ Vertex-granularity pick dots and their hover/selection marks, in CSS pixels (screen-space). */
+const WORLD_VERTEX_DOT_PX = 6;
+const WORLD_VERTEX_MARK_PX = 11;
+
 /** 🕹️ Leftover/object ids for gumball `translateSelection` — never component face ids. */
 export function world3dGumballSelectionArgsV1(selection: {
   readonly ids?: readonly string[];
@@ -3047,7 +3057,9 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               }}
               onPointerOut={() => onComponentHover(null)}
             >
-              <pointsMaterial color={colors.edge} size={0.05} sizeAttenuation />
+              {/* 📍️ Screen-space dots: a world-unit size (0.05) is sub-pixel on a six-unit mesh seen from
+                  thirty units away, so vertex mode showed nothing to hover or pick (lowpoly, 2026-09-18). */}
+              <pointsMaterial color={colors.edge} size={WORLD_VERTEX_DOT_PX} sizeAttenuation={false} />
             </points>
           ) : null}
           {faceSelectedOverlay ? (
@@ -3082,17 +3094,17 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
           ) : null}
           {vertexSelectedOverlay ? (
             <points geometry={vertexSelectedOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.select} size={0.09} sizeAttenuation depthTest={false} />
+              <pointsMaterial color={colors.select} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
           {vertexHoveredOverlay ? (
             <points geometry={vertexHoveredOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.hover} size={0.09} sizeAttenuation depthTest={false} />
+              <pointsMaterial color={colors.hover} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
           {vertexPreviewOverlay ? (
             <points geometry={vertexPreviewOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.hover} size={0.09} sizeAttenuation depthTest={false} />
+              <pointsMaterial color={colors.hover} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
         </>

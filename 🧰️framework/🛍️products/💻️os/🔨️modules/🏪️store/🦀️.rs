@@ -10384,7 +10384,10 @@ impl ArtifactCodec {
         {
             Box::pin(async move {
                 let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                print_document_text(&parsed.envelope).await
+                let envelope = parsed.into_envelope();
+                let mirror = print_document_text(&envelope).await;
+                drop(envelope.into_owners());
+                mirror
             })
         }
 
@@ -10400,7 +10403,10 @@ impl ArtifactCodec {
                         return Ok((Vec::new(), Vec::new(), String::new()));
                     }
                     let parsed = parse_document_pack::<P, Mutation>(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                    let files = print_document_pack(&parsed.envelope).await?;
+                    let envelope = parsed.into_envelope();
+                    let printed = print_document_pack(&envelope).await;
+                    drop(envelope.into_owners());
+                    let files = printed?;
                     return Ok((files.pack, files.spr, files.ops));
                 }
                 let op_blobs = crate::os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -10412,11 +10418,11 @@ impl ArtifactCodec {
                     return Err(VcsError::Deserialize("apply_ops_binary: lane has no pack+spr baseline".into()));
                 } else {
                     let parsed = parse_document_pack::<P, Mutation>(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                    let (applied, redo) = match &parsed.envelope.cursor {
+                    let mut envelope = parsed.into_envelope();
+                    let (applied, redo) = match &envelope.cursor {
                         Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                        None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+                        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
                     };
-                    let mut envelope = parsed.envelope;
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let store = ArtifactStore::new(envelope).await?;
                     store

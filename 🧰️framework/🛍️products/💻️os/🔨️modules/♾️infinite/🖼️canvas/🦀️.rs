@@ -2159,9 +2159,15 @@ pub mod camera {
     /// content it is stored for (`>= min_coverage` of the content's area on screen); otherwise — and
     /// whenever there is no stored camera at all — the content is fitted. Returns `true` in the
     /// second component when the fit won, which is what the caller persists as a viewport gesture.
+    ///
+    /// 🔍️ A non-positive stored zoom is not a camera: it collapses every world point onto one screen
+    /// pixel. With no content to fit against there is nothing to correct it, so it answers the
+    /// identity camera instead — a plugin that publishes `{0, 0, 0}` for an unset viewport used to
+    /// leave the live generation3d flow graph blank forever (every node and handle reported
+    /// `visible: false` around the panel centre).
     pub fn startup_camera(stored: Option<&Camera>, content: Option<&ContentBounds>, viewport: &Viewport, padding_px: f64, min_coverage: f64) -> (Camera, bool) {
         let Some(content) = content else {
-            return (stored.cloned().unwrap_or_default(), false);
+            return (stored.filter(|camera| camera.zoom > 0.0).cloned().unwrap_or_default(), false);
         };
         match stored {
             Some(camera) if camera.zoom > 0.0 && content_coverage(content, camera, viewport) >= min_coverage => (camera.clone(), false),

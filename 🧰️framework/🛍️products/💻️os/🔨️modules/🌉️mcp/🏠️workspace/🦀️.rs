@@ -196,6 +196,15 @@ impl store::ArtifactDsl for ProbeSnapshot {
     }
 }
 
+/// 🧩️ `ProbeSnapshot` is one opaque `serde_json::Value` leaf: it declares no child slot and no link
+/// slot, so its composition projection is empty. `ArtifactStore::undo`/`redo` reach it through
+/// `store::SpaceMember`, whose bound this satisfies.
+impl store::os_schema_composition::ArtifactCompositionFields for ProbeSnapshot {
+    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
+}
+
 impl store::ArtifactPack for ProbeSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(&self.0).map_err(|error| store::PackError::Schema(error.to_string()))
@@ -607,6 +616,21 @@ pub struct PluginArtifactChannel {
     pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
     next_seq: u64,
+    /// 💡️ Lazily opened on the FIRST `AppCommand::Infer` — a second guest activation of the same
+    /// component, dedicated to the cold `semio.infer` job lane. Deliberately separate from
+    /// `instances` above: `PluginInstanceHandle` takes ownership of its `GuestInstance` and drives
+    /// `start-job`/`step-job` against it from a worker pool, which the retained command-page loop
+    /// `exchange_one_real` runs on the same instance cannot share.
+    inference: Option<PluginInferenceRoute>,
+}
+
+/// 💡️ One plugin's real `semio.infer` route — the SAME `ArtifactInferenceRouter` +
+/// `PluginInstanceHandle` pair `🏃️run/🦀️.rs`'s own `load_runtime_recursive` builds, constructed here
+/// from the committed descriptor instead of from a live `run` process. The router owns the handle
+/// (which owns the `Arc<GuestRuntimes>` and the `GuestInstance`), so this struct holds only it.
+#[cfg(not(target_arch = "wasm32"))]
+struct PluginInferenceRoute {
+    router: semio_framework_plugin_host::ArtifactInferenceRouter,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -730,6 +754,20 @@ impl<const CAPACITY: usize> PendingExchangeRegistry<CAPACITY> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+/// 🔢️ The actor ordinal the inference-only activation uses. Distinct from every `ensure_instance`
+/// ordinal (those are `instance + 1`, i.e. `1..=u16::MAX - 1`) so an inference guest can never
+/// collide with a command-lane guest of the same plugin.
+#[cfg(not(target_arch = "wasm32"))]
+const INFERENCE_ACTOR_ORDINAL: u16 = u16::MAX;
+
+/// ⏱️ The finite allocation/recursion limits every `AppCommand::Infer` carries. Work units come from
+/// the caller (clamped to at least one); these two are host policy, not caller input, because an
+/// agent must not be able to widen a guest's memory or dependency-recursion envelope.
+#[cfg(not(target_arch = "wasm32"))]
+const INFERENCE_ALLOCATION_BYTES: u64 = 1 << 20;
+#[cfg(not(target_arch = "wasm32"))]
+const INFERENCE_RECURSION_DEPTH: u32 = 4;
+
 fn owned_interactive_budget() -> semio_framework::kernel::Budget {
     semio_framework::kernel::Budget { fuel: 2_000_000, deadline_ms: 8, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 }
 }
@@ -760,7 +798,93 @@ impl PluginArtifactChannel {
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
             next_seq: 1,
+            inference: None,
         })
+    }
+
+    /// 💡️ Opens (once) this plugin's real inference route: a fresh `GuestRuntimes` over the SAME
+    /// compiled component, one `PluginInstanceHandle`, and an `ArtifactInferenceRouter` registered
+    /// with the plugin's own declared roster — byte-for-byte the `serde_json` roster
+    /// `🏃️run/🦀️.rs` builds (`contributions.inference_services` chained with every
+    /// `artifact_contributions[].inferences`). A plugin that declares no inference at all is a
+    /// typed refusal here rather than an empty registration that would fail later with a worse
+    /// message.
+    fn ensure_inference_route(&mut self) -> Result<&PluginInferenceRoute, Fault> {
+        if self.inference.is_none() {
+            let roster: Vec<serde_json::Value> = self
+                .descriptor
+                .contributions
+                .inference_services
+                .iter()
+                .chain(self.descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
+                .map(serde_json::to_value)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|error| Self::not_wired("inference roster", error))?;
+            if roster.is_empty() {
+                return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.entry.plugin_id) });
+            }
+            let roster_bytes = serde_json::to_vec(&roster).map_err(|error| Self::not_wired("inference roster", error))?;
+            let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
+            let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
+                self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
+            let runtimes = Arc::new(semio_framework_plugin_host::GuestRuntimes::from(OwnedRuntime::new()));
+            let budget = owned_interactive_budget();
+            let instance = semio_framework_async::block_on(semio_framework_plugin_host::GuestRuntime::instantiate(runtimes.as_ref(), &self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("inference instantiate", error))?;
+            let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), instance)));
+            let router = semio_framework_plugin_host::ArtifactInferenceRouter::new();
+            semio_framework_async::block_on(router.register_plugin(&self.entry.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
+            self.inference = Some(PluginInferenceRoute { router });
+        }
+        Ok(self.inference.as_ref().expect("inference route was just opened"))
+    }
+
+    /// 💡️ Runs ONE declared inference through the real router — the general replacement for the old
+    /// blanket `channel.not-wired`. The router resolves the route, toposorts and injects
+    /// `dependsOn` results, drives the guest's `semio.infer` cold job, validates the guest's echo
+    /// field-for-field and re-checks commit freshness; this function only builds the request wire
+    /// and decodes the result, and reports whatever the router answers verbatim.
+    fn infer_real(&mut self, command: &crate::actions::InferCommand) -> Result<crate::schema::ArtifactInferenceResultV1, Fault> {
+        let declared = self
+            .descriptor
+            .contributions
+            .inference_services
+            .iter()
+            .chain(self.descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
+            .find(|item| item.artifact_kind == command.artifact_kind && item.inference_schema == command.inference_schema)
+            .cloned()
+            .ok_or_else(|| Fault {
+                code: "capability.not-found".to_string(),
+                message: format!("plugin `{}` declares no inference `{}` on artifact kind `{}`", self.entry.plugin_id, command.inference_schema, command.artifact_kind),
+            })?;
+        let request = crate::schema::ArtifactInferenceRequestV1 {
+            wire_version: crate::schema::ARTIFACT_INFERENCE_WIRE_VERSION,
+            owner: declared.owner.clone(),
+            artifact_kind: declared.artifact_kind.clone(),
+            artifact_schema: declared.artifact_schema.clone(),
+            artifact_schema_version: declared.artifact_schema_version,
+            inference_schema: declared.inference_schema.clone(),
+            inference_schema_version: declared.inference_schema_version,
+            algorithm_version: declared.algorithm_version,
+            policy_version: declared.policy_version,
+            revision: command.revision,
+            generation: command.generation,
+            // 🗣️ The artifact kind's own native dialect coordinate — the same
+            // `<kind>@<schemaVersion>/*` grammar every plugin's committed artifact identity uses.
+            // The guest echoes it verbatim and the router asserts the echo, so a plugin that reads
+            // it at all sees exactly its own declared dialect, never an invented one.
+            source_dialect: format!("{}@{}/*", declared.artifact_schema, declared.artifact_schema_version),
+            policy: Vec::new(),
+            budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units.max(1), recursion_depth: INFERENCE_RECURSION_DEPTH },
+            cancellation_id: command.cancellation_id.clone(),
+            previous_state: None,
+            requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
+            canonical_payload: command.canonical_payload.clone(),
+            dependencies: Vec::new(),
+        };
+        let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
+        let route = self.ensure_inference_route()?;
+        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes)).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
+        serde_json::from_slice(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
 
     fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {
@@ -955,7 +1079,12 @@ impl ArtifactChannel for PluginArtifactChannel {
         if commands.len() != 1 {
             return Err(Self::not_wired("exchange", format!("expected exactly one command, received {}", commands.len())));
         }
-        self.ensure_instance(instance)?;
+        // 💡️ `Infer` never touches the retained command-page lane, so it must not be gated on the
+        // command-lane instance being open (whose first `InstanceOpen` deliberately yields a
+        // `budget.exceeded` retry). It activates its own guest on first use — `ensure_inference_route`.
+        if !matches!(commands.first(), Some(AppCommand::Infer(_))) {
+            self.ensure_instance(instance)?;
+        }
         let mut frames = Vec::with_capacity(commands.len());
         for command in commands {
             let frame = match command {
@@ -1033,6 +1162,14 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                     other => return Err(Self::not_wired("TransactionUndo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
+                // ✅️ Real and general: every plugin-declared inference service, not just the one
+                // hub-backed GIS Map job. Routed through `ArtifactInferenceRouter` exactly the way
+                // `🏃️run`'s own plugin reactor routes `job_infer`, so the guest's result is the
+                // guest's own — this arm fabricates nothing and short-circuits nothing.
+                AppCommand::Infer(command) => {
+                    let result = self.infer_real(&command)?;
+                    AppFrame::Inferred { inference_schema: result.inference_schema, complete: result.complete, payload: result.canonical_payload }
+                }
                 AppCommand::TransactionRedo { group_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionRedo { seq: 0, group_id: group_id.clone() })? {
                     store::AppFrame::Done { .. } => AppFrame::TransactionRedone { group_id },
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
@@ -1142,8 +1279,13 @@ impl RoutingArtifactChannel {
 
     fn plugin_id_for(&self, instance: u32, commands: &[AppCommand]) -> Result<String, Fault> {
         for command in commands {
-            if let AppCommand::PureCommand { capability_id, .. } = command {
-                return resolve_plugin_for_capability_in(&self.catalog, capability_id).map_err(routing_fault);
+            match command {
+                AppCommand::PureCommand { capability_id, .. } => return resolve_plugin_for_capability_in(&self.catalog, capability_id).map_err(routing_fault),
+                // 💡️ An inference carries no capability id, but it DOES name its own route owner
+                // (the declared row's contributor) — so it routes directly, never through the
+                // `instance` slot encoding `prepare_action` mints for the mutation protocol.
+                AppCommand::Infer(infer) if !infer.plugin_id.is_empty() => return Ok(infer.plugin_id.clone()),
+                _ => {}
             }
         }
         plugin_for_instance_slot(&self.catalog, instance).ok_or_else(|| {
@@ -1929,7 +2071,7 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#region 💡️Inference
 use semio_framework_os_kernel::os_directory::DocumentScope;
 fn is_gis_map_descriptor(artifact_kind: &str, artifact_schema: &str) -> bool {
-    artifact_schema == crate::inference::GIS_MAP_INFERENCE_DOCUMENT_SCHEMA && artifact_kind == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND
+    artifact_schema == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_SCHEMA && artifact_kind == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND
 }
 
 /// 💡️ The authenticated hub GIS Map inference facade. Every method here is a thin, typed pass to

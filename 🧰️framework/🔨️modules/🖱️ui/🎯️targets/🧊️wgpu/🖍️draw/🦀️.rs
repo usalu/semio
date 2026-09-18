@@ -560,6 +560,12 @@ impl MeshGpuTable {
         self.upload.is_none()
     }
 
+    /// 🐕️ How far the in-flight mesh upload has walked its lease: `(vertex, index)`, `(0, 0)` when no
+    /// cursor is held. The presentation watchdog's only window into a per-scalar upload.
+    pub fn upload_progress(&self) -> (u32, u32) {
+        self.upload.as_ref().map_or((0, 0), |cursor| (cursor.vertex, cursor.index))
+    }
+
     fn begin_retirement(&mut self, selector: MeshGpuRetirementSelector) -> Result<(), &'static str> {
         if let Some(retirement) = self.retirement.as_ref() {
             return (retirement.selector == selector).then_some(()).ok_or("mesh GPU retirement authority is occupied");
@@ -3357,7 +3363,16 @@ impl UiPipelines {
         Ok(())
     }
 
-    /// 🌐 Encodes one retained mesh instance under one scene-pass owner.
+    /// 🌐 Encodes one retained mesh instance under one scene-pass owner, answering whether it drew.
+    ///
+    /// 🕰️ A mesh key/version that is not resident draws NOTHING and is not a fault, exactly as
+    /// [`Self::encode_prepared_world_textured`] answers a raster whose pixels have not landed. A miss
+    /// used to be a FATAL `present_step` fault that quarantined the whole surface for the rest of the
+    /// session — one unbacked ghost draw killed the puzzle3d journey mid-flight (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-prepared-world-mesh-missing.md`). React simply
+    /// renders nothing until its loader resolves, so the skip is the parity behaviour; the source-side
+    /// residency law lives in `♾️infinite/🌍️world`'s `retain_ensured_world_draws`, and the skip is
+    /// reported once per transition by the host so a regression there stays readable.
     #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
     pub fn encode_prepared_world_instance<'a>(
         &'a mut self,
@@ -3375,7 +3390,8 @@ impl UiPipelines {
         translucent: bool,
         width: f32,
         height: f32,
-    ) -> Result<(), &'static str> {
+    ) -> Result<bool, &'static str> {
+        let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
         let globals = World3dGlobals { view_proj: pass_owner.view_proj, light_dir: [pass_owner.light_dir[0], pass_owner.light_dir[1], pass_owner.light_dir[2], 0.0] };
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -3383,12 +3399,11 @@ impl UiPipelines {
         let Some(instance_buffer) = frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_instance") else {
             return Err("prepared world instance buffer admission failed");
         };
-        let mesh = mesh_store.get_versioned(mesh_key, mesh_version).ok_or("prepared world mesh was missing")?;
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
         let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
-            return Ok(());
+            return Ok(true);
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_world_instance"),
@@ -3407,7 +3422,7 @@ impl UiPipelines {
         pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         pass.draw_indexed(0..mesh.index_count, 0, 0..1);
         pass.set_viewport(0.0, 0.0, width * scale, height * scale, 0.0, 1.0);
-        Ok(())
+        Ok(true)
     }
 
     /// 🖼️ Encodes one retained TEXTURED world quad — the reference underlay — under one scene-pass

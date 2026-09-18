@@ -489,7 +489,7 @@ impl Drop for PendingRasterCheckedOut {
             return;
         }
         let returned = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().get_token_mut(self.surface).is_some_and(|surface| surface.queue.hand_back(self.queue)));
-        debug_assert!(returned, "checked-out raster producer must return to its exact FIFO slot");
+        debug_assert!(returned || std::thread::panicking(), "checked-out raster producer must return to its exact FIFO slot");
     }
 }
 
@@ -1918,6 +1918,9 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
     engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
     world3d_surface_debug_log(scene, bounds, ctx, state);
+    // 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
+    // reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
+    crate::interpreter::note_world3d_live_camera(&scene.surface_id, infinite_world::world::world3d_live_camera_json(state));
     cursor.finish()
 }
 

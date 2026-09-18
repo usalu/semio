@@ -10,6 +10,7 @@ const GPU_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱�
 const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
 const PREPARED_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs");
 const ENGINE_CANVAS_SOURCE: &str = include_str!("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
+const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-draw-unit/🦀️.rs");
 
 /// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
 /// else in the chain can: `AppFramePreparation` answers an empty `JobFault`, `ActiveFrameBuild`
@@ -109,7 +110,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let present_step = gpu.find("pub fn prepared_present_step").unwrap_or(0);
     let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
     let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
-    let engine_reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
+    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected)";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
     let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
     let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
@@ -186,7 +187,8 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && draw.contains("view: source.view.take()")
         && draw.contains("texture: source.texture.take()")
         && !draw.contains("HashMap<String, RasterTexture>")
-        && gpu.contains("self.ensure_raster_texture_step(key, pixels")
+        && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels)")
+        && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels)")
         && gpu.contains("pub fn stage_engine_texture")
         && gpu.contains("view: wgpu::TextureView")
         && gpu.contains(".stage_gpu_bind_group")
@@ -194,20 +196,23 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && begin < present_step
         && engine.matches(engine_reservation).count() == 1
         && engine_reservation_index < first_engine_allocation
-        && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(&admission, expected)", "create_target_texture", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_target_view_allocation(&admission, expected)", ".create_view", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_renderer_allocation(&admission, expected)", "Renderer::new", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_replacement_texture_allocation(&admission, expected)", "create_target_texture", 2)
-        && guarded_allocations(engine, "gpu.validate_engine_replacement_view_allocation(&admission, expected)", ".create_view", 2)
-        && engine.matches("gpu.retain_engine_allocation_fault(admission, Some(texture), None)").count() == 2
-        && engine.contains("gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view))")
-        && engine.contains("gpu.retain_engine_allocation_fault(admission, Some(replacement_texture), None)")
-        && engine.contains("RasterTextureStageFault::Returned { fault, admission, texture, view }")
-        && engine.contains("surface.texture = texture")
-        && engine.contains("surface.view = view")
-        && engine.contains("RasterTextureStageFault::Retained(fault)")
-        && engine.contains("let published_view = std::mem::replace(&mut surface.view, replacement_view)")
+        && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(admission, expected)", "create_target_texture", 1)
+        && guarded_allocations(engine, "gpu.validate_engine_target_view_allocation(admission, expected)", ".create_view", 1)
+        && guarded_allocations(engine, "gpu.validate_engine_renderer_allocation(admission, expected)", "Renderer::new", 1)
+        && guarded_allocations(engine, "gpu.validate_engine_replacement_texture_allocation(admission, expected)", "create_target_texture", 1)
+        && guarded_allocations(engine, "gpu.validate_engine_replacement_view_allocation(admission, expected)", ".create_view", 1)
+        && engine.contains("Err(RasterTextureStageFault::Returned { fault, admission, texture, view }) => {")
+        && engine.contains("build.admission = Some(admission);")
+        && engine.contains("build.texture = Some(texture);")
+        && engine.contains("build.view = Some(view);")
+        && engine.contains("Err(RasterTextureStageFault::Retained(fault)) => {")
+        && engine.contains("gpu.cancel_engine_texture_admission(admission)?;")
+        && engine.contains("let (Some(renderer), Some(texture), Some(view)) = (candidate.renderer.take(), candidate.replacement_texture.take(), candidate.replacement_view.take())")
+        && engine.contains("let published = EngineGpuSurface { vello: renderer, texture, view };")
+        && engine.contains("if let Some(displaced) = self.live.replace(published) {")
+        && engine.contains("self.retirement = Some(EngineGpuRetirement::new(displaced));")
         && !engine.contains("surface.view.clone()")
+        && !engine.contains("surface.texture.clone()")
         && glue.contains("struct RuntimeRasterOperationAuthority")
         && glue.contains("exhausted: AtomicBool")
         && glue.contains("compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)")
@@ -241,7 +246,7 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
             (DRAW_SOURCE.replace("view: Option<wgpu::TextureView>", "view_erased: bool"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.replace("view: wgpu::TextureView", "view: &wgpu::TextureView"), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("gpu.reserve_engine_texture", "gpu.realize_without_reservation")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("let published_view = std::mem::replace(&mut surface.view, replacement_view)", "let published_view = surface.view.clone()")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("self.retirement = Some(EngineGpuRetirement::new(displaced));", "drop(displaced);")),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE.to_string()),
             (
                 DRAW_SOURCE.to_string(),
@@ -309,31 +314,31 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_texture_allocation(&admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_texture_allocation(admission, expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_view_allocation(&admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_view_allocation(admission, expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_renderer_allocation(&admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_renderer_allocation(admission, expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_texture_allocation(&admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_texture_allocation(admission, expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_view_allocation(&admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_view_allocation(admission, expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.replace(
@@ -368,15 +373,15 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
                 LIBRARY_SOURCE.to_string(),
                 ENGINE_CANVAS_SOURCE.to_string(),
             ),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("surface.texture = texture", "drop(texture)")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("surface.view = view", "drop(view)")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.texture = Some(texture);", "drop(texture);")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.view = Some(view);", "drop(view);")),
         ];
     assert_eq!(mutations.len(), 38);
     for (draw, gpu, glue, engine) in mutations {
         assert!(!retained_raster_contract(&draw, &gpu, &glue, &engine));
     }
-    let reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
-    let first_allocation = "let texture = create_target_texture(gpu.device(), width, height);";
+    let reservation = "let admission = build.surface.id.with_raster_key(|key| gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected))?;";
+    let first_allocation = "build.texture = Some(create_target_texture(gpu.device(), build.width, build.height));";
     let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
     assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
 }
@@ -793,6 +798,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
+        pointer_capture: shell::PointerCapture::default(),
         modifiers: PointerModifiers::default(),
         wheel: crate::AppWheel::default(),
         space_pressed: false,
@@ -866,6 +872,13 @@ fn asset_poll_does_not_accumulate_completed_response_vectors() {
     assert!(!LIBRARY_SOURCE.contains("let mut fetched_ui_images = Vec::new()"));
 }
 
+/// 🔗️ The presenter contract's own cross-reference to the law below, checked by the COMPILER rather
+/// than by a source-text match: the census in `presenter_retirement_contract` only states that
+/// freshness is decided once because this law states that the authority and a candidate witness move
+/// independently. Renaming or deleting the law fails the build instead of quietly narrowing the
+/// contract, which is exactly how the old text-marker version went stale.
+const _: fn() = runtime_presentation_authority_and_candidate_identity_change_independently;
+
 #[test]
 fn runtime_presentation_authority_and_candidate_identity_change_independently() {
     let authority = RuntimePresentationAuthority::new();
@@ -925,7 +938,37 @@ fn runtime_raster_operation_authority_exhausts_permanently_without_aba() {
     assert_eq!(authority.0.next_operation.load(Ordering::Acquire), u64::MAX);
 }
 
-fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &str, host: &str, winit: &str) -> bool {
+/// 🎟️ LAW (source census): the presentation authority is read ONCE per frame, by the BUILD, and the
+/// presenter is then bound to that frozen pair for the rest of the presentation.
+///
+/// The census walks the four hand-offs that make that one claim true:
+///
+/// 1. **The build asks for its own generation.** `AppFrameTransaction::step` refuses to advance when
+///    `presentation_witness_for(self.generation.0)` answers nothing (a superseded input generation),
+///    and the `AppFrameTransactionPhase::Build` arm asks again to mint the `FrameBuildCursor`. Two
+///    reads, both keyed on the transaction's OWN generation, and the second one writes what it read
+///    into the authority with `admit_build_presentation_witness` — the build declares the pair it
+///    was admitted under instead of leaving the presenter to guess.
+/// 2. **The presenter reads `admitted()`, never `current()`.** `current()` is a moving target:
+///    `mark_scene_changed` fires from every runtime completion the host pumps, several per tick, and
+///    `observe_presentation_input_generation` is republished on every `build_and_publish_snapshot`.
+///    A presenter that re-read the live pair at admission refused packets that had been built
+///    correctly against the authority as it stood when the build started and turned them into
+///    surface faults (`prepared render revision is stale: live=35, packet=27` →
+///    `worker-present-failed`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// 3. **Acknowledgement compares against the FROZEN witness.** `AppPresentPhase::BeginGpu` mints one
+///    `RasterTextureWitness` from the admitted pair; the acknowledge phase compares the packet to
+///    THAT witness, so a presentation that legitimately spans more than one host tick is never
+///    faulted by an authority that moved underneath it.
+/// 4. **Every owner is returned by a step, never dropped** — the prepared witness ladder, the fixed
+///    mesh GPU table, and the host's `close_world_owners_step` drain.
+///
+/// **React ref:** R3F's demand frameloop is the same contract. `invalidate()`
+/// (`🌐️World3dHost/🟦️.tsx:2358` and its twelve siblings) marks the scene changed and the next raf
+/// renders the scene AS IT STANDS when the render begins; React never refuses a queued frame because
+/// something invalidated again in between — the later `invalidate` supersedes it with a new frame.
+/// Freshness is the producer's decision on both targets.
+fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &str, host: &str, winit: &str, laws: &str) -> bool {
     let table = &draw[draw.find("pub struct MeshGpuTable").unwrap_or(0)..draw.find("pub const WORLD_GLOBALS_SLOT_SIZE").unwrap_or(draw.len())];
     prepared.contains("pub struct PreparedPresenterWitness")
         && prepared.contains("pub fn stage_presented")
@@ -943,15 +986,20 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("self.gate.acknowledge_presented(witness)")
         && glue.contains("struct RuntimePresentationAuthority")
         && glue.contains("presentation_authority: RuntimePresentationAuthority")
-        && glue.matches(concat!("runtime.presentation_", "witness_for(self.generation.0)")).count() == 1
+        && glue.matches(concat!("runtime.presentation_", "witness_for(self.generation.0)")).count() == 2
+        && glue.contains("if base_witness != current_witness {")
+        && glue.contains("self.base_witness = Some(current_witness);")
+        && glue.contains(concat!("runtime.admit_build_presentation_", "witness(presentation_witness);"))
+        && glue.contains("self.build_cursor = Some(FrameBuildCursor::new(presentation_witness));")
         && glue.contains("presentation_witness.scene_revision")
         && glue.contains("presentation_witness.input_generation")
-        && glue.matches(concat!("let expected = self.presentation_", "authority.current();")).count() == 2
+        && glue.matches(concat!("let expected = self.presentation_", "authority.admitted();")).count() == 1
+        && !glue.contains(concat!("let expected = self.presentation_", "authority.current();"))
         && glue.contains("begin_prepared(&token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
         && glue.contains("begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
-        && glue.contains("packet.scene_revision() != expected.scene_revision || packet.preview_generation() != expected.input_generation")
-        && glue.matches(concat!("self.presentation_authority.", "mark_scene_changed();")).count() == 2
-        && glue.contains("runtime_presentation_authority_and_candidate_identity_change_independently")
+        && glue.contains("self.raster_operation_authority.begin(expected.scene_revision, expected.input_generation)")
+        && glue.contains(concat!("raster_witness.scene_revision != packet.scene_revision() || raster_witness.", "preview_generation != packet.preview_generation()"))
+        && glue.matches("mark_scene_changed();").count() == 2
         && !glue.contains(concat!("let revision = packet.", "scene_revision();"))
         && !glue.contains(concat!("let generation = packet.", "preview_generation();"))
         && !glue.contains(concat!("scene_revision: packet.", "scene_revision()"))
@@ -973,9 +1021,9 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && draw.contains("slots: [Option<MeshGpuEntry<T>>; MESH_GPU_TABLE_CAPACITY]")
         && draw.contains("pub fn evict_mesh_step")
         && draw.contains("pub fn evict_mesh_except_step")
-        && draw.contains("mesh_gpu_retirement_preserves_acknowledged_versions")
+        && laws.contains("fn mesh_gpu_retirement_preserves_acknowledged_versions()")
         && draw.contains("pub fn close_step(&mut self) -> bool")
-        && draw.contains("fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner")
+        && laws.contains("fn fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner()")
         && !table.contains("HashMap")
         && !table.contains(".retain(")
         && gpu.contains("self.mesh_store.evict_mesh_except_step(key, keep_versions)")
@@ -984,90 +1032,80 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
 
 #[test]
 fn presenter_ack_retirement_source_mutations_are_denied() {
-    assert!(presenter_retirement_contract(LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, WINT_APP_SOURCE));
-    let mutations = [
-        (LIBRARY_SOURCE.replace("AppPresentPhase::Acknowledge", "AppPresentPhase::Fullscreen"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (
-            LIBRARY_SOURCE.replace("self.gate.acknowledge_presented(witness)", "drop(witness); self.gate.acknowledge_presented_unchecked()"),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.replace("pub fn abort_pending", "fn abandon_pending"), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (
-            LIBRARY_SOURCE.to_string(),
-            PREPARED_SOURCE.replace("last_valid: Option<PreparedRenderPacket>", "last_valid: Option<Arc<PreparedRenderPacket>>"),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (LIBRARY_SOURCE.replace("previous.retire_step()", "drop(previous)"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (LIBRARY_SOURCE.replace("AppPresentPhase::Stage", "AppPresentPhase::Render"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (LIBRARY_SOURCE.replace("AppPresentPhase::Aborted", "AppPresentPhase::Render"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (
-            LIBRARY_SOURCE.to_string(),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.replace("self.mesh_store.evict_mesh_except_step(key, keep_versions)", "self.mesh_store.evict_mesh_step(key)"),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (
-            LIBRARY_SOURCE.to_string(),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.replace("MESH_GPU_TABLE_CAPACITY: usize = 256", "MESH_GPU_TABLE_CAPACITY: usize = usize::MAX"),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (
-            LIBRARY_SOURCE.to_string(),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.replace("FixedMeshGpuRegistry<GpuMeshBuffers>", "std::collections::HashMap<String, GpuMeshBuffers>"),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.replace("pub fn close_step(&mut self) -> bool", "pub fn close_all(&mut self) -> bool"), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.replace("presenter.world_owners_terminal_is_empty()", "true"), WINT_APP_SOURCE.to_string()),
-        (
-            LIBRARY_SOURCE.to_string(),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.replace(".admit_next_frame(|| frame_build.poll_runtime_and_resubmit", ".poll_runtime_and_resubmit"),
-        ),
-        (
-            LIBRARY_SOURCE.replacen(
-                concat!("let expected = self.presentation_", "authority.current();"),
-                concat!("let expected = RuntimePresentationWitness { scene_revision: packet.", "scene_revision(), input_generation: packet.", "preview_generation() };"),
-                1,
-            ),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (
-            LIBRARY_SOURCE.replace(concat!("runtime.presentation_", "witness_for(self.generation.0)"), "Some(RuntimePresentationWitness { scene_revision: self.generation.0, input_generation: self.generation.0 })"),
-            PREPARED_SOURCE.to_string(),
-            GPU_SOURCE.to_string(),
-            DRAW_SOURCE.to_string(),
-            OS_HOST_SOURCE.to_string(),
-            WINT_APP_SOURCE.to_string(),
-        ),
-        (LIBRARY_SOURCE.replace(concat!("self.presentation_authority.", "mark_scene_changed();"), ""), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
-        (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.replace("self.runtime.observe_presentation_input_generation(build_generation.0);", "")),
-    ];
-    for (glue, prepared, gpu, draw, host, winit) in mutations {
-        assert!(!presenter_retirement_contract(&glue, &prepared, &gpu, &draw, &host, &winit));
+    assert!(presenter_retirement_contract(LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, WINT_APP_SOURCE, DRAW_LAWS_SOURCE));
+    for (source, from, to, once) in PRESENTER_RETIREMENT_MUTATIONS {
+        let mutated = if *once { source.text().replacen(from, to, 1) } else { source.text().replace(from, to) };
+        assert_ne!(mutated.as_str(), source.text(), "mutation '{from}' must actually rewrite {source:?} — a no-op edit proves nothing");
+        let (glue, prepared, gpu, draw, host, laws, winit) = source.substitute(&mutated);
+        assert!(!presenter_retirement_contract(glue, prepared, gpu, draw, host, winit, laws), "{source:?} mutation '{from}' -> '{to}' was accepted by the presenter retirement contract");
     }
 }
+
+/// 🧬️ Which source of the presenter ladder a mutation rewrites.
+#[derive(Clone, Copy, Debug)]
+enum PresenterContractSource {
+    Glue,
+    Prepared,
+    Gpu,
+    Draw,
+    Host,
+    Laws,
+    Winit,
+}
+
+impl PresenterContractSource {
+    fn text(self) -> &'static str {
+        match self {
+            PresenterContractSource::Glue => LIBRARY_SOURCE,
+            PresenterContractSource::Prepared => PREPARED_SOURCE,
+            PresenterContractSource::Gpu => GPU_SOURCE,
+            PresenterContractSource::Draw => DRAW_SOURCE,
+            PresenterContractSource::Host => OS_HOST_SOURCE,
+            PresenterContractSource::Laws => DRAW_LAWS_SOURCE,
+            PresenterContractSource::Winit => WINT_APP_SOURCE,
+        }
+    }
+
+    fn substitute<'a>(self, mutated: &'a str) -> (&'a str, &'a str, &'a str, &'a str, &'a str, &'a str, &'a str) {
+        let mut sources = [LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, DRAW_LAWS_SOURCE, WINT_APP_SOURCE];
+        sources[self as usize] = mutated;
+        (sources[0], sources[1], sources[2], sources[3], sources[4], sources[5], sources[6])
+    }
+}
+
+/// 🧪️ Every rewrite `presenter_retirement_contract` must refuse — `(source, from, to, replace_once)`.
+/// Each one is a real regression this ladder has already suffered or a shortcut it invites, so a
+/// clause that stops discriminating shows up here as an accepted mutation rather than as silence.
+const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bool)] = &[
+    (PresenterContractSource::Glue, "AppPresentPhase::Acknowledge", "AppPresentPhase::Fullscreen", false),
+    (PresenterContractSource::Glue, "self.gate.acknowledge_presented(witness)", "drop(witness); self.gate.acknowledge_presented_unchecked()", false),
+    (PresenterContractSource::Glue, "previous.retire_step()", "drop(previous)", false),
+    (PresenterContractSource::Glue, "AppPresentPhase::Stage", "AppPresentPhase::Render", false),
+    (PresenterContractSource::Glue, "AppPresentPhase::Aborted", "AppPresentPhase::Render", false),
+    (PresenterContractSource::Glue, "let expected = self.presentation_authority.admitted();", "let expected = self.presentation_authority.current();", false),
+    (PresenterContractSource::Glue, "let expected = self.presentation_authority.admitted();", "let expected = RuntimePresentationWitness { scene_revision: packet.scene_revision(), input_generation: packet.preview_generation() };", true),
+    (PresenterContractSource::Glue, "runtime.admit_build_presentation_witness(presentation_witness);", "", false),
+    (PresenterContractSource::Glue, "runtime.presentation_witness_for(self.generation.0)", "Some(RuntimePresentationWitness { scene_revision: self.generation.0, input_generation: self.generation.0 })", false),
+    (PresenterContractSource::Glue, "if base_witness != current_witness {", "if false {", false),
+    (PresenterContractSource::Glue, "raster_witness.scene_revision != packet.scene_revision() || raster_witness.preview_generation != packet.preview_generation()", "false", false),
+    (PresenterContractSource::Glue, "mark_scene_changed();", "", true),
+    (PresenterContractSource::Glue, "if !gpu.close_mesh_upload_step()", "if false", false),
+    (PresenterContractSource::Prepared, "pub fn abort_pending", "fn abandon_pending", false),
+    (PresenterContractSource::Prepared, "last_valid: Option<PreparedRenderPacket>", "last_valid: Option<Arc<PreparedRenderPacket>>", false),
+    (PresenterContractSource::Prepared, "pub fn retire_step(&mut self) -> bool", "pub fn retire_all(&mut self)", false),
+    (PresenterContractSource::Gpu, "self.mesh_store.evict_mesh_except_step(key, keep_versions)", "self.mesh_store.evict_mesh_step(key)", false),
+    (PresenterContractSource::Gpu, "self.mesh_store.close_step()", "drop(&mut self.mesh_store)", false),
+    (PresenterContractSource::Draw, "MESH_GPU_TABLE_CAPACITY: usize = 256", "MESH_GPU_TABLE_CAPACITY: usize = usize::MAX", false),
+    (PresenterContractSource::Draw, "FixedMeshGpuRegistry<GpuMeshBuffers>", "std::collections::HashMap<String, GpuMeshBuffers>", false),
+    (PresenterContractSource::Draw, "pub fn close_step(&mut self) -> bool", "pub fn close_all(&mut self) -> bool", false),
+    (PresenterContractSource::Draw, "pub fn evict_mesh_except_step", "pub fn evict_mesh_all", false),
+    (PresenterContractSource::Laws, "fn mesh_gpu_retirement_preserves_acknowledged_versions()", "fn mesh_gpu_retirement_drops_everything()", false),
+    (PresenterContractSource::Laws, "fn fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner()", "fn fixed_mesh_gpu_registry_grows()", false),
+    (PresenterContractSource::Host, "presenter.world_owners_terminal_is_empty()", "true", false),
+    (PresenterContractSource::Host, "presenter.close_world_owners_step()", "drop(presenter)", false),
+    (PresenterContractSource::Winit, ".admit_next_frame(|| frame_build.poll_runtime_and_resubmit", ".poll_runtime_and_resubmit", false),
+    (PresenterContractSource::Winit, "self.runtime.observe_presentation_input_generation(build_generation.0);", "", false),
+];
 
 /// 🥽️📥️ The url half of the World3d mesh lane, end to end inside one surface: a fetched GLB becomes
 /// the RESIDENT mesh under the very id the wire names it by, carrying real positions and indices, in
@@ -1280,18 +1318,61 @@ fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity()
 /// over it, so the window cap's own `Puzzle 3D` title and its Focus/Close controls were painted and
 /// then blurred away by the very region that labels them — the batch renderer has always split the
 /// two with `LayerBatchFilter` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+///
+/// 🪟️ …EXCEPT a glass-content layer a LATER glass region fully encloses: that one is encoded into
+/// the scene so the covering region frosts it, which is how React's introduction veil blurs the whole
+/// shell except the card it spotlights (`useIntroductionElevation`). Containment, not overlap, is the
+/// predicate, so a context menu clipping a panel's corner never pushes that panel into the backdrop.
 #[test]
 fn glass_foreground_scalars_are_encoded_after_the_glass_pass_and_never_into_the_scene() {
     assert!(GPU_SOURCE.contains("fn prepared_draw_scalar_is_glass_foreground"), "the ladder classifies a scalar by its layer's glass ownership");
-    assert!(GPU_SOURCE.contains("layer.foreground_of.is_some()"), "using the draw list's own glass-content marker");
+    assert!(GPU_SOURCE.contains("draw.layers.get(layer)?.foreground_of"), "using the draw list's own glass-content marker");
+    assert!(GPU_SOURCE.contains("fn prepared_foreground_scalar_is_enclosed"), "and a layer a LATER region encloses goes back into the scene, so the veil frosts it");
+    assert!(GPU_SOURCE.contains("fn prepared_glass_region_covers"), "containment, never overlap, decides that");
     let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
     let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the scene command phase");
     let commands = &commands[..commands.find("PreparedGpuPresentPhase::BlurScene =>").unwrap_or(commands.len())];
-    assert!(commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor))"), "the scene phase skips glass-foreground scalars");
+    assert!(commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"), "the scene phase skips glass-foreground scalars no later region encloses");
     assert!(commands.contains("PreparedDrawTarget::Scene"), "and everything else goes to the scene");
     let foreground = ladder.split("PreparedGpuPresentPhase::ForegroundCommands =>").nth(1).expect("the glass-foreground phase");
     let foreground = &foreground[..foreground.find("PreparedGpuPresentPhase::Present =>").unwrap_or(foreground.len())];
-    assert!(foreground.contains("if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor))"), "and only they are re-encoded later");
+    assert!(foreground.contains("if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"), "and only they are re-encoded later");
     assert!(foreground.contains("PreparedDrawTarget::Composite"), "onto the composite the glass pass already wrote");
     assert!(GPU_SOURCE.contains("self.foreground_command"), "and its own index is part of the watchdog signature");
+}
+
+/// 🧷️ LAW: a prepared world draw whose mesh is not resident at SUBMIT is skipped and reported, never
+/// a fault — the pinning law's last line of defence.
+///
+/// 🩸️ `mesh_store.get_versioned` answers a prepared world draw hundreds of host steps after the build
+/// that authored it, and a miss used to be `Err("prepared world mesh was missing")`, which
+/// `AppPresentPhase::Render` turns into `worker-present-failed` and the browser shell turns into a
+/// dead page. One unbacked ghost draw — a placeholder mesh lease still being admitted — therefore
+/// killed the whole puzzle3d journey at t≈42.7 s (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w11a-prepared-world-mesh-missing.md`). React keeps rendering: its loader simply returns nothing
+/// until the mesh resolves, which is exactly what a skipped draw is.
+#[test]
+fn a_non_resident_prepared_world_mesh_is_skipped_and_reported_not_faulted() {
+    assert!(DRAW_SOURCE.contains("let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };"), "the encoder answers a non-resident mesh with a skip");
+    assert!(!DRAW_SOURCE.contains("prepared world mesh was missing"), "and no fault string survives anywhere in the encoder");
+    assert!(GPU_SOURCE.contains("self.missing_world_mesh = Some((draw_owner.mesh_key.clone(), draw_owner.mesh_version));"), "the GPU context records exactly which mesh was skipped");
+    assert!(GPU_SOURCE.contains("pub fn take_missing_world_mesh"), "and hands it over once");
+    assert!(LIBRARY_SOURCE.contains("os_host prepared world mesh was not resident, draw skipped"), "which the host reports on the transition");
+    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    assert!(render[..render.find("AppPresentPhase::CloseGpu =>").unwrap_or(render.len())].contains("take_missing_world_mesh()"), "from the phase that submits the frame");
+}
+
+/// 🐕️ LAW: the presentation watchdog sees WITHIN-item upload progress, so a healthy mesh upload can
+/// never look like a frozen cursor and a frozen one is still named.
+///
+/// 🩸️ `AppPresentCursor::upload` only moves when a whole upload item completes, and `ensure_mesh_step`
+/// writes ONE vertex per step — so a 293-vertex mesh froze the watchdog signature for 293 steps and
+/// the host's gate census could only say `phase=Some(Uploads) … stall-steps=293` with no reason
+/// attached (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-prepared-world-mesh-missing.md`).
+#[test]
+fn the_present_watchdog_signature_carries_within_item_upload_progress() {
+    assert!(DRAW_SOURCE.contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
+    assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
+    assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
+    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress)"), "as the fifth term of the progress signature");
 }

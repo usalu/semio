@@ -605,7 +605,7 @@ pub struct TsdfExtractionPreparation {
     /// 🪓️ One bit per domain point: already queued by the flood fill.
     queued: Vec<u64>,
     /// 🪓️ Flood-fill frontier (domain indices).
-    frontier: std::collections::VecDeque<u32>,
+    frontier: VecDeque<u32>,
     carved: bool,
     /// 🧵️ Per surface cube: the net vertex of each of its twelve local edges' crossing cluster
     /// (`u32::MAX` on an edge without a crossing).
@@ -675,7 +675,7 @@ impl TsdfExtractionPreparation {
             cursor: [0; 3],
             outside: vec![0; words],
             queued: vec![0; words],
-            frontier: std::collections::VecDeque::new(),
+            frontier: VecDeque::new(),
             carved: false,
             cube_vertices: BTreeMap::new(),
             positions: Vec::new(),
@@ -818,25 +818,45 @@ impl TsdfExtractionPreparation {
             }
             root
         }
+        // 🧵️ Faces with four crossings first: the corners alternate, and each inside corner's two
+        // edges (edge k-1 and edge k meet at corner k) pair up, keeping the inside corners apart.
+        // The two pairs of such a face are then never joined by the cube's other faces — joining
+        // them would put four quads on one net edge (both cubes sharing the face merging both
+        // pairs), the one way this net came out non-manifold.
+        let mut separated: Vec<(usize, usize)> = Vec::new();
+        for face in CUBE_FACES {
+            let edges: [usize; 4] = std::array::from_fn(|k| cube_edge_index(face[k], face[(k + 1) % 4]));
+            if (0..4).filter(|&k| crossing[edges[k]]).count() != 4 {
+                continue;
+            }
+            let mut pairs: Vec<usize> = Vec::with_capacity(2);
+            for k in 0..4 {
+                if inside[face[k]] {
+                    let (a, b) = (find(&mut parent, edges[(k + 3) % 4]), find(&mut parent, edges[k]));
+                    parent[a] = b;
+                    pairs.push(edges[k]);
+                }
+            }
+            if let [first, second] = pairs[..] {
+                separated.push((first, second));
+            }
+        }
         for face in CUBE_FACES {
             let edges: [usize; 4] = std::array::from_fn(|k| cube_edge_index(face[k], face[(k + 1) % 4]));
             let crossings: Vec<usize> = (0..4).filter(|&k| crossing[edges[k]]).collect();
-            match crossings.len() {
-                2 => {
-                    let (a, b) = (find(&mut parent, edges[crossings[0]]), find(&mut parent, edges[crossings[1]]));
-                    parent[a] = b;
-                }
-                4 => {
-                    // Every edge crosses: the corners alternate. Pair each inside corner's two
-                    // edges (edge k-1 and edge k meet at corner k), keeping the inside corners apart.
-                    for k in 0..4 {
-                        if inside[face[k]] {
-                            let (a, b) = (find(&mut parent, edges[(k + 3) % 4]), find(&mut parent, edges[k]));
-                            parent[a] = b;
-                        }
-                    }
-                }
-                _ => {}
+            if crossings.len() != 2 {
+                continue;
+            }
+            let (a, b) = (find(&mut parent, edges[crossings[0]]), find(&mut parent, edges[crossings[1]]));
+            if a == b {
+                continue;
+            }
+            let would_join_separated = separated.iter().any(|&(first, second)| {
+                let (p, q) = (find(&mut parent, first), find(&mut parent, second));
+                (p == a && q == b) || (p == b && q == a)
+            });
+            if !would_join_separated {
+                parent[a] = b;
             }
         }
         let mut sums = [([0.0f64; 3], 0usize); 12];
@@ -2259,13 +2279,17 @@ fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &Has
             neighbors.entry(b).or_default().insert(a);
         }
     }
-    let free: Vec<u32> = new_vertices.iter().copied().collect();
+    // 🎲️ Sorted, not set order: the conjugate-gradient rounding depends on the unknown and
+    // neighbour order, and a mesh must not differ between two runs of the same input.
+    let mut free: Vec<u32> = new_vertices.iter().copied().collect();
+    free.sort_unstable();
     let index_of: HashMap<u32, usize> = free.iter().enumerate().map(|(i, &v)| (v, i)).collect();
     let n = free.len();
     let mut triplets = Vec::new();
     let mut rhs = [crate::algebra::VecD::zeros(n), crate::algebra::VecD::zeros(n), crate::algebra::VecD::zeros(n)];
     for (row, &v) in free.iter().enumerate() {
-        let nbrs = neighbors.get(&v).cloned().unwrap_or_default();
+        let mut nbrs: Vec<u32> = neighbors.get(&v).map(|set| set.iter().copied().collect()).unwrap_or_default();
+        nbrs.sort_unstable();
         let degree = nbrs.len().max(1) as f64;
         triplets.push((row, row, degree));
         for nb in nbrs {

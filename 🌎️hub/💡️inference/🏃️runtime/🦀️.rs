@@ -226,7 +226,7 @@ pub trait GisMapApprovalCheckpointPublisherV1: Send + Sync {
         document_write: Arc<GisMapDocumentWriteAuthorityV1>,
         attempt_lifetime_ms: u64,
         decision_now_ms: u64,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+    ) -> std::pin::Pin<Box<dyn Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
 
     /// 📡️ Announces an already-published and ledger-applied checkpoint without yielding or releasing DocumentWrite.
     fn checkpoint_applied(&self, checkpoint: &directory::os_directory::PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1>;
@@ -241,9 +241,9 @@ pub trait GisMapApprovalCheckpointPublisherV1: Send + Sync {
 /// reconciled only against that real proof. It must never use `ArtifactHandle::submit` or the
 /// generic `db.pathmap.v1` receiver, and it must never apply anything without explicit approval.
 pub trait GisMapApprovalCommitterV1: Send + Sync {
-    fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
-    fn undo<'a>(&'a self, request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
-    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+    fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+    fn undo<'a>(&'a self, request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>>;
 }
 
 /// 🚧️ Fail-closed committer for every deployment where no composition transaction is registered.
@@ -259,15 +259,15 @@ pub trait GisMapApprovalCommitterV1: Send + Sync {
 pub struct UnavailableGisMapApprovalCommitterV1;
 
 impl GisMapApprovalCommitterV1 for UnavailableGisMapApprovalCommitterV1 {
-    fn commit<'a>(&'a self, _request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn commit<'a>(&'a self, _request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async { Err(GisMapApprovalCommitErrorV1::Unavailable) })
     }
 
-    fn undo<'a>(&'a self, _request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn undo<'a>(&'a self, _request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async { Err(GisMapApprovalCommitErrorV1::Unavailable) })
     }
 
-    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async { Ok(()) })
     }
 }
@@ -467,11 +467,11 @@ pub struct RetainedGisMapApprovalCommitterV1 {
     publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1>,
     documents: Arc<tokio::sync::Mutex<HashMap<String, RetainedGisMapDocumentStateV1>>>,
     next_operation: Arc<AtomicU64>,
-    maintenance: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
-    cleanup_jobs: Arc<std::sync::Mutex<HashMap<String, u16>>>,
+    maintenance: Arc<Mutex<std::collections::HashSet<String>>>,
+    cleanup_jobs: Arc<Mutex<HashMap<String, u16>>>,
     closing: Arc<AtomicBool>,
-    parked_prepared: Arc<std::sync::Mutex<HashMap<String, GisMapPreparedApprovalV1>>>,
-    parked_requests: Arc<std::sync::Mutex<HashMap<String, GisMapAbandonedRequestV1>>>,
+    parked_prepared: Arc<Mutex<HashMap<String, GisMapPreparedApprovalV1>>>,
+    parked_requests: Arc<Mutex<HashMap<String, GisMapAbandonedRequestV1>>>,
     state_epoch: Arc<tokio::sync::watch::Sender<u64>>,
 }
 
@@ -482,8 +482,8 @@ struct GisMapAbandonedRequestTaskV1 {
 }
 
 struct GisMapMaintenanceCompletionV1 {
-    maintenance: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
-    cleanup_jobs: Arc<std::sync::Mutex<HashMap<String, u16>>>,
+    maintenance: Arc<Mutex<std::collections::HashSet<String>>>,
+    cleanup_jobs: Arc<Mutex<HashMap<String, u16>>>,
     state_epoch: Arc<tokio::sync::watch::Sender<u64>>,
     maintenance_key: String,
     job_id: Option<String>,
@@ -567,11 +567,11 @@ impl RetainedGisMapApprovalCommitterV1 {
             publisher,
             documents: Arc::new(tokio::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
             next_operation: Arc::new(AtomicU64::new(1)),
-            maintenance: Arc::new(std::sync::Mutex::new(std::collections::HashSet::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
-            cleanup_jobs: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(super::schema::JOB_CAPACITY))),
+            maintenance: Arc::new(Mutex::new(std::collections::HashSet::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            cleanup_jobs: Arc::new(Mutex::new(HashMap::with_capacity(super::schema::JOB_CAPACITY))),
             closing: Arc::new(AtomicBool::new(false)),
-            parked_prepared: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
-            parked_requests: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            parked_prepared: Arc::new(Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            parked_requests: Arc::new(Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
             state_epoch: Arc::new(tokio::sync::watch::channel(0).0),
         }
     }
@@ -961,7 +961,7 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     fn reserve_operations(&self) -> Result<[semio_framework_job::OperationId; 3], GisMapApprovalCommitErrorV1> {
-        let start = self.next_operation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| value.checked_add(3)).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)?;
+        let start = self.next_operation.try_update(Ordering::AcqRel, Ordering::Acquire, |value| value.checked_add(3)).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)?;
         Ok([semio_framework_job::OperationId(start), semio_framework_job::OperationId(start + 1), semio_framework_job::OperationId(start + 2)])
     }
 
@@ -1798,7 +1798,7 @@ impl RetainedGisMapApprovalCommitterV1 {
     ) -> Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1> {
         let (handle, scope) = {
             let documents = self.documents.lock().await;
-            let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }) = documents.get(key) else {
+            let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write: _ }) = documents.get(key) else {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             };
             if !Self::identity_matches(stored, identity) || stored_receipt != receipt || owners.generation != generation {
@@ -2327,7 +2327,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 }
 
 impl GisMapApprovalCommitterV1 for RetainedGisMapApprovalCommitterV1 {
-    fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         if let Err(error) = self.validate_prepared_request(&request) {
             return Box::pin(async move { Err(error) });
         }
@@ -2357,7 +2357,7 @@ impl GisMapApprovalCommitterV1 for RetainedGisMapApprovalCommitterV1 {
         Box::pin(self.commit_retained(request, owner, preflight))
     }
 
-    fn undo<'a>(&'a self, request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn undo<'a>(&'a self, request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         let preflight = match Self::preflight_undo(&request) {
             Ok(preflight) => preflight,
             Err(error) => return Box::pin(async move { Err(error) }),
@@ -2369,7 +2369,7 @@ impl GisMapApprovalCommitterV1 for RetainedGisMapApprovalCommitterV1 {
         Box::pin(self.commit_undo_retained(request, owner, preflight))
     }
 
-    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+    fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(RetainedGisMapApprovalCommitterV1::close(self))
     }
 }
@@ -3199,7 +3199,7 @@ async fn drive_retained_gis_map_job(owner: RetainedInferenceRunOwnerV1, ready: o
         let outcome = owner.runtime.infer(&owner.identity, &owner.job_id, &owner.base, &owner.control, &mut |completed, total| {
             let now_ms = owner.runtime.fresh_now_ms()?;
             if completed > last && appended < super::schema::PROGRESS_MAX_CURSOR {
-                let progress_cursor = owner.runtime.ledger().heartbeat(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, completed, total, now_ms)?;
+                let _progress_cursor = owner.runtime.ledger().heartbeat(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, completed, total, now_ms)?;
                 appended += 1;
                 last = completed;
                 #[cfg(feature = "integration-fixtures")]

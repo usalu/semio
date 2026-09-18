@@ -52,7 +52,6 @@ export const WithControls: Story = {
   args: {
     id: "controls-window",
     children: <WindowContent title="Window with Controls" />,
-    showControls: true,
     onMaximize: () => {},
     onMinimize: () => {},
     onClose: () => {},
@@ -262,7 +261,6 @@ export const WithControlsMeasuresEngagementAndUtilityBar: Story = {
     active: true,
     children: <WindowContent title="Every Rail at Once" />,
     fill: true,
-    showControls: true,
     onMaximize: () => {},
     onClose: () => {},
     measures: <div className="p-tiny text-sm">LOD 2</div>,

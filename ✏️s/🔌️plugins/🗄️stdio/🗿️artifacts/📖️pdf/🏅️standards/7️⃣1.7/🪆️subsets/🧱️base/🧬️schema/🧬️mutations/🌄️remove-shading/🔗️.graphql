@@ -1,0 +1,4 @@
+# 🌄️ Direct remove-shading GraphQL payload.
+input RemoveShadingMutationInput {
+  id: String
+}

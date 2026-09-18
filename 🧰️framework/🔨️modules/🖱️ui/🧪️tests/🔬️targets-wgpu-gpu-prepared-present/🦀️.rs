@@ -160,6 +160,55 @@ fn only_a_glass_content_layer_is_split_off_the_scene_target() {
     assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassInstance { pass: 0, draw: 0, instance: 0, translucent: false }), "a scene pass with no layer is never a foreground scalar");
 }
 
+/// ⚖️ LAW: **a window cap goes UNDER the veil.** Glass content whose own region is fully enclosed by a
+/// LATER glass region — the introduction veil over a cap, a dialog over a floating panel — is encoded
+/// into the SCENE the blur chain mips, not into the composite after the glass pass. React's veil
+/// covers the whole shell except the card, and this renderer's caps used to stay crisp over it
+/// (`📓️w8a-tour-crispness-and-symbol-glyphs.md` §5, hand-off 1).
+///
+/// Containment, not overlap, is the predicate: a menu that clips a panel's corner must not push that
+/// panel's whole content into the backdrop, and a spotlight step's veil BANDS enclose nothing that
+/// straddles them, which leaves the introduced element crisp exactly as React elevates it.
+#[test]
+fn glass_content_under_a_later_enclosing_region_is_encoded_into_the_scene() {
+    let theme = crate::wgpu::theme::Theme::default();
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    let cap = draw.push_glass([0.0, 0.0, 200.0, 24.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
+    draw.begin_glass_content(cap);
+    draw.push_rounded([4.0, 4.0, 40.0, 16.0], theme.accent, 0.0);
+    draw.end_glass_content();
+    let cap_layer = draw.layers.iter().position(|layer| layer.foreground_of == Some(cap)).expect("the cap opened one content layer");
+    let cap_cursor = DrawMeasureCursor::LayerUi { layer: cap_layer, item: 0, overlay: false };
+
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, cap_cursor), "with nothing over it the cap's chips stay crisp");
+
+    let mut veiled = crate::wgpu::draw_types::DrawList::default();
+    veiled.push_glass([0.0, 0.0, 800.0, 600.0], 0.0, theme.veil_glass(crate::wgpu::theme::Level::Dialog));
+    assert!(prepared_foreground_scalar_is_enclosed(&draw, Some(&veiled), cap_cursor), "a full-viewport veil in the OVERLAY list encloses a cap of the main list");
+
+    let mut banded = crate::wgpu::draw_types::DrawList::default();
+    banded.push_glass([0.0, 40.0, 800.0, 560.0], 0.0, theme.veil_glass(crate::wgpu::theme::Level::Dialog));
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, Some(&banded), cap_cursor), "a veil band that starts below the cap encloses nothing of it");
+
+    let mut clipped = crate::wgpu::draw_types::DrawList::default();
+    clipped.push_glass([150.0, 0.0, 400.0, 300.0], 0.0, theme.glass(crate::wgpu::theme::Level::Menu));
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, Some(&clipped), cap_cursor), "a menu that merely clips the cap's corner never blurs the whole cap");
+
+    let card = draw.push_glass([300.0, 300.0, 200.0, 120.0], 0.0, theme.glass(crate::wgpu::theme::Level::Dialog));
+    draw.begin_glass_content(card);
+    draw.push_rounded([310.0, 310.0, 40.0, 16.0], theme.accent, 0.0);
+    draw.end_glass_content();
+    let card_layer = draw.layers.iter().position(|layer| layer.foreground_of == Some(card)).expect("the card opened one content layer");
+    let card_cursor = DrawMeasureCursor::LayerUi { layer: card_layer, item: 0, overlay: false };
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, card_cursor), "the LAST region's own content has nothing after it and stays crisp");
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, cap_cursor), "a later region that does not enclose the cap leaves it crisp");
+
+    assert!(prepared_glass_region_covers([0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 10.0, 10.0]), "an exactly coincident region encloses");
+    assert!(!prepared_glass_region_covers([0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]), "a degenerate region encloses nothing");
+    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, DrawMeasureCursor::Glass(0)), "a glass region itself is never enclosed content");
+    eprintln!("[DEBUG] glass enclosure: cap under veil = scene, cap under band/menu = composite");
+}
+
 /// 🖼️ LAW: a TEXTURED world instance is encoded, and into the same target every other scene scalar
 /// of its pass goes to.
 ///

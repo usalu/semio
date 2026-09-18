@@ -21,7 +21,7 @@ use crate::editor::equation::commands::set_artifact;
 use crate::editor::equation::commands::set_points;
 use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::editor::equation::modes::edit;
-use crate::editor::equation::modes::edit::windows::graph::config::{EquationGraphWindowConfigMutation, EquationGraphWindowConfigOwner};
+use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfigMutation, EquationGraphWindowConfigOwner};
 use crate::editor::equation::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::op::EquationMutation;
 use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};

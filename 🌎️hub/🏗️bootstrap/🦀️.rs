@@ -23,11 +23,11 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 #[cfg(any(test, feature = "native-artifact-execution"))]
-use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
+use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
 use directory::os_directory::{
-    self, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
-    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CheckpointPublicationBlobV1, CheckpointPublicationCommandV1,
-    CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
+    self, descriptor_digest_v1, directory_command_sha256, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
+    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CheckpointPublicationCommandV1,
+    CheckpointPublicationCurrentV1, CheckpointPublicationReceiptV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
     DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1,
     DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1,
     DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor,
@@ -68,14 +68,13 @@ use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
 use semio_hub::directory::model::{
-    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1,
-    DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
-    directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService,
+    directory_command_result_kind, published_artifact_checkpoint, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, DirectoryCommandExecutionV1, DirectoryService,
     HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS,
     DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
@@ -208,7 +207,7 @@ impl<'de, T: FromValue> Deserialize<'de> for DirectoryJson<T> {
 }
 
 impl<T: ToValue> IntoResponse for DirectoryJson<T> {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         ([(axum::http::header::CONTENT_TYPE, "application/json")], directory::os_pack::json::to_json_string(&self.0)).into_response()
     }
 }
@@ -288,7 +287,7 @@ struct ArtifactCasMaintenanceSupervisor {
     cancelled: Arc<std::sync::atomic::AtomicBool>,
     healthy: Arc<std::sync::atomic::AtomicBool>,
     wake: Arc<tokio::sync::Notify>,
-    task: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
+    task: Mutex<Option<tokio::task::JoinHandle<()>>>,
 }
 
 #[derive(Default)]
@@ -370,7 +369,7 @@ impl ArtifactCasMaintenanceSupervisor {
                 }
             }
         });
-        Arc::new(Self { cancelled, healthy, wake, task: std::sync::Mutex::new(Some(task)) })
+        Arc::new(Self { cancelled, healthy, wake, task: Mutex::new(Some(task)) })
     }
 
     #[cfg(test)]
@@ -554,7 +553,7 @@ struct ColorLease {
 /// nothing on hub restart, mirroring `presence`'s own ephemeral law.
 #[derive(Default)]
 struct SpaceColors {
-    by_actor: std::collections::BTreeMap<String, ColorLease>,
+    by_actor: BTreeMap<String, ColorLease>,
 }
 
 #[cfg(test)]
@@ -1252,7 +1251,7 @@ impl DocumentOpenPlanAuthorityV1 {
         self.browser_actor
             .validate(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
             .map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
-        let descriptor_digest = os_directory::descriptor_digest_v1(&self.descriptor).map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
+        let descriptor_digest = descriptor_digest_v1(&self.descriptor).map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
         let descriptor_digest = os_directory::hex_lower(&descriptor_digest.0);
         let descriptor_matches = self.descriptor.space_id == self.scope.space_id
             && self.descriptor.document_id == self.scope.document_id
@@ -1835,7 +1834,7 @@ impl HubState {
                 lease.refs += 1;
                 return lease.index;
             }
-            let used: std::collections::BTreeSet<u8> = colors.by_actor.values().map(|lease| lease.index).collect();
+            let used: BTreeSet<u8> = colors.by_actor.values().map(|lease| lease.index).collect();
             let index = (0..=255u8).find(|candidate| !used.contains(candidate)).unwrap_or((colors.by_actor.len() as u32 % 256) as u8);
             colors.by_actor.insert(actor.to_string(), ColorLease { index, refs: 1 });
             index
@@ -2350,7 +2349,7 @@ fn document_open_plan_exchange_error(code: DocumentOpenPlanErrorCodeV1) -> Docum
     document_open_plan_route_error(status, code)
 }
 
-fn document_open_checkpoint(checkpoint: os_directory::PublishedArtifactCheckpoint) -> DocumentOpenCheckpointV1 {
+fn document_open_checkpoint(checkpoint: PublishedArtifactCheckpoint) -> DocumentOpenCheckpointV1 {
     DocumentOpenCheckpointV1 {
         checkpoint_id: os_directory::hex_lower(&checkpoint.checkpoint_id.0),
         descriptor_digest_v1: os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0),
@@ -2390,7 +2389,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let descriptor_digest_v1 = os_directory::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
     let checkpoint = state
         .directory
         .get_active_artifact_checkpoint(&scope)
@@ -2405,7 +2404,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     let writable = matches!(subject, SocketSubjectV1::Session { role: Some(SpaceRole::Author), .. });
     let selected = catalog.resolve_document_open(&descriptor, intent.requested_surface_id.as_deref(), writable).ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
     let directory_revision = state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
-    if directory_revision == 0 || directory_revision > os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+    if directory_revision == 0 || directory_revision > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded));
     }
     let (session_generation, share_generation) = match &subject {
@@ -2588,12 +2587,12 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
         SocketBindingValidityV1::Unavailable => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)),
     }
     let directory_revision = state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
-    if directory_revision == 0 || directory_revision > os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+    if directory_revision == 0 || directory_revision > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded));
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
-    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let descriptor_digest_v1 = os_directory::hex_lower(&descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
     let checkpoint = state
         .directory
         .get_active_artifact_checkpoint(&scope)
@@ -2668,7 +2667,7 @@ async fn issue_document_execution_target(
     document_id: String,
     state: HubState,
     request: axum::extract::Request,
-) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+) -> Result<Response, DocumentOpenPlanRouteError> {
     if uri.query().is_some() {
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
@@ -2687,7 +2686,7 @@ async fn issue_document_execution_target(
     .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
 }
 
-fn document_execution_target_bytes(bytes: &[u8]) -> axum::response::Response {
+fn document_execution_target_bytes(bytes: &[u8]) -> Response {
     (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, bytes.len().to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], bytes.to_vec())
         .into_response()
 }
@@ -2697,7 +2696,7 @@ async fn issue_document_execution_target_manifest(
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
     request: axum::extract::Request,
-) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+) -> Result<Response, DocumentOpenPlanRouteError> {
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Manifest, uri, space_id, document_id, state, request).await
 }
 
@@ -2706,7 +2705,7 @@ async fn issue_document_execution_target_component(
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
     request: axum::extract::Request,
-) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+) -> Result<Response, DocumentOpenPlanRouteError> {
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Component, uri, space_id, document_id, state, request).await
 }
 
@@ -2715,7 +2714,7 @@ async fn issue_document_execution_target_descriptor(
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
     request: axum::extract::Request,
-) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+) -> Result<Response, DocumentOpenPlanRouteError> {
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Descriptor, uri, space_id, document_id, state, request).await
 }
 async fn issue_document_execution_target_browser_actor(
@@ -2723,7 +2722,7 @@ async fn issue_document_execution_target_browser_actor(
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
     request: axum::extract::Request,
-) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+) -> Result<Response, DocumentOpenPlanRouteError> {
     issue_document_execution_target(DocumentExecutionTargetAssetV1::BrowserActor, uri, space_id, document_id, state, request).await
 }
 //#endregion 🪪️ExecutionTargetLease
@@ -3786,7 +3785,7 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         Ok(Ok(checkpoint)) => checkpoint.map(document_open_checkpoint),
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
     };
-    if checkpoint != authority.checkpoint {
+    if checkpoint.as_ref() != Some(&authority.checkpoint) {
         return SocketBindingValidityV1::Unauthorized;
     }
     SocketBindingValidityV1::Active
@@ -3829,7 +3828,7 @@ struct DocumentWsV1Query {
     surface: Option<String>,
 }
 
-async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, axum::extract::Query(query): axum::extract::Query<DocumentWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DocumentWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let surface = query.surface.unwrap_or_default();
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) || surface.len() > AUTH_TEXT_MAX_BYTES {
         return StatusCode::BAD_REQUEST.into_response();
@@ -6107,7 +6106,7 @@ async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>,
     visible
 }
 
-async fn get_directory_events(axum::extract::Query(query): axum::extract::Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
+async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
     let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
     Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
@@ -6204,7 +6203,7 @@ struct DirectoryScopedWsV1Query {
     since: u64,
 }
 
-async fn directory_ws_v1(ws: WebSocketUpgrade, axum::extract::Query(query): axum::extract::Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let scope = match (query.space_id, query.document_id) {
         (Some(space_id), Some(document_id)) if socket_text_bounded(&space_id) && socket_text_bounded(&document_id) => Some(DocumentScope::new(space_id, document_id)),
         (None, None) => None,
@@ -6217,7 +6216,7 @@ async fn directory_ws_v1(ws: WebSocketUpgrade, axum::extract::Query(query): axum
     ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_directory_ws_v1(socket, query.since, scope, state, admission)).into_response()
 }
 
-async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, axum::extract::Query(query): axum::extract::Query<DirectoryScopedWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DirectoryScopedWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
         return StatusCode::BAD_REQUEST.into_response();
     }
@@ -6564,10 +6563,10 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
 
 /// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. Authentication issuance
 /// is absent from the public router; protected routes still require their typed capability.
-async fn cors_middleware(request: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+async fn cors_middleware(request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let origin = request.headers().get(axum::http::header::ORIGIN).cloned();
     if request.method() == axum::http::Method::OPTIONS {
-        let mut response = axum::response::Response::builder().status(StatusCode::NO_CONTENT).body(axum::body::Body::empty()).unwrap_or_default();
+        let mut response = Response::builder().status(StatusCode::NO_CONTENT).body(axum::body::Body::empty()).unwrap_or_default();
         apply_cors_headers(response.headers_mut(), origin.as_ref());
         return response;
     }
@@ -7010,7 +7009,7 @@ async fn cancel_admin_operation(
 }
 
 async fn admin_operation_audit(
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7582,7 +7581,7 @@ fn admin_space_summary_view(summary: semio_hub::directory::model::AdminSpaceSumm
 }
 
 async fn admin_spaces(
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7638,7 +7637,7 @@ fn admin_fit_space_detail(view: SpaceView, mut rows: Vec<MemberView>, storage_ha
 
 async fn admin_space(
     Path(space_id): Path<String>,
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7657,7 +7656,7 @@ async fn admin_space(
 }
 
 async fn admin_users(
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7674,7 +7673,7 @@ async fn admin_users(
 }
 
 async fn admin_connections(
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7714,7 +7713,7 @@ struct DocumentsQuery {
 }
 
 async fn admin_documents(
-    axum::extract::Query(query): axum::extract::Query<DocumentsQuery>,
+    Query(query): Query<DocumentsQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7738,7 +7737,7 @@ async fn admin_documents(
 }
 
 async fn admin_events(
-    axum::extract::Query(query): axum::extract::Query<AdminPageQuery>,
+    Query(query): Query<AdminPageQuery>,
     headers: HeaderMap,
     axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
     State(state): State<HubState>,
@@ -7855,7 +7854,7 @@ fn admin_asset_path(root: &std::path::Path, rest: &str) -> Option<std::path::Pat
     Some(path)
 }
 
-async fn admin_page(state: &HubState, rest: &str) -> axum::response::Response {
+async fn admin_page(state: &HubState, rest: &str) -> Response {
     let root = &state.admin_dir;
     if !root.is_dir() {
         return (StatusCode::SERVICE_UNAVAILABLE, "admin SPA not built — run: bun nx run os-hub-admin:build").into_response();
@@ -7901,7 +7900,7 @@ struct InferenceErrorBodyV1 {
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
-fn inference_error_response(error: semio_hub::inference::runtime::InferenceRouteErrorV1) -> Response {
+fn inference_error_response(error: InferenceRouteErrorV1) -> Response {
     let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     (status, Json(InferenceErrorBodyV1 { schema: "semio.hub.inference-error/v1", code: error.code() })).into_response()
 }
@@ -7965,7 +7964,7 @@ async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
-    let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(semio_hub::inference::runtime::InferenceRouteErrorV1::Unavailable))?;
+    let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(InferenceRouteErrorV1::Unavailable))?;
     let scope = DocumentScope::new(space_id, document_id);
     Ok(semio_hub::inference::runtime::InferenceRouteContextV1 {
         runtime,
@@ -8181,10 +8180,10 @@ fn router(state: HubState) -> Router {
 /// calls stalling their caller's own tokio worker thread. Hub is a headless server
 /// (`ProcessKind::HeadlessBatch`: no UI thread to reserve a core for), sized to the process's visible
 /// core count.
-fn hub_worker_pool() -> Arc<db::semio_framework_async::WorkerPool> {
+fn hub_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
-    Arc::new(db::semio_framework_async::process_worker_pool(config))
+    let config = semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores);
+    Arc::new(semio_framework_async::process_worker_pool(config))
 }
 
 async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {

@@ -14,9 +14,9 @@ Feature: Parse the real committed equation document, print it back and cross it 
 
   📄️ The real committed document is `asset://🎬️demo/🗣️.dsl.semio`, whose
   `equation` field is the default single-term integer expression `0` at label 0 with `nextLabel` 1,
-  and whose three composed child handles all carry the same real content key
-  `equation-scene-ed395b82221de2b2` — the one committed document where the composition is
-  resolved rather than placeheld.
+  and whose three composed child handles each carry their own target id — `equation-text`,
+  `equation-table` and `equation-value` — as the `childId` that `ChildRestoreProjection` requires of
+  every composed member.
 
   @id-identity-round-trip
   @level-long

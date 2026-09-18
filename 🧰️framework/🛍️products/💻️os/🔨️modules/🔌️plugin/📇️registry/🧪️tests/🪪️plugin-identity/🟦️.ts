@@ -53,8 +53,8 @@ function declaredIdentity(source: { readonly path: string; readonly text: string
 }
 
 describe("plugin identity is the same in every authority", () => {
-  it("joins the Cargo component package, the root builder/bundle identity, the deployment row and the generated row for all 59 crates", () => {
-    expect(registry).toHaveLength(59);
+  it("joins the Cargo component package, the root builder/bundle identity, the deployment row and the generated row for all 60 crates", () => {
+    expect(registry).toHaveLength(60);
     expect(catalog).toHaveLength(registry.length);
     const byId = new Map(catalog.map((row) => [row.pluginId, row.directoryName]));
     for (const entry of registry) {

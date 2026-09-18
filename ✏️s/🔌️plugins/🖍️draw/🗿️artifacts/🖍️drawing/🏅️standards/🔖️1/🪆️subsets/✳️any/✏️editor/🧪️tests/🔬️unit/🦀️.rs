@@ -367,6 +367,26 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     artifact_laws::close_registered_fixture_app(&mut app);
 }
 
+/// 📤️ `exportDocument` (palette default `pdf`) hands the host one `DownloadMediaExport` whose base64
+/// body is a PDF that `s.stdio.pdf`'s 1.4 reader opens on the artboard page — no document operation.
+#[semio_framework_async_macros::async_test]
+async fn export_document_downloads_a_real_pdf_of_the_document() {
+    let (mut app, meta) = inline_selection_app().await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }), &meta).await;
+    assert!(result.mutations.is_empty(), "an export is not a document operation");
+    let [Effect::DownloadMediaExport { filename, mime_type, data, encoding }] = receipt.effects.as_slice() else { panic!("one download effect, got {:?}", receipt.effects) };
+    assert!(filename.ends_with(".pdf"), "{filename}");
+    assert_eq!(mime_type, "application/pdf");
+    assert_eq!(encoding.as_deref(), Some("base64"));
+    let bytes = base64_codec::base64_standard_decode(data).expect("base64 body");
+    assert!(bytes.starts_with(b"%PDF-1.4\n"));
+    let read = semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("stdio's reader opens the download");
+    assert_eq!(read.pages.len(), 1);
+    let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }), &meta).await;
+    assert!(matches!(receipt.effects.as_slice(), [Effect::DownloadMediaExport { mime_type, data, encoding: None, .. }] if mime_type == "image/svg+xml" && data.starts_with("<svg")), "{:?}", receipt.effects);
+    artifact_laws::close_registered_fixture_app(&mut app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
     let mut app = drawing_app().await;
@@ -860,6 +880,7 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick {}),
         DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}),
         DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}),
+        DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }),
     ]
 }
 
@@ -925,6 +946,7 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
         "canvas-double-click",
         "canvas-commit-draft",
         "canvas-escape",
+        "export-document",
     ];
     for (command, keyword) in every_command().into_iter().zip(expected_keywords) {
         let printed = command.print_op();
@@ -943,7 +965,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 18);
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 19);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();

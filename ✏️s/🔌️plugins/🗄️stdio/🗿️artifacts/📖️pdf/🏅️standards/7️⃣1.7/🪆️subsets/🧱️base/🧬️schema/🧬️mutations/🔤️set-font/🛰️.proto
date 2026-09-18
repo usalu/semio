@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_font;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🔤️ Direct set-font protobuf payload.
+message SetFontMutation {
+  PdfFont font = 1;
+}

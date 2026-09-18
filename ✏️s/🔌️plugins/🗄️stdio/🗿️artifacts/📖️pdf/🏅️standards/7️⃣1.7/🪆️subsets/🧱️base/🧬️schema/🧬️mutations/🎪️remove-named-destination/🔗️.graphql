@@ -1,0 +1,4 @@
+# 🎪️ Direct remove-named-destination GraphQL payload.
+input RemoveNamedDestinationMutationInput {
+  name: String
+}

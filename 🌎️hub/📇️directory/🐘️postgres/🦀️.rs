@@ -993,7 +993,7 @@ impl PostgresDirectory {
                     .await
                     .map_err(backend)?;
                 let descriptor = DocumentDescriptor::from_value(DslValue::from(descriptor.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?.0)).map_err(backend)?;
-                let index: Option<(String,)> = sqlx_core::query::query_as("SELECT payload FROM hub_document_index WHERE space_id = $1 AND document_id = $2 FOR UPDATE")
+                let index: Option<(String,)> = sqlx_core::query_as::query_as("SELECT payload FROM hub_document_index WHERE space_id = $1 AND document_id = $2 FOR UPDATE")
                     .bind(&checkpoint.scope.space_id)
                     .bind(&checkpoint.scope.document_id)
                     .fetch_optional(&mut **tx)

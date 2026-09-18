@@ -86,16 +86,49 @@ enum PreparedDrawTarget {
 /// `Puzzle 3D` title and its Focus/Close controls were painted, then blurred away by the very region
 /// they label (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY). The batch renderer has always split the
 /// two with `LayerBatchFilter`; the scalar ladder now honours the same split.
-fn prepared_draw_scalar_is_glass_foreground(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> bool {
+fn prepared_draw_scalar_glass_region(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> Option<usize> {
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerVector { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => layer,
-        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassLineVertex { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } => match draw.scene_passes.get(pass) {
-            Some(pass) => pass.layer_index,
-            None => return false,
-        },
-        _ => return false,
+        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassLineVertex { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } => draw.scene_passes.get(pass)?.layer_index,
+        _ => return None,
     };
-    draw.layers.get(layer).is_some_and(|layer| layer.foreground_of.is_some())
+    draw.layers.get(layer)?.foreground_of
+}
+
+fn prepared_draw_scalar_is_glass_foreground(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> bool {
+    prepared_draw_scalar_glass_region(draw, cursor).is_some()
+}
+
+/// 🫧 Whether `outer` fully covers `inner` — the containment CSS stacking gives a later
+/// `backdrop-filter` element over an earlier one it encloses.
+fn prepared_glass_region_covers(outer: [f32; 4], inner: [f32; 4]) -> bool {
+    outer[2] > 0.0 && outer[3] > 0.0 && inner[0] >= outer[0] && inner[1] >= outer[1] && inner[0] + inner[2] <= outer[0] + outer[2] && inner[1] + inner[3] <= outer[1] + outer[3]
+}
+
+/// 🫧 Whether a glass-content scalar sits under a LATER glass region that encloses its own — the
+/// veil over a window cap, a dialog over a floating panel.
+///
+/// 🩸️ `ForegroundCommands` re-encodes EVERY glass-content layer after the glass pass, with no notion
+/// of which region a later region should cover, so a window cap's chips stayed CRISP over the
+/// introduction veil while React blurs the whole shell except the card
+/// (`📓️w8a-tour-crispness-and-symbol-glyphs.md` §5, hand-off 1). An enclosed layer is therefore
+/// encoded into the SCENE instead: it is mipped by the blur chain, its own region re-frosts it, and
+/// the covering region then frosts it again — which is what "the caps are under the veil" means on a
+/// renderer whose blur chain reads one scene texture. Containment (not mere overlap) is the
+/// predicate, so a context menu that clips the corner of a panel never pushes that panel's whole
+/// content into the backdrop, and a step that spotlights an element — whose veil is BANDS around the
+/// cutout, enclosing nothing that straddles them — leaves it crisp exactly as React's
+/// `useIntroductionElevation` does. `overlay_after` is the OVERLAY draw list when `draw` is the main
+/// one — the overlay is encoded after it, so every overlay region is later than every region of the
+/// main list, which is the veil-over-cap case itself.
+fn prepared_foreground_scalar_is_enclosed(draw: &crate::wgpu::draw::DrawList, overlay_after: Option<&crate::wgpu::draw::DrawList>, cursor: DrawMeasureCursor) -> bool {
+    let Some(region) = prepared_draw_scalar_glass_region(draw, cursor) else { return false };
+    let Some(own) = draw.glass_regions.get(region).map(|glass| glass.rect) else { return false };
+    draw.glass_regions
+        .iter()
+        .skip(region.saturating_add(1))
+        .chain(overlay_after.into_iter().flat_map(|overlay| overlay.glass_regions.iter()))
+        .any(|glass| prepared_glass_region_covers(glass.rect, own))
 }
 
 /// 🎟️ Generation-qualified retained surface and command submission cursor.
@@ -255,6 +288,9 @@ pub struct GpuContext {
     scene_color: Option<SceneColorTarget>,
     composite_color: Option<PreparedCompositeTarget>,
     atlas_upload: Option<PreparedAtlasUploadCursor>,
+    /// 🧷️ The last prepared world draw whose mesh was not resident at submit, kept for ONE readable
+    /// host report instead of the fatal `present_step` fault that used to quarantine the surface.
+    missing_world_mesh: Option<(String, u64)>,
     prepared_command_buffer: wgpu::Buffer,
     /// 📐️ PHYSICAL (device) surface extent — the only place physical pixels are legal. Everything
     /// a draw list, a hit test or a chrome constant speaks is logical; see `logical_width`.
@@ -343,6 +379,7 @@ impl GpuContext {
             scene_color: None,
             composite_color: None,
             atlas_upload: None,
+            missing_world_mesh: None,
             prepared_command_buffer,
             width,
             height,
@@ -416,6 +453,27 @@ impl GpuContext {
 
     pub fn mesh_upload_terminal_is_empty(&self) -> bool {
         self.mesh_store.upload_terminal_is_empty()
+    }
+
+    /// 🧷️ The last prepared world draw that named a non-resident mesh, TAKEN so the host reports it
+    /// exactly once per occurrence instead of once per instance scalar.
+    pub fn take_missing_world_mesh(&mut self) -> Option<(String, u64)> {
+        self.missing_world_mesh.take()
+    }
+
+    /// 🐕️ Every index a healthy `Uploads` step moves WITHIN one upload item: the mesh cursor's vertex
+    /// and index counters and the atlas cursor's page.
+    ///
+    /// 🩸️ `AppPresentCursor::upload` only moves when a whole item COMPLETES, and one mesh item is
+    /// uploaded one vertex per step — so a perfectly healthy 293-vertex mesh looked to the presenter
+    /// watchdog exactly like a frozen cursor, and the host's own gate census reported
+    /// `phase=Some(Uploads) … stall-steps=293` with no reason attached (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-prepared-world-mesh-missing.md`). With the inner
+    /// counters in the signature a progressing upload resets the watchdog and only a genuinely stuck
+    /// one accumulates toward its bound.
+    pub fn prepared_upload_progress(&self) -> (u32, u32, usize) {
+        let (vertex, index) = self.mesh_store.upload_progress();
+        (vertex, index, self.atlas_upload.map_or(0, |cursor| cursor.page))
     }
 
     pub fn retire_mesh_exact_step(&mut self, key: &str, version: u64) -> Result<bool, &'static str> {
@@ -565,7 +623,8 @@ impl GpuContext {
                 if let Some(draw_cursor) = command.draw_cursor() {
                     let overlay_owner = command.packet_overlay();
                     let owner = if overlay_owner { packet.overlay.as_ref() } else { Some(&packet.draw) };
-                    if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor)) {
+                    let overlay_after = if overlay_owner { None } else { packet.overlay.as_ref() };
+                    if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor)) {
                         self.encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Scene)?;
                     }
                 }
@@ -616,7 +675,8 @@ impl GpuContext {
                 if let Some(draw_cursor) = command.draw_cursor() {
                     let overlay_owner = command.packet_overlay();
                     let owner = if overlay_owner { packet.overlay.as_ref() } else { Some(&packet.draw) };
-                    if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor)) {
+                    let overlay_after = if overlay_owner { None } else { packet.overlay.as_ref() };
+                    if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor)) {
                         self.encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Composite)?;
                     }
                 }
@@ -697,7 +757,8 @@ impl GpuContext {
                 let draw_owner = draws.get(draw_index).ok_or_else(|| "prepared world draw cursor was stale".to_string())?;
                 let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared world instance cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_instance") });
-                self.pipelines
+                let drawn = self
+                    .pipelines
                     .encode_prepared_world_instance(
                         &self.device,
                         &self.queue,
@@ -715,6 +776,10 @@ impl GpuContext {
                         height,
                     )
                     .map_err(str::to_owned)?;
+                if !drawn {
+                    self.missing_world_mesh = Some((draw_owner.mesh_key.clone(), draw_owner.mesh_version));
+                    return Ok(());
+                }
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance } => {

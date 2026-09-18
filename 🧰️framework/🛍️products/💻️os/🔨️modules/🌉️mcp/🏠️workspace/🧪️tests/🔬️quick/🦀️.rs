@@ -18,7 +18,7 @@ fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
         store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
         store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
     }
-    assert!(!std::fs::read_to_string(Path::new(file!())).expect("probe source").contains("probe_document_socket_surface"));
+    assert!(!include_str!("../../🦀️.rs").contains("probe_document_socket_surface"));
 }
 
 #[test]

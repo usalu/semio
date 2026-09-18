@@ -52,7 +52,9 @@ const state = () => page.evaluate(() => {
 });
 const faces = (s) => s.meshes.reduce((sum, m) => sum + m.faces, 0);
 const settle = async (predicate, seconds = 20) => { let after = null; for (let i = 0; i < seconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (predicate(after)) break; } return after; };
-const clickId = async (id) => { const el = page.locator(`[id="${id}"]`).first(); return (await el.count()) ? el.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : "absent"; };
+// 🖱️ Rows live in scrollable panes: scroll the target into view first, or a forced click at an
+// off-screen centre lands on whatever is painted there.
+const clickId = async (id) => { const el = page.locator(`[id="${id}"]`).first(); if (!(await el.count())) return "absent"; await el.evaluate((node) => node.scrollIntoView({ block: "center", inline: "nearest" })).catch(() => {}); await page.waitForTimeout(150); return el.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120)); };
 const openActions = async () => { const s = await state(); if (!s.actionRows.length && s.engagements.length) await clickId(`${s.engagements[0]}.toggle`); await page.waitForTimeout(800); };
 /** 🎛️ Expands an Actions-pane row, stages args by control id, and clicks its execute control. */
 const submitAction = async (actionId, args = {}) => {
@@ -166,6 +168,8 @@ let extrudeBase = 0;
   const objPath = join(outDir, "journey-import.obj");
   writeFileSync(objPath, objText);
   const chooser = page.waitForEvent("filechooser", { timeout: 30000 }).catch(() => null);
+  const rowState = await page.evaluate(() => { const el = document.querySelector('[id="action.loadMeshRequest"]'); if (!el) return null; const r = el.getBoundingClientRect(); const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); const pane = el.closest('[data-slot="window-engagement-overlay"], [data-slot="window-engagement-body"]'); const pr = pane?.getBoundingClientRect(); return { rect: [r.x, r.y, r.width, r.height].map(Math.round), topAt: top ? `${top.tagName}#${top.id || top.getAttribute("data-slot")}` : null, paneRect: pr ? [pr.x, pr.y, pr.width, pr.height].map(Math.round) : null, visible: !!(el.offsetWidth || el.offsetHeight) }; });
+  console.log("[DEBUG] loadMeshRequest row", JSON.stringify(rowState));
   const a = await submitAction("loadMeshRequest", {});
   const fc = await chooser;
   let chosen = "no-filechooser";

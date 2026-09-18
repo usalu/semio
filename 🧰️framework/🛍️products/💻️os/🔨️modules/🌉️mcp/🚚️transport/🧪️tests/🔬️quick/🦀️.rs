@@ -212,7 +212,9 @@ fn request_line_and_header_delimiter_search_faults_at_cap_without_scanning_late_
     request_line[HTTP_REQUEST_LINE_BYTES + 1] = b'\n';
     assert_eq!(find_crlf_bounded(&request_line, 0, HTTP_REQUEST_LINE_BYTES), None);
     let (mut state, _peer) = state_with_connection();
-    state.connections[0].as_mut().unwrap().ingress = request_line;
+    let connection = state.connections[0].as_mut().unwrap();
+    connection.ingress = request_line;
+    connection.phase = HttpConnectionPhase::ParseHttp;
     assert!(matches!(state.drive_one(1), HttpTurn::MoreWork));
     assert_eq!(state.terminal.len(), 1);
 
@@ -424,10 +426,24 @@ fn owned_bridge_head(keys: &[&str]) -> ParsedHttpHead {
     head
 }
 
+/// 🧵️ One masked client websocket frame in RFC 6455's exact length encoding — 7-bit inline up to
+/// 125 bytes, `126` + `u16` up to 65 535, `127` + `u64` beyond. The bridge's own frames routinely
+/// exceed the inline form (a `ShellState` page alone is 16 KiB), so a 125-byte-only helper could
+/// never build the very ingress these tests drive.
 pub(super) fn masked_client_frame(opcode: u8, payload: &[u8], fin: bool) -> Vec<u8> {
-    assert!(payload.len() <= 125);
     let mask = [1u8, 2, 3, 4];
-    let mut frame = vec![(if fin { 0x80 } else { 0 }) | opcode, 0x80 | payload.len() as u8];
+    let mut frame = vec![(if fin { 0x80 } else { 0 }) | opcode];
+    match payload.len() {
+        length @ 0..=125 => frame.push(0x80 | length as u8),
+        length @ 126..=65_535 => {
+            frame.push(0x80 | 126);
+            frame.extend_from_slice(&(length as u16).to_be_bytes());
+        }
+        length => {
+            frame.push(0x80 | 127);
+            frame.extend_from_slice(&(length as u64).to_be_bytes());
+        }
+    }
     frame.extend_from_slice(&mask);
     frame.extend(payload.iter().enumerate().map(|(index, byte)| byte ^ mask[index % 4]));
     frame

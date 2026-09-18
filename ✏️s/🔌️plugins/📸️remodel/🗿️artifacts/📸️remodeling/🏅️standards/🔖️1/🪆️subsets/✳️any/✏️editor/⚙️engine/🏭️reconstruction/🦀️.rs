@@ -436,6 +436,35 @@ fn sparse_depth_range(points: &[[f64; 3]], pose: &remodeling_camera::CameraPose,
     if far > near { (near, far) } else { (configured.depth_min, configured.depth_max) }
 }
 
+/// 🧭️ Moves the sparse reconstruction into the frame every later stage and the published result
+/// assume: the point centroid at the origin and the points' RMS radius at one unit. A monocular
+/// reconstruction's gauge is whatever the seed pair's unit baseline made it — on the orbit fixture
+/// the scene came out ~9.5 units wide, twelve units from the origin — so without this the
+/// document's millimetre voxel size (sized for a metre-scale scene) met a lattice of thirty-two
+/// cells that covered a third of the object, and the result mesh sat far outside the view the
+/// placeholder occupied. Cameras follow the same similarity: `t' = s (R c + t)`, so depths scale
+/// with the points and the dense stage's sparse-derived depth ranges stay consistent.
+fn normalize_reconstruction_frame(reconstruction: &mut remodeling_sfm::Reconstruction) {
+    const MIN_POINTS: usize = 4;
+    if reconstruction.points.len() < MIN_POINTS {
+        return;
+    }
+    let count = reconstruction.points.len() as f64;
+    let centroid = reconstruction.points.iter().fold([0.0f64; 3], |acc, p| [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]).map(|sum| sum / count);
+    let rms = (reconstruction.points.iter().map(|p| (p[0] - centroid[0]).powi(2) + (p[1] - centroid[1]).powi(2) + (p[2] - centroid[2]).powi(2)).sum::<f64>() / count).sqrt();
+    if !rms.is_finite() || rms < 1e-9 {
+        return;
+    }
+    let scale = 1.0 / rms;
+    for point in &mut reconstruction.points {
+        *point = [(point[0] - centroid[0]) * scale, (point[1] - centroid[1]) * scale, (point[2] - centroid[2]) * scale];
+    }
+    for (_, pose) in &mut reconstruction.cameras {
+        let rotated = pose.0.r.act(centroid);
+        pose.0.t = [(rotated[0] + pose.0.t[0]) * scale, (rotated[1] + pose.0.t[1]) * scale, (rotated[2] + pose.0.t[2]) * scale];
+    }
+}
+
 fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
     const MAX_CELLS_PER_AXIS: i32 = 32;
     if !lo.iter().all(|value| value.is_finite()) || !hi.iter().all(|value| value.is_finite()) || voxel_size <= 0.0 {
@@ -487,9 +516,9 @@ pub struct ReconstructionEngine {
     seed_pair_preparation: Option<remodeling_sfm::SeedPairPreparation>,
     registration_preparation: Option<remodeling_sfm::RegistrationPreparation>,
     bundle_preparation: Option<remodeling_sfm::BundlePreparation>,
-    /// 🎯️ A bundle adjustment in flight, one damped Gauss-Newton iteration per step: the local one
-    /// after each registration and the global one at the start of the bundle stage.
-    bundle_iterations: Option<BundleIterations>,
+    /// 🎯️ A bundle adjustment in flight, [`BUNDLE_TERMS_PER_STEP`] terms per step: the local one
+    /// after each registration and the global passes of the bundle stage.
+    bundle_iterations: Option<remodeling_sfm::BundleAdjustment>,
     finalization_preparation: Option<FinalizationPreparation>,
     pose_cursor: usize,
     /// 🧭️ Frames to register after the seed pair, in registration order (outwards from the seed).
@@ -551,12 +580,8 @@ const BUNDLE_STAGE_PLAN: [BundleStagePhase; 5] = [
 const LOCAL_BUNDLE_WINDOW: usize = 5;
 const LOCAL_BUNDLE_ITERATIONS: usize = 5;
 
-/// 🎯️ A bundle adjustment spread over steps.
-struct BundleIterations {
-    frames: Vec<usize>,
-    lambda: f64,
-    remaining: usize,
-}
+/// ⏱️ Residual terms one bundle-adjustment unit accumulates (each is ~20 reprojections).
+const BUNDLE_TERMS_PER_STEP: usize = 4;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FeaturePhase {
@@ -600,13 +625,17 @@ struct PairMatchPreparation {
 struct PairVerification {
     correspondences: Vec<([f64; 2], [f64; 2])>,
     attempts: usize,
+    /// The best polished model so far, by explained correspondences.
     best: Option<remodeling_sfm::TwoViewResult>,
 }
 
-/// 🧭️ Hypotheses one verification call draws (each a five-point solve scored over the pair).
-const PAIR_VERIFICATION_HYPOTHESES_PER_STEP: usize = 16;
-/// 🧭️ Calls one pair's verification spends before it commits to the best model found.
-const PAIR_VERIFICATION_STEPS: usize = 4;
+/// 🧭️ Hypotheses one verification call draws (each a five-point solve — a 10×10 elimination and a
+/// degree-ten root finding, ~2 ms in a debug build — scored over the pair, then polished for
+/// ~0.7 ms). One per unit: two draws measured 3.8 ms at best, and under the host's scheduling
+/// jitter that unit overran the 8 ms law in runs the watchdog would quarantine.
+const PAIR_VERIFICATION_HYPOTHESES_PER_STEP: usize = 1;
+/// 🧭️ Calls one pair's verification spends drawing hypotheses before it commits the best model.
+const PAIR_VERIFICATION_STEPS: usize = 64;
 /// 🧭️ Sampson tolerance of the verification, in pixels; divided by the focal length into the
 /// normalized coordinates the solver scores in, so a 96-pixel frame is judged as leniently as a
 /// 320-pixel one. Tight on purpose: at 2 px a fifth of a 10° pair's kept matches were still wrong
@@ -1075,9 +1104,12 @@ impl ReconstructionEngine {
         self.match_pair_i >= n && self.match_anchor_frame >= n
     }
 
-    /// 🤝️ Consumes at most 4,096 Hamming comparisons across a resumable pair match.
+    /// 🤝️ Consumes at most `COMPARISONS_PER_STEP` Hamming comparisons across a resumable pair match.
     fn step_matching_features(&mut self) -> bool {
-        const COMPARISONS_PER_STEP: usize = 4_096;
+        // ⏱️ A debug-profile unit of 2 048 comparisons measured 8.2–9.5 ms against the 8 ms ceiling
+        // (`every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example`); half that
+        // leaves the headroom the law wants.
+        const COMPARISONS_PER_STEP: usize = 1_024;
         if self.pair_cursor >= self.match_pairs.len() {
             return false;
         }
@@ -1214,13 +1246,22 @@ impl ReconstructionEngine {
             });
             let seed = ((frame_a as u64) << 32 | frame_b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ verification.attempts as u64;
             let threshold = PAIR_VERIFICATION_THRESHOLD_PX / intrinsics.fx.max(intrinsics.fy).max(1.0);
-            if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 1) {
-                if verification.best.as_ref().is_none_or(|best| candidate.inliers.len() > best.inliers.len()) {
-                    verification.best = Some(candidate);
-                }
-            }
-            verification.attempts += 1;
             if verification.attempts < PAIR_VERIFICATION_STEPS {
+                if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
+                    // A raw five-point fit through five integer-pixel keypoints explains only a
+                    // handful of correspondences at a pixel's tolerance, and its raw MSAC score
+                    // does not rank the true model above a wrong one reliably enough to polish only
+                    // improvements: on a marginal pair (two thirds true matches) the true draws
+                    // lost to earlier wrong ones by raw score and the pair was dropped whole. So
+                    // every unit polishes its batch's best (the unit's one costlier part) and the
+                    // comparison is between refined models, by explained correspondences; the
+                    // survivor set at the end is the refined one.
+                    let polished = remodeling_sfm::polish_essential(candidate, &verification.correspondences, &intrinsics, threshold);
+                    if verification.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
+                        verification.best = Some(polished);
+                    }
+                }
+                verification.attempts += 1;
                 return true;
             }
             let survivors: Vec<usize> = verification.best.as_ref().map(|best| best.inliers.clone()).unwrap_or_default();
@@ -1367,21 +1408,11 @@ impl ReconstructionEngine {
         }
         let n = self.registration_order.len();
         let sfm = self.sfm.as_mut().expect("initialized SfM");
-        let registered = sfm.registered_count();
-        if self.params.max_registered_cameras > 0 && registered >= self.params.max_registered_cameras {
-            return Ok(false);
-        }
-        if self.pose_cursor >= n {
-            return Ok(false);
-        }
-        if self.registration_preparation.is_none() {
-            self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.registration_order[self.pose_cursor]));
-        }
+        // 🎯️ A local adjustment in flight finishes before anything else is decided — including the
+        // camera cap below, or the last admitted camera would leave the stage half-refined with the
+        // adjustment state still armed for the global pass to pick up.
         if let Some(bundle) = self.bundle_iterations.as_mut() {
-            let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(2)], bundle.lambda, sfm.robust_loss());
-            bundle.lambda = lambda;
-            bundle.remaining = bundle.remaining.saturating_sub(1);
-            if converged || bundle.remaining == 0 {
+            if sfm.advance_bundle_adjustment(bundle, BUNDLE_TERMS_PER_STEP) {
                 self.bundle_iterations = None;
                 let frame = self.registration_order[self.pose_cursor];
                 if let Some(pose) = sfm.camera_pose(frame) {
@@ -1392,15 +1423,33 @@ impl ReconstructionEngine {
             }
             return Ok(self.pose_cursor < n || self.registration_preparation.is_some());
         }
+        let registered = sfm.registered_count();
+        if self.params.max_registered_cameras > 0 && registered >= self.params.max_registered_cameras {
+            return Ok(false);
+        }
+        if self.pose_cursor >= n {
+            return Ok(false);
+        }
+        if self.registration_preparation.is_none() {
+            self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.registration_order[self.pose_cursor]));
+        }
         let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
         let frame = self.registration_order[self.pose_cursor];
         let registered = sfm.camera_pose(frame);
         match result {
             Ok(true) => {
-                if registered.is_some() {
+                let local = registered.and_then(|_| {
                     // 🎯️ Refine the newest cameras and their points before the next registration
                     // draws on them; the registration is announced once the refinement settles.
-                    self.bundle_iterations = Some(BundleIterations { frames: sfm.local_bundle_frames(LOCAL_BUNDLE_WINDOW), lambda: 1e-3, remaining: LOCAL_BUNDLE_ITERATIONS });
+                    let frames = sfm.local_bundle_frames(LOCAL_BUNDLE_WINDOW);
+                    sfm.begin_bundle_adjustment(&frames, &frames[..frames.len().min(2)], sfm.robust_loss(), LOCAL_BUNDLE_ITERATIONS)
+                });
+                if local.is_some() {
+                    self.bundle_iterations = local;
+                } else if registered.is_some() {
+                    self.record(EngineObservation::CameraRegistered { frame, pose: registered.expect("registered pose") });
+                    self.registration_preparation = None;
+                    self.pose_cursor += 1;
                 } else {
                     self.registration_preparation = None;
                     self.pose_cursor += 1;
@@ -1438,18 +1487,23 @@ impl ReconstructionEngine {
                 }
             }
             BundleStagePhase::Adjust { huber_factor } => {
-                let bundle = self.bundle_iterations.get_or_insert_with(|| BundleIterations { frames: sfm.registered_frames(), lambda: 1e-3, remaining: self.params.sfm.ba_max_iterations.max(1) });
-                let loss = match huber_factor {
-                    Some(factor) => remodeling_sfm::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
-                    None => sfm.robust_loss(),
-                };
-                // 📌️ Only the first camera is held: holding the seed pair's second camera too would
-                // pin the reconstruction to the seed's five-point baseline (a few degrees off), and
-                // every other camera would bend to fit it. Scale is left to the damping.
-                let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(1)], bundle.lambda, loss);
-                bundle.lambda = lambda;
-                bundle.remaining = bundle.remaining.saturating_sub(1);
-                if converged || bundle.remaining == 0 {
+                if self.bundle_iterations.is_none() {
+                    let loss = match huber_factor {
+                        Some(factor) => remodeling_sfm::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
+                        None => sfm.robust_loss(),
+                    };
+                    // 📌️ Only the first camera is held: holding the seed pair's second camera too
+                    // would pin the reconstruction to the seed's five-point baseline (a few degrees
+                    // off), and every other camera would bend to fit it. Scale is left to the damping.
+                    let frames = sfm.registered_frames();
+                    self.bundle_iterations = sfm.begin_bundle_adjustment(&frames, &frames[..frames.len().min(1)], loss, self.params.sfm.ba_max_iterations);
+                    if self.bundle_iterations.is_none() {
+                        self.ba_substep += 1;
+                        return self.ba_substep < BUNDLE_STAGE_PLAN.len();
+                    }
+                }
+                let bundle = self.bundle_iterations.as_mut().expect("an open adjustment");
+                if sfm.advance_bundle_adjustment(bundle, BUNDLE_TERMS_PER_STEP) {
                     self.bundle_iterations = None;
                     self.ba_substep += 1;
                 }
@@ -1476,7 +1530,9 @@ impl ReconstructionEngine {
                 let sfm = self.sfm.as_ref().expect("snapshot SfM");
                 if sfm.advance_reconstruction_snapshot(snapshot, ITEMS_PER_STEP) {
                     let snapshot = preparation.snapshot.take().expect("completed snapshot");
-                    self.reconstruction = Some(remodeling_sfm::IncrementalSfm::finish_reconstruction_snapshot(snapshot));
+                    let mut reconstruction = remodeling_sfm::IncrementalSfm::finish_reconstruction_snapshot(snapshot);
+                    normalize_reconstruction_frame(&mut reconstruction);
+                    self.reconstruction = Some(reconstruction);
                     preparation.phase = FinalizationPhase::CameraIndex;
                 }
             }
@@ -1769,9 +1825,10 @@ impl ReconstructionEngine {
         for frame in &mut self.frames {
             frame.image = remodeling_image::ImageRgba8 { width: 0, height: 0, data: Vec::new() };
         }
-        // 🧹️ Descriptors only ever feed pair matching, and the keypoints the terminal observation table
-        // needs were already copied into the finalized `observations`; both are dead by the mesh handoff.
-        self.descriptors_per_frame = Vec::new();
+        // 🧹️ The keypoints the terminal observation table needs were already copied into the
+        // finalized `observations`, so they are dead by the mesh handoff. The descriptors stay:
+        // at 32 bytes each they are under a megabyte for the admitted envelope, and the match
+        // oracle (`match_oracle_inputs`) reads them after the run.
         self.keypoints_per_frame = Vec::new();
         true
     }
@@ -2001,6 +2058,16 @@ impl ReconstructionEngine {
             point_indices.push(point_index);
         }
         TerminalQualityChunk { squared_error_sum, observation_count, point_indices, next_observation: end, complete: end == self.observations.len() }
+    }
+
+    /// 🔬️ Which bounded unit the engine is on, for the worker-law diagnostics: the stage plus the
+    /// cursors of whichever preparation is active.
+    pub fn unit_label(&self) -> String {
+        match self.stage {
+            EngineStage::EstimatingPoses => format!("poses cursor={} bundle={} registration={} seed={}", self.pose_cursor, self.bundle_iterations.is_some(), self.registration_preparation.is_some(), self.seed_pair_preparation.is_some()),
+            EngineStage::BundleAdjusting => format!("bundle substep={} adjustment={} cleanup={} finalization={}", self.ba_substep, self.bundle_iterations.is_some(), self.bundle_preparation.is_some(), self.finalization_preparation.as_ref().map_or("-".to_string(), |preparation| format!("{:?}", preparation.phase))),
+            stage => format!("{stage:?} cursor={}", self.stage_cursor),
+        }
     }
 
     /// 📊️ Returns the already-computed mesh watertight report without rebuilding full QC.

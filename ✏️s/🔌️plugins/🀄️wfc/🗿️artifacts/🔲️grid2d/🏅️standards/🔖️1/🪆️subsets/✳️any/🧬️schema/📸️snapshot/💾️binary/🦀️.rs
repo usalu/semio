@@ -77,10 +77,10 @@ impl ErasedSnapshotRetirement for Grid2dSnapshotRetirement {
 }
 
 impl Drop for Grid2dSnapshotRetirement {
+    /// ⚠️ `ManuallyDrop` exists so the collections above are released by `close_step`, never by an
+    /// unbounded `Drop`; what is left here is the emptied husk, and dropping it is O(1).
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "Grid 2D snapshot displacement reached Drop before terminal-empty close");
-        // ⚠️ `ManuallyDrop` exists so the collections above are released by `close_step`, never by an
-        // unbounded `Drop`; what is left here is the emptied husk, and dropping it is O(1).
         unsafe { std::mem::ManuallyDrop::drop(&mut self.displaced) };
     }
 }

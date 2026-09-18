@@ -1,0 +1,46 @@
+{
+  "_": "🎬️ React's per-window Actions pane and Search pane, read off 🛠️ShellHelpers/🟦️.tsx (buildActionCategoryTree/WindowActionPane/windowEngagementToSearchSpec), 🪟️Window/🟦️.tsx (the two Panes) and 🖱️ui/🎯️targets/⚛️react/🟦️.tsx (Search, filterSearchPossibles) — plus one measured DOM capture of 6313/?plugin=puzzle3d (🗑️generated/w13b-react-dom.json). Both renderers assert against this.",
+  "paneWidthPx": 300,
+  "actionsPane": {
+    "bodySlot": "window-action-pane",
+    "_rows": "One `action.category.<id>` header per category in first-declaration order, then that category's rows as `action.<actionId>` in declaration order — React's TreeDataSection/TreeDataItem ids verbatim (measured: action.category.actions, action.setActiveExample, … on puzzle3dMainTop).",
+    "categoryRowId": "action.category.{category}",
+    "actionRowId": "action.{actionId}",
+    "argCarryingLabelSuffix": "…",
+    "form": {
+      "sectionId": "action.category.{category}.form",
+      "argRowId": "action.{actionId}.arg.{argId}",
+      "executeId": "framework.window.{windowSegment}.action.{actionId}.execute",
+      "resetId": "framework.window.{windowSegment}.action.{actionId}.reset"
+    },
+    "reservedActionIds": ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste", "revertToCommand", "setHistoryCommandFilter", "noteShellCommand", "recordTutorial", "startIntroduction", "startTutorial", "setActiveUtility", "setActiveTool"]
+  },
+  "searchPane": {
+    "bodySlot": "search",
+    "_input": "React ids the line by the engagement input's own id, falling back to ui.windowSearch.action for an unnamed or internal one (measured: puzzle3d-engagement).",
+    "fallbackInputId": "ui.windowSearch.action",
+    "suggestionsId": "ui.windowSearch.suggestions",
+    "labels": {
+      "action": { "en": "Action", "de": "Aktion" },
+      "actionActive": { "en": "Action or value", "de": "Aktion oder Wert" },
+      "suggestions": { "en": "Suggestions", "de": "Vorschläge" },
+      "noMatches": { "en": "No matches", "de": "Keine Treffer" }
+    }
+  },
+  "searchRanking": {
+    "_": "React's searchPossibleRankScore: label prefix (3000 − len) > detail prefix (2000 − len) > id prefix (1000 − len) > substring anywhere (500) > no match. Ties keep declaration order.",
+    "possibles": [
+      { "id": "p.other", "label": "sphere", "detail": "none" },
+      { "id": "p.circle", "label": "circle", "detail": "boxy" },
+      { "id": "p.boxSelect", "label": "box select" },
+      { "id": "p.box", "label": "box" }
+    ],
+    "cases": [
+      { "query": "", "expected": ["p.other", "p.circle", "p.boxSelect", "p.box"] },
+      { "query": "box", "expected": ["p.box", "p.boxSelect", "p.circle"] },
+      { "query": "Box Sel", "expected": ["p.boxSelect"] },
+      { "query": "p.ci", "expected": [] },
+      { "query": "zz", "expected": [] }
+    ]
+  }
+}

@@ -9,7 +9,7 @@
       "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
       "descriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313",
-      "executionProtocol": { "appChannelVersion": 15 }
+      "executionProtocol": { "appChannelVersion": 17 }
     },
     "artifact": { "kind": "s.gis.gismap", "schema": "gis.map", "packSchemaHash": "1414141414141414141414141414141414141414141414141414141414141414" },
     "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
@@ -17,12 +17,12 @@
     "grant": { "read": true, "write": true, "observe": true },
     "service": {
       "owner": "gis", "contributor": "gis", "artifactKind": "s.gis.gismap", "artifactSchema": "s.gis.gismap", "artifactSchemaVersion": 1,
-      "documentSchema": "gis.map", "documentSchemaVersion": 1, "inferenceSchema": "s.gis.gismap.inference", "inferenceSchemaVersion": 1,
+      "inferenceSchema": "s.gis.gismap.inference", "inferenceSchemaVersion": 1,
       "algorithmVersion": 1, "policyVersion": 1, "dependsOn": []
     },
     "nativeExecutable": "semio_s_plugin_gis::gis_map_inference_service"
   },
-  "expectedDigest": "4cf67ba4dfb31d8edef0ede1f674596b12ba347efb6c6bc2c2ece03fde1f24ea",
+  "expectedDigest": "6343843a352cf26c26ecc8c871124dd46ce378d8f14d2dbd7fcb6b0d9e34dc09",
   "hostile": [
     { "name": "catalog-generation", "path": ["catalogGenerationId"], "value": "0202020202020202020202020202020202020202020202020202020202020202", "accepted": false },
     { "name": "plugin", "path": ["package", "pluginId"], "value": "stdio", "accepted": false },
@@ -51,8 +51,6 @@
     { "name": "service-artifact-kind", "path": ["service", "artifactKind"], "value": "s.gis.gisterrain", "accepted": false },
     { "name": "service-artifact-schema", "path": ["service", "artifactSchema"], "value": "s.gis.gisterrain", "accepted": false },
     { "name": "service-artifact-version", "path": ["service", "artifactSchemaVersion"], "value": 2, "accepted": false },
-    { "name": "service-document-schema", "path": ["service", "documentSchema"], "value": "gis.terrain", "accepted": false },
-    { "name": "service-document-version", "path": ["service", "documentSchemaVersion"], "value": 2, "accepted": false },
     { "name": "service-schema", "path": ["service", "inferenceSchema"], "value": "s.gis.terrain.inference", "accepted": false },
     { "name": "service-version", "path": ["service", "inferenceSchemaVersion"], "value": 2, "accepted": false },
     { "name": "algorithm", "path": ["service", "algorithmVersion"], "value": 2, "accepted": false },

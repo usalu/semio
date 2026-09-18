@@ -10,7 +10,7 @@
 //!
 //! 🔀️ **Shared syntax, own model.** The COS object grammar (ISO 32000-1 §7.2–7.3) is version-
 //! independent: the same lexer reads a 1.0 file and a 1.7 file. It is therefore REUSED from the
-//! 1.7 subtree ([`cos::Lexer`], [`cos::decode_stream`]) instead of being re-typed here — exactly
+//! 1.7 subtree ([`Lexer`], [`decode_stream`]) instead of being re-typed here — exactly
 //! the reuse `ifc` makes of `step`'s Part-21 tokenizer and `gif` 89a makes of 87a's LZW/sub-block
 //! codec. `cos::PdfObject` is that lexer's WORKING representation and never enters this standard's
 //! persisted snapshot, which is its own `PdfSnapshot { schema, pages: Vec<PageDoc> }`.
@@ -30,7 +30,8 @@ use crate::STDIO_PDF_DOCUMENT_SCHEMA;
 use std::collections::{HashMap, HashSet};
 
 /// 🔀️ The shared COS syntax layer, hosted in the 1.7 subtree (see the module doc comment).
-use crate::standards::v1_7::subsets::base::io as cos;
+use crate::standards::v1_7::subsets::base::modules::filters::decode_stream;
+use crate::standards::v1_7::subsets::base::modules::lexer::Lexer;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject};
 
 //#region 🎹️DerivedComposition
@@ -141,7 +142,7 @@ fn parse_indirect_at(data: &[u8], offset: usize) -> Option<(u32, PdfObject)> {
     if data.get(at_keyword..at_keyword + 3) != Some(b"obj") {
         return None;
     }
-    let mut lexer = cos::Lexer::new(data);
+    let mut lexer = Lexer::new(data);
     lexer.pos = at_keyword + 3;
     let value = lexer.parse_object().ok()?;
     Some((u32::try_from(number).ok()?, value))
@@ -236,7 +237,7 @@ fn read_classic_xref(data: &[u8], start: usize) -> Option<Xref> {
                 }
             }
         }
-        let mut lexer = cos::Lexer::new(data);
+        let mut lexer = Lexer::new(data);
         lexer.pos = cursor;
         let section_trailer = match lexer.parse_object() {
             Ok(PdfObject::Dict(entries)) => entries,
@@ -260,7 +261,7 @@ fn read_classic_xref(data: &[u8], start: usize) -> Option<Xref> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn rescued_trailer(data: &[u8]) -> Vec<PdfDictEntry> {
     let Some(at) = find_last_subslice(data, b"trailer") else { return Vec::new() };
-    let mut lexer = cos::Lexer::new(data);
+    let mut lexer = Lexer::new(data);
     lexer.pos = at + b"trailer".len();
     match lexer.parse_object() {
         Ok(PdfObject::Dict(entries)) => entries,
@@ -326,7 +327,7 @@ impl<'a> Resolver<'a> {
 /// keeps the operand list rather than only the first value.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn shown_text(content: &[u8]) -> String {
-    let mut lexer = cos::Lexer::new(content);
+    let mut lexer = Lexer::new(content);
     let mut operands: Vec<PdfObject> = Vec::new();
     let mut out: Vec<u8> = Vec::new();
     let push_last_string = |operands: &[PdfObject], out: &mut Vec<u8>| {
@@ -427,7 +428,7 @@ fn walk_page_tree(node: ObjRef, resolver: &mut Resolver<'_>, inherited: Option<(
         };
         for stream in streams {
             if let Some(PdfObject::Stream { dict, data, .. }) = resolver.resolve(stream.num) {
-                if let Ok((decoded, _)) = cos::decode_stream(&dict, &data) {
+                if let Ok((decoded, _)) = decode_stream(&dict, &data) {
                     if !combined.is_empty() {
                         combined.push(b'\n');
                     }

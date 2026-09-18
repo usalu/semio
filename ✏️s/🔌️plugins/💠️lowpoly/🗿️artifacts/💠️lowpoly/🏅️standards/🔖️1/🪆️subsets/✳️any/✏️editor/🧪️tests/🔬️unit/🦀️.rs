@@ -91,6 +91,45 @@ pub(crate) mod context {
         settle(&mut app.0, action).await;
     }
 
+    /// 🚫️ Dispatches a command the app must REFUSE and returns the refusal's text — either the dispatch
+    /// itself faults, or the retained reducer publishes a fault page while the operation settles.
+    pub async fn dispatch_refused(app: &mut LowpolyApp, command: LowpolyCommand) -> String {
+        let verb = command.command_id().to_string();
+        if let Err(fault) = app.0.dispatch_typed(command, &action_meta()).await {
+            return fault.message;
+        }
+        settle_faults(&mut app.0, &verb).await.into_iter().next().unwrap_or_else(|| panic!("{verb} was admitted and settled without a refusal"))
+    }
+
+    /// 🔁️ `settle`, but a fault page is collected instead of asserted away.
+    async fn settle_faults(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> Vec<String> {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+        let mut faults = Vec::new();
+        while app.has_pending_typed_operations() {
+            assert!(std::time::Instant::now() < deadline, "{action} did not settle");
+            let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
+            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+            while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
+                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                    faults.push(String::from_utf8_lossy(page.bytes()).to_string());
+                }
+                assert!(app.acknowledge_typed_operation_result(page.token).unwrap_or(false), "{action} rejected its result ACK");
+            }
+            while app.take_typed_operation_effect().is_some() {}
+            while app.take_typed_operation_event().is_some() {}
+            while app.take_typed_operation_ui_scope().is_some() {}
+            while app.take_typed_operation_completion().await.unwrap_or(None).is_some() {}
+            while let Some(reply) = app.take_local_interaction_query_reply() {
+                if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                    let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                    assert!(app.acknowledge_local_interaction_query(&token), "{action} rejected its local-interaction ACK");
+                }
+            }
+            std::thread::yield_now();
+        }
+        faults
+    }
+
     /// 🔁️ The fixture's own settle loop, at a REAL host grant (see `SETTLE_GRANT_BYTES`). Returns the
     /// number of result pages the operation published.
     pub async fn settle(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> usize {
@@ -354,7 +393,9 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
                     Ok(ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) => break,
                     Ok(_) => {}
                     Err(fault) => {
-                        assert!(fault.message.contains("selected") || fault.message.contains("selection"), "{tool_id} refused for a reason other than the empty selection: {fault:?}");
+                        // 🗿️ `deleteSelection` on the one-object box refuses "keeps at least one object" — that
+                        // is its empty-selection answer at object granularity.
+                        assert!(fault.message.contains("selected") || fault.message.contains("selection") || fault.message.contains("at least one object"), "{tool_id} refused for a reason other than the empty selection: {fault:?}");
                         refused = true;
                         break;
                     }
@@ -436,6 +477,8 @@ pub(super) fn every_command() -> Vec<LowpolyCommand> {
         LowpolyCommand::ExportMesh(export_mesh::ExportMesh { format: "obj".into() }),
         LowpolyCommand::LoadMeshRequest(load_mesh_request::LoadMeshRequest {}),
         LowpolyCommand::ImportMeshFile(import_mesh_file::ImportMeshFile { name: "quad.obj".into(), payload: "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n".into() }),
+        LowpolyCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+        LowpolyCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: None }),
         LowpolyCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("extrude".into()) }),
         LowpolyCommand::SetActiveObject(set_active_object::SetActiveObject { object_id: "obj-1".into() }),
         LowpolyCommand::SetActivePaintLayer(set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }),

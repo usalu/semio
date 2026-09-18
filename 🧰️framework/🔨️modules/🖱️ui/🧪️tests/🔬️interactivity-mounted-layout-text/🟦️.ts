@@ -27,7 +27,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     ["missing-atomic-commit", 0, "tree.commit_inactive_layout(generation)", "let _ = generation"],
     ["missing-completeness", 0, "self.results.len() != self.nodes.len()", "false"],
     ["bulk-close", 0, "self.results.pop().is_some()", "self.results.clear(); false"],
-    ["dynamic-surface-registry", 1, "slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]", "slots: HashMap<String, UiWindow>"],
+    ["dynamic-surface-registry", 1, "slots: Box<[Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]>", "slots: HashMap<String, UiWindow>"],
     ["dynamic-lane-ring", 1, "slots: [Option<SurfaceLaneEntry>; UI_LAYOUT_SURFACE_SLOTS]", "slots: VecDeque<SurfaceLaneEntry>"],
     ["wrapping-generation", 1, "window.layout_generation.checked_add(1)", "Some(window.layout_generation.wrapping_add(1))"],
     ["caller-lane-step", 1, "session.pump_one(pool, worker_lane(lane))", "job.worker_one(cx)"],
@@ -38,9 +38,9 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     ["missing-snapshot-swap", 2, "self.mounted_layout_active ^= 1", "self.mounted_layout_active = 0"],
     ["paint-live-layout", 3, "let Some(layout) = tree.accepted_layout(id) else { return RetainedNodePaintStep::Fault }", "let layout = Default::default()"],
     ["event-live-layout", 4, "let layout = tree.accepted_layout(id)?", "let layout = Default::default()"],
-    ["slot-live-layout", 5, "let Some(layout) = tree.accepted_layout(id) else { return }", "let layout = Default::default()"],
+    ["slot-live-layout", 5, "let layout = tree.accepted_layout(id)?", "let layout = Default::default()"],
     ["zero-production-driver", 6, "engine.step_layouts(&pool", "engine.needs_frame(); //"],
-    ["unbounded-renderer-budget", 6, "StepBudget::new(1, now.saturating_add(1))", "StepBudget::new(u64::MAX, u64::MAX)"],
+    ["unbounded-renderer-budget", 6, "StepBudget::from_duration(1, now, 1000)", "StepBudget::new(u64::MAX, u64::MAX)"],
     ["second-scheduler", 7, "process_worker_pool", "WorkerPool::new"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
@@ -63,7 +63,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     [1, "swaps, 1"],
     [1, "theme_revision = u64::MAX"],
     [1, "assert_eq!(first, second)"],
-    [1, "Duration::from_millis(8)"],
+    [1, "assert_eq!(widest_slice, (1, 1)"],
     [1, "slice < LANE_WHEEL.len()"],
   ];
   for (const [index, needle] of lawMutations) {

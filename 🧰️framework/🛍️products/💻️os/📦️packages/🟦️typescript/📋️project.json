@@ -21,6 +21,11 @@
       "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts preview-generated" },
       "outputs": []
     },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts typecheck" },
+      "outputs": []
+    },
     "check-wgpu": {
       "executor": "nx:run-commands",
       "inputs": ["production", "^production"],

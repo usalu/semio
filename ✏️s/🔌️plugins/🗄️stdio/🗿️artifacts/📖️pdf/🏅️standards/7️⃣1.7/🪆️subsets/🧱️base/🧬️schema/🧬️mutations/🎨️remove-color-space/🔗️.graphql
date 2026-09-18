@@ -1,0 +1,4 @@
+# 🎨️ Direct remove-color-space GraphQL payload.
+input RemoveColorSpaceMutationInput {
+  name: String
+}

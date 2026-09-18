@@ -1,0 +1,4 @@
+# 👁️ Direct set-optional-content GraphQL payload.
+input SetOptionalContentMutationInput {
+  content: PdfOptionalContentInput
+}

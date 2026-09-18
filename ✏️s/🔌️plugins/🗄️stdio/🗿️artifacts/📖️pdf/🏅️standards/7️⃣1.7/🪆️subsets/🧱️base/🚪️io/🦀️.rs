@@ -1,22 +1,27 @@
-//! 🚪️ IO stdio.pdf (1.7/🧱️base) — real PDF object lexer/parser, xref (classic + stream + hybrid +
-//! brute-force fallback), filters (Flate/ASCIIHex/ASCII85/RunLength; DCT/CCITT raw-retained),
-//! page tree with inherited attributes, content-stream text extraction (Tj/TJ/'/" inside
-//! BT..ET, WinAnsi/StandardEncoding+Differences+AGL or ToUnicode CMap resolution, honest U+FFFD
-//! for anything unresolvable), and a minimal multi-page writer. Reads PDF 1.0-1.7 leniently
-//! (Decision #5: 1.7 folds 1.4 in) — `declared_version` records whatever the file's `%PDF-x.y`
-//! header actually says, without rejecting it. 🦑 Dissolved out of the former `⚙️engine` (ticket
-//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration flows through
-//! `crate::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+//! 🚪️ IO stdio.pdf (1.7/🧱️base) — the codec entry points over the engine modules: `decode_pdf`
+//! (sniff → cross-reference → decrypt → retained graph → typed lanes), `encode_pdf` (typed lanes
+//! → COS graph, reconciled onto a retained graph when one is carried → bytes), the streaming
+//! [`DocumentStream`] a guest can drive one page per step, and the typed builders every consumer
+//! starts from ([`text_document`], [`PdfTextLayout`]). Reads PDF 1.0–2.0 leniently
+//! (`declared_version` records the header verbatim).
 //!
-//! Predictor math (PNG Up/Sub/Average/Paeth) and the xref-stream `/W` field-width decode were
-//! verified standalone first (scratch crate, `/private/tmp/.../scratchpad/pdf17`) before landing
-//! here — same shape as the sibling `📷️png` engine's row defilter, not importable across the
-//! artifact boundary (private fns), reimplemented per D2 ground rules ("reuse the shape, don't
-//! reinvent the math").
+//! Laws (proven in `🧪️tests`): `lift(lower(t)) == t` on the typed lanes; `decode(encode(s)) == s`
+//! after one write (a retained graph that no longer spells the typed lanes is regenerated once,
+//! after which the file is its own fixed point); every retained object the typed lanes do not
+//! own survives a write untouched, renumbered only where an id moved.
 
+use crate::standards::v1_7::subsets::base::modules::content::content_references;
+use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
+use crate::standards::v1_7::subsets::base::modules::fonts::{standard_font, FontCodec};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_with, Category};
+use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_document, lower_document_headless, lower_page_standalone, LowerOptions, LoweredDocument};
+use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions};
+use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, GraphSource, ObjectSource, Resolver};
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};
 
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
+pub use crate::standards::v1_7::subsets::base::modules::lexer::PdfEngineError as EngineError;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -59,2867 +64,478 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🔖️Error
-/// 🚨 Typed engine error — never silent fabrication. `Unsupported` is used specifically for
-/// `/Encrypt` (requirement #4: never guess a password / produce garbage).
-#[derive(Clone, Debug, PartialEq)]
-pub enum PdfEngineError {
-    NotPdf,
-    Unsupported(String),
-    Malformed(String),
+//#region 🔖️Sniff
+/// 🔍️ Real magic + version probe: `%PDF-` header, version digits parsed and reported.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
+    let start = bytes.windows(5).take(1024).position(|window| window == b"%PDF-")?;
+    let rest = &bytes[start + 5..];
+    let end = rest.iter().take(8).position(|&b| b == b'\n' || b == b'\r' || b == b' ' || b == b'\t').unwrap_or(rest.len().min(8));
+    let version = String::from_utf8_lossy(&rest[..end]).trim().to_string();
+    (!version.is_empty() && version.chars().all(|c| c.is_ascii_digit() || c == '.')).then_some(version)
 }
-
-impl std::fmt::Display for PdfEngineError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PdfEngineError::NotPdf => write!(f, "pdf: not a PDF file (missing %PDF- magic)"),
-            PdfEngineError::Unsupported(s) => write!(f, "pdf: unsupported: {s}"),
-            PdfEngineError::Malformed(s) => write!(f, "pdf: malformed: {s}"),
-        }
-    }
-}
-impl std::error::Error for PdfEngineError {}
-
-type PResult<T> = Result<T, PdfEngineError>;
-fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
-    Err(PdfEngineError::Malformed(msg.into()))
-}
-//#endregion 🔖️Error
-
-//#region 🔖️Lexer
-fn is_ws(b: u8) -> bool {
-    matches!(b, b' ' | b'\t' | b'\r' | b'\n' | 0x0C | 0x00)
-}
-fn is_delim(b: u8) -> bool {
-    matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
-}
-
-/// 🔍 Cursor-based recursive-descent lexer/parser over the PDF COS object grammar
-/// (ISO 32000-1 §7.2-7.3). Used both for top-level `N G obj ... endobj` parsing and for values
-/// nested inside arrays/dicts.
-pub struct Lexer<'a> {
-    pub data: &'a [u8],
-    pub pos: usize,
-}
-
-impl<'a> Lexer<'a> {
-    pub fn new(data: &'a [u8]) -> Self {
-        Self { data, pos: 0 }
-    }
-    pub fn at(&self, offset: usize) -> Self {
-        Self { data: self.data, pos: offset }
-    }
-    fn peek(&self) -> Option<u8> {
-        self.data.get(self.pos).copied()
-    }
-    fn peek_at(&self, n: usize) -> Option<u8> {
-        self.data.get(self.pos + n).copied()
-    }
-
-    pub fn skip_ws(&mut self) {
-        loop {
-            match self.peek() {
-                Some(b) if is_ws(b) => {
-                    self.pos += 1;
-                }
-                Some(b'%') => {
-                    while let Some(c) = self.peek() {
-                        self.pos += 1;
-                        if c == b'\n' || c == b'\r' {
-                            break;
-                        }
-                    }
-                }
-                _ => break,
-            }
-        }
-    }
-
-    fn read_regular_run(&mut self) -> &'a [u8] {
-        let start = self.pos;
-        while let Some(b) = self.peek() {
-            if is_ws(b) || is_delim(b) {
-                break;
-            }
-            self.pos += 1;
-        }
-        &self.data[start..self.pos]
-    }
-
-    fn starts_with(&self, kw: &[u8]) -> bool {
-        self.data.get(self.pos..self.pos + kw.len()) == Some(kw)
-    }
-
-    fn consume_keyword(&mut self, kw: &[u8]) -> bool {
-        if self.starts_with(kw) {
-            self.pos += kw.len();
-            true
-        } else {
-            false
-        }
-    }
-
-    fn parse_number(&mut self) -> PResult<PdfObject> {
-        let start = self.pos;
-        if matches!(self.peek(), Some(b'+') | Some(b'-')) {
-            self.pos += 1;
-        }
-        let mut is_real = false;
-        let mut saw_digit = false;
-        while let Some(b) = self.peek() {
-            match b {
-                b'0'..=b'9' => {
-                    saw_digit = true;
-                    self.pos += 1;
-                }
-                b'.' => {
-                    is_real = true;
-                    self.pos += 1;
-                }
-                b'+' | b'-' => {
-                    self.pos += 1;
-                } // lenient: some generators emit malformed extra signs
-                _ => break,
-            }
-        }
-        if !saw_digit {
-            return malformed("expected number");
-        }
-        let text = std::str::from_utf8(&self.data[start..self.pos]).unwrap_or("0");
-        if is_real {
-            PdfDecimal::parse(text).map(PdfObject::Real).map_err(PdfEngineError::Malformed)
-        } else {
-            text.parse::<i64>().map(PdfObject::Int).map_err(|error| PdfEngineError::Malformed(format!("invalid PDF integer {text:?}: {error}")))
-        }
-    }
-
-    fn parse_name(&mut self) -> PdfObject {
-        self.pos += 1; // consume '/'
-        let mut out = String::new();
-        while let Some(b) = self.peek() {
-            if is_ws(b) || is_delim(b) {
-                break;
-            }
-            if b == b'#' && self.peek_at(1).is_some() && self.peek_at(2).is_some() {
-                let h = &self.data[self.pos + 1..self.pos + 3];
-                if let Ok(s) = std::str::from_utf8(h) {
-                    if let Ok(v) = u8::from_str_radix(s, 16) {
-                        out.push(v as char);
-                        self.pos += 3;
-                        continue;
-                    }
-                }
-            }
-            out.push(b as char);
-            self.pos += 1;
-        }
-        PdfObject::Name(out)
-    }
-
-    fn parse_literal_string(&mut self) -> PResult<PdfObject> {
-        self.pos += 1; // consume '('
-        let mut depth = 1i32;
-        let mut out = Vec::new();
-        while let Some(b) = self.peek() {
-            self.pos += 1;
-            match b {
-                b'(' => {
-                    depth += 1;
-                    out.push(b);
-                }
-                b')' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        return Ok(PdfObject::Str(out));
-                    }
-                    out.push(b);
-                }
-                b'\\' => match self.peek() {
-                    Some(b'n') => {
-                        out.push(b'\n');
-                        self.pos += 1;
-                    }
-                    Some(b'r') => {
-                        out.push(b'\r');
-                        self.pos += 1;
-                    }
-                    Some(b't') => {
-                        out.push(b'\t');
-                        self.pos += 1;
-                    }
-                    Some(b'b') => {
-                        out.push(0x08);
-                        self.pos += 1;
-                    }
-                    Some(b'f') => {
-                        out.push(0x0C);
-                        self.pos += 1;
-                    }
-                    Some(b'(') => {
-                        out.push(b'(');
-                        self.pos += 1;
-                    }
-                    Some(b')') => {
-                        out.push(b')');
-                        self.pos += 1;
-                    }
-                    Some(b'\\') => {
-                        out.push(b'\\');
-                        self.pos += 1;
-                    }
-                    Some(b'\r') => {
-                        self.pos += 1;
-                        if self.peek() == Some(b'\n') {
-                            self.pos += 1;
-                        }
-                    }
-                    Some(b'\n') => {
-                        self.pos += 1;
-                    }
-                    Some(d) if d.is_ascii_digit() => {
-                        let mut v: u32 = 0;
-                        let mut n = 0;
-                        while n < 3 {
-                            match self.peek() {
-                                Some(dd) if (b'0'..=b'7').contains(&dd) => {
-                                    v = v * 8 + (dd - b'0') as u32;
-                                    self.pos += 1;
-                                    n += 1;
-                                }
-                                _ => break,
-                            }
-                        }
-                        out.push((v & 0xFF) as u8);
-                    }
-                    Some(other) => {
-                        out.push(other);
-                        self.pos += 1;
-                    }
-                    None => {}
-                },
-                other => out.push(other),
-            }
-        }
-        malformed("unterminated literal string")
-    }
-
-    fn parse_hex_string(&mut self) -> PResult<PdfObject> {
-        self.pos += 1; // consume '<'
-        let mut nibbles = Vec::new();
-        loop {
-            match self.peek() {
-                Some(b'>') => {
-                    self.pos += 1;
-                    break;
-                }
-                Some(b) if b.is_ascii_hexdigit() => {
-                    nibbles.push(hex_val(b));
-                    self.pos += 1;
-                }
-                Some(b) if is_ws(b) => {
-                    self.pos += 1;
-                }
-                None => return malformed("unterminated hex string"),
-                Some(_) => {
-                    self.pos += 1;
-                }
-            }
-        }
-        if nibbles.len() % 2 == 1 {
-            nibbles.push(0);
-        }
-        Ok(PdfObject::Str(nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()))
-    }
-
-    fn parse_array(&mut self) -> PResult<PdfObject> {
-        self.pos += 1; // consume '['
-        let mut items = Vec::new();
-        loop {
-            self.skip_ws();
-            if self.peek() == Some(b']') {
-                self.pos += 1;
-                break;
-            }
-            if self.peek().is_none() {
-                return malformed("unterminated array");
-            }
-            items.push(self.parse_object()?);
-        }
-        Ok(PdfObject::Array(items))
-    }
-
-    fn parse_dict_or_stream(&mut self, allow_stream: bool) -> PResult<PdfObject> {
-        self.pos += 2; // consume '<<'
-        let mut entries = Vec::new();
-        loop {
-            self.skip_ws();
-            if self.starts_with(b">>") {
-                self.pos += 2;
-                break;
-            }
-            if self.peek() != Some(b'/') {
-                return malformed("expected dict key");
-            }
-            let key = match self.parse_name() {
-                PdfObject::Name(n) => n,
-                _ => unreachable!(),
-            };
-            self.skip_ws();
-            let value = self.parse_object()?;
-            entries.push(PdfDictEntry { key, value });
-        }
-        if allow_stream {
-            let save = self.pos;
-            self.skip_ws();
-            if self.consume_keyword(b"stream") {
-                // 📏 spec: CRLF or LF (not bare CR) must follow the `stream` keyword.
-                if self.peek() == Some(b'\r') {
-                    self.pos += 1;
-                }
-                if self.peek() == Some(b'\n') {
-                    self.pos += 1;
-                }
-                let data_start = self.pos;
-                let declared_len = entries.iter().find(|e| e.key == "Length").and_then(|e| match &e.value {
-                    PdfObject::Int(i) if *i >= 0 => Some(*i as usize),
-                    _ => None,
-                });
-                let data_end = match declared_len {
-                    Some(len) if data_start + len <= self.data.len() => data_start + len,
-                    _ => find_subslice(self.data, data_start, b"endstream").unwrap_or(self.data.len()),
-                };
-                let raw = self.data[data_start..data_end.min(self.data.len())].to_vec();
-                self.pos = data_end;
-                self.skip_ws();
-                let _ = self.consume_keyword(b"endstream");
-                return Ok(PdfObject::Stream { dict: entries, data: raw, filters: Vec::new() });
-            }
-            self.pos = save;
-        }
-        Ok(PdfObject::Dict(entries))
-    }
-
-    /// 🎯 Parses one value: number, `N G R` reference, name, string, array, dict/stream,
-    /// `true`/`false`/`null`.
-    pub fn parse_object(&mut self) -> PResult<PdfObject> {
-        self.skip_ws();
-        match self.peek() {
-            None => malformed("unexpected end of input"),
-            Some(b'/') => Ok(self.parse_name()),
-            Some(b'(') => self.parse_literal_string(),
-            Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(true),
-            Some(b'<') => self.parse_hex_string(),
-            Some(b'[') => self.parse_array(),
-            Some(b'-') | Some(b'+') | Some(b'.') | Some(b'0'..=b'9') => {
-                let save = self.pos;
-                let first = self.parse_number()?;
-                if let PdfObject::Int(num) = first {
-                    if num >= 0 {
-                        let save2 = self.pos;
-                        self.skip_ws();
-                        if matches!(self.peek(), Some(b'0'..=b'9')) {
-                            let gen_save = self.pos;
-                            if let Ok(PdfObject::Int(gen)) = self.parse_number() {
-                                if gen >= 0 {
-                                    self.skip_ws();
-                                    if self.consume_keyword(b"R") && self.peek().is_none_or(|b| is_ws(b) || is_delim(b)) {
-                                        return Ok(PdfObject::Ref(ObjRef { num: num as u32, gen: gen as u16 }));
-                                    }
-                                }
-                            }
-                            self.pos = gen_save;
-                        }
-                        self.pos = save2;
-                    }
-                }
-                let _ = save;
-                Ok(first)
-            }
-            Some(_) => {
-                if self.consume_keyword(b"true") {
-                    return Ok(PdfObject::Bool(true));
-                }
-                if self.consume_keyword(b"false") {
-                    return Ok(PdfObject::Bool(false));
-                }
-                if self.consume_keyword(b"null") {
-                    return Ok(PdfObject::Null);
-                }
-                let run = self.read_regular_run();
-                if run.is_empty() {
-                    self.pos += 1;
-                    return Ok(PdfObject::Null);
-                }
-                Ok(PdfObject::Null)
-            }
-        }
-    }
-}
-
-fn hex_val(b: u8) -> u8 {
-    match b {
-        b'0'..=b'9' => b - b'0',
-        b'a'..=b'f' => b - b'a' + 10,
-        b'A'..=b'F' => b - b'A' + 10,
-        _ => 0,
-    }
-}
-
-fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
-    if from > data.len() {
-        return None;
-    }
-    data[from..].windows(needle.len()).position(|w| w == needle).map(|p| p + from)
-}
-//#endregion 🔖️Lexer
-
-//#region 🔖️IndirectObjects
-/// 📦️ Parses one `N G obj ... endobj` at `offset`. Returns the parsed value and the id it
-/// actually declared (used by the brute-force scanner, which doesn't trust its own guessed id).
-fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObject)> {
-    let mut lex = Lexer::new(data).at(offset);
-    lex.skip_ws();
-    let num = match lex.parse_number()? {
-        PdfObject::Int(i) if i >= 0 => i as u32,
-        _ => return malformed("bad object number"),
-    };
-    lex.skip_ws();
-    let gen = match lex.parse_number()? {
-        PdfObject::Int(i) if i >= 0 => i as u16,
-        _ => return malformed("bad generation number"),
-    };
-    lex.skip_ws();
-    if !lex.consume_keyword(b"obj") {
-        return malformed("expected 'obj' keyword");
-    }
-    let value = lex.parse_object()?;
-    lex.skip_ws();
-    let _ = lex.consume_keyword(b"endobj");
-    Ok((ObjRef { num, gen }, value))
-}
-
-/// 🩹 Brute-force fallback (requirement #2): scans the whole buffer for `N G obj` patterns —
-/// used when structured xref parsing fails outright (damaged/`%%EOF`-free files). Real readers
-/// all do this; last occurrence of a given object number wins (later generation/incremental
-/// update, matching how classic xref updates are meant to shadow earlier ones).
-fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
-    let mut found: HashMap<u32, (ObjRef, usize)> = HashMap::new();
-    let mut i = 0usize;
-    while i < data.len() {
-        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]) || is_delim(data[i - 1])) {
-            let start = i;
-            let mut lex = Lexer::new(data).at(start);
-            if let Ok(PdfObject::Int(num)) = lex.parse_number() {
-                if num >= 0 {
-                    lex.skip_ws();
-                    let gen_pos = lex.pos;
-                    if let Ok(PdfObject::Int(gen)) = lex.parse_number() {
-                        if gen >= 0 {
-                            lex.skip_ws();
-                            if lex.consume_keyword(b"obj") {
-                                found.insert(num as u32, (ObjRef { num: num as u32, gen: gen as u16 }, start));
-                                i = lex.pos;
-                                continue;
-                            }
-                        }
-                    }
-                    let _ = gen_pos;
-                }
-            }
-        }
-        i += 1;
-    }
-    found
-}
-//#endregion 🔖️IndirectObjects
-
-//#region 🔖️Filters
-/// 🔤️ `/ASCIIHexDecode`.
-pub fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
-    let mut nibbles = Vec::new();
-    for &b in s {
-        if b == b'>' {
-            break;
-        }
-        if is_ws(b) {
-            continue;
-        }
-        if b.is_ascii_hexdigit() {
-            nibbles.push(hex_val(b));
-        }
-    }
-    if nibbles.len() % 2 == 1 {
-        nibbles.push(0);
-    }
-    nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()
-}
-
-/// 🔡️ `/ASCII85Decode`.
-pub fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
-    let mut out = Vec::new();
-    let mut group = [0u8; 5];
-    let mut glen = 0usize;
-    let s = if s.starts_with(b"<~") { &s[2..] } else { s };
-    let mut i = 0usize;
-    while i < s.len() {
-        let b = s[i];
-        i += 1;
-        if is_ws(b) {
-            continue;
-        }
-        if b == b'~' {
-            break;
-        }
-        if b == b'z' && glen == 0 {
-            out.extend_from_slice(&[0, 0, 0, 0]);
-            continue;
-        }
-        if !(b'!'..=b'u').contains(&b) {
-            return malformed("bad ascii85 byte");
-        }
-        group[glen] = b - b'!';
-        glen += 1;
-        if glen == 5 {
-            let mut v: u32 = 0;
-            for g in group {
-                v = v.wrapping_mul(85).wrapping_add(g as u32);
-            }
-            out.extend_from_slice(&v.to_be_bytes());
-            glen = 0;
-        }
-    }
-    if glen > 0 {
-        let n = glen;
-        group[glen..5].fill(84);
-        let mut v: u32 = 0;
-        for g in group {
-            v = v.wrapping_mul(85).wrapping_add(g as u32);
-        }
-        out.extend_from_slice(&v.to_be_bytes()[..n - 1]);
-    }
-    Ok(out)
-}
-
-/// 🏃️ `/RunLengthDecode`.
-pub fn run_length_decode(s: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    let mut i = 0;
-    while i < s.len() {
-        let len = s[i];
-        i += 1;
-        if len == 128 {
-            break;
-        }
-        if len < 128 {
-            let n = len as usize + 1;
-            if i + n > s.len() {
-                break;
-            }
-            out.extend_from_slice(&s[i..i + n]);
-            i += n;
-        } else {
-            if i >= s.len() {
-                break;
-            }
-            let b = s[i];
-            i += 1;
-            out.extend(std::iter::repeat_n(b, 257 - len as usize));
-        }
-    }
-    out
-}
-
-fn paeth(a: u8, b: u8, c: u8) -> u8 {
-    let (a, b, c) = (a as i32, b as i32, c as i32);
-    let p = a + b - c;
-    let pa = (p - a).abs();
-    let pb = (p - b).abs();
-    let pc = (p - c).abs();
-    if pa <= pb && pa <= pc {
-        a as u8
-    } else if pb <= pc {
-        b as u8
-    } else {
-        c as u8
-    }
-}
-
-/// 🧮 PNG predictor decode (Predictor >= 10, ISO 32000-1 §7.4.4.4 / PNG spec §6): each row is
-/// prefixed by a filter-type byte. Reused by xref streams and any Flate/LZW stream declaring
-/// `/DecodeParms /Predictor`. Verified standalone against hand-checked rows before landing here.
-pub fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usize) -> PResult<Vec<u8>> {
-    let bpp = (colors * bpc).div_ceil(8).max(1);
-    let row_bytes = (columns * colors * bpc).div_ceil(8);
-    if row_bytes == 0 {
-        return malformed("predictor: zero row width");
-    }
-    let mut out = Vec::with_capacity(raw.len());
-    let mut prev = vec![0u8; row_bytes];
-    let mut pos = 0;
-    while pos < raw.len() {
-        if pos + 1 + row_bytes > raw.len() {
-            break;
-        } // lenient: tolerate a short trailing row
-        let ft = raw[pos];
-        pos += 1;
-        let filt = &raw[pos..pos + row_bytes];
-        pos += row_bytes;
-        let mut cur = vec![0u8; row_bytes];
-        for x in 0..row_bytes {
-            let a = if x >= bpp { cur[x - bpp] } else { 0 };
-            let b = prev[x];
-            let c = if x >= bpp { prev[x - bpp] } else { 0 };
-            cur[x] = match ft {
-                0 => filt[x],
-                1 => filt[x].wrapping_add(a),
-                2 => filt[x].wrapping_add(b),
-                3 => filt[x].wrapping_add(((a as u16 + b as u16) / 2) as u8),
-                4 => filt[x].wrapping_add(paeth(a, b, c)),
-                other => return malformed(format!("unsupported PNG predictor filter type {other}")),
-            };
-        }
-        out.extend_from_slice(&cur);
-        prev = cur;
-    }
-    Ok(out)
-}
-
-/// 🧮 TIFF predictor 2 decode (horizontal differencing, 8 bits/component) — the other predictor
-/// value the spec allows besides the PNG family.
-pub fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<u8> {
-    let mut out = raw.to_vec();
-    let row_bytes = columns * colors;
-    if row_bytes == 0 {
-        return out;
-    }
-    for row in out.chunks_mut(row_bytes) {
-        for x in colors..row.len() {
-            row[x] = row[x].wrapping_add(row[x - colors]);
-        }
-    }
-    out
-}
-
-/// 🎛️ Reads `/DecodeParms` (or `/DP`) `{Predictor, Colors, BitsPerComponent, Columns}` from a
-/// stream dict, applying spec defaults (Predictor 1 = none, Colors 1, BPC 8, Columns 1).
-fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
-    let parms = dict.iter().find(|e| e.key == "DecodeParms" || e.key == "DP").map(|e| &e.value);
-    let get = |key: &str, default: i64| -> i64 { parms.and_then(|p| p.dict_get(key)).and_then(|v| v.as_i64()).unwrap_or(default) };
-    (get("Predictor", 1), get("Colors", 1).max(1) as usize, get("BitsPerComponent", 8).max(1) as usize, get("Columns", 1).max(1) as usize)
-}
-
-/// 🗜️ Decodes a stream's bytes per its `/Filter` chain. Filters without a logical decoder
-/// are rejected so native encoded representations never enter the semantic snapshot.
-pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
-    let filters: Vec<String> = match dict.iter().find(|e| e.key == "Filter").map(|e| &e.value) {
-        Some(PdfObject::Name(n)) => vec![n.clone()],
-        Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_name().map(|s| s.to_string())).collect(),
-        _ => Vec::new(),
-    };
-    let mut data = raw.to_vec();
-    let mut pipeline = Vec::with_capacity(filters.len());
-    for filter in &filters {
-        match filter.as_str() {
-            "FlateDecode" | "Fl" => {
-                data = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
-                let (predictor, colors, bpc, columns) = decode_parms(dict);
-                if predictor >= 10 {
-                    data = png_predictor_decode(&data, columns, colors, bpc)?;
-                } else if predictor == 2 {
-                    data = tiff_predictor2_decode(&data, columns, colors);
-                }
-                pipeline.push(PdfStreamFilter::Flate { predictor: (predictor != 1).then_some(PdfPredictor { predictor: predictor as u32, colors: colors as u32, bits_per_component: bpc as u32, columns: columns as u32 }) });
-            }
-            "ASCIIHexDecode" | "AHx" => {
-                data = ascii_hex_decode(&data);
-                pipeline.push(PdfStreamFilter::AsciiHex);
-            }
-            "ASCII85Decode" | "A85" => {
-                data = ascii85_decode(&data)?;
-                pipeline.push(PdfStreamFilter::Ascii85);
-            }
-            "RunLengthDecode" | "RL" => {
-                data = run_length_decode(&data);
-                pipeline.push(PdfStreamFilter::RunLength);
-            }
-            other => return Err(PdfEngineError::Unsupported(format!("stream filter /{other} has no logical decoder"))),
-        }
-    }
-    Ok((data, pipeline))
-}
-//#endregion 🔖️Filters
-
-//#region 🔖️Xref
-#[derive(Clone, Copy, Debug)]
-enum XrefEntry {
-    Normal { offset: usize, gen: u16 },
-    Compressed { stream_num: u32, index: u32 },
-}
-
-struct XrefState {
-    entries: HashMap<u32, XrefEntry>,
-    trailer: Vec<PdfDictEntry>,
-}
-
-fn dict_ref_i64(entries: &[PdfDictEntry], key: &str) -> Option<i64> {
-    entries.iter().find(|e| e.key == key).and_then(|e| e.value.as_i64())
-}
-
-/// 📐️ Decodes one row of an xref stream given `/W = [w0,w1,w2]` (field widths in bytes; `w0==0`
-/// defaults field 1/type to `1` per spec note in §7.5.8.2). Verified standalone.
-fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
-    let mut pos = 0usize;
-    let mut read = |width: usize, default: u64| -> u64 {
-        if width == 0 {
-            return default;
-        }
-        let mut v: u64 = 0;
-        for _ in 0..width {
-            v = (v << 8) | *row.get(pos).unwrap_or(&0) as u64;
-            pos += 1;
-        }
-        v
-    };
-    let f0 = read(w[0], 1);
-    let f1 = read(w[1], 0);
-    let f2 = read(w[2], 0);
-    (f0 as u8, f1, f2)
-}
-
-/// 🌊 Parses a classic `xref` table + its `trailer` dict starting at `offset`. Handles multiple
-/// subsections; lenient about the fixed-width-20-byte convention (splits on whitespace instead).
-fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let mut lex = Lexer::new(data).at(offset);
-    lex.skip_ws();
-    if !lex.consume_keyword(b"xref") {
-        return malformed("expected 'xref' keyword");
-    }
-    let mut entries = HashMap::new();
-    loop {
-        lex.skip_ws();
-        if lex.starts_with(b"trailer") {
-            break;
-        }
-        if !matches!(lex.peek(), Some(b'0'..=b'9')) {
-            break;
-        }
-        let start = match lex.parse_number()? {
-            PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection start"),
-        };
-        lex.skip_ws();
-        let count = match lex.parse_number()? {
-            PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection count"),
-        };
-        for i in 0..count {
-            lex.skip_ws();
-            let off_tok = lex.read_regular_run();
-            lex.skip_ws();
-            let gen_tok = lex.read_regular_run();
-            lex.skip_ws();
-            let flag_tok = lex.read_regular_run();
-            let off: usize = std::str::from_utf8(off_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let gen: u16 = std::str::from_utf8(gen_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let in_use = flag_tok.first() == Some(&b'n');
-            if in_use {
-                entries.entry(start + i).or_insert(XrefEntry::Normal { offset: off, gen });
-            }
-        }
-    }
-    lex.skip_ws();
-    if !lex.consume_keyword(b"trailer") {
-        return malformed("expected 'trailer' keyword");
-    }
-    lex.skip_ws();
-    let trailer = match lex.parse_object()? {
-        PdfObject::Dict(d) => d,
-        _ => return malformed("trailer is not a dict"),
-    };
-    Ok((entries, trailer))
-}
-
-/// 🌊 Parses an xref STREAM (`/Type /XRef`) at `offset` — requirement #2.
-fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let (_id, obj) = parse_indirect_at(data, offset)?;
-    let (dict, raw) = match &obj {
-        PdfObject::Stream { dict, data, .. } => (dict.clone(), data.clone()),
-        _ => return malformed("xref stream object is not a stream"),
-    };
-    let (decoded, _) = decode_stream(&dict, &raw)?;
-    let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
-        _ => return malformed("xref stream missing /W"),
-    };
-    let size = dict_ref_i64(&dict, "Size").unwrap_or(0);
-    let index: Vec<i64> = match dict.iter().find(|e| e.key == "Index").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_i64()).collect(),
-        _ => vec![0, size],
-    };
-    let row_bytes = w[0] + w[1] + w[2];
-    let mut entries = HashMap::new();
-    let mut pos = 0usize;
-    let pair = index.chunks(2);
-    for chunk in pair {
-        if chunk.len() < 2 {
-            break;
-        }
-        let (start, count) = (chunk[0] as u32, chunk[1] as u32);
-        for i in 0..count {
-            if pos + row_bytes > decoded.len() {
-                break;
-            }
-            let (ty, f1, f2) = decode_xref_row(&decoded[pos..pos + row_bytes], w);
-            pos += row_bytes;
-            let num = start + i;
-            match ty {
-                1 => {
-                    entries.entry(num).or_insert(XrefEntry::Normal { offset: f1 as usize, gen: f2 as u16 });
-                }
-                2 => {
-                    entries.entry(num).or_insert(XrefEntry::Compressed { stream_num: f1 as u32, index: f2 as u32 });
-                }
-                _ => {} // 0 = free
-            }
-        }
-    }
-    Ok((entries, dict))
-}
-
-/// 🧵 Follows `/Prev` (and hybrid `/XRefStm`) chains, merging older sections without overwriting
-/// newer entries. Falls back to a brute-force `N G obj` scan (requirement #2) if the structured
-/// chain can't even be started.
-fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
-    let mut entries: HashMap<u32, XrefEntry> = HashMap::new();
-    let mut trailer: Vec<PdfDictEntry> = Vec::new();
-    let mut visited = HashSet::new();
-    let mut cursor = Some(start_offset);
-    let mut any_structured = false;
-    while let Some(off) = cursor {
-        if !visited.insert(off) || off >= data.len() {
-            break;
-        }
-        let parsed = {
-            let mut l = Lexer::new(data).at(off);
-            l.skip_ws();
-            if l.starts_with(b"xref") {
-                parse_classic_xref(data, off)
-            } else {
-                parse_xref_stream(data, off)
-            }
-        };
-        let Ok((sect_entries, sect_trailer)) = parsed else { break };
-        any_structured = true;
-        for (k, v) in sect_entries {
-            entries.entry(k).or_insert(v);
-        }
-        if trailer.is_empty() {
-            trailer = sect_trailer.clone();
-        }
-        // Hybrid: classic table's trailer may point at a companion xref STREAM via /XRefStm.
-        if let Some(stm_off) = dict_ref_i64(&sect_trailer, "XRefStm") {
-            if let Ok((stm_entries, _)) = parse_xref_stream(data, stm_off as usize) {
-                for (k, v) in stm_entries {
-                    entries.entry(k).or_insert(v);
-                }
-            }
-        }
-        cursor = dict_ref_i64(&sect_trailer, "Prev").map(|p| p as usize);
-    }
-    if !any_structured || entries.is_empty() {
-        // 🩹 Brute-force fallback (requirement #2).
-        let scanned = brute_force_scan(data);
-        for (num, (id, off)) in &scanned {
-            entries.entry(*num).or_insert(XrefEntry::Normal { offset: *off, gen: id.gen });
-        }
-        if trailer.is_empty() {
-            // Reconstruct a minimal trailer: find an object with /Type /Catalog to use as Root.
-            for (num, (id, off)) in &scanned {
-                if let Ok((_, obj)) = parse_indirect_at(data, *off) {
-                    if obj.dict_get("Type").and_then(|v| v.as_name()) == Some("Catalog") {
-                        trailer = vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(*id) }];
-                        let _ = num;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    XrefState { entries, trailer }
-}
-//#endregion 🔖️Xref
-
-//#region 🔖️Resolver
-/// 🧭 Resolves every reachable indirect object into a flat table, decoding object streams
-/// (`/Type /ObjStm`, requirement #2) transparently.
-struct Resolver<'a> {
-    data: &'a [u8],
-    xref: HashMap<u32, XrefEntry>,
-    cache: HashMap<u32, PdfObject>,
-    objstm_cache: HashMap<u32, Vec<(u32, usize)>>, // stream_num -> [(obj_num, local_offset)]
-    objstm_bytes: HashMap<u32, Vec<u8>>,
-}
-
-impl<'a> Resolver<'a> {
-    fn new(data: &'a [u8], xref: HashMap<u32, XrefEntry>) -> Self {
-        Self { data, xref, cache: HashMap::new(), objstm_cache: HashMap::new(), objstm_bytes: HashMap::new() }
-    }
-
-    fn resolve(&mut self, num: u32) -> Option<PdfObject> {
-        if let Some(v) = self.cache.get(&num) {
-            return Some(v.clone());
-        }
-        let entry = *self.xref.get(&num)?;
-        let value = match entry {
-            XrefEntry::Normal { offset, .. } => parse_indirect_at(self.data, offset).ok()?.1,
-            XrefEntry::Compressed { stream_num, index } => self.resolve_compressed(stream_num, index)?,
-        };
-        self.cache.insert(num, value.clone());
-        Some(value)
-    }
-
-    fn resolve_compressed(&mut self, stream_num: u32, index: u32) -> Option<PdfObject> {
-        if !self.objstm_bytes.contains_key(&stream_num) {
-            let stream_entry = *self.xref.get(&stream_num)?;
-            let XrefEntry::Normal { offset, .. } = stream_entry else { return None };
-            let (_, obj) = parse_indirect_at(self.data, offset).ok()?;
-            let PdfObject::Stream { dict, data, .. } = &obj else { return None };
-            let (decoded, _) = decode_stream(dict, data).ok()?;
-            let n = dict_ref_i64(dict, "N").unwrap_or(0) as usize;
-            let first = dict_ref_i64(dict, "First").unwrap_or(0) as usize;
-            let mut lex = Lexer::new(&decoded);
-            let mut pairs = Vec::with_capacity(n);
-            for _ in 0..n {
-                lex.skip_ws();
-                let on = match lex.parse_number() {
-                    Ok(PdfObject::Int(i)) => i as u32,
-                    _ => break,
-                };
-                lex.skip_ws();
-                let oo = match lex.parse_number() {
-                    Ok(PdfObject::Int(i)) => i as usize,
-                    _ => break,
-                };
-                pairs.push((on, first + oo));
-            }
-            self.objstm_cache.insert(stream_num, pairs);
-            self.objstm_bytes.insert(stream_num, decoded);
-        }
-        let pairs = self.objstm_cache.get(&stream_num)?;
-        let (_, local_off) = *pairs.get(index as usize)?;
-        let bytes = self.objstm_bytes.get(&stream_num)?;
-        let mut lex = Lexer::new(bytes).at(local_off);
-        lex.parse_object().ok()
-    }
-
-    /// 📚️ Materializes every entry reachable from the xref table into `PdfIndirectObject`s
-    /// (requirement #10: full object graph in the typed model, for lossless retention).
-    fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
-        let mut nums: Vec<u32> = self.xref.keys().copied().collect();
-        nums.sort_by_key(|num| match self.xref.get(num) {
-            Some(XrefEntry::Normal { offset, .. }) => (*offset, 0),
-            Some(XrefEntry::Compressed { stream_num, index }) => {
-                let offset = match self.xref.get(stream_num) {
-                    Some(XrefEntry::Normal { offset, .. }) => *offset,
-                    _ => usize::MAX,
-                };
-                (offset, index.saturating_add(1) as usize)
-            }
-            None => (usize::MAX, usize::MAX),
-        });
-        let mut out = Vec::with_capacity(nums.len());
-        for num in nums {
-            if let Some(value) = self.resolve(num) {
-                let gen = match self.xref.get(&num) {
-                    Some(XrefEntry::Normal { gen, .. }) => *gen,
-                    _ => 0,
-                };
-                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value: normalize_pdf_object(value)? });
-            }
-        }
-        Ok(out)
-    }
-}
-
-/// 🧹 Converts parsed COS into semantic snapshot form. Filter declarations describe the
-/// native encoding and are removed after their decoded value has been materialized.
-fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
-    match value {
-        PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
-        PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
-        PdfObject::Stream { dict, data, .. } => {
-            let (decoded, filters) = decode_stream(&dict, &data)?;
-            let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP")).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?;
-            Ok(PdfObject::Stream { dict, data: decoded, filters })
-        }
-        value => Ok(value),
-    }
-}
-//#endregion 🔖️Resolver
-
-//#region 🔖️Encodings
-/// 🔤️ WinAnsiEncoding (ISO 32000-1 Annex D.2 — matches cp1252 with a handful of undefined codes
-/// mapping to bullet per spec) for codes 0x20-0xFF. ASCII range is identical to Unicode; this is
-/// the common default `/Encoding` for non-symbolic TrueType/Type1 fonts.
-fn win_ansi(code: u8) -> Option<char> {
-    if (0x20..=0x7E).contains(&code) {
-        return Some(code as char);
-    }
-    let c = match code {
-        0x80 => '\u{20AC}',
-        0x82 => '\u{201A}',
-        0x83 => '\u{0192}',
-        0x84 => '\u{201E}',
-        0x85 => '\u{2026}',
-        0x86 => '\u{2020}',
-        0x87 => '\u{2021}',
-        0x88 => '\u{02C6}',
-        0x89 => '\u{2030}',
-        0x8A => '\u{0160}',
-        0x8B => '\u{2039}',
-        0x8C => '\u{0152}',
-        0x8E => '\u{017D}',
-        0x91 => '\u{2018}',
-        0x92 => '\u{2019}',
-        0x93 => '\u{201C}',
-        0x94 => '\u{201D}',
-        0x95 => '\u{2022}',
-        0x96 => '\u{2013}',
-        0x97 => '\u{2014}',
-        0x98 => '\u{02DC}',
-        0x99 => '\u{2122}',
-        0x9A => '\u{0161}',
-        0x9B => '\u{203A}',
-        0x9C => '\u{0153}',
-        0x9E => '\u{017E}',
-        0x9F => '\u{0178}',
-        0x81 | 0x8D | 0x8F | 0x90 | 0x9D => '\u{2022}', // undefined in WinAnsi -> bullet, per spec
-        0xA0..=0xFF => code as char,                    // Latin-1 supplement range matches Unicode directly
-        _ => return None,
-    };
-    Some(c)
-}
-
-/// 🔤️ AGL-lite: a real (not fabricated) subset of the Adobe Glyph List covering Basic Latin,
-/// common Latin-1 supplement (incl. German umlauts/ß — the bachelor-thesis fixture needs these),
-/// standard ligatures, and the two spec-sanctioned programmatic forms (`uniXXXX`, `uXXXX`).
-/// Anything outside this table resolves to `None` -> the caller emits honest U+FFFD.
-fn agl_lookup(name: &str) -> Option<&'static str> {
-    if let Some(rest) = name.strip_prefix("uni") {
-        if rest.len() == 4 && rest.chars().all(|c| c.is_ascii_hexdigit()) {
-            if let Ok(v) = u32::from_str_radix(rest, 16) {
-                if let Some(c) = char::from_u32(v) {
-                    return Some(Box::leak(c.to_string().into_boxed_str()));
-                }
-            }
-        }
-    }
-    if let Some(rest) = name.strip_prefix('u') {
-        if (4..=6).contains(&rest.len()) && rest.chars().all(|c| c.is_ascii_hexdigit()) {
-            if let Ok(v) = u32::from_str_radix(rest, 16) {
-                if let Some(c) = char::from_u32(v) {
-                    return Some(Box::leak(c.to_string().into_boxed_str()));
-                }
-            }
-        }
-    }
-    Some(match name {
-        "space" => " ",
-        "exclam" => "!",
-        "quotedbl" => "\"",
-        "numbersign" => "#",
-        "dollar" => "$",
-        "percent" => "%",
-        "ampersand" => "&",
-        "quotesingle" => "'",
-        "parenleft" => "(",
-        "parenright" => ")",
-        "asterisk" => "*",
-        "plus" => "+",
-        "comma" => ",",
-        "hyphen" => "-",
-        "period" => ".",
-        "slash" => "/",
-        "zero" => "0",
-        "one" => "1",
-        "two" => "2",
-        "three" => "3",
-        "four" => "4",
-        "five" => "5",
-        "six" => "6",
-        "seven" => "7",
-        "eight" => "8",
-        "nine" => "9",
-        "colon" => ":",
-        "semicolon" => ";",
-        "less" => "<",
-        "equal" => "=",
-        "greater" => ">",
-        "question" => "?",
-        "at" => "@",
-        "A" => "A",
-        "B" => "B",
-        "C" => "C",
-        "D" => "D",
-        "E" => "E",
-        "F" => "F",
-        "G" => "G",
-        "H" => "H",
-        "I" => "I",
-        "J" => "J",
-        "K" => "K",
-        "L" => "L",
-        "M" => "M",
-        "N" => "N",
-        "O" => "O",
-        "P" => "P",
-        "Q" => "Q",
-        "R" => "R",
-        "S" => "S",
-        "T" => "T",
-        "U" => "U",
-        "V" => "V",
-        "W" => "W",
-        "X" => "X",
-        "Y" => "Y",
-        "Z" => "Z",
-        "bracketleft" => "[",
-        "backslash" => "\\",
-        "bracketright" => "]",
-        "asciicircum" => "^",
-        "underscore" => "_",
-        "grave" => "`",
-        "a" => "a",
-        "b" => "b",
-        "c" => "c",
-        "d" => "d",
-        "e" => "e",
-        "f" => "f",
-        "g" => "g",
-        "h" => "h",
-        "i" => "i",
-        "j" => "j",
-        "k" => "k",
-        "l" => "l",
-        "m" => "m",
-        "n" => "n",
-        "o" => "o",
-        "p" => "p",
-        "q" => "q",
-        "r" => "r",
-        "s" => "s",
-        "t" => "t",
-        "u" => "u",
-        "v" => "v",
-        "w" => "w",
-        "x" => "x",
-        "y" => "y",
-        "z" => "z",
-        "braceleft" => "{",
-        "bar" => "|",
-        "braceright" => "}",
-        "asciitilde" => "~",
-        "adieresis" => "\u{00E4}",
-        "Adieresis" => "\u{00C4}",
-        "odieresis" => "\u{00F6}",
-        "Odieresis" => "\u{00D6}",
-        "udieresis" => "\u{00FC}",
-        "Udieresis" => "\u{00DC}",
-        "germandbls" => "\u{00DF}",
-        "agrave" => "\u{00E0}",
-        "Agrave" => "\u{00C0}",
-        "eacute" => "\u{00E9}",
-        "Eacute" => "\u{00C9}",
-        "egrave" => "\u{00E8}",
-        "Egrave" => "\u{00C8}",
-        "ccedilla" => "\u{00E7}",
-        "Ccedilla" => "\u{00C7}",
-        "ntilde" => "\u{00F1}",
-        "Ntilde" => "\u{00D1}",
-        "oslash" => "\u{00F8}",
-        "Oslash" => "\u{00D8}",
-        "aring" => "\u{00E5}",
-        "Aring" => "\u{00C5}",
-        "ae" => "\u{00E6}",
-        "AE" => "\u{00C6}",
-        "oe" => "\u{0153}",
-        "OE" => "\u{0152}",
-        "quoteleft" => "\u{2018}",
-        "quoteright" => "\u{2019}",
-        "quotedblleft" => "\u{201C}",
-        "quotedblright" => "\u{201D}",
-        "endash" => "\u{2013}",
-        "emdash" => "\u{2014}",
-        "ellipsis" => "\u{2026}",
-        "bullet" => "\u{2022}",
-        "dagger" => "\u{2020}",
-        "daggerdbl" => "\u{2021}",
-        "degree" => "\u{00B0}",
-        "section" => "\u{00A7}",
-        "paragraph" => "\u{00B6}",
-        "copyright" => "\u{00A9}",
-        "registered" => "\u{00AE}",
-        "trademark" => "\u{2122}",
-        "plusminus" => "\u{00B1}",
-        "mu" => "\u{00B5}",
-        "guillemotleft" => "\u{00AB}",
-        "guillemotright" => "\u{00BB}",
-        "fi" => "fi",
-        "fl" => "fl",
-        "ff" => "ff",
-        "ffi" => "ffi",
-        "ffl" => "ffl",
-        _ => return None,
-    })
-}
-
-/// 🧩 Resolves a `/Differences`-remapped or ligature glyph name to a real Unicode string,
-/// including underscore-joined names like `"f_i"` (seen in the bachelor-thesis fixture) by
-/// resolving each part -- never partially fabricates: any unresolved part fails the whole name.
-fn glyph_name_to_unicode(name: &str) -> Option<String> {
-    if let Some(direct) = agl_lookup(name) {
-        return Some(direct.to_string());
-    }
-    if name.contains('_') {
-        let mut out = String::new();
-        for part in name.split('_') {
-            out.push_str(agl_lookup(part)?);
-        }
-        return Some(out);
-    }
-    None
-}
-
-/// 🈴️ Per-font code -> Unicode-string map, built once per font the content stream references.
-#[derive(Clone, Debug, Default)]
-struct FontDecoder {
-    byte_width: usize,
-    chars: HashMap<u32, String>,
-    ranges: Vec<(u32, u32, u32)>, // (lo, hi, dst_lo) for ToUnicode bfrange entries
-}
-
-impl FontDecoder {
-    fn decode(&self, bytes: &[u8]) -> String {
-        let mut out = String::new();
-        let w = self.byte_width.max(1);
-        for chunk in bytes.chunks(w) {
-            if chunk.len() < w {
-                break;
-            }
-            let mut code: u32 = 0;
-            for b in chunk {
-                code = (code << 8) | *b as u32;
-            }
-            if let Some(s) = self.chars.get(&code) {
-                out.push_str(s);
-                continue;
-            }
-            if let Some((lo, _hi, dst)) = self.ranges.iter().find(|(lo, hi, _)| code >= *lo && code <= *hi) {
-                if let Some(c) = char::from_u32(dst + (code - lo)) {
-                    out.push(c);
-                    continue;
-                }
-            }
-            out.push('\u{FFFD}');
-        }
-        out
-    }
-}
-
-/// 🗺️ Parses a `/ToUnicode` CMap stream body (bfchar + bfrange, both scalar-dst and array-dst
-/// forms) — ISO 32000-1 §9.10.3. Byte width inferred from the first `codespacerange` entry.
-fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
-    let mut fd = FontDecoder { byte_width: 2, chars: HashMap::new(), ranges: Vec::new() };
-    let s = String::from_utf8_lossy(text);
-    if let Some(csr) = extract_block(&s, "begincodespacerange", "endcodespacerange") {
-        if let Some(first_hex) = csr.split_whitespace().next() {
-            let hexlen = first_hex.trim_matches(|c| c == '<' || c == '>').len();
-            if hexlen > 0 {
-                fd.byte_width = hexlen.div_ceil(2);
-            }
-        }
-    }
-    for block in extract_all_blocks(&s, "beginbfchar", "endbfchar") {
-        let toks: Vec<&str> = block.split_whitespace().collect();
-        let mut i = 0;
-        while i + 1 < toks.len() {
-            if let Some(src) = hex_tok(toks[i]) {
-                let u = hex_to_unicode_string(toks[i + 1]);
-                fd.chars.insert(src, u);
-            }
-            i += 2;
-        }
-    }
-    for block in extract_all_blocks(&s, "beginbfrange", "endbfrange") {
-        let toks: Vec<&str> = block.split_whitespace().collect();
-        let mut i = 0;
-        while i < toks.len() {
-            let lo = hex_tok(toks.get(i).copied().unwrap_or(""));
-            let hi = hex_tok(toks.get(i + 1).copied().unwrap_or(""));
-            match (lo, hi, toks.get(i + 2)) {
-                (Some(lo), Some(hi), Some(dst)) if dst.starts_with('<') => {
-                    if let Some(dst_v) = hex_tok(dst) {
-                        fd.ranges.push((lo, hi, dst_v));
-                    }
-                    i += 3;
-                }
-                (Some(_lo), Some(_hi), Some(_arr_start)) => {
-                    i += 1;
-                } // array form: skip conservatively
-                _ => {
-                    i += 1;
-                }
-            }
-        }
-    }
-    fd
-}
-
-fn extract_block<'a>(s: &'a str, start: &str, end: &str) -> Option<&'a str> {
-    let i = s.find(start)? + start.len();
-    let j = s[i..].find(end)? + i;
-    Some(&s[i..j])
-}
-fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
-    let mut out = Vec::new();
-    let mut from = 0usize;
-    while let Some(rel) = s[from..].find(start) {
-        let i = from + rel + start.len();
-        let Some(rel_end) = s[i..].find(end) else { break };
-        out.push(&s[i..i + rel_end]);
-        from = i + rel_end + end.len();
-    }
-    out
-}
-fn hex_tok(tok: &str) -> Option<u32> {
-    let inner = tok.trim_start_matches('<').trim_end_matches('>');
-    if inner.is_empty() {
-        return None;
-    }
-    u32::from_str_radix(inner, 16).ok()
-}
-fn hex_to_unicode_string(hex: &str) -> String {
-    let inner = hex.trim_start_matches('<').trim_end_matches('>');
-    let bytes: Vec<u8> = (0..inner.len()).step_by(2).filter_map(|i| inner.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
-    let mut out = String::new();
-    for pair in bytes.chunks(2) {
-        if pair.len() == 2 {
-            let cu = ((pair[0] as u32) << 8) | pair[1] as u32;
-            if let Some(c) = char::from_u32(cu) {
-                out.push(c);
-            }
-        }
-    }
-    out
-}
-
-/// 🏗️ Builds a `FontDecoder` for one font dict, per requirement #6: ToUnicode CMap first, else
-/// `/Encoding` (base name or `/Differences`) resolved through AGL, else an honest ASCII-only
-/// default (documented scope cut — StandardEncoding's upper range isn't assumed without more
-/// info, so unmapped codes there stay U+FFFD rather than guessing).
-fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> FontDecoder {
-    let is_type0 = font_dict.dict_get("Subtype").and_then(|v| v.as_name()) == Some("Type0");
-    if let Some(tu) = font_dict.dict_get("ToUnicode") {
-        let stream = match tu {
-            PdfObject::Ref(r) => resolve(r.num),
-            other => Some(other.clone()),
-        };
-        if let Some(PdfObject::Stream { dict, data, .. }) = stream {
-            if let Ok((decoded, _)) = decode_stream(&dict, &data) {
-                return parse_tounicode_cmap(&decoded);
-            }
-        }
-    }
-    let mut fd = FontDecoder { byte_width: if is_type0 { 2 } else { 1 }, chars: HashMap::new(), ranges: Vec::new() };
-    for code in 0x20u32..=0x7E {
-        fd.chars.insert(code, (code as u8 as char).to_string());
-    }
-    let encoding = font_dict.dict_get("Encoding").map(|v| match v {
-        PdfObject::Ref(r) => resolve(r.num).unwrap_or(PdfObject::Null),
-        other => other.clone(),
-    });
-    let (base_name, differences) = match &encoding {
-        Some(PdfObject::Name(n)) => (Some(n.clone()), None),
-        Some(d @ PdfObject::Dict(_)) => (d.dict_get("BaseEncoding").and_then(|v| v.as_name()).map(|s| s.to_string()), d.dict_get("Differences").and_then(|v| v.as_array()).map(|a| a.to_vec())),
-        _ => (None, None),
-    };
-    if base_name.as_deref() == Some("WinAnsiEncoding") || (base_name.is_none() && differences.is_none()) {
-        for code in 0u32..=0xFF {
-            if let Some(c) = win_ansi(code as u8) {
-                fd.chars.insert(code, c.to_string());
-            }
-        }
-    }
-    if let Some(diffs) = differences {
-        let mut cur = 0u32;
-        for item in diffs {
-            match item {
-                PdfObject::Int(i) => cur = i as u32,
-                PdfObject::Name(name) => {
-                    if let Some(u) = glyph_name_to_unicode(&name) {
-                        fd.chars.insert(cur, u);
-                    } else {
-                        fd.chars.remove(&cur);
-                    }
-                    cur += 1;
-                }
-                _ => {}
-            }
-        }
-    }
-    fd
-}
-//#endregion 🔖️Encodings
-
-//#region 🔖️ContentStream
-#[derive(Clone, Debug)]
-enum ContentOperand {
-    /// 🔢 A numeric operand -- text extraction never reads the value itself, only that a slot in
-    /// the operand stack was a number (vs. name/string/array), so no payload is carried.
-    Num,
-    Str(Vec<u8>),
-    Name(String),
-    Array(Vec<ContentOperand>),
-}
-
-/// 🖋️ Extracts shown text from a content stream: `Tj`/`'`/`"`/`TJ` inside `BT..ET`, resolving
-/// font encoding per the currently-selected `Tf` resource (requirement #6). Never fabricates —
-/// unresolvable codes come back as U+FFFD from `FontDecoder::decode` itself.
-fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> String {
-    let mut out = String::new();
-    let mut lex = Lexer::new(content);
-    let mut operands: Vec<ContentOperand> = Vec::new();
-    let mut in_text = false;
-    let mut font_cache: HashMap<String, FontDecoder> = HashMap::new();
-    let mut current_font: Option<String> = None;
-
-    let font_dict_for = |name: &str, resources: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>| -> Option<PdfObject> {
-        let fonts_raw = resources.dict_get("Font")?;
-        let fonts = match fonts_raw {
-            PdfObject::Ref(r) => resolve(r.num)?,
-            other => other.clone(),
-        };
-        let entry = fonts.dict_get(name)?.clone();
-        match entry {
-            PdfObject::Ref(r) => resolve(r.num),
-            other => Some(other),
-        }
-    };
-
-    loop {
-        lex.skip_ws();
-        let Some(b) = lex.data.get(lex.pos).copied() else { break };
-        match b {
-            b'/' => {
-                if let PdfObject::Name(n) = lex.parse_name() {
-                    operands.push(ContentOperand::Name(n));
-                }
-            }
-            b'(' => {
-                if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
-                    operands.push(ContentOperand::Str(s));
-                }
-            }
-            b'<' if lex.peek_at(1) != Some(b'<') => {
-                if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
-                    operands.push(ContentOperand::Str(s));
-                }
-            }
-            b'<' => {
-                let _ = lex.parse_dict_or_stream(false);
-            } // marked-content property list; skip
-            b'[' => {
-                lex.pos += 1;
-                let mut arr = Vec::new();
-                loop {
-                    lex.skip_ws();
-                    match lex.data.get(lex.pos).copied() {
-                        Some(b']') => {
-                            lex.pos += 1;
-                            break;
-                        }
-                        Some(b'(') => {
-                            if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
-                                arr.push(ContentOperand::Str(s));
-                            }
-                        }
-                        Some(b'<') => {
-                            if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
-                                arr.push(ContentOperand::Str(s));
-                            }
-                        }
-                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
-                            Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
-                            Ok(PdfObject::Real(real)) if real.to_f64().is_some() => {
-                                arr.push(ContentOperand::Num);
-                            }
-                            _ => {}
-                        },
-                        Some(_) => {
-                            lex.pos += 1;
-                        }
-                        None => break,
-                    }
-                }
-                operands.push(ContentOperand::Array(arr));
-            }
-            c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
-                Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
-                Ok(PdfObject::Real(r)) if r.to_f64().is_some() => {
-                    operands.push(ContentOperand::Num);
-                }
-                _ => {}
-            },
-            b'%' => {
-                lex.skip_ws();
-            }
-            _ => {
-                let op = lex.read_regular_run();
-                if op.is_empty() {
-                    lex.pos += 1;
-                    continue;
-                }
-                let op = String::from_utf8_lossy(op).into_owned();
-                match op.as_str() {
-                    "BT" => {
-                        in_text = true;
-                    }
-                    "ET" => {
-                        in_text = false;
-                    }
-                    "Tf" => {
-                        if let Some(ContentOperand::Name(n)) = operands.first() {
-                            current_font = Some(n.clone());
-                            if !font_cache.contains_key(n) {
-                                if let Some(fd) = font_dict_for(n, resources, resolve) {
-                                    font_cache.insert(n.clone(), build_font_decoder(&fd, resolve));
-                                }
-                            }
-                        }
-                    }
-                    "Tj" if in_text => {
-                        if let Some(ContentOperand::Str(s)) = operands.last() {
-                            if let Some(name) = &current_font {
-                                if let Some(fd) = font_cache.get(name) {
-                                    out.push_str(&fd.decode(s));
-                                }
-                            }
-                        }
-                    }
-                    // 🆕️ `T*` moves to the start of the next line (PDF32000-1 §9.4.2, equivalent
-                    // to `0 tl Td`) — a real newline signal preceding a subsequent `Tj`, distinct
-                    // from `'`/`"` (which fold the same move into the text-showing op itself).
-                    // `encode_pdf` emits exactly this `T*`-then-`Tj` shape for multi-line text.
-                    "T*" if in_text => {
-                        if !out.is_empty() {
-                            out.push('\n');
-                        }
-                    }
-                    "'" | "\"" if in_text => {
-                        if let Some(ContentOperand::Str(s)) = operands.last() {
-                            if let Some(name) = &current_font {
-                                if let Some(fd) = font_cache.get(name) {
-                                    if !out.is_empty() {
-                                        out.push('\n');
-                                    }
-                                    out.push_str(&fd.decode(s));
-                                }
-                            }
-                        }
-                    }
-                    "TJ" if in_text => {
-                        if let Some(ContentOperand::Array(items)) = operands.last() {
-                            for item in items {
-                                if let ContentOperand::Str(s) = item {
-                                    if let Some(name) = &current_font {
-                                        if let Some(fd) = font_cache.get(name) {
-                                            out.push_str(&fd.decode(s));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-                operands.clear();
-            }
-        }
-    }
-    out
-}
-//#endregion 🔖️ContentStream
-
-//#region 🔖️PageTree
-#[derive(Clone, Debug, Default)]
-struct Inherited {
-    resources: Option<PdfObject>,
-    media_box: Option<[f64; 4]>,
-    crop_box: Option<[f64; 4]>,
-    rotate: i32,
-}
-
-fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
-    let a = v.as_array()?;
-    if a.len() < 4 {
-        return None;
-    }
-    Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?, a[3].as_f64()?])
-}
-
-/// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
-/// `/Rotate` down to `/Page` leaves (requirement #5), extracting each leaf's text (requirement
-/// #6). Cycle-guarded — malformed files sometimes have self-referential kids. Each leaf is
-/// reported WITH the indirect reference it was read from, because the export side has to write
-/// the authored lanes back onto exactly those objects (@see [`retained_lanes`]).
-fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<(ObjRef, PdfPage)>) {
-    if !visited.insert(node_ref.num) {
-        return;
-    }
-    let Some(node) = resolve(node_ref.num) else { return };
-    let mut here = inherited.clone();
-    if let Some(r) = node.dict_get("Resources") {
-        // 🔗️ `/Resources` is very commonly an indirect reference to a shared dict (as in the
-        // bachelor-thesis fixture) -- must resolve it here, not just clone the `Ref` object,
-        // or every downstream `dict_get("Font")` silently sees a non-dict and finds nothing.
-        let resolved = match r {
-            PdfObject::Ref(rf) => resolve(rf.num).unwrap_or_else(|| r.clone()),
-            other => other.clone(),
-        };
-        here.resources = Some(resolved);
-    }
-    if let Some(mb) = node.dict_get("MediaBox").and_then(as_box) {
-        here.media_box = Some(mb);
-    }
-    if let Some(cb) = node.dict_get("CropBox").and_then(as_box) {
-        here.crop_box = Some(cb);
-    }
-    if let Some(rot) = node.dict_get("Rotate").and_then(|v| v.as_i64()) {
-        here.rotate = rot as i32;
-    }
-
-    let is_pages = node.dict_get("Type").and_then(|v| v.as_name()) == Some("Pages");
-    let kids = node.dict_get("Kids").and_then(|v| v.as_array());
-    if is_pages || kids.is_some() {
-        if let Some(kids) = kids {
-            for kid in kids {
-                if let Some(r) = kid.as_ref() {
-                    walk_page_tree(r, resolve, &here, visited, out);
-                }
-            }
-        }
-        return;
-    }
-    // 🍃 Leaf /Page node.
-    let media_box = here.media_box.unwrap_or([0.0, 0.0, 612.0, 792.0]);
-    let resources = here.resources.clone().unwrap_or(PdfObject::Dict(Vec::new()));
-    let mut text = String::new();
-    if let Some(contents) = node.dict_get("Contents") {
-        let refs: Vec<ObjRef> = match contents {
-            PdfObject::Ref(r) => vec![*r],
-            PdfObject::Array(a) => a.iter().filter_map(|o| o.as_ref()).collect(),
-            _ => Vec::new(),
-        };
-        let mut combined = Vec::new();
-        for r in refs {
-            if let Some(PdfObject::Stream { dict, data, .. }) = resolve(r.num) {
-                if let Ok((decoded, _)) = decode_stream(&dict, &data) {
-                    if !combined.is_empty() {
-                        combined.push(b' ');
-                    }
-                    combined.extend_from_slice(&decoded);
-                }
-            }
-        }
-        text = extract_text(&combined, &resources, resolve);
-    }
-    out.push((node_ref, PdfPage { media_box, crop_box: here.crop_box, rotate: here.rotate, text }));
-}
-//#endregion 🔖️PageTree
+//#endregion 🔖️Sniff
 
 //#region 🔖️Decode
-/// 📥️ Real decode (requirements #1-#6). Returns `Unsupported` if `/Encrypt` is present
-/// (requirement #4) — never guesses a password or produces garbage.
+/// 📥️ Decodes a file with the empty user password.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
-    if data.len() < 5 || &data[0..5] != b"%PDF-" {
-        return Err(PdfEngineError::NotPdf);
-    }
-    let header_end = data.iter().take(32).position(|&b| b == b'\n' || b == b'\r').unwrap_or(data.len().min(16));
-    let declared_version = String::from_utf8_lossy(&data[5..header_end.max(5)]).trim().to_string();
+    decode_pdf_with_password(data, "")
+}
 
-    let startxref_pos = find_last_subslice(data, b"startxref").ok_or(PdfEngineError::Malformed("missing startxref".into()));
-    let xref = match startxref_pos {
-        Ok(pos) => {
-            let mut lex = Lexer::new(data).at(pos + b"startxref".len());
-            lex.skip_ws();
-            match lex.parse_number() {
-                Ok(PdfObject::Int(off)) if off >= 0 && (off as usize) < data.len() => build_xref(data, off as usize),
-                _ => build_xref(data, data.len()), // forces brute-force fallback
-            }
-        }
-        Err(_) => build_xref(data, data.len()),
-    };
-
-    if xref.trailer.iter().any(|e| e.key == "Encrypt") {
-        return Err(PdfEngineError::Unsupported("/Encrypt present -- encrypted PDFs are not read".into()));
-    }
-
+/// 📥️ Decodes a file, opening the standard security handler with `password` when it is
+/// encrypted (`Unsupported` when the password does not open it or the handler is not the
+/// standard one — never garbage).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnapshot> {
+    let declared_version = sniff_pdf(data).ok_or(PdfEngineError::NotPdf)?;
+    let start = data.windows(5).position(|window| window == b"%PDF-").unwrap_or(0);
+    let data = &data[start..];
+    let xref = build_xref(data, startxref_offset(data));
     let mut resolver = Resolver::new(data, xref.entries.clone());
-    let mut resolve = |num: u32| resolver.resolve(num);
-
-    let root_ref = xref.trailer.iter().find(|e| e.key == "Root").and_then(|e| e.value.as_ref());
-    let mut leaves = Vec::new();
-    if let Some(root_ref) = root_ref {
-        if let Some(root) = resolve(root_ref.num) {
-            if root.dict_get("Encrypt").is_some() {
-                return Err(PdfEngineError::Unsupported("/Encrypt present on /Root".into()));
-            }
-            if let Some(pages_ref) = root.dict_get("Pages").and_then(|v| v.as_ref()) {
-                let mut visited = HashSet::new();
-                walk_page_tree(pages_ref, &mut resolve, &Inherited::default(), &mut visited, &mut leaves);
-            }
-        }
+    let mut encryption = None;
+    let mut encrypt_object: Option<u32> = None;
+    if let Some(encrypt) = dict_get(&xref.trailer, "Encrypt") {
+        encrypt_object = encrypt.as_ref().map(|reference| reference.num);
+        let dictionary = match encrypt {
+            PdfObject::Ref(reference) => resolver.resolve(reference.num).ok_or_else(|| PdfEngineError::Malformed("/Encrypt reference does not resolve".into()))?,
+            other => other.clone(),
+        };
+        let dictionary = dictionary.as_dict().ok_or_else(|| PdfEngineError::Malformed("/Encrypt is not a dictionary".into()))?.to_vec();
+        let document_id = dict_get(&xref.trailer, "ID").and_then(PdfObject::as_array).and_then(|items| items.first()).and_then(PdfObject::as_str_bytes).unwrap_or(&[]).to_vec();
+        let (decryptor, parameters) = open_standard_security(&dictionary, &document_id, password)?;
+        resolver.set_decryptor(Some(decryptor));
+        encryption = Some(parameters);
     }
-    let pages = leaves.into_iter().map(|(_, page)| page).collect();
-
-    let info = xref
-        .trailer
-        .iter()
-        .find(|e| e.key == "Info")
-        .and_then(|e| e.value.as_ref())
-        .and_then(|r| resolve(r.num))
-        .map(|d| PdfInfo {
-            title: d.dict_get("Title").and_then(pdf_string_to_text),
-            author: d.dict_get("Author").and_then(pdf_string_to_text),
-            subject: d.dict_get("Subject").and_then(pdf_string_to_text),
-            keywords: d.dict_get("Keywords").and_then(pdf_string_to_text),
-            creator: d.dict_get("Creator").and_then(pdf_string_to_text),
-            producer: d.dict_get("Producer").and_then(pdf_string_to_text),
-        })
-        .unwrap_or_default();
-
-    let objects = resolver.resolve_all()?;
-    let trailer = xref.trailer;
-
-    Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
-}
-
-fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
-    let PdfObject::Str(bytes) = v else { return None };
-    if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
-        let units: Vec<u16> = bytes[2..].chunks(2).filter(|c| c.len() == 2).map(|c| ((c[0] as u16) << 8) | c[1] as u16).collect();
-        return Some(String::from_utf16_lossy(&units));
+    let mut objects = resolver.resolve_all()?;
+    if let Some(number) = encrypt_object {
+        objects.retain(|object| object.id.num != number);
     }
-    Some(bytes.iter().map(|&b| win_ansi(b).unwrap_or('\u{FFFD}')).collect())
-}
-
-fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
-    if needle.len() > data.len() {
-        return None;
+    let trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| matches!(entry.key.as_str(), "Root" | "Info" | "ID")).cloned().collect();
+    if !trailer.iter().any(|entry| entry.key == "Root") {
+        return Err(PdfEngineError::Malformed("no /Root in any trailer and no /Catalog object to recover one from".into()));
     }
-    (0..=data.len() - needle.len()).rev().find(|&i| &data[i..i + needle.len()] == needle)
+    let mut source = GraphSource::new(&objects);
+    let lifter = lift_document_with(&trailer, &declared_version, &mut source);
+    let mut snapshot = lifter.snapshot;
+    snapshot.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
+    snapshot.declared_version = declared_version;
+    snapshot.encryption = encryption;
+    snapshot.objects = objects;
+    snapshot.trailer = trailer;
+    Ok(snapshot)
 }
 //#endregion 🔖️Decode
 
 //#region 🔖️Encode
-const TOUNICODE_IDENTITY_CMAP: &str = "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0000> <FFFF> <0000>\nendbfrange\nendcmap\nend\nend\n";
-
-fn hex_string_utf16(s: &str) -> String {
-    let mut out = String::from("<");
-    for c in s.chars() {
-        let cp = c as u32;
-        if cp <= 0xFFFF {
-            out.push_str(&format!("{cp:04X}"));
-        } else {
-            out.push_str("FFFD"); // documented scope cut: astral codepoints aren't representable by our 1-code-unit writer font
-        }
-    }
-    out.push('>');
-    out
+/// 🎛️ Every knob of a write in one place.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct EncodeOptions {
+    pub lower: LowerOptions,
+    pub write: WriteOptions,
 }
 
-fn pdf_text_string(s: &str) -> String {
-    if s.is_ascii() {
-        let escaped: String = s
-            .chars()
-            .flat_map(|c| match c {
-                '(' => vec!['\\', '('],
-                ')' => vec!['\\', ')'],
-                '\\' => vec!['\\', '\\'],
-                other => vec![other],
-            })
-            .collect();
-        format!("({escaped})")
-    } else {
-        let mut hex = String::from("<FEFF");
-        for c in s.chars() {
-            hex.push_str(&format!("{:04X}", c as u32 & 0xFFFF));
-        }
-        hex.push('>');
-        hex
+impl EncodeOptions {
+    /// 📦 The export profile consumers want: subset fonts, compressed streams.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn export() -> Self {
+        Self { lower: LowerOptions { subset_fonts: true, compress: true }, write: WriteOptions::default() }
     }
 }
 
-/// 🔤️ Whether `text` can be shown with a single-byte simple font. Anything outside printable
-/// ASCII (newlines aside) needs the two-byte `Identity-H` route and its `ToUnicode` CMap; anything
-/// inside it is written as a plain literal string, which is what every reader — including a
-/// deliberately naive one that never consults `ToUnicode` — recovers the text from.
-fn simple_shown_text(text: &str) -> bool {
-    text.chars().all(|character| character == '\n' || (character.is_ascii() && !character.is_control()))
+/// 📤️ Writes the snapshot with default options (no font subsetting, classic cross-reference
+/// table, the snapshot's own `encryption`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_pdf(snapshot: &PdfSnapshot) -> PResult<Vec<u8>> {
+    encode_pdf_with(snapshot, &EncodeOptions::default())
 }
 
-/// 🔤️ One `(…)` literal string operand, escaping the three characters ISO 32000-1 §7.3.4.2 gives
-/// special meaning to.
-fn literal_shown_string(line: &str) -> String {
-    let mut out = String::from("(");
-    for character in line.chars() {
-        if matches!(character, '(' | ')' | '\\') {
-            out.push('\\');
-        }
-        out.push(character);
-    }
-    out.push(')');
-    out
+/// 🧭 A source over the retained graph that remembers every object the typed lanes reached.
+struct RecordingSource<'a> {
+    inner: GraphSource<'a>,
+    seen: HashSet<u32>,
 }
 
-/// ✏️️ A text-showing content stream for `text`, drawn with the resource-named font `font`.
-///
-/// Two deliberate shapes, and both matter to a reader that is not this codec: `14 TL` is emitted
-/// only when a following `T*` actually consumes it, and the shown operand is a literal string
-/// whenever [`simple_shown_text`] holds — a hex `Identity-H` operand is only recoverable through
-/// the `ToUnicode` CMap this writer pairs it with, so spending it on plain ASCII would hide the
-/// text from every reader that does not.
-fn build_content_ops(text: &str, font: &str) -> String {
-    if text.is_empty() {
-        return String::new();
-    }
-    let lines: Vec<&str> = text.split('\n').collect();
-    let simple = simple_shown_text(text);
-    let mut ops = format!("BT\n/{font} 12 Tf\n");
-    if lines.len() > 1 {
-        ops.push_str("14 TL\n");
-    }
-    ops.push_str("72 740 Td\n");
-    for (i, line) in lines.iter().enumerate() {
-        if i > 0 {
-            ops.push_str("T*\n");
-        }
-        ops.push_str(&if simple { literal_shown_string(line) } else { hex_string_utf16(line) });
-        ops.push_str(" Tj\n");
-    }
-    ops.push_str("ET\n");
-    ops
-}
-
-fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
-    out.push(b'/');
-    for character in name.chars() {
-        let value = character as u32;
-        if value <= u8::MAX as u32 {
-            let byte = value as u8;
-            if (33..=126).contains(&byte) && !is_delim(byte) && byte != b'#' {
-                out.push(byte);
-            } else {
-                out.extend_from_slice(format!("#{byte:02X}").as_bytes());
-            }
-        } else {
-            for byte in character.to_string().as_bytes() {
-                out.extend_from_slice(format!("#{byte:02X}").as_bytes());
-            }
-        }
+impl ObjectSource for RecordingSource<'_> {
+    fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
+        self.seen.insert(reference.num);
+        self.inner.get(reference)
     }
 }
 
-fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>, top_level: bool, illustrator: bool) {
-    let stream = stream_length.is_some();
-    let compact_names = entries.first().is_some_and(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Group"));
-    let inline_action = entries.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "GoTo"));
-    let compact_uri_action =
-        entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Action")) && entries.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"));
-    let annotation = entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Annot"));
-    let type3_font = entries.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if name == "Type3"));
-    let compact_document_info = entries.iter().any(|entry| entry.key == "Author") && entries.iter().any(|entry| entry.key == "Keywords");
-    let resource_dictionary = entries.iter().any(|entry| entry.key == "ExtGState");
-    let nested_multiline = entries.iter().any(|entry| matches!(entry.key.as_str(), "Illustrator" | "ExtGState" | "Properties"))
-        || entries.iter().any(|entry| entry.key == "Creator") && entries.iter().any(|entry| entry.key == "Subtype")
-        || (!entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("GS") || entry.key.starts_with("MC") || entry.key.starts_with("Fm")));
-    let compact_tt_font = !entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("TT"));
-    let compact_font_resources = !entries.is_empty() && entries.iter().all(|entry| entry.key.starts_with("T1_") || entry.key.starts_with("TT"));
-    let illustrator_reference = entries.iter().find_map(|entry| match (&*entry.key, &entry.value) {
-        ("PieceInfo", PdfObject::Dict(piece_info)) => piece_info.iter().find_map(|entry| match (&*entry.key, &entry.value) {
-            ("Illustrator", PdfObject::Ref(reference)) => Some(reference.num),
-            _ => None,
-        }),
-        _ => None,
-    });
-    let multiline = stream || nested_multiline || (!compact_names && !inline_action && (top_level || entries.iter().any(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Page"))));
-    let unpadded_stream_length = stream && illustrator;
-    out.extend_from_slice(if multiline { b"<<\n" } else { b"<<" });
-    let mut wrote_length = false;
-    for (index, entry) in entries.iter().enumerate() {
-        if !multiline && !compact_uri_action && (!compact_names || index != 0) && !(compact_font_resources && index > 0) {
-            out.push(b' ');
-        }
-        write_pdf_name(out, &entry.key);
-        let compact_annotation_value = annotation
-            && (matches!(entry.key.as_str(), "Border" | "H" | "C")
-                || entry.key == "Subtype"
-                    && matches!(&entry.value, PdfObject::Name(name) if name == "Link")
-                    && entries.get(index + 1).is_some_and(|next| next.key == "A" && matches!(&next.value, PdfObject::Dict(action) if action.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"))))
-                || entry.key == "A" && matches!(&entry.value, PdfObject::Dict(action) if action.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "URI"))));
-        let compact_catalog_value = entry.key == "PageMode" && matches!(&entry.value, PdfObject::Name(name) if name == "UseOutlines") || entry.key == "PageLabels";
-        let compact_info_value = compact_document_info && matches!(entry.key.as_str(), "Author" | "Title" | "Subject" | "Creator" | "Keywords");
-        if !(compact_names && matches!(&entry.value, PdfObject::Name(_))) && !compact_annotation_value && !compact_uri_action && !compact_catalog_value && !compact_info_value {
-            out.push(b' ');
-        }
-        if entry.key == "Length" {
-            wrote_length = true;
-            match (&entry.value, stream_length) {
-                (PdfObject::Int(_), Some(length)) if unpadded_stream_length => out.extend_from_slice(length.to_string().as_bytes()),
-                (PdfObject::Int(_), Some(length)) => out.extend_from_slice(format!("{length:<10}").as_bytes()),
-                _ => write_pdf_object(out, &entry.value, illustrator),
-            }
-        } else {
-            match (&entry.value, inline_action && entry.key == "D") {
-                (PdfObject::Str(bytes), true) => write_pdf_string(out, bytes, true),
-                (PdfObject::Str(bytes), _) if entry.key == "PTEX.FileName" => write_pdf_filename_string(out, bytes),
-                (PdfObject::Str(bytes), _) if entry.key == "PTEX.Fullbanner" => write_pdf_fullbanner_string(out, bytes),
-                (PdfObject::Dict(entries), _) if entry.key == "PageLabels" => write_pdf_page_labels(out, entries),
-                (PdfObject::Array(items), _) if entry.key == "Filter" && illustrator => write_pdf_array(out, items, false, illustrator),
-                (PdfObject::Array(items), _) if entry.key == "Differences" => write_pdf_differences_array(out, items, entries.iter().any(|entry| entry.key == "BaseEncoding"), illustrator),
-                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Names" | "Limits") => write_pdf_name_tree_array(out, items, illustrator),
-                (PdfObject::Array(items), _) if entry.key == "Kids" => write_pdf_array(out, items, false, illustrator),
-                (PdfObject::Array(items), _) if entry.key == "BBox" => write_pdf_array_spacing(out, items, !matches!(items.first(), Some(PdfObject::Int(0))), false, illustrator),
-                (PdfObject::Array(items), _) if entry.key == "FontBBox" && type3_font => write_pdf_array_spacing(out, items, true, true, illustrator),
-                (PdfObject::Array(items), _) if entry.key == "FontBBox" => write_pdf_array_spacing(out, items, illustrator, false, illustrator),
-                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Widths" | "Matrix") => write_pdf_array_spacing(out, items, true, false, illustrator),
-                _ => write_pdf_object(out, &entry.value, illustrator),
-            }
-        }
-        let chains_to_next = annotation && matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("Border", Some("H")) | ("H", Some("C")))
-            || annotation && matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("Subtype", Some("A")))
-            || matches!((entry.key.as_str(), entries.get(index + 1).map(|next| next.key.as_str())), ("PageMode", Some("PageLabels")))
-            || compact_document_info && matches!(entry.key.as_str(), "Author" | "Title" | "Subject" | "Creator") && entries.get(index + 1).is_some_and(|next| matches!(next.key.as_str(), "Title" | "Subject" | "Creator" | "Keywords"))
-            || resource_dictionary && entry.key == "ExtGState" && index + 1 < entries.len()
-            || resource_dictionary && entry.key == "Properties"
-            || resource_dictionary && entry.key != "ExtGState" && index + 1 == entries.len() && matches!(&entry.value, PdfObject::Dict(_))
-            || entry.key == "PieceInfo" && entries.get(index + 1).is_some_and(|next| next.key == "Group") && matches!((&entries[index + 1].value, illustrator_reference), (PdfObject::Ref(group), Some(illustrator)) if group.num < illustrator);
-        if multiline && !chains_to_next {
-            out.push(b'\n');
-        }
-    }
-    if let Some(length) = stream_length.filter(|_| !wrote_length) {
-        if unpadded_stream_length {
-            out.extend_from_slice(format!("/Length {length}\n").as_bytes());
-        } else {
-            out.extend_from_slice(format!("/Length {length:<10}\n").as_bytes());
-        }
-    }
-    out.extend_from_slice(if multiline || compact_names || compact_uri_action || compact_tt_font || compact_font_resources { b">>" } else { b" >>" });
-}
-
-fn encode_ascii_hex(data: &[u8]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(data.len() * 2 + 1);
-    for byte in data {
-        out.extend_from_slice(format!("{byte:02X}").as_bytes());
-    }
-    out.push(b'>');
-    out
-}
-
-fn encode_ascii85(data: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    for chunk in data.chunks(4) {
-        let mut word = 0u32;
-        for index in 0..4 {
-            word = (word << 8) | chunk.get(index).copied().unwrap_or(0) as u32;
-        }
-        if chunk.len() == 4 && word == 0 {
-            out.push(b'z');
-            continue;
-        }
-        let mut encoded = [0u8; 5];
-        for index in (0..5).rev() {
-            encoded[index] = (word % 85) as u8 + b'!';
-            word /= 85;
-        }
-        out.extend_from_slice(&encoded[..chunk.len() + 1]);
-    }
-    out.extend_from_slice(b"~>");
-    out
-}
-
-fn encode_run_length(data: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    let mut index = 0;
-    while index < data.len() {
-        let mut repeated = 1usize;
-        while index + repeated < data.len() && data[index + repeated] == data[index] && repeated < 128 {
-            repeated += 1;
-        }
-        if repeated >= 3 {
-            out.push((257 - repeated) as u8);
-            out.push(data[index]);
-            index += repeated;
-            continue;
-        }
-        let literal_start = index;
-        index += repeated;
-        while index < data.len() && index - literal_start < 128 {
-            let mut next_repeat = 1usize;
-            while index + next_repeat < data.len() && data[index + next_repeat] == data[index] && next_repeat < 3 {
-                next_repeat += 1;
-            }
-            if next_repeat >= 3 {
-                break;
-            }
-            index += next_repeat;
-        }
-        let length = index - literal_start;
-        out.push((length - 1) as u8);
-        out.extend_from_slice(&data[literal_start..index]);
-    }
-    out.push(128);
-    out
-}
-
-fn write_pdf_string(out: &mut Vec<u8>, bytes: &[u8], escape_spaces: bool) {
-    if bytes.iter().all(|byte| matches!(byte, 0x20..=0x7e)) {
-        out.push(b'(');
-        for byte in bytes {
-            if escape_spaces && *byte == b' ' {
-                out.extend_from_slice(b"\\040");
-            } else {
-                if matches!(byte, b'(' | b')' | b'\\') {
-                    out.push(b'\\');
-                }
-                out.push(*byte);
-            }
-        }
-        out.push(b')');
-    } else {
-        out.push(b'<');
-        for byte in bytes {
-            out.extend_from_slice(format!("{byte:02X}").as_bytes());
-        }
-        out.push(b'>');
-    }
-}
-
-fn write_pdf_filename_string(out: &mut Vec<u8>, bytes: &[u8]) {
-    out.push(b'(');
-    for byte in bytes {
-        if matches!(byte, b'(' | b')' | b'\\') {
-            out.push(b'\\');
-            out.push(*byte);
-        } else if matches!(byte, 0x20..=0x7e) {
-            out.push(*byte);
-        } else {
-            out.extend_from_slice(format!("\\{byte:03o}").as_bytes());
-        }
-    }
-    out.push(b')');
-}
-
-fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
-    out.push(b'(');
-    for byte in bytes {
-        if *byte == b'\\' {
-            out.push(b'\\');
-        }
-        out.push(*byte);
-    }
-    out.push(b')');
-}
-
-fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
-    let row_bytes = (predictor.columns as usize * predictor.colors as usize * predictor.bits_per_component as usize).div_ceil(8);
-    if predictor.predictor >= 10 {
-        let mut out = Vec::with_capacity(data.len() + data.len().div_ceil(row_bytes.max(1)));
-        for row in data.chunks(row_bytes.max(1)) {
-            out.push(0);
-            out.extend_from_slice(row);
-        }
-        return out;
-    }
-    if predictor.predictor == 2 && predictor.bits_per_component == 8 {
-        let colors = predictor.colors.max(1) as usize;
-        let mut out = data.to_vec();
-        for row in out.chunks_mut(row_bytes.max(1)) {
-            for index in (colors..row.len()).rev() {
-                row[index] = row[index].wrapping_sub(row[index - colors]);
-            }
-        }
-        return out;
-    }
-    data.to_vec()
-}
-
-fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
-    dict.iter().any(|entry| entry.key == "PieceInfo" && matches!(&entry.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Illustrator")))
-}
-
-fn encode_stream_data(data: &[u8], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<u8> {
-    let mut encoded = data.to_vec();
-    for filter in filters.iter().rev() {
-        encoded = match filter {
-            PdfStreamFilter::Flate { predictor } => {
-                let predicted = predictor.as_ref().map_or_else(|| encoded.clone(), |value| encode_predictor(&encoded, value));
-                if illustrator {
-                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
-                } else {
-                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).expect("logical PDF stream is zlib-encodable")
-                }
-            }
-            PdfStreamFilter::AsciiHex => encode_ascii_hex(&encoded),
-            PdfStreamFilter::Ascii85 => encode_ascii85(&encoded),
-            PdfStreamFilter::RunLength => encode_run_length(&encoded),
-        };
-    }
-    encoded
-}
-
-fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<PdfDictEntry> {
-    let mut entries = dict.to_vec();
-    let names = filters
-        .iter()
-        .map(|filter| {
-            PdfObject::Name(
-                match filter {
-                    PdfStreamFilter::Flate { .. } => "FlateDecode",
-                    PdfStreamFilter::AsciiHex => "ASCIIHexDecode",
-                    PdfStreamFilter::Ascii85 => "ASCII85Decode",
-                    PdfStreamFilter::RunLength => "RunLengthDecode",
-                }
-                .into(),
-            )
-        })
-        .collect::<Vec<_>>();
-    if !names.is_empty() {
-        let root_piece_info = has_illustrator_piece_info(dict);
-        let font_program = dict.iter().any(|entry| entry.key == "Length1") || dict.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if matches!(name.as_str(), "Type1C" | "CIDFontType0C" | "OpenType")));
-        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
-        if illustrator && !root_piece_info {
-            let index = entries.iter().position(|entry| entry.key == "Length").unwrap_or(entries.len());
-            entries.insert(index, filter);
-        } else {
-            entries.push(filter);
-        }
-        let parameters = filters
-            .iter()
-            .map(|filter| match filter {
-                PdfStreamFilter::Flate { predictor: Some(value) } => PdfObject::Dict(vec![
-                    PdfDictEntry { key: "Predictor".into(), value: PdfObject::Int(value.predictor as i64) },
-                    PdfDictEntry { key: "Colors".into(), value: PdfObject::Int(value.colors as i64) },
-                    PdfDictEntry { key: "BitsPerComponent".into(), value: PdfObject::Int(value.bits_per_component as i64) },
-                    PdfDictEntry { key: "Columns".into(), value: PdfObject::Int(value.columns as i64) },
-                ]),
-                _ => PdfObject::Null,
-            })
-            .collect::<Vec<_>>();
-        if parameters.iter().any(|value| !matches!(value, PdfObject::Null)) {
-            entries.push(PdfDictEntry { key: "DecodeParms".into(), value: if parameters.len() == 1 { parameters[0].clone() } else { PdfObject::Array(parameters) } });
-        }
-    }
-    entries
-}
-
-fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject, illustrator: bool) {
-    match object {
-        PdfObject::Null => out.extend_from_slice(b"null"),
-        PdfObject::Bool(value) => out.extend_from_slice(if *value { b"true" } else { b"false" }),
-        PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
-        PdfObject::Real(value) => out.extend_from_slice(value.to_string().as_bytes()),
-        PdfObject::Str(bytes) => write_pdf_string(out, bytes, false),
-        PdfObject::Name(name) => write_pdf_name(out, name),
-        PdfObject::Array(items) => {
-            let padded = !items.is_empty() && (items.iter().all(|item| matches!(item, PdfObject::Name(_))) || items.iter().all(|item| matches!(item, PdfObject::Ref(_))));
-            write_pdf_array(out, items, padded, illustrator);
-        }
-        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None, false, illustrator),
-        PdfObject::Ref(reference) => out.extend_from_slice(format!("{} {} R", reference.num, reference.gen).as_bytes()),
-        PdfObject::Stream { dict, data, filters } => {
-            let encoded = encode_stream_data(data, filters, illustrator);
-            let dict = stream_serialization_dict(dict, filters, illustrator);
-            write_pdf_dict(out, &dict, Some(encoded.len()), true, illustrator);
-            out.extend_from_slice(b"\nstream\n");
-            out.extend_from_slice(&encoded);
-            out.extend_from_slice(b"\nendstream");
-        }
-    }
-}
-
-fn write_pdf_array(out: &mut Vec<u8>, items: &[PdfObject], padded: bool, illustrator: bool) {
-    write_pdf_array_spacing(out, items, padded, padded, illustrator);
-}
-
-fn write_pdf_array_spacing(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, trailing: bool, illustrator: bool) {
-    out.push(b'[');
-    if leading {
-        out.push(b' ');
-    }
-    for (index, item) in items.iter().enumerate() {
-        if index > 0 {
-            out.push(b' ');
-        }
-        write_pdf_object(out, item, illustrator);
-    }
-    if trailing {
-        out.push(b' ');
-    }
-    out.push(b']');
-}
-
-fn write_pdf_differences_array(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, illustrator: bool) {
-    out.push(b'[');
-    if leading {
-        out.push(b' ');
-    }
-    for (index, item) in items.iter().enumerate() {
-        if index > 0 && !matches!(item, PdfObject::Name(_)) {
-            out.push(b' ');
-        }
-        write_pdf_object(out, item, illustrator);
-    }
-    out.push(b']');
-}
-
-fn write_pdf_name_tree_array(out: &mut Vec<u8>, items: &[PdfObject], illustrator: bool) {
-    out.push(b'[');
-    for (index, item) in items.iter().enumerate() {
-        if index > 0 {
-            out.push(b' ');
-        }
-        match item {
-            PdfObject::Str(bytes) => write_pdf_string(out, bytes, true),
-            value => write_pdf_object(out, value, illustrator),
-        }
-    }
-    out.push(b']');
-}
-
-fn write_pdf_page_labels(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
-    out.extend_from_slice(b"<<");
-    for entry in entries {
-        write_pdf_name(out, &entry.key);
-        match &entry.value {
-            PdfObject::Array(items) if entry.key == "Nums" => {
-                out.push(b'[');
-                for item in items {
-                    match item {
-                        PdfObject::Dict(label) => {
-                            out.extend_from_slice(b"<<");
-                            for entry in label {
-                                write_pdf_name(out, &entry.key);
-                                write_pdf_object(out, &entry.value, false);
-                            }
-                            out.extend_from_slice(b">>");
-                        }
-                        value => write_pdf_object(out, value, false),
-                    }
-                }
-                out.push(b']');
-            }
-            value => write_pdf_object(out, value, false),
-        }
-    }
-    out.extend_from_slice(b">>");
-}
-
-fn collect_pdf_references(value: &PdfObject, references: &mut Vec<u32>) {
+/// 🔁 Rewrites references inside a retained object through `map`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rewrite_refs(value: &PdfObject, map: &HashMap<u32, ObjRef>) -> PdfObject {
     match value {
-        PdfObject::Ref(reference) => references.push(reference.num),
-        PdfObject::Array(items) => items.iter().for_each(|item| collect_pdf_references(item, references)),
-        PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => {
-            entries.iter().for_each(|entry| collect_pdf_references(&entry.value, references));
-        }
-        _ => {}
+        PdfObject::Ref(reference) => PdfObject::Ref(map.get(&reference.num).copied().unwrap_or(*reference)),
+        PdfObject::Array(items) => PdfObject::Array(items.iter().map(|item| rewrite_refs(item, map)).collect()),
+        PdfObject::Dict(entries) => PdfObject::Dict(entries.iter().map(|entry| PdfDictEntry { key: entry.key.clone(), value: rewrite_refs(&entry.value, map) }).collect()),
+        PdfObject::Stream { dict, data, filters } => PdfObject::Stream { dict: dict.iter().map(|entry| PdfDictEntry { key: entry.key.clone(), value: rewrite_refs(&entry.value, map) }).collect(), data: data.clone(), filters: filters.clone() },
+        other => other.clone(),
     }
 }
 
-fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> {
-    let by_id = objects.iter().map(|object| (object.id.num, &object.value)).collect::<HashMap<_, _>>();
-    let mut pending = objects
-        .iter()
-        .filter(|object| match &object.value {
-            PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => has_illustrator_piece_info(entries),
-            _ => false,
-        })
-        .map(|object| object.id.num)
-        .collect::<Vec<_>>();
-    let mut ids = HashSet::new();
-    while let Some(id) = pending.pop() {
-        if !ids.insert(id) {
-            continue;
-        }
-        if let Some(value) = by_id.get(&id) {
-            collect_pdf_references(value, &mut pending);
-        }
-    }
-    ids
-}
-
-//#region 🔖️AuthoredLanes
-/// 📛️ Resource name this writer parks its own font under. Deliberately not `/F1`: a page whose
-/// content is only APPENDED to keeps its original resource dictionary, and a real document's own
-/// `/F1` must not be shot out from under the operators that still reference it.
-const RECONCILED_FONT_NAME: &str = "SemioText";
-
-/// 🗂️ The page and metadata lanes as the RETAINED object graph currently spells them, read back
-/// through the very page-tree walk `decode_pdf` uses — so "has the authored lane moved away from
-/// the carrier?" is asked with one reader rather than two that could disagree.
-struct RetainedLanes {
-    pages_root: ObjRef,
-    leaves: Vec<ObjRef>,
-    pages: Vec<PdfPage>,
-    info: PdfInfo,
-    info_object: Option<ObjRef>,
-}
-
-fn retained_lanes(snap: &PdfSnapshot) -> Option<RetainedLanes> {
-    let by_number: HashMap<u32, &PdfObject> = snap.objects.iter().map(|object| (object.id.num, &object.value)).collect();
-    let mut resolve = |number: u32| by_number.get(&number).map(|value| (*value).clone());
-    let root_ref = snap.trailer.iter().find(|entry| entry.key == "Root").and_then(|entry| entry.value.as_ref())?;
-    let root = resolve(root_ref.num)?;
-    let pages_root = root.dict_get("Pages").and_then(|value| value.as_ref())?;
-    let mut visited = HashSet::new();
-    let mut walked: Vec<(ObjRef, PdfPage)> = Vec::new();
-    walk_page_tree(pages_root, &mut resolve, &Inherited::default(), &mut visited, &mut walked);
-    let info_object = snap.trailer.iter().find(|entry| entry.key == "Info").and_then(|entry| entry.value.as_ref());
-    let info = info_object
-        .and_then(|reference| resolve(reference.num))
-        .map(|dict| PdfInfo {
-            title: dict.dict_get("Title").and_then(pdf_string_to_text),
-            author: dict.dict_get("Author").and_then(pdf_string_to_text),
-            subject: dict.dict_get("Subject").and_then(pdf_string_to_text),
-            keywords: dict.dict_get("Keywords").and_then(pdf_string_to_text),
-            creator: dict.dict_get("Creator").and_then(pdf_string_to_text),
-            producer: dict.dict_get("Producer").and_then(pdf_string_to_text),
-        })
-        .unwrap_or_default();
-    let (leaves, pages) = walked.into_iter().unzip();
-    Some(RetainedLanes { pages_root, leaves, pages, info, info_object })
-}
-
-/// 🧮️ Which retained page each authored page was carried over from, or `None` where the authored
-/// lane grew a page the carrier never held.
-///
-/// `PdfSnapshot::pages` is index-keyed and carries no back-reference, so the correspondence has to
-/// be recovered rather than read. Three passes, most-certain first: a page still standing at its
-/// own index is itself; a page whose exact value moved is the nearest untaken carrier holding that
-/// value (this is what makes `MovePage`/`RemovePage`/`InsertPage` reorder rather than re-render);
-/// and only then does an authored slot nothing claimed pair with the nearest carrier nothing
-/// claimed, which is the in-place attribute or content edit.
-fn align_pages(authored: &[PdfPage], retained: &[PdfPage]) -> Vec<Option<usize>> {
-    let mut source: Vec<Option<usize>> = vec![None; authored.len()];
-    let mut taken = vec![false; retained.len()];
-    for (index, page) in authored.iter().enumerate() {
-        if retained.get(index).is_some_and(|carried| carried == page) {
-            source[index] = Some(index);
-            taken[index] = true;
-        }
-    }
-    for matching in [true, false] {
-        for (index, page) in authored.iter().enumerate() {
-            if source[index].is_some() {
-                continue;
-            }
-            let candidate = (0..retained.len()).filter(|candidate| !taken[*candidate] && (!matching || &retained[*candidate] == page)).min_by_key(|candidate| (candidate.abs_diff(index), *candidate));
-            if let Some(candidate) = candidate {
-                source[index] = Some(candidate);
-                taken[candidate] = true;
-            }
-        }
-    }
-    source
-}
-
-fn dict_slots(value: &mut PdfObject) -> Option<&mut Vec<PdfDictEntry>> {
-    match value {
-        PdfObject::Dict(entries) => Some(entries),
-        PdfObject::Stream { dict, .. } => Some(dict),
-        _ => None,
-    }
-}
-
-fn dict_put(entries: &mut Vec<PdfDictEntry>, key: &str, value: PdfObject) {
-    match entries.iter_mut().find(|entry| entry.key == key) {
-        Some(entry) => entry.value = value,
-        None => entries.push(PdfDictEntry { key: key.to_string(), value }),
-    }
-}
-
-fn dict_drop(entries: &mut Vec<PdfDictEntry>, key: &str) {
-    entries.retain(|entry| entry.key != key);
-}
-
-fn object_slot(objects: &mut [PdfIndirectObject], id: ObjRef) -> Option<&mut PdfObject> {
-    objects.iter_mut().find(|object| object.id == id).map(|object| &mut object.value)
-}
-
-fn allocate_object(objects: &mut Vec<PdfIndirectObject>, next_number: &mut u32, value: PdfObject) -> ObjRef {
-    let id = ObjRef { num: *next_number, gen: 0 };
-    *next_number += 1;
-    objects.push(PdfIndirectObject { id, value });
-    id
-}
-
-/// 🖋️ The one font every stream this writer regenerates is drawn with, created on first use.
-/// `Helvetica`/`WinAnsiEncoding` while [`simple_shown_text`] holds — a real, renderable simple
-/// font whose single-byte operands any reader recovers text from — and the `Identity-H` pair with
-/// its `ToUnicode` CMap only where the text genuinely needs two-byte codes.
-fn reconciled_font(objects: &mut Vec<PdfIndirectObject>, next_number: &mut u32, font: &mut Option<ObjRef>, text: &str) -> PdfObject {
-    if let Some(id) = font {
-        return PdfObject::Ref(*id);
-    }
-    let id = if simple_shown_text(text) {
-        allocate_object(
-            objects,
-            next_number,
-            PdfObject::Dict(vec![
-                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) },
-                PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type1".into()) },
-                PdfDictEntry { key: "BaseFont".into(), value: PdfObject::Name("Helvetica".into()) },
-                PdfDictEntry { key: "Encoding".into(), value: PdfObject::Name("WinAnsiEncoding".into()) },
-            ]),
-        )
-    } else {
-        let cmap = allocate_object(objects, next_number, PdfObject::Stream { dict: Vec::new(), data: TOUNICODE_IDENTITY_CMAP.as_bytes().to_vec(), filters: Vec::new() });
-        allocate_object(
-            objects,
-            next_number,
-            PdfObject::Dict(vec![
-                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) },
-                PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type0".into()) },
-                PdfDictEntry { key: "BaseFont".into(), value: PdfObject::Name("SemioSans-Identity".into()) },
-                PdfDictEntry { key: "Encoding".into(), value: PdfObject::Name("Identity-H".into()) },
-                PdfDictEntry { key: "DescendantFonts".into(), value: PdfObject::Array(Vec::new()) },
-                PdfDictEntry { key: "ToUnicode".into(), value: PdfObject::Ref(cmap) },
-            ]),
-        )
-    };
-    *font = Some(id);
-    PdfObject::Ref(id)
-}
-
-fn decimal_array(values: [f64; 4]) -> PdfObject {
-    PdfObject::Array(values.iter().map(|value| if value.fract() == 0.0 && value.abs() < 1e15 { PdfObject::Int(*value as i64) } else { PdfObject::Real(PdfDecimal::from(*value)) }).collect())
-}
-
-/// 🔤️ A `/Info` text value: plain bytes while the string is ASCII (what a naive reader recovers
-/// verbatim), UTF-16BE with the byte-order mark the moment it is not — the exact pair
-/// [`pdf_string_to_text`] reads back.
-fn info_string(text: &str) -> PdfObject {
-    if text.is_ascii() {
-        return PdfObject::Str(text.as_bytes().to_vec());
-    }
-    let mut bytes = vec![0xFE, 0xFF];
-    for unit in text.encode_utf16() {
-        bytes.extend_from_slice(&unit.to_be_bytes());
-    }
-    PdfObject::Str(bytes)
-}
-
-/// ✍️ Writes the authored `pages`/`info` lanes back onto the retained COS graph, returning the
-/// graph to serialize or `None` when the two already agree.
-///
-/// THE RULE THIS ENCODES. `PdfSnapshot` carries the same document twice: `pages`/`info` are the
-/// resolved authoring lanes every `PdfMutation` in the page and metadata half of the vocabulary
-/// edits, and `objects`/`trailer` are the retained native carrier. Until this function existed the
-/// writer serialized the carrier alone, so `SetPageRotation`, `SetPageMediaBox`, `SetPageCropBox`,
-/// `SetPageContent`, `AppendPageContent`, `InsertPage`, `RemovePage`, `MovePage`, and `SetInfo` all
-/// applied cleanly to the snapshot and then vanished on export — a mutation that
-/// reports as applied and cannot be read back out of the bytes. **The authored lanes are
-/// authoritative on export; the carrier supplies everything the authored lanes do not describe.**
-/// @see ../🧬️schema/📸️snapshot/🦀️.rs — `PdfPage::text` states the same contract
-/// ("the writer regenerates a fresh content stream from it on encode"). Ticket
-/// 26/08/23/END-TO-END-TESTING-REFACTOR.
-///
-/// Nothing is rewritten that did not move: a page still carrying its own geometry, its own text
-/// and its own position keeps its original content stream, filters and byte layout, which is why
-/// applying a mutation and then its inverse lands back on the untouched document rather than on a
-/// re-rendered lookalike.
-fn reconcile_authored_lanes(snap: &PdfSnapshot) -> Option<PdfSnapshot> {
-    let lanes = retained_lanes(snap)?;
-    if lanes.pages == snap.pages && lanes.info == snap.info {
-        return None;
-    }
-    let mut objects = snap.objects.clone();
-    let mut trailer = snap.trailer.clone();
-    let mut next_number = objects.iter().map(|object| object.id.num).max().unwrap_or(0) + 1;
-    let mut font: Option<ObjRef> = None;
-    let alignment = align_pages(&snap.pages, &lanes.pages);
-    let structural = alignment.len() != lanes.leaves.len() || alignment.iter().enumerate().any(|(index, source)| *source != Some(index));
-    let mut kids: Vec<ObjRef> = Vec::new();
-    for (index, page) in snap.pages.iter().enumerate() {
-        let Some(source) = alignment[index] else {
-            let content = build_content_ops(&page.text, RECONCILED_FONT_NAME);
-            let content_id = allocate_object(&mut objects, &mut next_number, PdfObject::Stream { dict: Vec::new(), data: content.into_bytes(), filters: Vec::new() });
-            let resource = reconciled_font(&mut objects, &mut next_number, &mut font, &page.text);
-            let mut entries = vec![
-                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Page".into()) },
-                PdfDictEntry { key: "Parent".into(), value: PdfObject::Ref(lanes.pages_root) },
-                PdfDictEntry { key: "MediaBox".into(), value: decimal_array(page.media_box) },
-                PdfDictEntry { key: "Resources".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: "Font".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: resource }]) }]) },
-                PdfDictEntry { key: "Contents".into(), value: PdfObject::Ref(content_id) },
-            ];
-            if let Some(crop_box) = page.crop_box {
-                entries.push(PdfDictEntry { key: "CropBox".into(), value: decimal_array(crop_box) });
-            }
-            entries.push(PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(page.rotate as i64) });
-            kids.push(allocate_object(&mut objects, &mut next_number, PdfObject::Dict(entries)));
-            continue;
-        };
-        let id = lanes.leaves[source];
-        let carried = lanes.pages[source].clone();
-        kids.push(id);
-        if carried.text != page.text {
-            let appended = !carried.text.is_empty() && page.text.starts_with(&carried.text);
-            let shown = if appended { page.text[carried.text.len()..].trim_start_matches('\n').to_string() } else { page.text.clone() };
-            let content = build_content_ops(&shown, RECONCILED_FONT_NAME);
-            let content_id = allocate_object(&mut objects, &mut next_number, PdfObject::Stream { dict: Vec::new(), data: content.into_bytes(), filters: Vec::new() });
-            let resource = reconciled_font(&mut objects, &mut next_number, &mut font, &shown);
-            let prior = object_slot(&mut objects, id).and_then(|value| value.dict_get("Contents").cloned());
-            let Some(entries) = object_slot(&mut objects, id).and_then(dict_slots) else { continue };
-            match prior.filter(|_| appended) {
-                Some(PdfObject::Array(mut items)) => {
-                    items.push(PdfObject::Ref(content_id));
-                    dict_put(entries, "Contents", PdfObject::Array(items));
-                }
-                Some(one) => dict_put(entries, "Contents", PdfObject::Array(vec![one, PdfObject::Ref(content_id)])),
-                None => dict_put(entries, "Contents", PdfObject::Ref(content_id)),
-            }
-            let resources = entries.iter().find(|entry| entry.key == "Resources").map(|entry| entry.value.clone());
-            match (appended, resources) {
-                // 🔗️ An appended stream draws beside operators that still reference the page's own
-                // resources, so the font is MERGED in under a name of this writer's own; a replaced
-                // stream is the only thing left on the page, so it carries its own dictionary.
-                (true, Some(PdfObject::Ref(shared))) => {
-                    if let Some(slots) = object_slot(&mut objects, shared).and_then(dict_slots) {
-                        merge_font_resource(slots, resource);
-                    }
-                }
-                (true, Some(_)) => {
-                    if let Some(slots) = object_slot(&mut objects, id).and_then(dict_slots).and_then(|entries| entries.iter_mut().find(|entry| entry.key == "Resources")).and_then(|entry| dict_slots(&mut entry.value)) {
-                        merge_font_resource(slots, resource);
-                    }
-                }
-                _ => {
-                    if let Some(slots) = object_slot(&mut objects, id).and_then(dict_slots) {
-                        dict_put(slots, "Resources", PdfObject::Dict(vec![PdfDictEntry { key: "Font".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: resource }]) }]));
-                    }
-                }
-            }
-        }
-        let Some(entries) = object_slot(&mut objects, id).and_then(dict_slots) else { continue };
-        if structural || carried.media_box != page.media_box {
-            dict_put(entries, "MediaBox", decimal_array(page.media_box));
-        }
-        if structural || carried.crop_box != page.crop_box {
-            match page.crop_box {
-                Some(crop_box) => dict_put(entries, "CropBox", decimal_array(crop_box)),
-                None => dict_drop(entries, "CropBox"),
-            }
-        }
-        if structural || carried.rotate != page.rotate {
-            match page.rotate {
-                0 => dict_drop(entries, "Rotate"),
-                rotate => dict_put(entries, "Rotate", PdfObject::Int(rotate as i64)),
-            }
-        }
-        if structural {
-            dict_put(entries, "Parent", PdfObject::Ref(lanes.pages_root));
-        }
-    }
-
-    if structural {
-        if let Some(entries) = object_slot(&mut objects, lanes.pages_root).and_then(dict_slots) {
-            dict_put(entries, "Kids", PdfObject::Array(kids.iter().map(|kid| PdfObject::Ref(*kid)).collect()));
-            dict_put(entries, "Count", PdfObject::Int(kids.len() as i64));
-        }
-    }
-
-    if lanes.info != snap.info {
-        // 📇️ `PdfInfo` is a whole-record slot (@see its own doc comment), so the retained `/Info`
-        // dictionary is re-stated rather than patched key by key — otherwise clearing a field
-        // through `SetInfo` would leave the old value standing in the file.
-        let mut entries = Vec::new();
-        for (key, value) in [("Title", &snap.info.title), ("Author", &snap.info.author), ("Subject", &snap.info.subject), ("Keywords", &snap.info.keywords), ("Creator", &snap.info.creator), ("Producer", &snap.info.producer)] {
-            if let Some(value) = value {
-                entries.push(PdfDictEntry { key: key.to_string(), value: info_string(value) });
-            }
-        }
-        match lanes.info_object {
-            Some(id) => {
-                if let Some(slot) = object_slot(&mut objects, id) {
-                    *slot = PdfObject::Dict(entries);
-                }
-            }
-            None => {
-                let id = allocate_object(&mut objects, &mut next_number, PdfObject::Dict(entries));
-                dict_put(&mut trailer, "Info", PdfObject::Ref(id));
-            }
-        }
-    }
-
-    Some(PdfSnapshot { objects, trailer, ..snap.clone() })
-}
-
-/// 🔗️ Adds this writer's font to a resource dictionary without disturbing whatever fonts the page
-/// already declares.
-fn merge_font_resource(resources: &mut Vec<PdfDictEntry>, font: PdfObject) {
-    match resources.iter_mut().find(|entry| entry.key == "Font").and_then(|entry| dict_slots(&mut entry.value)) {
-        Some(fonts) => dict_put(fonts, RECONCILED_FONT_NAME, font),
-        None => dict_put(resources, "Font", PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: font }])),
-    }
-}
-//#endregion 🔖️AuthoredLanes
-
-/// 📤️ Serializes the retained COS graph exactly as it stands. Reconciliation happens once, in
-/// [`encode_logical_pdf`], and never from here — a writer that re-entered its own reconciler would
-/// have to trust that re-reading a stream it just wrote reproduces the text it was written from,
-/// and that is precisely the round trip `PdfPage`'s single `text` field cannot promise.
-fn serialize_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
-    let version = if snap.declared_version.is_empty() { "1.7" } else { snap.declared_version.as_str() };
+/// 📤️ Writes the snapshot. A retained graph that still spells the typed lanes is written as it
+/// stands; otherwise the objects the typed lanes own are regenerated onto it and every other
+/// retained object is kept, with references to moved objects rewritten.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_pdf_with(snapshot: &PdfSnapshot, options: &EncodeOptions) -> PResult<Vec<u8>> {
+    let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
     if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
-        return malformed("declared PDF version is not numeric");
+        return Err(PdfEngineError::Malformed("declared PDF version is not numeric".into()));
     }
-    let objects = snap.objects.iter().collect::<Vec<_>>();
-    let illustrator_ids = illustrator_object_ids(&objects);
-    let type3_width_ids = objects
-        .iter()
-        .filter_map(|object| match &object.value {
-            PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if name == "Type3")) => entries.iter().find_map(|entry| match (&*entry.key, &entry.value) {
-                ("Widths", PdfObject::Ref(reference)) => Some(reference.num),
-                _ => None,
-            }),
-            _ => None,
-        })
-        .collect::<HashSet<_>>();
-    let max_num = objects.iter().map(|object| object.id.num).max().unwrap_or(0);
-    let size = max_num.saturating_add(1);
-    let mut body = format!("%PDF-{version}\n%").into_bytes();
-    body.extend_from_slice(&[0xD0, 0xD4, 0xC5, 0xD8, b'\n']);
-    let mut offsets = vec![None; size as usize];
-    for object in objects {
-        let illustrator = illustrator_ids.contains(&object.id.num);
-        let offset = body.len();
-        body.extend_from_slice(format!("{} {} obj\n", object.id.num, object.id.gen).as_bytes());
-        match &object.value {
-            PdfObject::Dict(entries) => write_pdf_dict(&mut body, entries, None, true, illustrator),
-            PdfObject::Array(items) if illustrator => {
-                body.push(b'[');
-                for item in items {
-                    write_pdf_object(&mut body, item, illustrator);
-                }
-                body.push(b']');
+    let version = if options.write.xref_stream && version.as_str() < "1.5" { "1.5".to_string() } else { version };
+    let mut write = options.write.clone();
+    if write.encryption.is_none() {
+        write.encryption = snapshot.encryption.clone();
+    }
+    let retained_root = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref);
+    if let Some(root) = retained_root.filter(|_| !snapshot.objects.is_empty() && options.lower == LowerOptions::default()) {
+        let mut recording = RecordingSource { inner: GraphSource::new(&snapshot.objects), seen: HashSet::new() };
+        let lifter = lift_document_with(&snapshot.trailer, &snapshot.declared_version, &mut recording);
+        let (lifted_snapshot, lifted_ids, lifted_page_refs, lifted_annotation_refs) = (lifter.snapshot, lifter.ids, lifter.page_refs, lifter.annotation_refs);
+        let mut retained_view = lifted_snapshot;
+        retained_view.schema = snapshot.schema.clone();
+        retained_view.declared_version = snapshot.declared_version.clone();
+        retained_view.encryption = snapshot.encryption.clone();
+        retained_view.objects = snapshot.objects.clone();
+        retained_view.trailer = snapshot.trailer.clone();
+        if retained_view == *snapshot {
+            let info = dict_get(&snapshot.trailer, "Info").and_then(PdfObject::as_ref);
+            let trailer = DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: Vec::new() };
+            return Ok(serialize_document(&version, &snapshot.objects, &trailer, &write));
+        }
+        let owned: HashSet<u32> = recording.seen.iter().copied().chain(std::iter::once(root.num)).chain(dict_get(&snapshot.trailer, "Info").and_then(PdfObject::as_ref).map(|r| r.num)).collect();
+        let first_number = snapshot.objects.iter().map(|object| object.id.num).max().unwrap_or(0) + 1;
+        let lowered = lower_document(snapshot, first_number, options.lower.clone())?;
+        let mut rewrite: HashMap<u32, ObjRef> = HashMap::new();
+        for ((category, old_ref), id) in &lifted_ids {
+            if let Some(new_ref) = lowered.refs.get(&(*category, id.clone())) {
+                rewrite.insert(old_ref.num, *new_ref);
             }
-            PdfObject::Array(items) if type3_width_ids.contains(&object.id.num) => write_pdf_array_spacing(&mut body, items, false, true, illustrator),
-            value => write_pdf_object(&mut body, value, illustrator),
         }
-        body.extend_from_slice(b"\nendobj\n");
-        offsets[object.id.num as usize] = Some((offset, object.id.gen));
-    }
-    let xref_offset = body.len();
-    let free_objects = offsets.iter().enumerate().skip(1).filter_map(|(object, entry)| entry.is_none().then_some(object as u32)).collect::<Vec<_>>();
-    let free_chain = free_objects.iter().enumerate().map(|(index, object)| (*object, free_objects.get(index + 1).copied().unwrap_or(0))).collect::<HashMap<_, _>>();
-    body.extend_from_slice(format!("xref\n0 {size}\n{:010} 65535 f \n", free_objects.first().copied().unwrap_or(0)).as_bytes());
-    for (object, entry) in offsets.iter().enumerate().skip(1) {
-        match entry {
-            Some((offset, generation)) => body.extend_from_slice(format!("{offset:010} {generation:05} n \n").as_bytes()),
-            None => body.extend_from_slice(format!("{:010} 00000 f \n", free_chain.get(&(object as u32)).copied().unwrap_or(0)).as_bytes()),
+        for (index, old_ref) in lifted_page_refs.iter().enumerate() {
+            if let Some(new_ref) = lowered.refs.get(&(Category::Page, index.to_string())) {
+                rewrite.insert(old_ref.num, *new_ref);
+            }
         }
-    }
-    body.extend_from_slice(b"trailer\n<<");
-    let mut first = true;
-    for entry in snap.trailer.iter().filter(|entry| !matches!(entry.key.as_str(), "Prev" | "XRefStm" | "Length" | "Filter" | "DecodeParms" | "W" | "Index" | "Type")) {
-        if first {
-            body.push(b' ');
-        } else {
-            body.push(b'\n');
+        for (old_ref, (page, index)) in &lifted_annotation_refs {
+            if let Some(new_ref) = lowered.annotation_refs.get(*page as usize).and_then(|refs| refs.get(*index as usize)) {
+                rewrite.insert(old_ref.num, *new_ref);
+            }
         }
-        first = false;
-        write_pdf_name(&mut body, &entry.key);
-        body.push(b' ');
-        if entry.key == "Size" {
-            write_pdf_object(&mut body, &PdfObject::Int(size as i64), false);
-        } else {
-            write_pdf_object(&mut body, &entry.value, false);
-        }
+        rewrite.insert(root.num, lowered.root);
+        let mut objects: Vec<PdfIndirectObject> = snapshot.objects.iter().filter(|object| !owned.contains(&object.id.num)).map(|object| PdfIndirectObject { id: object.id, value: rewrite_refs(&object.value, &rewrite) }).collect();
+        objects.extend(lowered.objects);
+        objects.sort_by_key(|object| object.id.num);
+        let trailer = DocumentTrailer { root: lowered.root, info: lowered.info, id: snapshot.document_id.clone(), extra: Vec::new() };
+        return Ok(serialize_document(&version, &objects, &trailer, &write));
     }
-    if !snap.trailer.iter().any(|entry| entry.key == "Size") {
-        if first {
-            body.push(b' ');
-        } else {
-            body.push(b'\n');
-        }
-        body.extend_from_slice(format!("/Size {size}").as_bytes());
-    }
-    body.extend_from_slice(format!(" >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes());
-    Ok(body)
-}
-
-/// 📤️ Writes a document that carries a retained COS graph: the authored `pages`/`info` lanes are
-/// written back onto that graph first (@see [`reconcile_authored_lanes`]), then the graph is
-/// serialized.
-fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
-    match reconcile_authored_lanes(snap) {
-        Some(reconciled) => serialize_logical_pdf(&reconciled),
-        None => serialize_logical_pdf(snap),
-    }
-}
-
-/// 📤️ Deterministically writes the logical COS object graph or an authored page model.
-pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
-    if !snap.objects.is_empty() {
-        return encode_logical_pdf(snap);
-    }
-    let mut next_num = 1u32;
-    let mut alloc = || {
-        let n = next_num;
-        next_num += 1;
-        n
-    };
-    let catalog_num = alloc();
-    let pages_num = alloc();
-    let needs_font = snap.pages.iter().any(|p| !p.text.is_empty());
-    // 🖋️ Same rule the reconciler follows (@see `reconciled_font`): the two-byte `Identity-H` pair
-    // is only spent where the text genuinely needs it, so an all-ASCII document is written with a
-    // real simple font whose operands any reader can recover the text from.
-    let simple = snap.pages.iter().all(|p| simple_shown_text(&p.text));
-    let font_num = if needs_font { Some(alloc()) } else { None };
-    let cmap_num = if needs_font && !simple { Some(alloc()) } else { None };
-    let mut page_nums = Vec::new();
-    let mut content_nums = Vec::new();
-    for _ in &snap.pages {
-        page_nums.push(alloc());
-        content_nums.push(alloc());
-    }
-    let has_info = snap.info.title.is_some() || snap.info.author.is_some() || snap.info.subject.is_some() || snap.info.keywords.is_some() || snap.info.creator.is_some() || snap.info.producer.is_some();
-    let info_num = if has_info { Some(alloc()) } else { None };
-
-    let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
-
-    if let Some(cnum) = cmap_num {
-        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
-        let mut cbytes = Vec::new();
-        cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
-        cbytes.extend_from_slice(&compressed);
-        cbytes.extend_from_slice(b"\nendstream\nendobj\n");
-        objects.push((cnum, cbytes));
-    }
-    if let Some(fnum) = font_num {
-        let fbytes = match cmap_num {
-            Some(cnum) => format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /SemioSans-Identity /Encoding /Identity-H /DescendantFonts [] /ToUnicode {cnum} 0 R >>\nendobj\n"),
-            None => format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n"),
-        };
-        objects.push((fnum, fbytes.into_bytes()));
-    }
-
-    let mut kids = String::new();
-    for (i, page) in snap.pages.iter().enumerate() {
-        let pnum = page_nums[i];
-        let cnum = content_nums[i];
-        let ops = build_content_ops(&page.text, "F1");
-        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
-        let mut cbytes = Vec::new();
-        cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
-        cbytes.extend_from_slice(&compressed);
-        cbytes.extend_from_slice(b"\nendstream\nendobj\n");
-        objects.push((cnum, cbytes));
-
-        let [x0, y0, x1, y1] = page.media_box;
-        let mut pd = format!("{pnum} 0 obj\n<< /Type /Page /Parent {pages_num} 0 R /MediaBox [{x0} {y0} {x1} {y1}]");
-        if let Some(cb) = page.crop_box {
-            pd += &format!(" /CropBox [{} {} {} {}]", cb[0], cb[1], cb[2], cb[3]);
-        }
-        if page.rotate != 0 {
-            pd += &format!(" /Rotate {}", page.rotate);
-        }
-        pd += &format!(" /Contents {cnum} 0 R");
-        if let Some(fnum) = font_num {
-            pd += &format!(" /Resources << /Font << /F1 {fnum} 0 R >> >>");
-        } else {
-            pd += " /Resources << >>";
-        }
-        pd += " >>\nendobj\n";
-        objects.push((pnum, pd.into_bytes()));
-        kids += &format!("{pnum} 0 R ");
-    }
-
-    objects.push((pages_num, format!("{pages_num} 0 obj\n<< /Type /Pages /Kids [{}] /Count {} >>\nendobj\n", kids.trim_end(), snap.pages.len()).into_bytes()));
-    objects.push((catalog_num, format!("{catalog_num} 0 obj\n<< /Type /Catalog /Pages {pages_num} 0 R >>\nendobj\n").into_bytes()));
-
-    if let Some(inum) = info_num {
-        let mut id = format!("{inum} 0 obj\n<<");
-        if let Some(v) = &snap.info.title {
-            id += &format!(" /Title {}", pdf_text_string(v));
-        }
-        if let Some(v) = &snap.info.author {
-            id += &format!(" /Author {}", pdf_text_string(v));
-        }
-        if let Some(v) = &snap.info.subject {
-            id += &format!(" /Subject {}", pdf_text_string(v));
-        }
-        if let Some(v) = &snap.info.keywords {
-            id += &format!(" /Keywords {}", pdf_text_string(v));
-        }
-        if let Some(v) = &snap.info.creator {
-            id += &format!(" /Creator {}", pdf_text_string(v));
-        }
-        if let Some(v) = &snap.info.producer {
-            id += &format!(" /Producer {}", pdf_text_string(v));
-        }
-        id += " >>\nendobj\n";
-        objects.push((inum, id.into_bytes()));
-    }
-
-    objects.sort_by_key(|(n, _)| *n);
-
-    let mut body = Vec::new();
-    body.extend_from_slice(b"%PDF-1.7\n%\xE2\xE3\xCF\xD3\n");
-    let mut offsets = vec![0usize; next_num as usize];
-    for (num, bytes) in &objects {
-        offsets[*num as usize] = body.len();
-        body.extend_from_slice(bytes);
-    }
-    let xref_offset = body.len();
-    body.extend_from_slice(format!("xref\n0 {next_num}\n0000000000 65535 f \n").as_bytes());
-    for n in 1..next_num {
-        body.extend_from_slice(format!("{:010} 00000 n \n", offsets[n as usize]).as_bytes());
-    }
-    let mut trailer = format!("trailer\n<< /Size {next_num} /Root {catalog_num} 0 R");
-    if let Some(inum) = info_num {
-        trailer += &format!(" /Info {inum} 0 R");
-    }
-    trailer += &format!(" >>\nstartxref\n{xref_offset}\n%%EOF\n");
-    body.extend_from_slice(trailer.as_bytes());
-    Ok(body)
+    let LoweredDocument { objects, root, info, .. } = lower_document(snapshot, 1, options.lower.clone())?;
+    let trailer = DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: Vec::new() };
+    Ok(serialize_document(&version, &objects, &trailer, &write))
 }
 //#endregion 🔖️Encode
 
-//#region 🔖️Sniff
-/// 🔍️ Real magic + version probe (requirement #9): `%PDF-` header, version digits parsed and
-/// reported (not discarded).
-pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
-    if bytes.len() < 8 || &bytes[0..5] != b"%PDF-" {
-        return None;
+//#region 🔖️Streaming
+/// 🌊 A page-at-a-time document writer for guests with per-step budgets: the document-level
+/// lanes are lowered up front, then every `page` call yields that page's bytes, and `finish`
+/// closes the file. Pages appended this way reference the snapshot's fonts, images, forms and
+/// graphics states by id exactly like [`PdfPage::content`] does.
+pub struct DocumentStream {
+    writer: PdfWriter,
+    lowered: LoweredDocument,
+    pages_ref: ObjRef,
+    page_refs: Vec<ObjRef>,
+    written_pages: usize,
+    next_number: u32,
+    snapshot: PdfSnapshot,
+    options: LowerOptions,
+    root_resources: PdfObject,
+    annotation_refs: Vec<Vec<ObjRef>>,
+}
+
+impl DocumentStream {
+    /// 🏁 Lowers the document-level lanes of `snapshot` (its `pages` are ignored — they arrive
+    /// through [`DocumentStream::page`]) for `expected_pages` pages and returns the header +
+    /// resource bytes.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn begin(snapshot: &PdfSnapshot, expected_pages: usize, options: EncodeOptions) -> PResult<(Self, Vec<u8>)> {
+        let (lowered, pages_ref, page_refs, root_resources) = lower_document_headless(snapshot, expected_pages, options.lower.clone())?;
+        let mut write = options.write.clone();
+        if write.encryption.is_none() {
+            write.encryption = snapshot.encryption.clone();
+        }
+        let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
+        let seed = snapshot.document_id.as_ref().map(|id| id[0].clone()).unwrap_or_default();
+        let (mut writer, mut out) = PdfWriter::begin(&version, &write, &seed, &seed);
+        for object in lowered.objects.iter().filter(|object| object.id != pages_ref && object.id != lowered.root) {
+            out.extend_from_slice(&writer.object(object));
+        }
+        let next_number = lowered.objects.iter().map(|object| object.id.num).max().unwrap_or(0).max(page_refs.iter().map(|r| r.num).max().unwrap_or(0)) + 1;
+        let mut headless = snapshot.clone();
+        headless.pages.clear();
+        headless.objects.clear();
+        headless.trailer.clear();
+        Ok((Self { writer, lowered, pages_ref, page_refs, written_pages: 0, next_number, snapshot: headless, options: options.lower, root_resources, annotation_refs: Vec::new() }, out))
     }
-    let end = bytes.iter().skip(5).take(8).position(|&b| b == b'\n' || b == b'\r' || is_ws(b)).map_or(bytes.len().min(13), |p| p + 5);
-    let version = String::from_utf8_lossy(&bytes[5..end]).trim().to_string();
-    if version.chars().all(|c| c.is_ascii_digit() || c == '.') && !version.is_empty() {
-        Some(version)
-    } else {
-        None
+
+    /// 📄 Appends the next page; returns its bytes (page object, content stream, annotations).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn page(&mut self, page: &PdfPage) -> PResult<Vec<u8>> {
+        let index = self.written_pages;
+        let page_ref = match self.page_refs.get(index) {
+            Some(reference) => *reference,
+            None => {
+                let reference = ObjRef { num: self.next_number, gen: 0 };
+                self.next_number += 1;
+                self.page_refs.push(reference);
+                reference
+            }
+        };
+        let (objects, annotation_refs) = lower_page_standalone(&self.snapshot, page, index, page_ref, self.pages_ref, self.next_number, self.options.clone(), &self.lowered.refs, &self.lowered.widget_parents)?;
+        self.annotation_refs.push(annotation_refs);
+        let mut out = Vec::new();
+        for object in &objects {
+            self.next_number = self.next_number.max(object.id.num + 1);
+            out.extend_from_slice(&self.writer.object(object));
+        }
+        self.written_pages += 1;
+        Ok(out)
+    }
+
+    /// 🏁 Writes the page tree, catalog and cross-reference section; returns the closing bytes.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn finish(mut self) -> PResult<Vec<u8>> {
+        let mut out = Vec::new();
+        let kids: Vec<PdfObject> = self.page_refs.iter().take(self.written_pages).map(|r| PdfObject::Ref(*r)).collect();
+        let pages = PdfObject::Dict(vec![PdfDictEntry::new("Type", PdfObject::name("Pages")), PdfDictEntry::new("Kids", PdfObject::Array(kids)), PdfDictEntry::new("Count", PdfObject::Int(self.written_pages as i64)), PdfDictEntry::new("Resources", self.root_resources.clone())]);
+        out.extend_from_slice(&self.writer.object(&PdfIndirectObject { id: self.pages_ref, value: pages }));
+        let mut acro_form: Option<ObjRef> = None;
+        if let Some((objects, reference)) = lower_acro_form_standalone(&self.snapshot, self.next_number, self.options.clone(), &self.lowered.refs, std::mem::take(&mut self.annotation_refs), self.lowered.field_refs.clone())? {
+            for object in &objects {
+                self.next_number = self.next_number.max(object.id.num + 1);
+                out.extend_from_slice(&self.writer.object(object));
+            }
+            acro_form = Some(reference);
+        }
+        if let Some(mut catalog) = self.lowered.objects.iter().find(|object| object.id == self.lowered.root).cloned() {
+            if let (Some(reference), PdfObject::Dict(entries)) = (acro_form, &mut catalog.value) {
+                entries.push(PdfDictEntry::new("AcroForm", PdfObject::Ref(reference)));
+            }
+            out.extend_from_slice(&self.writer.object(&catalog));
+        }
+        let trailer = DocumentTrailer { root: self.lowered.root, info: self.lowered.info, id: self.snapshot.document_id.clone(), extra: Vec::new() };
+        out.extend_from_slice(&self.writer.finish(&trailer));
+        Ok(out)
     }
 }
-//#endregion 🔖️Sniff
+//#endregion 🔖️Streaming
 
-//#region Tests
+//#region 🔖️Text
+impl PdfSnapshot {
+    /// 🔤 The Unicode text page `index` shows, raw codes decoded through the page's fonts.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn page_text(&self, index: usize) -> String {
+        let Some(page) = self.pages.get(index) else { return String::new() };
+        let codecs: HashMap<String, FontCodec> = self.fonts.iter().map(|font| (font.id.clone(), FontCodec::new(font))).collect();
+        crate::standards::v1_7::subsets::base::modules::content::extract_text(&page.content, &codecs)
+    }
+}
+//#endregion 🔖️Text
+
+//#region 🔖️Builders
+/// 📐 Simple text layout over a font: line breaking on words by real advance widths, returning
+/// the operators that show the lines top-down from `(x, top)`.
+pub struct PdfTextLayout<'a> {
+    pub font: &'a PdfFont,
+    pub size: f64,
+    pub leading: f64,
+    codec: FontCodec,
+}
+
+impl<'a> PdfTextLayout<'a> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(font: &'a PdfFont, size: f64) -> Self {
+        Self { font, size, leading: size * 1.2, codec: FontCodec::new(font) }
+    }
+
+    /// 📏 Width of `text` at this size in user space (`None` when the font cannot show it).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn width(&self, text: &str) -> Option<f64> {
+        self.codec.text_width(text).map(|width| width * self.size / 1000.0)
+    }
+
+    /// 📏 Ascent of the face at this size (AFM/descriptor metrics, else 0.8 em).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ascent(&self) -> f64 {
+        let ascent = match &self.font.kind {
+            PdfFontKind::Type1 { descriptor: Some(d), .. } | PdfFontKind::TrueType { descriptor: Some(d), .. } => d.ascent,
+            PdfFontKind::Type0 { descendant, .. } => descendant.descriptor.ascent,
+            _ => standard_font(self.font.base_font()).map(|metrics| metrics.ascender).unwrap_or(800.0),
+        };
+        (if ascent == 0.0 { 800.0 } else { ascent }) * self.size / 1000.0
+    }
+
+    /// 🔤 Breaks `text` into lines no wider than `max_width` (paragraphs split on `\n`; a word
+    /// wider than the line is split by characters).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn wrap(&self, text: &str, max_width: f64) -> Vec<String> {
+        let mut lines = Vec::new();
+        for paragraph in text.split('\n') {
+            let mut line = String::new();
+            for word in paragraph.split(' ') {
+                let candidate = if line.is_empty() { word.to_string() } else { format!("{line} {word}") };
+                if self.width(&candidate).unwrap_or(0.0) <= max_width || line.is_empty() && self.width(word).unwrap_or(0.0) <= max_width {
+                    line = candidate;
+                    continue;
+                }
+                if !line.is_empty() {
+                    lines.push(std::mem::take(&mut line));
+                }
+                let mut piece = String::new();
+                for character in word.chars() {
+                    let next = format!("{piece}{character}");
+                    if self.width(&next).unwrap_or(0.0) > max_width && !piece.is_empty() {
+                        lines.push(std::mem::take(&mut piece));
+                    }
+                    piece.push(character);
+                }
+                line = piece;
+            }
+            lines.push(line);
+        }
+        lines
+    }
+
+    /// 🖋️ Operators showing `lines` from `(x, top)` downwards (the first baseline sits one ascent
+    /// below `top`).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn show_lines(&self, lines: &[String], x: f64, top: f64) -> Vec<PdfOp> {
+        let mut ops = vec![PdfOp::BeginText, PdfOp::SetFont { name: self.font.id.clone(), size: self.size }, PdfOp::SetLeading { leading: self.leading }, PdfOp::MoveText { tx: x, ty: top - self.ascent() }];
+        for (index, line) in lines.iter().enumerate() {
+            if index > 0 {
+                ops.push(PdfOp::NextLine);
+            }
+            if !line.is_empty() {
+                ops.push(PdfOp::ShowText { text: PdfTextString::text(line.clone()) });
+            }
+        }
+        ops.push(PdfOp::EndText);
+        ops
+    }
+
+    /// 🖋️ Wraps and shows `text` inside the rectangle `[x, top - height, x + width, top]`,
+    /// dropping lines that do not fit; returns the operators and how many lines fit.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn show_paragraph(&self, text: &str, x: f64, top: f64, width: f64, height: f64) -> (Vec<PdfOp>, usize) {
+        let lines = self.wrap(text, width);
+        let fitting = ((height - self.ascent()) / self.leading).floor().max(0.0) as usize + 1;
+        let shown: Vec<String> = lines.into_iter().take(fitting).collect();
+        let count = shown.len();
+        (self.show_lines(&shown, x, top), count)
+    }
+}
+
+/// 📄️ A document of text pages: one page per `(width, height, text)` in Helvetica 12 pt with
+/// 72 pt margins, wrapped by real metrics — the shape every text-only exporter shares.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn text_document(pages: &[(f64, f64, &str)]) -> PdfSnapshot {
+    let mut snapshot = PdfSnapshot::default();
+    let font = PdfFont::standard("F1", "Helvetica");
+    let layout = PdfTextLayout::new(&font, 12.0);
+    for (width, height, text) in pages {
+        let mut page = PdfPage::new(*width, *height);
+        if !text.is_empty() {
+            let margin = (width.min(*height) * 0.1).min(72.0);
+            let (ops, _) = layout.show_paragraph(text, margin, height - margin, width - 2.0 * margin, height - 2.0 * margin);
+            page.content = ops;
+        }
+        snapshot.pages.push(page);
+    }
+    if snapshot.pages.iter().any(|page| !page.content.is_empty()) {
+        snapshot.fonts.push(font);
+    }
+    snapshot
+}
+
+/// 🔤 An embedded TrueType font as a Type 0 / CIDFontType2 (Identity-H, glyph ids as CIDs) with
+/// widths and a ToUnicode map for every character of `text` (the whole cmap when `None`) — the
+/// font shape any consumer with a `.ttf` in hand wants.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn embedded_true_type_font(id: &str, program: &[u8], base_font: &str, text: Option<&str>) -> Result<PdfFont, String> {
+    use crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont;
+    let font = TrueTypeFont::parse(program)?;
+    let characters: Vec<char> = match text {
+        Some(text) => {
+            let mut set: Vec<char> = text.chars().collect();
+            set.sort_unstable();
+            set.dedup();
+            set
+        }
+        None => font.unicode_map.keys().filter_map(|code| char::from_u32(*code)).collect(),
+    };
+    let mut widths: std::collections::BTreeMap<u32, f64> = std::collections::BTreeMap::new();
+    let mut mappings = Vec::new();
+    for character in characters {
+        if let Some(gid) = font.glyph_for_char(character) {
+            widths.insert(gid as u32, font.advance_1000(gid));
+            mappings.push(PdfToUnicodeMapping::Char { code: gid as u32, text: character.to_string() });
+        }
+    }
+    let mut runs: Vec<PdfCidWidthRun> = Vec::new();
+    for (gid, width) in widths {
+        match runs.last_mut() {
+            Some(run) if run.start_cid + run.widths.len() as u32 == gid => run.widths.push(width),
+            _ => runs.push(PdfCidWidthRun { start_cid: gid, widths: vec![width] }),
+        }
+    }
+    let flags = if font.fixed_pitch { 1 } else { 0 } | 32 | if font.italic_angle != 0.0 { 64 } else { 0 } | if font.weight_class.unwrap_or(400) >= 600 { 1 << 18 } else { 0 };
+    let descriptor = PdfFontDescriptor {
+        font_name: base_font.to_string(),
+        flags,
+        font_bbox: [font.scale_1000(font.bbox[0]), font.scale_1000(font.bbox[1]), font.scale_1000(font.bbox[2]), font.scale_1000(font.bbox[3])],
+        italic_angle: font.italic_angle,
+        ascent: font.scale_1000(font.ascender),
+        descent: font.scale_1000(font.descender),
+        cap_height: font.cap_height.map(|v| font.scale_1000(v)).unwrap_or_else(|| font.scale_1000(font.ascender)),
+        stem_v: 80.0,
+        x_height: font.x_height.map(|v| font.scale_1000(v)),
+        ..PdfFontDescriptor::default()
+    };
+    Ok(PdfFont {
+        id: id.to_string(),
+        kind: PdfFontKind::Type0 {
+            base_font: base_font.to_string(),
+            cmap: PdfCMap::identity_h(),
+            descendant: PdfCidFont { true_type: true, base_font: base_font.to_string(), system_info: PdfCidSystemInfo::default(), descriptor, default_width: 1000.0, widths: runs, default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: Some(PdfCidToGid::Identity), program: Some(PdfFontProgram::TrueType { data: program.to_vec() }), extra: Vec::new() },
+        },
+        to_unicode: Some(PdfToUnicode { byte_width: 2, mappings }),
+        extra: Vec::new(),
+    })
+}
+
+/// 🧾 Ids of every resource `ops` reference that the snapshot does not define — what a consumer
+/// asserts is empty before writing.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unresolved_resources(snapshot: &PdfSnapshot, ops: &[PdfOp]) -> Vec<String> {
+    let references = content_references(ops);
+    let mut missing = Vec::new();
+    missing.extend(references.fonts.iter().filter(|id| snapshot.font(id).is_none()).map(|id| format!("font {id}")));
+    missing.extend(references.x_objects.iter().filter(|id| snapshot.image(id).is_none() && snapshot.form(id).is_none()).map(|id| format!("xobject {id}")));
+    missing.extend(references.ext_g_states.iter().filter(|id| snapshot.ext_g_state(id).is_none()).map(|id| format!("extgstate {id}")));
+    missing.extend(references.shadings.iter().filter(|id| snapshot.shading(id).is_none()).map(|id| format!("shading {id}")));
+    missing.extend(references.patterns.iter().filter(|id| snapshot.pattern(id).is_none()).map(|id| format!("pattern {id}")));
+    missing.extend(references.color_spaces.iter().filter(|id| !snapshot.color_spaces.iter().any(|space| &space.name == *id)).map(|id| format!("colorspace {id}")));
+    missing
+}
+//#endregion 🔖️Builders
+
+//#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion Tests
+//#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {

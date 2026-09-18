@@ -50,7 +50,17 @@ pub(crate) enum LayoutNodeKind {
     TreeRow { row: f32, height: f32, expanded: bool },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
     /// children by intrinsic height (a `Section`) never collapses it to zero.
-    Control { height: f32 },
+    ///
+    /// 🏷️ `label_padding` is `Some(px)` for a control whose own LABEL is its content — a `Button`,
+    /// whose text is a field of the node and not an arena child. Such a control is measured through
+    /// the same glyph lane a `Text` is, with that padding on each side, which is where `paint_button`
+    /// starts its label.
+    ///
+    /// 🩸️ Without it a hug-width button solved to width ZERO: nothing measured it, so every retained
+    /// button published a zero-area rect, `retained_hit_registration` refused it, and the surface's
+    /// whole pointer registry came back empty while the panel painted and kept keyboard focus
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, the ToolRun panel's `[STATS] … targets []`).
+    Control { height: f32, label_padding: Option<f32> },
     /// 🧩️ HOST-PROVIDED content: a leaf whose pixels this engine does not author at all. It reserves
     /// the box its host declared and fills its parent's width, so an arbitrary host-painted surface
     /// (React's `Tree` `emptyState` escape hatch — an agent chat transcript, a marketplace list) can
@@ -59,6 +69,14 @@ pub(crate) enum LayoutNodeKind {
     /// never collapses to zero; unlike [`LayoutNodeKind::Control`] its height is the HOST's number, not
     /// the theme's control row.
     HostContent { height: f32 },
+    /// 🎞️ An ENGINE surface (`UiNode::ComponentScene`): a leaf whose pixels an engine paints into the
+    /// box this solver hands it. It has no content to measure and no intrinsic size, so as a plain
+    /// [`LayoutNodeKind::Leaf`] it solved to height ZERO inside every authored container — an
+    /// authored parent grows no child by itself, and a document that does not spell `grow` on its
+    /// scene child is ordinary (React's surface host fills its parent whatever the record declares).
+    /// Measured on the live generation3d flow window as `componentScene#procedural-main` at
+    /// `[0, 0, 974.8, 0.0]`, which collapsed the whole node graph onto a one-pixel band.
+    EngineSurface,
     Leaf,
 }
 
@@ -259,12 +277,24 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         LayoutNodeKind::Tree { height } => band(height, 0.0),
         LayoutNodeKind::TreeSection { header, height } => band(height, header),
         LayoutNodeKind::TreeRow { row, height, .. } => band(height, row),
-        LayoutNodeKind::Control { height } => {
+        LayoutNodeKind::Control { height, label_padding } => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
             flow.min_height = height;
+            if let Some(padding) = label_padding {
+                flow.text = true;
+                flow.padding = EdgePx { top: flow.padding.top, right: flow.padding.right.max(padding), bottom: flow.padding.bottom, left: flow.padding.left.max(padding) };
+            }
             flow
         }
         LayoutNodeKind::HostContent { height } => FlowStyle { height: Dim::Length(height), min_height: height, clips: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
+        LayoutNodeKind::EngineSurface => {
+            let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
+            flow.clips = true;
+            if matches!(flow.height, Dim::Auto) && flow.grow <= 0.0 {
+                flow.grow = 1.0;
+            }
+            flow
+        }
     }
 }
 

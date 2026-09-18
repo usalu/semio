@@ -212,11 +212,32 @@ fn interactive_storm_does_not_starve_background_surface_lane() {
     assert!(background_progress_at.is_some_and(|slice| slice < LANE_WHEEL.len()), "the weighted wheel must service background within one six-slot cycle");
 }
 
+/// 🧵️ LAW: a 1,025-node text workload is admitted ONE work unit per slice — never a batch whose size
+/// grows with the tree.
+///
+/// This used to assert a WALL-CLOCK ceiling (`max_slice < 8ms`) and it measured the machine, not the
+/// engine: it failed at 22.9 ms, 27.5 ms, 31.5 ms and 174 ms whenever peer cargos were resident and
+/// passed on a quiet box, so a red run said nothing about the code
+/// (`📓️w2-w6-integration.md` §6, `📓️w8a`, `📓️w9a`). The eight milliseconds were only ever a PROXY for
+/// the property that actually holds the frame budget: each `step_layouts` call advances the admission
+/// cursor by exactly one node or one scalar, so a slice costs the same whether the tree has ten nodes
+/// or ten thousand. That is what is asserted here, in units the engine itself reports
+/// (`UiLayoutStep::Yielded { nodes, glyphs }`), and it is machine-independent.
+///
+/// `admit_node_one` answers `(1, 0)` for the node it admits, `admit_text_one` answers `(0, 1)` for the
+/// single scalar it shapes, and `unwind_one` answers `(1, 0)` when it pops a frame — hence two node
+/// units per node in the tree, one glyph unit per scalar in every label, and never two of anything in
+/// one slice.
+///
+/// **React ref:** React's own layout is synchronous and unsliced; this engine slices because it owns
+/// the frame budget React gets from the browser for free, which is why the chunking — not a duration —
+/// is the law.
 #[test]
-fn large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms() {
+fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
+    let labels: Vec<String> = (0..1_024).map(|index| format!("node-{index}")).collect();
     let mut ui = Ui::new();
     let mut atlas = FontAtlas::builtin();
-    let children = (0..1_024).map(|index| UiNode::Text(UiTextNode { value: Label::data(format!("node-{index}")), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })).collect();
+    let children = labels.iter().map(|label| UiNode::Text(UiTextNode { value: Label::data(label.clone()), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })).collect();
     ui.apply_tree("large", &stack_ui(children));
     ui.set_viewport("large", 1_920.0, 1_080.0);
 
@@ -225,13 +246,19 @@ fn large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms() {
     let pool = test_layout_pool();
     let mut preview_sequence = 0;
     let mut slices = 0;
-    let mut max_slice = std::time::Duration::ZERO;
+    let mut widest_slice = (0usize, 0usize);
+    let mut admitted = (0usize, 0usize);
     loop {
         let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
-        let started = std::time::Instant::now();
         let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
-        max_slice = max_slice.max(started.elapsed());
         slices += 1;
+        if let UiLayoutStep::Yielded { stage, nodes, glyphs, .. } = step {
+            widest_slice = (widest_slice.0.max(nodes), widest_slice.1.max(glyphs));
+            if stage == "Layout.CollectNodes" {
+                admitted = (admitted.0 + nodes, admitted.1 + glyphs);
+            }
+            continue;
+        }
         if matches!(step, UiLayoutStep::Idle) {
             break;
         }
@@ -239,8 +266,10 @@ fn large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms() {
     let tree = ui.tree("large").expect("large tree");
     let root = tree.root.expect("large root");
     let children: Vec<_> = tree.children(root).collect();
+    let scalars: usize = labels.iter().map(|label| label.chars().count()).sum();
     assert!(slices > 10_000, "the 1,025-node/text workload must be observably chunked, got {slices} slices");
-    assert!(max_slice < std::time::Duration::from_millis(8), "largest observed layout slice was {max_slice:?}");
+    assert_eq!(widest_slice, (1, 1), "no slice may admit more than one node and one glyph, got {widest_slice:?}");
+    assert_eq!(admitted, (2 * (children.len() + 1), scalars), "admission must visit and unwind every node once and shape every label scalar once");
     assert_eq!(tree.accepted_layout(root).expect("accepted root").width, 1_920.0);
     assert!(tree.accepted_layout(*children.last().expect("last child")).expect("accepted last child").y > tree.accepted_layout(children[0]).expect("accepted first child").y);
 }

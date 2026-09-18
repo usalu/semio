@@ -147,8 +147,8 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
     }
 }
 
-// [DEBUG] temporary generator — writes the committed fixture quintets this lane commits. Run with
-// `cargo test -p semio-s-artifact-wfc-grid3d --features component-app-assembly --lib -- --ignored debug_emit_mutation_fixtures`.
+/// 🛠️ Generator for the committed fixture quintets this lane asserts over. Run with
+/// `cargo test -p semio-s-artifact-wfc-grid3d --features component-app-assembly --lib -- --ignored debug_emit_mutation_fixtures`.
 #[test]
 #[ignore]
 fn debug_emit_mutation_fixtures() {
@@ -174,8 +174,8 @@ fn debug_emit_mutation_fixtures() {
     }
 }
 
-// [DEBUG] temporary generator — prints each bundled example into its committed `🗣️.dsl.semio` asset,
-// so the asset is a PRINT of the Rust builder and never a second, drifting authority.
+/// 🛠️ Generator that prints each bundled example into its committed `🗣️.dsl.semio` asset, so the
+/// asset is a PRINT of the Rust builder and never a second, drifting authority.
 #[test]
 #[ignore]
 fn debug_emit_example_assets() {
@@ -187,10 +187,10 @@ fn debug_emit_example_assets() {
     }
 }
 
-// [DEBUG] temporary pretty-printer for the generator above. It re-INDENTS the canonical text rather
-// than re-serializing a parsed value: a `serde_json::Value` round trip would re-sort every object's
-// keys alphabetically, and the committed fixtures are canonical in KEY ORDER as well as in value —
-// the order the artifact's own records declare their fields in.
+/// 🛠️ Pretty-printer for the generators above. It re-INDENTS the canonical text rather than
+/// re-serializing a parsed value: a `serde_json::Value` round trip would re-sort every object's keys
+/// alphabetically, and the committed fixtures are canonical in KEY ORDER as well as in value — the
+/// order the artifact's own records declare their fields in.
 #[cfg(test)]
 fn pretty(compact: &str) -> String {
     let characters: Vec<char> = compact.chars().collect();

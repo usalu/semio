@@ -10,7 +10,7 @@ const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-inference-law-source/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-inference-law-source/🔣️.json"), "utf8"));
-const familyRel = "✏️s/🔌️plugins/🔱️trinity/🗟️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences";
+const familyRel = "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences";
 
 type VirtualNode = { kind: "directory" | "file" | "symlink"; text?: string; unreadable?: boolean };
 

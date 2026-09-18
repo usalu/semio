@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-viewer-preferences/schema.json",
+  "title": "SetViewerPreferences",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "preferences": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfViewerPreferences"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mutation": {
+      "const": "setViewerPreferences",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

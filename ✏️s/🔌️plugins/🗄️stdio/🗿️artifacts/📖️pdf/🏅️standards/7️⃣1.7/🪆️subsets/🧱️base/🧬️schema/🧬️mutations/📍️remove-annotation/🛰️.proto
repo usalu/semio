@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.remove_annotation;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 📍️ Direct remove-annotation protobuf payload.
+message RemoveAnnotationMutation {
+  uint64 index = 1;
+  uint64 at = 2;
+}

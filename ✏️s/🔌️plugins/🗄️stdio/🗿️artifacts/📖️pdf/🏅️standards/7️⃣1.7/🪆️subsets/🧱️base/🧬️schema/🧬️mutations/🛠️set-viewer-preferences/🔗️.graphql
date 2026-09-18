@@ -1,0 +1,4 @@
+# 🛠️ Direct set-viewer-preferences GraphQL payload.
+input SetViewerPreferencesMutationInput {
+  preferences: PdfViewerPreferencesInput
+}

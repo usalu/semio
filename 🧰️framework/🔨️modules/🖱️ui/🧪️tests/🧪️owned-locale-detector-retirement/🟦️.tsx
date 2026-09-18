@@ -7004,6 +7004,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.close"]')).toBeTruthy();
     });
 
+    // 🪪️ LAW: a window control GROUP exists only where it carries a control. The OS dock hands its
+    // windows no `onClose`/`onMaximize`/`onOpenInNewWindow` (focus and close live on the dock TAB), so
+    // an unconditional group published an empty 2px `…windowControls` box on every window — an id in
+    // every DOM census that names nothing and cannot be pressed, which no canvas renderer can or
+    // should mirror (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    // `📓️w12d-pane-chip-ids-and-projection-toggle.md` §4).
+    it("Window mints no window-control group when it is handed no window control", () => {
+      const { container } = render(
+        <Window id="uncontrolled-window">
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[id="framework.window.uncontrolledWindow.windowControls"]')).toBeNull();
+      expect([...container.querySelectorAll("[id]")].filter((element) => element.id.includes(".windowControls"))).toHaveLength(0);
+    });
+
+    it("Window mints the group again as soon as one control is handed to it", () => {
+      const { container } = render(
+        <Window id="controlled-window" onClose={() => {}}>
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[id="framework.window.controlledWindow.windowControls"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.controlledWindow.windowControls.close"]')).toBeTruthy();
+    });
+
     it("Window search pane uses the same default width as panels when unfolded", () => {
       const { container } = render(
         <Window id="layout-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>}>

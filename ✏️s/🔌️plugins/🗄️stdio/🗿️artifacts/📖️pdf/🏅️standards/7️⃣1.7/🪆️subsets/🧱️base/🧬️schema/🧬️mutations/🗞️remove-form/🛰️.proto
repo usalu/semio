@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.remove_form;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🗞️ Direct remove-form protobuf payload.
+message RemoveFormMutation {
+  string id = 1;
+}

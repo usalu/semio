@@ -268,7 +268,7 @@ mod wire {
 //#endregion 🔖️Wire
 
 //#region 🔖️GatewayToShell
-/// 📤️ Gateway→Shell frames, tags `0..7` in SSOT declaration order.
+/// 📤️ Gateway→Shell frames, tags `0..9` in SSOT declaration order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GatewayToShell {
     Welcome { bridge_version: u16, connection: String, principal: String },
@@ -279,6 +279,13 @@ pub enum GatewayToShell {
     AgentPresence { active: bool, label: String, invocation_id: Option<String> },
     Pong,
     Bye { reason: String },
+    /// 🛠️ One tool the connected agent is invoking right now, emitted by the gateway's own
+    /// `tools/call` dispatch before the handler runs. `arguments` is the call's arguments rendered
+    /// as JSON; the shell renders it, never re-executes it.
+    AgentToolCall { invocation_id: String, tool_name: String, arguments: String },
+    /// 🧾️ The terminal outcome of the [`GatewayToShell::AgentToolCall`] carrying the same
+    /// `invocation_id` — `ok` is the inverse of the result's own `isError`.
+    AgentToolResult { invocation_id: String, tool_name: String, ok: bool, summary: String },
 }
 
 impl GatewayToShell {
@@ -293,6 +300,8 @@ impl GatewayToShell {
             5 => GatewayToShell::AgentPresence { active: reader.read_bool()?, label: reader.read_string()?, invocation_id: reader.read_option_string()? },
             6 => GatewayToShell::Pong,
             7 => GatewayToShell::Bye { reason: reader.read_string()? },
+            8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
+            9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -343,6 +352,19 @@ impl GatewayToShell {
                 wire::write_u8(&mut buf, 7);
                 wire::write_string(&mut buf, reason);
             }
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                wire::write_u8(&mut buf, 8);
+                wire::write_string(&mut buf, invocation_id);
+                wire::write_string(&mut buf, tool_name);
+                wire::write_string(&mut buf, arguments);
+            }
+            GatewayToShell::AgentToolResult { invocation_id, tool_name, ok, summary } => {
+                wire::write_u8(&mut buf, 9);
+                wire::write_string(&mut buf, invocation_id);
+                wire::write_string(&mut buf, tool_name);
+                wire::write_bool(&mut buf, *ok);
+                wire::write_string(&mut buf, summary);
+            }
         }
         buf
     }
@@ -350,9 +372,9 @@ impl GatewayToShell {
 //#endregion 🔖️GatewayToShell
 
 //#region 🔖️ShellToGateway
-/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has nine variants
+/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has ten variants
 /// (`ShellState`/`ShellStatePatch`/`Instances`/`AppFrames` carry the React mirror's snapshots); the
-/// wgpu shell publishes none of those yet, so encoding them here would be dead wire with no
+/// wgpu shell publishes none of those four yet, so encoding them here would be dead wire with no
 /// producer — their tags (`1`,`2`,`3`,`4`) stay reserved and unread.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ShellToGateway {
@@ -361,6 +383,8 @@ pub enum ShellToGateway {
     Approval { approval_id: String, decision: ApprovalDecision, note: Option<String> },
     Ping,
     Bye,
+    /// 💬️ One human turn typed into this shell and sent to the connected agent.
+    AgentMessage { message_id: String, text: String },
 }
 
 impl ShellToGateway {
@@ -389,6 +413,11 @@ impl ShellToGateway {
             }
             ShellToGateway::Ping => wire::write_u8(&mut buf, 7),
             ShellToGateway::Bye => wire::write_u8(&mut buf, 8),
+            ShellToGateway::AgentMessage { message_id, text } => {
+                wire::write_u8(&mut buf, 9);
+                wire::write_string(&mut buf, message_id);
+                wire::write_string(&mut buf, text);
+            }
         }
         buf
     }
@@ -409,6 +438,7 @@ impl ShellToGateway {
             6 => ShellToGateway::Approval { approval_id: reader.read_string()?, decision: ApprovalDecision::from_tag(reader.read_u8()?)?, note: reader.read_option_string()? },
             7 => ShellToGateway::Ping,
             8 => ShellToGateway::Bye,
+            9 => ShellToGateway::AgentMessage { message_id: reader.read_string()?, text: reader.read_string()? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -445,15 +475,57 @@ pub struct PendingAgentApproval {
     pub requested_at_ms: f64,
 }
 
-/// 🌉️ The whole consumer: frames in, presence/approvals out, decisions back. Holds no socket and
-/// no timer, so it is `Send`, unit-testable, and identical on the browser and native builds.
+/// 🛠️ How far one tool invocation in the conversation has got.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AgentToolCallState {
+    Running,
+    Ok,
+    Failed,
+}
+
+/// ⏸️ How far one capability request in the conversation has got.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AgentApprovalState {
+    Pending,
+    Resolved,
+}
+
+/// 💬️ One entry of the live agent conversation, exactly as the bridge reported it — the wgpu twin of
+/// React's `AgentConversationEntry`. `UserMessage` is a turn this shell itself sent, echoed the
+/// moment the frame is queued so the panel is never behind the human's own typing; every other kind
+/// comes from a real `GatewayToShell` frame. Nothing is synthesised from a guess: a tool call with no
+/// result yet simply stays [`AgentToolCallState::Running`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AgentConversationEntry {
+    UserMessage { id: String, text: String },
+    ToolCall { id: String, tool_name: String, arguments: String, state: AgentToolCallState, summary: Option<String> },
+    Approval { id: String, summary: String, state: AgentApprovalState, decision: Option<ApprovalDecision> },
+}
+
+impl AgentConversationEntry {
+    pub fn id(&self) -> &str {
+        match self {
+            AgentConversationEntry::UserMessage { id, .. } | AgentConversationEntry::ToolCall { id, .. } | AgentConversationEntry::Approval { id, .. } => id,
+        }
+    }
+}
+
+/// ✂️ How many conversation entries the panel retains, one-for-one with React's
+/// `AGENT_CONVERSATION_MAX_ENTRIES`. The bridge is a live view, not an archive: an agent running for
+/// hours must not grow this list without bound, and the oldest entries are the least useful to keep.
+pub const AGENT_CONVERSATION_MAX_ENTRIES: usize = 200;
+
+/// 🌉️ The whole consumer: frames in, presence/approvals/conversation out, decisions back. Holds no
+/// socket and no timer, so it is `Send`, unit-testable, and identical on the browser and native builds.
 #[derive(Clone, Debug, Default)]
 pub struct AgentBridgeState {
     pub status: AgentBridgeStatus,
     pub presence: AgentBridgePresence,
     pub pending_approvals: Vec<PendingAgentApproval>,
+    pub conversation: Vec<AgentConversationEntry>,
     pub last_error: Option<String>,
     pub reconnect_attempt: u32,
+    next_message_ordinal: u64,
     outbox: Vec<ShellToGateway>,
 }
 
@@ -502,10 +574,12 @@ impl AgentBridgeState {
             GatewayToShell::AppCommand { .. } => {}
             GatewayToShell::ApprovalRequested { approval_id, summary } => {
                 self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
-                self.pending_approvals.push(PendingAgentApproval { approval_id, summary, requested_at_ms: now_ms });
+                self.pending_approvals.push(PendingAgentApproval { approval_id: approval_id.clone(), summary: summary.clone(), requested_at_ms: now_ms });
+                self.append_conversation(AgentConversationEntry::Approval { id: approval_id, summary, state: AgentApprovalState::Pending, decision: None });
             }
-            GatewayToShell::ApprovalResolved { approval_id, .. } => {
+            GatewayToShell::ApprovalResolved { approval_id, decision } => {
                 self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                self.resolve_conversation_approval(&approval_id, decision);
             }
             GatewayToShell::AgentPresence { active, label, invocation_id } => {
                 self.presence = AgentBridgePresence { active, label, invocation_id };
@@ -515,7 +589,37 @@ impl AgentBridgeState {
                 self.last_error = (!reason.is_empty()).then_some(reason);
                 self.status = AgentBridgeStatus::Closed;
             }
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                self.append_conversation(AgentConversationEntry::ToolCall { id: invocation_id, tool_name, arguments, state: AgentToolCallState::Running, summary: None });
+            }
+            GatewayToShell::AgentToolResult { invocation_id, ok, summary, .. } => {
+                self.settle_conversation_tool_call(&invocation_id, ok, summary);
+            }
         }
+    }
+
+    /// ➕️ Appends one entry and trims to [`AGENT_CONVERSATION_MAX_ENTRIES`], oldest first.
+    fn append_conversation(&mut self, entry: AgentConversationEntry) {
+        self.conversation.push(entry);
+        if self.conversation.len() > AGENT_CONVERSATION_MAX_ENTRIES {
+            self.conversation.remove(0);
+        }
+    }
+
+    /// 🔁️ Turns the running tool call with this `invocation_id` into its own result, in place — a
+    /// result whose call has already been trimmed off the tail records nothing rather than opening a
+    /// second, call-less row.
+    fn settle_conversation_tool_call(&mut self, invocation_id: &str, ok: bool, summary: String) {
+        let Some(AgentConversationEntry::ToolCall { state, summary: slot, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == invocation_id) else { return };
+        *state = if ok { AgentToolCallState::Ok } else { AgentToolCallState::Failed };
+        *slot = Some(summary);
+    }
+
+    /// 🔁️ Marks the pending approval with this id resolved, in place, carrying the decision.
+    fn resolve_conversation_approval(&mut self, approval_id: &str, resolved: ApprovalDecision) {
+        let Some(AgentConversationEntry::Approval { state, decision, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == approval_id) else { return };
+        *state = AgentApprovalState::Resolved;
+        *decision = Some(resolved);
     }
 
     /// 📥️ [`Self::apply_frame`] straight off the bytes one socket message carried; a fault is
@@ -538,6 +642,22 @@ impl AgentBridgeState {
     pub fn resolve_approval(&mut self, approval_id: &str, decision: ApprovalDecision, note: Option<String>) {
         self.outbox.push(ShellToGateway::Approval { approval_id: approval_id.to_string(), decision, note });
         self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+        self.resolve_conversation_approval(approval_id, decision);
+    }
+
+    /// 💬️ Sends one human turn to the connected agent and echoes it into the conversation at once —
+    /// React's `sendAgentMessage`. Blank text queues nothing and records nothing; the id is minted
+    /// from the shell session plus an ordinal, so the echo and the frame name the same turn.
+    pub fn send_agent_message(&mut self, shell_session_id: &str, text: &str) -> bool {
+        let trimmed = text.trim();
+        if trimmed.is_empty() {
+            return false;
+        }
+        let message_id = format!("msg_{shell_session_id}_{}", self.next_message_ordinal);
+        self.next_message_ordinal = self.next_message_ordinal.saturating_add(1);
+        self.outbox.push(ShellToGateway::AgentMessage { message_id: message_id.clone(), text: trimmed.to_string() });
+        self.append_conversation(AgentConversationEntry::UserMessage { id: message_id, text: trimmed.to_string() });
+        true
     }
 
     /// 💓️ Keep-alive frame the transport schedules every [`PING_INTERVAL_MS`].

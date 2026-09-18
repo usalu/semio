@@ -1,7 +1,7 @@
 cargo-features = ["trim-paths"]
 
 [package]
-name = "semio-s-plugin-reasoning-mindmap"
+name = "semio-s-plugin-reasoning"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

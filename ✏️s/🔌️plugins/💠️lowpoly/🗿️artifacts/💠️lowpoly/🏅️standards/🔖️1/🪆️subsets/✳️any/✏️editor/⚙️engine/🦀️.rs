@@ -335,6 +335,81 @@ impl LowpolyDocument {
         Ok(id)
     }
 
+    /// 🗑️ Deletes `faces` of the active mesh — the kernel has no face removal, so the mesh is rebuilt
+    /// from every face loop that survives (`from_faces`, orphan vertices dropped by the index compaction)
+    /// and re-unwrapped so the paint layer keeps a UV mapping. Deleting every face leaves an empty mesh.
+    pub fn delete_faces(&mut self, faces: &[FaceId]) -> Result<(), LowpolyCoreError> {
+        let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
+        let mesh = self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)?;
+        let doomed: std::collections::HashSet<u32> = faces.iter().map(|face| face.0).collect();
+        let mut positions: Vec<[f32; 3]> = Vec::new();
+        let mut remap: HashMap<u32, u32> = HashMap::new();
+        let mut loops: Vec<Vec<u32>> = Vec::new();
+        for face in 0..mesh.face_count() as u32 {
+            if doomed.contains(&face) {
+                continue;
+            }
+            let mut compact = Vec::new();
+            for vertex in mesh.face_vertex_ids(FaceId(face))? {
+                let index = match remap.get(&vertex.0) {
+                    Some(index) => *index,
+                    None => {
+                        let position = mesh.vertex_position(vertex)?;
+                        positions.push([position.x(), position.y(), position.z()]);
+                        let index = (positions.len() - 1) as u32;
+                        remap.insert(vertex.0, index);
+                        index
+                    }
+                };
+                compact.push(index);
+            }
+            loops.push(compact);
+        }
+        let mut rebuilt = HalfedgeMesh::from_faces(&positions, &loops)?;
+        prepare_paint_mesh(&mut rebuilt);
+        *self.meshes.get_mut(idx).ok_or(LowpolyCoreError::MeshMissing)? = rebuilt;
+        if let Some(dirty) = self.dirty.get_mut(idx) {
+            *dirty = true;
+        }
+        Ok(())
+    }
+
+    /// 🗑️ Deletes every face that uses one of `vertices` (the faces variant of a vertex delete).
+    pub fn delete_vertices(&mut self, vertices: &[VertexId]) -> Result<(), LowpolyCoreError> {
+        let doomed: std::collections::HashSet<u32> = vertices.iter().map(|vertex| vertex.0).collect();
+        let mesh = self.active_mesh()?;
+        let mut faces = Vec::new();
+        for face in 0..mesh.face_count() as u32 {
+            if mesh.face_vertex_ids(FaceId(face))?.iter().any(|vertex| doomed.contains(&vertex.0)) {
+                faces.push(FaceId(face));
+            }
+        }
+        self.delete_faces(&faces)
+    }
+
+    /// 🗑️ Deletes every face that runs along one of `edges` (the faces variant of an edge delete).
+    pub fn delete_edges(&mut self, edges: &[EdgeId]) -> Result<(), LowpolyCoreError> {
+        let mesh = self.active_mesh()?;
+        let mut pairs: Vec<(u32, u32)> = Vec::new();
+        for edge in edges {
+            let (a, b) = mesh.edge_endpoints(*edge)?;
+            pairs.push((a.0.min(b.0), a.0.max(b.0)));
+        }
+        let mut faces = Vec::new();
+        for face in 0..mesh.face_count() as u32 {
+            let ring = mesh.face_vertex_ids(FaceId(face))?;
+            let along = (0..ring.len()).any(|index| {
+                let a = ring[index].0;
+                let b = ring[(index + 1) % ring.len()].0;
+                pairs.contains(&(a.min(b), a.max(b)))
+            });
+            if along {
+                faces.push(FaceId(face));
+            }
+        }
+        self.delete_faces(&faces)
+    }
+
     pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
         if self.snapshot.objects[idx].paint_layers.is_empty() {

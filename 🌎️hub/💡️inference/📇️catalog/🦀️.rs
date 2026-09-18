@@ -101,7 +101,7 @@ fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingV1, nativ
         || projection.service.owner != "gis"
         || projection.service.contributor != "gis"
         || projection.service.artifact_kind != projection.artifact.kind
-        || projection.service.artifact_schema != projection.artifact.schema
+        || projection.service.artifact_schema != "s.gis.gismap"
         || projection.service.inference_schema != GIS_SERVICE_ID
         || !projection.service.depends_on.is_empty()
         || [projection.service.artifact_schema_version, projection.service.inference_schema_version, projection.service.algorithm_version, projection.service.policy_version] != [1; 4]
@@ -235,7 +235,7 @@ fn exact_projection<'a>(scope: &DocumentScope, descriptor: &DocumentDescriptor, 
         || service.owner != "gis"
         || service.contributor != "gis"
         || service.artifact_kind != descriptor.artifact_kind
-        || service.artifact_schema != descriptor.artifact_schema
+        || service.artifact_schema != "s.gis.gismap"
         || !service.depends_on.is_empty()
         || [service.artifact_schema_version, service.inference_schema_version, service.algorithm_version, service.policy_version] != [1; 4]
     {

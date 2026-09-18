@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_properties;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🏷️ Direct set-properties protobuf payload.
+message SetPropertiesMutation {
+  PdfNamedProperties properties = 1;
+}

@@ -11,13 +11,13 @@
 
 pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
-use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
+use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, object, paint, patch_object, selection, sun, transform, utility, uv};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
 use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::editor::lowpoly::session::{LowpolyScratch, LowpolyTransient, LowpolyTransientMutation};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_INTERACTION_DOMAIN};
+use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use crate::op::LowpolyMutation;
 use crate::{artifact_kind, LowpolyObject, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use protocol::{Mutation, MutationDiff};
@@ -221,12 +221,50 @@ pub fn paint_utility_params_group(utility: &str, params: &serde_json::Value, lab
 /// 🎛️ The window engagement (options/status/input/possible-engagements) shared byte-identically by both
 /// windows — see this file's top-level doc comment.
 pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> WindowEngagement {
+    lowpoly_window_engagement_with_selection(view, active_utility, labels, &crate::editor::lowpoly::options::select::SelectState::default(), 0)
+}
+
+/// 🎯️ The engagement with the mesh domain's LIVE state: which granularity the next pick addresses, how
+/// many components are selected, and which gumball handle groups are on. These switches live in the
+/// engagement's quick-action rail (the always-visible strip that yields to chrome panels) rather than
+/// only in Window Options, which the framework lets a right-anchored panel cover by design.
+pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels, select: &crate::editor::lowpoly::options::select::SelectState, selected_components: usize) -> WindowEngagement {
     let config = view.config;
+    let handles = crate::editor::lowpoly::options::gumball::GumballHandles::from_config(config);
+    let granularity = |id: &str, icon: &str, label: LabelText, granularity_id: &str| WindowEngagementOption {
+        id: format!("lowpoly.opt.select-{id}"),
+        label: Some(label.into()),
+        icon_id: Some(icon.into()),
+        pressed: Some(select.granularity == granularity_id),
+        disabled: None,
+        action: Some(lowpoly_window_action(
+            "setInteractionGranularity",
+            Some((&dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])).into()),
+        )),
+    };
+    let gumball = |id: &str, icon: &str, label: LabelText, key: &str, pressed: bool| WindowEngagementOption {
+        id: format!("lowpoly.opt.gumball-{id}"),
+        label: Some(label.into()),
+        icon_id: Some(icon.into()),
+        pressed: Some(pressed),
+        disabled: None,
+        // 🎛️ An engagement option carries no toggle value, so the press flips the flag it reads.
+        action: Some(lowpoly_window_action("setUtilityParam", Some((&dsl::DslValue::object([("key".to_string(), dsl::DslValue::String(key.to_string())), ("value".to_string(), dsl::DslValue::Bool(!pressed))])).into()))),
+    };
+    let status = if selected_components > 0 { format!("{active_utility} · {selected_components} {} {}", select.granularity, labels.selected.as_str()) } else { active_utility.to_string() };
     WindowEngagement {
         session_active: Some(true),
         // 🧰️ The move/rotate/scale transform switcher lives in the framework utility bar (declared via
-        // `.utility` + window-level `utilities`), so the engagement keeps only its non-utility options.
+        // `.utility` + window-level `utilities`); the rail carries what a mesh edit needs at hand: the
+        // pick granularity, the gumball handle groups, and the three chrome switches.
         options: Some(vec![
+            granularity("mesh", "box", labels.mesh, MESH_GRANULARITY_OBJECT),
+            granularity("vertex", "circle", labels.vertex, "vertex"),
+            granularity("edge", "minus", labels.edge, "edge"),
+            granularity("face", "square", labels.face, "face"),
+            gumball("move", "move", labels.gumball_move, crate::editor::lowpoly::view::GUMBALL_MOVE_PARAM, handles.r#move),
+            gumball("rotate", "rotate-cw", labels.gumball_rotate, crate::editor::lowpoly::view::GUMBALL_ROTATE_PARAM, handles.rotate),
+            gumball("scale", "scaling", labels.gumball_scale, crate::editor::lowpoly::view::GUMBALL_SCALE_PARAM, handles.scale),
             WindowEngagementOption { id: "lowpoly.opt.snap".into(), label: Some(labels.snap.into()), icon_id: Some("magnet".into()), pressed: None, disabled: None, action: Some(lowpoly_window_action("snap", None)) },
             WindowEngagementOption { id: "lowpoly.opt.smooth".into(), label: Some(labels.smooth.into()), icon_id: Some("sun".into()), pressed: None, disabled: None, action: Some(lowpoly_window_action("toggleSmooth", None)) },
             WindowEngagementOption {
@@ -255,7 +293,7 @@ pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, la
         // `ArtifactApp::window_engagements` (unlike `handle`/`copy_fragment`/`cut_operations`) is not
         // threaded an `InteractionView` this wave — the status line drops the selection summary rather
         // than reading stale app-local state. Peer/self selection is surfaced generically by the shell.
-        status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: active_utility.to_string() }]),
+        status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: status }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "lowpoly.eng.extrude".into(), label: labels.extrude.into(), detail: None, action: Some(lowpoly_window_action("extrude", None)) },
             WindowEngagementPossible { id: "lowpoly.eng.triangulate".into(), label: labels.triangulate.into(), detail: None, action: Some(lowpoly_window_action("triangulate", None)) },
@@ -301,6 +339,8 @@ semio_framework_plugin::app_commands! {
         "exportMesh" as "export-mesh" => export_mesh::ExportMesh,
         "loadMeshRequest" as "load-mesh-request" => load_mesh_request::LoadMeshRequest,
         "importMeshFile" as "import-mesh-file" => import_mesh_file::ImportMeshFile,
+        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
+        "duplicateObject" as "duplicate-object" => duplicate_object::DuplicateObject,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
         "setActivePaintLayer" as "set-active-paint-layer" => set_active_paint_layer::SetActivePaintLayer,
@@ -331,6 +371,7 @@ use chrome::toggle_show_edges;
 use engagement::{engagement_input, engagement_submit};
 use document::{replace_snapshot_json, set_snapshot_json};
 use media::{export_mesh, import_mesh_file, load_mesh_request};
+use object::{delete_selection, duplicate_object};
 use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
 use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
 use selection::{set_active_object, set_active_paint_layer};
@@ -509,6 +550,8 @@ mod args_bridge {
             "exportMesh" => LowpolyCommand::ExportMesh(decode(action, fold(args, &[("value", "format")], &[("format", DslValue::String("obj".into()))]))?),
             "loadMeshRequest" => LowpolyCommand::LoadMeshRequest(decode(action, none())?),
             "importMeshFile" => LowpolyCommand::ImportMeshFile(decode(action, fold(args, &[("filename", "name"), ("contents", "payload")], &[]))?),
+            "deleteSelection" => LowpolyCommand::DeleteSelection(decode(action, none())?),
+            "duplicateObject" => LowpolyCommand::DuplicateObject(decode(action, fold(args, OBJECT, &[]))?),
             "engagementSubmit" => LowpolyCommand::EngagementSubmit(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[])))?),
             "setActiveObject" => LowpolyCommand::SetActiveObject(decode(action, fold(args, OBJECT, &[]))?),
             "setActivePaintLayer" => LowpolyCommand::SetActivePaintLayer(decode(action, fold(args, &[("index", "layer_index"), ("value", "layer_index")], &[]))?),
@@ -562,6 +605,8 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "exportMesh",
     "loadMeshRequest",
     "importMeshFile",
+    "deleteSelection",
+    "duplicateObject",
     "paintSample",
     "paintStrokeBegin",
     "transformBegin",
@@ -626,7 +671,7 @@ fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDispositio
         // `context.transient` and publish the post-handle cache back as the new transient root, so
         // every one of these is `Artifact` (the real edit) `+ Transient` (the cache bookkeeping).
         "paintStrokeEnd" | "extrude" | "inset" | "bevel" | "loopCut" | "subdivide" | "triangulate" | "mirror" | "decimate" | "flipFaces" | "merge" | "dissolve" | "snap" | "toggleSmooth" | "unwrapActive" | "markUvSeam" | "clearSeam"
-        | "engagementSubmit" | "translateSelection" | "rotateSelection" | "scaleSelection" | "transformEnd" => LowpolyCommandDisposition::ArtifactTransient,
+        | "engagementSubmit" | "translateSelection" | "rotateSelection" | "scaleSelection" | "transformEnd" | "deleteSelection" => LowpolyCommandDisposition::ArtifactTransient,
         "importSnapshotJson" | "replaceSnapshotJson" | "exportMesh" | "loadMeshRequest" | "importMeshFile" => LowpolyCommandDisposition::HostOnly,
         "paintStrokeBegin" | "transformBegin" => LowpolyCommandDisposition::Transient,
         // 🖌️ Every paint-tick command (`paint_tick` mutates the mid-drag stroke scratch, or — eyedropper — emits a `Config` mutation instead):
@@ -636,7 +681,7 @@ fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDispositio
         // 🌱️ `addPrimitive`'s handler unconditionally emits both a `CreateObject` Artifact mutation and
         // a `SetActiveObject` Config mutation, and it reaches `session::build_doc` — same as every
         // `ArtifactTransient` command above — so it needs the identical scratch rehydration/republication.
-        "addPrimitive" => LowpolyCommandDisposition::ArtifactConfigTransient,
+        "addPrimitive" | "duplicateObject" => LowpolyCommandDisposition::ArtifactConfigTransient,
         tool_id if LOWPOLY_MIGRATED_TOOL_IDS.contains(&tool_id) => LowpolyCommandDisposition::Config,
         _ => return None,
     })
@@ -673,6 +718,8 @@ fn lowpoly_command_admitted(command: &LowpolyCommand, snapshot: &LowpolySnapshot
             LowpolyCommand::ExportMesh(payload) => field(&payload.format),
             LowpolyCommand::LoadMeshRequest(_) => true,
             LowpolyCommand::ImportMeshFile(payload) => field(&payload.name) && payload.payload.len() <= media::LOWPOLY_MESH_FILE_BYTES,
+            LowpolyCommand::DeleteSelection(_) => true,
+            LowpolyCommand::DuplicateObject(payload) => payload.object_id.as_deref().is_none_or(field),
             LowpolyCommand::PaintSample(payload) => payload.object_id.as_deref().is_none_or(field),
             LowpolyCommand::PaintStrokeEnd(_) => true,
             LowpolyCommand::PaintStrokeBegin(_) | LowpolyCommand::TransformBegin(_) => true,
@@ -769,6 +816,8 @@ fn lowpoly_retained_reduce(
     let active_object_id = crate::editor::lowpoly::view::active_object_for_selection(snapshot, config, domain_selection);
     let selection = selection_from_state(&active_object_id, domain_selection);
     let selection_object_id = crate::editor::lowpoly::view::selection_object_id(snapshot, domain_selection);
+    // 🗿️ The whole objects the selection names (object-granularity rows), for delete/duplicate.
+    let selected_object_ids: Vec<String> = domain_selection.ids.iter().filter_map(|raw| crate::editor::lowpoly::view::parse_mesh_target_id(raw)).filter(|(_, component)| component.is_none()).map(|(object_id, _)| object_id).collect();
     // 🕸️ Commands whose handler reaches `session::build_doc`/`mesh_edit`, the mid-drag paint stroke
     // scratch, or the mid-drag gumball transform scratch cannot use a blank `LowpolyScratch::default()`
     // — `LowpolyDocument::reload_meshes` (`⚙️engine/🦀️.rs`) rejects every mesh edit past the
@@ -780,6 +829,7 @@ fn lowpoly_retained_reduce(
         ($handle:expr) => {{
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone()).map_err(Fault::from)?;
             threaded.set_selection_object_id(selection_object_id.clone());
+            threaded.set_selected_object_ids(selected_object_ids.clone());
             let step_emit = ($handle)(&doc, &cfg, &mut threaded)?;
             let transient = threaded.transient_snapshot().map_err(Fault::from)?;
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step_emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } });
@@ -850,6 +900,8 @@ fn lowpoly_retained_reduce(
         // the `Transient` republication `PUBLICATION_CONTRACTS`'s `["addPrimitive", lanes: &[Artifact,
         // Config, Transient]]` entry now admits.
         LowpolyCommand::AddPrimitive(payload) => threaded!(|doc, cfg, ctx| add_primitive::handle(payload, doc, cfg, ctx)),
+        LowpolyCommand::DeleteSelection(payload) => threaded!(|doc, cfg, ctx| delete_selection::handle(payload, doc, cfg, ctx)),
+        LowpolyCommand::DuplicateObject(payload) => threaded!(|doc, cfg, ctx| duplicate_object::handle(payload, doc, cfg, ctx)),
         // 🪣️ `ctx.fill_at` reads/writes only `stroke_dirty` (a render-side texture-cache invalidation
         // counter, never persisted, never read back for any semantic decision) — a single-shot fill
         // needs no transient rehydration, unlike the drag-tick commands above.
@@ -1198,6 +1250,11 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportMesh", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadMeshRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_framework_plugin::ArtifactToolPublicationContract {
+            tool_id: "duplicateObject",
+            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+        },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintStrokeBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
@@ -1772,6 +1829,34 @@ impl ArtifactEditor for LowpolyPlayApp {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
+    /// 🎯️ What a mesh-domain interaction verb repaints. Hover: the Model scene only (the guest echoes
+    /// `hoveredComponent` there; the rail and panels never show a hover). A moved selection: the scene,
+    /// the Artifact tree and Inspection panels, the engagement rail (`N faces selected`) and the
+    /// measures. A granularity or mode switch: the scene (the pick targets change), the engagement
+    /// rail and the measures — the framework default refreshes measures but never engagements, which
+    /// left the rail's pressed granularity stale until the next pick (2026-09-18).
+    fn interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+        use semio_framework::kernel::UiDirtyScope;
+        use semio_framework_plugin::InteractionVerb;
+        if domains.is_empty() || domains.iter().any(|domain| *domain != MESH_INTERACTION_DOMAIN) {
+            return None;
+        }
+        let windows = vec![LOWPOLY_PLAY_BODY_MAIN.to_string(), LOWPOLY_PLAY_BODY_UV.to_string()];
+        Some(match verb {
+            InteractionVerb::Hover => UiDirtyScope::Partial { window_bodies: vec![LOWPOLY_PLAY_BODY_MAIN.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+            InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll => UiDirtyScope::Partial {
+                window_bodies: windows,
+                panel_bodies: vec![LOWPOLY_PLAY_BODY_ARTIFACT.to_string(), LOWPOLY_PLAY_BODY_INSPECTION.to_string()],
+                utilities: false,
+                tools: false,
+                engagements: true,
+                measures: true,
+                labels: false,
+            },
+            InteractionVerb::SetSelectionMode | InteractionVerb::SetGranularity => UiDirtyScope::Partial { window_bodies: windows, panel_bodies: Vec::new(), utilities: false, tools: false, engagements: true, measures: true, labels: false },
+        })
+    }
+
     /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
     /// (`reset_document_effect`: mesh import, fixture import) — the trait default refuses the envelope,
     /// which the host reported as `artifact-store.persisted-initializer-refused` on every import
@@ -1857,6 +1942,8 @@ impl ArtifactEditor for LowpolyPlayApp {
             // (`registration.contract == row.contract`, else the boot-time proof join refuses the tool);
             // the mesh file rides inside that shared wire budget.
             "importMeshFile" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "deleteSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "duplicateObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintStrokeBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "transformBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
@@ -2048,6 +2135,19 @@ impl ArtifactEditor for LowpolyPlayApp {
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
+    /// 🎯️ The live engagement: granularity switches pressed to the mesh domain's state, the selected
+    /// component count in the status line.
+    fn window_engagements_with_request_context(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.snapshot;
+        let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
+        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
+        let select = crate::editor::lowpoly::options::select::SelectState::from_interaction(interaction);
+        let world = crate::editor::lowpoly::view::world_selection_from_state(doc.snapshot, config, interaction.selection(MESH_INTERACTION_DOMAIN), interaction.active_granularity(MESH_INTERACTION_DOMAIN));
+        let selected = if world.granularity == MESH_GRANULARITY_OBJECT { world.object_ids.len() } else { world.component_ids.len() };
+        let engagement = lowpoly_window_engagement_with_selection(LowpolyView { snapshot: doc.snapshot, config }, active_utility, labels, &select, selected);
+        HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
+    }
+
     fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
@@ -2159,6 +2259,8 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("importSnapshotJson", LocalizedLabel::native("Import Snapshot Json", "Snapshot-JSON importieren"))
             .mutation("replaceSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
             // 📤️ Shell effects: a mesh download, a file-open request, and the import the shell answers it with.
+            .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .mutation("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"))
             .shell_action("exportMesh", LocalizedLabel::native("Export Mesh", "Mesh exportieren"))
             .shell_action("loadMeshRequest", LocalizedLabel::native("Load Mesh…", "Mesh laden…"))
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("importMeshFile", LocalizedLabel::native("Import Mesh File", "Mesh-Datei importieren"), semio_framework_plugin::ActionKind::Mutation) })
@@ -2264,6 +2366,12 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             })
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            // ⌨️ The modeller's hands: delete what is selected, duplicate the active object, extrude/inset it.
+            .keybinding("delete", "deleteSelection")
+            .keybinding("backspace", "deleteSelection")
+            .keybinding("mod+d", "duplicateObject")
+            .keybinding("e", "extrude")
+            .keybinding("i", "inset")
             .config(LowpolyPlayApp::config_spec())
             .io(lowpoly_io())
             .action_interactive_job("addPrimitive", InteractiveJobClassification::Migrated)
@@ -2297,6 +2405,8 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("exportMesh", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadMeshRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importMeshFile", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateObject", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveObject", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActivePaintLayer", InteractiveJobClassification::Migrated)

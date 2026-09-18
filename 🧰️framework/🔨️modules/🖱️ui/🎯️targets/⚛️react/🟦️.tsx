@@ -9498,7 +9498,6 @@ export { IconSelector, type IconSelectorProps };
 
 // #region 📜️Tree
 import {
-  BasicChatPanel,
   CATALOGUE_DRAG_MIME,
   Catalogue,
   ControlTree,
@@ -9610,7 +9609,6 @@ import {
   type WindowPaneChromeToggleProps,
 } from "../../🧱️elements/🌳️Tree/🟦️.tsx";
 export {
-  BasicChatPanel,
   CATALOGUE_DRAG_MIME,
   Catalogue,
   ControlTree,

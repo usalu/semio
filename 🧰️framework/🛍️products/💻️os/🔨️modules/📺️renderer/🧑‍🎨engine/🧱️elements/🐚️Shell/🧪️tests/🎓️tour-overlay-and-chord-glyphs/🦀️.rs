@@ -157,7 +157,7 @@ fn the_veil_owns_every_pointer_it_covers() {
         let hit = HitTarget { rect: *rect, event: None, control_id: Some(id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None };
         assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&hit)), "🧯️ {id} is the shell's press, never the surface's");
     }
-    let stray = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("shell.window.search.toggle.pane".into()), kind: HitKind::Button, drag_axis: None, drag_data: None };
+    let stray = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("tree.label.seed-left-001".into()), kind: HitKind::Button, drag_axis: None, drag_data: None };
     assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&stray)), "🧯️ and an ordinary chrome Button still leaves the surface's press alone");
 
     let press = |shell: &mut ShellState, control_id: &str| {
@@ -446,6 +446,140 @@ fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scri
     assert!(foreground.len() >= 4, "🫧 the sheet carries its own buttons and copy: {}", foreground.len());
     assert!(foreground.iter().all(inside), "🫧 all of it on the sheet");
     assert!(!background.iter().any(inside), "🫧 and none of it left in the scene the glass pass samples");
+}
+
+/// 🔬️ The measured card of the armed step, straight off the production measurer.
+fn tour_layout(shell: &mut ShellState, theme: &Theme, atlas: &mut FontAtlas) -> ChromeTourLayout {
+    let step = shell.chrome_tour_active_step().expect("🎓️ a step is armed");
+    let step_index = shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index).expect("🎓️ the tour carries its index");
+    let step_count = shell.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()).expect("🎓️ the app declares its steps");
+    chrome_tour_layout(shell, atlas, theme, &step, step_index, step_count, 1440.0, 900.0)
+}
+
+/// 🧪️ **The step-counter law.** The footer chip reads `1 / 2` — the step AND the total, with nothing
+/// clipped off its tail.
+///
+/// 🩸️ The defect: the live card read `1 /` (`🗑️generated/tour-paint-1/t025.png`) against React's
+/// `1 / 5` (`🗑️generated/react-6313/final.png`). The chip was priced at
+/// `measure_text(counter) + padding_standard * 2`, while the painter insets its text by
+/// `padding_standard * 2` on BOTH sides and clips the run to what is left — a box exactly
+/// `padding_standard * 2` narrower than its own label, so the total always fell off the end. Chrome
+/// text flows `RetainedTextFlow::Clip`, which drops an overflowing glyph silently rather than
+/// wrapping, so nothing in the walk reports it.
+#[test]
+fn the_footer_counter_paints_its_whole_step_of_the_total() {
+    let theme = Theme::light();
+    let mut shell = armed_tour_shell();
+    let mut atlas = FontAtlas::builtin();
+    let layout = tour_layout(&mut shell, &theme, &mut atlas);
+    assert_eq!(layout.counter_text, "1 / 2", "🎓️ React's `{{stepIndex + 1}} / {{steps.length}}`");
+    let label_w = atlas.measure_text(&layout.counter_text, theme.font_size_small).0;
+    let text_box = layout.counter.w - theme.padding_standard * 4.0;
+    assert!(text_box >= label_w, "🎓️ the chip holds its whole label: box {text_box} for a {label_w} label");
+
+    let painted = paint_tour(&mut shell, &theme);
+    let counter = layout.counter;
+    // 🔠️ Only the label: the chip's four hairline strokes all start on its own edge, so insetting by
+    // one `--ui-spacing` leaves exactly the glyph quads. The vertical band is generous because a
+    // bitmap-fallback cell is taller than the `--text-xs` box it sits in.
+    let glyphs = painted
+        .foreground
+        .iter()
+        .filter(|rect| {
+            rect[0] >= counter.x + theme.padding_standard && rect[0] < counter.x + counter.w - theme.padding_standard && rect[1] > counter.y - counter.h && rect[1] < counter.y + counter.h
+        })
+        .count();
+    assert_eq!(glyphs, layout.counter_text.chars().count(), "🎓️ every scalar of `{}` is painted, none clipped off the end", layout.counter_text);
+}
+
+/// 🧪️ **The chip law.** React composes each footer control as `ButtonGroupItem` — inline label, then
+/// the `ControlHotkeyBadge` chord, then the icon — so the card reads `Next ↵ ›`, and composes Skip as
+/// `WindowChrome`'s `close` control, which leads with its `CloseIcon`, so it reads `✕ Skip`. The cap
+/// row also carries the `DragHandle` grip between the title and the chip's edge.
+///
+/// 🩸️ The wgpu card painted a bare `Next` and a bare `Skip` with no icon, no chord and no grip
+/// (`🗑️generated/tour-paint-1/t025.png`).
+#[test]
+fn the_cards_chips_carry_reacts_label_chord_icon_order() {
+    let theme = Theme::light();
+    let mut shell = armed_tour_shell();
+    let mut atlas = FontAtlas::builtin();
+    let layout = tour_layout(&mut shell, &theme, &mut atlas);
+
+    let next = layout.next.as_ref().expect("🎓️ a step with no interactions advances by button");
+    assert_eq!(next.icon_id, "chevron-right", "🎓️ React's `icon={{isLast ? \"check\" : \"chevron-right\"}}`");
+    assert!(!next.leading_icon, "🎓️ `ButtonGroupItem` renders the icon LAST");
+    assert_eq!(next.hotkey.as_deref(), Some(format_keybinding_shortcut("enter,arrowright").as_str()), "🎓️ the chord badge is the first chord of `ui.introduction.next`");
+    assert_eq!(layout.skip.icon_id, "x", "🎓️ `WindowChrome`'s close control wears `CloseIcon`");
+    assert!(layout.skip.leading_icon, "🎓️ and leads with it");
+    assert_eq!(layout.skip.hotkey, None, "🎓️ the close control is not a `Button`, so it wears no inline badge");
+
+    let icon_x = chrome_tour_chip_icon_x(next, &theme);
+    let (label_x, _, label_w) = chrome_tour_chip_label_box(next, &mut atlas, &theme);
+    let (_, (hotkey_x, _, hotkey_w)) = chrome_tour_chip_hotkey_box(next, &mut atlas, &theme).expect("🎓️ Next carries a chord");
+    assert!(label_x + label_w <= hotkey_x, "🎓️ label before chord");
+    assert!(hotkey_x + hotkey_w <= icon_x + 0.5, "🎓️ chord before icon");
+    assert!(icon_x + CHROME_ICON_TINY <= next.rect.x + next.rect.w, "🎓️ and the icon inside the chip");
+
+    assert!(layout.grip.w > 0.0 && layout.grip.x + layout.grip.w <= layout.title_chip.x + layout.title_chip.w, "🎓️ the drag grip sits at the title chip's trailing edge");
+    assert!(layout.title_rect.x + layout.title_rect.w <= layout.grip.x, "🎓️ after the title, never over it");
+
+    shell.chrome_build.tour_state.as_mut().expect("🎓️ the tour is armed").step_index = 1;
+    let last = tour_layout(&mut shell, &theme, &mut atlas);
+    assert_eq!(last.counter_text, "2 / 2");
+    assert_eq!(last.next.as_ref().expect("🎓️ the last step still advances by button").icon_id, "check", "🎓️ the terminal step is Done, with React's own check icon");
+    let back = last.back.as_ref().expect("🎓️ step 2 offers Back");
+    assert_eq!(back.icon_id, "chevron-left");
+    assert_eq!(back.hotkey.as_deref(), Some(format_keybinding_shortcut("arrowleft").as_str()));
+}
+
+/// 🧪️ **The overlay-sheet law.** EVERY overlay sheet that pushes a glass region encodes its own
+/// glyphs in the FOREGROUND pass. A sheet that paints into the scene under its own region blurs its
+/// labels away the instant it opens — the defect `📓️w8a` fixed twice (tour card, confirm dialog) and
+/// listed six more times as hand-off 2: the navbar/search/find dropdown, the World3d status pill, the
+/// retained context menu, the tooltip, the agent-approvals modal and the immediate-mode menu level.
+///
+/// The source scan is what keeps a NEW sheet honest: a bare `push_glass` that is not a veil (a veil
+/// is a backdrop with no content of its own) and does not open a content layer fails here rather than
+/// in a screenshot nobody takes until the sheet is open.
+#[test]
+fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_pass() {
+    let source = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
+    let mut bare = Vec::new();
+    for (index, line) in source.lines().enumerate() {
+        if !line.contains("push_glass(") || line.contains("fn ") {
+            continue;
+        }
+        let opens = line.contains("open_chrome_overlay_glass_content") || source.lines().skip(index).take(8).any(|near| near.contains("begin_glass_content"));
+        if !line.contains("veil_glass(") && !opens {
+            bare.push(format!("{}: {}", index + 1, line.trim()));
+        }
+    }
+    assert!(bare.is_empty(), "🫧 every non-veil glass region opens a content layer, these do not: {bare:#?}");
+
+    let theme = Theme::light();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.context_menu = Some(ContextMenuState {
+        x: 100.0,
+        y: 100.0,
+        items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }],
+        ..Default::default()
+    });
+    let mut overlay = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut cursor = ShellChromeChildCursor::default();
+    let complete = (0..8192).any(|_| shell.render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
+    assert!(complete, "🖱️ the context-menu walk terminates");
+    let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the context menu opens a glass-content layer");
+    let menu = overlay.glass_regions[sheet].rect;
+    let inside = |rect: &[f32; 4]| rect[0] >= menu[0] - 0.5 && rect[0] <= menu[0] + menu[2] + 0.5 && rect[1] >= menu[1] - 0.5 && rect[1] <= menu[1] + menu[3] + 0.5;
+    let foreground: Vec<[f32; 4]> = overlay.layers.iter().filter(|layer| layer.foreground_of.is_some()).flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect();
+    let background: Vec<[f32; 4]> = overlay.layers.iter().filter(|layer| layer.foreground_of.is_none()).flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect();
+    assert!(foreground.len() >= 2, "🫧 the menu's row and its label are foreground content: {}", foreground.len());
+    assert!(!background.iter().any(inside), "🫧 and nothing it carries is left in the scene the glass pass samples");
+    assert!(cursor.depth == 0, "🫧 the walk closed its own layer on the way out");
 }
 
 //#endregion 🫧CrispnessLaw

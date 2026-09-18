@@ -257,7 +257,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             dependencies: vec![],
             component: TrustedBundleComponentV1 { path: "packages/stdio/component.wasm".into(), byte_length: 1, sha256: "21".repeat(32), blake3: "22".repeat(32) },
             descriptor: TrustedBundleFileV1 { path: "packages/stdio/descriptor.semio".into(), byte_length: 1, sha256: "23".repeat(32) },
-            browser_actor: TrustedBundleBrowserActorV1::None,
+            browser_actor: TrustedBundleBrowserActorV1::None {},
             native_codecs: stdio_codecs,
             open_targets: vec![],
         },
@@ -353,8 +353,8 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_
                     "config": { "fields": [] },
                     "commandGrammar": { "variants": [] },
                     "io": {
-                        "documentSchema": "fixture.document",
-                        "documentMediaType": { "class": "data", "form": "value" },
+                        "artifactSchema": "fixture.document",
+                        "artifactMediaType": { "class": "data", "form": "value" },
                         "ports": [],
                         "exportFormats": [],
                         "importFormats": [],
@@ -1302,7 +1302,8 @@ async fn descriptor_owned_surface_is_required_before_any_catalog_or_codec_public
         ("rendererTarget", serde_json::json!("wgpu")),
     ] {
         let mut fixture = prepared_fixture();
-        fixture.bundle["packages"][0]["openTargets"][0][field] = value;
+        fixture.bundle["packages"][0]["openTargets"][0][field] = value.clone();
+        fixture.bundle["profiles"][0]["openTarget"]["target"][field] = value;
         fixture.persist_bundle();
         let error = expect_load_error(&fixture, &[fixture.binding()], &TestControl::new()).await;
         assert!(error.to_string().contains("document-open target"), "{field}: {error}");

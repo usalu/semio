@@ -43,7 +43,7 @@ func binaryPath(repoRoot string) (string, error) {
 		name += ".exe"
 	}
 	binary := filepath.Join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", name)
-	source := filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔌️mcp", "📦️packages", "🐹️go")
+	source := filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "🔌️mcp")
 	// 🕰️A cached binary is reused only while it is NEWER than every source file it was built from.
 	// Reusing it unconditionally made the Go subject answer from a build that predates the change under
 	// test, so a real fix read as a parity difference against the other implementations.
@@ -53,8 +53,8 @@ func binaryPath(repoRoot string) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(binary), 0o755); err != nil {
 		return "", err
 	}
-	build := exec.Command("go", "build", "-o", binary, ".")
-	build.Dir = filepath.Join(source, "🚀️bin")
+	build := exec.Command("bun", "./📜️script.ts", "build")
+	build.Dir = source
 	build.Env = append(os.Environ(), "GOWORK="+filepath.Join(repoRoot, "go.work"), "GOFLAGS=")
 	if output, err := build.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("build semio-repo-mcp: %v: %s", err, output)

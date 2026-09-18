@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗣️set-language",
+  "semanticKind": "set-language",
+  "displayName": "Set Language",
+  "emoji": "🗣️",
+  "aggregateVariant": "SetLanguage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-language",
+  "binaryTag": 53,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -550,7 +550,7 @@ impl OsHostRetirementState {
 
 impl Drop for OsHostRetirementState {
     fn drop(&mut self) {
-        debug_assert!(self.terminal_is_empty(), "OsHostRetirementState must reach terminal-empty before release");
+        debug_assert!(self.terminal_is_empty() || std::thread::panicking(), "OsHostRetirementState must reach terminal-empty before release");
     }
 }
 
@@ -611,7 +611,7 @@ impl Drop for OsHostRetirement {
     fn drop(&mut self) {
         let Some(state) = self.state.take() else {
             if let Some(token) = self.abandonment.take() {
-                if !release_os_host_retirement_abandonment(token) {
+                if !release_os_host_retirement_abandonment(token) && !std::thread::panicking() {
                     std::process::abort();
                 }
             }

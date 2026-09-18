@@ -128,19 +128,14 @@ fn shell_pref_locks_reads_the_four_lockable_envs() {
 /// earlier test reusing this worker thread) — only that a lock always overrides whatever loads.
 #[test]
 fn load_ui_prefs_once_prefers_a_lock_over_storage() {
-    unsafe {
-        std::env::set_var("SEMIO_LOCKED_APPEARANCE", "dark");
-    }
+    let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), ..Default::default() });
     let mut state = ShellState::new(Vec::new(), String::new());
     state.load_ui_prefs_once();
     assert_eq!(state.appearance_id, "dark");
-    // The "load once" gate: mutating the field and calling load again must not reset it.
     state.appearance_id = "light".to_string();
     state.load_ui_prefs_once();
     assert_eq!(state.appearance_id, "light");
-    unsafe {
-        std::env::remove_var("SEMIO_LOCKED_APPEARANCE");
-    }
+    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
 /// 🧪️ `persist_ui_prefs_if_changed`'s dirty-check: a second call with no field changes since the

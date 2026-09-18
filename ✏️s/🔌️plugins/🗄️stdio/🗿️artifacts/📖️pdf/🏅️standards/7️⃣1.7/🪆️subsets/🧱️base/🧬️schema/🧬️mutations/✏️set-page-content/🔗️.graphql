@@ -1,5 +1,5 @@
 # ✏️ Direct set-page-content GraphQL payload.
 input SetPageContentMutationInput {
   index: Int
-  text: String
+  content: [PdfOpInput!]
 }

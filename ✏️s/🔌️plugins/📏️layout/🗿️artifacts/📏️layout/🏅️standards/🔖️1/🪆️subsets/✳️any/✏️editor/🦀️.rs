@@ -543,7 +543,8 @@ fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<L
     let (kind, page_id) = match *request.command {
         LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
         LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
-        LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
+        // 📕️ An unaddressed PDF is the whole document (every page); PNG/SVG stay single-page.
+        LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id),
         LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
         _ => return Ok(None),
     };
@@ -551,9 +552,14 @@ fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<L
         return Err(Fault::from("layout-export-command-tool-mismatch"));
     }
     let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
+    // 📤️ A queue of the job's OWN, never `request.output_chunks`: the mounted operation keeps a clone
+    // of the request's queue and drains it at retirement (`MountedTypedCommandFullOperation::
+    // retirement_step`), which emptied every download right after the host's ACK — a 0-byte `Demo.pdf`
+    // (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). Same shape as puzzle's `export_fixture`.
+    drop(request.output_chunks);
     let payload = LayoutExportToolPayload {
         request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
-        output_chunks: request.output_chunks,
+        output_chunks: semio_framework_plugin::app::ArtifactOutputChunks::new(crate::editor::layout::engine::export::MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
         completion: Some(request.completion),
     };
     Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))

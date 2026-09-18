@@ -37,7 +37,11 @@ const EARLY_INTERACTIVE_REGISTRATION_INLIER_SHARE: f64 = 0.6;
 /// 🎯️ Bounded hypothesis batches the two-view registration fallback spends before it commits to the
 /// best essential matrix it found (each batch is one [`MAX_INTERACTIVE_SEED_HYPOTHESES`] draw from
 /// each of the five-point and eight-point estimators).
-const MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS: usize = 8;
+const MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS: usize = 32;
+/// 🎯️ Hypotheses each estimator draws per two-view fallback call: four five-point and four
+/// eight-point solves, unpolished, keep one call inside a worker step; the best model is polished
+/// once when the fallback commits.
+const INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL: usize = 4;
 const MAX_INTERACTIVE_TRACK_OBSERVATIONS: usize = 8;
 /// 🧵️ Tracks the bounded registration, triangulation and snapshot walks consider. Every walk is a
 /// cursor advanced by the call's work budget, so this caps the reconstruction's point count, not a
@@ -536,6 +540,12 @@ pub fn estimate_essential(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_
 }
 
 fn estimate_essential_with_limit(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, maximum_hypotheses: usize) -> Option<TwoViewResult> {
+    estimate_essential_with_threshold(matches, k_a, k_b, 0.005, maximum_hypotheses)
+}
+
+/// 🎥️ [`estimate_essential_with_limit`] at an explicit Sampson tolerance in normalized coordinates
+/// (the caller derives it from a pixel tolerance and the focal length).
+fn estimate_essential_with_threshold(matches: &[([f64; 2], [f64; 2])], k_a: &Intrinsics, k_b: &Intrinsics, threshold: f64, maximum_hypotheses: usize) -> Option<TwoViewResult> {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
@@ -544,7 +554,7 @@ fn estimate_essential_with_limit(matches: &[([f64; 2], [f64; 2])], k_a: &Intrins
             ([ra[0], ra[1]], [rb[0], rb[1]])
         })
         .collect();
-    let cfg = RansacConfig { threshold: 0.005, confidence: 0.999, max_iters: maximum_hypotheses, seed: 1, scoring: RansacScoring::Msac };
+    let cfg = RansacConfig { threshold, confidence: 0.999, max_iters: maximum_hypotheses, seed: 1, scoring: RansacScoring::Msac };
     let local_opt = |subset: &[([f64; 2], [f64; 2])], _model: &[[f64; 3]; 3]| fit_fundamental_dlt(subset);
     let result = lo_ransac(&FundamentalSolver, &normalized, &cfg, local_opt)?;
     Some(TwoViewResult { model: TwoViewModel::Fundamental(result.model), inliers: result.inliers, score: result.score })
@@ -689,11 +699,17 @@ impl LeastSquaresProblem for EssentialRefineProblem<'_> {
 /// [`estimate_essential_five_point`]), this never leaves the essential matrix's constrained manifold, so
 /// it remains well-behaved exactly where the minimal 5-point solve most needs a noise-robust polish.
 fn refine_essential_lm(initial: &Se3, corr: &[([f64; 2], [f64; 2])]) -> Se3 {
+    refine_essential_lm_bounded(initial, corr, 50)
+}
+
+/// 🎯️ [`refine_essential_lm`] with the Levenberg–Marquardt iteration count as a parameter, for the
+/// interactive polish whose unit must stay inside the worker law.
+fn refine_essential_lm_bounded(initial: &Se3, corr: &[([f64; 2], [f64; 2])], max_iters: usize) -> Se3 {
     let t0 = vec3d_normalize(initial.t);
     let (tangent_u, tangent_v) = sphere_tangent_basis(t0);
     let problem = EssentialRefineProblem { corr, t0, tangent_u, tangent_v };
     let x0 = VecD::from_vec(vec![initial.r.log()[0], initial.r.log()[1], initial.r.log()[2], 0.0, 0.0]);
-    let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
+    let cfg = LmConfig { max_iters, ..LmConfig::default() };
     let result = crate::optimize::levenberg_marquardt(&problem, x0, &cfg);
     let omega: [f64; 3] = std::array::from_fn(|k| result.x.get(k));
     let phi = [result.x.get(3), result.x.get(4)];
@@ -1056,17 +1072,50 @@ pub fn estimate_essential_five_point_bounded(matches: &[([f64; 2], [f64; 2])], k
     // The nonlinear polish below is safe where the DLT refit isn't: it stays on the essential matrix's
     // true 5-DOF manifold instead of an unconstrained 8-DOF linear one.
     let result = ransac(&EssentialFivePointSolver, &normalized, &cfg)?;
-    let mut model = result.model;
-    let mut inliers = result.inliers.clone();
+    Some(polish_essential_normalized(TwoViewResult { model: TwoViewModel::Fundamental(result.model), inliers: result.inliers, score: result.score }, &normalized, threshold, polish_rounds))
+}
+
+/// 🎯️ The nonlinear polish of [`estimate_essential_five_point_bounded`] on its own, bounded for
+/// one interactive unit: one round of decompose → LM refine → re-classify, over pixel matches
+/// unprojected through the intrinsics, for a caller that keeps the RANSAC search and the polish in
+/// separate bounded units. The refine runs [`INTERACTIVE_ESSENTIAL_REFINE_ITERATIONS`] iterations
+/// over at most [`INTERACTIVE_ESSENTIAL_REFINE_CORRESPONDENCES`] of the estimate's inliers (an
+/// evenly strided subset): the unbounded polish of a true model with 60 raw inliers measured 4–12 ms
+/// in a debug build, the whole worker law, and its cost grows with the inliers it explains.
+pub fn polish_essential(estimate: TwoViewResult, matches: &[([f64; 2], [f64; 2])], intrinsics: &Intrinsics, threshold: f64) -> TwoViewResult {
+    let normalized: Vec<([f64; 2], [f64; 2])> = matches
+        .iter()
+        .map(|&(pa, pb)| {
+            let ra = intrinsics.unproject_ray(pa);
+            let rb = intrinsics.unproject_ray(pb);
+            ([ra[0], ra[1]], [rb[0], rb[1]])
+        })
+        .collect();
+    polish_essential_normalized_with(estimate, &normalized, threshold, 1, INTERACTIVE_ESSENTIAL_REFINE_ITERATIONS, INTERACTIVE_ESSENTIAL_REFINE_CORRESPONDENCES)
+}
+
+/// ⏱️ Levenberg–Marquardt iterations of one interactive essential-matrix polish.
+pub const INTERACTIVE_ESSENTIAL_REFINE_ITERATIONS: usize = 8;
+/// ⏱️ Correspondences one interactive essential-matrix polish refines over at most.
+pub const INTERACTIVE_ESSENTIAL_REFINE_CORRESPONDENCES: usize = 48;
+
+fn polish_essential_normalized(estimate: TwoViewResult, normalized: &[([f64; 2], [f64; 2])], threshold: f64, polish_rounds: usize) -> TwoViewResult {
+    polish_essential_normalized_with(estimate, normalized, threshold, polish_rounds, 50, usize::MAX)
+}
+
+fn polish_essential_normalized_with(estimate: TwoViewResult, normalized: &[([f64; 2], [f64; 2])], threshold: f64, polish_rounds: usize, max_iters: usize, max_correspondences: usize) -> TwoViewResult {
+    let TwoViewModel::Fundamental(mut model) = estimate.model else { return estimate };
+    let mut inliers = estimate.inliers.clone();
     for _ in 0..polish_rounds {
-        let inlier_corr: Vec<([f64; 2], [f64; 2])> = inliers.iter().map(|&i| normalized[i]).collect();
+        let stride = inliers.len().div_ceil(max_correspondences.max(1)).max(1);
+        let inlier_corr: Vec<([f64; 2], [f64; 2])> = inliers.iter().step_by(stride).map(|&i| normalized[i]).collect();
         let Some(pose) = decompose_essential(&model, &inlier_corr) else { break };
-        let refined_pose = refine_essential_lm(&pose, &inlier_corr);
+        let refined_pose = refine_essential_lm_bounded(&pose, &inlier_corr, max_iters);
         let r = mat3d_to_array(&refined_pose.r.0);
         model = mat3_mul(&skew3(refined_pose.t), &r);
         inliers = (0..normalized.len()).filter(|&i| sampson_distance(&model, normalized[i].0, normalized[i].1) < threshold).collect();
     }
-    Some(TwoViewResult { model: TwoViewModel::Fundamental(model), inliers, score: result.score })
+    TwoViewResult { model: TwoViewModel::Fundamental(model), inliers, score: estimate.score }
 }
 // #endregion 🔖️TwoView
 
@@ -1137,7 +1186,10 @@ pub fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], 
     x0.set(0, initial[0]);
     x0.set(1, initial[1]);
     x0.set(2, initial[2]);
-    let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
+    // ⏱️ A three-parameter point from a DLT start converges in a handful of damped steps; fifty
+    // bought nothing and made one bounded retriangulation unit (which may refine twice, on the full
+    // track and on its agreeing subset) overrun the worker ceiling.
+    let cfg = LmConfig { max_iters: 8, ..LmConfig::default() };
     let result = crate::optimize::levenberg_marquardt(&problem, x0, &cfg);
     [result.x.get(0), result.x.get(1), result.x.get(2)]
 }
@@ -1314,6 +1366,17 @@ impl MinimalSolver for P3pSolver {
 /// 🎯️ Outlier-robust perspective-n-point: RANSAC over [`P3pSolver`]'s minimal 3-point samples, with
 /// [`refine_pose_lm`] as the locally-optimized-RANSAC polish on each new best model's inlier set.
 pub fn pnp_ransac(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], cfg: &RansacConfig) -> Option<(CameraPose, Vec<usize>)> {
+    pnp_ransac_bounded(intr, world_pts, obs_px, cfg, POSE_REFINE_ITERATIONS)
+}
+
+/// 🎯️ Levenberg–Marquardt iterations [`refine_pose_lm`] spends, and the smaller budget a bounded
+/// registration step affords its local optimisation (the global bundle adjustment refines again).
+const POSE_REFINE_ITERATIONS: usize = 50;
+pub const INTERACTIVE_POSE_REFINE_ITERATIONS: usize = 8;
+
+/// 🎯️ [`pnp_ransac`] with an explicit iteration budget for the local-optimisation polish of each
+/// improved model, so one hypothesis draw stays inside a worker step.
+pub fn pnp_ransac_bounded(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], cfg: &RansacConfig, refine_iterations: usize) -> Option<(CameraPose, Vec<usize>)> {
     if world_pts.len() != obs_px.len() || world_pts.len() < 3 {
         return None;
     }
@@ -1325,7 +1388,7 @@ pub fn pnp_ransac(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]]
         }
         let w: Vec<[f64; 3]> = subset.iter().map(|d| d.0).collect();
         let o: Vec<[f64; 2]> = subset.iter().map(|d| d.1).collect();
-        Some(refine_pose_lm(&solver.intr, &w, &o, *model))
+        Some(refine_pose_lm_bounded(&solver.intr, &w, &o, *model, refine_iterations))
     };
     let result = lo_ransac(&solver, &data, cfg, local_opt)?;
     Some((CameraPose(result.model), result.inliers))
@@ -1489,9 +1552,14 @@ impl LeastSquaresProblem for PoseRefineProblem<'_> {
 
 /// 📐️ Refines a camera pose via Levenberg-Marquardt on its reprojection error over fixed world points.
 pub fn refine_pose_lm(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], initial: Se3) -> Se3 {
+    refine_pose_lm_bounded(intr, world_pts, obs_px, initial, POSE_REFINE_ITERATIONS)
+}
+
+/// 🎯️ [`refine_pose_lm`] with an explicit iteration budget.
+pub fn refine_pose_lm_bounded(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64; 2]], initial: Se3, max_iterations: usize) -> Se3 {
     let problem = PoseRefineProblem { intr, world_pts, obs_px };
     let x0 = VecD::from_vec(initial.log().to_vec());
-    let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
+    let cfg = LmConfig { max_iters: max_iterations.max(1), ..LmConfig::default() };
     let result = crate::optimize::levenberg_marquardt(&problem, x0, &cfg);
     let xi: [f64; 6] = std::array::from_fn(|k| result.x.get(k));
     Se3::exp(xi)
@@ -2090,16 +2158,18 @@ pub struct SeedPairPreparation {
     cursor: usize,
     correspondences: Vec<([f64; 2], [f64; 2])>,
     phase: SeedPairPhase,
-    /// 🎯️ Hypothesis batches spent and the best essential-matrix estimate they produced: one
-    /// bounded five-point batch per call, so no call runs the whole search.
+    /// 🎯️ Hypothesis batches spent and the best (polished) essential-matrix estimate they
+    /// produced, with the raw inlier count of the candidate it was polished from: one bounded
+    /// five-point batch per call, so no call runs the whole search.
     attempts: usize,
     best: Option<TwoViewResult>,
+    best_raw_score: f64,
 }
 
 /// 🎯️ Five-point hypotheses one seed-solve call draws, and the calls a seed spends before it
 /// commits to the best model found.
-const SEED_HYPOTHESES_PER_CALL: usize = 4;
-const SEED_SOLVE_CALLS: usize = 16;
+const SEED_HYPOTHESES_PER_CALL: usize = 2;
+const SEED_SOLVE_CALLS: usize = 32;
 
 impl SeedPairPreparation {
     pub fn new(frame_a: usize, frame_b: usize, matches: &[Match]) -> Self {
@@ -2112,6 +2182,7 @@ impl SeedPairPreparation {
             phase: SeedPairPhase::Collect,
             attempts: 0,
             best: None,
+            best_raw_score: f64::INFINITY,
         }
     }
 }
@@ -2177,6 +2248,15 @@ pub enum BundlePhase {
     Prune,
     Retriangulate,
     Done,
+}
+
+/// 🎯️ A bundle adjustment in flight (see [`IncrementalSfm::begin_bundle_adjustment`]).
+pub struct BundleAdjustment {
+    frames: Vec<usize>,
+    point_track_ids: Vec<usize>,
+    problem: SfmBundleProblem,
+    cfg: LmConfig,
+    preparation: SchurLmPreparation,
 }
 
 pub struct BundlePreparation {
@@ -2558,19 +2638,18 @@ impl IncrementalSfm {
                 if preparation.correspondences.len() < 8 {
                     return Err(SfmError::InsufficientMatches);
                 }
-                // 🎯️ Five-point minimal solves with a one-round nonlinear polish, one bounded batch
-                // per call, the best-supported model kept across calls: the seed pose anchors every
+                // 🎯️ Five-point minimal solves, one bounded batch per call, the best-supported model
+                // kept across calls and polished once at the end: the seed pose anchors every
                 // triangulation, PnP registration and bundle adjustment downstream, so it is worth
                 // the manifold-true estimate; the unconstrained 8-point fit is only the fallback for
                 // a pair the five-point search cannot solve at all.
-                const SEED_FIVE_POINT_THRESHOLD: f64 = 0.005;
+                // The tolerance is the configured pixel threshold in normalized coordinates, so a
+                // 128-pixel frame is judged as leniently as a 320-pixel one.
+                let threshold = self.cfg.ransac_threshold_px / self.intrinsics.fx.max(self.intrinsics.fy).max(1.0);
                 let seed = (preparation.frame_a as u64) << 32 ^ preparation.frame_b as u64 ^ (preparation.attempts as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
-                let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, &self.intrinsics, &self.intrinsics, SEED_FIVE_POINT_THRESHOLD, seed, SEED_HYPOTHESES_PER_CALL, 1);
-                if candidate.is_none() && preparation.best.is_none() {
-                    // 🛑️ The linear fit must at least yield a decomposable model, or the
-                    // correspondences are degenerate (coincident, collinear) and no further batch
-                    // will change that.
-                    let linear = estimate_essential_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
+                let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, &self.intrinsics, &self.intrinsics, threshold, seed, SEED_HYPOTHESES_PER_CALL, 0);
+                let linear = || {
+                    let linear = estimate_essential_with_threshold(&preparation.correspondences, &self.intrinsics, &self.intrinsics, threshold, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
                     let TwoViewModel::Fundamental(essential) = linear.model else { return Err(SfmError::DegenerateGeometry) };
                     let rays: Vec<([f64; 2], [f64; 2])> = linear
                         .inliers
@@ -2583,18 +2662,42 @@ impl IncrementalSfm {
                         })
                         .collect();
                     decompose_essential(&essential, &rays).ok_or(SfmError::DegenerateGeometry)?;
-                    preparation.best = Some(linear);
+                    Ok::<TwoViewResult, SfmError>(linear)
+                };
+                if preparation.attempts == 0 {
+                    // 🛑️ Coincident correspondences (every point the same pixel) have no geometry
+                    // to solve; answer on the first call rather than after every batch failed.
+                    let spread = |side: usize| {
+                        let coordinate = |pair: &([f64; 2], [f64; 2])| if side == 0 { pair.0 } else { pair.1 };
+                        let first = coordinate(&preparation.correspondences[0]);
+                        preparation.correspondences.iter().map(|pair| { let p = coordinate(pair); (p[0] - first[0]).abs().max((p[1] - first[1]).abs()) }).fold(0.0f64, f64::max)
+                    };
+                    if spread(0) < 1e-9 || spread(1) < 1e-9 {
+                        return Err(SfmError::DegenerateGeometry);
+                    }
                 }
                 if let Some(candidate) = candidate {
-                    if preparation.best.as_ref().is_none_or(|best| candidate.inliers.len() > best.inliers.len()) {
-                        preparation.best = Some(candidate);
+                    // A candidate that beats the running best is polished right away, so the
+                    // comparison is between refined models (a raw five-point fit through five
+                    // integer-pixel keypoints explains only a handful of correspondences).
+                    if candidate.score < preparation.best_raw_score {
+                        preparation.best_raw_score = candidate.score;
+                        let polished = polish_essential(candidate, &preparation.correspondences, &self.intrinsics, threshold);
+                        if preparation.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
+                            preparation.best = Some(polished);
+                        }
                     }
                 }
                 preparation.attempts += 1;
                 if preparation.attempts < SEED_SOLVE_CALLS {
                     return Ok(false);
                 }
-                let estimate = preparation.best.take().filter(|estimate| estimate.inliers.len() >= 8).ok_or(SfmError::DegenerateGeometry)?;
+                // 🎯️ The five-point search's best model, or the linear fit as the fallback for a
+                // pair the minimal solver could not support with eight inliers.
+                let estimate = match preparation.best.take().filter(|estimate| estimate.inliers.len() >= 8) {
+                    Some(estimate) => estimate,
+                    None => linear()?,
+                };
                 let TwoViewModel::Fundamental(essential) = estimate.model else { return Err(SfmError::DegenerateGeometry) };
                 let rays: Vec<([f64; 2], [f64; 2])> = estimate
                     .inliers
@@ -2655,7 +2758,7 @@ impl IncrementalSfm {
                 } else {
                     let config = RansacConfig { threshold: self.cfg.ransac_threshold_px * INTERACTIVE_REGISTRATION_THRESHOLD_FACTOR, confidence: 0.5, max_iters: 1, seed: preparation.frame as u64 ^ preparation.attempts.wrapping_mul(0x9E37_79B9), scoring: RansacScoring::Msac };
                     preparation.attempts += 1;
-                    if let Some((pose, inliers)) = pnp_ransac(&self.intrinsics, &preparation.world_points, &preparation.observations, &config) {
+                    if let Some((pose, inliers)) = pnp_ransac_bounded(&self.intrinsics, &preparation.world_points, &preparation.observations, &config, INTERACTIVE_POSE_REFINE_ITERATIONS) {
                         if preparation.best.as_ref().is_none_or(|(_, best)| inliers.len() > *best) {
                             preparation.best = Some((pose, inliers.len()));
                         }
@@ -2745,8 +2848,8 @@ impl IncrementalSfm {
                 // degenerates on, and MSAC scores over the same correspondences are comparable, so
                 // the better model simply wins across calls.
                 let candidates = [
-                    estimate_essential_five_point_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, FIVE_POINT_THRESHOLD, seed, MAX_INTERACTIVE_SEED_HYPOTHESES),
-                    estimate_essential_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES),
+                    estimate_essential_five_point_bounded(&fallback.correspondences, &intrinsics, &intrinsics, FIVE_POINT_THRESHOLD, seed, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL, 0),
+                    estimate_essential_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL),
                 ];
                 for candidate in candidates.into_iter().flatten() {
                     if fallback.best.as_ref().is_none_or(|best| candidate.score < best.score) {
@@ -2756,6 +2859,9 @@ impl IncrementalSfm {
                 fallback.attempts += 1;
                 if fallback.attempts < MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS {
                     return Ok(false);
+                }
+                if let Some(best) = fallback.best.take() {
+                    fallback.best = Some(polish_essential(best, &fallback.correspondences, &intrinsics, FIVE_POINT_THRESHOLD));
                 }
                 let relative = fallback.best.as_ref().and_then(|estimate| {
                     let TwoViewModel::Fundamental(essential) = estimate.model else { return None };
@@ -2937,30 +3043,39 @@ impl IncrementalSfm {
         (problem, a0, b0, point_track_ids)
     }
 
-    /// 🎯️ One damped Gauss-Newton iteration of the bundle adjustment over `camera_frames` and the
-    /// points they see, resuming the damping schedule at `lambda`; answers the damping to resume
-    /// with and whether the solver reports convergence. Rebuilding the problem per call costs one
-    /// pass over the window's observations, which is what keeps a call inside a worker step.
-    pub fn bundle_adjustment_iteration(&mut self, camera_frames: &[usize], fixed_frames: &[usize], lambda: f64, loss: RobustLoss) -> (f64, bool) {
+    /// 🎯️ Opens a bounded bundle adjustment over `camera_frames` (the `fixed_frames` among them held
+    /// still) and the points they see: the problem is built once, the Levenberg–Marquardt iterations
+    /// then run `term_budget` residual terms per [`Self::advance_bundle_adjustment`] call up to
+    /// `max_iterations`, and the refined poses and points are written back when it completes.
+    /// `None` when there is nothing to adjust.
+    pub fn begin_bundle_adjustment(&self, camera_frames: &[usize], fixed_frames: &[usize], loss: RobustLoss, max_iterations: usize) -> Option<BundleAdjustment> {
         if camera_frames.is_empty() {
-            return (lambda, true);
+            return None;
         }
         let (problem, a0, b0, point_track_ids) = self.build_bundle_problem(camera_frames, fixed_frames);
         if problem.terms.is_empty() {
-            return (lambda, true);
+            return None;
         }
-        let cfg = LmConfig { max_iters: 1, initial_lambda: lambda, loss, ..LmConfig::default() };
-        let result: SchurResult = schur_lm(&problem, a0, b0, &cfg);
-        for (frame, a) in camera_frames.iter().zip(result.a_params.iter()) {
+        let cfg = LmConfig { max_iters: max_iterations.max(1), loss, ..LmConfig::default() };
+        let preparation = SchurLmPreparation::new(&problem, a0, b0, &cfg);
+        Some(BundleAdjustment { frames: camera_frames.to_vec(), point_track_ids, problem, cfg, preparation })
+    }
+
+    /// 🎯️ One bounded unit of an open adjustment; `true` once it is done and written back.
+    pub fn advance_bundle_adjustment(&mut self, adjustment: &mut BundleAdjustment, term_budget: usize) -> bool {
+        if !adjustment.preparation.advance(&adjustment.problem, &adjustment.cfg, term_budget) {
+            return false;
+        }
+        for (frame, a) in adjustment.frames.iter().zip(adjustment.preparation.a_params.iter()) {
             let xi: [f64; 6] = std::array::from_fn(|k| a.get(k));
             if let Some(entry) = self.cameras.iter_mut().find(|entry| entry.0 == *frame) {
                 entry.1 = CameraPose(Se3::exp(xi));
             }
         }
-        for (tid, b) in point_track_ids.iter().zip(result.b_params.iter()) {
+        for (tid, b) in adjustment.point_track_ids.iter().zip(adjustment.preparation.b_params.iter()) {
             self.points.insert(*tid, [b.get(0), b.get(1), b.get(2)]);
         }
-        (result.lambda, result.converged)
+        true
     }
 
     /// 🎯️ The configured robust loss, the one a local adjustment uses.
@@ -3233,4 +3348,4 @@ impl IncrementalSfm {
 mod tests;
 // #endregion 🔖️Tests
 
-use crate::optimize::{schur_lm, SchurResult};
+use crate::optimize::{schur_lm, SchurLmPreparation, SchurResult};

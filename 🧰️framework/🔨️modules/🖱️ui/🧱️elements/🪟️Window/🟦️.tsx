@@ -17,7 +17,7 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
-import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useChromePanelSafeArea, chromePanelSafeAreaStyle, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
+import { interactiveActiveFillClass, type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useChromePanelSafeArea, chromePanelSafeAreaStyle, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
 import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -32,7 +32,6 @@ export interface WindowConfig {
   status?: UiStatus;
   error?: Error | null;
   skeleton?: React.ReactNode;
-  showControls?: boolean;
   onOpenInNewWindow?: () => void;
   onMaximize?: () => void;
   onMinimize?: () => void;
@@ -126,7 +125,6 @@ const Window: React.FC<WindowProps> = ({
   status = "idle",
   error = null,
   skeleton,
-  showControls = false,
   onOpenInNewWindow,
   onMaximize,
   onMinimize,
@@ -269,12 +267,20 @@ const Window: React.FC<WindowProps> = ({
 
   if (!isVisible) return null;
 
-  const hasControls = showControls || controls || onOpenInNewWindow || focusControl || onClose;
+  // 🪪️ A control GROUP is minted only when it carries a control. `showControls` used to force it open
+  // too, and the OS dock passes no `onClose`/`onMaximize`/`onOpenInNewWindow` at all (its focus and
+  // close live on the dock TAB, `ModeDockTabBar`) — so every window in the shell published an empty
+  // 2px-wide `framework.window.<segment>.windowControls` box: a control id that names nothing, in
+  // every DOM census, with a focusable border and no affordance (the catalogue smoke test filters it
+  // out by name, `💻️os/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts:163`). Ticket
+  // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12d-pane-chip-ids-and-projection-toggle.md` §4.
+  const hasWindowControls = Boolean(onOpenInNewWindow || focusControl || onClose);
+  const hasControls = hasWindowControls || controls;
 
   const controlsContent = hasControls && (
     <div data-dim className="flex items-stretch gap-single">
       {controls}
-      {(showControls || onOpenInNewWindow || focusControl || onClose) && (
+      {hasWindowControls && (
         <ActionGroup id={childElementId("framework.window", id, "windowControls")}>
           {onOpenInNewWindow && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "external")} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
           {focusControl && (
@@ -354,7 +360,9 @@ const Window: React.FC<WindowProps> = ({
             >
               <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")}>
                 {engagement.options.map((option) => (
-                  <ActionGroupItem key={option.id} id={option.id} icon={option.icon} text={typeof option.label === "string" ? option.label : undefined} onClick={option.onPress} disabled={option.disabled} />
+                  // 🎛️ A pressed option (a granularity switch, a gumball handle group) reads pressed here exactly as
+                  // in the expanded engagement: `aria-pressed` for readers, the active fill for the eye.
+                  <ActionGroupItem key={option.id} id={option.id} icon={option.icon} text={typeof option.label === "string" ? option.label : undefined} aria-pressed={option.pressed} data-state={option.pressed === undefined ? undefined : option.pressed ? "on" : "off"} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
                 ))}
               </ActionGroup>
             </div>

@@ -7,7 +7,7 @@ use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWin
 use crate::editor::bitmap::transient::BitmapTransient;
 use crate::schema::snapshot::decode_base64;
 use crate::BitmapSnapshot;
-use semio_framework_plugin::{scene_surface, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
@@ -37,9 +37,29 @@ pub fn definition() -> WindowKindDefinition {
     };
     definition.actions.extend([
         ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Berechnen"), ActionKind::Mutation),
-        ActionDefinition::bounded_catalog("resize-output", LocalizedLabel::native("Resize Output", "Ausgabe skalieren"), ActionKind::Mutation),
-        ActionDefinition::bounded_catalog("pin-pixel", LocalizedLabel::native("Pin Pixel", "Pixel anheften"), ActionKind::Mutation),
-        ActionDefinition::bounded_catalog("unpin-pixel", LocalizedLabel::native("Unpin Pixel", "Pixel lösen"), ActionKind::Mutation),
+        ActionDefinition {
+            args: vec![
+                ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&24.0),
+                ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required().default_value(&24.0),
+                ActionArgDef::toggle("periodic", LocalizedLabel::native("Periodic", "Periodisch")).default_value(&true),
+            ],
+            ..ActionDefinition::bounded_catalog("resize-output", LocalizedLabel::native("Resize Output", "Ausgabe skalieren"), ActionKind::Mutation)
+        },
+        ActionDefinition {
+            args: vec![
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&0.0),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&0.0),
+                ActionArgDef::number("color", LocalizedLabel::native("Colour", "Farbe")).required().default_value(&0.0),
+            ],
+            ..ActionDefinition::bounded_catalog("pin-pixel", LocalizedLabel::native("Pin Pixel", "Pixel anheften"), ActionKind::Mutation)
+        },
+        ActionDefinition {
+            args: vec![
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&0.0),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&0.0),
+            ],
+            ..ActionDefinition::bounded_catalog("unpin-pixel", LocalizedLabel::native("Unpin Pixel", "Pixel lösen"), ActionKind::Mutation)
+        },
     ]);
     for action in &mut definition.actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;

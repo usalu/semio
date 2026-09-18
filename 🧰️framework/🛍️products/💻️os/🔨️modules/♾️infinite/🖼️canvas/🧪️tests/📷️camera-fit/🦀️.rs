@@ -105,6 +105,22 @@ fn the_fit_leaves_the_padding_it_promises() {
     assert!(f64::from(view.width) - right >= camera::CONTENT_FIT_PADDING_PX - 1e-6, "the fit pushed the graph into the right edge");
 }
 
+/// 🔍️ LAW: a stored camera with a non-positive zoom is refused even when there is no content to fit
+/// against. Such a camera maps the whole world onto one pixel — the live generation3d Flow graph
+/// reported every node and handle as `visible: false` inside a 1x1 rect at the panel centre.
+#[test]
+fn a_stored_zero_zoom_camera_never_opens_a_surface() {
+    let view = camera::Viewport { width: 966, height: 807, dpr: 1.0 };
+    let unset = camera::Camera { x: 0.0, y: 0.0, zoom: 0.0 };
+    let (opened, fitted) = camera::startup_camera(Some(&unset), None, &view, camera::CONTENT_FIT_PADDING_PX, camera::CONTENT_FRAMED_MIN_COVERAGE);
+    assert!(!fitted, "there was no content to fit");
+    assert!(opened.zoom > 0.0, "an opening camera always has a positive zoom, got {}", opened.zoom);
+    let content = camera::ContentBounds { min_x: -200.0, min_y: -160.0, max_x: 240.0, max_y: -80.0 };
+    let (framed, fitted) = camera::startup_camera(Some(&unset), Some(&content), &view, camera::CONTENT_FIT_PADDING_PX, camera::CONTENT_FRAMED_MIN_COVERAGE);
+    assert!(fitted, "with content, a zero-zoom camera loses to the fit");
+    assert!(close(camera::content_coverage(&content, &framed, &view), 1.0));
+}
+
 #[test]
 fn a_camera_that_frames_nothing_is_never_reported_as_framing_something() {
     let content = camera::ContentBounds { min_x: 5000.0, min_y: 5000.0, max_x: 5200.0, max_y: 5100.0 };

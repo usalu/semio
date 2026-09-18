@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🅾️remove-font",
+  "semanticKind": "remove-font",
+  "displayName": "Remove Font",
+  "emoji": "🅾️",
+  "aggregateVariant": "RemoveFont",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-font",
+  "binaryTag": 25,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

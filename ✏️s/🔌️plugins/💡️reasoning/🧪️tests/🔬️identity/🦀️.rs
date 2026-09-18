@@ -22,9 +22,10 @@ fn assembled_plugin() -> semio_framework_plugin::Plugin<super::ReasoningApps> {
 /// hand-authored deployment catalog row (id + physical module directory), the generated registry
 /// row (`pluginId`/`packageId`/`packageName`) and the canonical `s.<plugin>.<artifact>` owner
 /// segment the assembly gate `plugin-assembly.surface-dependency-gate` derives via
-/// `ArtifactKindId::plugin()`. The Cargo crate NAME (`semio-s-plugin-reasoning-mindmap`) and the
-/// playground VARIANT (`reasoning-wires`) are deliberately other names and are pinned separately,
-/// so a future rename can never silently conflate them with the identity again (the 2026-09-05
+/// `ArtifactKindId::plugin()`. The Cargo crate NAME (`semio-s-plugin-reasoning`) follows the
+/// `semio-s-plugin-<plugin id>` convention every sibling plugin crate uses, while the playground
+/// VARIANT (`reasoning-wires`) is deliberately another name; both are pinned separately from the
+/// identity so a future rename can never silently conflate them with it again (the 2026-09-05
 /// regression: `semio:reasoning-mindmap` in Cargo against a `builder("reasoning")` root and
 /// `s.reasoning.*` artifact kinds).
 #[semio_framework_async_macros::async_test]

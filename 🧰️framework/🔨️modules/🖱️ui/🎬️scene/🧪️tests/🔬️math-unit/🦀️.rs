@@ -477,6 +477,45 @@ fn a_parallel_fit_moves_the_zoom_and_a_perspective_fit_moves_the_distance() {
     assert!(half_width >= screen_half_w && half_height >= screen_half_h, "and the framed box fits inside the frustum it chose");
 }
 
+/// 📐️ LAW: a projection pane frames on React's CARDINAL half-extent, not on the box's projected
+/// screen extent — `worldProjectionViewHalfExtent` reads `(hx, hy)` for a plan view, `(hx, hz)` for
+/// front/back, `(hy, hz)` for left/right, `(hx, hz)` for a free oblique, and the ISOTROPIC span
+/// `max(hx, hy, hz)` for everything else (`🎨️r3f/🟦️.tsx`).
+///
+/// 🧪️ The numbers are React's own, ported from `🎨️r3f/🧪️tests/🧪️chunkkey/🟦️.tsx`: a 50-wide
+/// reference at `[7, 0, 0.01]` gives `halfExtent [25, 25, 0.5]`, and a `400 × 800` top pane frames
+/// it at `zoom = 200 / (25 · 1.35)`. There was no Rust mirror of that fixture, which is why the
+/// cardinal-versus-projected divergence went unpinned.
+#[test]
+fn a_projection_frame_reads_reacts_cardinal_half_extent() {
+    let half = [25.0_f32, 25.0, 0.5];
+    let cardinal = |view| world_projection_view_half_extent(WorldProjectionOrientation::Cardinal(view), false, half);
+    assert_eq!(cardinal(WorldCardinalView::Top), (25.0, 25.0), "📐️ a plan view spans (hx, hy)");
+    assert_eq!(cardinal(WorldCardinalView::Bottom), (25.0, 25.0));
+    assert_eq!(cardinal(WorldCardinalView::Front), (25.0, 0.5), "📐️ front/back span (hx, hz)");
+    assert_eq!(cardinal(WorldCardinalView::Back), (25.0, 0.5));
+    assert_eq!(cardinal(WorldCardinalView::Left), (25.0, 0.5), "📐️ left/right span (hy, hz)");
+    assert_eq!(cardinal(WorldCardinalView::Right), (25.0, 0.5));
+    assert_eq!(world_projection_view_half_extent(WorldProjectionOrientation::Free, true, half), (25.0, 0.5), "📐️ a free oblique measures in (x, z)");
+    assert_eq!(world_projection_view_half_extent(WorldProjectionOrientation::Free, false, half), (25.0, 25.0), "📐️ and every other free orientation takes the isotropic span");
+    assert_eq!(world_projection_view_half_extent(WorldProjectionOrientation::Free, false, [1.0, 2.0, 9.0]), (9.0, 9.0), "📐️ isotropic means the LARGEST axis on both, React's `max(hx, hy, hz)`");
+
+    let parallel = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, ..OrbitController::default() };
+    let (minimum, maximum) = ([7.0_f32 - 25.0, -25.0, 0.01 - 0.5], [7.0_f32 + 25.0, 25.0, 0.01 + 0.5]);
+    let framed = frame_projection_orbit_to_bounds(&parallel, WorldProjectionOrientation::Cardinal(WorldCardinalView::Top), false, minimum, maximum, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
+    assert!((framed.target.x - 7.0).abs() < 1e-5 && framed.target.y.abs() < 1e-5 && (framed.target.z - 0.01).abs() < 1e-5, "📐️ the frame centres on the content box, as React's `computeWorldProjectionPose` does: {:?}", framed.target);
+    assert!((framed.zoom - 200.0 / (25.0 * WORLD_PROJECTION_FRAME_PADDING)).abs() < 1e-3, "📐️ React's own chunkkey number, to the digit: {}", framed.zoom);
+    assert!((framed.distance - parallel.distance).abs() < 1e-6, "📐️ a parallel frame never dollies");
+
+    // 📐️ The divergence the cardinal rule exists to remove: a box seen down a corner. React frames
+    // it on the isotropic span; the projected screen extent of the same box is strictly smaller.
+    let corner = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, yaw: 0.7, pitch: 0.6, ..OrbitController::default() };
+    let (thin_min, thin_max) = ([-8.0_f32, -1.0, -1.0], [8.0_f32, 1.0, 1.0]);
+    let isotropic = frame_projection_orbit_to_bounds(&corner, WorldProjectionOrientation::Free, false, thin_min, thin_max, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
+    let projected = frame_orbit_to_bounds(&corner, thin_min, thin_max, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
+    assert!(isotropic.zoom < projected.zoom, "📐️ React's isotropic span frames WIDER than the projected box extent: {} vs {}", isotropic.zoom, projected.zoom);
+}
+
 /// 🔎️ LAW: the wheel moves whichever number the family owns — three's `OrbitControls` dollies a
 /// perspective camera and scales an orthographic one's `zoom` (`captureNavigationSnapshot` reports
 /// exactly that split).

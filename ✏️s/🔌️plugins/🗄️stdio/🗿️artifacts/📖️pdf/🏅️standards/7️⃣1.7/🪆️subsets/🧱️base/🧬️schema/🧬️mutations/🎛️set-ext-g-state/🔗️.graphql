@@ -1,0 +1,4 @@
+# 🎛️ Direct set-ext-g-state GraphQL payload.
+input SetExtGStateMutationInput {
+  state: PdfExtGStateInput
+}

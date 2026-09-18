@@ -73,6 +73,47 @@ async fn add_primitive_pick_translate_and_camera() {
     act(&mut app, "setCamera", serde_json::json!({ "windowId": "lowpoly-main", "camera": { "position": [3.0, 2.0, 5.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })).await;
 }
 
+/// 🧲️ The composable gumball's three handle groups, exactly as `World3dHost` dispatches a drag end:
+/// `transformBegin`, ONE absolute delta in the host shape (`mode` + string `ids`, `rotateSelection`'s
+/// axis + angle, `scaleSelection`'s factors), `transformEnd` — each an undoable document edit; and a
+/// face-level translate moves only the picked face's vertices.
+#[semio_framework_async_macros::async_test]
+async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
+    let mut app = mounted();
+    let before = object(&app, "obj-1");
+    let row = crate::editor::lowpoly::view::document_object_row_id("obj-1");
+    act(&mut app, "interactionSelect", select(&[("object", &row)])).await;
+    act(&mut app, "transformBegin", serde_json::json!({})).await;
+    act(&mut app, "rotateSelection", serde_json::json!({ "mode": "mesh", "ids": [row], "ax": 0.0, "ay": 1.0, "az": 0.0, "angle": 0.5 })).await;
+    act(&mut app, "transformEnd", serde_json::json!({})).await;
+    let rotated = object(&app, "obj-1");
+    assert_ne!(rotated.mesh, before.mesh, "a gumball rotate lands");
+    act(&mut app, "transformBegin", serde_json::json!({})).await;
+    act(&mut app, "scaleSelection", serde_json::json!({ "mode": "mesh", "ids": [row], "sx": 2.0, "sy": 1.0, "sz": 1.0 })).await;
+    act(&mut app, "transformEnd", serde_json::json!({})).await;
+    let scaled = object(&app, "obj-1");
+    assert_ne!(scaled.mesh, rotated.mesh, "a gumball scale lands");
+    act(&mut app, "undo", serde_json::json!({})).await;
+    assert_eq!(object(&app, "obj-1").mesh, rotated.mesh, "undo pops the scale as one edit");
+    act(&mut app, "undo", serde_json::json!({})).await;
+    assert_eq!(object(&app, "obj-1").mesh, before.mesh, "undo pops the rotate as one edit");
+    // ✂️ A face pick, then the gumball's translate over that component selection.
+    act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
+    let mesh_before = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
+    act(&mut app, "transformBegin", serde_json::json!({})).await;
+    act(&mut app, "translateSelection", serde_json::json!({ "mode": "face", "ids": [row, "lowpoly-document.obj-1.face.0"], "dx": 0.0, "dy": 0.0, "dz": 2.0 })).await;
+    act(&mut app, "transformEnd", serde_json::json!({})).await;
+    let mesh_after = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
+    assert_eq!(mesh_after.face_count(), mesh_before.face_count(), "a face translate keeps the topology");
+    let moved = (0..mesh_before.vertex_count() as u32).filter(|index| {
+        let a = mesh_before.vertex_position(semio_framework_3d::mesh::VertexId(*index)).expect("position");
+        let b = mesh_after.vertex_position(semio_framework_3d::mesh::VertexId(*index)).expect("position");
+        (a.z() - b.z()).abs() > 1e-4
+    }).count();
+    let face_vertices = mesh_before.face_vertex_ids(semio_framework_3d::mesh::FaceId(0)).expect("face 0").len();
+    assert!(moved > 0 && moved <= face_vertices.max(4), "only the picked face's vertices move: {moved} of {} (face has {face_vertices})", mesh_before.vertex_count());
+}
+
 /// 📐️ Vertex and edge picks select through the same `<object>.<granularity>.<id>` targets, and the
 /// Model window scene publishes the domain binding, the component ids and a gumball anchor.
 #[semio_framework_async_macros::async_test]

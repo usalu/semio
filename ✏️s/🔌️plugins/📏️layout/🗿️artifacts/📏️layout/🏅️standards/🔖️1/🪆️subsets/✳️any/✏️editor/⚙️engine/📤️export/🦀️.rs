@@ -2103,19 +2103,49 @@ enum ExportStage {
     Complete,
 }
 
+/// 📕️ The PDF route streams one object per unit in id order: `1` catalog, `2` pages, `3`–`6` the
+/// embedded `MapLabelSans` CIDFontType2 (Type0 → CIDFont → descriptor → `FontFile2`), then per page
+/// `p` the page object `7+3p`, its content stream `8+3p` (length as the indirect `9+3p`, so no
+/// content is ever buffered whole) — see `encode_pdf_one` (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PdfSection {
     Header,
     Catalog,
     Pages,
-    PageBegin,
     PageKids,
-    PageEnd,
-    Rects,
+    PagesEnd,
+    FontType0,
+    FontCid,
+    FontDescriptor,
+    FontFileBegin,
+    FontFileBytes,
+    FontFileEnd,
+    PageObject,
+    ContentBegin,
+    ContentItem,
+    ContentEnd,
+    ContentLength,
     XrefBegin,
     XrefEntries,
     Trailer,
     Complete,
+}
+
+/// 📕️ One painted element of a page's content stream, in page (top-left, y-down) coordinates.
+#[derive(Clone, Debug)]
+enum PdfItem {
+    Rect { x: f32, y: f32, width: f32, height: f32, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]> },
+    Glyph { x: f32, y: f32, size: f32, glyph_id: u16 },
+    Image { x: f32, y: f32, width: f32, height: f32, placeholder: bool },
+}
+
+/// 📕️ One exported page: its media box and how many `pdf_items` it owns (items are contiguous in
+/// page order, so the page's slice starts where the previous page's ended).
+#[derive(Clone, Copy, Debug)]
+struct PdfPagePlan {
+    width: u32,
+    height: u32,
+    items: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2148,6 +2178,9 @@ enum LayoutExportCloseStage {
     Base64Tail,
     PngRow,
     PdfOffsets,
+    PdfItems,
+    PdfPages,
+    PdfEngine,
     ZipEntries,
     ZipCurrentName,
     PageAuthority,
@@ -2267,6 +2300,13 @@ pub struct LayoutExportJob {
     pdf_section: PdfSection,
     pdf_cursor: usize,
     pdf_xref_offset: usize,
+    pdf_items: Vec<PdfItem>,
+    pdf_pages: Vec<PdfPagePlan>,
+    pdf_page_cursor: usize,
+    pdf_item_cursor: usize,
+    pdf_font_cursor: usize,
+    pdf_content_start: usize,
+    pdf_engine: Option<crate::editor::layout::engine::scene::LayoutEngine>,
     package_section: PackageSection,
     package_index: usize,
     package_byte_cursor: usize,
@@ -2291,13 +2331,6 @@ pub struct LayoutExportToolPayload {
     pub completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
 }
 
-#[derive(ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-struct LayoutExportWireCommand {
-    #[value(default)]
-    page_id: Option<String>,
-}
-
 pub struct LayoutExportToolJob {
     inner: Option<LayoutExportJob>,
     pending_operation: Option<Operation>,
@@ -2309,12 +2342,6 @@ pub struct LayoutExportToolJob {
     raw_input: Option<RetainedToolWireInput>,
     raw_bytes: Vec<u8>,
     raw_page_cursor: usize,
-    raw_scan_cursor: usize,
-    raw_stack: [u8; 64],
-    raw_stack_len: usize,
-    raw_in_string: bool,
-    raw_escape: bool,
-    raw_invalid: bool,
     raw_validated: bool,
     completed: bool,
 }
@@ -2332,39 +2359,21 @@ impl LayoutExportToolJob {
         self.inner.is_some()
     }
 
-    fn scan_raw_byte(&mut self, byte: u8) {
-        if self.raw_in_string {
-            if self.raw_escape {
-                self.raw_escape = false;
-            } else if byte == b'\\' {
-                self.raw_escape = true;
-            } else if byte == b'"' {
-                self.raw_in_string = false;
-            } else if byte < 0x20 {
-                self.raw_invalid = true;
-            }
-            return;
-        }
-        match byte {
-            b'"' => self.raw_in_string = true,
-            b'[' | b'{' if self.raw_stack_len < self.raw_stack.len() => {
-                self.raw_stack[self.raw_stack_len] = if byte == b'[' { b']' } else { b'}' };
-                self.raw_stack_len += 1;
-            }
-            b'[' | b'{' => self.raw_invalid = true,
-            b']' | b'}' if self.raw_stack_len != 0 && self.raw_stack[self.raw_stack_len - 1] == byte => self.raw_stack_len -= 1,
-            b']' | b'}' => self.raw_invalid = true,
-            _ => {}
-        }
-    }
-
+    /// 🔐️ The retained wire is the command's `OpBinary` encoding (ticket
+    /// 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END) — the JSON-text state machine that used to sit here
+    /// faulted at the first byte of every real export, which the shell only showed as an empty
+    /// `typed-operation failed:`. Verb and page target must match the reducer-built request.
     fn decoded_wire_command_matches(&self) -> bool {
-        let Ok(raw) = std::str::from_utf8(&self.raw_bytes) else { return false };
-        let Ok((verb, command)) = dsl::os_pack::json::from_json_str::<(String, Option<LayoutExportWireCommand>)>(raw) else { return false };
-        if verb != self.kind.tool_id() {
+        let Ok(command) = <crate::editor::layout::LayoutCommand as protocol::OpBinary>::decode_op(&self.raw_bytes) else { return false };
+        if command.command_id() != self.kind.tool_id() {
             return false;
         }
-        let page_id = command.and_then(|command| command.page_id);
+        let page_id = match &command {
+            crate::editor::layout::LayoutCommand::ExportPng(payload) => payload.page_id.clone(),
+            crate::editor::layout::LayoutCommand::ExportSvg(payload) => payload.page_id.clone(),
+            crate::editor::layout::LayoutCommand::ExportPdf(payload) => payload.page_id.clone(),
+            _ => None,
+        };
         match self.kind {
             LayoutExportKind::Package => page_id.is_none(),
             _ => page_id.as_ref().is_none_or(|page_id| self.pending_request.as_ref().and_then(|request| request.page_id.as_ref()) == Some(page_id)),
@@ -2396,19 +2405,7 @@ impl InteractiveJob for LayoutExportToolJob {
                 });
                 return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.raw_bytes.len() as u64 });
             }
-            if self.raw_scan_cursor < self.raw_bytes.len() {
-                let byte = self.raw_bytes[self.raw_scan_cursor];
-                self.scan_raw_byte(byte);
-                self.raw_scan_cursor += 1;
-                context.consume_fuel(1);
-                let cursor = (self.raw_scan_cursor as u64).to_le_bytes();
-                let state = context.payload_from_bytes(JobPayloadStream::CheckpointState, &cursor).unwrap_or_else(|rejected| {
-                    drop(rejected.into_source());
-                    RetainedJobPayload::empty(JobPayloadStream::CheckpointState)
-                });
-                return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.raw_bytes.len().saturating_add(self.raw_scan_cursor) as u64 });
-            }
-            if self.raw_invalid || self.raw_in_string || self.raw_escape || self.raw_stack_len != 0 || !self.decoded_wire_command_matches() {
+            if !self.decoded_wire_command_matches() {
                 return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
             }
             if !self.materialize_decoded_job() {
@@ -2435,7 +2432,12 @@ impl InteractiveJob for LayoutExportToolJob {
                     self.completed = true;
                     return StepOutcome::Complete(candidate);
                 }
-                let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), inner.output_chunks.clone());
+                // 📤️ The download OWNS the sealed chunk queue from here: `ArtifactOutputChunks` clones
+                // share one queue, and the job's own close (`LayoutExportCloseStage::OutputChunks`) pops it —
+                // which drained every export to a 0-byte `Demo.pdf` before the host could take a single
+                // chunk (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). The job keeps an empty stand-in.
+                let chunks = std::mem::replace(&mut inner.output_chunks, ArtifactOutputChunks::new(0));
+                let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), chunks);
                 if let Some(completion) = &self.completion {
                     if let Err(error) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
                         let _ = error;
@@ -2537,7 +2539,9 @@ impl InteractiveJob for LayoutMediaExportJob {
                         return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                     }
                 }
-                let media = match ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, self.inner.output_chunks.clone()) {
+                // 📤️ Same ownership handover as the download route: the media result owns the sealed queue.
+                let chunks = std::mem::replace(&mut self.inner.output_chunks, ArtifactOutputChunks::new(0));
+                let media = match ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, chunks) {
                     Ok(media) => media,
                     Err(error) => {
                         let _ = error;
@@ -2685,12 +2689,6 @@ impl ToolJobFactory for LayoutExportJobFactory {
             raw_input: None,
             raw_bytes: Vec::new(),
             raw_page_cursor: 0,
-            raw_scan_cursor: 0,
-            raw_stack: [0; 64],
-            raw_stack_len: 0,
-            raw_in_string: false,
-            raw_escape: false,
-            raw_invalid: false,
             raw_validated: true,
             completed: false,
         })
@@ -2722,12 +2720,6 @@ impl ToolJobFactory for LayoutExportJobFactory {
             raw_input: None,
             raw_bytes: Vec::new(),
             raw_page_cursor: 0,
-            raw_scan_cursor: 0,
-            raw_stack: [0; 64],
-            raw_stack_len: 0,
-            raw_in_string: false,
-            raw_escape: false,
-            raw_invalid: false,
             raw_validated: false,
             completed: false,
         };
@@ -2788,6 +2780,13 @@ impl LayoutExportJob {
             pdf_section: PdfSection::Header,
             pdf_cursor: 0,
             pdf_xref_offset: 0,
+            pdf_items: Vec::new(),
+            pdf_pages: Vec::new(),
+            pdf_page_cursor: 0,
+            pdf_item_cursor: 0,
+            pdf_font_cursor: 0,
+            pdf_content_start: 0,
+            pdf_engine: None,
             package_section: PackageSection::Begin,
             package_index: 0,
             package_byte_cursor: 0,
@@ -2987,8 +2986,31 @@ impl LayoutExportJob {
                 }
                 debug_assert!(self.pdf_offsets.is_empty());
                 drop(std::mem::take(&mut self.pdf_offsets));
-                self.close_stage = LayoutExportCloseStage::ZipEntries;
+                self.close_stage = LayoutExportCloseStage::PdfItems;
                 Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            }
+            LayoutExportCloseStage::PdfItems => {
+                if self.pdf_items.pop().is_some() {
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                debug_assert!(self.pdf_items.is_empty());
+                drop(std::mem::take(&mut self.pdf_items));
+                self.close_stage = LayoutExportCloseStage::PdfPages;
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            }
+            LayoutExportCloseStage::PdfPages => {
+                if self.pdf_pages.pop().is_some() {
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                debug_assert!(self.pdf_pages.is_empty());
+                drop(std::mem::take(&mut self.pdf_pages));
+                self.close_stage = LayoutExportCloseStage::PdfEngine;
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            }
+            LayoutExportCloseStage::PdfEngine => {
+                let released = usize::from(self.pdf_engine.take().is_some());
+                self.close_stage = LayoutExportCloseStage::ZipEntries;
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: released * size_of::<crate::editor::layout::engine::scene::LayoutEngine>() })
             }
             LayoutExportCloseStage::ZipEntries => {
                 let bytes = self.zip.entries.last().map_or(0, |entry| entry.name.len());
@@ -3059,6 +3081,9 @@ impl LayoutExportJob {
             && self.base64_tail.is_empty()
             && self.png_row.is_empty()
             && self.pdf_offsets.is_empty()
+            && self.pdf_items.is_empty()
+            && self.pdf_pages.is_empty()
+            && self.pdf_engine.is_none()
             && self.zip.entries.is_empty()
             && self.zip.current_name.is_none()
             && self.request.page_id.is_none()
@@ -3364,6 +3389,9 @@ impl LayoutExportJob {
     }
 
     fn plan_one(&mut self) -> Result<(), String> {
+        if matches!(self.request.kind, LayoutExportKind::Pdf) {
+            return self.plan_pdf_one();
+        }
         let page = self.page()?;
         let parent = page.parent_page_id.as_ref().and_then(|id| self.request.snapshot.parent_pages.iter().find(|candidate| &candidate.id == id));
         let frame = if self.plan_cursor < self.parent_frame_count { parent.and_then(|value| value.frames.get(self.plan_cursor)) } else { page.frames.get(self.plan_cursor - self.parent_frame_count) };
@@ -3419,23 +3447,111 @@ impl LayoutExportJob {
         Ok(())
     }
 
-    fn begin_pdf(&mut self) -> Result<(), String> {
-        self.output.append(b"%PDF-1.4\n")?;
-        self.pdf_section = PdfSection::Catalog;
+    /// 📕️ Which pages the PDF carries: the addressed page, or every page when none is addressed.
+    fn pdf_page_indices(&self) -> Vec<usize> {
+        match self.target_page {
+            Some(index) if self.request.page_id.is_some() => vec![index],
+            _ => (0..self.request.snapshot.pages.len()).collect(),
+        }
+    }
+
+    /// 📕️ One unit per page: the same display list the Preview window paints (parent-page
+    /// inheritance, overrides, parley-shaped glyphs) becomes this page's item slice.
+    fn plan_pdf_one(&mut self) -> Result<(), String> {
+        let indices = self.pdf_page_indices();
+        let Some(&page_index) = indices.get(self.pdf_page_cursor) else {
+            self.begin_encoder()?;
+            self.stage = ExportStage::Encode;
+            return Ok(());
+        };
+        let snapshot = Arc::clone(&self.request.snapshot);
+        let page = snapshot.pages.get(page_index).ok_or("layout-export-page-missing")?;
+        let width = finite_dimension(page.width)?;
+        let height = finite_dimension(page.height)?;
+        let engine = self.pdf_engine.get_or_insert_with(crate::editor::layout::engine::scene::LayoutEngine::new);
+        let list = crate::editor::layout::engine::scene::build_display_list_for_page(engine, &snapshot, page, "", &[], None, false);
+        let mut items = 0usize;
+        let mut push = |item: PdfItem, pdf_items: &mut Vec<PdfItem>| -> Result<(), String> {
+            if pdf_items.len() >= MAX_LAYOUT_EXPORT_DECODED_ITEMS {
+                return Err("layout-export-item-limit".into());
+            }
+            pdf_items.push(item);
+            items += 1;
+            Ok(())
+        };
+        for rect in &list.rects {
+            push(PdfItem::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fill: rect.fill.as_ref().map(|color| color.0), stroke: rect.stroke.as_ref().map(|color| color.0) }, &mut self.pdf_items)?;
+        }
+        for image in &list.images {
+            push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, placeholder: image.placeholder }, &mut self.pdf_items)?;
+        }
+        for run in &list.text_runs {
+            for glyph in &run.glyphs {
+                let glyph_id = u16::try_from(glyph.glyph_id).map_err(|_| "layout-export-glyph-range")?;
+                push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id }, &mut self.pdf_items)?;
+            }
+        }
+        self.pdf_pages.push(PdfPagePlan { width, height, items });
+        self.pdf_page_cursor += 1;
         Ok(())
     }
 
-    fn pdf_object(&mut self, id: usize, body: &[u8]) -> Result<(), String> {
+    fn begin_pdf(&mut self) -> Result<(), String> {
+        self.output.append(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")?;
+        self.pdf_section = PdfSection::Catalog;
+        self.pdf_cursor = 0;
+        self.pdf_item_cursor = 0;
+        Ok(())
+    }
+
+    fn pdf_object_offset(&mut self, id: usize) -> Result<(), String> {
         if self.pdf_offsets.len() + 1 != id {
             return Err("layout-export-pdf-object-order".into());
         }
         self.pdf_offsets.push(u32::try_from(self.output.len).map_err(|_| "layout-export-output-limit")?);
+        Ok(())
+    }
+
+    fn pdf_object(&mut self, id: usize, body: &[u8]) -> Result<(), String> {
+        self.pdf_object_offset(id)?;
         self.output.append(format!("{id} 0 obj\n").as_bytes())?;
         self.output.append(body)?;
         self.output.append(b"\nendobj\n")
     }
 
+    fn pdf_page_object_id(page: usize) -> usize {
+        7 + 3 * page
+    }
+
+    fn pdf_item_ops(item: &PdfItem, page_height: f32) -> String {
+        let color = |rgba: [f32; 4]| format!("{:.4} {:.4} {:.4}", rgba[0].clamp(0.0, 1.0), rgba[1].clamp(0.0, 1.0), rgba[2].clamp(0.0, 1.0));
+        match item {
+            PdfItem::Rect { x, y, width, height, fill, stroke } => {
+                let mut ops = String::new();
+                let path = format!("{:.3} {:.3} {:.3} {:.3} re", x, page_height - y - height, width, height);
+                if let Some(fill) = fill.filter(|rgba| rgba[3] > 0.001) {
+                    ops.push_str(&format!("q {} rg {path} f Q\n", color(fill)));
+                }
+                if let Some(stroke) = stroke.filter(|rgba| rgba[3] > 0.001) {
+                    ops.push_str(&format!("q {} RG 1 w {path} S Q\n", color(stroke)));
+                }
+                ops
+            }
+            PdfItem::Image { x, y, width, height, placeholder } => {
+                let path = format!("{:.3} {:.3} {:.3} {:.3} re", x, page_height - y - height, width, height);
+                if *placeholder {
+                    format!("q 0.92 0.88 0.84 rg {path} f Q\nq 0.75 0.35 0.2 RG 1 w {path} S Q\n")
+                } else {
+                    format!("q 0.85 0.85 0.85 rg {path} f Q\n")
+                }
+            }
+            PdfItem::Glyph { x, y, size, glyph_id } => format!("BT /F1 {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <{:04X}> Tj ET\n", size, x, page_height - y, glyph_id),
+        }
+    }
+
     fn encode_pdf_one(&mut self) -> Result<(), String> {
+        const FONT: &[u8] = crate::editor::layout::engine::scene::LAYOUT_SANS;
+        let page_count = self.pdf_pages.len();
         match self.pdf_section {
             PdfSection::Header => return Err("layout-export-pdf-header-state".into()),
             PdfSection::Catalog => {
@@ -3443,39 +3559,94 @@ impl LayoutExportJob {
                 self.pdf_section = PdfSection::Pages;
             }
             PdfSection::Pages => {
-                self.pdf_object(2, b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>")?;
-                self.pdf_section = PdfSection::PageBegin;
-            }
-            PdfSection::PageBegin => {
-                let (width, height) = {
-                    let page = self.page()?;
-                    (finite_dimension(page.width)?, finite_dimension(page.height)?)
-                };
-                self.pdf_offsets.push(u32::try_from(self.output.len).map_err(|_| "layout-export-output-limit")?);
-                self.output.append(format!("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Contents [").as_bytes())?;
+                self.pdf_object_offset(2)?;
+                self.output.append(b"2 0 obj\n<< /Type /Pages /Kids [")?;
+                self.pdf_cursor = 0;
                 self.pdf_section = PdfSection::PageKids;
             }
             PdfSection::PageKids => {
-                if self.pdf_cursor < self.rects.len() {
-                    self.output.append(format!("{} 0 R ", self.pdf_cursor + 4).as_bytes())?;
+                if self.pdf_cursor < page_count {
+                    self.output.append(format!("{} 0 R ", Self::pdf_page_object_id(self.pdf_cursor)).as_bytes())?;
                     self.pdf_cursor += 1;
                 } else {
-                    self.pdf_section = PdfSection::PageEnd;
+                    self.pdf_section = PdfSection::PagesEnd;
                 }
             }
-            PdfSection::PageEnd => {
-                self.output.append(b"] >>\nendobj\n")?;
-                self.pdf_section = PdfSection::Rects;
+            PdfSection::PagesEnd => {
+                self.output.append(format!("] /Count {page_count} >>\nendobj\n").as_bytes())?;
+                self.pdf_section = PdfSection::FontType0;
             }
-            PdfSection::Rects => {
-                if let Some(rect) = self.rects.get(self.encode_cursor).cloned() {
-                    let content = format!("q {:.6} {:.6} {:.6} rg {} {} {} {} re f Q\n", f32::from(rect.rgba[0]) / 255.0, f32::from(rect.rgba[1]) / 255.0, f32::from(rect.rgba[2]) / 255.0, rect.x, rect.y, rect.width, rect.height);
-                    let body = format!("<< /Length {} >>\nstream\n{}endstream", content.len(), content);
-                    self.pdf_object(self.encode_cursor + 4, body.as_bytes())?;
-                    self.encode_cursor += 1;
+            PdfSection::FontType0 => {
+                self.pdf_object(3, b"<< /Type /Font /Subtype /Type0 /BaseFont /LayoutSans /Encoding /Identity-H /DescendantFonts [4 0 R] >>")?;
+                self.pdf_section = PdfSection::FontCid;
+            }
+            PdfSection::FontCid => {
+                self.pdf_object(4, b"<< /Type /Font /Subtype /CIDFontType2 /BaseFont /LayoutSans /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /DW 600 /CIDToGIDMap /Identity >>")?;
+                self.pdf_section = PdfSection::FontDescriptor;
+            }
+            PdfSection::FontDescriptor => {
+                self.pdf_object(5, b"<< /Type /FontDescriptor /FontName /LayoutSans /Flags 32 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent 900 /Descent -250 /CapHeight 700 /StemV 80 /FontFile2 6 0 R >>")?;
+                self.pdf_section = PdfSection::FontFileBegin;
+            }
+            PdfSection::FontFileBegin => {
+                self.pdf_object_offset(6)?;
+                self.output.append(format!("6 0 obj\n<< /Length {} /Length1 {} >>\nstream\n", FONT.len(), FONT.len()).as_bytes())?;
+                self.pdf_font_cursor = 0;
+                self.pdf_section = PdfSection::FontFileBytes;
+            }
+            PdfSection::FontFileBytes => {
+                let end = (self.pdf_font_cursor + OUTPUT_CHUNK_BYTES).min(FONT.len());
+                if self.pdf_font_cursor < end {
+                    self.output.append(&FONT[self.pdf_font_cursor..end])?;
+                    self.pdf_font_cursor = end;
                 } else {
-                    self.pdf_section = PdfSection::XrefBegin;
+                    self.pdf_section = PdfSection::FontFileEnd;
                 }
+            }
+            PdfSection::FontFileEnd => {
+                self.output.append(b"\nendstream\nendobj\n")?;
+                self.pdf_cursor = 0;
+                self.pdf_item_cursor = 0;
+                self.pdf_section = if page_count == 0 { PdfSection::XrefBegin } else { PdfSection::PageObject };
+            }
+            PdfSection::PageObject => {
+                let page = self.pdf_pages.get(self.pdf_cursor).copied().ok_or("layout-export-page-missing")?;
+                let id = Self::pdf_page_object_id(self.pdf_cursor);
+                let body = format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Resources << /Font << /F1 3 0 R >> >> /Contents {} 0 R >>", page.width, page.height, id + 1);
+                self.pdf_object(id, body.as_bytes())?;
+                self.pdf_section = PdfSection::ContentBegin;
+            }
+            PdfSection::ContentBegin => {
+                let id = Self::pdf_page_object_id(self.pdf_cursor) + 1;
+                self.pdf_object_offset(id)?;
+                self.output.append(format!("{id} 0 obj\n<< /Length {} 0 R >>\nstream\n", id + 1).as_bytes())?;
+                self.pdf_content_start = self.output.len;
+                self.pdf_section = PdfSection::ContentItem;
+            }
+            PdfSection::ContentItem => {
+                let page = self.pdf_pages.get(self.pdf_cursor).copied().ok_or("layout-export-page-missing")?;
+                let first: usize = self.pdf_pages[..self.pdf_cursor].iter().map(|plan| plan.items).sum();
+                if self.pdf_item_cursor < page.items {
+                    let item = self.pdf_items.get(first + self.pdf_item_cursor).ok_or("layout-export-item-missing")?;
+                    let ops = Self::pdf_item_ops(item, page.height as f32);
+                    self.output.append(ops.as_bytes())?;
+                    self.pdf_item_cursor += 1;
+                } else {
+                    self.pdf_section = PdfSection::ContentEnd;
+                }
+            }
+            PdfSection::ContentEnd => {
+                self.pdf_xref_offset = self.output.len - self.pdf_content_start;
+                self.output.append(b"\nendstream\nendobj\n")?;
+                self.pdf_section = PdfSection::ContentLength;
+            }
+            PdfSection::ContentLength => {
+                let id = Self::pdf_page_object_id(self.pdf_cursor) + 2;
+                let length = self.pdf_xref_offset;
+                self.pdf_object(id, format!("{length}").as_bytes())?;
+                self.pdf_cursor += 1;
+                self.pdf_item_cursor = 0;
+                self.pdf_section = if self.pdf_cursor < page_count { PdfSection::PageObject } else { PdfSection::XrefBegin };
             }
             PdfSection::XrefBegin => {
                 self.pdf_xref_offset = self.output.len;
@@ -3492,7 +3663,7 @@ impl LayoutExportJob {
                 }
             }
             PdfSection::Trailer => {
-                self.output.append(format!("trailer<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n", self.pdf_offsets.len() + 1, self.pdf_xref_offset).as_bytes())?;
+                self.output.append(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n", self.pdf_offsets.len() + 1, self.pdf_xref_offset).as_bytes())?;
                 self.pdf_section = PdfSection::Complete;
             }
             PdfSection::Complete => self.stage = ExportStage::Base64,
@@ -4224,7 +4395,7 @@ pub(crate) fn output_name(request: &LayoutExportRequest) -> String {
     if matches!(request.kind, LayoutExportKind::Package) {
         sanitize_filename(&request.snapshot.name)
     } else {
-        request.page_id.as_deref().map_or_else(|| "layout".into(), sanitize_filename)
+        request.page_id.as_deref().map_or_else(|| sanitize_filename(&request.snapshot.name), sanitize_filename)
     }
 }
 

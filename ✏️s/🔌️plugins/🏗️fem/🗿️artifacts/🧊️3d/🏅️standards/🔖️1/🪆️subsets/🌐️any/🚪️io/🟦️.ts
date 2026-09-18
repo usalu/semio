@@ -9,7 +9,7 @@
  * No codec bodies here on purpose. A TS json writer or `.semio` DSL reader would have to reproduce
  * `pack::json`'s number-lexeme rule and the DSL grammar's layout rules byte for byte, and this
  * package's vitest config (`📦️packages/🟦️typescript/🧪️tests/🟦️.ts`) only discovers
- * `🗿️artifacts/**/📚️examples/**/🧪️tests/🟦️.ts` — no test under `🚪️io/` is reachable, so such a
+ * `🗿️artifacts/**\/📚️examples/**\/🧪️tests/🟦️.ts` — no test under `🚪️io/` is reachable, so such a
  * mirror could not be pinned against the Rust output by any runnable parity test. See the ticket's
  * `📓️w4-io.md`.
  */

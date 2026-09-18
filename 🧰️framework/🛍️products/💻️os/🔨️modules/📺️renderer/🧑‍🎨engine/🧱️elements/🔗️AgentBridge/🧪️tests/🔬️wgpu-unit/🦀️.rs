@@ -52,7 +52,7 @@ fn every_gateway_to_shell_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 8, "the gateway→shell corpus must cover all eight tags, saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 10, "the gateway→shell corpus must cover all ten tags, saw {seen:?}");
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn every_modelled_shell_to_gateway_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 5, "Hello + ShellCommandResult + Approval + Ping + Bye — the nine SSOT variants minus the unmodelled four, saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 6, "Hello + ShellCommandResult + Approval + Ping + Bye + AgentMessage — the ten SSOT variants minus the unmodelled four, saw {seen:?}");
 }
 
 #[test]
@@ -197,4 +197,68 @@ fn a_bye_frame_closes_the_bridge_and_keeps_its_reason() {
     state.apply_frame(GatewayToShell::Bye { reason: "shutdown".into() }, 0.0);
     assert_eq!(state.status, AgentBridgeStatus::Closed);
     assert_eq!(state.last_error.as_deref(), Some("shutdown"));
+}
+
+/// 💬️ LAW: a tool call becomes its own RESULT, in place — React's `updateConversationEntry`, not a
+/// second row. A result whose call is not in the conversation records nothing at all rather than
+/// opening a call-less row the panel cannot render.
+#[test]
+fn a_tool_result_settles_its_own_call_in_place_and_an_orphan_result_records_nothing() {
+    let mut state = AgentBridgeState::default();
+    state.apply_frame(GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "translate".into(), arguments: "{\"dx\":1}".into() }, 0.0);
+    assert_eq!(state.conversation.len(), 1);
+    state.apply_frame(GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "translate".into(), ok: false, summary: "refused".into() }, 1.0);
+    assert_eq!(state.conversation.len(), 1);
+    match &state.conversation[0] {
+        AgentConversationEntry::ToolCall { tool_name, arguments, state: call_state, summary, .. } => {
+            assert_eq!(tool_name, "translate");
+            assert_eq!(arguments, "{\"dx\":1}");
+            assert_eq!(*call_state, AgentToolCallState::Failed);
+            assert_eq!(summary.as_deref(), Some("refused"));
+        }
+        other => panic!("expected ToolCall, got {other:?}"),
+    }
+    state.apply_frame(GatewayToShell::AgentToolResult { invocation_id: "inv_missing".into(), tool_name: "translate".into(), ok: true, summary: "done".into() }, 2.0);
+    assert_eq!(state.conversation.len(), 1);
+}
+
+/// ⏸️ LAW: an approval is ONE conversation row across its whole life — requested, then resolved in
+/// place, whether the gateway resolves it or this shell's own human does.
+#[test]
+fn an_approval_is_one_conversation_row_from_request_to_decision() {
+    let mut state = AgentBridgeState::default();
+    state.apply_frame(GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate".into() }, 0.0);
+    state.resolve_approval("appr_1", ApprovalDecision::Once, None);
+    assert!(!state.has_pending_approvals());
+    assert_eq!(state.conversation.len(), 1);
+    match &state.conversation[0] {
+        AgentConversationEntry::Approval { state: approval_state, decision, .. } => {
+            assert_eq!(*approval_state, AgentApprovalState::Resolved);
+            assert_eq!(*decision, Some(ApprovalDecision::Once));
+        }
+        other => panic!("expected Approval, got {other:?}"),
+    }
+}
+
+/// 💬️ LAW: a human turn is echoed the moment it is queued, under the SAME id the frame carries, and
+/// blank text queues nothing. The conversation is a bounded live view, never an archive.
+#[test]
+fn a_human_turn_is_echoed_under_its_own_frame_id_and_the_view_stays_bounded() {
+    let mut state = AgentBridgeState::default();
+    assert!(!state.send_agent_message("shell-1", "   "));
+    assert!(state.conversation.is_empty());
+    assert!(state.send_agent_message("shell-1", "  move it  "));
+    let queued = state.take_outbox();
+    match &queued[0] {
+        ShellToGateway::AgentMessage { message_id, text } => {
+            assert_eq!(text, "move it");
+            assert_eq!(state.conversation[0], AgentConversationEntry::UserMessage { id: message_id.clone(), text: "move it".into() });
+        }
+        other => panic!("expected AgentMessage, got {other:?}"),
+    }
+    for index in 0..AGENT_CONVERSATION_MAX_ENTRIES {
+        assert!(state.send_agent_message("shell-1", &format!("turn-{index}")));
+    }
+    assert_eq!(state.conversation.len(), AGENT_CONVERSATION_MAX_ENTRIES);
+    assert_eq!(state.conversation[AGENT_CONVERSATION_MAX_ENTRIES - 1], AgentConversationEntry::UserMessage { id: format!("msg_shell-1_{AGENT_CONVERSATION_MAX_ENTRIES}"), text: format!("turn-{}", AGENT_CONVERSATION_MAX_ENTRIES - 1) });
 }

@@ -1627,7 +1627,7 @@ pub(crate) mod actor_bindings {
     });
 }
 
-use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
+pub(crate) use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
 use wasmtime::component::Accessor;
 // 🧬️ `reactor`/`jobs` are `export`s of `world actor` (design-runtime.md §2's `execute_turn`/`step_job`
 // exports), not `import`s, so their generated bindings live under `exports::` — unlike `pure`'s
@@ -2634,7 +2634,7 @@ async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result
     Ok((ordinary, command, cold))
 }
 
-async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
+pub(crate) async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
     match event {
         Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
             // 🚫️async: R10 residue shape 1 — `kernel_broker_grant_to_wit` is async, hoisted out of

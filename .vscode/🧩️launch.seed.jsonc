@@ -271,7 +271,7 @@
       "name": "🦑️mcp dev",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-mcp-go:dev",
+      "command": "bun ./📜️script.ts dev mcp stdio client",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1206,10 +1206,10 @@
       }
     },
     {
-      "name": "🛠️dev🧰️repo🔌️mcp🐹️go",
+      "name": "🛠️build🧰️repo🔌️mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-mcp-go:run",
+      "command": "bun nx run repo-mcp:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",

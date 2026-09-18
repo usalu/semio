@@ -642,6 +642,14 @@ pub fn ui_resources(_bridge: Option<&BridgeSlot>) -> Vec<Resource> {
             size: None,
         },
         Resource {
+            uri: "semio://ui/agent-messages".to_string(),
+            name: "ui-agent-messages".to_string(),
+            title: Some("Messages from the human".to_string()),
+            description: Some("Unread turns the human typed into the shell's agent chat panel, oldest first. Reading DRAINS them, so each turn is delivered exactly once.".to_string()),
+            mime_type: Some("application/json".to_string()),
+            size: None,
+        },
+        Resource {
             uri: "semio://ui/selection".to_string(),
             name: "ui-selection".to_string(),
             title: Some("UI selection".to_string()),
@@ -679,8 +687,26 @@ pub fn read_ui_resource(uri: &str, bridge: Option<&BridgeSlot>, _workspace: Opti
         "semio://window" => Some(read_window_resource(bridge, None)),
         "semio://ui/active-context" => Some(read_active_context_resource(bridge)),
         "semio://ui/selection" => Some(read_selection_resource(bridge)),
+        "semio://ui/agent-messages" => Some(read_agent_messages_resource(bridge)),
         _ => None,
     }
+}
+/// 💬️ The receiving half of the agent chat panel: every turn the human typed at the agent since the
+/// last read, oldest first. A READ DRAINS the queue — MCP resources have no server-push, so the
+/// agent polls this uri, and a turn it has already been handed must not be handed to it twice.
+/// Bare/headless tiers answer the same typed, retryable `PLUGIN_UNAVAILABLE` every other UI resource
+/// does; an attached shell that has simply said nothing answers an empty list, which is a real
+/// answer, not a gap.
+fn read_agent_messages_resource(bridge: Option<&Arc<BridgeHandle>>) -> Result<Vec<ResourceContent>, GatewayError> {
+    let bridge = bridge.ok_or_else(bridge_not_running_error)?;
+    let connection = active_shell_connection(bridge).ok_or_else(no_shell_attached_error)?;
+    let messages: Vec<serde_json::Value> = bridge
+        .take_agent_messages(connection)
+        .into_iter()
+        .map(|message| serde_json::json!({ "messageId": message.message_id, "text": message.text, "receivedAtMs": message.received_at_ms }))
+        .collect();
+    let body = serde_json::json!({ "connection": connection.to_string(), "messages": messages, "drained": true });
+    Ok(vec![ResourceContent { uri: "semio://ui/agent-messages".to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }])
 }
 //#endregion 🔖️ShellStateProjection
 

@@ -246,7 +246,7 @@ impl ArtifactCreationIntentV1 {
     /// 🚪️ Coordinates are derived from the accepted catalog binding, not supplied as a ready reply.
     pub fn ready(&self) -> SpaceArtifactCreationReadyV1 {
         SpaceArtifactCreationReadyV1 {
-            document_id: self.scope.document_id.clone(),
+            artifact_id: self.scope.document_id.clone(),
             kind_id: self.request.kind_id.clone(),
             artifact_schema: self.artifact_schema.clone(),
             parent_dialect: SpaceArtifactCreationDialectV1 { artifact_kind: self.parent_dialect.artifact_kind.clone(), standard: self.parent_dialect.standard.clone(), subset: self.parent_dialect.subset.clone() },

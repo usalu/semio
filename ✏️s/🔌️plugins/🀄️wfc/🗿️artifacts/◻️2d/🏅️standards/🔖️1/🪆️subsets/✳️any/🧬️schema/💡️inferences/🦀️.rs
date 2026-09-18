@@ -429,6 +429,13 @@ fn slot_entropy(snapshot: &Wfc2dSnapshot, slot: &crate::schema::snapshot::Wfc2dS
 }
 
 impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
+    /// 🩺 `wfc-unsatisfiable` is the engine's way of saying the spec admits no total
+    /// assignment. That is an ANSWER, not a failure: it becomes the contradiction
+    /// verdict plus the prior entropy map, and the fault's own payload is retired
+    /// here rather than propagated. Any other fault is a real fault and passes through.
+    /// 🚪️ Every `WfcJob` runs its close ladder before it is dropped (engine §7):
+    /// dropping one that still owns retained pages trips the job module's own
+    /// lifecycle assertion and aborts the process from a second panic in `drop`.
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         use semio_framework_job::StepOutcome;
         if context.is_cancelled() {
@@ -491,9 +498,6 @@ impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
                             retire_payload(candidate.output);
                             self.final_checkpoint = Some(candidate.state);
                             self.child_commit = self.child.as_mut().expect("WFC child").take_completed_commit();
-                            // 🚪️ Every `WfcJob` runs its close ladder before it is dropped (engine §7):
-                            // dropping one that still owns retained pages trips the job module's own
-                            // lifecycle assertion and aborts the process from a second panic in `drop`.
                             if let Some(mut child) = self.child.take() {
                                 semio_s_plugin_wfc_engine::job::close_job(&mut child);
                             }
@@ -505,10 +509,6 @@ impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
                             }
                             self.emit_preview(context)
                         }
-                        // 🩺 `wfc-unsatisfiable` is the engine's way of saying the spec admits no total
-                        // assignment. That is an ANSWER, not a failure: it becomes the contradiction
-                        // verdict plus the prior entropy map, and the fault's own payload is retired
-                        // here rather than propagated. Any other fault is a real fault and passes through.
                         StepOutcome::Fault(fault) if semio_s_plugin_wfc_engine::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
                             retire_payload(fault.detail);
                             if let Some(mut child) = self.child.take() {
@@ -585,6 +585,10 @@ impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
         }
     }
 
+    /// 🚪️ The engine's own bounded ladder closes a child job: a child that answers `Complete`
+    /// while still owning pages leaves the framework's stage-1 check returning `Blocked` forever,
+    /// which a `while !terminal_is_empty()` driver spins on rather than failing. `close_job`
+    /// panics loudly on a genuinely stuck child instead.
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if let Some(output) = self.output.as_mut() {
             if !output.terminal_is_empty() {
@@ -612,10 +616,6 @@ impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
             self.final_checkpoint = None;
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        // 🚪️ The engine's own bounded ladder closes a child job: a child that answers `Complete`
-        // while still owning pages leaves the framework's stage-1 check returning `Blocked` forever,
-        // which a `while !terminal_is_empty()` driver spins on rather than failing. `close_job`
-        // panics loudly on a genuinely stuck child instead.
         if let Some(mut restore) = self.restore.take() {
             semio_s_plugin_wfc_engine::job::close_job(&mut restore);
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };

@@ -210,7 +210,7 @@ import { abstractionOwnershipChecks } from "./🧰️framework/🛍️products/�
 import { policyAbstractionOwnershipBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
 import { policyIndexedGeneratedOutputBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/indexed-generated-output/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync, type Dirent } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { builtinModules, createRequire } from "node:module";
 import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
@@ -228,11 +228,11 @@ const REPO_CLI_ENTRY_GO = join(REPO_CLIENT_GO, "cmd", "repo");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
 
-/** 🚪️Gates the repo MCP client on the Nx-cached `@semio-tech/repo-mcp-go:build` output instead of
+/** 🚪️Gates the repo MCP client on the Nx-cached `repo-mcp:build` output instead of
  * rebuilding it inline — a continuous `dev` session must stay thin and consume cached deliverables. */
 function requireRepoMcpBinary(root: string): string {
   const bin = resolveMcpBin(root);
-  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun nx run @semio-tech/repo-mcp-go:build`);
+  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun nx run repo-mcp:build`);
   return bin;
 }
 
@@ -262,7 +262,13 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
  * the whole catalog and hands off to `trunk serve`, never to Vite on `S_OS_PORT`.
  *
  * It is a command segment rather than an env var so it stays reachable from `launch.json`, which is
- * how every dev here starts things and which carries no `env` field. */
+ * how every dev here starts things and which carries no `env` field.
+ *
+ * `dev s` IS the all-plugins hub: `space` declares `[package.metadata.semio].host`, and every layer
+ * keys off that one declaration — `runtimeComponentClosure` fans the Nx closure out to every
+ * registered component, `buildPlaygroundSession`/`expandPluginRegistry` return the whole registry
+ * unfiltered, and both renderers boot from that list. There is no separate multi-plugin variant to
+ * select; a `dev multi` segment existed once and never resolved past this file. */
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
   const served = rest.includes("served");
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
@@ -413,25 +419,13 @@ export class DevScript extends Script {
       runFrameworkOsPlaygroundDev("s", segments.slice(1));
       return;
     }
-    if (segments[0] === "multi") {
-      // 🐚️ Not a registered playground variant (no matching Cargo.toml), so this deliberately bypasses
-      // `runFrameworkOsPlaygroundDev`/`frameworkOsPlaygroundDevEnv` — those resolve `SEMIO_PLUGIN` from
-      // the registry catalog, which a non-variant id would only satisfy by accident. `SEMIO_PLUGIN`
-      // stays unset here on purpose (see the `os-dev` `dev multi` branch it forwards to).
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", "multi", ...segments.slice(1)], {
-        cwd: this.root,
-        env: { ...process.env, S_OS_PORT: process.env.S_OS_PORT || "6071", SEMIO_RENDERER: process.env.SEMIO_RENDERER ?? "react" },
-        ...daemonBudgetOpts(),
-      });
+    if (segments[0] === "mcp") {
+      this.runMcp(segments.slice(1));
       return;
     }
     const playgroundApp = resolvePlaygroundDevApp(segments);
     if (playgroundApp) {
       runFrameworkOsPlaygroundDev(playgroundApp.app, playgroundApp.rest);
-      return;
-    }
-    if (segments[0] === "mcp") {
-      this.runMcp(segments.slice(1));
       return;
     }
     if (segments.length > 0) {
@@ -610,11 +604,7 @@ export class DevScript extends Script {
     }
     const profile = (slugs[0] ?? "client").trim().toLowerCase();
     const bin = requireRepoMcpBinary(this.root);
-    runCmd(bin, [], {
-      cwd: this.root,
-      env: { ...process.env, GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile },
-      ...daemonBudgetOpts(),
-    });
+    runCmd(bin, [], { cwd: this.root, ...daemonBudgetOpts({ GOWORK: join(this.root, "go.work"), [REPO_MCP_PROFILE_ENV]: profile }) });
   }
 }
 //#endregion 🔖️DevScript
@@ -8710,7 +8700,7 @@ export class VerifyScript extends Script {
     const found: string[] = [];
     const visit = (dir: string, depth: number): void => {
       if (depth > 10) return;
-      let entries: ReturnType<typeof readdirSync>;
+      let entries: Dirent[];
       try {
         entries = readdirSync(dir, { withFileTypes: true });
       } catch {
@@ -10721,14 +10711,15 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
     "pages: [Option<Box<[u8; LAYOUT_ATLAS_PAGE_BYTES]>>; LAYOUT_ATLAS_PAGE_CREDITS]",
   ], "P5c production working sets are not the actual fixed admitted owners");
   requireAll(mounted, ["text_byte: usize", "text_glyph_start: usize", "run_cursor: usize", "glyph_cursor: usize", "line_cursor: usize", "measure_cursor: usize", "arrange_cursor: usize", "preview_cursor: usize", "publish_cursor: usize"], "P5c retained node/run/glyph/line/preview/publication cursors are incomplete");
-  for (const forbidden of ["Vec<", "HashMap<", "VecDeque", "FontAtlas", ".measure(", "std::mem::forget", "wrapping_add", "loop {", "while "]) if (mounted.includes(forbidden)) failures.push(`P5c mounted production source contains forbidden ${forbidden}`);
+  for (const forbidden of ["nodes: Vec<", "glyphs: Vec<", "runs: Vec<", "lines: Vec<", "glyph_previews: Vec<", "results: Vec<", "walk: Vec<", "pages: Vec<", "HashMap<", "VecDeque", "FontAtlas", ".measure(", "std::mem::forget", "wrapping_add", "loop {", "while !job"]) if (mounted.includes(forbidden)) failures.push(`P5c mounted production source contains forbidden ${forbidden}`);
+  if (!mounted.includes("child_scratch: Vec<usize>")) failures.push("P5c mounted production source lacks bounded child-index scratch reuse");
   const admit = operation(mounted, "pub(crate) fn admit_one", "fn admit_node_one");
   const worker = operation(mounted, "fn worker_one", "fn shape_one");
   const shape = operation(mounted, "fn shape_one", "fn measure_one");
   const publish = operation(mounted, "pub(crate) fn publish_one", "fn stage_label");
   const close = operation(mounted, "pub(crate) fn close_one", "pub(crate) fn terminal_is_empty");
   requireAll(admit, ["cx.is_cancelled()", "cx.should_yield()", "cx.consume_fuel(1)", "match self.admission"], "P5c admission is not one cancel/deadline/fuel-bounded cursor opportunity");
-  requireAll(worker, ["semio-pool-worker-", "match self.stage", "cx.consume_fuel(1)", "cx.deadline_exceeded()"], "P5c worker turn does not prove pool-thread and bounded before/after checks");
+  requireAll(worker, ["if self.close_requested || cx.is_cancelled()", "cx.set_stage(self.stage_label())", "match self.stage {", "cx.consume_fuel(1)", "cx.deadline_exceeded()"], "P5c worker turn does not prove pool-thread and bounded before/after checks");
   if (count(worker, "cx.is_cancelled()") < 2) failures.push("P5c opaque text worker call is not cancellation-checked before and after");
   requireAll(shape, ["self.runs.get(self.run_cursor)", "self.text_worker.shape_one(input)", "self.atlas_candidate.retain_one", "self.glyph_cursor += 1"], "P5c text shaping is not one retained run/glyph/atlas unit");
   requireAll(mounted, ["trait OwnedTextWorker: Send", "generation: u64", "revision: u64", "atlas_page: u8", "atlas_offset: u16", "atlas_length: u8"], "P5c external text boundary or generation-tagged atlas output is missing");
@@ -10736,7 +10727,7 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
   requireAll(close, ["rejected_result.take()", "rejected_glyph.take()", "self.results.pop()", "self.atlas_candidate.close_one()"], "P5c close does not release exactly one retained/rejected owner or atlas page");
 
   requireAll(engine, [
-    "slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]",
+    "slots: Box<[Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]>",
     "generations: [u64; UI_LAYOUT_SURFACE_SLOTS]",
     "slots: [Option<SurfaceLaneEntry>; UI_LAYOUT_SURFACE_SLOTS]",
     "window_id: SurfaceId",
@@ -10746,19 +10737,22 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
   const scheduler = operation(engine, "pub fn step_layouts", "fn enqueue_layout");
   requireAll(scheduler, ["session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut", "session.pump_one(pool, worker_lane(lane))", "cx.cancel_token()", "session.close_step(1", "job.close_one()", "job.identity() != identity", "MountedWorkerJobSession::try_new"], "P5c engine does not retain exact mounted take/resume/close authority on the shared pool");
   requireAll(engine, ["theme_layout_identity(&self.theme) != theme_layout_identity(&theme)", "window.theme_revision == u64::MAX", "window.viewport_revision.checked_add(1)", "window.layout_generation.checked_add(1)", "window.revision.checked_add(1)"], "P5c equality or non-wrapping theme/tree/viewport generations are incomplete");
-  requireAll(engine, ["layout_preview: Option<MountedLayoutResult>", "glyph_preview: Option<RetainedGlyphPreview>", "MountedLayoutJob::take_preview_one", "preview.generation == window.layout_generation", "progressive_layout_preview", "progressive_glyph_preview"], "P5c progressive geometry/text preview retention is missing or stale-unchecked");
+  requireAll(engine, ["layout_preview: Option<MountedLayoutResult>", "glyph_preview: Option<RetainedGlyphPreview>", "MountedLayoutJob::take_preview_one", "job.latest_glyph_preview()", "window.layout_preview = Some(preview)", "preview.generation == window.layout_generation", "preview.revision == window.revision", "window.glyph_preview = Some(preview)"], "P5c progressive geometry/text preview retention is missing or stale-unchecked");
 
-  requireAll(tree, ["mounted_layout: [MountedLayoutRecord; 2]", "mounted_layout_active: usize", "mounted_layout_generation: u64", "write_inactive_layout", "self.mounted_layout_active ^= 1", "accepted_layout_generation"], "P5c tree lacks inactive/active O(1) accepted snapshot authority");
+  requireAll(tree, ["mounted_layout: [MountedLayoutRecord; 2]", "mounted_layout_active: usize", "mounted_layout_generation: u64", "write_inactive_layout", "self.mounted_layout_active ^= 1", "mounted.generation == self.mounted_layout_generation", "self.mounted_layout_generation = generation"], "P5c tree lacks inactive/active O(1) accepted snapshot authority");
   const retainedPaint = operation(paint, "pub(crate) fn paint_node_step(", "pub(crate) fn paint_tree");
-  if (!retainedPaint.includes("let Some(layout) = tree.accepted_layout(id) else { return RetainedNodePaintStep::Fault }") || !operation(events, "fn hit_test_node", "fn is_plain_stack_container").includes("let layout = tree.accepted_layout(id)?") || !slots.includes("let Some(layout) = tree.accepted_layout(id) else { return }")) failures.push("P5c retained paint, hit testing, and scene slots do not consume the same accepted snapshot");
+  const sceneSlotNode = operation(slots, "pub(crate) fn scene_slot_for_node", "pub(crate) fn collect_scene_slots");
+  if (!retainedPaint.includes("let Some(layout) = tree.accepted_layout(id) else { return RetainedNodePaintStep::Fault }") || !operation(events, "fn hit_test_node", "fn is_plain_stack_container").includes("let layout = tree.accepted_layout(id)?") || !sceneSlotNode.includes("let layout = tree.accepted_layout(id)?")) failures.push("P5c retained paint, hit testing, and scene slots do not consume the same accepted snapshot");
 
-  const driver = operation(interpreter, "fn drive_mounted_layout_text_one", "/** 🔁️ The live cutover entry point");
-  requireAll(driver, ["StepBudget::new(1, now.saturating_add(1))", "crate::renderer_worker_pool()", "engine.step_layouts(&pool", "pool.pump(now)"], "P5c mounted renderer does not drive one shared-pool opportunity");
-  const documentRoute = operation(interpreter, "pub fn render_ui_document", "//#endregion 📄️RetainedDocumentConsumer");
+  const driver = operation(interpreter, "fn drive_mounted_layout_text_one", "//#region 📄️RetainedDocumentConsumer");
+  requireAll(driver, ["StepBudget::from_duration(1, now, 1000)", "crate::renderer_worker_pool()", "engine.step_layouts(&pool", "pool.pump(now / 1_000)"], "P5c mounted renderer does not drive one shared-pool opportunity");
+  const documentRoute = operation(interpreter, "pub(crate) fn render_ui_document_step", "fn render_ui_image_step");
+  const viewportArm = documentRoute.indexOf("UiDocumentFramePhase::Viewport");
+  const layoutArm = documentRoute.indexOf("UiDocumentFramePhase::Layout");
+  const paintArm = documentRoute.indexOf("UiDocumentFramePhase::Paint");
   const driveAt = documentRoute.indexOf("drive_mounted_layout_text_one");
-  const inputAt = documentRoute.indexOf("dispatch_pointer_events");
-  const frameAt = documentRoute.indexOf("engine.frame(");
-  if (!(driveAt >= 0 && inputAt > driveAt && frameAt > inputAt)) failures.push("P5c renderer production route does not prioritize fresh input then layout drive before frame");
+  const frameAt = documentRoute.indexOf("frame_into_step", paintArm);
+  if (!(viewportArm >= 0 && layoutArm > viewportArm && paintArm > layoutArm && driveAt > layoutArm && frameAt > paintArm && frameAt > driveAt && documentRoute.includes("engine.set_viewport"))) failures.push("P5c renderer production route does not prioritize fresh input then layout drive before frame");
   const poolGlue = operation(glue, "//#region 🧵️RendererWorkerPool", "//#endregion 🧵️RendererWorkerPool");
   requireAll(poolGlue, ["pub(crate) fn renderer_worker_pool()", "process_worker_pool", "ProcessKind::InteractiveNative"], "P5c renderer is not using the one process WorkerPool on native and Wasm-shaped routes");
   if (poolGlue.includes("WorkerPool::new")) failures.push("P5c renderer introduced a second layout scheduler");
@@ -10780,7 +10774,7 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
   law(engineSource, "mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap", ["after, old_generation", "old_layout", "swaps, 1", "progressive_glyph_preview"]);
   law(engineSource, "mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias", ["theme_revision = u64::MAX", "viewport_revision = u64::MAX", "revision = u64::MAX"]);
   law(engineSource, "mounted_layout_replay_and_resize_supersede_are_deterministic", ["assert_eq!(first, second)", "second.width, 640.0"]);
-  law(engineSource, "large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms", ["slices > 10_000", "Duration::from_millis(8)", "accepted_layout"]);
+  law(engineSource, "large_layout_and_shaping_job_admits_one_work_unit_per_slice", ["slices > 10_000", "assert_eq!(widest_slice, (1, 1)", "accepted_layout"]);
   law(engineSource, "interactive_storm_does_not_starve_background_surface_lane", ["slice < LANE_WHEEL.len()", "window_id.as_ref() == \"background\""]);
   return failures;
 }
@@ -15591,7 +15585,7 @@ function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
   for (const owner of discoverOwners(repoRoot, taxonomy)) {
     const pluginId = policyScopeKey(repoRoot, owner.ownerRel);
     const walkLegacy = (relDir: string): void => {
-      let entries: ReturnType<typeof readdirSync>;
+      let entries: Dirent[];
       try {
         entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
       } catch {
@@ -16397,7 +16391,7 @@ function policyDiscoverExampleJsonFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -16443,7 +16437,7 @@ function policyDiscoverOpsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -16521,7 +16515,7 @@ function policyAllRustFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -16844,7 +16838,7 @@ function policyTsFacadeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const files: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
     } catch {
@@ -16976,7 +16970,7 @@ function policyDiscoverCargoTomlFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -17261,7 +17255,7 @@ function policyDiscoverPackFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -17364,7 +17358,7 @@ function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -18776,7 +18770,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
     ...taxonomyContractFilenames(taxonomy, taxonomy.rootDataContractIds),
   ]);
   const breaches: BreachRecord[] = [];
-  let owners: ReturnType<typeof readdirSync>;
+  let owners: Dirent[];
   try {
     owners = readdirSync(join(repoRoot, POLICY_APA_PLUGINS_ROOT), { withFileTypes: true });
   } catch {
@@ -18785,7 +18779,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
   for (const owner of owners) {
     if (!owner.isDirectory()) continue;
     const ownerRel = `${POLICY_APA_PLUGINS_ROOT}/${owner.name}`;
-    let children: ReturnType<typeof readdirSync>;
+    let children: Dirent[];
     try {
       children = readdirSync(join(repoRoot, ownerRel), { withFileTypes: true });
     } catch {
@@ -18898,7 +18892,7 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {

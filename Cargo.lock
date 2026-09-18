@@ -5602,6 +5602,7 @@ dependencies = [
  "semio-framework-compiler",
  "semio-framework-geometry",
  "semio-framework-graph",
+ "semio-framework-hash",
  "semio-framework-intrinsic-size",
  "semio-framework-io-base64",
  "semio-framework-job",
@@ -6707,7 +6708,9 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
+ "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-json",
+ "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-svg",
  "semio-s-plugin-draw-fsm",
@@ -9623,7 +9626,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-reasoning-mindmap"
+name = "semio-s-plugin-reasoning"
 version = "0.1.0"
 dependencies = [
  "semio-framework",

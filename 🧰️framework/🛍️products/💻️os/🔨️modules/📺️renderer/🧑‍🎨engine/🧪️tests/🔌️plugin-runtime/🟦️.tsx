@@ -1465,6 +1465,79 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
     });
   
+    /** 🧾️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — the history-snapshot read's
+     * refusal law. `plugin_exchange`'s `ReadHistory` arm takes the instance cell with `try_lock`, so a
+     * read racing the same instance's own turn comes back as an `Error` frame with no `HistorySnapshot`
+     * beside it. The adapter used to report that as `missing HistorySnapshot frame` and throw away the
+     * guest's own sentence, which is why the collaboration e2e's blocker was read for a month as a hub
+     * bootstrap-ordering bug rather than a per-instance lock race. Three laws are pinned: a transient
+     * refusal is retried on a bounded doubling ladder, an exhausted ladder raises the guest's text, and
+     * a fault that is NOT the transient one is raised on the first reply without a single retry. */
+    describe("history snapshot bounded retry", () => {
+      const busyFrames = (instanceId: number): readonly unknown[] => [
+        { Error: { in_reply_to: 1, fault: Array.from(new TextEncoder().encode(`plugin.internal: instance busy or poisoned: ${instanceId}`)), report: [] } },
+      ];
+
+      it("retries a transient `instance busy` refusal on a doubling backoff and returns the snapshot the guest finally yields", async () => {
+        const { readHistoryWithBoundedRetryV1, encodePackValue, PLUGIN_INSTANCE_BUSY_BACKOFF_MS } = dependencies;
+        const waits: number[] = [];
+        let reads = 0;
+        const channel = {
+          readHistory: async () => {
+            reads += 1;
+            if (reads < 3) return busyFrames(7);
+            return [{ HistorySnapshot: { in_reply_to: 1, history_patch: Array.from(encodePackValue({ cursor: 3 })) } }];
+          },
+        } as unknown as Parameters<PluginRuntimeTestDependenciesV1["readHistoryWithBoundedRetryV1"]>[0];
+        const patch = await readHistoryWithBoundedRetryV1(channel, 7, async (ms: number) => { waits.push(ms); });
+        expect(reads, "one read per attempt until the guest answers").toBe(3);
+        expect(waits, "a doubling ladder, never a spin").toEqual([PLUGIN_INSTANCE_BUSY_BACKOFF_MS, PLUGIN_INSTANCE_BUSY_BACKOFF_MS * 2]);
+        expect(patch).toEqual({ cursor: 3 });
+      });
+
+      it("stops at the bound and raises the guest's own fault text rather than a `missing HistorySnapshot frame` sentence", async () => {
+        const { readHistoryWithBoundedRetryV1, PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS } = dependencies;
+        const waits: number[] = [];
+        let reads = 0;
+        const channel = { readHistory: async () => { reads += 1; return busyFrames(7); } } as unknown as Parameters<PluginRuntimeTestDependenciesV1["readHistoryWithBoundedRetryV1"]>[0];
+        let raised: unknown = null;
+        try {
+          await readHistoryWithBoundedRetryV1(channel, 7, async (ms: number) => { waits.push(ms); });
+        } catch (error) {
+          raised = error;
+        }
+        expect(reads, "bounded — the ladder never re-arms itself").toBe(PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS);
+        expect(waits.length, "and never waits after the last attempt").toBe(PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS - 1);
+        expect(String(raised)).toContain("instance busy or poisoned: 7");
+        expect(String(raised)).not.toContain("missing HistorySnapshot frame");
+      });
+
+      it("raises a fault that is not the transient lock refusal on the first reply, with no retry at all", async () => {
+        const { readHistoryWithBoundedRetryV1 } = dependencies;
+        let reads = 0;
+        const channel = {
+          readHistory: async () => {
+            reads += 1;
+            return [{ Error: { in_reply_to: 1, fault: Array.from(new TextEncoder().encode("plugin.internal: history projection is poisoned")), report: [] } }];
+          },
+        } as unknown as Parameters<PluginRuntimeTestDependenciesV1["readHistoryWithBoundedRetryV1"]>[0];
+        let raised: unknown = null;
+        try {
+          await readHistoryWithBoundedRetryV1(channel, 4, async () => {});
+        } catch (error) {
+          raised = error;
+        }
+        expect(reads, "a terminal fault is terminal on the first reply").toBe(1);
+        expect(String(raised)).toContain("history projection is poisoned");
+      });
+
+      it("names the transient refusal by its guest sentence and nothing else", () => {
+        const { isPluginInstanceBusyFaultV1 } = dependencies;
+        expect(isPluginInstanceBusyFaultV1("plugin.internal: instance busy or poisoned: 12")).toBe(true);
+        expect(isPluginInstanceBusyFaultV1("plugin.internal: no actor for instance 12")).toBe(false);
+      });
+    });
+
     describe("PluginRuntime documentPack/transaction wire adapter", () => {
       it("keeps the exact channel subscribed through refused close and releases only that channel after retry", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔒️channel-close.json");

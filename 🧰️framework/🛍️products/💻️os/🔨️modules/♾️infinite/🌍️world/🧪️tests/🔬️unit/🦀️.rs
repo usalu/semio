@@ -130,7 +130,7 @@ fn cursor_wake_coalesces_duplicates_and_rearms_after_exact_take() {
 #[test]
 fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and_duplicate_consumption() {
     const TOKEN_FIELD: &str = "cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>";
-    const HOST_TOKEN_FIELD: &str = "cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>";
+    const HOST_TOKEN_FIELD: &str = "cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>";
 
     fn region<'a>(source: &'a str, start: &str, end: &str) -> Option<&'a str> {
         let start = source.find(start)?;
@@ -152,18 +152,19 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
     fn exact(glue: &str, host: &str, native: &str, browser: &str) -> bool {
         let typed_handoffs = [
             ("AppFrameBuild", "pub(crate) struct AppFrameBuild {", "struct AppFrameAfterChrome {"),
-            ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameWheelCursor {"),
+            ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameBuildCursor {"),
+            ("FrameBuildCursor", "struct FrameBuildCursor {", "struct FrameWheelCursor {"),
             ("AppFramePresentation", "pub(crate) struct AppFramePresentation {", "impl AppFrameBuild {"),
             ("AppFramePreparation", "pub(crate) struct AppFramePreparation {", "impl AppFramePreparation {"),
             ("AppPresentStep::Complete", "pub(crate) enum AppPresentStep {", "impl AppPresenter {"),
         ];
-        let host_handoffs = [("OsHost", "pub struct OsHost {", "pub(crate) struct OsHostRetirement {"), ("OsHostRetirement", "pub(crate) struct OsHostRetirement {", "impl OsHost {")];
+        let host_handoffs = [("OsHost", "pub struct OsHost {", "struct OsHostRetirementState {"), ("OsHostRetirementState", "struct OsHostRetirementState {", "pub(crate) struct OsHostRetirement {")];
         glue.contains("world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority")
             && glue.contains("World3dBuildContext::new(runtime.world_cursor_wake_authority())")
             && glue.matches(TOKEN_FIELD).count() == typed_handoffs.len()
             && typed_handoffs.iter().all(|(_, start, end)| region(glue, start, end).is_some_and(|handoff| handoff.matches(TOKEN_FIELD).count() == 1))
             && region(glue, "pub(crate) enum AppPresentStep {", "impl AppPresenter {")
-                .is_some_and(|handoff| handoff.contains("Complete { fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> }") && handoff.matches(TOKEN_FIELD).count() == 1)
+                .is_some_and(|handoff| handoff.contains("Complete { generation: semio_framework_trace::Generation, cursor: SemioCursor, fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> }") && handoff.matches(TOKEN_FIELD).count() == 1)
             && region(glue, "pub(crate) struct AppPresenter {", "#[derive(Clone, Copy, Debug, PartialEq, Eq)]").is_some_and(|presenter| presenter.matches("pending: Option<AppPresentCursor>").count() == 1)
             && region(glue, "struct AppPresentCursor {", "pub(crate) enum AppPresentStep {").is_some_and(|presenter| presenter.matches("frame: AppFramePresentation").count() == 1)
             && !glue.contains("cursor_wake: bool")
@@ -192,7 +193,8 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
     assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
     for (name, start, end) in [
         ("AppFrameBuild", "pub(crate) struct AppFrameBuild {", "struct AppFrameAfterChrome {"),
-        ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameWheelCursor {"),
+        ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameBuildCursor {"),
+        ("FrameBuildCursor", "struct FrameBuildCursor {", "struct FrameWheelCursor {"),
         ("AppFramePresentation", "pub(crate) struct AppFramePresentation {", "impl AppFrameBuild {"),
         ("AppFramePreparation", "pub(crate) struct AppFramePreparation {", "impl AppFramePreparation {"),
         ("AppPresentStep::Complete", "pub(crate) enum AppPresentStep {", "impl AppPresenter {"),
@@ -208,7 +210,7 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
     assert!(!exact(&presenter_erased, host, native, browser), "presenter ownership must retain the typed presentation handoff");
     let pending_presenter_erased = glue.replacen("pending: Option<AppPresentCursor>", "request_frame: bool", 1);
     assert!(!exact(&pending_presenter_erased, host, native, browser), "AppPresenter must retain its typed pending cursor");
-    for (name, start, end) in [("OsHost", "pub struct OsHost {", "pub(crate) struct OsHostRetirement {"), ("OsHostRetirement", "pub(crate) struct OsHostRetirement {", "impl OsHost {")] {
+    for (name, start, end) in [("OsHost", "pub struct OsHost {", "struct OsHostRetirementState {"), ("OsHostRetirementState", "struct OsHostRetirementState {", "pub(crate) struct OsHostRetirement {")] {
         let erased = replace_region(host, start, end, HOST_TOKEN_FIELD, "cursor_wake_requested: bool").expect("enumerated host token field");
         assert!(!exact(glue, &erased, native, browser), "erasing {name}'s retained host token must be rejected");
     }
@@ -652,23 +654,17 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
     assert!(cursor.close_step());
 }
 
+/// 🖱️📋️ **The right-gesture law.** A right press/drag/release over a world surface publishes no
+/// action while the gesture runs — the menu is the shell's and the camera report is the settle's.
+/// Plain right is bound to NOTHING in React's orbit map (`resolveWorldOrbitMouseButtonsIdle`:
+/// `RIGHT: null`, pan on Shift, orbit on Alt), so an unmodified right-drag moves no camera either.
 #[test]
-fn world_context_menu_cursor_is_revisioned_and_right_drag_suppresses_publication() {
+fn a_right_gesture_publishes_nothing_while_it_runs() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 4;
     state.interaction_objects.revision = 4;
     state.hovered_vortex_id = Some("vortex".into());
-    let token = state.interaction_objects.admit(4, WorldInteractionObjectKind::Vortex, "vortex", None, Mat4::identity(), [0.0; 8]).expect("vortex token");
-    let mut cursor = WorldContextMenuCursor::new(&state, 11, 12.0, 13.0).expect("context cursor");
-    cursor.slot = token.slot;
-    assert_eq!(with_world_step_context(1, |context| cursor.step(&state, 11, context)), WorldInteractionStep::Pending);
-    assert_eq!(cursor.target, Some(token));
-    assert_eq!(with_world_step_context(1, |context| cursor.step(&state, 11, context)), WorldInteractionStep::Complete);
-    let mut plan = cursor.finish_plan(&state, 11).expect("context plan").expect("context target");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 11, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
-    assert_eq!(take_actions(&mut input).len(), 1);
-
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 4;
     authority.queue.push(WorldInteractionIntent::pointer_button(0.0, 0.0, true, 2, &PointerModifiers::default())).unwrap();
@@ -683,6 +679,58 @@ fn world_context_menu_cursor_is_revisioned_and_right_drag_suppresses_publication
         assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, generation, &mut input, context)), WorldInteractionAuthorityStep::Complete);
     }
     assert!(take_actions(&mut input).is_empty());
+}
+
+/// 🖱️ **The stale-aim law.** A queued intent outlives a relayout: dragging the dock's split gutter
+/// moves a pane out from under the moves already enqueued against its previous bounds. Every pick
+/// cursor refuses a point outside the CURRENT pick rect, and that refusal used to FAULT the authority
+/// — a frame fault, which kills the page, so the whole wgpu shell tore down mid-drag (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15). A stale aim
+/// retires like any other answered intent; a point the surface DOES cover still faults, because there
+/// the refusal is real.
+#[test]
+fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    state.bounds = Rect { x: 536.0, y: 54.0, w: 1061.0, h: 913.0 };
+    state.interaction_objects.revision = state.interaction_revision;
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut authority = WorldInteractionAuthority::default();
+    authority.next_generation = 2;
+    authority.queue.push(WorldInteractionIntent::pointer_move(534.4, 500.0, -34.0, -453.0, false, 0, &PointerModifiers::default())).unwrap();
+    authority.queue.slots[0].as_mut().unwrap().generation = 1;
+    state.interaction_authority = Some(authority);
+    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Complete, "🖱️ a hover the pane no longer covers is retired");
+    assert_eq!(world3d_interaction_front_generation(&state), None, "🖱️ and it leaves the queue rather than blocking it");
+    assert!(!state.interaction_authority.as_ref().expect("authority").faulted, "🖱️ the authority stays usable for the next gesture");
+    assert!(take_actions(&mut input).is_empty());
+
+    // 🖱️ The button no CAMERA gesture claims still answers, and never faults — a middle press used to
+    // fall through to the unclaimed-intent fault, which killed the page on the first middle-click of
+    // any world surface. What it answers is the selection React publishes for any button (packet
+    // W13c's `plan_world3d_non_primary_press_pick`, through R3F's `onPointerMissed`); the release
+    // retires as before.
+    let mut authority = WorldInteractionAuthority::default();
+    authority.next_generation = 3;
+    authority.queue.push(WorldInteractionIntent::pointer_button(1000.0, 400.0, true, 1, &PointerModifiers::default())).unwrap();
+    authority.queue.slots[0].as_mut().unwrap().generation = 1;
+    authority.queue.push(WorldInteractionIntent::pointer_button(1000.0, 400.0, false, 1, &PointerModifiers::default())).unwrap();
+    authority.queue.slots[1].as_mut().unwrap().generation = 2;
+    state.interaction_authority = Some(authority);
+    for generation in 1..=2 {
+        let mut turns = 0;
+        loop {
+            let step = with_world_step_context(1, |context| step_world3d_interaction(&mut state, generation, &mut input, context));
+            assert_ne!(step, WorldInteractionAuthorityStep::Fault, "🖱️ a middle press inside the pane never faults");
+            turns += 1;
+            assert!(turns < 64, "🖱️ a bounded press answers in bounded turns");
+            if step == WorldInteractionAuthorityStep::Complete {
+                break;
+            }
+            assert_eq!(step, WorldInteractionAuthorityStep::Pending);
+        }
+    }
+    assert!(!state.interaction_authority.as_ref().expect("authority").faulted);
+    assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), ["interactionSelect"], "🖱️ the press publishes the selection React's own `handleEmptyClick` publishes for any button");
 }
 
 #[test]
@@ -828,12 +876,30 @@ fn world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry() {
     assert_eq!(job.gesture.len, 0);
 }
 
+/// 🔺️ The marquee triangle carrying its OWN vertex, edge and face id buffers — what a decoded GLB
+/// brings and what `screen_select_components` needs before it can answer anything but the whole
+/// instance: with empty id buffers its `"vertex"`/`"edge"` arms are guarded off
+/// (`🎬️scene/📐️math/🦀️.rs:1631`, `:1647`) and the oracle falls through to the instance-id arm, which
+/// is not a component census at all.
+fn component_triangle_mesh_oracle() -> LegacyMeshOracleData {
+    let mut data = triangle_mesh_oracle();
+    data.vertex_ids = vec![11, 12, 13];
+    data.face_ids = vec![31];
+    data.edge_positions = vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0];
+    data.edge_ids = vec![21, 22, 23];
+    data
+}
+
 fn world_marquee_geometry_fixture(instance_count: usize) -> World3dState {
+    world_marquee_geometry_fixture_from(triangle_mesh_oracle(), instance_count)
+}
+
+fn world_marquee_geometry_fixture_from(data: LegacyMeshOracleData, instance_count: usize) -> World3dState {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.pick_bounds = state.bounds;
     state.interaction_revision = 2;
-    let mesh = publish_oracle_mesh(triangle_mesh_oracle());
+    let mesh = publish_oracle_mesh(data);
     store_mesh(&mut state, "mesh".into(), mesh);
     let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
     let instances = (0..instance_count).map(|index| Instance3d { id: format!("object-{index:03}"), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }).collect();
@@ -968,7 +1034,7 @@ fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]])
 
 #[test]
 fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
-    let mut state = world_marquee_geometry_fixture(1);
+    let mut state = world_marquee_geometry_fixture_from(component_triangle_mesh_oracle(), 1);
     let viewport = render_pick_viewport(&state);
     let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 400.0]];
@@ -977,6 +1043,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
         let (meshes, draws) = legacy_geometry_fixture(&state);
         let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
         legacy.sort_unstable();
+        assert!(!legacy.is_empty(), "the oracle must answer a component census, not an empty one: granularity={granularity}");
         assert_eq!(world_component_marquee_cursor_ids(&state, &points), legacy, "granularity={granularity}");
     }
 }
@@ -1294,16 +1361,26 @@ fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
     assert_eq!(state.orbit.distance, original_distance);
     assert!(take_actions(&mut input).is_empty());
 
-    let mut plan = plan_world3d_wheel(&state, 8, 20.0).expect("bounded wheel plan");
+    let mut plan = plan_world3d_wheel(&state, 8, 200.0).expect("bounded wheel plan");
     let pending = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
     assert_eq!(pending, WorldInteractionStep::Pending);
     assert_ne!(state.orbit.distance, original_distance);
-    let actions = take_actions(&mut input);
-    assert_eq!(actions.len(), 1);
-    assert_eq!(actions[0].action, "setCamera");
+    // 🧭️ A navigation step moves the orbit and publishes NOTHING: the wire report is the debounced
+    // settle's, one per gesture (see `WorldCameraSync`).
+    assert!(take_actions(&mut input).is_empty());
     let complete = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
     assert_eq!(complete, WorldInteractionStep::Complete);
     assert!(plan.terminal_is_empty());
+
+    let mut settle = plan_world3d_camera_settle(&state, 9).expect("a moved camera owes a settle");
+    let mut turns = 0;
+    while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut settle, 9, &mut input, context)).unwrap() != WorldInteractionStep::Complete {
+        turns += 1;
+        assert!(turns < 8, "a bounded settle terminates");
+    }
+    let actions = take_actions(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec!["noteWorldNavigation", "setCamera"]);
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("gestures")).and_then(dsl::DslValue::as_array).map(|ids| ids.iter().filter_map(dsl::DslValue::as_str).collect::<Vec<_>>()), Some(vec!["zoom"]));
 }
 
 #[test]
@@ -1316,7 +1393,7 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
     let step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut drag, 3, &mut input, context)).unwrap();
     assert_eq!(step, WorldInteractionStep::Pending);
     assert_ne!(state.orbit.target, original_target);
-    assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
+    assert!(take_actions(&mut input).is_empty(), "a pan step moves the orbit and owes the settle, it never publishes per move");
 
     state.interaction_mode = "paint".into();
     let mut begin = plan_world3d_paint_stroke(&state, 4, true, 0).expect("paint begin plan");
@@ -1416,31 +1493,46 @@ fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
     assert!(cursor.terminal_is_empty());
 }
 
+/// 🧭️ **The settle-saturation law.** A navigation intent publishes nothing at all — it moves the
+/// orbit and leaves the debt — so the plan that can saturate the output is the SETTLE's, and a
+/// saturated settle is RETAINED and retried in its own order (`noteWorldNavigation`, then
+/// `setCamera`), never dropped. See `WorldCameraSync`.
 #[test]
 fn world_authority_retains_front_plan_across_output_saturation_and_retries_in_order() {
     let mut state = World3dState::new("surface".into(), "controller".into());
+    state.interaction_objects.revision = state.interaction_revision;
     let original_distance = state.orbit.distance;
-    enqueue_world3d_intent(&mut state, world_intent(1, 10.0)).expect("wheel intent");
-    enqueue_world3d_intent(&mut state, world_intent(2, 20.0)).expect("second wheel intent");
+    enqueue_world3d_intent(&mut state, world_intent(1, 200.0)).expect("wheel intent");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Pending);
+    let mut turns = 0;
+    while with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)) != WorldInteractionAuthorityStep::Complete {
+        turns += 1;
+        assert!(turns < 8, "a wheel intent settles in a bounded number of steps");
+    }
+    assert_ne!(state.orbit.distance, original_distance);
+    assert!(take_actions(&mut input).is_empty(), "a navigation step publishes nothing");
+
+    let settle = world3d_interaction_front_generation(&state).expect("a drained queue still owes the settle");
     let mut claims = Vec::new();
     while let Ok(claim) = input.claim_action(1) {
         claims.push(claim);
     }
     assert!(!claims.is_empty());
-    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::OutputBlocked);
-    assert_eq!(state.orbit.distance, original_distance);
-    let released = claims.pop().expect("one retry credit");
-    input.release_action_claim(released).expect("release retry credit");
-    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Pending);
-    assert_ne!(state.orbit.distance, original_distance);
+    let mut turns = 0;
+    while with_world_step_context(1, |context| step_world3d_interaction(&mut state, settle, &mut input, context)) != WorldInteractionAuthorityStep::OutputBlocked {
+        turns += 1;
+        assert!(turns < 16, "a settle with no output credit blocks rather than dropping its plan");
+    }
+    assert!(take_actions(&mut input).is_empty());
     for claim in claims {
         input.release_action_claim(claim).expect("release retained credit");
     }
-    assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
-    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Complete);
-    assert_eq!(state.interaction_authority.as_ref().and_then(|authority| authority.queue.front()).map(|intent| intent.generation), Some(2));
+    let mut turns = 0;
+    while with_world_step_context(1, |context| step_world3d_interaction(&mut state, settle, &mut input, context)) != WorldInteractionAuthorityStep::Complete {
+        turns += 1;
+        assert!(turns < 8, "a retried settle completes in a bounded number of steps");
+    }
+    assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["noteWorldNavigation", "setCamera"]);
 }
 
 #[test]
@@ -1466,19 +1558,30 @@ fn world_authority_close_drains_active_and_queued_fixed_owners_to_terminal() {
 #[test]
 fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
     let mut state = World3dState::new("surface".into(), "controller".into());
+    state.interaction_objects.revision = state.interaction_revision;
     for generation in 1..=WORLD_INTERACTION_INTENT_CAPACITY as u64 + 1 {
         enqueue_world3d_intent(&mut state, world_intent(generation, generation as f32)).expect("queue or retained saturation owner");
     }
     let rejected_generation = WORLD_INTERACTION_INTENT_CAPACITY as u64 + 2;
     assert_eq!(enqueue_world3d_intent(&mut state, world_intent(rejected_generation, rejected_generation as f32)).expect_err("blocked owner seals ingress").generation, rejected_generation);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    for _ in 0..3 {
+    let mut turns = 0;
+    while state.interaction_authority.as_ref().and_then(|authority| authority.queue.front()).map(|intent| intent.generation) == Some(1) {
         let _ = with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context));
+        turns += 1;
+        assert!(turns < 16, "the front intent is answered in a bounded number of turns");
     }
-    assert_eq!(take_actions(&mut input).len(), 1);
-    assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
+    assert!(take_actions(&mut input).is_empty(), "a navigation intent moves the orbit and owes the settle, it publishes nothing");
+    // 🗃️ The blocked owner transfers on the FIRST turn that finds a freed slot, whatever else that
+    // turn's authority owes first (a moved camera re-dirties the object registry, and its rebuild is
+    // itself several turns).
+    let mut turns = 0;
+    while state.interaction_authority.as_ref().is_some_and(|authority| authority.blocked.is_some()) {
+        assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
+        turns += 1;
+        assert!(turns < 16, "a freed slot admits the retained saturation owner");
+    }
     let authority = state.interaction_authority.as_mut().expect("authority");
-    assert!(authority.blocked.is_none());
     for generation in 2..=WORLD_INTERACTION_INTENT_CAPACITY as u64 + 1 {
         assert_eq!(authority.queue.front().map(|intent| intent.generation), Some(generation));
         assert!(authority.queue.retire_front(generation));
@@ -1515,7 +1618,7 @@ fn renderer_world_consumers_use_only_fixed_intent_ingress() {
 fn an_appended_world_raster_producer_is_bound_to_the_frames_generation() {
     use semio_framework_job::InteractiveJob;
     let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    resources.ensure_world_plane_texture("plan", &[1, 2, 3, 4], 1, 1);
+    resources.ensure_world_plane_texture("plan", vec![1, 2, 3, 4], 1, 1);
     let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(input.raster_producers.len(), 1);
@@ -1524,7 +1627,7 @@ fn an_appended_world_raster_producer_is_bound_to_the_frames_generation() {
 
     let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
     let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    resources.ensure_world_plane_texture("plan", &[1, 2, 3, 4], 1, 1);
+    resources.ensure_world_plane_texture("plan", vec![1, 2, 3, 4], 1, 1);
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     let mut job = ui_wgpu::wgpu::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
     let mut preview = 0;
@@ -1546,6 +1649,34 @@ fn an_appended_world_raster_producer_is_bound_to_the_frames_generation() {
     while !matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {}
 }
 
+/// 🖼️ The reference underlay is OFFERED, never given away, and a refused admission is back-pressure
+/// rather than a frame fault.
+///
+/// Two regressions meet here. Reporting the refusal as a fault killed the page on a dock-window close
+/// (`frame world resource admission exceeded fixed credits`), and taking the payload to offer it only
+/// once left both panes with no plan at all when that one frame's present was aborted (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` §1 and W9b's regression).
+#[test]
+fn a_reference_underlay_is_offered_every_render_and_a_refused_admission_is_not_a_fault() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    state.reference_pixels.insert("/plan.jpg".into(), (4, 2, vec![7; 4 * 2 * 4])).expect("reference pixels admitted");
+    for render in 0..4 {
+        let offered = reference_underlay_upload(&state, "/plan.jpg").expect("every render offers the payload");
+        assert_eq!((offered.0, offered.1, offered.2.len()), (4, 2, 32), "🖼️ render {render}");
+    }
+    assert_eq!(state.reference_pixels.get("/plan.jpg").map(|(_, _, pixels)| pixels.len()), Some(32), "🖼️ and the surface KEEPS it — a sibling pane offers the same image from its own state");
+    assert_eq!(reference_image_aspect(&state, "/plan.jpg"), 2.0, "🖼️ the dimensions answer the aspect every frame reads");
+    assert!(reference_underlay_upload(&state, "/missing.jpg").is_none());
+
+    // 🧯️ An item over the raster lane's own per-item ceiling is refused at admission. The frame must
+    // carry NO rejection owner for it — it simply has no underlay this time — and the context must
+    // still be terminal-empty, which is what proves the refusal's credit was retired here.
+    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let over_budget = ui_wgpu::wgpu::PREPARED_RASTER_ITEM_BYTES / 4 + 1;
+    resources.ensure_world_plane_texture("/plan.jpg", vec![0; over_budget * 4], over_budget as u32, 1);
+    assert!(resources.terminal_is_empty(), "🧯️ a refused underlay leaves the frame NO rejection owner to fault on, and its credit retired inside the admission");
+}
+
 #[test]
 fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_send::<World3dBuildContext>();
@@ -1553,8 +1684,8 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     let mesh = publish_oracle_mesh(triangle_mesh_oracle());
     resources.ensure_mesh("mesh", 3, mesh);
     resources.ensure_mesh("mesh", 3, mesh);
-    resources.ensure_world_plane_texture("image", &[1, 2, 3, 4], 1, 1);
-    resources.ensure_world_plane_texture("image", &[9, 9, 9, 9], 1, 1);
+    resources.ensure_world_plane_texture("image", vec![1, 2, 3, 4], 1, 1);
+    resources.ensure_world_plane_texture("image", vec![9, 9, 9, 9], 1, 1);
     resources.evict_mesh("stale");
     let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
@@ -1563,7 +1694,12 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(true));
-    assert_eq!(input.uploads.len(), 2);
+    // 🖼️ A mesh is an UPLOAD, a raster is a PRODUCER — two lanes, one deduplicated entry each. This
+    // asserted two uploads, which no version of `ensure_world_plane_texture` has ever produced (the
+    // raster has been a `PreparedRasterProducer` since W7b bound it to the frame's generation), so the
+    // law was red at HEAD before this packet touched it.
+    assert_eq!(input.uploads.len(), 1);
+    assert_eq!(input.raster_producers.len(), 1);
     assert_eq!(input.evictions.len(), 1);
     assert_eq!(input.evictions.get(0), Some(&PreparedRenderEviction::Mesh { key: "stale".into() }));
 }
@@ -2832,6 +2968,193 @@ fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching(
 
 //#endregion GlbAssetTests
 
+//#region 🥽️BrushMeshAnnounceTests
+/// 🧫️ React's measured `registerBrushMesh` rows and the arg shapes it sends, from the 2026-09-18
+/// side-by-side run (`🗑️generated/w11a-parity-run-14/steps.json`).
+const BRUSH_MESH_REGISTRATION: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🥽️brush-mesh-registration.json");
+
+/// 🔒️ The announcement registry is process-wide by design (React's is a module singleton), so the
+/// laws below take it one at a time whatever `--test-threads` says.
+static BRUSH_MESH_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn brush_mesh_fixture() -> serde_json::Value {
+    serde_json::from_str(BRUSH_MESH_REGISTRATION).expect("brush mesh registration fixture parses")
+}
+
+/// 🧫️ A mesh whose payload spans SEVERAL pages, so the run's positions-then-indices split falls
+/// inside a page the way a real GLB's does: 400 vertices (1 200 position values) plus 900 indices is
+/// 2 100 values, three pages at [`WORLD_BRUSH_MESH_PAGE_VALUES`].
+fn brush_mesh_oracle() -> LegacyMeshOracleData {
+    let vertices = 400_u32;
+    let positions: Vec<f32> = (0..vertices).flat_map(|vertex| [vertex as f32, (vertex % 7) as f32, (vertex % 13) as f32]).collect();
+    let normals: Vec<f32> = (0..vertices).flat_map(|_| [0.0, 0.0, 1.0]).collect();
+    let indices: Vec<u32> = (0..900_u32).map(|index| index % vertices).collect();
+    mesh_oracle_from_buffers(positions, normals, indices)
+}
+
+/// 🧫️ A bridged world pane whose url-declared mesh is RESIDENT — the state React reaches when its
+/// `useLoader(GLTFLoader, …)` resolves and `BrushMeshRegistrar` fires.
+fn resident_brush_mesh_surface(surface_id: &str) -> World3dState {
+    let scene = url_mesh_wire_scene();
+    let mut state = World3dState::new(surface_id.into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+    let mesh = publish_oracle_mesh_at_revision(brush_mesh_oracle(), state.interaction_revision);
+    publish_world3d_asset_mesh_lease(&mut state, URL_MESH_URL, mesh).expect("the decoded GLB publishes under the wire's mesh id");
+    state
+}
+
+fn brush_mesh_text(action: &ActionDescriptor, key: &str) -> Option<String> {
+    action.args.as_ref().and_then(|args| args.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string)
+}
+
+fn brush_mesh_number(action: &ActionDescriptor, key: &str) -> Option<u64> {
+    action.args.as_ref().and_then(|args| args.get(key)).and_then(dsl::DslValue::as_f64).map(|value| value as u64)
+}
+
+fn brush_mesh_carries(action: &ActionDescriptor, key: &str) -> bool {
+    action.args.as_ref().and_then(|args| args.get(key)).is_some()
+}
+
+fn drain_brush_mesh_run(state: &mut World3dState) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
+    for _ in 0..(WORLD_BRUSH_MESH_MAX_PAGES as usize + 2) {
+        let Some(action) = step_world3d_brush_mesh_announce(state) else { break };
+        actions.push(action);
+    }
+    actions
+}
+
+/// 🥽️ LAW: a resident mesh emits exactly ONE `registerBrushMesh` per window instance per revision,
+/// with React's own arg shape — and never a second one in the same frame or the next.
+///
+/// 🩸️ The wgpu host dispatched nothing at all for family B of the parity diff, so the guest's brush
+/// and volume-brush utilities had no collision body on this renderer while React announced on all
+/// seven measured steps (`📓️w11a-prepared-world-mesh-missing.md` §6 family B).
+#[test]
+fn a_resident_mesh_announces_one_register_brush_mesh_per_window_with_reacts_args() {
+    let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    reset_world3d_brush_mesh_registry();
+    let fixture = brush_mesh_fixture();
+    let windows: Vec<String> = fixture["windows"].as_array().expect("window list").iter().map(|entry| entry.as_str().expect("window id").to_string()).collect();
+    assert_eq!(windows.len(), 2, "React journals both window instances on every measured step");
+
+    let mut first = resident_brush_mesh_surface(&windows[0]);
+    let run = drain_brush_mesh_run(&mut first);
+    assert!(!run.is_empty(), "the first window pages the geometry it just made resident");
+    assert!(run.iter().all(|action| action.action == fixture["action"].as_str().expect("action id")), "every row is a registerBrushMesh");
+    assert_eq!(brush_mesh_text(&run[0], "surfaceId").as_deref(), Some(windows[0].as_str()), "React sends the pane's own surface id");
+    assert_eq!(brush_mesh_text(&run[0], "windowId").as_deref(), Some(windows[0].as_str()), "and scopes the announcement to the window instance that owns the mesh");
+    assert_eq!(brush_mesh_text(&run[0], "url").as_deref(), Some(URL_MESH_URL));
+    assert_eq!(brush_mesh_number(&run[0], "pageCount"), Some(run.len() as u64), "the run declares its own length on every page");
+    let digest = brush_mesh_text(&run[0], "digest").expect("the identity is the digest the guest verifies the run against");
+    assert_eq!(digest.len(), 64, "unkeyed BLAKE3, hex");
+    assert!(step_world3d_brush_mesh_announce(&mut first).is_none(), "an announced identity is never re-announced at the same revision");
+    assert!(!world3d_brush_mesh_announce_pending(&first), "and the surface owes the guest nothing more");
+
+    let mut second = resident_brush_mesh_surface(&windows[1]);
+    let sibling = drain_brush_mesh_run(&mut second);
+    assert_eq!(sibling.len(), 1, "a sibling window announces the identity the registry already holds by id alone");
+    assert_eq!(brush_mesh_text(&sibling[0], "windowId").as_deref(), Some(windows[1].as_str()), "scoped to ITS window, which is why React journals a row per window");
+    assert_eq!(brush_mesh_text(&sibling[0], "url").as_deref(), Some(URL_MESH_URL));
+    assert_eq!(brush_mesh_text(&sibling[0], "digest"), Some(digest), "by the digest the first window put into the guest");
+    assert!(!brush_mesh_carries(&sibling[0], "page"), "and with no payload at all");
+    assert!(!brush_mesh_carries(&sibling[0], "positionsB64"));
+
+    retire_bridged_surface(&mut first);
+    retire_bridged_surface(&mut second);
+    reset_world3d_brush_mesh_registry();
+}
+
+/// 🥽️ LAW: a page run carries the mesh's little-endian positions followed by its little-endian
+/// indices, positions filling each page first — the exact layout the guest's
+/// `decode_brush_mesh_page_values` reassembles and its `brush_mesh_digest` hashes.
+#[test]
+fn a_brush_mesh_run_pages_positions_then_indices_under_the_announced_digest() {
+    let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    reset_world3d_brush_mesh_registry();
+    let oracle = brush_mesh_oracle();
+    let mut expected: Vec<u8> = oracle.positions.iter().flat_map(|value| value.to_le_bytes()).collect();
+    expected.extend(oracle.indices.iter().flat_map(|value| value.to_le_bytes()));
+
+    let mut state = resident_brush_mesh_surface("puzzle3d-main-top");
+    let run = drain_brush_mesh_run(&mut state);
+    assert!(run.len() > 2, "the oracle spans several pages, so the positions-then-indices split falls inside one");
+    assert!(run.iter().filter(|action| brush_mesh_carries(action, "positionsB64") && brush_mesh_carries(action, "indicesB64")).count() == 1, "exactly one page carries the seam");
+    let mut positions = Vec::new();
+    let mut indices = Vec::new();
+    for action in &run {
+        assert_eq!(brush_mesh_text(action, "digest"), Some(semio_framework_hash::hash_bytes(&expected)), "every page names the identity the whole run hashes to");
+        if let Some(encoded) = brush_mesh_text(action, "positionsB64") {
+            positions.extend(base64_codec::base64_standard_decode(&encoded).expect("page payload is base64"));
+        }
+        if let Some(encoded) = brush_mesh_text(action, "indicesB64") {
+            indices.extend(base64_codec::base64_standard_decode(&encoded).expect("page payload is base64"));
+        }
+    }
+    positions.extend(indices);
+    assert_eq!(positions, expected, "the run reassembles into the resident mesh's own geometry, positions first");
+
+    retire_bridged_surface(&mut state);
+    reset_world3d_brush_mesh_registry();
+}
+
+/// 🚚️ LAW: the guest's own two published facts drive every re-announcement — a residency that fell
+/// is a restarted guest and voids every claim, and a standing `meshReuploadUrls` entry is an
+/// identity whose bytes the guest is waiting for. React folds the identical pair into
+/// `brushMeshRevisions` (`🌐️World3dHost/🟦️.tsx`).
+#[test]
+fn a_guest_restart_or_a_reupload_request_makes_every_surface_announce_again() {
+    let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    reset_world3d_brush_mesh_registry();
+    let mut state = resident_brush_mesh_surface("puzzle3d-main-top");
+    assert!(drain_brush_mesh_run(&mut state).iter().any(|action| brush_mesh_carries(action, "positionsB64")), "the first run pages the bytes");
+    assert!(!world3d_brush_mesh_announce_pending(&state));
+
+    sync_world3d_brush_mesh_feedback(&mut state, Some(r#"{"meshResidency":7,"meshReuploadUrls":[]}"#));
+    assert!(!world3d_brush_mesh_announce_pending(&state), "a climbing residency is the guest confirming what it holds, not news");
+
+    sync_world3d_brush_mesh_feedback(&mut state, Some(&format!(r#"{{"meshResidency":7,"meshReuploadUrls":["{URL_MESH_URL}"]}}"#)));
+    assert!(world3d_brush_mesh_announce_pending(&state), "a standing request is an identity the guest cannot serve");
+    let reupload = drain_brush_mesh_run(&mut state);
+    assert!(reupload.iter().any(|action| brush_mesh_carries(action, "positionsB64")), "a claimed request takes the PAGE path, never the id-only one");
+
+    sync_world3d_brush_mesh_feedback(&mut state, Some(r#"{"meshResidency":0,"meshReuploadUrls":[]}"#));
+    assert!(world3d_brush_mesh_announce_pending(&state), "a residency below the high-water mark is proof of a restarted guest");
+    assert!(drain_brush_mesh_run(&mut state).iter().any(|action| brush_mesh_carries(action, "positionsB64")), "and the voided claim pages the bytes again");
+
+    retire_bridged_surface(&mut state);
+    reset_world3d_brush_mesh_registry();
+}
+
+/// 🪟️ LAW: every React-measured trigger is answered per WINDOW INSTANCE — a rebuilt surface starts
+/// with an empty announced set and announces again, which is exactly what `window-reopen`,
+/// `role-viewer` and `role-editor` journal on both panes.
+#[test]
+fn every_react_measured_trigger_announces_once_per_window_instance() {
+    let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    reset_world3d_brush_mesh_registry();
+    let fixture = brush_mesh_fixture();
+    let steps = fixture["reactSteps"].as_array().expect("measured steps").clone();
+    assert_eq!(steps.len(), 7, "the parity run measured seven family-B steps");
+
+    for step in &steps {
+        let per_window = step["perWindow"].as_object().expect("rows per window");
+        for (window, rows) in per_window {
+            assert!(rows.as_u64().is_some_and(|rows| rows > 0), "React journals at least one row per window on {}", step["step"]);
+            let mut state = resident_brush_mesh_surface(window);
+            let announced = drain_brush_mesh_run(&mut state);
+            assert!(!announced.is_empty(), "the wgpu twin answers {} on {window}", step["step"]);
+            for action in &announced {
+                assert_eq!(brush_mesh_text(action, "windowId").as_deref(), Some(window.as_str()), "every row is scoped to the window that owns the mesh");
+            }
+            assert!(step_world3d_brush_mesh_announce(&mut state).is_none(), "and no duplicate follows in the same frame");
+            retire_bridged_surface(&mut state);
+        }
+    }
+    reset_world3d_brush_mesh_registry();
+}
+//#endregion 🥽️BrushMeshAnnounceTests
+
 /// 📐️ LAW: the grid draws React's ONE band at `lodGridStepWorld`'s exact spacing, is sized by the
 /// camera's own fade radius rather than a fixed square, stays inside the far plane, and fades to
 /// zero alpha at its rim (`📓️w7b-presenter-one-frame-per-boot.md` §5,
@@ -3053,23 +3376,28 @@ fn resolve_world_context_menu_target_is_none_without_any_hover() {
     assert_eq!(resolve_world_context_menu_target(&state), None);
 }
 
+/// 🖱️📋️ **The dead-verb law.** A right click on a world surface publishes NO action of its own. The
+/// menu is the SHELL's (`open_context_menu`, whose `resolve_context_menu_surface` fills a World3d
+/// surface's hits/selection from `world3d_context_menu_surface`), and React deleted its own
+/// `contextMenuAt` twin when the target moved onto the menu REQUEST — dispatching it anyway only
+/// produced an `undeclaredActionDiagnostic` drop (`world3dContextMenuSurfaceV1`'s docstring). What a
+/// release DOES owe is the unconditional camera report three's `OrbitControls` fires on every
+/// pointer-up (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 #[test]
-fn right_click_dispatches_context_menu_at_for_hovered_vortex() {
+fn right_click_publishes_no_menu_verb_and_still_reports_the_camera() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.bounds = inner;
     state.pick_bounds = inner;
     state.hovered_vortex_id = Some("vortex-1".into());
     handle_world3d_pointer_button(&mut state, 200.0, 200.0, true, 2, &PointerModifiers::default());
-    let action = handle_world3d_pointer_button(&mut state, 200.0, 200.0, false, 2, &PointerModifiers::default()).expect("right click should dispatch");
-    assert_eq!(action.action, "contextMenuAt");
-    let args = action.args.expect("args");
-    assert_eq!(args["kind"], json!("vortex"));
-    assert_eq!(args["id"], json!("vortex-1"));
+    let action = handle_world3d_pointer_button(&mut state, 200.0, 200.0, false, 2, &PointerModifiers::default()).expect("a right release reports the camera");
+    assert_eq!(action.action, "setCamera");
+    assert!(action.args.expect("args").get("camera").is_some(), "the report carries the pose, never a menu target");
 }
 
 #[test]
-fn right_drag_does_not_dispatch_context_menu_even_with_a_hovered_vortex() {
+fn right_drag_reports_the_camera_like_every_other_release() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.bounds = inner;
@@ -3077,7 +3405,7 @@ fn right_drag_does_not_dispatch_context_menu_even_with_a_hovered_vortex() {
     state.hovered_vortex_id = Some("vortex-1".into());
     handle_world3d_pointer_button(&mut state, 200.0, 200.0, true, 2, &PointerModifiers::default());
     let action = handle_world3d_pointer_button(&mut state, 260.0, 260.0, false, 2, &PointerModifiers::default()).expect("right release should still sync camera");
-    assert_eq!(action.action, "setCamera", "a right-drag should fall back to the orbit camera sync, not open a context menu");
+    assert_eq!(action.action, "setCamera", "a right-drag reports the camera, and no renderer opens a menu from a drag");
 }
 //#endregion ContextMenuTests
 
@@ -3526,6 +3854,43 @@ fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_s
     );
 }
 
+/// 🧷️ LAW: a world draw is published only when THIS frame's uploads carry the exact mesh identity it
+/// names — the source half of the prepared-frame residency law.
+///
+/// 🩸️ On the GPU a prepared world draw is answered by `mesh_store.get_versioned` at SUBMIT, hundreds
+/// of host steps after the build. Five ghost/stand-in sites (`brush_preview`,
+/// `catalogue_drop_preview`, the tool-run trace, the vortex arrows, the vertex markers) pushed their
+/// `SceneDraw3d` unconditionally while calling `ensure_mesh` only `if let Some(mesh) =
+/// state.meshes.get(..)` — and every one of them reaches for a lease `begin_world_placeholder_mesh`
+/// is still admitting. The puzzle3d journey died on the engagement chip with `prepared frame submit
+/// step: prepared world mesh was missing` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w11a-prepared-world-mesh-missing.md`).
+#[test]
+fn a_world_draw_without_this_frames_upload_is_never_published() {
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    gpu.ensure_mesh("resident", 3, publish_oracle_mesh(triangle_mesh_oracle()));
+    let draw = |key: &str, version: u64| SceneDraw3d { mesh_key: key.into(), mesh_version: version, instances: vec![Instance3d { id: key.into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] };
+    let mut draws = vec![draw("resident", 3), draw("resident", 4), draw("ghost-still-landing", 0)];
+    retain_ensured_world_draws(&gpu, &mut draws);
+
+    assert_eq!(draws.len(), 1, "only the draw whose exact identity this frame uploads survives");
+    assert_eq!((draws[0].mesh_key.as_str(), draws[0].mesh_version), ("resident", 3), "and it is the ensured one, not a stale version of the same key");
+    assert!(gpu.has_mesh_request("resident", 3) && !gpu.has_mesh_request("resident", 4), "the predicate is exact on BOTH key and version");
+}
+
+/// 🧷️ LAW: every scene pass the world publishes runs its two draw lists through
+/// [`retain_ensured_world_draws`] first. The filter is the structural guarantee that a sixth
+/// ghost site cannot reintroduce the fatal submit fault.
+#[test]
+fn the_scene_pass_is_published_behind_the_residency_filter() {
+    let world = include_str!("../../🦀️.rs");
+    assert_eq!(world.matches("ctx.draw.push_scene_pass(ScenePass3d {").count(), 1, "the world publishes exactly one scene pass");
+    assert!(
+        world.contains("retain_ensured_world_draws(gpu, &mut culled_draws);\n    retain_ensured_world_draws(gpu, &mut translucent_draws);\n    ctx.draw.push_scene_pass(ScenePass3d {"),
+        "both draw lists are filtered immediately before the pass is pushed"
+    );
+}
+
 /// 🔘️ LAW: every mesh key the gumball draws is ENSURED on the GPU in the same build, and the plane it
 /// draws is pinned in the mesh pool.
 ///
@@ -3573,3 +3938,157 @@ fn the_gumball_plane_is_pinned_against_pool_eviction() {
     assert_eq!(GUMBALL_PLANE_MESH, "gumball-plane");
 }
 
+
+/// 🎨️ LAW: the whole of React's `MESH_STYLE_PAINT` lives in ONE table with React's own numbers, and
+/// a row is chosen by React's own priority ladder (`resolveMeshStyle`, `🌐️World3dHost/🟦️.tsx`:
+/// `disabled → provisional → celebrated → selected → highlighted → hovered → neutral`).
+///
+/// 🩸️ Two of the seven rows existed, as an inline `if/else if`: `selected` and `hovered`.
+/// `provisional` was painted by a second, unrelated rule that substituted `theme.accent` for React's
+/// `--color-secondary`; `celebrated`, `highlighted` and `disabled` had no wgpu paint at all, so a
+/// disabled instance painted opaque where React paints it at 0.45
+/// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
+#[test]
+fn the_mesh_style_table_is_reacts_whole_paint_table() {
+    let theme = ui_wgpu::wgpu::Theme::light();
+    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
+
+    let neutral = mesh_style_paint(&theme, MeshStyleKind::Neutral);
+    assert_eq!((neutral.fill, neutral.line, neutral.emissive_intensity, neutral.opacity), (rgba(theme.panel), rgba(theme.border_normal), 0.0, 1.0));
+    let hovered = mesh_style_paint(&theme, MeshStyleKind::Hovered);
+    assert_eq!((hovered.fill, hovered.line, hovered.emissive_intensity, hovered.opacity), (rgba(theme.row_hover), rgba(theme.border_emphasized), 0.08, 1.0));
+    let selected = mesh_style_paint(&theme, MeshStyleKind::Selected);
+    assert_eq!((selected.fill, selected.line, selected.emissive_intensity, selected.opacity), (primary, primary, 0.35, 1.0));
+    let highlighted = mesh_style_paint(&theme, MeshStyleKind::Highlighted);
+    assert_eq!((highlighted.fill, highlighted.line, highlighted.emissive_intensity, highlighted.opacity), (secondary, secondary, 0.2, 1.0));
+
+    let provisional = mesh_style_paint(&theme, MeshStyleKind::Provisional);
+    assert_eq!(provisional.fill, secondary, "🎨️ React's provisional fill is `--color-secondary`, not this theme's accent");
+    assert_eq!((provisional.emissive_intensity, provisional.opacity), (0.2, ui_styling::metrics::tool_run::PROVISIONAL_OPACITY as f32));
+
+    let celebrated = mesh_style_paint(&theme, MeshStyleKind::Celebrated);
+    assert_eq!((celebrated.fill, celebrated.emissive_intensity, celebrated.opacity), (primary, 0.55, 1.0));
+    assert_eq!(celebrated.conic, Some([primary, secondary, tertiary]), "🎉️ the celebrated row carries React's whole conic triad, primary → secondary → tertiary");
+    assert!(MeshStyleKind::Neutral != MeshStyleKind::Celebrated && mesh_style_paint(&theme, MeshStyleKind::Selected).conic.is_none(), "🎉️ and it is the ONLY row that does");
+
+    let disabled = mesh_style_paint(&theme, MeshStyleKind::Disabled);
+    assert_eq!((disabled.line, disabled.emissive_intensity, disabled.opacity), (rgba(theme.text_muted), 0.0, 0.45), "🎨️ React's disabled row is 0.45 opaque");
+    assert_eq!(disabled.fill, ui_styling::color::oklab_mix(rgba(theme.text_muted), rgba(theme.panel), 0.45), "🎨️ and its fill is React's `color-mix(in oklab, muted-foreground 55%, panel)`");
+    assert!(disabled.fill != rgba(theme.text_muted) && disabled.fill != rgba(theme.panel), "🎨️ a real mix, not one of its ends: {:?}", disabled.fill);
+
+    let all = MeshStyleState { disabled: true, provisional: true, celebrating: true, selected: true, highlighted: true, hovered: true };
+    assert_eq!(resolve_mesh_style(all), MeshStyleKind::Disabled, "🎨️ disabled outranks everything");
+    assert_eq!(resolve_mesh_style(MeshStyleState { disabled: false, ..all }), MeshStyleKind::Provisional);
+    assert_eq!(resolve_mesh_style(MeshStyleState { disabled: false, provisional: false, ..all }), MeshStyleKind::Celebrated);
+    assert_eq!(resolve_mesh_style(MeshStyleState { disabled: false, provisional: false, celebrating: false, ..all }), MeshStyleKind::Selected);
+    assert_eq!(resolve_mesh_style(MeshStyleState { selected: false, hovered: true, highlighted: true, ..MeshStyleState::default() }), MeshStyleKind::Highlighted);
+    assert_eq!(resolve_mesh_style(MeshStyleState { hovered: true, ..MeshStyleState::default() }), MeshStyleKind::Hovered);
+    assert_eq!(resolve_mesh_style(MeshStyleState::default()), MeshStyleKind::Neutral);
+
+    let instance = Instance3d { id: "one".into(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [0.1, 0.2, 0.3, 1.0], selected: false, hovered: false };
+    assert_eq!(world3d_style_paint(&theme, MeshStyleState::default(), instance.clone()).color, [0.1, 0.2, 0.3, 1.0], "🎨️ a neutral instance keeps the colour its producer authored");
+    let painted = world3d_style_paint(&theme, MeshStyleState { disabled: true, ..MeshStyleState::default() }, instance);
+    assert_eq!(painted.color[3], 0.45, "🎨️ and a styled one takes the row's opacity into its alpha");
+}
+
+/// 🎥️ LAW: the diagnostics row reports the LIVE orbit — the pose the pane is looking through this
+/// frame, its projection family and its framing orientation — not the wire camera the guest
+/// published.
+///
+/// 🩸️ `dumpMeshStats` filled `camera` from `World3dScene.camera_json` and nothing else, so every
+/// local camera move was invisible to a probe: a `Projection` pane switch to `Orthographic` reported
+/// the delivered perspective pose, unchanged, and read as a dead control
+/// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.5).
+#[test]
+fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    state.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
+    let before = world3d_live_camera_json(&state);
+    assert_eq!(before["projection"]["mode"]["kind"], "perspective", "🎥️ an untouched pane opens perspective");
+    assert_eq!(before["userMoved"], serde_json::Value::Bool(false));
+
+    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top), false));
+    let after = world3d_live_camera_json(&state);
+    assert_eq!(after["projection"]["mode"]["kind"], "orthographic", "🎥️ the switch is visible in the row the probe reads");
+    assert_eq!(after["projection"]["orientation"], "Cardinal(Top)", "🎥️ and so is the plane its framing measures in");
+    assert!(after["zoom"].as_f64().unwrap_or_default() > 1.0, "🎥️ a parallel pane reports its real frustum scale: {}", after["zoom"]);
+
+    state.orbit.target = Vec3::new(3.5, 0.0, 0.005);
+    let moved = world3d_live_camera_json(&state);
+    let target: Vec<f64> = moved["target"].as_array().expect("the row carries a target").iter().filter_map(serde_json::Value::as_f64).collect();
+    assert!((target[0] - 3.5).abs() < 1e-6 && target[1].abs() < 1e-6 && (target[2] - 0.005).abs() < 1e-6, "🎥️ the row follows the orbit, not the wire: {target:?}");
+}
+
+/// 📐️ LAW: selecting a projection template re-arms the pane's framing. React's
+/// `handleProjectionKindChange` hands the pending spec to `seedPendingWorldProjectionCamera`, which
+/// re-runs `frameWorldProjectionPose` (`🌐️World3dHost/🟦️.tsx`).
+///
+/// 🩸️ `apply_world3d_projection` arms `camera_user_moved`, which is the very gate
+/// `sync_world3d_projection_content_frame` refuses on — so a pane switched to `Orthographic` took
+/// the parallel frustum and kept the perspective pane's zoom forever.
+#[test]
+fn a_projection_selection_rearms_the_panes_framing() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    state.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
+    state.camera_user_moved = true;
+    state.projection_frame_key = Some(7);
+    state.projection_frame_zoom = Some(3.0);
+
+    let top = ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top);
+    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, top, false), "📐️ the press moves the pane");
+    assert!(state.projection_frame_owed, "📐️ and owes one framing, immune to the ownership latch the settle it queues arms");
+    assert!(state.projection_selected, "📐️ and holds its own spec from here on, React's `externalPendingProjectionSpec`");
+    assert_eq!(state.projection_frame_key, None, "📐️ and forgets the extent it last framed");
+    assert_eq!(state.projection_frame_zoom, None);
+    assert_eq!(state.projection_orientation, top);
+
+    assert!(!apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, top, false), "📐️ pressing the SAME row again changes nothing");
+    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, ui_wgpu::wgpu::WorldProjectionOrientation::Free, true), "📐️ but a row with the same family and another plane does — Cabinet after Orthographic");
+    assert!(state.projection_oblique_off_axis, "📐️ a free oblique frames in (x, z), which is a framing input, not a camera one");
+
+    // 📐️ And the wire never takes the selection back. The settle a press queues publishes
+    // `setCamera`, whose payload carries no `projection` member at all, so the guest's echo always
+    // arrives in the DELIVERED family — applying it whole is how the switch undid itself in one
+    // round trip.
+    let mut wired = World3dState::new("surface".into(), "controller".into());
+    wired.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
+    assert!(apply_world3d_projection_spec(&mut wired, CameraProjection3d::Orthographic, top, false));
+    let echo = OrbitController { projection: CameraProjection3d::Perspective, target: Vec3::new(7.0, 0.0, 0.01), ..OrbitController::default() };
+    let held = OrbitController { projection: wired.orbit.projection, ..echo.clone() };
+    assert_eq!(held.projection, CameraProjection3d::Orthographic, "📐️ the echoed pose lands, the echoed FAMILY does not");
+    assert_eq!(held.target, echo.target, "📐️ everything else the wire says still wins");
+}
+
+/// 🌐️ LAW: the grid never ends on a HARD edge, at any camera. React's drei `Grid` is `infiniteGrid`
+/// with `followCamera`, so it has no edge at all; this is real line geometry with a
+/// [`WORLD_GRID_MAX_DIVISIONS`] vertex ceiling, and the ceiling is only invisible while the fade
+/// curve is clamped WITH the radius — the outermost line has to reach alpha 0.
+///
+/// 🩸️ Spending the ceiling on the STEP instead, so the geometry covers the whole
+/// `camera_grid_fade_distance`, was tried and reverted: that distance is React's `visibleRadius × 32`
+/// FADE parameter, not a draw extent, so at the puzzle 3d boot camera it coarsened the band from
+/// 10 world units to 10 000 and painted four giant cells across a pane where React paints a 10-unit
+/// grid (`📓️w9b-projection-pane-framing-grid-materials.md` §3).
+#[test]
+fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
+    let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
+    let base = OrbitController::default().to_camera();
+    let step = ui_wgpu::wgpu::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
+    for distance in [12.0_f32, 400.0, 20_000.0, 500_000.0] {
+        let camera = ui_wgpu::wgpu::Camera3d { position: Vec3::new(0.0, 0.0, distance), target: Vec3::ZERO, ..base.clone() };
+        let mut lines = Vec::new();
+        append_lod_grid_lines(&mut lines, 2.0, 10.0, Vec3::ZERO, &camera, viewport, [0.5, 0.5, 0.5, 1.0]);
+        assert!(!lines.is_empty(), "🌐️ every camera gets a grid at {distance}");
+        assert!(lines.len() <= 8 * (WORLD_GRID_MAX_DIVISIONS as usize + 1), "🌐️ inside the vertex budget at {distance}: {}", lines.len());
+        assert!(lines.iter().any(|vertex| vertex.color[3] == 0.0), "🌐️ the rim reaches alpha 0 at {distance}, so the ceiling is invisible");
+
+        // 🌐️ And the ceiling is never spent on the SPACING: every band keeps React's own
+        // `lodGridStepWorld` step however far the camera is.
+        let mut offsets: Vec<f32> = lines.iter().map(|vertex| vertex.position[1]).collect();
+        offsets.sort_by(|left, right| left.partial_cmp(right).expect("finite grid coordinates"));
+        offsets.dedup_by(|left, right| (*left - *right).abs() < 1e-4);
+        let gap = offsets.windows(2).map(|pair| pair[1] - pair[0]).fold(f32::INFINITY, f32::min);
+        assert!((gap - step).abs() < 1e-2, "🌐️ the band keeps React's {step}-unit spacing at {distance}, it read {gap}");
+    }
+}

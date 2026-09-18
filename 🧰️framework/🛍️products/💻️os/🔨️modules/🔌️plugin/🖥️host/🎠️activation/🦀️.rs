@@ -2,10 +2,29 @@
 
 use super::shard::executor::{RegistrationAdmission, ShardExecutor};
 use super::{CompiledHandle, GuestRuntime, GuestRuntimes};
-use semio_framework::kernel::{BrokerCapabilityGrant, Budget};
+use semio_framework::kernel::{ActivationEvent, BrokerCapabilityGrant, Budget, Event};
 use semio_framework_actor::activation::KernelActivationReservation;
 use semio_framework_actor::{ActorId, Kernel};
 use std::sync::Arc;
+
+/// 🎬️ The declared activation event an app id justifies — the native twin of the kernel's own
+/// `activationReasonForAppId` (`🎠️kernel/🟦️.ts`), reading the SAME canonical surface grammar
+/// `surface_app_id` mints. A role-suffixed surface id carries the artifact kind its actor is being
+/// activated for, so it activates `OnArtifactKind` with that kind; a bare landing/host app id names
+/// no kind and answers `None`, because the host's own trigger is not a declared activation event and
+/// `📜️.wit`'s `activation-event` variant has no case for it.
+pub fn activation_event_for_app_id(app_id: &str) -> Option<ActivationEvent> {
+    semio_framework::parse_surface_app_id(app_id).ok().map(|(dialect, _)| ActivationEvent::OnArtifactKind { kind: dialect.artifact_kind })
+}
+
+/// 🎬️ The `Event::Activate` a freshly activated instance must receive before its own
+/// `Event::InstanceOpen`, for an app id that names a declared activation event. This is the one
+/// producer of that event in the tree: `kernel_event_to_wit` already marshals it onto the guest's
+/// `activate(activate-event)`, so prepending this to an instance's first turn is exactly what makes
+/// the guest see WHY it was woken; that marshal stamps the turn's own instance id onto the record.
+pub fn activation_turn_event(app_id: &str) -> Option<Event> {
+    activation_event_for_app_id(app_id).map(|reason| Event::Activate { reason })
+}
 
 async fn retire_failed_activation(kernel: &mut Kernel, reservation: KernelActivationReservation, reason: String) -> String {
     match kernel.abort_activation(reservation).await {

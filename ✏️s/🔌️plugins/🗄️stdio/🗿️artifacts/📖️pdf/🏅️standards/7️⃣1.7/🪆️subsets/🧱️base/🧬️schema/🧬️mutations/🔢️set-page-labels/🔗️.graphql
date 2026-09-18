@@ -1,0 +1,4 @@
+# 🔢️ Direct set-page-labels GraphQL payload.
+input SetPageLabelsMutationInput {
+  labels: [PdfPageLabelRangeInput!]
+}

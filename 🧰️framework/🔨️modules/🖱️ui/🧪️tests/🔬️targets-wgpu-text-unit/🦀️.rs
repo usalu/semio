@@ -171,7 +171,8 @@ fn wrapped_and_single_line_measurement_agree_on_the_line_box() {
     let size = ui_styling::metrics::typography::TEXT_SM_PX as f32;
     let (_, single) = atlas.measure_text("Word", size);
     assert!((single - super::line_height(size)).abs() < 0.001, "one line occupies exactly one line box, got {single}");
-    let (_, wrapped) = atlas.measure_text_wrapped("Word Word Word", 1.0, size);
+    let one_word = atlas.measure_text("Word", size).0;
+    let (_, wrapped) = atlas.measure_text_wrapped("Word Word Word", one_word, size);
     assert!((wrapped - super::line_height(size) * 3.0).abs() < 0.001, "three wrapped lines occupy exactly three line boxes, got {wrapped}");
     let (_, empty) = atlas.measure_text_wrapped("", 100.0, size);
     assert!((empty - super::line_height(size)).abs() < 0.001, "empty text still reserves one line box");
@@ -289,3 +290,167 @@ async fn a_symbol_glyph_shares_the_faces_baseline_and_honours_the_raster_scale()
 }
 
 //#endregion 🔣️SymbolFaceTests
+
+//#region ✂️LineBreakTests
+// ✂️ W9a: the tour card painted `comp|osing` — the measures split on whitespace while the retained
+// PAINTER broke at whatever glyph happened to overflow. These laws pin the one predicate both now go
+// through, against a reference computed from the CSS rules inside the test itself.
+
+/// 🧾️ The paragraph React's own boot tour carries (`🗑️generated/react-6313/final.png` reads it under
+/// `Welcome to Puzzle 3D`) — the string that exposed the defect.
+const TOUR_BODY: &str = "A quick tour of the viewport, utilities, and panels before you start composing.";
+
+/// ⚖️ LAW: a break is allowed exactly where CSS `word-break: normal` allows one — after a run of
+/// spaces, after a hyphen/dash/soft-hyphen/zero-width space, and on either side of an ideograph
+/// except where a bracket forbids it. Nowhere else, and never inside a Latin word.
+#[test]
+fn a_break_opportunity_is_exactly_what_css_allows() {
+    for (prev, next, allowed, why) in [
+        ('p', 'o', false, "inside a Latin word"),
+        (' ', 'W', true, "after a space"),
+        (' ', ' ', false, "between two spaces — the break is after the LAST of a run"),
+        ('d', ' ', false, "before a space — a trailing space hangs, it never starts a line"),
+        ('\u{00A0}', 'W', false, "a no-break space is written precisely to forbid this break"),
+        ('-', 'b', true, "after a hyphen"),
+        ('\u{00AD}', 'b', true, "after a soft hyphen"),
+        ('\u{200B}', 'b', true, "after a zero-width space"),
+        ('\u{2014}', 'b', true, "after an em dash"),
+        ('\u{4E16}', '\u{754C}', true, "between two ideographs"),
+        ('a', '\u{4E16}', true, "before an ideograph"),
+        ('\u{4E16}', '\u{3002}', false, "an ideographic full stop never starts a line"),
+        ('\u{300C}', '\u{4E16}', false, "an opening bracket never ends a line"),
+        ('.', 'b', false, "a full stop is not a break opportunity in Latin"),
+        ('/', 'b', false, "a solidus is not one either"),
+    ] {
+        assert_eq!(super::may_break_between(prev, next), allowed, "{prev:?} → {next:?}: {why}");
+    }
+    assert!(!super::is_break_opportunity(TOUR_BODY, 0), "the start of a run is never a break");
+    assert!(!super::is_break_opportunity(TOUR_BODY, TOUR_BODY.len()), "nor is its end");
+    assert_eq!(super::unbreakable_run_end(TOUR_BODY, 2), 7, "`quick` is one unbreakable run");
+    eprintln!("[DEBUG] break-opportunity table: 15 CSS cases pinned");
+}
+
+/// 🧮️ The REFERENCE wrap, written here from the CSS rules rather than borrowed from the
+/// implementation: greedy first-fit over whitespace-separated words, a word measured by the very
+/// advances the painter pens, a trailing space that never counts toward the line's fit, and a break
+/// inside a word only when that word alone is wider than the whole box (`overflow-wrap`).
+fn reference_break_indices(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<usize> {
+    let advance = |atlas: &mut FontAtlas, ch: char| atlas.ensure_glyph(ch, size).advance;
+    let mut breaks = Vec::new();
+    let (mut pen, mut cursor) = (0.0f32, 0usize);
+    for (offset, ch) in text.char_indices() {
+        if ch == ' ' {
+            pen += advance(atlas, ch);
+            cursor = offset + ch.len_utf8();
+            continue;
+        }
+        if cursor == offset {
+            let word_end = text[offset..].find(' ').map_or(text.len(), |at| offset + at);
+            let word: f32 = text[offset..word_end].chars().map(|ch| advance(atlas, ch)).sum();
+            if pen > 0.0 && pen + word > max_width + super::LINE_BREAK_FIT_EPSILON {
+                breaks.push(offset);
+                pen = 0.0;
+            }
+        }
+        let width = advance(atlas, ch);
+        if pen > 0.0 && pen + width > max_width + super::LINE_BREAK_FIT_EPSILON {
+            breaks.push(offset);
+            pen = 0.0;
+        }
+        pen += width;
+    }
+    breaks
+}
+
+/// ⚖️ LAW: the atlas wrap breaks at exactly the reference's indices, at every width from "one word
+/// fits" to "the whole paragraph fits", and never inside a word that fits its own line.
+#[test]
+fn a_paragraph_wraps_at_the_reference_break_indices() {
+    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
+    let mut atlas = FontAtlas::builtin();
+    let full = atlas.measure_text(TOUR_BODY, size).0;
+    let widest_word = TOUR_BODY.split(' ').map(|word| atlas.measure_text(word, size).0).fold(0.0f32, f32::max);
+    let mut widths = 0;
+    let mut max_width = widest_word;
+    while max_width <= full {
+        let expected = reference_break_indices(&mut atlas, TOUR_BODY, max_width, size);
+        let actual: Vec<usize> = atlas.wrap_lines(TOUR_BODY, max_width, size).into_iter().skip(1).map(|line| line.start).collect();
+        assert_eq!(actual, expected, "break indices at max_width {max_width}");
+        for start in &actual {
+            let prev = TOUR_BODY[..*start].chars().next_back().expect("a break index is never zero");
+            assert!(prev == ' ', "a line may only start after a space, got {prev:?} at {start} (width {max_width})");
+        }
+        widths += 1;
+        max_width += 7.0;
+    }
+    assert!(widths > 10, "the sweep must cover a real range of box widths, covered {widths}");
+    eprintln!("[DEBUG] wrap reference agreed at {widths} box widths");
+}
+
+/// ⚖️ LAW: the last-resort arm is the ONLY way a word is cut — one run wider than the whole box.
+#[test]
+fn only_a_word_wider_than_the_box_is_ever_cut() {
+    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
+    let mut atlas = FontAtlas::builtin();
+    let word_w = atlas.measure_text("composing", size).0;
+    let lines = atlas.wrap_lines("composing", word_w * 0.5, size);
+    assert!(lines.len() > 1, "a word alone and wider than its box breaks rather than painting outside it");
+    let fits = atlas.wrap_lines("composing", word_w, size);
+    assert_eq!(fits.len(), 1, "a word that fits is never cut");
+    let paragraph = atlas.wrap_lines(TOUR_BODY, word_w * 4.0, size);
+    for line in &paragraph {
+        let trimmed = TOUR_BODY[line.clone()].trim();
+        assert!(!trimmed.is_empty(), "no empty line");
+        assert!(TOUR_BODY[..line.start].chars().next_back().is_none_or(|prev| prev == ' '), "no line starts mid-word: {trimmed:?}");
+    }
+}
+
+/// ⚖️ LAW: a hard newline always ends a line, and trailing spaces hang — they never push a line over
+/// its box and never open the next one.
+#[test]
+fn a_newline_always_breaks_and_a_trailing_space_hangs() {
+    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
+    let mut atlas = FontAtlas::builtin();
+    let wide = atlas.measure_text("one two", size).0 * 4.0;
+    assert_eq!(atlas.wrap_lines("one\ntwo", wide, size).len(), 2, "a hard newline breaks even in an empty box");
+    let exact = atlas.measure_text("one two", size).0;
+    assert_eq!(atlas.wrap_lines("one two ", exact, size).len(), 1, "the trailing space hangs off the end of its own line");
+    let (width, _) = atlas.measure_text_wrapped("one two ", exact, size);
+    assert!((width - exact).abs() < 0.001, "a hanging space is not priced into the line box, got {width}");
+}
+
+/// ⚖️ LAW: **the retained painter breaks where the measure says it does.** Driven glyph by glyph over
+/// a real `DrawList`, the line each scalar lands on is exactly the line [`FontAtlas::wrap_lines`]
+/// assigns it. This is the law the tour card's `comp|osing` violated.
+#[test]
+fn the_retained_painter_breaks_where_the_measure_says() {
+    use crate::wgpu::draw::DrawList;
+    use crate::wgpu::geometry::Rect;
+    use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
+    use crate::wgpu::theme::Rgba;
+
+    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
+    let mut atlas = FontAtlas::builtin();
+    let max_width = atlas.measure_text("A quick tour of the viewport,", size).0;
+    let expected = atlas.wrap_lines(TOUR_BODY, max_width, size);
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedGlyphCursor::default();
+    let bounds = Rect::new(0.0, 0.0, max_width, 400.0);
+    let mut painted: Vec<(usize, usize)> = Vec::new();
+    for _ in 0..TOUR_BODY.len() + 4 {
+        let byte = cursor.byte();
+        match paint_retained_glyph_step_flowed(TOUR_BODY, bounds, size, Rgba::new(1.0, 1.0, 1.0, 1.0), RetainedTextFlow::Wrap, &mut atlas, &mut draw, &mut cursor) {
+            RetainedGlyphStep::Pending => painted.push((byte, cursor.line())),
+            RetainedGlyphStep::Complete => break,
+            RetainedGlyphStep::Fault => panic!("the tour body must never fault the retained painter"),
+        }
+    }
+    assert_eq!(painted.len(), TOUR_BODY.chars().count(), "every scalar is stepped exactly once");
+    for (byte, line) in painted {
+        let assigned = expected.iter().position(|range| range.contains(&byte)).unwrap_or_else(|| panic!("byte {byte} lands on no measured line"));
+        assert_eq!(line, assigned, "scalar at byte {byte} ({:?}) painted on line {line}, measured onto line {assigned}", &TOUR_BODY[byte..byte + 1]);
+    }
+    assert_eq!(expected.len(), 3, "this box holds the paragraph in three lines");
+    eprintln!("[DEBUG] retained painter and wrap_lines agree on {} lines", expected.len());
+}
+//#endregion ✂️LineBreakTests

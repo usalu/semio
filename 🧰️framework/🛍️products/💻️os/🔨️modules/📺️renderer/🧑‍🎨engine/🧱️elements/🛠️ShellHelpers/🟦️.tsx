@@ -1759,12 +1759,23 @@ export function pluginShouldReceiveContributions(pluginId: string, sessionPlugin
 }
 
 
-export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
+/** 🔌️ Loads one plugin module under the idle-progress deadline, answering `null` for every refusal
+ * rather than throwing — the shell's own per-plugin isolation.
+ *
+ * 🛑️ `signal` is the shell's install-band cancel. It is raced explicitly rather than only handed to
+ * {@link loadPluginModule}, because the point of a cancel control is that the AWAIT settles now; the
+ * underlying fetch finishes into the loader's own cache, so a re-request finds it warm. A cancelled
+ * load is not a fault and is logged as such. */
+export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle | null> {
   const startedAtMs = Date.now();
   let timer = 0;
   try {
+    if (signal?.aborted === true) throw new Error(`plugin-install.cancelled: ${pluginId}`);
     return await Promise.race([
-      loadPluginModule(pluginId, moduleUrl),
+      loadPluginModule(pluginId, moduleUrl, signal),
+      new Promise<never>((_, reject) => {
+        signal?.addEventListener("abort", () => reject(new Error(`plugin-install.cancelled: ${pluginId}`)), { once: true });
+      }),
       new Promise<never>((_, reject) => {
         // ⏱️ Re-arms itself for whatever the idle rule still allows instead of firing once at a fixed
         // wall-clock offset, so an attempt that keeps reporting progress keeps its deadline moving.
@@ -1780,11 +1791,28 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
       }),
     ]);
   } catch (error) {
-    console.error("program load failed", pluginId, error);
+    if (signal?.aborted === true) console.debug(`[DEBUG] plugin install cancelled ${pluginId}`);
+    else console.error("program load failed", pluginId, error);
     return null;
   } finally {
     if (timer) window.clearTimeout(timer);
   }
+}
+
+/** 🎬️ The install band's own copy — the React twin of the wgpu shell's `plugin.install.*` chrome
+ * strings. No `ui.common.*` chrome key covers "loading a plugin", so this follows the same
+ * local-resolution idiom as the rest of this region. */
+const PLUGIN_INSTALL_BAND_LABEL: FrozenLabel = { en: "Loading plugin", de: "Plugin wird geladen" };
+const PLUGIN_INSTALL_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
+
+/** 🎬️ "Loading plugin cad, beta" — one band for however many installs are in flight, because they
+ * share one progress story and one cancel. */
+export function pluginInstallBandTextV1(pluginIds: readonly string[], locale: string): string {
+  return `${frozenLabelText(PLUGIN_INSTALL_BAND_LABEL, locale)} ${[...pluginIds].sort().join(", ")}`;
+}
+
+export function pluginInstallCancelTextV1(locale: string): string {
+  return frozenLabelText(PLUGIN_INSTALL_CANCEL_LABEL, locale);
 }
 
 function isViewportSurface(surfaceKind: string | undefined): boolean {

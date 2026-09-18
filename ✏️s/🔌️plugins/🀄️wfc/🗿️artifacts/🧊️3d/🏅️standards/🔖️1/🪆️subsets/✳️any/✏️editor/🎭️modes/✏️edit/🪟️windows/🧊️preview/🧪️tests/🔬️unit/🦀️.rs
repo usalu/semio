@@ -124,3 +124,35 @@ fn the_window_renders_a_non_empty_surface_for_every_example() {
         assert!(!format!("{built:?}").is_empty());
     }
 }
+
+/// 🥽️ Every catalogue entry must bind buffers the host can actually draw: one NORMAL per position
+/// (a zero-length normal attribute at item size 3 killed every instanced draw with
+/// `glDrawElements: Vertex buffer is not big enough`) and RGB — not RGBA — colours, because the host
+/// binds `color` at item size 3.
+#[test]
+fn every_catalogue_mesh_binds_one_normal_and_one_rgb_colour_per_vertex() {
+    for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
+        let meshes = array(&meshes_json(&document));
+        assert!(!meshes.is_empty());
+        for mesh in &meshes {
+            let data = &mesh["data"];
+            let positions = data["positions"].as_array().expect("positions").len();
+            let normals = data["normals"].as_array().expect("normals").len();
+            let colors = data["colors"].as_array().expect("colors").len();
+            assert_eq!(normals, positions, "mesh {} binds one normal per position", mesh["id"]);
+            assert!(colors == 0 || colors == positions, "mesh {} binds RGB colours, never RGBA", mesh["id"]);
+            for normal in data["normals"].as_array().expect("normals").chunks(3) {
+                let length: f64 = normal.iter().filter_map(Value::as_f64).map(|value| value * value).sum::<f64>().sqrt();
+                assert!((length - 1.0).abs() < 1e-9, "every normal is unit length, saw {length}");
+            }
+        }
+    }
+}
+
+/// 📐️ A single triangle in the XY plane, wound counter-clockwise, normals to `+Z`.
+#[test]
+fn vertex_normals_follow_the_triangle_winding_and_never_answer_zero() {
+    let normals = vertex_normals(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1, 2]);
+    assert_eq!(normals, vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]);
+    assert_eq!(vertex_normals(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0], &[0, 1, 2]), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], "a degenerate triangle falls back to +Z, never to a zero normal");
+}

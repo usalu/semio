@@ -1,5 +1,5 @@
 # ➕️ Direct append-page-content GraphQL payload.
 input AppendPageContentMutationInput {
   index: Int
-  text: String
+  content: [PdfOpInput!]
 }

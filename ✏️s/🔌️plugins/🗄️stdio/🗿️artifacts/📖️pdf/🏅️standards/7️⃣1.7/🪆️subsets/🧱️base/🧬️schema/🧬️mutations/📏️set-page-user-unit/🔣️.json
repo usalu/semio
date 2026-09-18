@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📏️set-page-user-unit",
+  "semanticKind": "set-page-user-unit",
+  "displayName": "Set Page User Unit",
+  "emoji": "📏️",
+  "aggregateVariant": "SetPageUserUnit",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-page-user-unit",
+  "binaryTag": 17,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

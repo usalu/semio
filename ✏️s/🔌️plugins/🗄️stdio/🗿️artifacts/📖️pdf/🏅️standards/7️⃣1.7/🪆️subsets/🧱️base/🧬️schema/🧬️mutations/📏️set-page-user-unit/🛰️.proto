@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_page_user_unit;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 📏️ Direct set-page-user-unit protobuf payload.
+message SetPageUserUnitMutation {
+  uint64 index = 1;
+  double user_unit = 2;
+}

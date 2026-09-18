@@ -11,12 +11,12 @@
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/ObjRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
     },
     "path": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/PdfPathSegment"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json#/$defs/PdfPathSegment"
       }
     },
     "key": {
@@ -25,65 +25,6 @@
     "mutation": {
       "const": "removeDictEntry",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "ObjRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "num",
-        "gen"
-      ],
-      "properties": {
-        "num": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "gen": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
-        }
-      }
-    },
-    "PdfPathSegment": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "index"
-          ],
-          "properties": {
-            "kind": {
-              "const": "arrayIndex"
-            },
-            "index": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "key"
-          ],
-          "properties": {
-            "kind": {
-              "const": "dictKey"
-            },
-            "key": {
-              "type": "string"
-            }
-          }
-        }
-      ]
     }
   }
 }

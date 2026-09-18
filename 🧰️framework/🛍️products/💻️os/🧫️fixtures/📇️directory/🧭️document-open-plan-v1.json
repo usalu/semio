@@ -107,7 +107,7 @@
         "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
         "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
         "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-        "executionProtocol": { "appChannelVersion": 15 }
+        "executionProtocol": { "appChannelVersion": 17 }
       },
       "artifact": {
         "kind": "s.gis:gismap",
@@ -143,7 +143,7 @@
         "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
         "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
         "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-        "executionProtocol": { "appChannelVersion": 15 }
+        "executionProtocol": { "appChannelVersion": 17 }
       },
       "artifact": {
         "kind": "s.gis:gismap",
@@ -289,7 +289,7 @@
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "executionProtocol": { "appChannelVersion": 15 }
+      "executionProtocol": { "appChannelVersion": 17 }
     },
     "artifact": {
       "kind": "s.gis:gismap",

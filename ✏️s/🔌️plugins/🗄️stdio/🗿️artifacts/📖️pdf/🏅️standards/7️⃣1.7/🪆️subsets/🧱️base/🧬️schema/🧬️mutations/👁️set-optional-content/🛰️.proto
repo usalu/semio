@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_optional_content;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 👁️ Direct set-optional-content protobuf payload.
+message SetOptionalContentMutation {
+  PdfOptionalContent content = 1;
+}

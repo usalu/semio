@@ -2,43 +2,54 @@
   "schemaVersion": 1,
   "valid": {
     "id": "valid-report",
-    "assertions": 2,
-    "output": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration",
+    "assertions": 7,
+    "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)",
     "expected": {
-      "summary": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)",
-      "coverage": "example asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "grammar": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)",
+      "protocol": "[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)",
+      "coverage": "[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     }
   },
   "hostile": [
     {
-      "id": "missing-sweep-summary",
-      "assertions": 2,
-      "output": "example asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "id": "missing-grammar-summary",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     },
     {
-      "id": "duplicate-sweep-summary",
-      "assertions": 2,
-      "output": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\n[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "id": "missing-protocol-summary",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
+    },
+    {
+      "id": "missing-coverage-summary",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)"
+    },
+    {
+      "id": "duplicate-grammar-summary",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     },
     {
       "id": "empty-fleet",
-      "assertions": 2,
-      "output": "[dsl-fixture-sweep] 0 example dir(s), 0 .semio fixture file(s) found, 0 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 0 facet(s) found, 0 checked, 0 soft-skipped, 0 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     },
     {
-      "id": "wrong-app-kind-count",
-      "assertions": 2,
-      "output": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 53 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "id": "all-soft-skipped-protocol",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 0 checked, 54 soft-skipped, 0 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     },
     {
-      "id": "empty-asset-coverage",
-      "assertions": 2,
-      "output": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 0 slug(s) on new 🖼️assets layout, 15 soft-skipped mid-migration"
+      "id": "reported-hard-failure",
+      "assertions": 7,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 1 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     },
     {
       "id": "wrong-law-assertion-count",
-      "assertions": 1,
-      "output": "[dsl-fixture-sweep] 17 example dir(s), 31 .semio fixture file(s) found, 29 law-check(s) run across 54 registered app kind(s), 0 unmapped fixture(s)\nexample asset coverage: 12 slug(s) on new 🖼️assets layout, 3 soft-skipped mid-migration"
+      "assertions": 2,
+      "output": "[dsl-fixture-sweep] m5 grammar auto-discovery: 54 facet(s) found, 31 checked, 23 soft-skipped, 2 stdio-exempt soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 protocol auto-discovery: 54 facet(s) found, 29 checked, 25 soft-skipped, 3 stdio-exempt-or-known-gap soft failure(s), 0 hard failure(s)\n[dsl-fixture-sweep] m5 production coverage auto-discovery: 54 facet(s) found, 31 checked, 2 stdio-exempt soft failure(s), 0 hard failure(s)"
     }
   ]
 }

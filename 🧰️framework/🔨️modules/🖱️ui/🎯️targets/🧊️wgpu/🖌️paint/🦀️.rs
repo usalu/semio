@@ -97,6 +97,12 @@ impl RetainedGlyphCursor {
         self.byte
     }
 
+    /// ✂️ The line box the pen is currently on — zero for the first. What the wrap law reads to
+    /// assert that the painter lands every scalar on the line `FontAtlas::wrap_lines` measured it onto.
+    pub fn line(&self) -> usize {
+        self.line
+    }
+
     pub fn close_step(&mut self) -> bool {
         if self.byte != 0 || self.line != 0 || self.pen_x != 0.0 {
             self.reset();
@@ -116,7 +122,7 @@ impl RetainedGlyphCursor {
 /// this painter then re-accumulates, and f32 addition does not have to land on the same last bit:
 /// without the slack a perfectly measured chip label loses its final glyph (`Chat` → `Cha`) or, in
 /// [`RetainedTextFlow::Wrap`], drops that glyph onto a second line.
-const RETAINED_TEXT_FIT_EPSILON: f32 = 1.0 / 64.0;
+const RETAINED_TEXT_FIT_EPSILON: f32 = crate::wgpu::text::LINE_BREAK_FIT_EPSILON;
 
 /// ✒️ Advances one UTF-8 scalar and at most one exactly admitted glyph, wrapping at `bounds.w`.
 pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
@@ -125,6 +131,15 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
 
 /// ✒️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
 /// takes so a chip label can never break onto a second line.
+///
+/// ✂️ **A [`RetainedTextFlow::Wrap`] run breaks where CSS breaks it.** Before the glyph at a
+/// [`crate::wgpu::text::is_break_opportunity`] is penned, the WHOLE unbreakable run it starts is
+/// priced ([`crate::wgpu::text::unbreakable_run_end`]) and moved down as one if it does not fit; the
+/// per-glyph overflow arm below is only reachable once that run is alone on its line and still wider
+/// than the box, which is CSS's `overflow-wrap` last resort. A space never triggers either arm — a
+/// trailing space hangs. This stepper used to break at whatever glyph happened to overflow, which is
+/// why a card measured for word wrap painted `comp|osing`
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W9a).
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
 pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
@@ -146,6 +161,14 @@ pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, co
         cursor.pen_x = 0.0;
         return RetainedGlyphStep::Pending;
     }
+    if matches!(flow, RetainedTextFlow::Wrap) && cursor.pen_x > 0.0 && crate::wgpu::text::is_break_opportunity(value, cursor.byte) {
+        let run = atlas.measure_range(value, cursor.byte, crate::wgpu::text::unbreakable_run_end(value, cursor.byte), size);
+        if cursor.pen_x + run > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON {
+            let Some(next_line) = cursor.line.checked_add(1) else { return RetainedGlyphStep::Fault };
+            cursor.line = next_line;
+            cursor.pen_x = 0.0;
+        }
+    }
     if draw.begin_retained_output(1, size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
         return RetainedGlyphStep::Fault;
     }
@@ -154,7 +177,8 @@ pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, co
     let glyph = atlas.ensure_glyph(ch, size);
     let (atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y) = (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.bearing_x, glyph.bearing_y);
     let (logical_w, logical_h) = (glyph.logical_width(), glyph.logical_height());
-    let overflows = cursor.pen_x > 0.0 && cursor.pen_x + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
+    let hangs = matches!(flow, RetainedTextFlow::Wrap) && crate::wgpu::text::is_wrap_space(ch);
+    let overflows = !hangs && cursor.pen_x > 0.0 && cursor.pen_x + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
     if overflows && matches!(flow, RetainedTextFlow::Clip) {
         if draw.finish_retained_output().is_err() {
             return RetainedGlyphStep::Fault;
@@ -1464,6 +1488,31 @@ fn retained_sync_fault(cursor: &mut RetainedInteractiveSyncCursor, line: u32) ->
     RetainedInteractiveSyncStep::Fault
 }
 
+/// 🌳️ A declared `Tree` row whose retained child is absent is SKIPPED, never a fault. `reconcile`
+/// mounts a row only when the published document carries a child record keyed by that row's id, so a
+/// producer that authors `UiNode::Tree` sections/items without a matching record subtree is ordinary
+/// — React's host renders such a tree from the component props alone, and this module's own
+/// `sync_tree_row_drag_sources` twin walks past the row with `continue`. Faulting instead killed the
+/// WHOLE surface: the live `framework.panel.toolRun` panel on 6118 painted `retained document
+/// ingress reached its terminal fault` in place of every row.
+fn retained_sync_tree_skip(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
+    cursor.matched = None;
+    cursor.child_scan = None;
+    cursor.tree_apply = cursor.tree_apply.saturating_add(1);
+    cursor.phase = RetainedInteractiveSyncPhase::TreeApplyPrepare;
+    RetainedInteractiveSyncStep::Pending
+}
+
+/// 🔽️ The same rule for an open `Select`: a popup row the document never mounted is skipped, exactly
+/// as the `sync_select_popup_rows` twin skips it, instead of taking the surface down.
+fn retained_sync_select_skip(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
+    cursor.matched = None;
+    cursor.child_scan = None;
+    cursor.item = cursor.item.saturating_add(1);
+    cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
+    RetainedInteractiveSyncStep::Pending
+}
+
 fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
     let Some(frame) = cursor.tree_frames[cursor.tree_depth] else { return retained_sync_fault(cursor, line!()) };
     if frame.next_item >= frame.items_len {
@@ -1554,7 +1603,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::SelectScan => {
-            let Some(child) = cursor.child_scan else { return retained_sync_fault(cursor, line!()) };
+            let Some(child) = cursor.child_scan else { return retained_sync_select_skip(cursor) };
             let matches = tree
                 .node(id)
                 .and_then(|node| match &node.spec.0 {
@@ -1631,14 +1680,14 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 Some(parent) => cursor.tree_records.get(parent).and_then(|record| record.as_ref()).and_then(|record| record.retained),
                 None => Some(id),
             };
-            let Some(parent) = parent else { return retained_sync_fault(cursor, line!()) };
+            let Some(parent) = parent else { return retained_sync_tree_skip(cursor) };
             cursor.child_scan = tree.node(parent).and_then(|node| node.first_child);
             cursor.matched = None;
             cursor.phase = RetainedInteractiveSyncPhase::TreeApplyScan;
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::TreeApplyScan => {
-            let Some(child) = cursor.child_scan else { return retained_sync_fault(cursor, line!()) };
+            let Some(child) = cursor.child_scan else { return retained_sync_tree_skip(cursor) };
             let Some(record) = cursor.tree_records[cursor.tree_apply] else { return retained_sync_fault(cursor, line!()) };
             let Some(target) = record.key.as_str() else { return retained_sync_fault(cursor, line!()) };
             if matches!(tree.node(child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == target) {

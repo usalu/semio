@@ -12,6 +12,17 @@ fn sample_job_id() -> String {
     fixture()["sampleJobId"].as_str().expect("sampleJobId").to_string()
 }
 
+/// 🆔️ A well-formed 32-lower-hex job id that is never the fixture's own `sampleJobId` — a hostile
+/// "foreign job" candidate that happens to equal the sample asserts nothing at all.
+fn foreign_job_id() -> String {
+    let candidate = "2".repeat(32);
+    if sample_job_id() == candidate {
+        "3".repeat(32)
+    } else {
+        candidate
+    }
+}
+
 fn sample_proposal_hash() -> String {
     fixture()["proposalHash"].as_str().expect("proposalHash").to_string()
 }
@@ -119,7 +130,7 @@ fn the_client_mirrors_the_neutral_fixtures_exact_fixed_limits() {
     assert_eq!(limits["progressMaxCursor"], INFERENCE_PROGRESS_MAX_CURSOR);
     assert_eq!(limits["eventPageMaxItems"], INFERENCE_EVENT_PAGE_MAX_ITEMS as u64);
     assert_eq!(fixture["binding"]["serviceId"], GIS_MAP_INFERENCE_SERVICE_ID);
-    assert_eq!(fixture["binding"]["documentSchema"], GIS_MAP_INFERENCE_DOCUMENT_SCHEMA);
+    assert_eq!(fixture["binding"]["artifactSchema"], GIS_MAP_INFERENCE_ARTIFACT_SCHEMA);
     assert_eq!(fixture["binding"]["artifactKind"], GIS_MAP_INFERENCE_ARTIFACT_KIND);
 }
 //#endregion 🧪️Vocabulary
@@ -411,7 +422,7 @@ fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope()
     for (name, candidate) in [
         ("foreign-job", {
             let mut value = exact.clone();
-            value["jobId"] = serde_json::json!("11".repeat(16));
+            value["jobId"] = serde_json::json!(foreign_job_id());
             value
         }),
         ("foreign-proposal", {

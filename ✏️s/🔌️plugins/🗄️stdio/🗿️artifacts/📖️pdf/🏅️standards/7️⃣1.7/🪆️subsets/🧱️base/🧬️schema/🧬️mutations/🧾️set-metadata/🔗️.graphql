@@ -1,0 +1,4 @@
+# 🧾️ Direct set-metadata GraphQL payload.
+input SetMetadataMutationInput {
+  xmp: String
+}

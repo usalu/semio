@@ -100,6 +100,10 @@ fn commands_round_trip_through_their_binary_codec() {
 /// gap the wfc2d audit flagged as blocking. The two arguments left out (`ArtifactInstanceOperationOwnerHandle`
 /// and `InteractionView`) are unconstructible from this crate — `InteractionView`'s fields are
 /// `pub(crate)` in the framework crate — and neither is read by this artifact's render.
+/// 🎨 …and the difference is the tile media, not an incidental label: the solved projection carries
+/// one path layer per solved slot, the unsolved one carries none.
+/// 🔎️ `ComponentTree` is `Debug` but not `PartialEq`, so the two renders are compared by their
+/// debug projection — enough to prove the lane is read, and it fails loudly if it ever is not.
 #[test]
 fn the_host_render_path_paints_the_solved_assignment() {
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
@@ -121,12 +125,8 @@ fn the_host_render_path_paints_the_solved_assignment() {
 
     let painted = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &solved, window: None }).expect("the host render path renders");
     let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
-    // 🔎️ `ComponentTree` is `Debug` but not `PartialEq`, so the two renders are compared by their
-    // debug projection — enough to prove the lane is read, and it fails loudly if it ever is not.
     assert_ne!(format!("{painted:?}"), format!("{unsolved:?}"), "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
 
-    // 🎨 …and the difference is the tile media, not an incidental label: the solved projection carries
-    // one path layer per solved slot, the unsolved one carries none.
     let solved_layers = preview::preview_layers_json(&document, &solved);
     let unsolved_layers = preview::preview_layers_json(&document, &empty);
     for slot in &document.slots {
@@ -153,3 +153,112 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
     crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &transient, window: None }).expect("the raster board renders through the host path");
 }
+
+//#region 🕹️GraphGestures
+/// 🕹️ Every canvas gesture arrives as ONE `nodeGraphEdit`; the wasm node-graph surface hands back the
+/// WHOLE graph, so a drag is read as the node whose position moved.
+#[test]
+fn a_dragged_node_lands_exactly_one_move_slot() {
+    let document = crate::examples::two_room_corridor::document();
+    let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
+    let snapshot = format!(
+        "{{\"schema\":\"dag.host_snapshot\",\"camera\":{{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},\"nodes\":[{{\"id\":\"room-a\",\"x\":{},\"y\":{}}},{{\"id\":\"corridor\",\"x\":{},\"y\":0.0}},{{\"id\":\"room-b\",\"x\":{},\"y\":0.0}}],\"edges\":[{{\"id\":\"edge-a-corridor\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"}},{{\"id\":\"edge-corridor-b\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}}]}}",
+        7.0 * scale,
+        3.0 * scale,
+        2.0 * scale,
+        4.0 * scale
+    );
+    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot));
+    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a drag is one edit") };
+    assert_eq!(emit.artifact_mutations.len(), 1, "one gesture is one edit");
+    assert_eq!(emit.description.as_deref(), Some("Move slot room-a"));
+    let mut next = document;
+    crate::mutations::apply_wfc2d_mutation(&mut next, &emit.artifact_mutations[0]).expect("the move applies");
+    let slot = next.slots.iter().find(|slot| slot.id == "room-a").expect("room-a survives its own move");
+    assert!((slot.x - 7.0).abs() < 1e-9 && (slot.y - 3.0).abs() < 1e-9, "the canvas' own units are divided back out: {slot:?}");
+}
+
+/// 🔗️ A wire the canvas drew between two slot nodes lands as `connect-slots` with a fresh edge id.
+#[test]
+fn a_drawn_wire_lands_exactly_one_connect_slots() {
+    let document = crate::examples::two_room_corridor::document();
+    let snapshot = "{\"schema\":\"dag.host_snapshot\",\"camera\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0},\"nodes\":[],\"edges\":[{\"id\":\"e1\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"},{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"},{\"id\":\"e3\",\"source\":\"room-a@adjacent-out\",\"target\":\"room-b@adjacent-in\"}]}";
+    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot.to_string()));
+    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a wire is one edit") };
+    assert_eq!(emit.artifact_mutations.len(), 1);
+    assert_eq!(emit.description.as_deref(), Some("Connect room-a to room-b"));
+}
+
+/// ✂️ A wire the canvas removed lands as `disconnect-slots` naming the document's own edge id.
+#[test]
+fn a_removed_wire_lands_exactly_one_disconnect_slots() {
+    let document = crate::examples::two_room_corridor::document();
+    let snapshot = "{\"schema\":\"dag.host_snapshot\",\"camera\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0},\"nodes\":[],\"edges\":[{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}]}";
+    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot.to_string()));
+    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a removed wire is one edit") };
+    assert_eq!(emit.description.as_deref(), Some("Disconnect edge-a-corridor"));
+}
+
+/// 🧘 A gesture that only panned the camera is not an edit at all.
+#[test]
+fn a_camera_only_gesture_is_no_edit() {
+    let document = crate::examples::two_room_corridor::document();
+    let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
+    let snapshot = format!(
+        "{{\"schema\":\"dag.host_snapshot\",\"camera\":{{\"x\":120.0,\"y\":-40.0,\"zoom\":2.5}},\"nodes\":[{{\"id\":\"room-a\",\"x\":0.0,\"y\":0.0}},{{\"id\":\"corridor\",\"x\":{},\"y\":0.0}},{{\"id\":\"room-b\",\"x\":{},\"y\":0.0}}],\"edges\":[{{\"id\":\"e1\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"}},{{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}}]}}",
+        2.0 * scale,
+        4.0 * scale
+    );
+    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot));
+    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a pan is no edit") };
+    assert!(emit.artifact_mutations.is_empty(), "a camera-only gesture must mint nothing");
+}
+
+/// 🛂️ A verb aimed at an id the document does not hold is refused BY NAME rather than minting an edit
+/// against nothing — the palette's argument defaults are static and outlive the example they were
+/// authored against.
+#[test]
+fn a_verb_against_an_unknown_id_is_refused_by_name() {
+    let document = crate::examples::two_room_corridor::document();
+    for (command, code) in [
+        (Wfc2dEditorCommand::DeleteSlot { id: "nope".into() }, "wfc2d.slot.unknown-slot"),
+        (Wfc2dEditorCommand::UnpinSlot { id: "nope".into() }, "wfc2d.slot.unknown-slot"),
+        (Wfc2dEditorCommand::DeleteTile { id: "nope".into() }, "wfc2d.tile.unknown-tile"),
+        (Wfc2dEditorCommand::DisconnectSlots { id: "nope".into() }, "wfc2d.edge.unknown-edge"),
+        (Wfc2dEditorCommand::DeleteRule { id: "nope".into() }, "wfc2d.rule.unknown-rule"),
+        (Wfc2dEditorCommand::CreateSlot { id: "room-a".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0 }, "wfc2d.id.taken"),
+    ] {
+        let Err(fault) = dispatch(&command, &document, &Wfc2dConfig::default()) else { panic!("an unknown id must be refused: {command:?}") };
+        assert_eq!(fault.code.0, code, "{command:?}");
+    }
+}
+
+/// 🏁 The solve the preview paints is the artifact's OWN inference, run to completion.
+#[test]
+fn the_solve_verb_answers_a_transient_assignment() {
+    let document = crate::examples::two_room_corridor::document();
+    let mutations = crate::editor::wfc2d::solve_transient(&document).expect("the boot example solves");
+    assert_eq!(mutations.len(), 1, "one solve is one transient publication");
+    let crate::editor::wfc2d::transient::Wfc2dTransientMutation::SetSolve(solve) = &mutations[0];
+    let transient = crate::editor::wfc2d::transient::Wfc2dTransient { assignments: solve.assignments.clone(), contradiction: solve.contradiction };
+    assert!(!transient.contradiction, "the boot example is satisfiable");
+    assert_eq!(transient.assignments.len(), document.slots.len(), "every slot is assigned");
+    for row in &transient.assignments {
+        assert!(document.tiles.iter().any(|tile| tile.id == row.tile_id), "slot {} was assigned an undeclared tile", row.slot_id);
+    }
+}
+
+/// 🗃️ The example picker answers a whole-document LOAD, never a mutation set — which is exactly why
+/// re-picking the booted example mints no undo entry.
+#[test]
+fn the_example_picker_loads_a_document_instead_of_editing_one() {
+    let document = crate::examples::two_room_corridor::document();
+    for example_id in [crate::examples::two_room_corridor::ID, crate::examples::wall_roof_facade_strip::ID, crate::examples::hex_ring::ID, crate::examples::terrain_ring::ID] {
+        let emit = dispatch(&Wfc2dEditorCommand::SetActiveExample { example_id: example_id.to_string() }, &document, &Wfc2dConfig::default()).expect("every offered example loads");
+        assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
+        assert!(matches!(emit.effects.first(), Some(semio_framework::kernel::Effect::LoadDocument { .. })), "an example load is one LoadDocument effect");
+    }
+    let Err(fault) = dispatch(&Wfc2dEditorCommand::SetActiveExample { example_id: "not-an-example".into() }, &document, &Wfc2dConfig::default()) else { panic!("an unknown example must be refused") };
+    assert_eq!(fault.code.0, "wfc2d.example.unknown");
+}
+//#endregion 🕹️GraphGestures

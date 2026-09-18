@@ -14,8 +14,10 @@ fn source(path: impl AsRef<Path>) -> String {
     read_to_string(path).expect("socket-grant source must remain readable")
 }
 
+/// 🧪️ Recognises every attribute this repo declares a test with: `#[test]`, `#[tokio::test]` and the
+/// owned `#[semio_framework_async_macros::async_test]`.
 fn test_attribute(attribute: &Attribute) -> bool {
-    attribute.path().segments.last().is_some_and(|segment| segment.ident == "test")
+    attribute.path().segments.last().is_some_and(|segment| segment.ident == "test" || segment.ident == "async_test")
 }
 
 fn test_declarations(source: &str) -> Vec<String> {

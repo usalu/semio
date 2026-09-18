@@ -81,10 +81,17 @@ class NativeTestScript extends BundleScript {
  * as a `[[test]]` binary, so `--lib` is the selector that compiles and runs them — and the selector
  * a dangling mount wedges, which is why it gets a target of its own rather than hiding inside
  * `test-native`'s wider all-targets build.
+ *
+ * Runs at `long` or above: the fifty mounted case directories are 912 laws over the os renderer, ~68 s
+ * serial and ~25 s across seven threads on an idle machine, so the suite cannot honestly sit at the
+ * fundamental 15 s or quick 30 s budget — it was killed mid-run at every invocation
+ * (`[budget] cargo nextest run … exceeded 15000ms — killed`) and reported as a target failure with no
+ * red test in it. Its two siblings (`@semio-tech/ui-rs:test-wgpu-engine`, 568 laws, and
+ * `semio-framework-os-infinite:test-wgpu-world-terrain`, 199) fit the fundamental budget and keep it.
  */
 class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "long");
     await runCargoTestBudgeted([crateName], this.repoRoot, ["--lib", ...rest]);
   }
 }

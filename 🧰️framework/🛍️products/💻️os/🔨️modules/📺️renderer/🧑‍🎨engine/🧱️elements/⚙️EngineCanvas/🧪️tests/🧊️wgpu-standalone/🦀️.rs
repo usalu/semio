@@ -135,6 +135,26 @@ fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framewor
     step(&mut context)
 }
 
+/// 🎬️ Drives ONE board surface's retained pointer authority to its terminal and publishes what it
+/// produced — the `AppFrameTransactionPhase::BoardAuthority` ladder
+/// (`🧊️renderer/🦀️.rs:12233`), reduced to the single surface a law exercises.
+///
+/// 🩸️ `puzzle_board_pointer_up_into` does NOT finish a gesture: every non-`Idle` plan
+/// `requires_retained_commit`, so the handler only ARMS `begin_pointer_commit` and answers whether
+/// the plan emits. The gesture ends when this authority reaches `Complete`, which is why a law that
+/// read `defers_descriptor_sync_from_js()` straight after the handler saw a still-live gesture.
+#[cfg(test)]
+fn settle_board_pointer_authority(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    for _ in 0..4_096 {
+        match with_engine_close_context(1, |context| drive_board_authority_step(surface_id, context)) {
+            infinite_canvas::BoardAuthorityStep::Pending => {}
+            infinite_canvas::BoardAuthorityStep::Complete => return publish_board_pointer_step(surface_id, input).is_ok(),
+            infinite_canvas::BoardAuthorityStep::Cancelled | infinite_canvas::BoardAuthorityStep::Fault => return false,
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 #[test]
 fn board_surface_close_freezes_registration_and_reaches_nonopaque_terminal() {
@@ -337,6 +357,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     assert!(with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
     let mut retry = ui_wgpu::wgpu::InputState::default();
     assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut retry), Ok(true));
+    assert!(settle_board_pointer_authority(board_id, &mut retry), "the retried pointer-up's retained commit reaches its terminal");
     assert!(!with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();

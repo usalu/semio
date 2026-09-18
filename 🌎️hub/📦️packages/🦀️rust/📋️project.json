@@ -110,6 +110,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-all-features": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test all-features",
+        "forwardAllArgs": true
+      }
+    },
     "artifact-cas-check": {
       "executor": "nx:run-commands",
       "options": {

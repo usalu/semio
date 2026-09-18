@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_ext_g_state;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🎛️ Direct set-ext-g-state protobuf payload.
+message SetExtGStateMutation {
+  PdfExtGState state = 1;
+}

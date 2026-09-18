@@ -287,8 +287,8 @@ fn a_section_stacks_children_below_its_header_at_their_own_height() {
     let theme = crate::wgpu::theme::Theme::default();
     let mut fixture = Fixture::new();
     let parent = fixture.push(LayoutNodeKind::Section { gap: theme.gap_standard }, None, None);
-    let first = fixture.push(LayoutNodeKind::Control { height: 12.0 }, Some(parent), None);
-    let second = fixture.push(LayoutNodeKind::Control { height: 12.0 }, Some(parent), None);
+    let first = fixture.push(LayoutNodeKind::Control { height: 12.0, label_padding: None }, Some(parent), None);
+    let second = fixture.push(LayoutNodeKind::Control { height: 12.0, label_padding: None }, Some(parent), None);
     fixture.solve(200.0, 200.0);
     let first_rect = fixture.rect(first);
     let second_rect = fixture.rect(second);
@@ -346,4 +346,47 @@ fn a_text_leaf_is_remeasured_against_the_width_its_container_offers() {
     fixture.measured(text, (500.0, 14.0));
     fixture.solve(120.0, 400.0);
     assert!(fixture.rect(text).width <= 120.0, "a stretched text child is bounded by its container, got {}", fixture.rect(text).width);
+}
+
+/// 🎞️ LAW: an engine surface fills the authored container that mounts it. The record a plugin
+/// publishes for a scene carries the terminal `LayoutSpec::Leaf` by default and an authored parent
+/// grows no child by itself, so as a plain leaf the surface solved to height ZERO — the live
+/// generation3d flow window laid `componentScene#procedural-main` out at `[0, 0, 974.8, 0.0]` and
+/// painted no node of its graph at all.
+#[test]
+fn an_engine_surface_fills_the_authored_container_that_mounts_it() {
+    let body = LayoutSpec::Stack(StackLayout { axis: Axis::Vertical, gap: SpaceToken::None, padding: EdgeSpace::default(), align: Align::Stretch, justify: Justify::Start, grow: true, wrap: false });
+    let declared = LayoutSpec::Leaf(LeafLayout::default());
+    let mut fixture = Fixture::new();
+    let column = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&body));
+    let scene = fixture.push(LayoutNodeKind::EngineSurface, Some(column), Some(&declared));
+    fixture.solve(974.848, 813.6);
+    let rect = fixture.rect(scene);
+    assert!(close(rect.width, 974.848), "the surface spans its container, got {rect:?}");
+    assert!(close(rect.height, 813.6), "the surface fills its container, got {rect:?}");
+}
+
+/// 📐️ …and a surface whose record DOES size itself keeps that size: filling is the fallback for a
+/// scene nothing else measures, never an override of an authored box.
+#[test]
+fn an_engine_surface_that_declares_its_own_height_keeps_it() {
+    let body = LayoutSpec::Stack(StackLayout { axis: Axis::Vertical, gap: SpaceToken::None, padding: EdgeSpace::default(), align: Align::Stretch, justify: Justify::Start, grow: true, wrap: false });
+    let declared = LayoutSpec::Leaf(LeafLayout { width: Sizing::Fill, height: Sizing::Fixed(SpaceToken::Xxl) });
+    let mut fixture = Fixture::new();
+    let column = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&body));
+    let scene = fixture.push(LayoutNodeKind::EngineSurface, Some(column), Some(&declared));
+    fixture.solve(600.0, 800.0);
+    assert!(close(fixture.rect(scene).height, SpaceToken::Xxl.px()), "got {:?}", fixture.rect(scene));
+}
+
+/// 🗺️ …and a document whose ROOT is the engine surface — a map playground publishes exactly one node
+/// — solves against the viewport box without a second pass over itself.
+#[test]
+fn an_engine_surface_root_solves_against_the_viewport_it_is_given() {
+    let declared = LayoutSpec::Leaf(LeafLayout::default());
+    let mut fixture = Fixture::new();
+    let scene = fixture.push(LayoutNodeKind::EngineSurface, None, Some(&declared));
+    fixture.solve(1433.6, 813.6);
+    let rect = fixture.rect(scene);
+    assert!(close(rect.width, 1433.6) && close(rect.height, 813.6), "got {rect:?}");
 }

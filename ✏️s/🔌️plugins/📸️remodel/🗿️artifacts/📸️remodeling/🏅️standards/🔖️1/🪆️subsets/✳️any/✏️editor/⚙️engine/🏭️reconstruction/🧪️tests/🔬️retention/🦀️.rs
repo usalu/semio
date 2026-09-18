@@ -17,7 +17,7 @@ use super::*;
 const TSDF_REPORT_CEILING_BYTES: usize = 320 * 1024 * 1024;
 
 fn vec_bytes<T>(v: &[T]) -> usize {
-    std::mem::size_of_val(v)
+    size_of_val(v)
 }
 
 fn nested_bytes<T>(v: &[Vec<T>]) -> usize {

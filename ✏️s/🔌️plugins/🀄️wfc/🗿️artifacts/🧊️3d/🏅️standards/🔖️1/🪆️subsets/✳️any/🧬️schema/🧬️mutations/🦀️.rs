@@ -3,15 +3,16 @@
 //! leaf wired by the crate root. `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Wfc3dSnapshot>` and `impl protocol::SemanticMutation<Wfc3dSnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here.
+//!
+//! 🧵 Deliberately NOT `use super::{create_slot, …};` — this file's own `pub use X::x;` builder
+//! re-exports below, glob-re-exported back into `mutations` by the crate root's `pub use
+//! component::*;`, would collide with a bare-name import of the same sibling submodules (E0252).
+//! Fully qualifying each variant's payload path instead breaks that self-referential loop.
 
 use crate::diff::Wfc3dDiff;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-// 🧵 Deliberately NOT `use super::{create_slot, …};` — this file's own `pub use X::x;` builder
-// re-exports below, glob-re-exported back into `mutations` by the crate root's `pub use
-// component::*;`, would collide with a bare-name import of the same sibling submodules (E0252).
-// Fully qualifying each variant's payload path instead breaks that self-referential loop.
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]

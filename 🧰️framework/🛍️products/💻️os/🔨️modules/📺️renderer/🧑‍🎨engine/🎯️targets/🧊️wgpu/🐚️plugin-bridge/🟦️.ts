@@ -59,6 +59,7 @@
 import {
   ActivationRegistry,
   type ActivationReason,
+  activationReasonForAppId,
   appCommandIdsV1,
   hostEffectInvocationV1,
   type HostEffectDispatchScope,
@@ -1642,7 +1643,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         requireOpening();
         const phase = declareWgpuBootSubphase(`shell-boot:create-app:${pluginId}`);
         try {
-        await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+        await registry.activate(pluginId, actorId, activationReasonForAppId(appId));
         requireOpening();
         eventSeq += 1;
         const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);

@@ -13,17 +13,7 @@ package = "semio:flow"
 
 [package.metadata.semio]
 role = "plugin"
-depends-on = [
-  "flow-extension-bim",
-  "flow-extension-brep",
-  "flow-extension-dictionary",
-  "flow-extension-draw",
-  "flow-extension-list",
-  "flow-extension-logic",
-  "flow-extension-math",
-  "flow-extension-primitive",
-  "flow-extension-text",
-]
+consumes = ["flow.extension"]
 
 [[package.metadata.semio.playground]]
 variant = "flow"

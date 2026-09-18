@@ -1,9 +1,38 @@
 syntax = "proto3";
 package semio.s_stdio_pdf_1_7.snapshot;
 
-message ObjRef {
-  uint32 num = 1;
-  uint32 gen = 2;
+message PdfSnapshot {
+  string schema = 1;
+  string declared_version = 2;
+  repeated PdfPage pages = 3;
+  repeated PdfFont fonts = 4;
+  repeated PdfImage images = 5;
+  repeated PdfFormXObject forms = 6;
+  repeated PdfExtGState ext_g_states = 7;
+  repeated PdfShading shadings = 8;
+  repeated PdfPattern patterns = 9;
+  repeated PdfNamedColorSpace color_spaces = 10;
+  repeated PdfNamedProperties properties = 11;
+  repeated PdfOutlineItem outlines = 12;
+  repeated PdfNamedDestination named_destinations = 13;
+  repeated PdfPageLabelRange page_labels = 14;
+  repeated PdfEmbeddedFile embedded_files = 15;
+  repeated PdfOutputIntent output_intents = 16;
+  PdfAcroForm acro_form = 17;
+  PdfOptionalContent optional_content = 18;
+  PdfPageLayout page_layout = 19;
+  PdfPageMode page_mode = 20;
+  PdfViewerPreferences viewer_preferences = 21;
+  PdfOpenAction open_action = 22;
+  optional string language = 23;
+  PdfMarkInfo mark_info = 24;
+  optional string metadata = 25;
+  repeated bytes document_id = 26;
+  PdfEncryption encryption = 27;
+  PdfInfo info = 28;
+  repeated PdfDictEntry catalog_extra = 29;
+  repeated PdfIndirectObject objects = 30;
+  repeated PdfDictEntry trailer = 31;
 }
 
 message PdfDictEntry {
@@ -11,10 +40,33 @@ message PdfDictEntry {
   PdfObject value = 2;
 }
 
-message PdfDecimal {
-  bool negative = 1;
-  string coefficient = 2;
-  uint32 scale = 3;
+message PdfObject {
+  string kind = 1;
+  optional bool value = 2;
+  repeated PdfDictEntry dict = 3;
+  optional bytes data = 4;
+  repeated PdfStreamFilter filters = 5;
+}
+
+message PdfStreamFilter {
+  string kind = 1;
+  PdfPredictor predictor = 2;
+  optional bool early_change = 3;
+  optional uint32 color_transform = 4;
+  PdfCcittParameters parameters = 5;
+  optional bytes globals = 6;
+  optional string name = 7;
+}
+
+message PdfCcittParameters {
+  optional int32 k = 1;
+  optional uint32 columns = 2;
+  optional uint32 rows = 3;
+  optional bool black_is_1 = 4;
+  optional bool encoded_byte_align = 5;
+  optional bool end_of_line = 6;
+  optional bool end_of_block = 7;
+  optional uint32 damaged_rows_before_error = 8;
 }
 
 message PdfPredictor {
@@ -24,50 +76,20 @@ message PdfPredictor {
   uint32 columns = 4;
 }
 
-message PdfStreamFilter {
-  enum Kind { FLATE = 0; ASCII_HEX = 1; ASCII_85 = 2; RUN_LENGTH = 3; }
-  Kind kind = 1;
-  optional PdfPredictor predictor = 2;
+message ObjRef {
+  uint32 num = 1;
+  uint32 gen = 2;
 }
 
-// ISO 32000-1 §7.3 COS object grammar. `stream_data` is filter-decoded logical data.
-message PdfObject {
-  enum Kind {
-    NULL = 0;
-    BOOL = 1;
-    INT = 2;
-    REAL = 3;
-    STR = 4;
-    NAME = 5;
-    ARRAY = 6;
-    DICT = 7;
-    REF = 8;
-    STREAM = 9;
-  }
-  Kind kind = 1;
-  bool bool_value = 2;
-  int64 int_value = 3;
-  PdfDecimal real_value = 4;
-  bytes str_value = 5;
-  string name_value = 6;
-  repeated PdfObject array_value = 7;
-  repeated PdfDictEntry dict_value = 8;
-  ObjRef ref_value = 9;
-  repeated PdfDictEntry stream_dict = 10;
-  bytes stream_data = 11;
-  repeated PdfStreamFilter stream_filters = 12;
+message PdfDecimal {
+  bool negative = 1;
+  string coefficient = 2;
+  uint32 scale = 3;
 }
 
 message PdfIndirectObject {
   ObjRef id = 1;
   PdfObject value = 2;
-}
-
-message PdfPage {
-  repeated double media_box = 1; // exactly 4
-  repeated double crop_box = 2;  // exactly 4 when present, empty = unset
-  int32 rotate = 3;
-  string text = 4;
 }
 
 message PdfInfo {
@@ -77,13 +99,782 @@ message PdfInfo {
   optional string keywords = 4;
   optional string creator = 5;
   optional string producer = 6;
+  PdfDate creation_date = 7;
+  PdfDate modification_date = 8;
+  optional string trapped = 9;
+  repeated PdfDictEntry extra = 10;
 }
 
-message PdfSnapshot {
-  string schema = 1;
-  string declared_version = 2;
-  repeated PdfPage pages = 3;
-  PdfInfo info = 4;
-  repeated PdfIndirectObject objects = 5;
-  repeated PdfDictEntry trailer = 6;
+message PdfDate {
+  int32 year = 1;
+  optional uint32 month = 2;
+  optional uint32 day = 3;
+  optional uint32 hour = 4;
+  optional uint32 minute = 5;
+  optional uint32 second = 6;
+  optional int32 offset_minutes = 7;
+}
+
+message PdfEncryption {
+  PdfEncryptionAlgorithm algorithm = 1;
+  optional int32 permissions = 2;
+  optional string user_password = 3;
+  optional string owner_password = 4;
+  optional bool encrypt_metadata = 5;
+}
+
+enum PdfEncryptionAlgorithm {
+  PDFENCRYPTIONALGORITHM_RC4_40 = 0;
+  PDFENCRYPTIONALGORITHM_RC4_128 = 1;
+  PDFENCRYPTIONALGORITHM_AES128 = 2;
+  PDFENCRYPTIONALGORITHM_AES256 = 3;
+}
+
+message PdfMarkInfo {
+  optional bool marked = 1;
+  optional bool user_properties = 2;
+  optional bool suspects = 3;
+}
+
+message PdfOpenAction {
+  string kind = 1;
+  PdfDestination destination = 2;
+  PdfAction action = 3;
+}
+
+message PdfAction {
+  PdfActionKind kind = 1;
+  repeated PdfAction next = 2;
+}
+
+message PdfActionKind {
+  string kind = 1;
+  PdfDestination destination = 2;
+  PdfFileSpecification file = 3;
+  optional bool new_window = 4;
+  optional uint32 thread = 5;
+  optional string uri = 6;
+  optional bool is_map = 7;
+  optional string sound = 8;
+  optional double volume = 9;
+  optional bool synchronous = 10;
+  optional bool repeat = 11;
+  optional bool mix = 12;
+  optional string annotation = 13;
+  optional string operation = 14;
+  repeated string annotations = 15;
+  optional bool hide = 16;
+  optional string name = 17;
+  optional string url = 18;
+  repeated string fields = 19;
+  optional uint32 flags = 20;
+  optional string script = 21;
+  repeated PdfDictEntry states = 22;
+  optional bool preserve_radio_buttons = 23;
+  repeated PdfDictEntry entries = 24;
+  optional string subtype = 25;
+}
+
+message PdfFileSpecification {
+  string kind = 1;
+  optional string path = 2;
+  optional string file = 3;
+}
+
+message PdfDestination {
+  string kind = 1;
+  optional uint32 page = 2;
+  PdfDestinationFit fit = 3;
+  optional string name = 4;
+}
+
+message PdfDestinationFit {
+  string kind = 1;
+  optional double left = 2;
+  optional double top = 3;
+  optional double zoom = 4;
+  repeated double rect = 5;
+}
+
+message PdfViewerPreferences {
+  optional bool hide_toolbar = 1;
+  optional bool hide_menubar = 2;
+  optional bool hide_window_ui = 3;
+  optional bool fit_window = 4;
+  optional bool center_window = 5;
+  optional bool display_doc_title = 6;
+  PdfPageMode non_full_screen_page_mode = 7;
+  optional string direction = 8;
+  optional string view_area = 9;
+  optional string view_clip = 10;
+  optional string print_area = 11;
+  optional string print_clip = 12;
+  optional string print_scaling = 13;
+  optional string duplex = 14;
+  optional bool pick_tray_by_pdf_size = 15;
+  repeated uint32 print_page_range = 16;
+  optional uint32 num_copies = 17;
+  repeated PdfDictEntry extra = 18;
+}
+
+enum PdfPageMode {
+  PDFPAGEMODE_USENONE = 0;
+  PDFPAGEMODE_USEOUTLINES = 1;
+  PDFPAGEMODE_USETHUMBS = 2;
+  PDFPAGEMODE_FULLSCREEN = 3;
+  PDFPAGEMODE_USEOC = 4;
+  PDFPAGEMODE_USEATTACHMENTS = 5;
+}
+
+enum PdfPageLayout {
+  PDFPAGELAYOUT_SINGLEPAGE = 0;
+  PDFPAGELAYOUT_ONECOLUMN = 1;
+  PDFPAGELAYOUT_TWOCOLUMNLEFT = 2;
+  PDFPAGELAYOUT_TWOCOLUMNRIGHT = 3;
+  PDFPAGELAYOUT_TWOPAGELEFT = 4;
+  PDFPAGELAYOUT_TWOPAGERIGHT = 5;
+}
+
+message PdfOptionalContent {
+  repeated PdfOptionalContentGroup groups = 1;
+  optional string name = 2;
+  optional bool base_state_off = 3;
+  repeated string on = 4;
+  repeated string off = 5;
+  repeated PdfObject order = 6;
+  repeated PdfDictEntry extra = 7;
+}
+
+message PdfOptionalContentGroup {
+  string id = 1;
+  string name = 2;
+  repeated string intent = 3;
+  repeated PdfDictEntry usage = 4;
+}
+
+message PdfAcroForm {
+  repeated PdfFormField fields = 1;
+  optional bool need_appearances = 2;
+  optional uint32 signature_flags = 3;
+  optional string default_appearance = 4;
+  optional uint32 quadding = 5;
+  repeated string default_fonts = 6;
+  repeated PdfDictEntry extra = 7;
+}
+
+message PdfFormField {
+  string name = 1;
+  PdfFormFieldKind kind = 2;
+  optional uint32 flags = 3;
+  optional string alternate_name = 4;
+  optional string mapping_name = 5;
+  optional string default_appearance = 6;
+  optional uint32 quadding = 7;
+  optional bytes widgets = 8;
+  repeated PdfFormField children = 9;
+  repeated PdfDictEntry additional_actions = 10;
+  repeated PdfDictEntry extra = 11;
+}
+
+message PdfFormFieldKind {
+  string kind = 1;
+  optional string value = 2;
+  optional string default_value = 3;
+  repeated string options = 4;
+  optional uint32 max_length = 5;
+  optional string rich_value = 6;
+  repeated string values = 7;
+  repeated string default_values = 8;
+  optional uint32 top_index = 9;
+}
+
+message PdfOutputIntent {
+  string subtype = 1;
+  string condition_identifier = 2;
+  optional string condition = 3;
+  optional string registry_name = 4;
+  optional string info = 5;
+  optional bytes profile = 6;
+}
+
+message PdfEmbeddedFile {
+  string id = 1;
+  string file_name = 2;
+  optional string description = 3;
+  optional string mime_type = 4;
+  bytes data = 5;
+  PdfDate creation_date = 6;
+  PdfDate modification_date = 7;
+  optional string relationship = 8;
+  optional bool listed = 9;
+}
+
+message PdfPageLabelRange {
+  uint32 start_index = 1;
+  PdfPageLabelStyle style = 2;
+  optional string prefix = 3;
+  optional uint32 start = 4;
+}
+
+enum PdfPageLabelStyle {
+  PDFPAGELABELSTYLE_DECIMAL = 0;
+  PDFPAGELABELSTYLE_ROMANUPPER = 1;
+  PDFPAGELABELSTYLE_ROMANLOWER = 2;
+  PDFPAGELABELSTYLE_LETTERSUPPER = 3;
+  PDFPAGELABELSTYLE_LETTERSLOWER = 4;
+}
+
+message PdfNamedDestination {
+  string name = 1;
+  PdfDestination destination = 2;
+}
+
+message PdfOutlineItem {
+  string title = 1;
+  PdfDestination destination = 2;
+  PdfAction action = 3;
+  repeated double color = 4;
+  optional bool italic = 5;
+  optional bool bold = 6;
+  optional bool open = 7;
+  repeated PdfOutlineItem children = 8;
+  repeated PdfDictEntry extra = 9;
+}
+
+message PdfNamedProperties {
+  string name = 1;
+  repeated PdfDictEntry entries = 2;
+}
+
+message PdfNamedColorSpace {
+  string name = 1;
+  PdfColorSpace color_space = 2;
+}
+
+message PdfColorSpace {
+  string kind = 1;
+  repeated double white_point = 2;
+  repeated double black_point = 3;
+  optional double gamma = 4;
+  repeated double matrix = 5;
+  repeated double range = 6;
+  optional uint32 components = 7;
+  optional bytes profile = 8;
+  PdfColorSpace alternate = 9;
+  PdfColorSpace base = 10;
+  optional uint32 hival = 11;
+  optional bytes lookup = 12;
+  optional string name = 13;
+  PdfFunction tint_transform = 14;
+  repeated string names = 15;
+  repeated PdfDictEntry attributes = 16;
+}
+
+message PdfFunction {
+  string kind = 1;
+  repeated double domain = 2;
+  repeated double range = 3;
+  repeated uint32 size = 4;
+  optional uint32 bits_per_sample = 5;
+  optional uint32 order = 6;
+  repeated double encode = 7;
+  repeated double decode = 8;
+  optional bytes samples = 9;
+  repeated double c0 = 10;
+  repeated double c1 = 11;
+  optional double n = 12;
+  repeated PdfFunction functions = 13;
+  repeated double bounds = 14;
+  optional string code = 15;
+}
+
+message PdfPattern {
+  string id = 1;
+  repeated double matrix = 2;
+  PdfPatternKind kind = 3;
+  repeated PdfDictEntry extra = 4;
+}
+
+message PdfPatternKind {
+  string kind = 1;
+  optional uint32 paint_type = 2;
+  optional uint32 tiling_type = 3;
+  repeated double bbox = 4;
+  optional double x_step = 5;
+  optional double y_step = 6;
+  repeated PdfOp content = 7;
+  optional string shading = 8;
+  optional string ext_g_state = 9;
+}
+
+message PdfOp {
+  string op = 1;
+  optional double width = 2;
+  PdfLineCap cap = 3;
+  PdfLineJoin join = 4;
+  optional double limit = 5;
+  repeated double array = 6;
+  optional double phase = 7;
+  optional string intent = 8;
+  optional double flatness = 9;
+  optional string name = 10;
+  repeated double matrix = 11;
+  optional double x = 12;
+  optional double y = 13;
+  optional double x1 = 14;
+  optional double y1 = 15;
+  optional double x2 = 16;
+  optional double y2 = 17;
+  optional double x3 = 18;
+  optional double y3 = 19;
+  optional double height = 20;
+  optional double spacing = 21;
+  optional double scale = 22;
+  optional double leading = 23;
+  optional double size = 24;
+  optional uint32 mode = 25;
+  optional double rise = 26;
+  optional double tx = 27;
+  optional double ty = 28;
+  PdfTextString text = 29;
+  repeated PdfTextArrayItem items = 30;
+  optional double word_spacing = 31;
+  optional double char_spacing = 32;
+  optional double wx = 33;
+  optional double wy = 34;
+  optional double llx = 35;
+  optional double lly = 36;
+  optional double urx = 37;
+  optional double ury = 38;
+  repeated double components = 39;
+  optional string pattern = 40;
+  optional double gray = 41;
+  optional double r = 42;
+  optional double g = 43;
+  optional double b = 44;
+  optional double c = 45;
+  optional double m = 46;
+  optional double k = 47;
+  PdfInlineImage image = 48;
+  optional string tag = 49;
+  PdfPropertyList properties = 50;
+  optional string operator = 51;
+  repeated PdfObject operands = 52;
+}
+
+message PdfPropertyList {
+  string kind = 1;
+  optional string name = 2;
+  repeated PdfDictEntry entries = 3;
+}
+
+message PdfInlineImage {
+  uint32 width = 1;
+  uint32 height = 2;
+  optional uint32 bits_per_component = 3;
+  PdfColorSpace color_space = 4;
+  optional bool image_mask = 5;
+  repeated double decode = 6;
+  optional bool interpolate = 7;
+  repeated PdfStreamFilter filters = 8;
+  bytes data = 9;
+  repeated PdfDictEntry extra = 10;
+}
+
+message PdfTextString {
+  string kind = 1;
+  optional string text = 2;
+  optional bytes bytes = 3;
+}
+
+message PdfTextArrayItem {
+  string kind = 1;
+  optional string text = 2;
+  optional bytes bytes = 3;
+  optional double amount = 4;
+}
+
+enum PdfLineJoin {
+  PDFLINEJOIN_MITER = 0;
+  PDFLINEJOIN_ROUND = 1;
+  PDFLINEJOIN_BEVEL = 2;
+}
+
+enum PdfLineCap {
+  PDFLINECAP_BUTT = 0;
+  PDFLINECAP_ROUND = 1;
+  PDFLINECAP_SQUARE = 2;
+}
+
+message PdfShading {
+  string id = 1;
+  PdfColorSpace color_space = 2;
+  PdfShadingKind kind = 3;
+  repeated double background = 4;
+  repeated double bbox = 5;
+  optional bool anti_alias = 6;
+  repeated PdfDictEntry extra = 7;
+}
+
+message PdfShadingKind {
+  string kind = 1;
+  repeated double domain = 2;
+  repeated double matrix = 3;
+  PdfFunction function = 4;
+  repeated double coords = 5;
+  repeated bool extend = 6;
+  optional uint32 shading_type = 7;
+  optional uint32 bits_per_coordinate = 8;
+  optional uint32 bits_per_component = 9;
+  optional uint32 bits_per_flag = 10;
+  optional uint32 vertices_per_row = 11;
+  repeated double decode = 12;
+  optional bytes data = 13;
+}
+
+message PdfExtGState {
+  string id = 1;
+  optional double line_width = 2;
+  PdfLineCap line_cap = 3;
+  PdfLineJoin line_join = 4;
+  optional double miter_limit = 5;
+  optional bytes dash = 6;
+  optional string rendering_intent = 7;
+  optional bool overprint_stroke = 8;
+  optional bool overprint_fill = 9;
+  optional uint32 overprint_mode = 10;
+  optional bytes font = 11;
+  repeated string blend_mode = 12;
+  PdfSoftMask soft_mask = 13;
+  optional double stroke_alpha = 14;
+  optional double fill_alpha = 15;
+  optional bool alpha_is_shape = 16;
+  optional bool stroke_adjust = 17;
+  optional double flatness = 18;
+  optional double smoothness = 19;
+  optional bool text_knockout = 20;
+  repeated PdfDictEntry extra = 21;
+}
+
+message PdfSoftMask {
+  string kind = 1;
+  optional string group = 2;
+  PdfFunction transfer = 3;
+  repeated double backdrop = 4;
+}
+
+message PdfFormXObject {
+  string id = 1;
+  repeated double bbox = 2;
+  repeated double matrix = 3;
+  repeated PdfOp content = 4;
+  PdfTransparencyGroup group = 5;
+  optional string optional_content = 6;
+  optional uint32 struct_parent = 7;
+  repeated PdfDictEntry extra = 8;
+}
+
+message PdfTransparencyGroup {
+  PdfColorSpace color_space = 1;
+  optional bool isolated = 2;
+  optional bool knockout = 3;
+}
+
+message PdfImage {
+  string id = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  PdfColorSpace color_space = 4;
+  optional uint32 bits_per_component = 5;
+  optional bool image_mask = 6;
+  repeated double decode = 7;
+  optional bool interpolate = 8;
+  PdfImageCodec codec = 9;
+  bytes data = 10;
+  optional string soft_mask = 11;
+  optional uint32 soft_mask_in_data = 12;
+  PdfImageMask mask = 13;
+  repeated double matte = 14;
+  optional string intent = 15;
+  optional string optional_content = 16;
+  optional uint32 struct_parent = 17;
+  repeated PdfDictEntry extra = 18;
+}
+
+message PdfImageMask {
+  string kind = 1;
+  optional string image = 2;
+  repeated uint32 ranges = 3;
+}
+
+message PdfImageCodec {
+  string kind = 1;
+  optional uint32 color_transform = 2;
+  PdfCcittParameters parameters = 3;
+  optional bytes globals = 4;
+}
+
+message PdfFont {
+  string id = 1;
+  PdfFontKind kind = 2;
+  PdfToUnicode to_unicode = 3;
+  repeated PdfDictEntry extra = 4;
+}
+
+message PdfToUnicode {
+  uint32 byte_width = 1;
+  repeated PdfToUnicodeMapping mappings = 2;
+}
+
+message PdfToUnicodeMapping {
+  string kind = 1;
+  optional uint32 code = 2;
+  optional string text = 3;
+  optional uint32 low = 4;
+  optional uint32 high = 5;
+}
+
+message PdfFontKind {
+  string kind = 1;
+  optional string base_font = 2;
+  PdfSimpleEncoding encoding = 3;
+  optional uint32 first_char = 4;
+  repeated double widths = 5;
+  PdfFontDescriptor descriptor = 6;
+  PdfFontProgram program = 7;
+  repeated double font_matrix = 8;
+  repeated double font_bbox = 9;
+  repeated PdfCharProc char_procs = 10;
+  PdfCMap cmap = 11;
+  PdfCidFont descendant = 12;
+}
+
+message PdfCidFont {
+  bool true_type = 1;
+  string base_font = 2;
+  PdfCidSystemInfo system_info = 3;
+  PdfFontDescriptor descriptor = 4;
+  optional double default_width = 5;
+  repeated PdfCidWidthRun widths = 6;
+  repeated double default_vertical = 7;
+  repeated PdfCidVerticalRun vertical_metrics = 8;
+  PdfCidToGid cid_to_gid = 9;
+  PdfFontProgram program = 10;
+  repeated PdfDictEntry extra = 11;
+}
+
+message PdfFontProgram {
+  string kind = 1;
+  optional bytes data = 2;
+  optional uint32 length1 = 3;
+  optional uint32 length2 = 4;
+  optional uint32 length3 = 5;
+}
+
+message PdfCidToGid {
+  string kind = 1;
+  optional bytes data = 2;
+}
+
+message PdfCidVerticalRun {
+  uint32 start_cid = 1;
+  bytes metrics = 2;
+}
+
+message PdfCidWidthRun {
+  uint32 start_cid = 1;
+  repeated double widths = 2;
+}
+
+message PdfFontDescriptor {
+  string font_name = 1;
+  optional uint32 flags = 2;
+  repeated double font_bbox = 3;
+  optional double italic_angle = 4;
+  optional double ascent = 5;
+  optional double descent = 6;
+  optional double cap_height = 7;
+  optional double stem_v = 8;
+  optional double stem_h = 9;
+  optional double x_height = 10;
+  optional double leading = 11;
+  optional double avg_width = 12;
+  optional double max_width = 13;
+  optional double missing_width = 14;
+  optional string font_family = 15;
+  optional string font_stretch = 16;
+  optional double font_weight = 17;
+  optional string char_set = 18;
+  repeated PdfDictEntry extra = 19;
+}
+
+message PdfCidSystemInfo {
+  string registry = 1;
+  string ordering = 2;
+  uint32 supplement = 3;
+}
+
+message PdfCMap {
+  string kind = 1;
+  optional string name = 2;
+  PdfEmbeddedCMap cmap = 3;
+}
+
+message PdfEmbeddedCMap {
+  string name = 1;
+  optional bool vertical = 2;
+  repeated PdfCodespaceRange codespace = 3;
+  repeated PdfCidMapping mappings = 4;
+  optional string use_cmap = 5;
+}
+
+message PdfCidMapping {
+  string kind = 1;
+  optional uint32 code = 2;
+  optional uint32 cid = 3;
+  optional uint32 low = 4;
+  optional uint32 high = 5;
+}
+
+message PdfCodespaceRange {
+  uint32 byte_width = 1;
+  uint32 low = 2;
+  uint32 high = 3;
+}
+
+message PdfCharProc {
+  string name = 1;
+  repeated PdfOp content = 2;
+}
+
+message PdfSimpleEncoding {
+  PdfBaseEncoding base = 1;
+  repeated PdfEncodingDifference differences = 2;
+}
+
+message PdfEncodingDifference {
+  uint32 code = 1;
+  string glyph = 2;
+}
+
+enum PdfBaseEncoding {
+  PDFBASEENCODING_STANDARD = 0;
+  PDFBASEENCODING_WINANSI = 1;
+  PDFBASEENCODING_MACROMAN = 2;
+  PDFBASEENCODING_MACEXPERT = 3;
+}
+
+message PdfPage {
+  repeated double media_box = 1;
+  repeated double crop_box = 2;
+  repeated double bleed_box = 3;
+  repeated double trim_box = 4;
+  repeated double art_box = 5;
+  optional int32 rotate = 6;
+  optional double user_unit = 7;
+  repeated PdfOp content = 8;
+  repeated PdfAnnotation annotations = 9;
+  PdfTransparencyGroup group = 10;
+  optional string thumbnail = 11;
+  optional uint32 struct_parents = 12;
+  repeated PdfDictEntry transition = 13;
+  optional double duration = 14;
+  optional string metadata = 15;
+  repeated PdfDictEntry additional_actions = 16;
+  repeated PdfDictEntry extra = 17;
+}
+
+message PdfAnnotation {
+  repeated double rect = 1;
+  PdfAnnotationKind kind = 2;
+  optional string contents = 3;
+  optional string name = 4;
+  optional string modified = 5;
+  optional uint32 flags = 6;
+  PdfBorderStyle border = 7;
+  repeated double color = 8;
+  PdfAppearance appearance = 9;
+  optional string appearance_state = 10;
+  PdfMarkupAnnotation markup = 11;
+  optional string optional_content = 12;
+  optional uint32 struct_parent = 13;
+  repeated PdfDictEntry extra = 14;
+}
+
+message PdfMarkupAnnotation {
+  optional string title = 1;
+  optional uint64 popup = 2;
+  optional double opacity = 3;
+  optional string rich_contents = 4;
+  PdfDate creation_date = 5;
+  optional uint64 in_reply_to = 6;
+  optional string subject = 7;
+  optional string reply_type = 8;
+  optional string intent = 9;
+}
+
+message PdfAppearance {
+  PdfAppearanceEntry normal = 1;
+  PdfAppearanceEntry rollover = 2;
+  PdfAppearanceEntry down = 3;
+}
+
+message PdfAppearanceEntry {
+  string kind = 1;
+  optional string form = 2;
+  repeated PdfAppearanceState states = 3;
+}
+
+message PdfAppearanceState {
+  string state = 1;
+  string form = 2;
+}
+
+message PdfBorderStyle {
+  double width = 1;
+  optional string style = 2;
+  repeated double dash = 3;
+  repeated double radii = 4;
+}
+
+message PdfAnnotationKind {
+  string kind = 1;
+  optional bool open = 2;
+  optional string icon = 3;
+  optional string state = 4;
+  optional string state_model = 5;
+  PdfAction action = 6;
+  PdfDestination destination = 7;
+  optional string highlight = 8;
+  repeated double quad_points = 9;
+  optional string default_appearance = 10;
+  optional uint32 quadding = 11;
+  repeated double callout = 12;
+  optional string line_ending = 13;
+  optional string rich_text = 14;
+  repeated double points = 15;
+  repeated string line_endings = 16;
+  repeated double interior_color = 17;
+  optional double leader_length = 18;
+  optional bool caption = 19;
+  repeated double rect_differences = 20;
+  repeated double vertices = 21;
+  optional string symbol = 22;
+  optional bytes paths = 23;
+  optional uint64 parent = 24;
+  PdfFileSpecification file = 25;
+  repeated PdfDictEntry sound = 26;
+  optional string title = 27;
+  repeated PdfDictEntry movie = 28;
+  repeated PdfDictEntry activation = 29;
+  optional string field = 30;
+  repeated PdfDictEntry characteristics = 31;
+  repeated PdfDictEntry additional_actions = 32;
+  optional string mark_style = 33;
+  repeated PdfDictEntry colorants = 34;
+  repeated PdfDictEntry entries = 35;
+  repeated PdfDictEntry fixed_print = 36;
+  optional string overlay_text = 37;
+  optional bool repeat = 38;
+  optional string subtype = 39;
 }

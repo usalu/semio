@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-embedded-file/schema.json",
+  "title": "SetEmbeddedFile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file"
+  ],
+  "properties": {
+    "file": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfEmbeddedFile"
+    },
+    "mutation": {
+      "const": "setEmbeddedFile",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

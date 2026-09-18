@@ -329,25 +329,20 @@ pub struct EquationWorkingScene {
     pub geometry: EquationGeometry,
 }
 
-fn equation_scene_id(graph: &EquationGraph, geometry: &EquationGeometry) -> String {
-    use std::hash::{Hash, Hasher};
-    let content_json = dsl::os_pack::json::to_json_string(&(graph.clone(), geometry.clone()));
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("equation-scene-{:016x}", hasher.finish())
-}
-
 /// 🏗️ Mints all three composed-child handles for a `(graph, geometry)` pair and attaches one
-/// shared immutable artifact-instance owner.
+/// shared immutable artifact-instance owner. Each handle's `child_id` is its own target
+/// `artifact_id`, which is what `ChildRestoreProjection::child` demands of every member of a
+/// `genesis_child_pack`: a differing id fails `InvalidReference`, and one id shared by the three
+/// slots fails `DuplicateChild`, both of them aborting the guest before the first window renders.
+/// The live `(graph, geometry)` identity therefore rides on the attached owner alone.
 pub fn equation_children_from_state(graph: &EquationGraph, geometry: &EquationGeometry) -> (EquationNotationChild, EquationResultsChild, EquationComputedChild) {
-    let scene_id = equation_scene_id(graph, geometry);
     let owner = Arc::new(EquationWorkingScene { graph: graph.clone(), geometry: geometry.clone() });
-    let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("equation-{subset}"), dialect: dialect_for(subset) };
+    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("equation-{subset}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
+    let (notation_target, results_target, computed_target) = (target_for("text"), target_for("table"), target_for("value"));
     (
-        store::ArtifactChild::new(scene_id.clone(), target_for("text")).with_local_owner(owner.clone()),
-        store::ArtifactChild::new(scene_id.clone(), target_for("table")).with_local_owner(owner.clone()),
-        store::ArtifactChild::new(scene_id, target_for("value")).with_local_owner(owner),
+        store::ArtifactChild::new(notation_target.artifact_id.clone(), notation_target).with_local_owner(owner.clone()),
+        store::ArtifactChild::new(results_target.artifact_id.clone(), results_target).with_local_owner(owner.clone()),
+        store::ArtifactChild::new(computed_target.artifact_id.clone(), computed_target).with_local_owner(owner),
     )
 }
 

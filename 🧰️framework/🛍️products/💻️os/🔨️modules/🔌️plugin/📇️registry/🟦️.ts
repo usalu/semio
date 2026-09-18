@@ -17,8 +17,9 @@ function toCatalogTarget(target: {
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
   readonly dependsOn?: readonly string[];
+  readonly activationEvents?: readonly string[];
 }): PluginCatalogTarget {
-  return { pluginId: target.pluginId, wasmOut: target.wasmOut, role: target.role, contributes: target.contributes, consumes: target.consumes, dependsOn: target.dependsOn };
+  return { pluginId: target.pluginId, wasmOut: target.wasmOut, role: target.role, contributes: target.contributes, consumes: target.consumes, dependsOn: target.dependsOn, activationEvents: target.activationEvents };
 }
 
 function toPlaygroundCatalogTarget(target: { readonly variant: string; readonly pluginId: string; readonly app?: string; readonly aliases: readonly string[] }): PlaygroundCatalogTarget {

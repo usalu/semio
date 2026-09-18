@@ -8,6 +8,7 @@ import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/�
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
 import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
+import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 
 //#region 🔖️Bindings
@@ -725,6 +726,31 @@ function settleHostIo(message: Extract<BrowserFrameUiMessage, { readonly kind: "
 
 (globalThis as { semioWgpuHostIo?: typeof requestHostIo }).semioWgpuHostIo = requestHostIo;
 //#endregion 🚪️HostIo
+
+//#region 🧩️LazyPluginInstall
+/** 🧩️ The door the browser wgpu shell's `install_plugin` calls (`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
+ * `install_js_plugin`). It mounts through the SAME `loadPluginModule`/`pluginHandleForBridge` pair
+ * {@link mountPluginHandles} uses, under the same `monitoredSuspension` watchdog declaration, so a
+ * lazily installed plugin is indistinguishable from an eagerly mounted one once it lands. The module
+ * url comes from the catalog rather than the boot plan on purpose: the whole point is reaching a
+ * plugin the boot plan did NOT name. */
+const lazyPluginInstalls = createLazyPluginInstallDoor({
+  moduleUrl: (pluginId) => (PLUGIN_CATALOG.plugins.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.moduleUrl(pluginId) : PLUGIN_CATALOG.extensions.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.extensionModuleUrl(pluginId) : undefined),
+  mount: async (pluginId, moduleUrl) => {
+    if (closed || closing || failed) throw new Error("plugin-install.closing: the frame Worker is closing");
+    const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl), suspensionLedger);
+    const handle = pluginHandleForBridge(module);
+    void primeContributionManifest(pluginId, moduleUrl).catch(() => {});
+    return handle;
+  },
+  progress: (pluginId, phase) => {
+    if (diagnosticsStamp === true) console.debug(`[DEBUG] wgpu lazy plugin install ${pluginId} ${phase}`);
+  },
+});
+
+(globalThis as { semioWgpuInstallPlugin?: (pluginId: string) => Promise<unknown> }).semioWgpuInstallPlugin = (pluginId) => lazyPluginInstalls.install(pluginId);
+(globalThis as { semioWgpuCancelPluginInstall?: (pluginId: string) => boolean }).semioWgpuCancelPluginInstall = (pluginId) => lazyPluginInstalls.cancel(pluginId);
+//#endregion 🧩️LazyPluginInstall
 
 function post(message: BrowserFrameWorkerMessage): void {
   scope.postMessage(message);

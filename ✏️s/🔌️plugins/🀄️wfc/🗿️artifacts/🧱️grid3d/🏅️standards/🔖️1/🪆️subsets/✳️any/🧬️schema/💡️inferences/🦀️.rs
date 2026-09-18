@@ -453,6 +453,14 @@ impl Grid3dInferenceJob {
 }
 
 impl semio_framework_job::InteractiveJob for Grid3dInferenceJob {
+    /// 🪜️ One bounded stage of the solve, with two retained-ownership laws the stages depend on. A
+    /// `CommitCandidate` carries TWO retained payloads: the checkpoint becomes this job's own state,
+    /// while the child's raw output is not the shape this artifact commits, so the `Solve` stage
+    /// RETIRES it rather than dropping it — an ordinary `Drop` on a retained payload aborts the
+    /// process. And a `StepContext` grants exactly ONE payload page per step (`payload_page_granted`),
+    /// so the encode stage yields after every committed page instead of looping: a second
+    /// `admit_payload_page` in the same step is refused as `OpportunityExhausted`, and the refusal's
+    /// own fault detail then cannot be admitted either, which is how that surfaces as an EMPTY fault.
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         use semio_framework_job::StepOutcome;
         if context.is_cancelled() {
@@ -502,10 +510,6 @@ impl semio_framework_job::InteractiveJob for Grid3dInferenceJob {
                     let mut outcome = self.child.as_mut().expect("WFC child").step(context);
                     match &mut outcome {
                         StepOutcome::Complete(candidate) => {
-                            // 🧾️ A `CommitCandidate` carries TWO retained payloads. The checkpoint becomes
-                            // this job's own state; the child's raw output is not the shape this artifact
-                            // commits, so it is retired here rather than dropped (an ordinary `Drop` on a
-                            // retained payload aborts the process).
                             retire(&mut candidate.output);
                             self.final_checkpoint = Some(std::mem::replace(&mut candidate.state, semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)));
                             let mut child = self.child.take().expect("WFC child");
@@ -548,11 +552,6 @@ impl semio_framework_job::InteractiveJob for Grid3dInferenceJob {
                             output,
                         });
                     }
-                    // 📦️ A `StepContext` grants exactly ONE payload page per step
-                    // (`payload_page_granted`), so the encode stage yields after every committed page
-                    // instead of looping: a second `admit_payload_page` in the same step is refused as
-                    // `OpportunityExhausted`, and the refusal's own fault detail then cannot be
-                    // admitted either, which is how this surfaces as an EMPTY fault.
                     Ok(false) => return StepOutcome::Yield,
                     Err(error) => {
                         let detail = retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes());

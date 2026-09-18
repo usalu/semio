@@ -464,3 +464,39 @@ fn transaction_begin_requires_at_least_one_prepared_handle() {
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
 }
 //#endregion 🔖️Misc
+
+//#region 💡️Inference
+/// 💡️ The general inference route reaches the channel as a REAL `AppCommand::Infer` carrying every
+/// identity field the router needs, and the guest's own answer comes straight back out — the
+/// contract `🏠️workspace`'s `PluginArtifactChannel` implements against `ArtifactInferenceRouter`.
+#[test]
+fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let command = InferCommand {
+        plugin_id: "wfc".into(),
+        artifact_kind: "s.wfc.wfc3d".into(),
+        inference_schema: "s.wfc.wfc3d.solve".into(),
+        revision: 4,
+        generation: 0,
+        cancellation_id: "cancel-1".into(),
+        work_units: 64,
+        canonical_payload: b"{\"seed\":7}".to_vec(),
+    };
+    let outcome = adapter.run_inference(3, command.clone()).expect("the mock channel answers a real Inferred frame");
+    assert_eq!(outcome.inference_schema, "s.wfc.wfc3d.solve");
+    assert!(outcome.complete);
+    assert_eq!(outcome.payload, b"{\"seed\":7}".to_vec());
+    assert_eq!(channel.frame_log(), vec![(3, AppCommand::Infer(command))], "exactly one Infer command, on the instance the caller named");
+}
+
+/// 💡️ A stale base generation is the guest/store's own rejection, mapped through the SAME
+/// `map_fault` table every mutation fault travels — never swallowed, never retried silently.
+#[test]
+fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    channel.bump_generation(0);
+    let command = InferCommand { plugin_id: "gis".into(), artifact_kind: "s.gis.gismap".into(), inference_schema: "s.gis.gismap.inference".into(), generation: 0, work_units: 1, ..InferCommand::default() };
+    let error = adapter.run_inference(0, command).unwrap_err();
+    assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
+}
+//#endregion 💡️Inference

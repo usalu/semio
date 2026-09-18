@@ -4,8 +4,14 @@
 //! other command leaves it alone, which is why a stale render is visibly stale rather than silently
 //! wrong.
 
+/// ✉️ The envelope id must be DOTTED (`plugin.artifact`). `DslArtifact` falls back to the extension
+/// when no `id` is given, and `SemioEnvelope::from_envelope_id` refuses an id without a `.` — so a
+/// bare `wfcbitmaptransient` made `print_dsl`'s own `expect` PANIC the guest the first time the solve
+/// was published on the transient lane, trapping every later dispatch in the shell
+/// (found live on the bitmap playground, 2026-09-18).
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
+#[dsl(id = "wfc.bitmaptransient")]
 #[dsl(extension = "wfcbitmaptransient")]
 #[dsl(layout = "lines")]
 pub struct BitmapTransient {

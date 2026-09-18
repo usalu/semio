@@ -1,0 +1,4 @@
+# 📎️ Direct set-embedded-file GraphQL payload.
+input SetEmbeddedFileMutationInput {
+  file: PdfEmbeddedFileInput
+}

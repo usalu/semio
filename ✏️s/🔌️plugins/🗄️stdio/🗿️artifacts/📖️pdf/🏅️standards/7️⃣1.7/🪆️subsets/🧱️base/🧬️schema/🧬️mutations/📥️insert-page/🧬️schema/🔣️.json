@@ -14,53 +14,11 @@
       "minimum": 0
     },
     "page": {
-      "$ref": "#/$defs/PdfPage"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage"
     },
     "mutation": {
       "const": "insertPage",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "PdfPage": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mediaBox"
-      ],
-      "properties": {
-        "mediaBox": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 4,
-          "maxItems": 4
-        },
-        "cropBox": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 4,
-              "maxItems": 4
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "rotate": {
-          "type": "integer",
-          "minimum": -2147483648,
-          "maximum": 2147483647
-        },
-        "text": {
-          "type": "string"
-        }
-      }
     }
   }
 }

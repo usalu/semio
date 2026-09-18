@@ -1,0 +1,4 @@
+# 🧩️ Direct set-pattern GraphQL payload.
+input SetPatternMutationInput {
+  pattern: PdfPatternInput
+}

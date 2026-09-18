@@ -52,7 +52,10 @@ fn artifact_capability(id: &str, tool_name: &str, kind: CapabilityKind, icon_id:
         use_when,
         input_schema,
         output_schema,
-        effects: Default::default(),
+        effects: match kind {
+            CapabilityKind::Mutation => semio_framework::manifest::CapabilityEffects { writes: vec![semio_framework::manifest::ResourceSelector::new("artifact:{self}")], ..Default::default() },
+            _ => Default::default(),
+        },
         policy: Default::default(),
         execution: Default::default(),
         exposure: ToolExposure::Direct { tool_name: tool_name.to_string() },

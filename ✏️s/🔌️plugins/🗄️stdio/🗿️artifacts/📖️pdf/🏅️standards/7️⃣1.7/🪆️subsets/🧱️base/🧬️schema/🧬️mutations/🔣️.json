@@ -7,42 +7,6 @@
     {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/append-page-content/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "appendPageContent"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-object/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "insertObject"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-page/schema.json"
         },
         {
@@ -53,60 +17,6 @@
           "properties": {
             "mutation": {
               "const": "insertPage"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/move-page/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "movePage"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-dict-entry/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "removeDictEntry"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-object/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "removeObject"
             }
           }
         }
@@ -133,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-trailer-entry/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-media-box/schema.json"
         },
         {
           "type": "object",
@@ -142,79 +52,7 @@
           ],
           "properties": {
             "mutation": {
-              "const": "removeTrailerEntry"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-dict-entry/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setDictEntry"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-info/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setInfo"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-object-value/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setObjectValue"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "allOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-content/schema.json"
-        },
-        {
-          "type": "object",
-          "required": [
-            "mutation"
-          ],
-          "properties": {
-            "mutation": {
-              "const": "setPageContent"
+              "const": "setPageMediaBox"
             }
           }
         }
@@ -241,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-media-box/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/append-page-content/schema.json"
         },
         {
           "type": "object",
@@ -250,7 +88,187 @@
           ],
           "properties": {
             "mutation": {
-              "const": "setPageMediaBox"
+              "const": "appendPageContent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-info/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setInfo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-object/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertObject"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-object/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeObject"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-object-value/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setObjectValue"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-dict-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setDictEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-dict-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeDictEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-trailer-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTrailerEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-trailer-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeTrailerEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/move-page/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "movePage"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-content/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageContent"
             }
           }
         }
@@ -277,7 +295,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-trailer-entry/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-box/schema.json"
         },
         {
           "type": "object",
@@ -286,7 +304,781 @@
           ],
           "properties": {
             "mutation": {
-              "const": "setTrailerEntry"
+              "const": "setPageBox"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-user-unit/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageUserUnit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-content/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertContent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-content/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeContent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/replace-content/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "replaceContent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/insert-annotation/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertAnnotation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-annotation/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeAnnotation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-annotation/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setAnnotation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-font/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFont"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-font/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeFont"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-image/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setImage"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-image/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeImage"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-form/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setForm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-form/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeForm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-ext-g-state/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setExtGState"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-ext-g-state/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeExtGState"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-shading/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setShading"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-shading/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeShading"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-pattern/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPattern"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-pattern/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removePattern"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-color-space/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setColorSpace"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-color-space/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeColorSpace"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-properties/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setProperties"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-properties/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeProperties"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-embedded-file/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEmbeddedFile"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-embedded-file/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEmbeddedFile"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-outlines/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setOutlines"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-named-destination/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setNamedDestination"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-named-destination/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeNamedDestination"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-labels/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageLabels"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-output-intents/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setOutputIntents"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-acro-form/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setAcroForm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-optional-content/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setOptionalContent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-layout/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageLayout"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-page-mode/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageMode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-viewer-preferences/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setViewerPreferences"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-open-action/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setOpenAction"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-language/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLanguage"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-mark-info/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setMarkInfo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-metadata/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setMetadata"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-document-id/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setDocumentId"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-encryption/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEncryption"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-catalog-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setCatalogEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-catalog-entry/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeCatalogEntry"
             }
           }
         }

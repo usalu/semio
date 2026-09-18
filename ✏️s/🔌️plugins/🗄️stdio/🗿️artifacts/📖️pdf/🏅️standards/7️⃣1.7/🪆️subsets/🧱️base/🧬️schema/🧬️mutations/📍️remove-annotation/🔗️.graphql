@@ -1,0 +1,5 @@
+# 📍️ Direct remove-annotation GraphQL payload.
+input RemoveAnnotationMutationInput {
+  index: Int
+  at: Int
+}

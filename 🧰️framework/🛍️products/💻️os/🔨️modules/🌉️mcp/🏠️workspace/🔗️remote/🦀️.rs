@@ -312,7 +312,7 @@ impl HubRemoteBinding {
             Ok(session) => session,
             Err(error) => return self.fail(generation, map_client_error(error)),
         };
-        if session.expires_at_ms <= wall_now_ms {
+        if session.expires_at <= wall_now_ms {
             return self.fail(generation, HubBindingError::SessionExpired);
         }
         validate_identity("authenticated user id", &session.user_id).and_then(|_| validate_identity("authenticated email", &session.email)).map_err(|error| {
@@ -335,7 +335,7 @@ impl HubRemoteBinding {
             DirectorySpaceAdministrationPageV1::Public { .. } => return self.fail(generation, HubBindingError::MembershipRequired),
         };
         let observed_event_seq = self.observed_event_seq.load(Ordering::SeqCst);
-        let snapshot = match self.validate_snapshot(session.user_id, session.expires_at_ms, space, members, documents, observed_event_seq, ctx) {
+        let snapshot = match self.validate_snapshot(session.user_id, session.expires_at, space, members, documents, observed_event_seq, ctx) {
             Ok(snapshot) => Arc::new(snapshot),
             Err(error) => return self.fail(generation, error),
         };

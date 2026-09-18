@@ -461,6 +461,82 @@
       "name": "wfc-wfc3d-react-attach",
       "url": "http://localhost:6045",
       "port": 6045
+    },
+    {
+      "name": "reasoning-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-reasoning-wires-react-dev"
+      ],
+      "port": 6015,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6015"
+      }
+    },
+    {
+      "name": "reasoning-react-attach",
+      "url": "http://localhost:6015",
+      "port": 6015
+    },
+    {
+      "name": "imperative-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-imperative-react-dev"
+      ],
+      "port": 6076,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6076"
+      }
+    },
+    {
+      "name": "imperative-react-attach",
+      "url": "http://localhost:6076",
+      "port": 6076
+    },
+    {
+      "name": "playbook-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-playbook-react-dev"
+      ],
+      "port": 6085,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6085"
+      }
+    },
+    {
+      "name": "playbook-react-attach",
+      "url": "http://localhost:6085",
+      "port": 6085
+    },
+    {
+      "name": "norm-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-din4108-react-dev"
+      ],
+      "port": 6091,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6091"
+      }
+    },
+    {
+      "name": "norm-react-attach",
+      "url": "http://localhost:6091",
+      "port": 6091
     }
   ]
 }

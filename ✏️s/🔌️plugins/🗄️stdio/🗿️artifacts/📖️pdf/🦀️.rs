@@ -442,6 +442,31 @@ pub mod standards {
             #[path = "."]
             pub mod base {
                 #[path = "."]
+                pub mod modules {
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/🦀️.rs"]
+                    pub mod lexer;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/🦀️.rs"]
+                    pub mod filters;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔗️xref/🦀️.rs"]
+                    pub mod xref;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔐️encryption/🦀️.rs"]
+                    pub mod encryption;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🦀️.rs"]
+                    pub mod fonts;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🖋️content/🦀️.rs"]
+                    pub mod content;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🎨️colour/🦀️.rs"]
+                    pub mod colour;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🖼️images/🦀️.rs"]
+                    pub mod images;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🦀️.rs"]
+                    pub mod lift;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/🦀️.rs"]
+                    pub mod lower;
+                    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/📝️writer/🦀️.rs"]
+                    pub mod writer;
+                }
+                #[path = "."]
                 pub mod schema {
                     #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
                     mod component;

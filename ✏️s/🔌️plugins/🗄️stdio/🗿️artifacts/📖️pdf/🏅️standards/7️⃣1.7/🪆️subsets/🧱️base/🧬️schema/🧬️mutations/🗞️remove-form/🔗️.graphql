@@ -1,0 +1,4 @@
+# 🗞️ Direct remove-form GraphQL payload.
+input RemoveFormMutationInput {
+  id: String
+}

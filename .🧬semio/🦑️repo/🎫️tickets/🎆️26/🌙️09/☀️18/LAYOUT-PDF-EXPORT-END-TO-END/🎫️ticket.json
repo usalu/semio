@@ -1,0 +1,25 @@
+{
+  "title": "Layout Pdf Export End To End",
+  "emoji": "📕️",
+  "status": "done",
+  "description": "Get the layout artifact's PDF export working fully end to end: the shell's Export Pdf action runs the resumable LayoutExportJob, the job renders every page (frames, text, images) into a valid PDF, the bytes reach the browser as a download, and the file opens with the expected page count and content.",
+  "goal": "LAYOUT",
+  "sessions": [
+    "⚪88a59fa7-6895-41a0-ab94-127ac33b4a44"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-18). Follows 26/09/16/LAYOUT-PLUGIN-END-TO-END (serve/probe scripts reused).",
+  "summary": "Layout PDF export works end to end in the react playground: Export Pdf → OpBinary wire decoded (was JSON-text scan, every export faulted) → resumable job renders every page from the Preview's display list with the embedded MapLabelSans CIDFont, y-flipped rects/strokes/image placeholders, streaming objects → download built on the job's own chunk queue (the mounted operation drained the request's queue at retirement → 0-byte files) → Demo.pdf 29 KiB, PyMuPDF-verified 2 pages with ink where the document paints, live edits included. Native laws: xref/stream structure walk + host-turn drain law.",
+  "files": [
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🔣️.json",
+    "✏️s/🔌️plugins/📏️layout/🛂️.descriptor.semio",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/LAYOUT-PDF-EXPORT-END-TO-END/📓️status.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/LAYOUT-PDF-EXPORT-END-TO-END/📜️activate-layout-react.sh",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/LAYOUT-PDF-EXPORT-END-TO-END/📜️serve-layout-react.sh",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/LAYOUT-PDF-EXPORT-END-TO-END/🐍️layout-export-pdf-probe.mjs",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/LAYOUT-PDF-EXPORT-END-TO-END/🐍️validate-pdf.py"
+  ]
+}

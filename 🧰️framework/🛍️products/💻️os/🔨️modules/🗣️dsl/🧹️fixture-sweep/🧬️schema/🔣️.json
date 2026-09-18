@@ -11,12 +11,13 @@
         "schema",
         "package",
         "target",
+        "targetPath",
         "moduleSha256",
-        "retainedSha256",
+        "mounts",
         "laws",
-        "registry",
-        "dependencies",
-        "hostSnapshots",
+        "workspaceDependencies",
+        "pathDependencies",
+        "kernelDependencies",
         "cases"
       ],
       "properties": {
@@ -29,89 +30,81 @@
         "target": {
           "const": "fixture_sweep"
         },
+        "targetPath": {
+          "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/🧪️tests/🧹️fixture-sweep/🦀️.rs"
+        },
         "moduleSha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
-        "retainedSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "laws": {
+        "mounts": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^tests::repo_wide_[a-z_]+$"
-          }
-        },
-        "registry": {
-          "type": "array",
-          "minItems": 54,
-          "maxItems": 54,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "dependencies": {
-          "type": "array",
-          "minItems": 29,
-          "maxItems": 29,
+          "minItems": 9,
+          "maxItems": 9,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "alias",
-              "package",
-              "path",
-              "features",
-              "defaultFeatures"
-            ],
+            "required": ["name", "path"],
             "properties": {
-              "alias": {
-                "type": "string",
-                "minLength": 1
-              },
-              "package": {
-                "type": "string",
-                "minLength": 1
-              },
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "features": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "string"
-                }
-              },
-              "defaultFeatures": {
-                "type": "boolean"
-              }
+              "name": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+              "path": { "type": "string", "pattern": "^\\.\\./.+/🦀️\\.rs$" }
             }
           }
         },
-        "hostSnapshots": {
-          "const": [
-            "WorkflowSnapshot",
-            "SpaceSnapshot",
-            "CollectionSnapshot"
-          ]
-        },
-        "cases": {
+        "laws": {
           "type": "array",
-          "minItems": 16,
-          "maxItems": 16,
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+::[a-z0-9_]+$"
+          }
+        },
+        "workspaceDependencies": {
+          "type": "array",
+          "minItems": 53,
+          "maxItems": 53,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^semio-[a-z0-9-]+$"
+          }
+        },
+        "pathDependencies": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["alias", "package", "path", "features", "defaultFeatures"],
+            "properties": {
+              "alias": { "type": "string", "minLength": 1 },
+              "package": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "minLength": 1 },
+              "features": { "type": "array", "items": { "type": "string" } },
+              "defaultFeatures": { "type": "boolean" }
+            }
+          }
+        },
+        "kernelDependencies": {
+          "type": "array",
+          "minItems": 1,
           "uniqueItems": true,
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
           }
         }
       }

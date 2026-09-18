@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-output-intents/schema.json",
+  "title": "SetOutputIntents",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intents"
+  ],
+  "properties": {
+    "intents": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfOutputIntent"
+      }
+    },
+    "mutation": {
+      "const": "setOutputIntents",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

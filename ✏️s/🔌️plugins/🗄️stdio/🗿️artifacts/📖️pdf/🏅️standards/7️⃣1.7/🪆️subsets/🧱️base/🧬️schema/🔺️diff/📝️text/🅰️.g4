@@ -1,18 +1,14 @@
-// ANTLR4 grammar for PdfDiff's sparse structural logical text protocol. Recursive payloads carry
-// typed COS values, decoded stream bytes, and typed filter pipelines without JSON or native PDF.
+// ANTLR4 grammar for PdfDiff's one-line derive-owned text record: the sparse typed diff value
+// printed by the shared DSL value printer.
 grammar Stdio_pdf_1_7_Diff;
 
-pdfDiff: field* EOF;
-field
-    : 'declared-version=' ATOM
-    | 'info=' payload
-    | 'pages=' triple
-    | 'objects=' triple
-    | 'trailer=' triple
-    ;
-triple: payload ';' payload ';' payload;
-payload: '[' payloadItem* ']';
-payloadItem: payload | ATOM | ',' | ':' | ';';
+pdfDiff: 'value=' value EOF;
+value: record | list | STRING | NUMBER | 'true' | 'false' | 'null';
+record: '{' (field (',' field)*)? '}';
+field: KEY ':' value;
+list: '[' (value (',' value)*)? ']';
 
-ATOM: [A-Za-z0-9.+-]+;
-WS: ' '+ -> skip;
+KEY: [A-Za-z_] [A-Za-z0-9_]*;
+STRING: '"' (~["\\] | '\\' .)* '"';
+NUMBER: '-'? [0-9]+ ('.' [0-9]+)?;
+WS: [ \t]+ -> skip;

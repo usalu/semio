@@ -73,14 +73,14 @@ fn a_different_seed_is_free_to_answer_differently_but_stays_valid() {
     assert_eq!(decode_base64(&solved.pixels).expect("output decodes").len(), 24);
 }
 
+/// 🩺 The sample `0 1 0` learned as 2 × 2 windows over a periodic input yields three patterns
+/// whose only horizontal rule is "a pattern's right column must be the next one's left column".
+/// Colour 1 is the anchor of exactly ONE pattern, whose right column is `1`, and no pattern's
+/// left column is `1` except that same one — which its own rule forbids following itself. Pinning
+/// two ADJACENT output cells to colour 1 therefore asks for an adjacency the sample never
+/// contains, and no assignment exists.
 #[test]
 fn a_sample_that_cannot_tile_the_output_reports_a_contradiction() {
-    // 🩺 The sample `0 1 0` learned as 2 × 2 windows over a periodic input yields three patterns
-    // whose only horizontal rule is "a pattern's right column must be the next one's left column".
-    // Colour 1 is the anchor of exactly ONE pattern, whose right column is `1`, and no pattern's
-    // left column is `1` except that same one — which its own rule forbids following itself. Pinning
-    // two ADJACENT output cells to colour 1 therefore asks for an adjacency the sample never
-    // contains, and no assignment exists.
     let snapshot = BitmapSnapshot {
         seed: 5,
         input: BitmapInput { width: 3, height: 1, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: encode_base64(&[0, 1, 0]) },
@@ -97,11 +97,11 @@ fn a_sample_that_cannot_tile_the_output_reports_a_contradiction() {
     assert_eq!(<BitmapSolve as store::InferredField<BitmapSnapshot>>::compute(&snapshot, &"bitmap".to_string(), &[]), BitmapSolveResult::Unsolved);
 }
 
+/// 🩺 With `N = 2` over a non-periodic `0 1 2`, only `0` and `1` are ever a window's top-left
+/// cell, so colour `2` is not expressible as a pin at all. Silently ignoring the pin would hand
+/// back a bitmap that quietly disobeys the document.
 #[test]
 fn a_pin_on_a_colour_no_pattern_anchors_is_refused_rather_than_dropped() {
-    // 🩺 With `N = 2` over a non-periodic `0 1 2`, only `0` and `1` are ever a window's top-left
-    // cell, so colour `2` is not expressible as a pin at all. Silently ignoring the pin would hand
-    // back a bitmap that quietly disobeys the document.
     let snapshot = BitmapSnapshot {
         seed: 5,
         input: BitmapInput {

@@ -106,10 +106,19 @@ fn gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_too
 fn declared_inferences_for_workspace_finds_the_real_wfc_roster() {
     let workspace = open_workspace(wfc_only_catalog());
     let declared = declared_inferences_for_workspace(&workspace).expect("wfc is the sole plugin owner");
-    assert_eq!(declared.len(), 1, "{declared:?}");
-    assert_eq!(declared[0].owner, "wfc");
-    assert_eq!(declared[0].artifact_kind, "s.wfc.wfc3d");
-    assert_eq!(declared[0].inference_schema, "s.wfc.wfc3d.solve");
+    assert!(declared.iter().all(|row| row.owner == "wfc" && row.contributor == "wfc"), "{declared:?}");
+    let solved: Vec<(&str, &str)> = declared.iter().map(|row| (row.artifact_kind.as_str(), row.inference_schema.as_str())).collect();
+    assert_eq!(
+        solved,
+        vec![
+            ("s.wfc.bitmap", "s.wfc.bitmap.solve"),
+            ("s.wfc.grid2d", "s.wfc.grid2d.solve"),
+            ("s.wfc.grid3d", "s.wfc.grid3d.solve"),
+            ("s.wfc.wfc2d", "s.wfc.wfc2d.solve"),
+            ("s.wfc.wfc3d", "s.wfc.wfc3d.solve"),
+        ],
+        "the committed 🀄️wfc descriptor's own five artifact kinds, in its own declaration order"
+    );
 }
 
 #[test]
@@ -240,3 +249,107 @@ async fn bound_tier_inference_resources_list_names_every_known_artifact() {
     assert!(resources.iter().any(|resource| resource.uri == "semio://artifact/probe-list/inference"));
 }
 //#endregion 🧪️Resources
+
+//#region 🧪️Execution
+/// 🏗️ A tool registry with `inference_run` wired exactly the way the live binary wires it, plus the
+/// shared `MockArtifactChannel` so the test can assert on the REAL `AppCommand::Infer` that left the
+/// dispatch path. The workspace is a real `--folder` one over `catalog`, so the declared roster is
+/// read from the plugins' own COMMITTED `🔣️.json` descriptors — no fixture roster is invented here.
+fn inference_run_harness(catalog: Arc<Catalog>) -> (InMemoryToolRegistry, crate::actions::MockArtifactChannel, Arc<HeadlessWorkspace>) {
+    let workspace = open_workspace(catalog);
+    let channel = crate::actions::MockArtifactChannel::new();
+    let actions = Arc::new(crate::actions::ActionAdapter::new(
+        Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
+        Arc::new(crate::handles::HandleTable::new()),
+        Arc::new(crate::handles::IdempotencyStore::new()),
+        Arc::new(crate::audit::AuditSinks::InMemory(crate::audit::InMemoryAuditSink::new())),
+        crate::policy::AutoApprovePolicy::Never,
+        crate::audit::ClientInfo { name: "test".into(), version: "0".into() },
+    ));
+    let principal = AgentPrincipal::from_scope_names("agent:test", "claude-code", &["artifacts.read".to_string(), "jobs.spawn".to_string()], None);
+    let mut registry = InMemoryToolRegistry::new();
+    register_inference_job_tools(&mut registry, Some(workspace.clone()), actions, principal, crate::handles::SessionHandle::new("sess_inference"));
+    (registry, channel, workspace)
+}
+
+fn call_inference_run(registry: &InMemoryToolRegistry, arguments: serde_json::Value) -> CallToolResult {
+    registry.call("inference_run", arguments).expect("inference_run is registered")
+}
+
+/// 💡️ The GIS Map service is the oracle: it is the ONE inference this gateway could already reach
+/// (hub-backed), so proving the general route resolves the SAME declared row from the SAME committed
+/// descriptor and dispatches it through `AppCommand::Infer` is what makes the new path trustworthy.
+#[tokio::test]
+async fn inference_run_dispatches_the_gis_map_oracle_through_the_infer_command() {
+    let (registry, channel, _workspace) = inference_run_harness(plugin_only_catalog("gis"));
+    let result = call_inference_run(
+        &registry,
+        serde_json::json!({ "artifactKind": GIS_MAP_INFERENCE_ARTIFACT_KIND, "inferenceSchema": GIS_MAP_INFERENCE_SERVICE_ID, "payload": { "probe": 1 }, "cancellationId": "cancel-gis" }),
+    );
+    assert!(!result.is_error, "gis map inference must not be a tool error: {result:?}");
+    let structured = result.structured_content.expect("inference_run answers structured content");
+    assert_eq!(structured["status"], "SUCCEEDED");
+    assert_eq!(structured["pluginId"], "gis");
+    assert_eq!(structured["inferenceSchema"], GIS_MAP_INFERENCE_SERVICE_ID);
+    assert_eq!(structured["payload"], serde_json::json!({ "probe": 1 }), "the guest's own result payload, not a host-synthesised one");
+    assert!(structured["jobId"].as_str().expect("a job handle").starts_with("job_"), "an expensive call always mints a job for job_get/job_cancel");
+
+    let log = channel.frame_log();
+    assert_eq!(log.len(), 1, "exactly one command left the dispatch path: {log:?}");
+    let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
+    assert_eq!(command.plugin_id, "gis");
+    assert_eq!(command.artifact_kind, GIS_MAP_INFERENCE_ARTIFACT_KIND);
+    assert_eq!(command.inference_schema, GIS_MAP_INFERENCE_SERVICE_ID);
+    assert_eq!(command.cancellation_id, "cancel-gis");
+}
+
+/// 💡️ …and a service that was previously `channel.not-wired` for ALL of its life — `wfc`'s own
+/// `s.wfc.wfc3d.solve` — travels the identical route with no per-plugin special case anywhere.
+#[tokio::test]
+async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
+    let (registry, channel, _workspace) = inference_run_harness(wfc_only_catalog());
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.solve", "payload": { "seed": 7 } }));
+    assert!(!result.is_error, "wfc inference must not be a tool error: {result:?}");
+    let structured = result.structured_content.expect("structured content");
+    assert_eq!(structured["status"], "SUCCEEDED");
+    assert_eq!(structured["pluginId"], "wfc");
+    assert_eq!(structured["payload"], serde_json::json!({ "seed": 7 }));
+
+    let log = channel.frame_log();
+    let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
+    assert_eq!(command.plugin_id, "wfc");
+    assert_eq!(command.inference_schema, "s.wfc.wfc3d.solve");
+    assert!(!command.cancellation_id.is_empty(), "a cancellation identity is always minted, so job_cancel has something to address");
+}
+
+/// 🚫️ An inference nobody declares is a typed `NOT_FOUND` naming both halves of the pair — never a
+/// silent empty result and never a guessed plugin.
+#[tokio::test]
+async fn inference_run_refuses_an_undeclared_service() {
+    let (registry, channel, _workspace) = inference_run_harness(wfc_only_catalog());
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.nonexistent" }));
+    assert!(result.is_error);
+    assert!(channel.frame_log().is_empty(), "an undeclared service must never reach a plugin channel");
+}
+
+/// 🔐️ A principal without `jobs.spawn` is refused by the gateway's OWN policy engine before any
+/// plugin is touched — the same scope gate every other inference tool applies.
+#[tokio::test]
+async fn inference_run_is_scope_gated() {
+    let workspace = open_workspace(wfc_only_catalog());
+    let channel = crate::actions::MockArtifactChannel::new();
+    let actions = Arc::new(crate::actions::ActionAdapter::new(
+        Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
+        Arc::new(crate::handles::HandleTable::new()),
+        Arc::new(crate::handles::IdempotencyStore::new()),
+        Arc::new(crate::audit::AuditSinks::InMemory(crate::audit::InMemoryAuditSink::new())),
+        crate::policy::AutoApprovePolicy::Never,
+        crate::audit::ClientInfo { name: "test".into(), version: "0".into() },
+    ));
+    let mut registry = InMemoryToolRegistry::new();
+    register_inference_job_tools(&mut registry, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.solve" }));
+    assert!(result.is_error);
+    assert!(channel.frame_log().is_empty());
+}
+//#endregion 🧪️Execution

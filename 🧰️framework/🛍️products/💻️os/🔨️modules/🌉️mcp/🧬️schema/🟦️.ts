@@ -96,7 +96,7 @@ function parseExport(exportId: string, value: unknown): unknown {
 
 //#region 🔖️Exports
 /** 🆔️ Every ExportId this scope publishes, in the document's own (key-sorted) order. */
-export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "GatewayError", "GatewayErrorCode", "GisMapInferenceApprovalRequestV1", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
+export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "GatewayError", "GatewayErrorCode", "GisMapInferenceApprovalRequestV1", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
 
 export type OsMcpExportId = (typeof OS_MCP_EXPORT_IDS)[number];
 
@@ -145,6 +145,48 @@ export type ArtifactExportOutput = {
   readonly "contentBase64"?: string | null;
   readonly "format"?: string;
   readonly "mimeType"?: string | null;
+};
+
+export type ArtifactInferenceBudgetV1 = {
+  readonly "allocationBytes": number;
+  readonly "recursionDepth": number;
+  readonly "workUnits": number;
+};
+
+export type ArtifactInferenceCacheModeV1 = "cold" | "incremental" | "bypass";
+
+export type ArtifactInferenceRequestV1 = {
+  readonly "algorithmVersion": number;
+  readonly "artifactKind": string;
+  readonly "artifactSchema": string;
+  readonly "artifactSchemaVersion": number;
+  readonly "budgets": ArtifactInferenceBudgetV1;
+  readonly "cancellationId": string;
+  readonly "canonicalPayload": readonly number[];
+  readonly "dependencies": readonly readonly JsonValue[][];
+  readonly "generation": number;
+  readonly "inferenceSchema": string;
+  readonly "inferenceSchemaVersion": number;
+  readonly "owner": string;
+  readonly "policy": readonly number[];
+  readonly "policyVersion": number;
+  readonly "previousState"?: readonly number[] | null;
+  readonly "requestedCacheMode": ArtifactInferenceCacheModeV1;
+  readonly "revision": number;
+  readonly "sourceDialect": string;
+  readonly "wireVersion": number;
+};
+
+export type ArtifactInferenceResultV1 = {
+  readonly "actualCacheMode": ArtifactInferenceCacheModeV1;
+  readonly "artifactKind": string;
+  readonly "canonicalPayload": readonly number[];
+  readonly "complete": boolean;
+  readonly "generation": number;
+  readonly "inferenceSchema": string;
+  readonly "owner": string;
+  readonly "revision": number;
+  readonly "wireVersion": number;
 };
 
 export type ArtifactOpenInput = {
@@ -305,6 +347,30 @@ export type InferenceListOutput = {
   readonly "artifactId"?: JsonValue;
   readonly "artifactKind"?: JsonValue;
   readonly "declared"?: readonly JsonValue[];
+};
+
+export type InferenceRunInput = {
+  readonly "artifactId"?: string;
+  readonly "artifactKind": string;
+  readonly "cancellationId"?: string;
+  readonly "generation"?: number;
+  readonly "inferenceSchema": string;
+  readonly "payload"?: JsonValue;
+  readonly "pluginId"?: string;
+  readonly "revision"?: number;
+  readonly "workUnits"?: number;
+};
+
+export type InferenceRunOutput = {
+  readonly "artifactKind": string;
+  readonly "cancellationId"?: string;
+  readonly "complete"?: boolean;
+  readonly "inferenceSchema": string;
+  readonly "jobId": string;
+  readonly "payload"?: JsonValue;
+  readonly "payloadBytes"?: number;
+  readonly "pluginId"?: string;
+  readonly "status": string;
 };
 
 export type InferenceSubmitInput = {
@@ -482,6 +548,10 @@ export const parseArtifactCreateOutput = (value: unknown): ArtifactCreateOutput 
 export const parseArtifactCreateTemplateInput = (value: unknown): ArtifactCreateTemplateInput => parseExport("ArtifactCreateTemplateInput", value) as ArtifactCreateTemplateInput;
 export const parseArtifactExportInput = (value: unknown): ArtifactExportInput => parseExport("ArtifactExportInput", value) as ArtifactExportInput;
 export const parseArtifactExportOutput = (value: unknown): ArtifactExportOutput => parseExport("ArtifactExportOutput", value) as ArtifactExportOutput;
+export const parseArtifactInferenceBudgetV1 = (value: unknown): ArtifactInferenceBudgetV1 => parseExport("ArtifactInferenceBudgetV1", value) as ArtifactInferenceBudgetV1;
+export const parseArtifactInferenceCacheModeV1 = (value: unknown): ArtifactInferenceCacheModeV1 => parseExport("ArtifactInferenceCacheModeV1", value) as ArtifactInferenceCacheModeV1;
+export const parseArtifactInferenceRequestV1 = (value: unknown): ArtifactInferenceRequestV1 => parseExport("ArtifactInferenceRequestV1", value) as ArtifactInferenceRequestV1;
+export const parseArtifactInferenceResultV1 = (value: unknown): ArtifactInferenceResultV1 => parseExport("ArtifactInferenceResultV1", value) as ArtifactInferenceResultV1;
 export const parseArtifactOpenInput = (value: unknown): ArtifactOpenInput => parseExport("ArtifactOpenInput", value) as ArtifactOpenInput;
 export const parseArtifactOpenOutput = (value: unknown): ArtifactOpenOutput => parseExport("ArtifactOpenOutput", value) as ArtifactOpenOutput;
 export const parseArtifactSnapshotInput = (value: unknown): ArtifactSnapshotInput => parseExport("ArtifactSnapshotInput", value) as ArtifactSnapshotInput;
@@ -511,6 +581,8 @@ export const parseInferenceJobHandleInput = (value: unknown): InferenceJobHandle
 export const parseInferenceJobOutput = (value: unknown): InferenceJobOutput => parseExport("InferenceJobOutput", value) as InferenceJobOutput;
 export const parseInferenceListInput = (value: unknown): InferenceListInput => parseExport("InferenceListInput", value) as InferenceListInput;
 export const parseInferenceListOutput = (value: unknown): InferenceListOutput => parseExport("InferenceListOutput", value) as InferenceListOutput;
+export const parseInferenceRunInput = (value: unknown): InferenceRunInput => parseExport("InferenceRunInput", value) as InferenceRunInput;
+export const parseInferenceRunOutput = (value: unknown): InferenceRunOutput => parseExport("InferenceRunOutput", value) as InferenceRunOutput;
 export const parseInferenceSubmitInput = (value: unknown): InferenceSubmitInput => parseExport("InferenceSubmitInput", value) as InferenceSubmitInput;
 export const parseInvocationReport = (value: unknown): InvocationReport => parseExport("InvocationReport", value) as InvocationReport;
 export const parseInvocationStatus = (value: unknown): InvocationStatus => parseExport("InvocationStatus", value) as InvocationStatus;

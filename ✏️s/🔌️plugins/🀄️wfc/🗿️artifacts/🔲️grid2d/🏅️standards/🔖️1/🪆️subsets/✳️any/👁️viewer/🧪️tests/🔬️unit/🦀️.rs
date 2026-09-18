@@ -27,11 +27,21 @@ fn the_viewer_boots_the_same_committed_example_the_editor_does() {
     assert_eq!(<Grid2dViewer as ArtifactViewer>::initial_snapshot(), crate::examples::grid2d::pipes::document());
 }
 
+/// 👁️ Every row of the view command channel is a HOST-dispatched verb the window must declare —
+/// the ids the shell's navbar picker and `Canvas2dHost` send — and each round trips its own wire.
 #[test]
-fn the_view_command_is_structurally_inert() {
-    let bytes = <Grid2dViewCommand as protocol::OpBinary>::encode_op(&Grid2dViewCommand::Noop).expect("encode");
-    assert!(bytes.is_empty());
-    assert_eq!(<Grid2dViewCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode"), Grid2dViewCommand::Noop);
+fn the_view_command_channel_carries_exactly_the_host_dispatched_verbs() {
+    assert_eq!(GRID2D_VIEW_TOOL_IDS, <Grid2dViewCommand as protocol::OpBinary>::TOOL_JOB_IDS, "the proof catalog and the wire ids are one declaration");
+    let definition = create_grid2d_viewer();
+    let window = definition.window_kinds.first();
+    for action in GRID2D_VIEW_TOOL_IDS {
+        assert!(window.actions.iter().any(|declared| &declared.id == action), "{action} is dispatched at this pane but declared by no window");
+        let command = <Grid2dViewer as ArtifactViewer>::command_from_action(action, None).unwrap_or_else(|error| panic!("{action}: {error:?}"));
+        assert_eq!(grid2d_view_command_id(&command), *action);
+        let bytes = <Grid2dViewCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
+        assert_eq!(<Grid2dViewCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode"), command);
+    }
+    assert!(<Grid2dViewer as ArtifactViewer>::command_from_action("pin-cell", None).is_err(), "a mutation verb never reaches a read-only surface");
 }
 
 #[test]

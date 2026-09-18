@@ -450,7 +450,7 @@ impl Drop for MountedSurfaceResizeLane {
         }
         self.begin_close();
         let Some(token) = self.token else {
-            debug_assert!(false, "surface resize lane without a token requires incremental close before drop");
+            debug_assert!(std::thread::panicking(), "surface resize lane without a token requires incremental close before drop");
             return;
         };
         let slot = token.slot as usize;

@@ -192,9 +192,23 @@ fn face_index(axis: usize, positive: bool) -> usize {
     axis * 2 + usize::from(!positive)
 }
 
-/// 🎨️ A flat per-face base color, with any nearby [`FaceMarker`] drawn on top — isolated, high-contrast,
-/// locally-unique corner-rich features at fixed world positions.
-fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> [u8; 3] {
+/// 🧱️ Cell size (in units of the cube's half extent) and luminance swing of the blocky value-noise
+/// texture on every face: a flat face gives a gradient descriptor nothing to tell its keypoints
+/// apart by (every marker edge looks like every other), so like the shipped orbit fixture the faces
+/// carry a seeded pattern whose cell junctions are the corners a real surface offers.
+const CUBE_TEXTURE_CELL: f64 = 0.16;
+const CUBE_TEXTURE_SWING: f64 = 0.45;
+
+fn cube_texture_shade(face: usize, u: f64, v: f64, half: f64) -> f64 {
+    let cell = CUBE_TEXTURE_CELL * half;
+    let (iu, iv) = ((u / cell).floor() as i64, (v / cell).floor() as i64);
+    let mut rng = geometry::random::Rng::from_seed(0x7E57_CE11 ^ ((face as u64) << 56) ^ (iu as u64).wrapping_mul(0x9E37_79B9) ^ ((iv as u64).wrapping_mul(0x85EB_CA6B) << 20));
+    1.0 + CUBE_TEXTURE_SWING * (rng.next_f64() * 2.0 - 1.0)
+}
+
+/// 🎨️ A textured per-face base color, with any nearby [`FaceMarker`] drawn on top — isolated,
+/// high-contrast, locally-unique corner-rich features at fixed world positions.
+fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6], half: f64) -> [u8; 3] {
     let positive = p[axis] > 0.0;
     let (u, v) = match axis {
         0 => (p[1], p[2]),
@@ -207,7 +221,8 @@ fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> 
             return m.color;
         }
     }
-    FACE_BASE_COLORS[idx]
+    let shade = cube_texture_shade(idx, u, v, half);
+    FACE_BASE_COLORS[idx].map(|channel| (f64::from(channel) * shade).round().clamp(0.0, 255.0) as u8)
 }
 
 /// 🖼️ Renders one view of a `half`-extent axis-aligned textured cube (analytic ray/box intersection,
@@ -222,7 +237,7 @@ fn render_cube_frame(width: u32, height: u32, intr: &remodeling_camera::Intrinsi
             let ray_cam = intr.unproject_ray([f64::from(x) + 0.5, f64::from(y) + 0.5]);
             let ray_world = normalize3(sub3(to_world.act(ray_cam), origin_world));
             let color = match ray_box_intersect(origin_world, ray_world, half) {
-                Some((p, axis)) => cube_face_color(p, axis, markers),
+                Some((p, axis)) => cube_face_color(p, axis, markers, half),
                 None => [35u8, 35, 40],
             };
             let idx = ((y * width + x) * 4) as usize;
@@ -322,6 +337,12 @@ fn chunking_does_not_change_the_final_mesh() {
     }
     let mesh_huge_budget = run_to_done(&mut big, usize::MAX);
 
+    let census = |engine: &ReconstructionEngine| {
+        let reconstruction = engine.reconstruction.as_ref();
+        (reconstruction.map(|r| r.cameras.iter().map(|(frame, _)| *frame).collect::<Vec<_>>()).unwrap_or_default(), reconstruction.map_or(0, |r| r.points.len()), engine.depth_maps.len(), engine.dense_positions().len())
+    };
+    println!("[chunking] budget 1: cameras/points/depth maps/dense {:?}; budget MAX: {:?}", census(&small), census(&big));
+    assert_eq!(census(&small), census(&big), "chunking must not change the registration or the dense stage");
     assert_eq!(mesh_small_budget.indices.len(), mesh_huge_budget.indices.len(), "chunking must not change triangle count");
     assert_eq!(mesh_small_budget.positions.len(), mesh_huge_budget.positions.len(), "chunking must not change vertex count");
     assert_eq!(mesh_small_budget.positions, mesh_huge_budget.positions, "chunking must not change vertex positions");
@@ -502,6 +523,7 @@ mod long {
         // synthetic scene's own world frame via a closed-form Umeyama fit between the true and
         // recovered camera centers (correspondence keyed by frame index) before any bbox comparison.
         let recon_cameras = engine.reconstruction.as_ref().expect("Done status must retain the finalized Reconstruction").cameras.clone();
+        println!("[long] registered frames {:?}, {} sparse points", recon_cameras.iter().map(|(frame, _)| *frame).collect::<Vec<_>>(), engine.reconstruction.as_ref().map_or(0, |r| r.points.len()));
         assert!(recon_cameras.len() >= 3, "need >= 3 registered cameras to fit a Sim3 gauge alignment, got {}", recon_cameras.len());
         let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx])).unzip();
         let gauge = crate::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
@@ -528,7 +550,11 @@ mod long {
         // baseline chaining drifts the Umeyama fit, fall back to the raw mesh extent (which can
         // already sit near the world gauge for this synthetic orbit).
         let mesh_diag = if (gauged_diag - cube_diag).abs() <= (raw_diag - cube_diag).abs() { gauged_diag } else { raw_diag };
-        let tolerance = 0.50;
+        // 🧊️ The interactive pipeline meshes what the depth maps observed as a closed shell one
+        // truncation band (a third of the half extent here) thick, so a correct reconstruction's
+        // extent exceeds the cube's by up to two truncation distances before the coarsened net adds
+        // its own cell of slack — hence the tolerance.
+        let tolerance = 0.60;
         println!("[long] cube_diag={cube_diag:.4} raw_diag={raw_diag:.4} gauged_diag={gauged_diag:.4} chosen={mesh_diag:.4}");
         assert!((mesh_diag - cube_diag).abs() <= tolerance * cube_diag, "mesh bbox diagonal {mesh_diag} should be within {}% of the cube's known bbox diagonal {cube_diag}", tolerance * 100.0);
 
@@ -726,12 +752,23 @@ fn diagnose_synthetic_orbit_geometry() {
         engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
     }
     let intrinsics = intrinsics.expect("one frame");
+    engine.observe();
     // One unit at a time: the first pose-estimation unit hands the pair table to the SfM.
     while engine.stage() != EngineStage::EstimatingPoses {
         if let EngineStatus::Failed(message) = engine.advance(1) {
             panic!("engine failed before pose estimation: {message}");
         }
     }
+    let mut observations = Vec::new();
+    engine.drain_observations(&mut observations);
+    for observation in &observations {
+        match observation {
+            EngineObservation::PairMatched { frame_a, frame_b, matches } if (*frame_a, *frame_b) == (0, 1) || (*frame_a, *frame_b) == (11, 12) => eprintln!("[GEO] observed pair ({frame_a},{frame_b}) kept {matches} matches"),
+            EngineObservation::PairGeometryRejected { frame_a, frame_b, dropped } if (*frame_a, *frame_b) == (0, 1) || (*frame_a, *frame_b) == (11, 12) => eprintln!("[GEO] observed pair ({frame_a},{frame_b}) dropped {dropped} matches"),
+            _ => {}
+        }
+    }
+    eprintln!("[GEO] {} observations, {} keypoints in frame 11, {} in frame 12", observations.len(), engine.keypoints_per_frame[11].len(), engine.keypoints_per_frame[12].len());
     let relative = |a: usize, b: usize| world_to_camera[b].semio_compose_rs(&world_to_camera[a].inverse());
     let essential = |pose: &Se3| {
         let t = pose.t;

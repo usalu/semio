@@ -1,0 +1,4 @@
+# 🧺️ Direct remove-catalog-entry GraphQL payload.
+input RemoveCatalogEntryMutationInput {
+  key: String
+}

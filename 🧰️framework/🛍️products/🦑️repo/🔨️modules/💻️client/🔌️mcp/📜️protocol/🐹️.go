@@ -165,6 +165,34 @@ func decodeExact(data []byte, target any) error {
 	return nil
 }
 
+// 🤝️DecodeOpenParams decodes one params object WITHOUT rejecting unknown fields. It exists for the
+// handshake alone: MCP declares `initialize` forward-extensible, so a conforming client may send
+// `clientInfo.title`, `capabilities.tasks`, `capabilities.experimental` or any later addition, and
+// rejecting those with -32602 closes the session before `tools/list` for every modern client.
+// Every other frame stays on the hostile DecodeParams.
+func DecodeOpenParams(raw json.RawMessage, target any) error {
+	if len(raw) == 0 {
+		raw = []byte("{}")
+	}
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) == 0 || trimmed[0] != '{' {
+		return errors.New("mcp: params must be an object")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return errors.New("mcp: trailing JSON value")
+		}
+		return err
+	}
+	return nil
+}
+
 func DecodeParams(raw json.RawMessage, target any) error {
 	if len(raw) == 0 {
 		raw = []byte("{}")
@@ -182,6 +210,7 @@ func DecodeParams(raw json.RawMessage, target any) error {
 
 type Implementation struct {
 	Name    string `json:"name"`
+	Title   string `json:"title,omitempty"`
 	Version string `json:"version"`
 }
 

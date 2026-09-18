@@ -33,10 +33,10 @@ Feature: Apply every typed SEQUENCE step mutation to the real committed step gra
   edge touches, so the kind is measured on its own and not on the edge cascade its diff also performs.
 
   ⚖️ The projection is `(schema, steps, edges)` read back through `sequence_working_scene`. The
-  composed content handle is deliberately NOT projected: `sequence_content_child_handle`
-  content-addresses exactly that pair with `std`'s deliberately unspecified `DefaultHasher`, so
-  projecting the handle would compare the same content twice and pin a value the standard library
-  does not promise.
+  composed content handle is deliberately NOT projected: `sequence_content_child_handle` mints one
+  constant `(child_id, target)` pair — the identity `ChildRestoreProjection` requires — and carries
+  the live steps/edges on its local owner, so projecting the handle would compare the same content
+  twice and add nothing the scene projection does not already state.
 
   @id-mutate
   @level-exhaustive

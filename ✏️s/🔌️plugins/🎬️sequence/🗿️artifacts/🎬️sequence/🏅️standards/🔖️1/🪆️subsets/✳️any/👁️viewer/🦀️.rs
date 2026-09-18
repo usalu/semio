@@ -56,6 +56,11 @@ impl ArtifactViewer for SequenceViewer {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child-projection"), error.to_string()))
     }
 
+    /// 🌱️ The derivable `content` member — see `crate::genesis_sequence_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_sequence_child_pack(snapshot, slot, child_id)
+    }
+
     fn initial_snapshot() -> SequenceSnapshot {
         crate::snapshot::schema::default_persisted_snapshot()
     }

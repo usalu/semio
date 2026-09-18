@@ -499,6 +499,12 @@ pub mod editor {
         }
 
         #[path = "."]
+        pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
+        }
+
+        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
@@ -588,7 +594,9 @@ pub mod examples {
 }
 //#endregion 📚️Examples
 
-// ---- Shims: flat access from the artifact root, mirroring the sibling artifacts ----
+/// 🪞️ Flat access from the artifact root, mirroring the sibling wfc artifacts: the subset's schema
+/// tree reached as `crate::schema`, with the shims below doing the same for diff, mutations and
+/// inferences.
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }

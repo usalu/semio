@@ -270,7 +270,7 @@ impl BridgeInstanceRef {
 //#endregion 🔖️SharedTypes
 
 //#region 🔖️ShellToGateway
-/// 📨️ Shell→Gateway frames, tag 0..8 in this exact declaration order (`📋️master.md` §2.2).
+/// 📨️ Shell→Gateway frames, tag 0..9 in this exact declaration order (`📋️master.md` §2.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -284,6 +284,11 @@ pub enum ShellToGateway {
     Approval { approval_id: String, decision: ApprovalDecision, note: Option<String> },
     Ping,
     Bye,
+    /// 💬️ One human turn typed into the shell's own agent chat panel, addressed to the connected
+    /// MCP agent. `message_id` is minted by the shell and is what the gateway's
+    /// `semio://ui/agent-messages` resource pages from, so the agent reads each turn exactly once
+    /// and never has to guess whether it already saw one.
+    AgentMessage { message_id: String, text: String },
 }
 
 impl ShellToGateway {
@@ -336,6 +341,11 @@ impl ShellToGateway {
             }
             ShellToGateway::Ping => wire::write_u8(&mut buf, 7),
             ShellToGateway::Bye => wire::write_u8(&mut buf, 8),
+            ShellToGateway::AgentMessage { message_id, text } => {
+                wire::write_u8(&mut buf, 9);
+                wire::write_string(&mut buf, message_id);
+                wire::write_string(&mut buf, text);
+            }
         }
         buf
     }
@@ -366,6 +376,7 @@ impl ShellToGateway {
             6 => ShellToGateway::Approval { approval_id: reader.read_string()?, decision: ApprovalDecision::from_tag(reader.read_u8()?)?, note: reader.read_option_string()? },
             7 => ShellToGateway::Ping,
             8 => ShellToGateway::Bye,
+            9 => ShellToGateway::AgentMessage { message_id: reader.read_string()?, text: reader.read_string()? },
             other => return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown ShellToGateway tag {other}"))),
         };
         reader.finish()?;
@@ -393,6 +404,7 @@ pub(crate) enum ShellFrameKind {
     Approval,
     Ping,
     Bye,
+    AgentMessage,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -452,6 +464,8 @@ enum ShellDecodePhase {
     ApprovalDecision,
     ApprovalNoteFlag,
     ApprovalNoteString,
+    AgentMessageId,
+    AgentMessageText,
     Finish,
     ValidateStrings { range: usize, offset: usize, utf8: Utf8Cursor },
     Copy { offset: usize },
@@ -531,12 +545,13 @@ pub(crate) struct ShellToGatewayDecodeCursor {
     range_count: usize,
     items: usize,
     owned_bytes: usize,
+    pending_range: Option<usize>,
     output: Option<ValidatedShellFrame>,
 }
 
 impl ShellToGatewayDecodeCursor {
     pub(crate) fn new(payload_len: usize) -> Self {
-        Self { phase: ShellDecodePhase::Tag, payload_len, cursor: 0, kind: None, ranges: std::array::from_fn(|_| None), range_count: 0, items: 0, owned_bytes: 0, output: None }
+        Self { phase: ShellDecodePhase::Tag, payload_len, cursor: 0, kind: None, ranges: std::array::from_fn(|_| None), range_count: 0, items: 0, owned_bytes: 0, pending_range: None, output: None }
     }
 
     pub(crate) fn step<F>(&mut self, mut byte_at: F) -> ShellDecodeStep
@@ -550,19 +565,19 @@ impl ShellToGatewayDecodeCursor {
             ShellDecodePhase::Tag => self.read_tag(&mut byte_at),
             ShellDecodePhase::HelloVersion => self.read_u16(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::HelloKind)),
             ShellDecodePhase::HelloKind => self.read_u8(&mut byte_at).and_then(|kind| if kind <= 2 { self.next(ShellDecodePhase::HelloSession) } else { Err(ShellDecodeFault::Malformed) }),
-            ShellDecodePhase::HelloSession => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::HelloPrincipal)),
-            ShellDecodePhase::HelloPrincipal => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::HelloFlags)),
+            ShellDecodePhase::HelloSession => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::HelloPrincipal)),
+            ShellDecodePhase::HelloPrincipal => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::HelloFlags)),
             ShellDecodePhase::HelloFlags => self.read_u8(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::Finish)),
             ShellDecodePhase::StateRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::StateBytes)),
-            ShellDecodePhase::StateBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::StateBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
             ShellDecodePhase::PatchRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::PatchBaseRevision)),
             ShellDecodePhase::PatchBaseRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::PatchBytes)),
-            ShellDecodePhase::PatchBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::PatchBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
             ShellDecodePhase::InstancesCount => self.read_count(&mut byte_at, 20).and_then(|count| self.next(if count == 0 { ShellDecodePhase::Finish } else { ShellDecodePhase::InstancePlugin { instances: count } })),
-            ShellDecodePhase::InstancePlugin { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceApp { instances })),
-            ShellDecodePhase::InstanceApp { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceId { instances })),
-            ShellDecodePhase::InstanceId { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceArtifact { instances })),
-            ShellDecodePhase::InstanceArtifact { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceWindowsCount { instances })),
+            ShellDecodePhase::InstancePlugin { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::InstanceApp { instances })),
+            ShellDecodePhase::InstanceApp { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::InstanceId { instances })),
+            ShellDecodePhase::InstanceId { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::InstanceArtifact { instances })),
+            ShellDecodePhase::InstanceArtifact { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::InstanceWindowsCount { instances })),
             ShellDecodePhase::InstanceWindowsCount { instances } => self.read_count(&mut byte_at, 4).and_then(|windows| {
                 self.next(if windows == 0 {
                     if instances == 1 {
@@ -574,8 +589,8 @@ impl ShellToGatewayDecodeCursor {
                     ShellDecodePhase::InstanceWindow { instances, windows }
                 })
             }),
-            ShellDecodePhase::InstanceWindow { instances, windows } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| {
-                self.next(if windows > 1 {
+            ShellDecodePhase::InstanceWindow { instances, windows } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| {
+                self.next_after_range(granted, if windows > 1 {
                     ShellDecodePhase::InstanceWindow { instances, windows: windows - 1 }
                 } else if instances > 1 {
                     ShellDecodePhase::InstancePlugin { instances: instances - 1 }
@@ -584,17 +599,19 @@ impl ShellToGatewayDecodeCursor {
                 })
             }),
             ShellDecodePhase::AppReply => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::AppInstance)),
-            ShellDecodePhase::AppInstance => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::AppFramesCount)),
+            ShellDecodePhase::AppInstance => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::AppFramesCount)),
             ShellDecodePhase::AppFramesCount => self.read_count(&mut byte_at, 4).and_then(|count| self.next(if count == 0 { ShellDecodePhase::Finish } else { ShellDecodePhase::AppFrame { frames: count } })),
-            ShellDecodePhase::AppFrame { frames } => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(if frames == 1 { ShellDecodePhase::Finish } else { ShellDecodePhase::AppFrame { frames: frames - 1 } })),
+            ShellDecodePhase::AppFrame { frames } => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|granted| self.next_after_range(granted, if frames == 1 { ShellDecodePhase::Finish } else { ShellDecodePhase::AppFrame { frames: frames - 1 } })),
             ShellDecodePhase::CommandReply => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::CommandOk)),
             ShellDecodePhase::CommandOk => self.read_bool(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::CommandFaultFlag)),
             ShellDecodePhase::CommandFaultFlag => self.read_bool(&mut byte_at).and_then(|present| self.next(if present { ShellDecodePhase::CommandFaultString } else { ShellDecodePhase::Finish })),
-            ShellDecodePhase::CommandFaultString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::Finish)),
-            ShellDecodePhase::ApprovalId => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::ApprovalDecision)),
+            ShellDecodePhase::CommandFaultString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
+            ShellDecodePhase::ApprovalId => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::ApprovalDecision)),
             ShellDecodePhase::ApprovalDecision => self.read_u8(&mut byte_at).and_then(|decision| if decision <= 2 { self.next(ShellDecodePhase::ApprovalNoteFlag) } else { Err(ShellDecodeFault::Malformed) }),
             ShellDecodePhase::ApprovalNoteFlag => self.read_bool(&mut byte_at).and_then(|present| self.next(if present { ShellDecodePhase::ApprovalNoteString } else { ShellDecodePhase::Finish })),
-            ShellDecodePhase::ApprovalNoteString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::ApprovalNoteString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
+            ShellDecodePhase::AgentMessageId => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::AgentMessageText)),
+            ShellDecodePhase::AgentMessageText => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
             ShellDecodePhase::Finish => self.finish_preflight(),
             ShellDecodePhase::ValidateStrings { range, offset, utf8 } => self.validate_string(range, offset, utf8, &mut byte_at),
             ShellDecodePhase::Copy { offset } => return self.copy_page(offset, &mut byte_at),
@@ -620,6 +637,7 @@ impl ShellToGatewayDecodeCursor {
             6 => (ShellFrameKind::Approval, ShellDecodePhase::ApprovalId),
             7 => (ShellFrameKind::Ping, ShellDecodePhase::Finish),
             8 => (ShellFrameKind::Bye, ShellDecodePhase::Finish),
+            9 => (ShellFrameKind::AgentMessage, ShellDecodePhase::AgentMessageId),
             _ => return Err(ShellDecodeFault::Malformed),
         };
         self.kind = Some(kind);
@@ -705,10 +723,20 @@ impl ShellToGatewayDecodeCursor {
         Ok(count)
     }
 
-    fn read_range<F>(&mut self, byte_at: &mut F, kind: ShellRangeKind) -> Result<(), ShellDecodeFault>
+    /// 📏️ One length-prefixed field, admitted over TWO steps: the first reads and bounds-checks the
+    /// `u32` length token alone, the second grants the range and skips the cursor past its body.
+    /// Splitting them is the retained-turn law — a single step may consume one scalar token, never a
+    /// whole megabyte-capped field — and `Ok(false)` means "grant still pending, stay in this phase".
+    fn read_range<F>(&mut self, byte_at: &mut F, kind: ShellRangeKind) -> Result<bool, ShellDecodeFault>
     where
         F: FnMut(usize) -> Option<u8>,
     {
+        if let Some(len) = self.pending_range.take() {
+            self.ranges[self.range_count] = Some(ShellRange { start: self.cursor, len, kind });
+            self.range_count += 1;
+            self.cursor += len;
+            return Ok(true);
+        }
         let len = self.read_u32(byte_at)? as usize;
         if len > BRIDGE_INBOUND_MAX_FIELD_BYTES || self.range_count == BRIDGE_INBOUND_MAX_RANGES {
             return Err(ShellDecodeFault::Capacity);
@@ -721,15 +749,22 @@ impl ShellToGatewayDecodeCursor {
         if owned_bytes > BRIDGE_INBOUND_MAX_BYTES {
             return Err(ShellDecodeFault::Capacity);
         }
-        self.ranges[self.range_count] = Some(ShellRange { start: self.cursor, len, kind });
-        self.range_count += 1;
         self.owned_bytes = owned_bytes;
-        self.cursor = end;
-        Ok(())
+        self.pending_range = Some(len);
+        Ok(false)
     }
 
     fn next(&mut self, phase: ShellDecodePhase) -> Result<(), ShellDecodeFault> {
         self.phase = phase;
+        Ok(())
+    }
+
+    /// ➡️ Advances only once [`Self::read_range`] actually granted the range; a pending grant keeps
+    /// the current phase so the very next step performs it.
+    fn next_after_range(&mut self, granted: bool, phase: ShellDecodePhase) -> Result<(), ShellDecodeFault> {
+        if granted {
+            self.phase = phase;
+        }
         Ok(())
     }
 
@@ -932,6 +967,8 @@ enum ShellMaterializePhase {
     ApprovalDecision,
     ApprovalNoteFlag,
     ApprovalNote,
+    AgentMessageId,
+    AgentMessageText,
     Finish,
 }
 
@@ -1004,6 +1041,7 @@ impl ShellToGatewayMaterializeCursor {
                     5 => ShellMaterializePhase::CommandReply,
                     6 => ShellMaterializePhase::ApprovalId,
                     7 | 8 => ShellMaterializePhase::Finish,
+                    9 => ShellMaterializePhase::AgentMessageId,
                     _ => return Err(ShellDecodeFault::Malformed),
                 };
             }
@@ -1166,6 +1204,18 @@ impl ShellToGatewayMaterializeCursor {
                     self.phase = ShellMaterializePhase::Finish;
                 }
             }
+            ShellMaterializePhase::AgentMessageId => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::AgentMessageText;
+                }
+            }
+            ShellMaterializePhase::AgentMessageText => {
+                if let Some(value) = self.step_string()? {
+                    self.text_b = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
             ShellMaterializePhase::Finish => return self.finish().map(Some),
         }
         Ok(None)
@@ -1276,13 +1326,14 @@ impl ShellToGatewayMaterializeCursor {
             },
             ShellFrameKind::Ping => ShellToGateway::Ping,
             ShellFrameKind::Bye => ShellToGateway::Bye,
+            ShellFrameKind::AgentMessage => ShellToGateway::AgentMessage { message_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?, text: self.text_b.take().ok_or(ShellDecodeFault::Malformed)? },
         })
     }
 }
 //#endregion 🔖️BoundedShellDecode
 
 //#region 🔖️GatewayToShell
-/// 📤️ Gateway→Shell frames, tag 0..7 in this exact declaration order (`📋️master.md` §2.2).
+/// 📤️ Gateway→Shell frames, tag 0..9 in this exact declaration order (`📋️master.md` §2.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1295,6 +1346,33 @@ pub enum GatewayToShell {
     AgentPresence { active: bool, label: String, invocation_id: Option<String> },
     Pong,
     Bye { reason: String },
+    /// 🛠️ One tool the connected agent is invoking RIGHT NOW, emitted from the gateway's own
+    /// `tools/call` dispatch before the handler runs. `arguments` is the call's arguments rendered
+    /// as JSON and truncated to [`AGENT_CONVERSATION_MAX_TEXT`]; the shell renders it, never
+    /// re-executes it.
+    AgentToolCall { invocation_id: String, tool_name: String, arguments: String },
+    /// 🧾️ The terminal outcome of the `AgentToolCall` with the same `invocation_id` — `ok` is the
+    /// inverse of the result's own `isError`, `summary` its first text block (or the gateway error
+    /// message), truncated the same way.
+    AgentToolResult { invocation_id: String, tool_name: String, ok: bool, summary: String },
+}
+
+/// ✂️ The hard cap on every human-readable string the agent-conversation frames carry. The bridge
+/// outbox admits a bounded number of bounded frames, so an agent calling a tool with a megabyte of
+/// arguments must not be able to starve it — the text is truncated with a visible marker rather
+/// than silently dropped or allowed through.
+pub const AGENT_CONVERSATION_MAX_TEXT: usize = 2_048;
+
+/// ✂️ [`AGENT_CONVERSATION_MAX_TEXT`], applied on a char boundary so the result is always UTF-8.
+pub fn truncate_conversation_text(text: &str) -> String {
+    if text.len() <= AGENT_CONVERSATION_MAX_TEXT {
+        return text.to_string();
+    }
+    let mut end = AGENT_CONVERSATION_MAX_TEXT;
+    while end > 0 && !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{}…", &text[..end])
 }
 
 impl GatewayToShell {
@@ -1311,6 +1389,12 @@ impl GatewayToShell {
             }
             GatewayToShell::Pong => Some(1),
             GatewayToShell::Bye { reason } => 1usize.checked_add(bridge_wire_field_len(reason.len())?),
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                1usize.checked_add(bridge_wire_field_len(invocation_id.len())?)?.checked_add(bridge_wire_field_len(tool_name.len())?)?.checked_add(bridge_wire_field_len(arguments.len())?)
+            }
+            GatewayToShell::AgentToolResult { invocation_id, tool_name, summary, .. } => {
+                2usize.checked_add(bridge_wire_field_len(invocation_id.len())?)?.checked_add(bridge_wire_field_len(tool_name.len())?)?.checked_add(bridge_wire_field_len(summary.len())?)
+            }
         }
     }
 
@@ -1354,6 +1438,19 @@ impl GatewayToShell {
             GatewayToShell::Bye { reason } => {
                 wire::write_u8(&mut buf, 7);
                 wire::write_string(&mut buf, reason);
+            }
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                wire::write_u8(&mut buf, 8);
+                wire::write_string(&mut buf, invocation_id);
+                wire::write_string(&mut buf, tool_name);
+                wire::write_string(&mut buf, arguments);
+            }
+            GatewayToShell::AgentToolResult { invocation_id, tool_name, ok, summary } => {
+                wire::write_u8(&mut buf, 9);
+                wire::write_string(&mut buf, invocation_id);
+                wire::write_string(&mut buf, tool_name);
+                wire::write_bool(&mut buf, *ok);
+                wire::write_string(&mut buf, summary);
             }
         }
         buf
@@ -1402,6 +1499,19 @@ impl GatewayToShell {
                 writer.push(&[7]);
                 writer.field(reason.as_bytes());
             }
+            Self::AgentToolCall { invocation_id, tool_name, arguments } => {
+                writer.push(&[8]);
+                writer.field(invocation_id.as_bytes());
+                writer.field(tool_name.as_bytes());
+                writer.field(arguments.as_bytes());
+            }
+            Self::AgentToolResult { invocation_id, tool_name, ok, summary } => {
+                writer.push(&[9]);
+                writer.field(invocation_id.as_bytes());
+                writer.field(tool_name.as_bytes());
+                writer.push(&[*ok as u8]);
+                writer.field(summary.as_bytes());
+            }
         }
         writer.written
     }
@@ -1418,6 +1528,8 @@ impl GatewayToShell {
             5 => GatewayToShell::AgentPresence { active: reader.read_bool()?, label: reader.read_string()?, invocation_id: reader.read_option_string()? },
             6 => GatewayToShell::Pong,
             7 => GatewayToShell::Bye { reason: reader.read_string()? },
+            8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
+            9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
             other => return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown GatewayToShell tag {other}"))),
         };
         reader.finish()?;
@@ -1483,7 +1595,24 @@ struct ConnectionEntry {
     last_instances: Option<Vec<BridgeInstanceRef>>,
     last_command_result: Option<(u64, bool, Option<String>)>,
     last_approval: Option<(String, ApprovalDecision, Option<String>)>,
+    /// 💬️ Human turns this shell typed at the agent, oldest first, capped at
+    /// [`BRIDGE_AGENT_INBOX_MAX_ITEMS`]. Read-once: `take_agent_messages` drains it, so the
+    /// `semio://ui/agent-messages` resource the agent polls never replays a turn it already read
+    /// and never grows without bound if no agent is polling.
+    agent_inbox: std::collections::VecDeque<AgentInboxMessage>,
 }
+
+/// 💬️ One human turn waiting for the connected agent to read it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AgentInboxMessage {
+    pub message_id: String,
+    pub text: String,
+    pub received_at_ms: u64,
+}
+
+/// 📥️ How many unread human turns one connection retains. A shell whose agent never polls drops
+/// its OLDEST turn rather than growing without bound — the same fixed-credit rule the outbox uses.
+pub const BRIDGE_AGENT_INBOX_MAX_ITEMS: usize = 64;
 
 const BRIDGE_OUTBOX_MAX_ITEMS: usize = 64;
 const BRIDGE_OUTBOX_MAX_BYTES: usize = 1_048_576;
@@ -1976,6 +2105,19 @@ impl BridgeEncodedFrame {
                 encoded.write_u8(7);
                 encoded.write_field(reason.as_bytes());
             }
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                encoded.write_u8(8);
+                encoded.write_field(invocation_id.as_bytes());
+                encoded.write_field(tool_name.as_bytes());
+                encoded.write_field(arguments.as_bytes());
+            }
+            GatewayToShell::AgentToolResult { invocation_id, tool_name, ok, summary } => {
+                encoded.write_u8(9);
+                encoded.write_field(invocation_id.as_bytes());
+                encoded.write_field(tool_name.as_bytes());
+                encoded.write_u8(*ok as u8);
+                encoded.write_field(summary.as_bytes());
+            }
         }
         assert_eq!(encoded.len, expected, "preflighted bridge frame length changed during encode");
         encoded
@@ -2301,7 +2443,7 @@ impl BridgeHandle {
             .connections
             .lock()
             .expect("bridge connections lock poisoned")
-            .insert(id, ConnectionEntry { generation: id.0, outbox: Arc::clone(&outbox), last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None });
+            .insert(id, ConnectionEntry { generation: id.0, outbox: Arc::clone(&outbox), last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None, agent_inbox: std::collections::VecDeque::new() });
         (id, BridgeOutboxReceiver(outbox))
     }
 
@@ -2321,6 +2463,12 @@ impl BridgeHandle {
             ShellToGateway::Instances { entries } => entry.last_instances = Some(entries),
             ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => entry.last_command_result = Some((in_reply_to, ok, fault)),
             ShellToGateway::Approval { approval_id, decision, note } => entry.last_approval = Some((approval_id, decision, note)),
+            ShellToGateway::AgentMessage { message_id, text } => {
+                if entry.agent_inbox.len() == BRIDGE_AGENT_INBOX_MAX_ITEMS {
+                    entry.agent_inbox.pop_front();
+                }
+                entry.agent_inbox.push_back(AgentInboxMessage { message_id, text, received_at_ms: bridge_wall_now_ms() });
+            }
             ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AppFrames { .. } => {}
         }
     }
@@ -2456,12 +2604,86 @@ impl BridgeHandle {
     pub fn last_approval(&self, id: ShellConnectionId) -> Option<(String, ApprovalDecision, Option<String>)> {
         self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_approval.clone())
     }
+
+    /// 📥️ Drains every unread human turn this connection typed at the agent, oldest first. Read-once
+    /// by design: the agent polls `semio://ui/agent-messages`, and a turn it has been handed is not
+    /// handed to it again.
+    pub fn take_agent_messages(&self, id: ShellConnectionId) -> Vec<AgentInboxMessage> {
+        let mut connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
+        match connections.get_mut(&id) {
+            Some(entry) => entry.agent_inbox.drain(..).collect(),
+            None => Vec::new(),
+        }
+    }
+
+    /// 👀️ How many unread human turns this connection is holding — a non-destructive peek, for a
+    /// resource listing or a test that must not consume the queue.
+    pub fn pending_agent_message_count(&self, id: ShellConnectionId) -> usize {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).map(|entry| entry.agent_inbox.len()).unwrap_or(0)
+    }
+}
+
+/// 🕐️ Wall-clock milliseconds — this facet's own single clock read site, same convention every
+/// other facet in this crate restates rather than sharing a private helper across module roots.
+fn bridge_wall_now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
 
 fn try_send_bridge_frame(entry: &ConnectionEntry, frame: GatewayToShell) -> Result<(), GatewayToShell> {
     entry.outbox.try_send(frame)
 }
 //#endregion 🔖️BridgeHandle
+
+//#region 💬️AgentConversation
+/// 💬️ The gateway's own emitter for the agent-conversation frames — the ONE place `tools/call`
+/// traffic becomes something a shell can render. It is deliberately not a second log: it carries no
+/// state beyond the invocation counter, reads nothing, and publishes only what the real dispatch
+/// path hands it, so the panel shows the agent's actual calls or nothing at all.
+///
+/// Every emission is best-effort by construction. A gateway with no `/bridge` (stdio), a bridge with
+/// no shell attached, or a shell whose outbox is momentarily saturated must never fail or delay a
+/// tool call — the agent's work is the authority, the shell's view of it is a projection.
+pub struct AgentConversation {
+    bridge: crate::ui::BridgeSlot,
+    label: String,
+    next_invocation: AtomicU64,
+}
+
+impl AgentConversation {
+    /// 🏗️ `label` is the connected client's own name (e.g. `claude-code`) — what
+    /// `GatewayToShell::AgentPresence` already publishes and what the panel shows as the speaker.
+    pub fn new(bridge: crate::ui::BridgeSlot, label: impl Into<String>) -> Self {
+        Self { bridge, label: label.into(), next_invocation: AtomicU64::new(1) }
+    }
+
+    pub fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn publish(&self, frame: GatewayToShell) {
+        if let Some(handle) = self.bridge.get() {
+            let _ = handle.broadcast(frame);
+        }
+    }
+
+    /// 🛠️ Announces one tool call and returns its invocation id. Emitted BEFORE the handler runs, so
+    /// a long tool is visible in the shell while it is still running rather than only afterwards;
+    /// the `AgentPresence{active:true}` frame is what turns the existing presence dot amber.
+    pub fn begin_tool_call(&self, tool_name: &str, arguments: &serde_json::Value) -> String {
+        let invocation_id = format!("inv_{}", self.next_invocation.fetch_add(1, Ordering::Relaxed));
+        let rendered = if arguments.is_null() { String::new() } else { truncate_conversation_text(&serde_json::to_string(arguments).unwrap_or_default()) };
+        self.publish(GatewayToShell::AgentToolCall { invocation_id: invocation_id.clone(), tool_name: tool_name.to_string(), arguments: rendered });
+        self.publish(GatewayToShell::AgentPresence { active: true, label: self.label.clone(), invocation_id: Some(invocation_id.clone()) });
+        invocation_id
+    }
+
+    /// 🧾️ Closes the invocation `begin_tool_call` opened, then returns presence to idle.
+    pub fn finish_tool_call(&self, invocation_id: &str, tool_name: &str, ok: bool, summary: &str) {
+        self.publish(GatewayToShell::AgentToolResult { invocation_id: invocation_id.to_string(), tool_name: tool_name.to_string(), ok, summary: truncate_conversation_text(summary) });
+        self.publish(GatewayToShell::AgentPresence { active: false, label: self.label.clone(), invocation_id: None });
+    }
+}
+//#endregion 💬️AgentConversation
 
 //#region 🔖️BridgeServer
 /// 🌐️ The real `/bridge` websocket endpoint (P1c) — mounted onto the SAME axum app `/mcp` lives on

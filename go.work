@@ -22,10 +22,11 @@ use (
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go/🚀️bin
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
 )

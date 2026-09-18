@@ -48,7 +48,14 @@ export type PluginRegistryEntry = {
    * strings (`on-command:<id>`, `on-view-visible:<id>`, `on-file-type:<ext>`, `on-artifact-kind:<kind>`,
    * `on-extension-request:<point>`, `on-startup-finished`) — sourced from `🔣️.json`, empty
    * for a crate that has none yet (E1-describe lands ahead of the W3 plugin migrations that produce
-   * one per crate — see `parsePluginCargo`'s own doc for the fallback rule). */
+   * one per crate — see `parsePluginCargo`'s own doc for the fallback rule).
+   *
+   * The `on-artifact-kind:` rows carry BOTH namespaces the same descriptor declares: the crate's own
+   * `ActivationEvent::OnArtifactKind` kinds (`3d.cad`, the `ArtifactKindSpec.id`) and every artifact
+   * kind its app surfaces name (`s.cad.cad`, what an opening coordinate parses to) — see
+   * {@link descriptorSurfaceArtifactKinds}. {@link claimOwnedArtifactKinds} then leaves each kind on
+   * exactly the owner's row, so a host resolves "who opens this kind" from the catalog alone, with no
+   * plugin loaded. */
   readonly activationEvents: readonly string[];
   /** 🧩️ `ExtensionPointDeclaration.id` rows this package PUBLISHES for others to attach to — empty
    * for crates with none declared or no descriptor yet. */
@@ -248,6 +255,62 @@ export function formatActivationEvent(raw: unknown): string | undefined {
 }
 
 
+export const ON_ARTIFACT_KIND_PREFIX = "on-artifact-kind:";
+
+
+/** 🗂️ The artifact kinds a descriptor's own app surfaces declare — `manifest.apps[].dialect.artifactKind`,
+ * deduped, first-seen order. This is the namespace an opening request speaks (`s.cad.cad@1/*` parses
+ * to `s.cad.cad`), which is NOT the namespace a crate's hand-declared `ActivationEvent::OnArtifactKind`
+ * uses (`3d.cad`, the `ArtifactKindSpec.id`). Both are declared by the same descriptor, so the catalog
+ * carries both as `on-artifact-kind:` rows and a host can resolve an owner from either without having
+ * loaded a single wasm module. */
+export function descriptorSurfaceArtifactKinds(descriptor: Record<string, unknown> | undefined): string[] {
+  const manifest = descriptor?.manifest as Record<string, unknown> | undefined;
+  const apps = Array.isArray(manifest?.apps) ? (manifest!.apps as unknown[]) : [];
+  const kinds: string[] = [];
+  for (const app of apps) {
+    const dialect = (app as { dialect?: unknown }).dialect as Record<string, unknown> | undefined;
+    const kind = dialect?.artifactKind;
+    if (typeof kind !== "string" || kind.trim() !== kind || kind === "" || kinds.includes(kind)) continue;
+    kinds.push(kind);
+  }
+  return kinds;
+}
+
+
+/** 🎬️ Strips every `on-artifact-kind:` row a crate shares with one of its transitive `dependsOn`
+ * crates, so exactly one catalog row claims each kind: the owner. This is the build-time twin of the
+ * runtime `AppRouter.build` ownership rule ("dependency-first load order, first claim wins") — a
+ * contributor that registers a surface on someone else's kind must declare that owner as a dependency
+ * (`surface.contribution-not-permitted`), so the dependency edge is exactly what separates the two.
+ * Kinds claimed by unrelated crates stay on both rows; the resolvers below then pick the first by
+ * ascending `pluginId`, matching the router's own deterministic ordering. */
+export function claimOwnedArtifactKinds(entries: readonly PluginRegistryEntry[]): PluginRegistryEntry[] {
+  const byId = new Map(entries.map((entry) => [entry.pluginId, entry] as const));
+  const kindsOf = (entry: PluginRegistryEntry): Set<string> => new Set(entry.activationEvents.filter((event) => event.startsWith(ON_ARTIFACT_KIND_PREFIX)));
+  const transitive = (entry: PluginRegistryEntry): Set<string> => {
+    const seen = new Set<string>();
+    const claimed = new Set<string>();
+    const pending = [...entry.dependsOn];
+    while (pending.length > 0) {
+      const id = pending.pop()!;
+      if (id === entry.pluginId || seen.has(id)) continue;
+      seen.add(id);
+      const dependency = byId.get(id);
+      if (!dependency) continue;
+      for (const kind of kindsOf(dependency)) claimed.add(kind);
+      pending.push(...dependency.dependsOn);
+    }
+    return claimed;
+  };
+  return entries.map((entry) => {
+    const inherited = transitive(entry);
+    const activationEvents = entry.activationEvents.filter((event) => !inherited.has(event));
+    return activationEvents.length === entry.activationEvents.length ? entry : { ...entry, activationEvents };
+  });
+}
+
+
 /** 🔣️ Reads and loosely-shapes `<cratePath>/🤖️generated/🔣️.json` (the
  * `semio-framework-plugin-describe` emitter's JSON mirror of `PackageDescriptor`) — `undefined` when
  * the crate has none yet (every crate today: E1-describe lands ahead of the W3 plugin migrations
@@ -319,6 +382,10 @@ export function parsePluginCargo(manifestPath: string, repoRoot: string, view?: 
     contributes = topicContributions.map((row) => (row as { topic?: unknown }).topic).filter((topic): topic is string => typeof topic === "string");
     const rawActivationEvents = Array.isArray(descriptor.activationEvents) ? descriptor.activationEvents : [];
     activationEvents = rawActivationEvents.map(formatActivationEvent).filter((event): event is string => event !== undefined);
+    for (const kind of descriptorSurfaceArtifactKinds(descriptor)) {
+      const event = `${ON_ARTIFACT_KIND_PREFIX}${kind}`;
+      if (!activationEvents.includes(event)) activationEvents.push(event);
+    }
     const rawExtensionPoints = Array.isArray(descriptor.extensionPoints) ? descriptor.extensionPoints : [];
     extensionPoints = rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
     executionMode = typeof descriptor.execution === "string" ? descriptor.execution : undefined;
@@ -373,7 +440,7 @@ export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: G
     if (entry) entries.push(entry);
   }
   entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
-  return entries;
+  return claimOwnedArtifactKinds(entries);
 }
 
 

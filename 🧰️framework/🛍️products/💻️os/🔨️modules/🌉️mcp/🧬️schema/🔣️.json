@@ -138,6 +138,211 @@
       },
       "type": "object"
     },
+    "ArtifactInferenceBudgetV1": {
+      "description": "⏱️ Finite host-enforced inference work limits — field-for-field the guest's own `artifact-inference-budget`.",
+      "properties": {
+        "allocationBytes": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "recursionDepth": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "workUnits": {
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "allocationBytes",
+        "recursionDepth",
+        "workUnits"
+      ],
+      "type": "object"
+    },
+    "ArtifactInferenceCacheModeV1": {
+      "description": "🗃️ Requested or actual inference cache behaviour — the guest's own closed vocabulary.",
+      "enum": [
+        "cold",
+        "incremental",
+        "bypass"
+      ],
+      "type": "string"
+    },
+    "ArtifactInferenceRequestV1": {
+      "description": "💡️ The request `semio_framework_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a CLIENT of that router here, so this export is an explicit MIRROR of the router's own private `InferenceRouteRequest` (which that crate does not export), never a second authority. The router re-checks every identity field against its registered route and against the guest's echo before any result is publishable, so a drift between this mirror and the router is a decode failure at the first call, not a silently wrong answer.",
+      "properties": {
+        "algorithmVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "artifactSchemaVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "budgets": {
+          "$ref": "#/$defs/ArtifactInferenceBudgetV1"
+        },
+        "cancellationId": {
+          "type": "string"
+        },
+        "canonicalPayload": {
+          "items": {
+            "minimum": 0.0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "minimum": 0.0,
+                  "type": "integer"
+                },
+                "type": "array"
+              }
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "generation": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        },
+        "inferenceSchemaVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "policy": {
+          "items": {
+            "minimum": 0.0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "policyVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "previousState": {
+          "items": {
+            "minimum": 0.0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "requestedCacheMode": {
+          "$ref": "#/$defs/ArtifactInferenceCacheModeV1"
+        },
+        "revision": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "sourceDialect": {
+          "type": "string"
+        },
+        "wireVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "algorithmVersion",
+        "artifactKind",
+        "artifactSchema",
+        "artifactSchemaVersion",
+        "budgets",
+        "cancellationId",
+        "canonicalPayload",
+        "dependencies",
+        "generation",
+        "inferenceSchema",
+        "inferenceSchemaVersion",
+        "owner",
+        "policy",
+        "policyVersion",
+        "requestedCacheMode",
+        "revision",
+        "sourceDialect",
+        "wireVersion"
+      ],
+      "type": "object"
+    },
+    "ArtifactInferenceResultV1": {
+      "description": "💡️ The subset of the guest's `artifact-inference-result` this gateway reads back. The guest wire carries more (diagnostics, provenance, validity, quality); those belong to the plugin's own domain contract and the router has ALREADY asserted that every identity field echoes the request exactly before this decode runs, so mirroring them here would duplicate an authority this scope does not own. Unknown fields are therefore accepted and ignored — deliberately, not by oversight.",
+      "properties": {
+        "actualCacheMode": {
+          "$ref": "#/$defs/ArtifactInferenceCacheModeV1"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "canonicalPayload": {
+          "items": {
+            "minimum": 0.0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "generation": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "wireVersion": {
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actualCacheMode",
+        "artifactKind",
+        "canonicalPayload",
+        "complete",
+        "generation",
+        "inferenceSchema",
+        "owner",
+        "revision",
+        "wireVersion"
+      ],
+      "type": "object"
+    },
     "ArtifactOpenInput": {
       "additionalProperties": false,
       "properties": {
@@ -704,6 +909,81 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "InferenceRunInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "cancellationId": {
+          "type": "string"
+        },
+        "generation": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        },
+        "payload": {},
+        "pluginId": {
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "workUnits": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifactKind",
+        "inferenceSchema"
+      ],
+      "type": "object"
+    },
+    "InferenceRunOutput": {
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "cancellationId": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "payload": {},
+        "payloadBytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "pluginId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobId",
+        "status",
+        "artifactKind",
+        "inferenceSchema"
+      ],
       "type": "object"
     },
     "InferenceSubmitInput": {

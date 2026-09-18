@@ -47,18 +47,17 @@ mkdirSync(outDir, { recursive: true });
 
 /** 🪟️ The pane-chip keys a window publishes, matched as an id SUFFIX so the window instance in the middle
  * (`framework.window.<Window>.<chip>`) never has to be named by the journey. */
-const PANE_CHIPS = ["engagement.toggle", "search.toggle", "windowControls", "utilityBar.unfold", "projection.toggle", "windowOptions.toggle"];
+const PANE_CHIPS = ["engagement.toggle", "search.toggle", "windowControls", "utilityBar.unfold", "pane.fold", "measures.unfold"];
 
 /** 🪪️ Control keys the two renderers genuinely spell differently. An alias is tried only after the exact /
  * suffix / containment ladder has failed, and the step records `resolved: "alias"` — so a divergent id shows
  * up in `parity.md` as a control-resolution difference instead of silently passing as "the same control".
- * Measured 2026-09-18: the wgpu tour chips are `shell.tour.{skip,next,back}` where React's are
- * `ui.introduction.{skip,next,back}`. */
-const CONTROL_ALIASES = {
-  "ui.introduction.skip": ["shell.tour.skip"],
-  "ui.introduction.next": ["shell.tour.next"],
-  "ui.introduction.back": ["shell.tour.back"],
-};
+ *
+ * 🈳️ Deliberately EMPTY. It carried the tour chips (`shell.tour.*` against React's `ui.introduction.*`) and
+ * the wgpu shell has since adopted React's spelling for those and for the five pane chips
+ * (`framework.window.<segment>.…`, 📓️w9c-behaviour-parity-run-2.md). An alias here hides exactly the defect
+ * this probe exists to measure, so a new entry needs a reason no fix can reach. */
+const CONTROL_ALIASES = {};
 //#endregion ⚙️Configuration
 
 //#region 🧾️Report
@@ -179,11 +178,18 @@ function reactDriver(page, name, url, consoleLines) {
             return { id, kind: slot ?? element.getAttribute("role") ?? element.tagName.toLowerCase(), rect: rectOf(element), pressed: element.getAttribute("aria-pressed") ?? element.getAttribute("data-state") ?? undefined };
           })
           .filter((control) => control.rect[2] > 0 && control.rect[3] > 0);
+        // 🪟️ The shell's THREE surface levels, named the same way on both renderers: a window
+        // instance, a docked panel (by the tab it shows) and "a dialog is up". Deliberately not
+        // "every element carrying data-level": React puts that attribute on the chat panel's own
+        // Send and Clear buttons and renders the tour as two dialog nodes, one of them anonymous, so
+        // the raw DOM census measured React's composition rather than the shell's state and could
+        // never be met by a canvas renderer. `data-surface-id` is dropped for the same reason — it
+        // restates `window:<id>` as `surface:window:<id>` (📓️w9c-behaviour-parity-run-2.md).
+        const panelTabPrefix = "framework.panelTab.";
         const surfaces = [
           ...[...document.querySelectorAll("[data-window-id]")].map((element) => `window:${element.getAttribute("data-window-id")}`),
-          ...[...document.querySelectorAll('[data-level="panel"]')].map((element) => `panel:${element.id || element.getAttribute("data-tab-id") || element.getAttribute("data-anchor") || "?"}`),
-          ...[...document.querySelectorAll('[data-level="dialog"]')].map((element) => `dialog:${element.id || "?"}`),
-          ...[...document.querySelectorAll("[data-surface-id]")].map((element) => `surface:${element.getAttribute("data-surface-id")}`),
+          ...[...document.querySelectorAll('[data-level="panel"]')].filter((element) => element.id.startsWith(panelTabPrefix)).map((element) => `panel:${element.id.slice(panelTabPrefix.length)}`),
+          ...(document.querySelector('[data-level="dialog"]') ? ["dialog"] : []),
         ];
         return {
           ready: document.documentElement.getAttribute("data-semio-os-ready"),
@@ -211,14 +217,35 @@ function reactDriver(page, name, url, consoleLines) {
     consoleLines,
     observe,
     actions,
+    // 🚦️ Booted means READY *and* QUIET: the readiness beacon plus a settled chrome census plus two
+    // consecutive seconds in which the action ledger grew by nothing.
+    //
+    // 🩸️ Without the quiet term the probe measured a race, not a renderer. Both shells announce their
+    // loaded collision meshes at boot (`registerBrushMesh`, one per window per mesh — React's
+    // `BrushMeshRegistrar` off its GLB loader, wgpu's `step_world3d_brush_mesh_announce`). React's
+    // GLBs resolve during the first render and its run is always over before the beacon's fifth
+    // second; wgpu's decode finishes at t≈12.2 s and its run dispatched from 15.3 s to 20.5 s — right
+    // across `dismiss-tour` and `panel-artifact`, which then differed by a boot announcement neither
+    // step caused (`🗑️generated/w12c-parity-run-19/steps.json` steps 02/03, ticket 26/09/17 packet
+    // W13c §1). Every step's own cursor is read at its start, so a row that lands inside this wait is
+    // attributed to the boot it belongs to and to no step at all.
     async boot() {
+      let quiet = 0;
+      let seen = -1;
       for (let second = 0; second < bootSeconds; second += 1) {
         await page.waitForTimeout(1000);
         const state = await observe();
         if (state.error) return { booted: false, why: `shell error ${state.error}` };
-        if (state.ready && state.controls.length > 4 && second > 4) return { booted: true, ready: state.ready };
+        if (!state.ready || state.controls.length <= 4 || second <= 4) continue;
+        // 🔢️ The ledger is a ROLLING buffer, so its length saturates; the newest row's `inputSeq` is
+        // the monotonic term and the only one that answers "did anything dispatch this second".
+        const rows = await actions();
+        const ledger = rows.length ? rows[rows.length - 1].seq : 0;
+        quiet = ledger === seen ? quiet + 1 : 0;
+        seen = ledger;
+        if (quiet >= 2) return { booted: true, ready: state.ready, bootSeq: ledger, quietAfterSeconds: second };
       }
-      return { booted: false, why: "never reported data-semio-os-ready" };
+      return { booted: false, why: "never reported a quiet data-semio-os-ready" };
     },
     async resolve(key) {
       const state = await observe();
@@ -281,13 +308,25 @@ function wgpuDriver(page, name, url, consoleLines) {
     const [chrome, structure] = await Promise.all([dump("dumpChrome"), dump("dumpStructure")]);
     if (chrome?.unavailable) return { error: "renderer exposes no dumpChrome — rebuild the wgpu wasm", controls: [], surfaces: [], chromeAvailable: false };
     const controls = (chrome?.hits ?? []).map((hit) => ({ id: hit.controlId, kind: hit.kind, rect: hit.rect, windowId: hit.windowId, action: hit.action }));
-    const surfaces = [...new Set([...(structure?.windowIds ?? []).map((id) => `window:${id}`), ...controls.filter((control) => control.windowId).map((control) => `surface:${control.windowId}`)])].sort();
+    // 🪟️ The shell's own census (`dumpChrome().surfaces`), NOT `dumpStructure().windowIds`: the wgpu
+    // shell models a docked panel as a window instance, so the engine's window list reported every
+    // open panel as a window where React reports a panel. The census carries each surface's level and
+    // React's own element id (📓️w9c-behaviour-parity-run-2.md).
+    const surfaces = [
+      ...new Set(
+        (chrome?.surfaces ?? []).map((surface) => {
+          if (surface.level === "dialog") return "dialog";
+          if (surface.level === "panel") return `panel:${surface.id}`;
+          return `window:${surface.id}`;
+        }),
+      ),
+    ].sort();
     return { ready: structure ? "wgpu" : null, error: chrome?.error ?? structure?.error, armed: chrome?.armed ?? false, generation: chrome?.generation ?? 0, controls, surfaces, chromeAvailable: true };
   };
 
   const actions = async () => {
     const chrome = await dump("dumpChrome");
-    return (chrome?.actions ?? []).map((entry) => ({ seq: entry.seq, controller: entry.controllerId, action: entry.action, windowId: entry.windowId, origin: "shell", outcome: "dispatched", args: entry.args }));
+    return (chrome?.actions ?? []).map((entry) => ({ seq: entry.seq, controller: entry.controllerId, action: entry.action, windowId: entry.windowId, origin: entry.origin ?? "shell", outcome: "dispatched", args: entry.args }));
   };
 
   return {
@@ -303,8 +342,15 @@ function wgpuDriver(page, name, url, consoleLines) {
         await page.mouse.move(4 + (second % 3), 4 + (second % 3)).catch(() => {});
         const structure = await dump("dumpStructure");
         if (structure && !structure.unavailable && !structure.error && second > 4) {
-          await page.locator("canvas").first().click({ position: { x: 4, y: 4 }, timeout: 4000 }).catch(() => {});
+          // ⌨️ The canvas is FOCUSED, never pressed. A press is a real user gesture to this renderer:
+          // the introduction veil owns every pointer it covers and ends the tour on any press
+          // (React's `pointer-events-auto` veil, `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s
+          // `UI_INTRODUCTION_VEIL_CONTROL_ID`), so booting with a click dismissed the tour before
+          // `dismiss-tour` ever ran and the step could only report `ui.introduction.skip` absent —
+          // a probe artefact reported as a renderer difference (📓️w9c-behaviour-parity-run-2.md).
+          await page.locator("canvas").first().evaluate((element) => element.focus?.()).catch(() => {});
           const state = await observe();
+          if (state.controls.length <= 4) continue;
           return { booted: true, ready: "wgpu", chromeAvailable: state.chromeAvailable, armed: state.armed, hits: state.controls.length };
         }
       }
@@ -363,12 +409,20 @@ const journey = [
   { name: "window-cap-focus", run: (driver, before) => driver.clickWindowCap(before, "focus") },
   { name: "window-cap-close", run: (driver, before) => driver.clickWindowCap(before, "close") },
   { name: "window-reopen", run: (driver, before) => driver.reopenWindow(before) },
-  { name: "orbit-drag", run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("drag", at, [at[0] + 180, at[1] + 90]); } },
-  { name: "pan-drag", run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("drag", at, [at[0] - 140, at[1] + 40], { button: "middle" }); } },
-  { name: "zoom-wheel", run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("wheel", at, at, { deltaY: -360 }); } },
-  { name: "pick-instance", run: async (driver) => { const at = await driver.surfacePoint(); await driver.page.mouse.click(at[0], at[1]); return { at, button: "left" }; } },
-  { name: "context-menu", run: async (driver) => { const at = await driver.surfacePoint(); await driver.page.mouse.click(at[0], at[1], { button: "right" }); return { at, button: "right" }; } },
-  { name: "context-menu-dismiss", run: (driver) => driver.chord("Escape") },
+  // 🕰️ The five scene gestures settle LONGER than the chrome steps, on both renderers. React's own
+  // `CAMERA_SYNC_DEBOUNCE_MS` is 120 ms, so its rows land inside the default window either way; the wgpu
+  // host answers a synthesized 8-move drag through the frame worker's intent queue and its
+  // `noteWorldNavigation`/`setCamera` settle landed up to ~1.3 s after the release — measured in
+  // `🗑️generated/w11a-parity-run-14/wgpu/console.txt` (orbit release t=76797 ms, `setCamera` produced at
+  // t=77130 ms with the ledger read already taken), where the rows fell into the gap BETWEEN this step's
+  // read and the next step's cursor and were counted for neither. Widening the window equally for both
+  // renderers measures the journal instead of the ingress latency, which is reported separately.
+  { name: "orbit-drag", settle: 4000, run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("drag", at, [at[0] + 180, at[1] + 90]); } },
+  { name: "pan-drag", settle: 4000, run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("drag", at, [at[0] - 140, at[1] + 40], { button: "middle" }); } },
+  { name: "zoom-wheel", settle: 4000, run: async (driver) => { const at = await driver.surfacePoint(); return driver.pointer("wheel", at, at, { deltaY: -360 }); } },
+  { name: "pick-instance", settle: 4000, run: async (driver) => { const at = await driver.surfacePoint(); await driver.page.mouse.click(at[0], at[1]); return { at, button: "left" }; } },
+  { name: "context-menu", settle: 4000, run: async (driver) => { const at = await driver.surfacePoint(); await driver.page.mouse.click(at[0], at[1], { button: "right" }); return { at, button: "right" }; } },
+  { name: "context-menu-dismiss", settle: 4000, run: (driver) => driver.chord("Escape") },
   { name: "chord-command-palette", run: (driver) => driver.chord(`${mod}+k`) },
   { name: "chord-escape", run: (driver) => driver.chord("Escape") },
   { name: "chord-undo", run: (driver) => driver.chord(`${mod}+z`) },
@@ -396,6 +450,16 @@ function attachJourneyVerbs(driver) {
   /** 🪟️ A window cap chip. React renders it id-less with `data-slot="mode-dock-tab-<cap>"`, wgpu registers it
    * as `dock.tab.<path>.<windowId>.<cap>` — both END in the cap verb, which is what this matches on. */
   driver.clickWindowCap = async (_before, cap) => {
+    // 🖱️ HOVER the dock tab first. React renders a window cap chip only while its tab is hovered
+    // (`mode-dock-tab-<cap>` appears under the pointer), so without this the step resolved `absent` on
+    // React and `contains` on wgpu — and the wgpu shell then CLOSED both world panes while React closed
+    // none, so every later step compared two different applications: with no window left, the wgpu
+    // chord ladder journalled nothing at all for `chord-escape`/`-undo`/`-redo`
+    // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c`). One journey must drive one state.
+    const tabbed = await driver.observe();
+    const tab = (tabbed.controls ?? []).find((row) => /mode-dock-tab$|mode-dock-tab#|dock\.tab\.[^.]*\.[^.]+$/i.test(row.id ?? ""));
+    if (tab) await driver.page.mouse.move(...centre(tab.rect));
+    await driver.page.waitForTimeout(400);
     const before = await driver.observe();
     const key = cap === "focus" ? "focus" : cap === "close" ? "close" : "maximize";
     const control = (before.controls ?? []).find((row) => new RegExp(`(^|[.\\-])${key}$`, "i").test(row.id ?? ""));

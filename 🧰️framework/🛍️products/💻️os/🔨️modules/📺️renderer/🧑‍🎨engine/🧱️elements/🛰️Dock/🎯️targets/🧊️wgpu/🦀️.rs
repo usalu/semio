@@ -1554,6 +1554,20 @@ fn register_split_hit(ctx: &mut DockRenderContext<'_>, path: &[usize], index: us
 ///
 /// 🩸️ The call sat COMMENTED OUT here, so no window ever had an outline on wgpu and the only
 /// focus cue was the active tab's text tint.
+/// 📑️ Paints one tab stack and registers its pointer targets in REACT'S OWN ORDER: a tab's SELECT
+/// target first, then its action chips left to right (`focus`, `close`, `drag`) — the DOM order of
+/// `🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1034-1100`, where the `<button role="tab">` label precedes the
+/// `mode-dock-tab-focus`/`-close` chips and the `DragHandle`.
+///
+/// 🩸️ The chips used to be registered BEFORE the select target, so the first `dock.tab.…` row this
+/// renderer published for a stack was its DESTRUCTIVE `close` chip. Anything that resolves "the dock
+/// tab" by scanning the published rows — the parity probe's `reopenWindow` does exactly that — landed
+/// on `close` here while React's same scan landed on the `mode-dock-tabbar` container that owns the
+/// tabs, so the journey's `window-reopen` step CLOSED the last remaining world pane and every later
+/// window-owned chord (`escape` → `engagementAbort`, `mod+z` → `undo`) became a hinted no-op against
+/// an empty dock (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c-chords-and-camera-live.md` §4.2,
+/// `🗑️generated/w12c-parity-run-19/steps.json` step 18: `dock.tab..puzzle3d-main-perspective.close`).
+/// The rects do not overlap, so this is publication order only — never which row a press resolves.
 fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usize], node: &DockNode, bounds: Rect, maximized: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str)) {
     let DockNode::Stack { windows, active } = node else {
         return;
@@ -1601,6 +1615,9 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
             content_x += icon_w;
             dock_text(ctx, &tab.label, content_x, tab.rect.y + (tab.rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
             let action_w = dock_tab_action_width(theme);
+            let select_w = (tab.rect.w - action_w * actions.len() as f32).max(theme.padding_standard * 2.0);
+            let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
+            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
             content_x = tab.rect.x + tab.rect.w - action_w * actions.len() as f32;
             for (action, icon_id) in actions.iter() {
                 let action_rect = Rect::new(content_x, tab.rect.y, action_w, tab.rect.h);
@@ -1610,9 +1627,6 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
                 ctx.input.register_hit(HitTarget { rect: action_rect, event: None, control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 content_x += action_w;
             }
-            let select_w = (tab.rect.w - action_w * actions.len() as f32).max(theme.padding_standard * 2.0);
-            let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
-            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
         }
         ctx.draw.end_glass_content();
     }
@@ -1750,26 +1764,39 @@ impl WindowSilhouette {
     //#endregion ContentClip
 }
 
-/// 🪟️ Paints a hairline (or thicker) stroke along the dock-stack silhouette path.
+/// 🪟️ Paints a hairline (or thicker) stroke along the dock-stack silhouette path, every segment
+/// lying INSIDE the silhouette it outlines.
+///
+/// 🩸️ The horizontal segments were centred on their path (`edge - stroke * 0.5`) while both outer
+/// verticals were already inset, so a window's cap border bled half a stroke ABOVE `bounds.y` and the
+/// notch baseline half a stroke BELOW the cap — a border outside the window box, which React never
+/// paints: its outline is inset by `WINDOW_SILHOUETTE_PATH_INSET` exactly so a non-scaling stroke
+/// stays within the box (`🔲️WindowSilhouette/🟦️.tsx:85`, `:225`; the golden path `M1,1 H60 V25 H160
+/// V1 H199 …` starts one inset in, not on the edge).
 pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSilhouette, stroke: f32, color: Rgba) {
     let b = silhouette.bounds;
     let mut paint_edge = |edge: &WindowSilhouetteEdge, outer: f32, inner: f32| {
+        let downward = outer < inner;
+        let outer_y = if downward { outer } else { outer - stroke };
+        let inner_y = if downward { inner - stroke } else { inner };
+        let wall_y = outer.min(inner);
+        let wall_h = (outer - inner).abs();
         let mut cursor = 0.0;
         for span in &edge.spans {
             if span.left > cursor + WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + cursor, inner - stroke * 0.5, span.left - cursor, stroke], color);
+                draw.push_solid([b.x + cursor, inner_y, span.left - cursor, stroke], color);
             }
-            draw.push_solid([b.x + span.left, outer - stroke * 0.5, span.right - span.left, stroke], color);
+            draw.push_solid([b.x + span.left, outer_y, span.right - span.left, stroke], color);
             if span.left > WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + span.left - stroke * 0.5, outer.min(inner), stroke, (outer - inner).abs()], color);
+                draw.push_solid([b.x + span.left, wall_y, stroke, wall_h], color);
             }
             if span.right < b.w - WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + span.right - stroke * 0.5, outer.min(inner), stroke, (outer - inner).abs()], color);
+                draw.push_solid([b.x + span.right - stroke, wall_y, stroke, wall_h], color);
             }
             cursor = span.right;
         }
         if cursor < b.w - WindowSilhouette::CHIP_EPSILON {
-            draw.push_solid([b.x + cursor, inner - stroke * 0.5, b.w - cursor, stroke], color);
+            draw.push_solid([b.x + cursor, inner_y, b.w - cursor, stroke], color);
         }
     };
     paint_edge(&silhouette.top, b.y, b.y + silhouette.top.depth);
@@ -1886,6 +1913,12 @@ fn collect_stack_frames(node: &DockNode, bounds: Rect, path: &[usize], out: &mut
     }
 }
 
+/// 🪟️ Every stack's body rect and the window it shows, plus that window's silhouette. A stack holding
+/// NO tabs answers its rect with an EMPTY window id — it is still a drop target, exactly as React's
+/// `WindowChrome` keeps rendering for an empty stack — but it owns no silhouette and no window, because
+/// React's `activeDescriptor` is `undefined` there and its `stackBody` renders nothing at all
+/// (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1176`/`:1212`). `ShellState::plan_dock_windows` is where that
+/// empty id is dropped from the window-keyed registries.
 fn collect_stack_bodies(
     node: &DockNode,
     bounds: Rect,
@@ -1926,7 +1959,9 @@ fn collect_stack_bodies(
             let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, bounds, action_count);
             let silhouette = stack_window_silhouette(bounds, theme, &layout);
             out.push((path.to_vec(), silhouette.safe_body_rect(), active.clone()));
-            silhouettes.insert(active.clone(), silhouette);
+            if !active.is_empty() {
+                silhouettes.insert(active.clone(), silhouette);
+            }
         }
     }
 }

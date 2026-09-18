@@ -583,7 +583,7 @@
           "kind": "source"
         }
       ],
-      "error": "has no exact unescaped JSON value span"
+      "error": "has no exact declared JSON value encoding"
     },
     {
       "id": "nonstring-coordinate",
@@ -607,7 +607,7 @@
           "kind": "source"
         }
       ],
-      "error": "has no exact unescaped JSON value span"
+      "error": "has no exact declared JSON value encoding"
     }
   ],
   "coordinateValueEncoding": {

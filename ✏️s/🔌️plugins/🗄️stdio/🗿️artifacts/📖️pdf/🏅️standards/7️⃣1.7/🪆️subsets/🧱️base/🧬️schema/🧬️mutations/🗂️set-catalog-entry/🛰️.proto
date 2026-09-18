@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_catalog_entry;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🗂️ Direct set-catalog-entry protobuf payload.
+message SetCatalogEntryMutation {
+  string key = 1;
+  PdfObject value = 2;
+}

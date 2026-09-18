@@ -3,7 +3,7 @@
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+import Ajv, { type ValidateFunction } from "ajv";
 import {
   BundleScript,
   ScriptRouter,
@@ -16,13 +16,16 @@ import {
 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
+/** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
+type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
+
 class MediaProjectionScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("media-projection-check accepts only --oracle-only");
     const owner = join(this.root, "../..");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🕸️media-projection/🔣️.json"), "utf8"));
     const projection = JSON.parse(readFileSync(join(owner, "🧬️schema/🕸️media-projection/🔣️.json"), "utf8")) as { $id: string };
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(projection).getSchema(`${projection.$id}#/$defs/WorkflowMediaContractProjectionV1`)!;
+    const validate: SchemaCheck = new Ajv({ strict: true, allErrors: true }).addSchema(projection).getSchema(`${projection.$id}#/$defs/WorkflowMediaContractProjectionV1`) as ValidateFunction;
     assert.equal(fixture.schema, "semio.workflow.media-contract-presentation/v1");
     assert.equal(fixture.cases.length, 4);
     const ids = new Set<string>();
@@ -61,8 +64,8 @@ class PersistenceContractScript extends BundleScript {
     const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addSchema(schema);
-    const requestValid = ajv.getSchema(`${schema.$id}#/$defs/Request`)!;
-    const eventValid = ajv.getSchema(`${schema.$id}#/$defs/Event`)!;
+    const requestValid: SchemaCheck = ajv.getSchema(`${schema.$id}#/$defs/Request`) as ValidateFunction;
+    const eventValid: SchemaCheck = ajv.getSchema(`${schema.$id}#/$defs/Event`) as ValidateFunction;
     assert.equal(fixture.schema, "semio.shell.persistence-neutral/v1");
     assert.equal(fixture.capacity, 64);
     assert.equal(fixture.requests.length, 4);
@@ -97,7 +100,7 @@ class PersistenceContractScript extends BundleScript {
         const event = step.value;
         const expected = request.correlation;
         const actual = event.correlation;
-        let allow = Boolean(eventValid(event)) && !terminal && actual.requestId === expected.requestId && ["windowId", "spaceId", "sessionId", "generation"].every(key => actual.scope[key] === expected.scope[key]);
+        let allow: boolean = Boolean(eventValid(event)) && !terminal && actual.requestId === expected.requestId && ["windowId", "spaceId", "sessionId", "generation"].every(key => actual.scope[key] === expected.scope[key]);
         if (allow && event.kind === "progress") {
           const next = phases.indexOf(event.phase);
           allow = next >= phase && event.completedBytes >= completed && event.completedBytes <= event.totalBytes && (total === undefined || total === event.totalBytes) && (next !== 4 || event.completedBytes === event.totalBytes);
@@ -147,7 +150,7 @@ class DocumentRetirementScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("document-retirement-check accepts only --oracle-only");
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement");
     const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
+    const validate: SchemaCheck = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let grants = 0;
     const measure = (value: unknown, text: (value: string) => number): number => value === null ? 0 : typeof value === "string" ? text(value) : typeof value === "number" ? 8 : typeof value === "boolean" ? 1 : Array.isArray(value) ? value.reduce((sum, item) => sum + measure(item, text), 0) : Object.entries(value as Record<string, unknown>).reduce((sum, [key, item]) => sum + text(key) + measure(item, text), 0);
@@ -186,13 +189,13 @@ class MemberOpenProtocolScript extends BundleScript {
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open");
     const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true, allErrors: true });
-    const validate = ajv.compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
+    const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let rejectedBytes = 0;
     for (const row of fixture.cases) {
       const text = row.artifactId.length > 0 && Buffer.byteLength(row.artifactId) <= fixture.limits.identityBytes && !/\p{Cc}/u.test(row.artifactId);
       const reason = !row.sealed ? "unsealed" : row.bytes === 0 ? "empty" : row.nowUs >= row.expiresAtUs ? "expired" : !text ? "identity" : row.ownerChildId !== null && row.ownerChildId !== row.artifactId ? "owner" : null;
-      const structural = ajv.compile({ type: "object", required: ["sealed", "bytes", "expiresAtUs", "artifactId", "ownerChildId"], properties: {
+      const structural: SchemaCheck = ajv.compile({ type: "object", required: ["sealed", "bytes", "expiresAtUs", "artifactId", "ownerChildId"], properties: {
         sealed: { const: true }, bytes: { type: "integer", minimum: 1 }, expiresAtUs: { type: "integer", exclusiveMinimum: row.nowUs },
         artifactId: { type: "string", minLength: 1, pattern: "^[^\\p{Cc}]+$" }, ownerChildId: { enum: [null, row.artifactId] },
       } });
@@ -252,9 +255,9 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
-    const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
-    const fail = (error: string): never => { throw new Error(error); };
+    const fail: (error: string) => never = error => { throw new Error(error); };
     const text = (value: string): string => value && Buffer.byteLength(value) <= fixture.limits.identityBytes && !/\p{Cc}/u.test(value) ? value : fail("identity");
     const reader = (bytes: Buffer) => {
       let offset = 0;
@@ -341,7 +344,7 @@ class MemberHistoryInputScript extends BundleScript {
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const history = Buffer.from(fixture.historyHex, "hex"); const hash = (bytes: Buffer) => Buffer.from(blake3Hex(bytes), "hex");
     assert.equal(crc.buf(history.subarray(0, 20)) >>> 0, history.readUInt32LE(20));
@@ -379,7 +382,7 @@ class MemberHistoryInputScript extends BundleScript {
       assert.equal(bytes.length, row.historyBytes); assert.equal(input.length + identityBytes, row.retiredBytes);
       assert.equal(retireBytes(input.length + identityBytes), row.retiredBytes);
       let span: ReturnType<typeof inspectRetainedSprNeutral> | null = null; let error: string | null = null;
-      try { span = inspectRetainedSprNeutral(bytes, bytes => crc.buf(bytes) >>> 0, hash); if (span.sequence === 0) error = "malformed"; }
+      try { span = inspectRetainedSprNeutral(bytes, (bytes: Uint8Array) => crc.buf(bytes) >>> 0, hash); if (span.sequence === 0) error = "malformed"; }
       catch { error = "malformed"; }
       assert.equal(error, row.error);
       if (row.error === null) {
@@ -441,11 +444,11 @@ class MemberHistoryIdScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); const ids = new Set<string>(); let accepted = 0;
     const decode = (row: { dictionary: string | null; resolvedIndex?: number }, bytes: Buffer) => {
       let at = 0;
-      const fail = (error: string): never => { throw new Error(error); };
+      const fail: (error: string) => never = error => { throw new Error(error); };
       const take = (count: number): Buffer => { if (count > bytes.length - at) fail("malformed"); const value = bytes.subarray(at, at + count); at += count; return value; };
       const uint = (): number => {
         const start = at; let value = 0n;
@@ -531,9 +534,9 @@ class MemberHistoryRecordScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); let accepted = 0; const ids = new Set<string>();
-    const fail = (reason: string): never => { throw new Error(reason); };
+    const fail: (reason: string) => never = reason => { throw new Error(reason); };
     for (const row of fixture.cases) {
       assert(!ids.has(row.id)); ids.add(row.id);
       for (const grant of fixture.grants) {
@@ -629,12 +632,12 @@ class MemberHistoryDictionaryScript extends BundleScript {
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
     const hash = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
     const uint = (value: number): Buffer => Buffer.from(leb.encodeU32(value));
-    const fail = (reason: string): never => { throw new Error(reason); };
+    const fail: (reason: string) => never = reason => { throw new Error(reason); };
     const frame = (kind: number, payload: Buffer, critical = kind !== 65): Buffer => {
       const body = Buffer.concat([Buffer.from([kind, critical ? 2 : 0]), payload]); const prefix = uint(body.length); const tail = Buffer.alloc(8);
       tail.writeUInt32LE(checksum(body)); tail.writeUInt32LE(prefix.length + body.length + 8, 4); return Buffer.concat([prefix, body, tail]);
@@ -898,7 +901,7 @@ class MemberFactoryIdentityScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-factory-identity-check accepts only --oracle-only");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate: SchemaCheck = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const semioSource = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
     const semioTable = semioSource.slice(semioSource.indexOf("pub enum SemioMembers {"), semioSource.indexOf("/// 🏭️ Mints a typed Semio child"));
@@ -1046,7 +1049,7 @@ class PublicMemberOpenHandoffScript extends BundleScript {
   protected proveSource(): void {
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🚪️member-open");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const validate: SchemaCheck = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     const selectedFixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(selectedFixture.declarations.length, fixture.requiredFactoryOperations);

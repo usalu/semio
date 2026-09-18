@@ -969,7 +969,7 @@ pub mod types {
         fn drop(&mut self) {
             let terminal = self.terminal_is_empty();
             let never_admitted = self.retirement_scene.get().is_none() && self.cache.get_mut().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none());
-            debug_assert!(terminal || never_admitted, "IconPaintCache with admitted resources must reach terminal-empty through close_step before release");
+            debug_assert!(terminal || never_admitted || std::thread::panicking(), "IconPaintCache with admitted resources must reach terminal-empty through close_step before release");
             if terminal || never_admitted {
                 unsafe { ManuallyDrop::drop(self.cache.get_mut()) };
             }

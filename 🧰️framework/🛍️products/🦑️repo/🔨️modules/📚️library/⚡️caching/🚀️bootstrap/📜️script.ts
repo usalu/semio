@@ -251,7 +251,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const { level, rest } = resolveTestLevel(selected);
     if (!rest.length) return { args: ["run", `workspace:test-${level}`, ...options], env: { SEMIO_TEST_LEVEL: level } };
     if (rest[0] === "repo-client" || rest[0] === "repo-mcp") {
-      const project = rest[0] === "repo-client" ? "@semio-tech/repo-client" : "@semio-tech/repo-mcp-go";
+      const project = rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp";
       return { args: ["run", `${project}:${level === "fundamental" ? "test" : `test-${level}`}`, ...options, ...(rest.length > 1 ? ["--", ...rest.slice(1)] : [])], env: { SEMIO_TEST_LEVEL: level } };
     }
     const taxonomy = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));

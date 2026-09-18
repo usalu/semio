@@ -8,7 +8,7 @@ use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor,
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 #[path = "🧬️schema/🦀️.rs"]
@@ -545,6 +545,23 @@ impl TrustedCatalogLoader {
         let mut registration_codecs = Vec::new();
         let mut resolved_paths = BTreeSet::from([bundle_path]);
 
+        /// 📦️ One selected package whose retained bytes, digests, descriptor and browser actor are
+        /// already verified, held until the whole closure is proven so no provider sees a package
+        /// belonging to a closure that is still able to be refused.
+        struct StagedTrustedPackage<'a> {
+            position: usize,
+            record: &'a TrustedBundlePackageV1,
+            component_bytes: Vec<u8>,
+            component_sha256: [u8; 32],
+            component_blake3: [u8; 32],
+            descriptor_bytes: Vec<u8>,
+            descriptor_sha256: [u8; 32],
+            descriptor: PackageDescriptor,
+            browser_actor: DocumentOpenBrowserActorV1,
+            browser_actor_bytes: Option<Arc<[u8]>>,
+        }
+
+        let mut staged = Vec::with_capacity(order.len());
         for (position, index) in order.into_iter().enumerate() {
             context.checkpoint()?;
             let record = &bundle.packages[index];
@@ -595,7 +612,11 @@ impl TrustedCatalogLoader {
                 None
             };
             report_package_progress(context, position, 3, total_units)?;
+            staged.push(StagedTrustedPackage { position, record, component_bytes, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_bytes });
+        }
 
+        for stage in staged {
+            let StagedTrustedPackage { position, record, component_bytes, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_bytes } = stage;
             context.checkpoint()?;
             let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version }, &descriptor, context)?;
             context.checkpoint()?;

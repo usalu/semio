@@ -5679,11 +5679,11 @@ pub mod examples {
     }
     #[path = "."]
     pub mod bestest_600ff {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600FF/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600ff/🦀️.rs"]
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600FF/🧪️tests/🧩️example/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600ff/🧪️tests/🧩️example/🦀️.rs"]
         mod tests;
     }
     #[path = "."]
@@ -5742,11 +5742,11 @@ pub mod examples {
     }
     #[path = "."]
     pub mod bestest_900ff {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900FF/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900ff/🦀️.rs"]
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900FF/🧪️tests/🧩️example/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900ff/🧪️tests/🧩️example/🦀️.rs"]
         mod tests;
     }
     #[path = "."]

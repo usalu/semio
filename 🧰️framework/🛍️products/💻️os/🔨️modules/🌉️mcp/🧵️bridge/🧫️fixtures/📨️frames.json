@@ -18,5 +18,8 @@
   { "direction": "gateway_to_shell", "variant": "AgentPresence", "frame": {"variant":"agentPresence","active":true,"label":"claude-code","invocationId":"inv-1"}, "hex": "05010b000000636c617564652d636f64650105000000696e762d31" },
   { "direction": "gateway_to_shell", "variant": "AgentPresence", "frame": {"variant":"agentPresence","active":false,"label":"","invocationId":null}, "hex": "05000000000000" },
   { "direction": "gateway_to_shell", "variant": "Pong", "frame": {"variant":"pong"}, "hex": "06" },
-  { "direction": "gateway_to_shell", "variant": "Bye", "frame": {"variant":"bye","reason":"shutdown"}, "hex": "070800000073687574646f776e" }
+  { "direction": "gateway_to_shell", "variant": "Bye", "frame": {"variant":"bye","reason":"shutdown"}, "hex": "070800000073687574646f776e" },
+  { "direction": "shell_to_gateway", "variant": "AgentMessage", "frame": {"variant":"agentMessage","messageId":"msg_1","text":"translate the selection by one metre"}, "hex": "09050000006d73675f31240000007472616e736c617465207468652073656c656374696f6e206279206f6e65206d65747265" },
+  { "direction": "gateway_to_shell", "variant": "AgentToolCall", "frame": {"variant":"agentToolCall","invocationId":"inv_1","toolName":"action_invoke","arguments":"{\"capabilityId\":\"cad.viewport.translateSelection\"}"}, "hex": "0805000000696e765f310d000000616374696f6e5f696e766f6b65320000007b226361706162696c6974794964223a226361642e76696577706f72742e7472616e736c61746553656c656374696f6e227d" },
+  { "direction": "gateway_to_shell", "variant": "AgentToolResult", "frame": {"variant":"agentToolResult","invocationId":"inv_1","toolName":"action_invoke","ok":true,"summary":"moved 1 object"}, "hex": "0905000000696e765f310d000000616374696f6e5f696e766f6b65010e0000006d6f7665642031206f626a656374" }
 ]

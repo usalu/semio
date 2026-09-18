@@ -105,7 +105,7 @@ export type InferenceBindingIdentityV1 = {
   readonly componentSha256: string;
   readonly componentBlake3: string;
   readonly artifactKind: "s.gis.gismap";
-  readonly documentSchema: "gis.map";
+  readonly artifactSchema: "gis.map";
   readonly parentDialect: InferenceParentDialectV1;
   readonly surfaceId: "s.gis.gismap@1/*#editor";
   readonly grantedMode: "read-write-observe";
@@ -115,13 +115,13 @@ export type InferenceBindingIdentityV1 = {
 };
 export function parseInferenceBindingIdentityV1(value: unknown): InferenceBindingIdentityV1 {
   const name = "hub.inference/InferenceBindingIdentityV1";
-  const row = rows(value, ["digest", "catalogGenerationId", "packageId", "packageVersion", "componentSha256", "componentBlake3", "artifactKind", "documentSchema", "parentDialect", "surfaceId", "grantedMode", "serviceId", "serviceVersion", "algorithmVersion"], name);
+  const row = rows(value, ["digest", "catalogGenerationId", "packageId", "packageVersion", "componentSha256", "componentBlake3", "artifactKind", "artifactSchema", "parentDialect", "surfaceId", "grantedMode", "serviceId", "serviceVersion", "algorithmVersion"], name);
   if (!["digest", "catalogGenerationId", "componentSha256", "componentBlake3"].every((key) => hex(row[key], 64)) || row.packageId !== "semio:gis" || !serverId(row.packageVersion)
-    || row.artifactKind !== "s.gis.gismap" || row.documentSchema !== "gis.map" || row.surfaceId !== "s.gis.gismap@1/*#editor" || row.grantedMode !== "read-write-observe"
+    || row.artifactKind !== "s.gis.gismap" || row.artifactSchema !== "gis.map" || row.surfaceId !== "s.gis.gismap@1/*#editor" || row.grantedMode !== "read-write-observe"
     || row.serviceId !== "s.gis.gismap.inference" || row.serviceVersion !== 1 || row.algorithmVersion !== 1) return fail(name);
   return {
     digest: row.digest as string, catalogGenerationId: row.catalogGenerationId as string, packageId: "semio:gis", packageVersion: row.packageVersion as string,
-    componentSha256: row.componentSha256 as string, componentBlake3: row.componentBlake3 as string, artifactKind: "s.gis.gismap", documentSchema: "gis.map",
+    componentSha256: row.componentSha256 as string, componentBlake3: row.componentBlake3 as string, artifactKind: "s.gis.gismap", artifactSchema: "gis.map",
     parentDialect: parseInferenceParentDialectV1(row.parentDialect), surfaceId: "s.gis.gismap@1/*#editor", grantedMode: "read-write-observe",
     serviceId: "s.gis.gismap.inference", serviceVersion: 1, algorithmVersion: 1,
   };
@@ -586,12 +586,12 @@ export function parseInferenceCatalogPackageV1(value: unknown): InferenceCatalog
 
 export type InferenceCatalogServiceV1 = {
   readonly owner: "gis"; readonly contributor: "gis"; readonly artifactKind: "s.gis.gismap"; readonly artifactSchema: "s.gis.gismap"; readonly artifactSchemaVersion: 1;
-  readonly documentSchema: "gis.map"; readonly documentSchemaVersion: 1; readonly inferenceSchema: "s.gis.gismap.inference"; readonly inferenceSchemaVersion: 1;
+  readonly inferenceSchema: "s.gis.gismap.inference"; readonly inferenceSchemaVersion: 1;
   readonly algorithmVersion: 1; readonly policyVersion: 1; readonly dependsOn: readonly never[];
 };
 const INFERENCE_CATALOG_SERVICE: InferenceCatalogServiceV1 = {
-  owner: "gis", contributor: "gis", artifactKind: "s.gis.gismap", artifactSchema: "s.gis.gismap", artifactSchemaVersion: 1, documentSchema: "gis.map",
-  documentSchemaVersion: 1, inferenceSchema: "s.gis.gismap.inference", inferenceSchemaVersion: 1, algorithmVersion: 1, policyVersion: 1, dependsOn: [],
+  owner: "gis", contributor: "gis", artifactKind: "s.gis.gismap", artifactSchema: "s.gis.gismap", artifactSchemaVersion: 1,
+  inferenceSchema: "s.gis.gismap.inference", inferenceSchemaVersion: 1, algorithmVersion: 1, policyVersion: 1, dependsOn: [],
 };
 export function parseInferenceCatalogServiceV1(value: unknown): InferenceCatalogServiceV1 {
   const name = "hub.inference/InferenceCatalogServiceV1";
@@ -616,10 +616,10 @@ export function parseInferenceCatalogSelectionV1(value: unknown): InferenceCatal
   return { scope: { spaceId: scope.spaceId as string, documentId: scope.documentId as string }, descriptor: parseInferenceCatalogDescriptorV1(row.descriptor), package: parseInferenceCatalogPackageV1(row.package), services: row.services.map(parseInferenceCatalogServiceV1) };
 }
 
-export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 15 };
+export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 17 };
 export function parseGisMapFrozenExecutionProtocolV1(value: unknown): GisMapFrozenExecutionProtocolV1 {
   const row = rows(value, ["appChannelVersion"], "hub.inference/GisMapFrozenExecutionProtocolV1");
-  return row.appChannelVersion === 15 ? { appChannelVersion: 15 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
+  return row.appChannelVersion === 17 ? { appChannelVersion: 17 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
 }
 
 export type GisMapFrozenPackageV1 = {

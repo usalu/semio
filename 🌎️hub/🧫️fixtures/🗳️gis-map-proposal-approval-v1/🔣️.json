@@ -2,14 +2,14 @@
   "schema": "semio.hub.gis-map-proposal-approval-fixture/v1",
   "version": 1,
   "binding": {
-    "digest": "4cf67ba4dfb31d8edef0ede1f674596b12ba347efb6c6bc2c2ece03fde1f24ea",
+    "digest": "6343843a352cf26c26ecc8c871124dd46ce378d8f14d2dbd7fcb6b0d9e34dc09",
     "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
     "packageId": "semio:gis",
     "packageVersion": "0.1.0",
     "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
     "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
     "artifactKind": "s.gis.gismap",
-    "documentSchema": "gis.map",
+    "artifactSchema": "gis.map",
     "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
     "surfaceId": "s.gis.gismap@1/*#editor",
     "grantedMode": "read-write-observe",
@@ -30,7 +30,7 @@
     "jobId": "11111111111111111111111111111111",
     "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
     "regionId": "inference-11111111111111111111111111111111",
-    "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+    "ring": [[7.0, 46.0], [9.0, 46.0], [9.0, 48.0], [7.0, 48.0], [7.0, 46.0]]
   },
   "inverseCanonical": "[{\"DeleteRegion\":{\"id\":\"inference-11111111111111111111111111111111\"}}]",
   "inverseHash": "ad964a220d81b242aad274b748af0213d60dad45117496de80991f527ff2de43",

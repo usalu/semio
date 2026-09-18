@@ -43,6 +43,20 @@ export const agentUiLabel = registerUiTranslationBundles({
           },
           chat: {
             panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
+            transcriptLabel: { label: { normal: "Agent conversation", beginner: "Agent conversation" } },
+            empty: { label: { normal: "No agent activity yet. Messages you send appear here, along with every tool the agent runs.", beginner: "No agent activity yet. Messages you send appear here, along with every tool the agent runs." } },
+            youRole: { label: { normal: "You", beginner: "You" } },
+            toolCallRole: { label: { normal: "Tool call", beginner: "Tool call" } },
+            toolResultRole: { label: { normal: "Result", beginner: "Result" } },
+            approvalRole: { label: { normal: "Approval", beginner: "Approval" } },
+            running: { label: { normal: "Running…", beginner: "Running…" } },
+            failed: { label: { normal: "Failed", beginner: "Failed" } },
+            succeeded: { label: { normal: "Done", beginner: "Done" } },
+            approvalPending: { label: { normal: "Waiting for your decision", beginner: "Waiting for your decision" } },
+            draftLabel: { label: { normal: "Message to the agent", beginner: "Message to the agent" } },
+            placeholder: { label: { normal: "Tell the agent what to do…", beginner: "Tell the agent what to do…" } },
+            send: { label: { normal: "Send", beginner: "Send" } },
+            disconnected: { label: { normal: "Not connected to an agent — messages cannot be sent.", beginner: "Not connected to an agent — messages cannot be sent." } },
           },
           approvals: {
             trigger: { label: { normal: "Open agent approvals", beginner: "Open agent approvals" } },
@@ -80,6 +94,20 @@ export const agentUiLabel = registerUiTranslationBundles({
           },
           chat: {
             panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
+            transcriptLabel: { label: { normal: "Agent-Konversation", beginner: "Agent-Konversation" } },
+            empty: { label: { normal: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug.", beginner: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug." } },
+            youRole: { label: { normal: "Du", beginner: "Du" } },
+            toolCallRole: { label: { normal: "Werkzeugaufruf", beginner: "Werkzeugaufruf" } },
+            toolResultRole: { label: { normal: "Ergebnis", beginner: "Ergebnis" } },
+            approvalRole: { label: { normal: "Freigabe", beginner: "Freigabe" } },
+            running: { label: { normal: "Läuft…", beginner: "Läuft…" } },
+            failed: { label: { normal: "Fehlgeschlagen", beginner: "Fehlgeschlagen" } },
+            succeeded: { label: { normal: "Fertig", beginner: "Fertig" } },
+            approvalPending: { label: { normal: "Wartet auf deine Entscheidung", beginner: "Wartet auf deine Entscheidung" } },
+            draftLabel: { label: { normal: "Nachricht an den Agent", beginner: "Nachricht an den Agent" } },
+            placeholder: { label: { normal: "Sag dem Agent, was zu tun ist…", beginner: "Sag dem Agent, was zu tun ist…" } },
+            send: { label: { normal: "Senden", beginner: "Senden" } },
+            disconnected: { label: { normal: "Nicht mit einem Agent verbunden — Nachrichten können nicht gesendet werden.", beginner: "Nicht mit einem Agent verbunden — Nachrichten können nicht gesendet werden." } },
           },
           approvals: {
             trigger: { label: { normal: "Agent-Freigaben öffnen", beginner: "Agent-Freigaben öffnen" } },
@@ -251,6 +279,39 @@ const IDLE_PRESENCE: AgentBridgePresence = { active: false, label: "", invocatio
 
 export type PendingAgentApproval = { readonly approvalId: string; readonly summary: string; readonly requestedAtMs: number };
 
+/** 💬️ One entry of the live agent conversation, exactly as the bridge reported it. `userMessage` is
+ * a turn this shell itself sent (echoed locally the moment the frame leaves, so the panel is never
+ * behind the human's own typing); every other kind is a real `GatewayToShell` frame the gateway
+ * emitted from its own `tools/call` dispatch or approval gate. Nothing here is synthesised from a
+ * guess: a tool call with no result yet simply has `state: "running"`. */
+export type AgentConversationEntry =
+  | { readonly kind: "userMessage"; readonly id: string; readonly text: string; readonly atMs: number }
+  | { readonly kind: "toolCall"; readonly id: string; readonly toolName: string; readonly args: string; readonly state: "running" | "ok" | "failed"; readonly summary: string | null; readonly atMs: number }
+  | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved"; readonly decision: ApprovalDecision | null; readonly atMs: number };
+
+/** ✂️ How many conversation entries the panel retains. The bridge is a live view, not an archive:
+ * an agent running for hours must not grow this array without bound, and the oldest entries are the
+ * least useful ones to keep. */
+export const AGENT_CONVERSATION_MAX_ENTRIES = 200;
+
+/** ➕️ Appends one entry and trims to {@link AGENT_CONVERSATION_MAX_ENTRIES}, oldest first. */
+function appendConversationEntry(current: readonly AgentConversationEntry[], entry: AgentConversationEntry): readonly AgentConversationEntry[] {
+  const next = [...current, entry];
+  return next.length > AGENT_CONVERSATION_MAX_ENTRIES ? next.slice(next.length - AGENT_CONVERSATION_MAX_ENTRIES) : next;
+}
+
+/** 🔁️ Replaces the entry with `id`, leaving the rest untouched — how a `toolCall` becomes its own
+ * result and a `pending` approval becomes a resolved one, in place, rather than as a second row. */
+function updateConversationEntry(current: readonly AgentConversationEntry[], id: string, update: (entry: AgentConversationEntry) => AgentConversationEntry): readonly AgentConversationEntry[] {
+  let found = false;
+  const next = current.map((entry) => {
+    if (entry.id !== id) return entry;
+    found = true;
+    return update(entry);
+  });
+  return found ? next : current;
+}
+
 export type UseAgentBridgeOptions = {
   readonly config?: AgentBridgeConfig | null;
   readonly shellKind?: ShellKind;
@@ -266,9 +327,15 @@ export type UseAgentBridgeResult = {
   readonly shellState: ShellState;
   readonly presence: AgentBridgePresence;
   readonly pendingApprovals: readonly PendingAgentApproval[];
+  readonly conversation: readonly AgentConversationEntry[];
   readonly lastError: string | null;
   readonly dispatch: (command: ShellCommand) => ReduceResult;
   readonly resolveApproval: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
+  /** 💬️ Sends one human turn to the connected agent as a `ShellToGateway.agentMessage` frame and
+   * echoes it into {@link UseAgentBridgeResult.conversation}. Returns `false` (and records nothing)
+   * when no socket is open, so the panel can tell the human their message did not go anywhere
+   * instead of showing it as if it had. */
+  readonly sendAgentMessage: (text: string) => boolean;
 };
 
 const RECONNECT_BASE_MS = 1000;
@@ -291,7 +358,9 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const [shellState, setShellState] = useState<ShellState>(() => options.initialState ?? createDefaultShellState());
   const [presence, setPresence] = useState<AgentBridgePresence>(IDLE_PRESENCE);
   const [pendingApprovals, setPendingApprovals] = useState<readonly PendingAgentApproval[]>([]);
+  const [conversation, setConversation] = useState<readonly AgentConversationEntry[]>([]);
   const [lastError, setLastError] = useState<string | null>(null);
+  const nextMessageOrdinalRef = useRef(1);
 
   const socketRef = useRef<WebSocket | null>(null);
   const shellStateRef = useRef(shellState);
@@ -330,8 +399,23 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     (approvalId: string, decision: ApprovalDecision, note?: string) => {
       send({ variant: "approval", approvalId, decision, note: note ?? null });
       setPendingApprovals((current) => current.filter((approval) => approval.approvalId !== approvalId));
+      setConversation((current) => updateConversationEntry(current, approvalId, (entry) => (entry.kind === "approval" ? { ...entry, state: "resolved", decision } : entry)));
     },
     [send],
+  );
+
+  const sendAgentMessage = useCallback(
+    (text: string): boolean => {
+      const trimmed = text.trim();
+      const socket = socketRef.current;
+      if (!trimmed || !socket || socket.readyState !== WebSocket.OPEN) return false;
+      const messageId = `msg_${shellSessionId}_${nextMessageOrdinalRef.current}`;
+      nextMessageOrdinalRef.current += 1;
+      send({ variant: "agentMessage", messageId, text: trimmed });
+      setConversation((current) => appendConversationEntry(current, { kind: "userMessage", id: messageId, text: trimmed, atMs: Date.now() }));
+      return true;
+    },
+    [send, shellSessionId],
   );
 
   useEffect(() => {
@@ -386,10 +470,20 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
         }
         case "approvalRequested": {
           setPendingApprovals((current) => [...current.filter((approval) => approval.approvalId !== frame.approvalId), { approvalId: frame.approvalId, summary: frame.summary, requestedAtMs: Date.now() }]);
+          setConversation((current) => appendConversationEntry(current, { kind: "approval", id: frame.approvalId, summary: frame.summary, state: "pending", decision: null, atMs: Date.now() }));
           break;
         }
         case "approvalResolved": {
           setPendingApprovals((current) => current.filter((approval) => approval.approvalId !== frame.approvalId));
+          setConversation((current) => updateConversationEntry(current, frame.approvalId, (entry) => (entry.kind === "approval" ? { ...entry, state: "resolved", decision: frame.decision } : entry)));
+          break;
+        }
+        case "agentToolCall": {
+          setConversation((current) => appendConversationEntry(current, { kind: "toolCall", id: frame.invocationId, toolName: frame.toolName, args: frame.arguments, state: "running", summary: null, atMs: Date.now() }));
+          break;
+        }
+        case "agentToolResult": {
+          setConversation((current) => updateConversationEntry(current, frame.invocationId, (entry) => (entry.kind === "toolCall" ? { ...entry, state: frame.ok ? "ok" : "failed", summary: frame.summary } : entry)));
           break;
         }
         case "agentPresence": {
@@ -471,6 +565,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.url, config?.admissionProof, shellKind, shellSessionId, principalActor, send]);
 
-  return { status, shellState, presence, pendingApprovals, lastError, dispatch, resolveApproval };
+  return { status, shellState, presence, pendingApprovals, conversation, lastError, dispatch, resolveApproval, sendAgentMessage };
 }
 //#endregion 🔖️Hook

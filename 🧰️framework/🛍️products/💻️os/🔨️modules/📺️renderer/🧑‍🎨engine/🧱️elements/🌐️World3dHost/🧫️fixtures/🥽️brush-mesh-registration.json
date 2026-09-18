@@ -1,0 +1,42 @@
+{
+  "action": "registerBrushMesh",
+  "origin": "gesture",
+  "source": "🗑️generated/w11a-parity-run-14/steps.json (2026-09-18T17:04Z, http://127.0.0.1:6313/?plugin=puzzle3d)",
+  "note": "Family B of the parity run's behavioural diff: React's World3dHost mounts one BrushMeshRegistrar per loaded GLB per window instance and announces its welded collision geometry to the puzzle guest; the wgpu host dispatched nothing at all, so the guest's brush and volume-brush utilities had no collision body on this renderer. Every React row below is `origin: gesture` on the scene host's own controller — never `user` — which is the provenance the wgpu twin stamps too (`dispatch_gesture_action`).",
+  "argShapes": {
+    "announce": {
+      "keys": ["surfaceId", "windowId", "url", "digest"],
+      "note": "An identity the client's registry already holds under THIS guest instantiation — because a sibling window paged it, or a sibling id carries byte-identical geometry — costs one command and no payload. React's `handleRegisterBrushMesh` holds/alias fast paths."
+    },
+    "page": {
+      "keys": ["surfaceId", "windowId", "url", "digest", "page", "pageCount", "positionsB64", "indicesB64"],
+      "optionalKeys": ["positionsB64", "indicesB64"],
+      "pageValues": 1024,
+      "commandRawBytes": 8192,
+      "maxPages": 384,
+      "note": "One page of a first upload: base64 of little-endian f32 positions followed by little-endian u32 indices, positions filling each page first and the indices stream continuing in whatever of the page's value budget is left. The guest reassembles it in `decode_brush_mesh_page_values` and refuses a run that does not hash to the announced digest."
+    }
+  },
+  "digest": {
+    "algorithm": "unkeyed BLAKE3, hex",
+    "over": "positions little-endian f32 bytes followed by indices little-endian u32 bytes",
+    "note": "Byte-identical to the guest's own `brush_mesh_digest` (`✏️editor/⏳️precompute/🦀️.rs`) and React's `puzzle3dBrushMeshDigest`."
+  },
+  "reactSteps": [
+    { "index": 9, "step": "pane-chip-engagement-toggle", "rows": 6, "perWindow": { "puzzle3d-main-top": 3, "puzzle3d-main-perspective": 3 } },
+    { "index": 14, "step": "pane-chip-windowoptions-toggle", "rows": 10, "perWindow": { "puzzle3d-main-top": 5, "puzzle3d-main-perspective": 5 } },
+    { "index": 18, "step": "window-reopen", "rows": 22, "perWindow": { "puzzle3d-main-perspective": 11, "puzzle3d-main-top": 11 } },
+    { "index": 34, "step": "example-switch", "rows": 59, "perWindow": { "puzzle3d-main-top": 30, "puzzle3d-main-perspective": 29 } },
+    { "index": 35, "step": "example-picker-dismiss", "rows": 19, "perWindow": { "puzzle3d-main-perspective": 10, "puzzle3d-main-top": 9 } },
+    { "index": 36, "step": "role-viewer", "rows": 8, "perWindow": { "puzzle3d-main-perspective": 5, "puzzle3d-main-top": 3 } },
+    { "index": 37, "step": "role-editor", "rows": 28, "perWindow": { "puzzle3d-main-top": 14, "puzzle3d-main-perspective": 14 } }
+  ],
+  "windows": ["puzzle3d-main-top", "puzzle3d-main-perspective"],
+  "laws": {
+    "perWindowInstance": "Every one of the seven measured steps carries rows for BOTH window instances — an announcement is scoped to a window, never to the document, because React mounts a registrar per World3dHost. The wgpu twin therefore keeps its announced set per `World3dState`.",
+    "oneRowPerIdentityPerRevision": "A surface announces an identity once per registry revision and never twice in the same frame. React's registrar re-fires on its `revision` prop, which is `brushMeshRevisions.generation + brushMeshRevisions.urls[url]`; the wgpu twin reads the same two numbers off the guest's own `interactionJson.meshResidency` / `interactionJson.meshReuploadUrls`.",
+    "reannounceTriggers": "A window that is rebuilt (window-reopen, role-viewer, role-editor) starts with an empty announced set and announces again; an example switch changes the mesh url set and announces the new identities; a guest restart (meshResidency going backwards) voids every claim and bumps the revision for all of them.",
+    "backPressure": "At most ONE command is outstanding per surface while a first upload runs, so a user action that lands mid-run queues behind a single page rather than behind a whole 72-command run (React's `drainPuzzle3dBrushMeshQueue` awaits each page's settle; the wgpu twin emits one page per surface per frame).",
+    "sharedRegistry": "The claim ledger is process-wide, exactly as React's `puzzle3dBrushMeshRegistry` is a module singleton shared by every mounted host: the first window pages the bytes, and every later window announces the same identity by `{url, digest}` alone."
+  }
+}

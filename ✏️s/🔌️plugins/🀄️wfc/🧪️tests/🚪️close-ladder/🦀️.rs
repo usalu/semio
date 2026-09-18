@@ -185,6 +185,48 @@ wfc_close_ladder_law!(wfc2d_editor_instance_close_reaches_retired, 2);
 wfc_close_ladder_law!(grid3d_editor_instance_close_reaches_retired, 3);
 wfc_close_ladder_law!(wfc3d_editor_instance_close_reaches_retired, 4);
 
+/// 👁️ Every viewer this owner ships, by `(label, app id)`. A viewer owns the very same document,
+/// config, presence and transient stores its editor does and releases them through the same ladder,
+/// so the owned-store declaration that made the editors close is a law for the read-only surfaces too.
+const WFC_VIEWERS: [(&str, &str); 5] = [
+    ("bitmap-viewer", "s.wfc.bitmap@1/*#viewer"),
+    ("grid2d-viewer", "s.wfc.grid2d@1/*#viewer"),
+    ("wfc2d-viewer", "s.wfc.wfc2d@1/*#viewer"),
+    ("grid3d-viewer", "s.wfc.grid3d@1/*#viewer"),
+    ("wfc3d-viewer", "s.wfc.wfc3d@1/*#viewer"),
+];
+
+/// 🚪️ Drives one viewer's whole ladder: boot, four idle turns, close to a bounded `Retired` receipt.
+fn viewer_close_reaches_retired(index: usize) {
+    let (label, app_id) = WFC_VIEWERS[index];
+    let app_id = app_id.to_string();
+    let owned_label = label.to_string();
+    on_close_ladder_thread(label, move || async move {
+        let (runtime, lifetime) = boot(&app_id).await;
+        for _ in 0..4 {
+            turn(&runtime, Vec::new()).await;
+        }
+        close_to_retired(&runtime, lifetime, &owned_label).await;
+    });
+}
+
+/// 🚪️ LAW: every wfc viewer instance is driven to `Retired` by the close ladder inside a bounded turn
+/// count. One law PER ARTIFACT for the same reason the editor laws are split.
+macro_rules! wfc_viewer_close_ladder_law {
+    ($name:ident, $index:expr) => {
+        #[test]
+        fn $name() {
+            viewer_close_reaches_retired($index);
+        }
+    };
+}
+
+wfc_viewer_close_ladder_law!(bitmap_viewer_instance_close_reaches_retired, 0);
+wfc_viewer_close_ladder_law!(grid2d_viewer_instance_close_reaches_retired, 1);
+wfc_viewer_close_ladder_law!(wfc2d_viewer_instance_close_reaches_retired, 2);
+wfc_viewer_close_ladder_law!(grid3d_viewer_instance_close_reaches_retired, 3);
+wfc_viewer_close_ladder_law!(wfc3d_viewer_instance_close_reaches_retired, 4);
+
 /// ⚖️ The language-agnostic close-cost fixture — shared by this law and by the shell-side twin, so
 /// the ceiling a close must respect is authored once instead of hard-coded per implementation.
 const CLOSE_COST_FIXTURE: &str = include_str!("../../🧫️fixtures/🚪️close-ladder/🔣️.json");

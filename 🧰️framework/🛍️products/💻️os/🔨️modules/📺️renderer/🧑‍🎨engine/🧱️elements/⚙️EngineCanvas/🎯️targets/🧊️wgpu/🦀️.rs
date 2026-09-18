@@ -761,7 +761,7 @@ impl EngineSurfaceRetirement {
 
 impl Drop for EngineSurfaceRetirement {
     fn drop(&mut self) {
-        debug_assert!(self.terminal_nonopaque_is_empty(), "EngineSurfaceRetirement must reach terminal-empty before release");
+        debug_assert!(self.terminal_nonopaque_is_empty() || std::thread::panicking(), "EngineSurfaceRetirement must reach terminal-empty before release");
     }
 }
 
@@ -1618,7 +1618,7 @@ impl EngineCanvasPresenter {
 
 impl Drop for EngineCanvasPresenter {
     fn drop(&mut self) {
-        debug_assert!(self.terminal_is_empty(), "EngineCanvasPresenter must reach terminal-empty before release");
+        debug_assert!(self.terminal_is_empty() || std::thread::panicking(), "EngineCanvasPresenter must reach terminal-empty before release");
         if self.terminal_is_empty() {
             unsafe { ManuallyDrop::drop(&mut self.slots) };
         }
@@ -2156,6 +2156,13 @@ fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, p
     }
 }
 
+/// 🖼️ Whether this graph offers the engine something to frame — either measured content bounds or an
+/// empty graph, which has nothing to wait for. An opening camera decided against neither is a
+/// decision taken too early.
+fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
+    dag.content_world_bounds().is_some() || dag.host_snapshot.nodes.is_empty()
+}
+
 /// 🕸️ Feeds one `NodeGraphScene` into a live engine host, field by field, applying only what
 /// actually changed since the last frame — the wgpu twin of React's `syncFlowSessionFromScene`
 /// (structure, then selection/hover, then preview-off/lod/camera, then eval BEFORE computing chrome).
@@ -2234,21 +2241,31 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
     // graph is replaced by a fit. Every later viewport the plugin publishes is one this renderer
     // itself persisted from a gesture, so it is adopted verbatim. Twin of `dagStartupCamera` in
     // `🧱️elements/🕸️NodeGraph/🟦️.tsx`.
+    // ⏳️ And it is a decision the engine can only take once it HAS the content to frame: the first
+    // viewport reaches this sync before the graph's own nodes are measured, where `startup_camera`
+    // has nothing to fit against and keeps the stored camera. Remembering the viewport then retires
+    // the decision forever — on the live generation3d flow graph that pinned the opening camera and
+    // left every node off screen. The decision is therefore retried until the content exists.
     if cache.viewport.as_ref() != graph.viewport.as_ref() {
         let first = cache.viewport.is_none();
+        let mut decided = true;
         if let Some(viewport) = graph.viewport.as_ref() {
             match engine {
                 NodeGraphEngine::Flow(host) if first => {
                     host.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                    decided = node_graph_frames_content(&host.dag);
                 }
                 NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
                 NodeGraphEngine::Dag(host) if first => {
                     host.dag.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                    decided = node_graph_frames_content(&host.dag);
                 }
                 NodeGraphEngine::Dag(host) => host.dag.set_camera(viewport.x, viewport.y, viewport.zoom),
             }
         }
-        cache.viewport = graph.viewport.clone();
+        if decided {
+            cache.viewport = graph.viewport.clone();
+        }
         changed = true;
     } else if fixture_changed {
         // 🔀️ An example switch can move the whole graph out from under a live camera; only then is

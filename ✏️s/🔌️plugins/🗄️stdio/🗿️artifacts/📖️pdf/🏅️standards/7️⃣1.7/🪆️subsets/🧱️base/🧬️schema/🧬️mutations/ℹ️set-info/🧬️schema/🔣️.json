@@ -9,79 +9,11 @@
   ],
   "properties": {
     "info": {
-      "$ref": "#/$defs/PdfInfo"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo"
     },
     "mutation": {
       "const": "setInfo",
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
-    }
-  },
-  "$defs": {
-    "PdfInfo": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "title": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "author": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "subject": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "keywords": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "creator": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "producer": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
     }
   }
 }

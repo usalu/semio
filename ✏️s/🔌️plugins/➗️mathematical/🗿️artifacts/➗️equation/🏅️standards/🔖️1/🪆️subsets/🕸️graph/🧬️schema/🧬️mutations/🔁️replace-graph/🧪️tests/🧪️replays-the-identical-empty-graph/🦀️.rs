@@ -8,9 +8,8 @@
 //! ⚠️ Why this leaf pins the NO-OP branch: `EquationSnapshot` keeps its graph and its point
 //! cloud in three co-derived composed CHILDREN (`notation`/`results`/`computed`,
 //! `🔖️WorkingScene`), and every state-changing equation diff re-mints all three through
-//! `equation_children_from_state`, whose `child_id` is a `DefaultHasher` digest of the child
-//! content — a value `std` deliberately leaves unspecified, so it cannot honestly be hand-authored
-//! into an `➡️after`. A committed snapshot therefore decodes to an UNRESOLVED handle and
+//! `equation_children_from_state`, which attaches the live `(graph, geometry)` pair as the
+//! handle's LOCAL OWNER — an in-process value no committed JSON can carry into an `➡️after`. A committed snapshot therefore decodes to an UNRESOLVED handle and
 //! `equation_scene` fails soft to the empty graph this committed payload replays verbatim,
 //! taking `replace-graph`'s own whole-value `mutation.no-op` guard.
 

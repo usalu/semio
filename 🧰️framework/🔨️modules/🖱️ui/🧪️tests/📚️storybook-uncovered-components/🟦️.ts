@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/ui-uncovered-components-stories.spec.ts
 // Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories covering the previously-uncovered
-// barrel exports BasicChatPanel, CanvasPickMenu/useCanvasPickInteraction, ContextMenu/ContextMenuController,
+// barrel exports CanvasPickMenu/useCanvasPickInteraction, ContextMenu/ContextMenuController,
 // DragHandle (DragAndDrop), Field, FileTree, Geometry, HistoryTable, IconSelector, IconShotFrame/iconShotFrameStyle/
 // clipIconSvgMarkupToEllipse, and Label.
 // Summary: Drives each story id through the aggregated Storybook static build's `iframe.html` and asserts a mounted
@@ -13,8 +13,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const UNCOVERED_UI_STORY_IDS: readonly string[] = [
-  "🖱️ui⚛️react-basicchatpanel--default",
-  "🖱️ui⚛️react-basicchatpanel--narrow",
   "🖱️ui⚛️react-canvaspickmenu--default",
   "🖱️ui⚛️react-canvaspickmenu--dismissed",
   "🖱️ui⚛️react-canvaspickmenu--pointer-interaction",

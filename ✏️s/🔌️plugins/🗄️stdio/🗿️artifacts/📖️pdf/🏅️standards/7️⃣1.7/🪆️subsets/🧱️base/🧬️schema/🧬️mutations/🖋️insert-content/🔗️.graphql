@@ -1,0 +1,6 @@
+# 🖋️ Direct insert-content GraphQL payload.
+input InsertContentMutationInput {
+  index: Int
+  at: Int
+  content: [PdfOpInput!]
+}

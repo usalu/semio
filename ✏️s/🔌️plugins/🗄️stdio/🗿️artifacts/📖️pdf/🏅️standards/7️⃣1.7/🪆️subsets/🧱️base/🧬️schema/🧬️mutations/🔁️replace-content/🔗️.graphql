@@ -1,0 +1,6 @@
+# 🔁️ Direct replace-content GraphQL payload.
+input ReplaceContentMutationInput {
+  index: Int
+  at: Int
+  op: PdfOpInput
+}

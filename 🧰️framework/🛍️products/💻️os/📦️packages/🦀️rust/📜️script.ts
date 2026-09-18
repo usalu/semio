@@ -9,6 +9,9 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestL
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 
+/** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
+type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
+
 //#region 🧬️OwnedSchemaExports
 const OS_MODULE_SCHEMAS = {
   "db.engine": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/🔣️.json",
@@ -21,7 +24,7 @@ const OS_MODULE_SCHEMAS = {
 } as const;
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
-function ownedExport(repoRoot: string, scope: keyof typeof OS_MODULE_SCHEMAS, exportId: string): ValidateFunction {
+function ownedExport(repoRoot: string, scope: keyof typeof OS_MODULE_SCHEMAS, exportId: string): SchemaCheck {
   const doc = JSON.parse(readFileSync(join(repoRoot, OS_MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
   const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
@@ -1731,7 +1734,7 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1");
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate: SchemaCheck = new Ajv({ strict: true, allErrors: true }).compile(schema);
   const contract = await import("../../🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts");
   for (const row of fixture.rows) {
     assert.equal(validate(row.value), row.accepted, `${row.id}: ${JSON.stringify(validate.errors)}`);
@@ -1805,7 +1808,7 @@ class DirectorySessionAuthorityCheckScript extends BundleScript {
 export async function directoryEventPageContractOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator: SchemaCheck = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   assert(validator(fixture.valid), JSON.stringify(validator.errors));
   assert.equal(new TextEncoder().encode(fixture.canonicalUnsigned).length, 474);
   assert.equal(createHash("sha256").update(fixture.canonicalUnsigned).digest("hex"), fixture.expectedReceiptSha256);
@@ -1820,10 +1823,10 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
     parent[parts.at(-1)!] = replacement;
     return copy;
   };
-  for (const hostile of fixture.hostileMutations) await assert.rejects(() => contract.parseDirectoryEventPageV1(JSON.stringify(setPath(fixture.valid, hostile.path, hostile.value))), undefined, hostile.name);
+  for (const hostile of fixture.hostileMutations) await assert.rejects(() => contract.parseDirectoryEventPageV1(JSON.stringify(setPath(fixture.valid, hostile.path, hostile.value))), hostile.name);
   const canonical = JSON.stringify(fixture.valid);
-  await assert.rejects(() => contract.parseDirectoryEventPageV1(`${canonical} `), undefined, "trailing-byte");
-  await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace('{"schema":', '{"schema":"duplicate","schema":')), undefined, "duplicate-key");
+  await assert.rejects(() => contract.parseDirectoryEventPageV1(`${canonical} `), "trailing-byte");
+  await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace('{"schema":', '{"schema":"duplicate","schema":')), "duplicate-key");
   const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectoryEventPageV1") && rust.includes("pub fn receipt_matches(&self) -> bool"), "Rust event-page contract missing");
   return 5 + fixture.hostileMutations.length + fixture.rawHostiles.length;
@@ -1833,7 +1836,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
 export async function directoryEventPageClientOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator: SchemaCheck = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   const canonical = JSON.stringify(fixture.valid);
   const accept = (raw: string, after: number) => {
     if (!Number.isSafeInteger(after) || after < 0 || new TextEncoder().encode(raw).byteLength > 65_536) throw new Error("client admission");
@@ -1926,12 +1929,12 @@ export function directoryEventPageBootstrapOracle(repoRoot: string): number {
     return hasMore ? "fetch" : "live";
   };
   present(trace.pages[0]);
-  assert.throws(() => present(trace.pages[1]), undefined, "page 2 before ACK");
-  assert.throws(() => acknowledge({ ...trace.pages[0], receiptSha256: "d".repeat(64) }), undefined, "forged ACK");
+  assert.throws(() => present(trace.pages[1]), "page 2 before ACK");
+  assert.throws(() => acknowledge({ ...trace.pages[0], receiptSha256: "d".repeat(64) }), "forged ACK");
   assert.equal(cursor, trace.initialAfter);
   assert.equal(acknowledge(trace.pages[0]), "fetch");
   present(trace.pages[1]);
-  assert.throws(() => acknowledge(trace.pages[1], trace.bootstrapEpoch + 1), undefined, "stale epoch");
+  assert.throws(() => acknowledge(trace.pages[1], trace.bootstrapEpoch + 1), "stale epoch");
   assert.equal(acknowledge(trace.pages[1]), "live");
   for (const wakeup of trace.wakeups) assert(wakeup > cursor && cursor === trace.expectedSocketSince);
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");

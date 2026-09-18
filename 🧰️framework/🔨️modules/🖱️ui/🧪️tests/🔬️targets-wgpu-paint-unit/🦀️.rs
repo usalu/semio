@@ -810,6 +810,41 @@ fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
     );
 }
 
+/// 🌳️ LAW: a declared section/row whose retained child was never mounted is walked past, not
+/// faulted. A document-mounted `Tree` carries only the rows its producer published as child records,
+/// and one missing row used to answer `Fault` — which the shell reports as `retained document
+/// ingress reached its terminal fault` and paints as an empty body, killing the whole panel
+/// (`framework.panel.toolRun` on the live generation3d wgpu playground).
+#[test]
+fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
+    let section = |id: &str, item: &str| UiTreeSectionNode {
+        window: None,
+        id: id.into(),
+        label: Some(Label::data(id)),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        items: vec![UiTreeItemNode::base(item, Label::data(item))],
+    };
+    let tree_of = |id: &str, item: &str| {
+        UiNode::Tree(UiTreeNode { sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+    };
+    let (mut tree, root, theme, _) = setup(&tree_of("mounted", "row"));
+    let Some(node) = tree.node_mut(root) else { panic!("retained tree root") };
+    node.spec = crate::wgpu::tree::WidgetSpec(tree_of("never-mounted", "ghost"));
+    let mut cursor = RetainedInteractiveSyncCursor::default();
+    let mut complete = false;
+    for _ in 0..256 {
+        let step = sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor);
+        assert_ne!(step, RetainedInteractiveSyncStep::Fault);
+        if step == RetainedInteractiveSyncStep::Complete {
+            complete = true;
+            break;
+        }
+    }
+    assert!(complete);
+    assert!(cursor.terminal_is_empty());
+}
+
 #[test]
 fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant() {
     let mut nested = UiTreeItemNode::base("nested", Label::data("Nested"));

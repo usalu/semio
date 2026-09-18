@@ -22,6 +22,12 @@ use ui_wgpu::wgpu::{
 //#region 📦️PreparedWorldResources
 const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
 
+/// 🧯️ Retirement steps a refused raster admission is given to reach terminal — one page of its source
+/// per step, so a 16 MiB item needs 1 024 of them. The bound exists only so a poisoned ledger lock
+/// cannot spin forever; reaching it leaks that one credit, which a lock that is already poisoned has
+/// lost anyway.
+const WORLD_RASTER_REFUSAL_CLOSE_STEPS: u32 = 8_192;
+
 pub enum World3dBuildRejected {
     Upload(PreparedRenderUpload),
     RasterProducer(PreparedRasterProducer),
@@ -209,15 +215,46 @@ impl World3dBuildContext {
         self.upload_len += 1;
     }
 
-    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+    /// 🧷️ Whether this frame's uploads already carry that exact mesh identity.
+    ///
+    /// The predicate [`retain_ensured_world_draws`] enforces the residency law with.
+    pub fn has_mesh_request(&self, key: &str, version: u64) -> bool {
+        self.mesh_requests[..self.mesh_request_len].iter().flatten().any(|candidate| candidate.0 == key && candidate.1 == version)
+    }
+
+    /// 🖼️ Admits ONE decoded raster into this frame's world uploads, TAKING its pixels.
+    ///
+    /// 🩸️ It used to borrow them and `to_vec()` a fresh copy on every call, and `render_world_3d`
+    /// calls it once per visible reference image per surface per FRAME — so a two-pane mode re-admitted
+    /// the same megabytes twice a frame against the process-wide 32 MiB
+    /// `PREPARED_RASTER_PRODUCER_BYTES` ledger. Eight outstanding producers exhausted it, the
+    /// admission was refused, and the refusal surfaced as the frame fault `frame world resource
+    /// admission exceeded fixed credits`, which kills the page: on the close of a dock window (a
+    /// relayout burst) the whole wgpu shell tore down with it (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 17). Taking the
+    /// pixels means the world state can hand them over exactly ONCE — the same one-shot semantics the
+    /// chrome lane's `queue_decoded_raster_upload` has always had — and the producer, not the world,
+    /// owns their bounded retirement from then on.
+    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: Vec<u8>, width: u32, height: u32) {
         if self.raster_requests[..self.raster_request_len].iter().flatten().any(|candidate| candidate == key) {
             return;
         }
-        let producer = match PreparedRasterProducer::try_admit(key.to_string(), pixels.to_vec(), width, height) {
+        let producer = match PreparedRasterProducer::try_admit(key.to_string(), pixels, width, height) {
             Ok((producer, _)) => producer,
-            Err(rejected) => {
-                if self.rejected.is_none() {
-                    self.rejected = Some(World3dBuildRejected::RasterAdmission(rejected));
+            Err(mut rejected) => {
+                // 🖼️ A refused raster ADMISSION is back-pressure, not a frame fault. The process-wide
+                // raster ledger is shared by every surface and every frame still in flight, so a
+                // relayout burst can legitimately exhaust it for one frame — and this lane re-offers
+                // its underlay on the next one anyway. Reporting it as a build fault killed the page
+                // instead: closing a dock window tore the whole wgpu shell down with
+                // `frame world resource admission exceeded fixed credits` (ticket
+                // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` §1).
+                //
+                // 🧯️ The refusal owns the source bytes and a ledger credit, so it is retired HERE to
+                // terminal — abandoning it would leak the credit and the exhaustion would be permanent.
+                let mut steps = 0_u32;
+                while steps < WORLD_RASTER_REFUSAL_CLOSE_STEPS && !rejected.close_step() {
+                    steps += 1;
                 }
                 return;
             }
@@ -821,7 +858,6 @@ impl<T, const N: usize> WorldDynamicRegistry<T, N> {
         self.slots.iter().flatten().find(|entry| entry.id == id).map(|entry| &entry.value)
     }
 
-    #[cfg(test)]
     fn get_mut(&mut self, id: &str) -> Option<&mut T> {
         self.slots.iter_mut().flatten().find(|entry| entry.id == id).map(|entry| &mut entry.value)
     }
@@ -1128,7 +1164,7 @@ impl WorldDrawDraft {
 impl Drop for WorldDrawDraft {
     fn drop(&mut self) {
         #[cfg(not(test))]
-        assert!(self.terminal_is_empty(), "WorldDrawDraft reached Drop before every admitted instance reached its terminal handback");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "WorldDrawDraft reached Drop before every admitted instance reached its terminal handback");
         #[cfg(test)]
         while self.take_next().is_some() {}
     }
@@ -1230,7 +1266,7 @@ impl WorldDrawRebuildCursor {
 #[cfg(not(test))]
 impl Drop for WorldDrawRebuildCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "WorldDrawRebuildCursor reached Drop before every draft, instance, output, and staged draw reached terminal handback");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "WorldDrawRebuildCursor reached Drop before every draft, instance, output, and staged draw reached terminal handback");
     }
 }
 
@@ -1269,7 +1305,7 @@ impl IndexMut<usize> for WorldDrawRegistry {
 #[cfg(not(test))]
 impl Drop for WorldDrawRegistry {
     fn drop(&mut self) {
-        assert!(self.is_empty(), "world draw registry reached Drop before its exact terminal-empty witness");
+        assert!(self.is_empty() || std::thread::panicking(), "world draw registry reached Drop before its exact terminal-empty witness");
     }
 }
 
@@ -1420,6 +1456,17 @@ pub struct World3dState {
     instance_interaction_ids: HashMap<String, String>,
     mesh_pool: RefCountPool<String>,
     mesh_source_urls: HashMap<String, String>,
+    /// 🥽️ Mesh url → the [`world_brush_mesh_revision`] THIS surface last announced it to the guest
+    /// at. The wgpu twin of the `revision` prop React hands each mounted `BrushMeshRegistrar`: a
+    /// surface announces an identity once per revision, and a surface that is rebuilt (window
+    /// reopen, role switch) starts empty and announces again — see
+    /// [`step_world3d_brush_mesh_announce`].
+    brush_mesh_announced: HashMap<String, u64>,
+    /// 🥽️ The ONE `registerBrushMesh` page run this surface has in flight. One page leaves per
+    /// frame, so a user action never queues behind more than a single page — React's
+    /// `drainPuzzle3dBrushMeshQueue` back pressure, expressed as a frame cursor.
+    brush_mesh_run: Option<WorldBrushMeshRun>,
+    brush_mesh_feedback_digest: Option<u64>,
     resolved_lod_pick: Option<f64>,
     environment: WorldEnvironmentRecord,
     terrain_style: Option<WorldTerrainStyle>,
@@ -1460,10 +1507,23 @@ pub struct World3dState {
     /// 📷️ The zoom that framing produced — a staged wire camera landing afterwards replaces the whole
     /// orbit, so the latch has to notice its own framing being overwritten and re-apply it.
     projection_frame_zoom: Option<f32>,
+    /// 📐️ React's `spec.orientation` off the delivered camera, or off the Projection pane's own
+    /// selection — the plane `world_projection_view_half_extent` measures the content box in.
+    projection_orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
+    /// 📐️ React's `mode.kind === "oblique" && mode.variant !== "military"`.
+    projection_oblique_off_axis: bool,
+    /// 📐️ This pane holds its OWN projection spec — React's `externalPendingProjectionSpec`, which
+    /// the delivered `cameraState.projectionSpec` never overrides while it is set.
+    projection_selected: bool,
+    /// 📐️ A local selection owes exactly ONE content framing, and it is immune to
+    /// `camera_user_moved`: the press is not a gesture the latch exists to protect.
+    projection_frame_owed: bool,
     /// 🔒️ The user has moved this camera since the live fit revision arrived — the latch that keeps a
     /// re-evaluation of the SAME document from yanking the view back
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
     camera_user_moved: bool,
+    /// 🧭️ This pane's camera-report debt — see [`WorldCameraSync`].
+    camera_sync: WorldCameraSync,
     scene_selection_digest: Option<u64>,
     scene_document_lanes_digest: Option<u64>,
     scene_mesh_digests: HashMap<String, u64>,
@@ -1593,7 +1653,7 @@ impl World3dState {
         // scene's `cameraJson` cannot move until the guest answers.
         let eye = self.orbit.to_camera();
         format!(
-            "camera=[{:.3},{:.3},{:.3}]->[{:.3},{:.3},{:.3}]/{:.1}deg {front} queued={} next-g={} active={active} blocked={} registry={} marquee={} gumball={} right-press={} faulted={} closing={} revision={} objects-revision={} objects={} draws={} utility={} granularity={} mode={} bounds={}x{}+{},{} pick={}x{}+{},{} hover={:?} selected={}",
+            "camera=[{:.3},{:.3},{:.3}]->[{:.3},{:.3},{:.3}]/{:.1}deg {front} queued={} next-g={} active={active} blocked={} registry={} marquee={} gumball={} right-press={} faulted={} closing={} sync-owed={} sync-navigating={} sync-hover-owed={} revision={} objects-revision={} objects={} draws={} utility={} granularity={} mode={} bounds={}x{}+{},{} pick={}x{}+{},{} hover={:?} selected={}",
             eye.position.x,
             eye.position.y,
             eye.position.z,
@@ -1610,6 +1670,9 @@ impl World3dState {
             authority.right_press.is_some(),
             authority.faulted,
             authority.closing,
+            self.camera_sync.owed,
+            self.camera_sync.navigating,
+            self.camera_sync.hover_owed,
             self.interaction_revision,
             self.interaction_objects.revision,
             self.interaction_objects.instance_len,
@@ -1707,6 +1770,9 @@ impl World3dState {
             instance_interaction_ids: HashMap::new(),
             mesh_pool: RefCountPool::new(),
             mesh_source_urls: HashMap::new(),
+            brush_mesh_announced: HashMap::new(),
+            brush_mesh_run: None,
+            brush_mesh_feedback_digest: None,
             resolved_lod_pick: None,
             environment: WorldEnvironmentRecord::default(),
             terrain_style: None,
@@ -1735,7 +1801,12 @@ impl World3dState {
             fit_seen_revision: None,
             projection_frame_key: None,
             projection_frame_zoom: None,
+            projection_orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+            projection_oblique_off_axis: false,
+            projection_selected: false,
+            projection_frame_owed: false,
             camera_user_moved: false,
+            camera_sync: WorldCameraSync::default(),
             scene_selection_digest: None,
             scene_document_lanes_digest: None,
             scene_mesh_digests: HashMap::new(),
@@ -1816,10 +1887,121 @@ pub fn world3d_offers_transform_gumball(state: &World3dState) -> bool {
 #[cfg(not(test))]
 impl Drop for World3dState {
     fn drop(&mut self) {
-        assert!(world3d_dynamic_retirement_terminal_is_empty(self), "World3dState reached Drop before retained dynamic owners reached terminal empty");
+        assert!(world3d_dynamic_retirement_terminal_is_empty(self) || std::thread::panicking(), "World3dState reached Drop before retained dynamic owners reached terminal empty");
     }
 }
 //#endregion World3dState
+
+//#region 🧭️WorldCameraSync
+/** 🧭️ A world pane's camera-report debt, and the parity contract behind it.
+ *
+ * ⚖️ React's `WorldOrbitGated` (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx`) reports through three's
+ * `OrbitControls` events, and the two of them do NOT fire on the same condition:
+ *
+ * - `end` is dispatched on EVERY pointer-up over the canvas, whatever the button and whether or not
+ *   any camera state moved (`three/examples/jsm/controls/OrbitControls.js`'s `onPointerUp`, which
+ *   calls `dispatchEvent(_endEvent)` unconditionally once the last pointer lifts). `onEnd` always
+ *   calls `reportCamera`, so a plain left click and a plain right click each owe ONE `setCamera` —
+ *   which is exactly what the React reference journals for the `pick-instance` and `context-menu`
+ *   steps, neither of which moves the camera at all
+ *   (`🗑️generated/parity-run-2/steps.json`).
+ * - `start` is dispatched only when a mouse button actually claimed a navigation state, so
+ *   `navigationSnapshotRef` is set only for a real gesture, and `onNavigationGestures` — the
+ *   `noteWorldNavigation` dispatch — additionally requires the before/after diff to classify
+ *   non-empty. The same run journals `noteWorldNavigation` for `pan-drag` and `zoom-wheel` and NOT
+ *   for `orbit-drag`, because the left button is bound to nothing
+ *   (`resolveWorldOrbitMouseButtonsIdle`: `LEFT: null`, `MIDDLE: PAN`, right → pan on Shift and
+ *   orbit on Alt) — so the left drag marquees and the camera never moves.
+ *
+ * ⏱️ `reportCamera`'s dispatch is TRAILING-DEBOUNCED (`CAMERA_SYNC_DEBOUNCE_MS`), so a whole drag or
+ * a whole wheel burst publishes ONE `setCamera`. This lane owes no timer to reproduce that: an
+ * interaction intent queue that has drained IS the settle point, so the debt is paid once the last
+ * intent of the gesture is answered, and a burst coalesces by construction. `noteWorldNavigation` is
+ * NOT debounced in React, so it is published first — the order the reference journals
+ * (`noteWorldNavigation` then `setCamera`).
+ *
+ * 🩸️ Before this, a nav drag published one `setCamera` per pointer MOVE — eight per gesture on the
+ * parity probe's eight-sample drag — and a gesture that moved nothing published none at all; there
+ * was no `noteWorldNavigation` anywhere in the target
+ * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w10a-world-interaction-journal-parity.md`). */
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct WorldCameraSync {
+    owed: bool,
+    navigating: bool,
+    start: Option<WorldNavigationSnapshot>,
+    /// 🎯️ A settled camera owes ONE re-published hover: the scene moved under a pointer that did not,
+    /// so what it is over changed. React gets this for free — r3f re-raycasts the moved scene and
+    /// `dispatchInstanceHover` publishes again, which is the trailing `interactionHover` every one of
+    /// the reference's five world steps ends on.
+    hover_owed: bool,
+    /// 🖱️ The last point a pointer intent named on this surface, for that re-published hover.
+    at: Option<[f32; 2]>,
+}
+
+/// 📸️ The subset of camera state [`classify_world_navigation_gestures`] diffs before/after a
+/// gesture — React's `WorldNavigationSnapshot`, whose `zoom` is the live frustum scale for a
+/// parallel pane and a bare `1` for a perspective one (`captureNavigationSnapshot`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WorldNavigationSnapshot {
+    pub position: [f32; 3],
+    pub target: [f32; 3],
+    pub zoom: f32,
+    pub parallel: bool,
+}
+
+/// 📏️ React's `WORLD_NAVIGATION_THRESHOLDS_DEFAULT`, verbatim.
+pub const WORLD_NAVIGATION_PAN_RATIO: f32 = 0.02;
+pub const WORLD_NAVIGATION_ZOOM_RATIO: f32 = 0.03;
+pub const WORLD_NAVIGATION_ORBIT_RADIANS: f32 = 0.05;
+
+/// 🧭️ The three gestures a camera movement may have performed, in React's own push order — `pan`,
+/// `zoom`, `orbit` — so the `gestures` array this lane publishes is byte-identical to the DOM host's.
+pub const WORLD_NAVIGATION_GESTURE_IDS: [&str; 3] = ["pan", "zoom", "orbit"];
+
+fn world_navigation_distance(left: [f32; 3], right: [f32; 3]) -> f32 {
+    ((left[0] - right[0]).powi(2) + (left[1] - right[1]).powi(2) + (left[2] - right[2]).powi(2)).sqrt()
+}
+
+fn world_navigation_direction(from: [f32; 3], to: [f32; 3]) -> [f32; 3] {
+    let delta = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+    let length = (delta[0].powi(2) + delta[1].powi(2) + delta[2].powi(2)).sqrt();
+    if length > 1e-9 {
+        [delta[0] / length, delta[1] / length, delta[2] / length]
+    } else {
+        [0.0, 0.0, 0.0]
+    }
+}
+
+/// 📸️ This pane's live camera as the snapshot a navigation diff measures.
+pub fn world_navigation_snapshot(state: &World3dState) -> WorldNavigationSnapshot {
+    let camera = state.orbit.to_camera();
+    WorldNavigationSnapshot {
+        position: [camera.position.x, camera.position.y, camera.position.z],
+        target: [camera.target.x, camera.target.y, camera.target.z],
+        zoom: if camera.projection.is_parallel() { camera.zoom } else { 1.0 },
+        parallel: camera.projection.is_parallel(),
+    }
+}
+
+/// 🧭️ Which navigation gestures a camera movement performed, as a `[pan, zoom, orbit]` mask — the
+/// port of React's `classifyWorldNavigationGestures`: pan when the orbit TARGET moved, zoom when the
+/// parallel zoom factor or the perspective dolly distance changed, orbit when the eye's direction
+/// around the target rotated. One drag may answer more than one, so this is a set, not a verdict.
+pub fn classify_world_navigation_gestures(before: WorldNavigationSnapshot, after: WorldNavigationSnapshot) -> [bool; 3] {
+    let reference = world_navigation_distance(before.position, before.target).max(1.0);
+    let pan = world_navigation_distance(before.target, after.target) > WORLD_NAVIGATION_PAN_RATIO * reference;
+    let zoom_delta = if before.parallel {
+        (after.zoom / if before.zoom == 0.0 { 1.0 } else { before.zoom } - 1.0).abs()
+    } else {
+        (world_navigation_distance(after.position, after.target) / reference - 1.0).abs()
+    };
+    let zoom = zoom_delta > WORLD_NAVIGATION_ZOOM_RATIO;
+    let before_direction = world_navigation_direction(before.target, before.position);
+    let after_direction = world_navigation_direction(after.target, after.position);
+    let dot = (before_direction[0] * after_direction[0] + before_direction[1] * after_direction[1] + before_direction[2] * after_direction[2]).clamp(-1.0, 1.0);
+    [pan, zoom, dot.acos() > WORLD_NAVIGATION_ORBIT_RADIANS]
+}
+//#endregion 🧭️WorldCameraSync
 
 //#region 🧹️World3dDynamicRetirement
 
@@ -2458,6 +2640,14 @@ impl WorldInteractionObjectRegistry {
         (id.as_bytes().iter().fold(2_166_136_261u64 ^ seed, |hash, byte| hash.wrapping_mul(16_777_619) ^ u64::from(*byte)) % WORLD_INTERACTION_OBJECT_CAPACITY as u64) as usize
     }
 
+    /// 🪪️ Admits one object for one interaction revision, reusing the slot its own `(kind, id)`
+    /// already holds — even from an EARLIER revision — before it takes a free one.
+    ///
+    /// 🩸️ A stale-revision slot of the same id only seeded `reusable` and the probe walked on to the
+    /// next EMPTY slot, so re-admitting an id at a new revision left the previous revision's entry
+    /// intact AND resolvable: `resolve` matches on generation and revision, both of which the old
+    /// token still carried. Every revision therefore leaked a slot until the fixed table faulted, and
+    /// a marquee cursor holding the previous token kept picking the object it had already replaced.
     fn admit(&mut self, revision: u64, kind: WorldInteractionObjectKind, id: &str, mesh: Option<WorldInteractionMeshToken>, model: Mat4, values: [f32; 8]) -> Option<WorldInteractionObjectToken> {
         let Some(id) = WorldInteractionId::new(id) else {
             self.faulted = true;
@@ -2476,6 +2666,10 @@ impl WorldInteractionObjectRegistry {
                     break;
                 }
                 Some(existing) if existing.revision != revision => {
+                    if existing.kind == kind && existing.id == id {
+                        reusable = Some(slot);
+                        break;
+                    }
                     reusable.get_or_insert(slot);
                 }
                 None => {
@@ -2583,9 +2777,21 @@ impl WorldInteractionRegistryBuildCursor {
                         context.consume_fuel(1);
                         return WorldInteractionStep::Pending;
                     }
+                    // 🫥️ An EMPTY probe slot is "this mesh was never published", not a defect: the
+                    // guest publishes a draw list and its mesh leases in separate deliveries, so a
+                    // draw naming a glb whose lease has not landed is normal for the frames in
+                    // between. Faulting here killed the whole page with `world3d retained
+                    // interaction authority faulted` on the first pointer move after a mesh-bearing
+                    // document mounted (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c`).
+                    // Skipping the draw is React's own behaviour — a `GlbInstanceMesh` whose loader
+                    // has not resolved renders nothing and raycasts to nothing — and is the
+                    // interaction twin of W11a's "a miss is a skipped draw, not a quarantine".
                     None => {
-                        self.faulted = true;
-                        return WorldInteractionStep::Fault;
+                        self.draw += 1;
+                        self.instance = 0;
+                        self.mesh_probe = 0;
+                        context.consume_fuel(1);
+                        return WorldInteractionStep::Pending;
                     }
                 };
                 let Some(instance) = draw.instances.get(self.instance) else {
@@ -2674,6 +2880,7 @@ pub enum WorldInteractionPhase {
     PointerMove,
     PointerButton,
     PointerDrag,
+    PointerLeave,
     Wheel,
     Close,
 }
@@ -2707,6 +2914,14 @@ impl WorldInteractionIntent {
     pub fn wheel(x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Self {
         Self { phase: WorldInteractionPhase::Wheel, generation: 0, x, y, dx: 0.0, dy: 0.0, delta, button: 0, down: false, shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
     }
+
+    /// 🚪️ The DOM's `pointerout`: the pointer is no longer over THIS surface — it left its rect, or a
+    /// chrome layer painted above it owns the point now. Carries no gesture, only the point it left
+    /// at, and answers exactly one published hover with its clear. See
+    /// [`plan_world3d_pointer_leave`].
+    pub fn pointer_leave(x: f32, y: f32) -> Self {
+        Self { phase: WorldInteractionPhase::PointerLeave, generation: 0, x, y, dx: 0.0, dy: 0.0, delta: 0.0, button: 0, down: false, shift: false, ctrl: false, alt: false, meta: false }
+    }
 }
 
 pub struct WorldInteractionIntentQueue {
@@ -2735,6 +2950,44 @@ impl WorldInteractionIntentQueue {
 
     pub fn front(&self) -> Option<&WorldInteractionIntent> {
         self.slots[usize::from(self.head)].as_ref()
+    }
+
+    /// 🚪️ Whether a [`WorldInteractionPhase::PointerLeave`] is already waiting to be answered.
+    fn holds_pointer_leave(&self) -> bool {
+        self.slots.iter().flatten().any(|intent| intent.phase == WorldInteractionPhase::PointerLeave)
+    }
+
+    /// 🫧 Folds a fresh pointer MOVE onto the one already waiting at the tail, answering the
+    /// generation it keeps — the retained twin of React's own rAF batching.
+    ///
+    /// React never sees a move per DOM event either: `🚚️browser-frame-transport/🟦️.ts`'s
+    /// `enqueueReplaceable` keeps ONE sample per pointer identity per animation frame, and
+    /// `🌐️World3dHost/🟦️.tsx`'s hover dispatcher "keeps at most one outstanding and coalesces the
+    /// rest onto the latest target". This queue had no such rung: every move the host drained became
+    /// its own intent, so the probe's eight-move drag left `queued=10` in front of the authority and
+    /// every one of them was answered with a full pick/plan turn
+    /// (`🗑️generated/w12c-parity-run-19/wgpu/console.txt`, ticket 26/09/17 packet W13c §3).
+    ///
+    /// 🧭️ The fold is EXACT for gesture classification, which is the one thing it may not move:
+    /// `dx`/`dy` accumulate (a drag plan reads the delta, so eight folded moves steer the camera by
+    /// the same total as eight separate ones), `x`/`y` take the newest sample (a pick reads the
+    /// point, and the newest point is the one React would have raycast), and the `down`/button/
+    /// modifier state must MATCH — a change in any of them is a different gesture and starts a new
+    /// intent. The FRONT is never folded into: it may already be half-stepped by a live cursor.
+    fn coalesce_tail_pointer_move(&mut self, intent: &WorldInteractionIntent) -> Option<u64> {
+        if self.closing || intent.phase != WorldInteractionPhase::PointerMove || self.len < 2 {
+            return None;
+        }
+        let index = (usize::from(self.head) + usize::from(self.len) - 1) % WORLD_INTERACTION_INTENT_CAPACITY;
+        let tail = self.slots[index].as_mut()?;
+        if tail.phase != WorldInteractionPhase::PointerMove || tail.down != intent.down || tail.button != intent.button || tail.shift != intent.shift || tail.ctrl != intent.ctrl || tail.alt != intent.alt || tail.meta != intent.meta {
+            return None;
+        }
+        tail.x = intent.x;
+        tail.y = intent.y;
+        tail.dx += intent.dx;
+        tail.dy += intent.dy;
+        Some(tail.generation)
     }
 
     pub fn retire_front(&mut self, generation: u64) -> bool {
@@ -2783,8 +3036,15 @@ enum WorldFlatActionKind {
     Hover,
     ComponentSelect,
     ComponentHover,
-    ContextMenu,
     Camera,
+    /// 🧭️ A navigation step that moves this pane's orbit and publishes NOTHING — see
+    /// [`WorldCameraSync`]. The wire report is one debounced [`WorldFlatActionKind::Camera`] at the
+    /// settle, never one per pointer move.
+    CameraLocal,
+    /// 🧭️ `noteWorldNavigation` — the classified gesture set of a completed navigation, published
+    /// ahead of the settle's `setCamera` exactly as React's un-debounced `onNavigationGestures` lands
+    /// ahead of its debounced `reportCamera`.
+    Navigation,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -2818,7 +3078,6 @@ enum WorldInteractionActive {
     Pick { cursor: WorldRayPickCursor, retirement: Option<WorldInteractionAuthorityStep> },
     ObjectPick { cursor: WorldObjectPickCursor, retirement: Option<WorldInteractionAuthorityStep> },
     ComponentPick { cursor: WorldComponentPickCursor, retirement: Option<WorldInteractionAuthorityStep> },
-    ContextMenu { cursor: WorldContextMenuCursor, retirement: Option<WorldInteractionAuthorityStep> },
     MarqueePick { cursor: WorldMarqueePickCursor, retirement: Option<WorldInteractionAuthorityStep> },
     MarqueePublish { job: WorldMarqueePublishJob, retirement: Option<WorldInteractionAuthorityStep> },
     ComponentMarqueePublish { job: WorldComponentMarqueePublishJob, retirement: Option<WorldInteractionAuthorityStep> },
@@ -2836,7 +3095,6 @@ fn world_interaction_active_census(active: &WorldInteractionActive) -> String {
         WorldInteractionActive::Pick { cursor, .. } => format!("Pick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
         WorldInteractionActive::ObjectPick { cursor, .. } => format!("ObjectPick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
         WorldInteractionActive::ComponentPick { cursor, .. } => format!("ComponentPick[{:?} hit={} done={}]", cursor.purpose, cursor.best.is_some(), cursor.complete),
-        WorldInteractionActive::ContextMenu { .. } => "ContextMenu".to_string(),
         WorldInteractionActive::MarqueePick { .. } => "MarqueePick".to_string(),
         WorldInteractionActive::MarqueePublish { job, .. } => format!("MarqueePublish[page={} stage={} targets={}b]", job.page, job.stage, job.targets_len),
         WorldInteractionActive::ComponentMarqueePublish { .. } => "ComponentMarqueePublish".to_string(),
@@ -3817,7 +4075,7 @@ impl WorldComponentMarqueePublishJob {
             2 => draft.builder().begin_array(Some("ids"))?,
             stage if stage < ids_end => {
                 let id = self.merged[usize::from(stage - 3)].ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-                draft.builder().number(None, id as f64)?;
+                draft.builder().integer(None, i64::from(id))?;
             }
             stage if stage == ids_end => draft.builder().end_container()?,
             stage if stage == ids_end + 1 => draft.builder().end_container()?,
@@ -4026,6 +4284,15 @@ impl WorldRayPickCursor {
         Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge: 0, best: None, complete: false, faulted: false })
     }
 
+    /// ⏭️ Advances past a draw the ray cannot test — one whose mesh the guest has not published yet.
+    fn skip_draw(&mut self) {
+        self.draw += 1;
+        self.instance = 0;
+        self.triangle = 0;
+        self.mesh = None;
+        self.mesh_probe = 0;
+    }
+
     pub fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
         if context.should_yield() {
             return WorldInteractionStep::Pending;
@@ -4059,9 +4326,10 @@ impl WorldRayPickCursor {
                     self.mesh_probe = 0;
                 }
                 Some(_) => self.mesh_probe += 1,
+                // 🫥️ Unpublished mesh ⇒ an uninteractable draw, never a fault — see the same arm of
+                // `WorldInteractionRegistryBuildCursor::step`.
                 None => {
-                    self.faulted = true;
-                    return WorldInteractionStep::Fault;
+                    self.skip_draw();
                 }
             }
             context.consume_fuel(1);
@@ -4075,8 +4343,9 @@ impl WorldRayPickCursor {
             return WorldInteractionStep::Stale;
         }
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
-            self.faulted = true;
-            return WorldInteractionStep::Fault;
+            self.skip_draw();
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
         };
         let Ok(schema) = mesh.schema() else {
             return WorldInteractionStep::Stale;
@@ -4593,104 +4862,6 @@ impl WorldComponentKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum WorldContextTargetKind {
-    Vortex,
-    Object,
-    Reference,
-}
-
-struct WorldContextMenuCursor {
-    revision: u64,
-    generation: u64,
-    kind: WorldContextTargetKind,
-    id: WorldInteractionId,
-    x: f32,
-    y: f32,
-    slot: u16,
-    target: Option<WorldInteractionObjectToken>,
-    complete: bool,
-}
-
-impl WorldContextMenuCursor {
-    fn new(state: &World3dState, generation: u64, x: f32, y: f32) -> Option<Self> {
-        let (domain, id) = resolve_world_context_menu_target(state)?;
-        let kind = match domain {
-            "vortex" => WorldContextTargetKind::Vortex,
-            "reference" => WorldContextTargetKind::Reference,
-            _ => WorldContextTargetKind::Object,
-        };
-        Some(Self { revision: state.interaction_revision, generation, kind, id: WorldInteractionId::new(&id)?, x, y, slot: 0, target: None, complete: false })
-    }
-
-    fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
-        if context.should_yield() {
-            return WorldInteractionStep::Pending;
-        }
-        if self.revision != state.interaction_revision || self.generation != generation || !state.interaction_objects.terminal_for_revision(self.revision) {
-            return WorldInteractionStep::Stale;
-        }
-        if self.complete {
-            return WorldInteractionStep::Complete;
-        }
-        let index = usize::from(self.slot);
-        let Some(entry) = state.interaction_objects.slots.get(index) else {
-            self.complete = true;
-            context.consume_fuel(1);
-            return WorldInteractionStep::Pending;
-        };
-        self.slot += 1;
-        let expected_kind = match self.kind {
-            WorldContextTargetKind::Vortex => WorldInteractionObjectKind::Vortex,
-            WorldContextTargetKind::Object => WorldInteractionObjectKind::Instance,
-            WorldContextTargetKind::Reference => WorldInteractionObjectKind::Reference,
-        };
-        if let Some(entry) = entry.as_ref().filter(|entry| entry.revision == self.revision && entry.kind == expected_kind && entry.id == self.id) {
-            self.target = Some(WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision });
-            self.complete = true;
-        }
-        context.consume_fuel(1);
-        WorldInteractionStep::Pending
-    }
-
-    fn finish_plan(&self, state: &World3dState, generation: u64) -> Result<Option<WorldInteractionPlan>, WorldInteractionStep> {
-        if !self.complete {
-            return Err(WorldInteractionStep::Pending);
-        }
-        if self.revision != state.interaction_revision || self.generation != generation {
-            return Err(WorldInteractionStep::Stale);
-        }
-        let Some(target) = self.target else {
-            return Ok(None);
-        };
-        let target = state.interaction_objects.resolve(target).ok_or(WorldInteractionStep::Stale)?;
-        let mut plan = WorldInteractionPlan::new(self.revision, generation);
-        let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
-        let surface = plan.push_string(&state.surface_id).ok_or(WorldInteractionStep::Fault)?;
-        let id = plan.push_string(target.id.as_str()).ok_or(WorldInteractionStep::Fault)?;
-        let kind = plan
-            .push_string(match self.kind {
-                WorldContextTargetKind::Vortex => "vortex",
-                WorldContextTargetKind::Object => "object",
-                WorldContextTargetKind::Reference => "reference",
-            })
-            .ok_or(WorldInteractionStep::Fault)?;
-        let action = WorldFlatAction {
-            kind: WorldFlatActionKind::ContextMenu,
-            strings: [Some(controller), Some(surface), Some(id), Some(kind), None, None, None, None],
-            numbers: [self.x as f64, self.y as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        };
-        plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
-    }
-
-    fn close_step(&mut self) -> bool {
-        if self.target.take().is_some() {
-            return false;
-        }
-        self.complete = true;
-        true
-    }
-}
 
 const WORLD_GUMBALL_SELECTED_CAPACITY: usize = 64;
 
@@ -5453,10 +5624,32 @@ pub fn enqueue_world3d_intent(state: &mut World3dState, intent: WorldInteraction
     }
 }
 
+/** 🫧 Whether this surface's pointer MOVES may be folded onto one another
+ * ([`WorldInteractionIntentQueue::coalesce_tail_pointer_move`]).
+ *
+ * Two gestures read the move SAMPLES rather than the latest point plus the accumulated delta, and
+ * folding would change what they produce, which is the one thing the fold may never do:
+ * - a LASSO marquee is its own path — `marquee_is_crossing_from_path` and the painted outline both
+ *   walk every point, where a rectangle needs only its start and its newest corner;
+ * - a live PAINT stroke raycasts once per move (`WorldRayPickPurpose::Paint`), so a folded move
+ *   would leave a gap in the painted run.
+ *
+ * Everything else — hover, orbit/pan/zoom, the rectangle marquee, the vertex/brush object hover —
+ * reads only `(x, y)` and the summed `(dx, dy)`, which the fold preserves exactly. */
+pub fn world3d_pointer_move_folds(state: &World3dState) -> bool {
+    state.selection_method != "lasso" && !(state.interaction_mode == "paint" && state.paint_stroke_active)
+}
+
 pub fn enqueue_world3d_event(state: &mut World3dState, mut intent: WorldInteractionIntent) -> Result<u64, WorldInteractionIntent> {
-    let Some(authority) = state.interaction_authority.as_ref() else {
+    let folds = world3d_pointer_move_folds(state);
+    let Some(authority) = state.interaction_authority.as_mut() else {
         return Err(intent);
     };
+    if folds && !authority.faulted && !authority.closing && authority.blocked.is_none() {
+        if let Some(generation) = authority.queue.coalesce_tail_pointer_move(&intent) {
+            return Ok(generation);
+        }
+    }
     intent.generation = authority.next_generation;
     let generation = intent.generation;
     enqueue_world3d_intent(state, intent).map(|()| generation)
@@ -5484,8 +5677,21 @@ pub fn enqueue_world3d_events<const N: usize>(state: &mut World3dState, mut inte
     Ok(generations)
 }
 
+/** 🎟️ The generation the frame driver must step this surface at, or `None` when it owes nothing.
+ *
+ * 🧭️ A drained queue is NOT idle while a camera settle is owed: the debounced `setCamera` (and the
+ * `noteWorldNavigation` ahead of it, and the re-published hover behind it) are published by
+ * `WorldInteractionAuthority::step` with no intent of their own, so they need a generation to be
+ * stepped at. The LAST minted one is that generation — no queued intent can ever carry it again, so
+ * the settle plan's `retire_front` is a no-op and a fresh intent supersedes it as `Stale`, which is
+ * what a gesture that resumed mid-settle deserves. See [`WorldCameraSync`]. */
 pub fn world3d_interaction_front_generation(state: &World3dState) -> Option<u64> {
-    state.interaction_authority.as_ref()?.queue.front().map(|intent| intent.generation)
+    let authority = state.interaction_authority.as_ref()?;
+    if let Some(intent) = authority.queue.front() {
+        return Some(intent.generation);
+    }
+    let settle_owed = !authority.closing && (state.camera_sync.owed || (state.camera_sync.hover_owed && state.camera_sync.at.is_some()));
+    (authority.active.is_some() || settle_owed).then(|| authority.next_generation.wrapping_sub(1))
 }
 
 pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
@@ -5519,7 +5725,6 @@ pub fn close_world3d_interaction_step(state: &mut World3dState, input: &mut ui_w
             WorldInteractionActive::Pick { cursor, .. } => cursor.close_step(),
             WorldInteractionActive::ObjectPick { cursor, .. } => cursor.close_step(),
             WorldInteractionActive::ComponentPick { cursor, .. } => cursor.close_step(),
-            WorldInteractionActive::ContextMenu { cursor, .. } => cursor.close_step(),
             WorldInteractionActive::MarqueePick { cursor, .. } => cursor.close_step(),
             WorldInteractionActive::MarqueePublish { job, .. } => job.close_step(input),
             WorldInteractionActive::ComponentMarqueePublish { job, .. } => job.close_step(input),
@@ -5643,8 +5848,37 @@ impl WorldInteractionAuthority {
             }
         }
         let Some(intent) = self.queue.front().copied() else {
+            // 🧭️ A DRAINED queue is this lane's settle point — React's `CAMERA_SYNC_DEBOUNCE_MS`
+            // trailing debounce without a timer, since the last answered intent of a gesture is
+            // exactly when that debounce would fire. See [`WorldCameraSync`].
+            if let Some(plan) = plan_world3d_camera_settle(state, generation) {
+                self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Pending;
+            }
+            if let (true, Some([x, y])) = (state.camera_sync.hover_owed, state.camera_sync.at) {
+                state.camera_sync.hover_owed = false;
+                let mut hover = WorldInteractionIntent::pointer_move(x, y, 0.0, 0.0, false, 0, &PointerModifiers::default());
+                hover.generation = self.next_generation;
+                if self.queue.push(hover).is_ok() {
+                    self.next_generation += 1;
+                    context.consume_fuel(1);
+                    return WorldInteractionAuthorityStep::Pending;
+                }
+            }
             return WorldInteractionAuthorityStep::Idle;
         };
+        if !matches!(intent.phase, WorldInteractionPhase::Close | WorldInteractionPhase::PointerLeave) {
+            state.camera_sync.at = Some([intent.x, intent.y]);
+            // 🧭️ three's `OrbitControls.onPointerUp` dispatches `_endEvent` UNCONDITIONALLY once the
+            // last pointer lifts, and React's `onEnd` always reports the camera — so every release
+            // over a world pane owes one `setCamera`, whatever the button and whether or not the
+            // camera moved. The reference journals exactly that for `pick-instance` and
+            // `context-menu` (`🗑️generated/parity-run-2/steps.json`).
+            if intent.phase == WorldInteractionPhase::PointerButton && !intent.down {
+                state.camera_sync.owed = true;
+            }
+        }
         if intent.generation < generation {
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
@@ -5657,6 +5891,30 @@ impl WorldInteractionAuthority {
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 2 && intent.down {
             self.right_press = Some([intent.x, intent.y]);
             self.right_dragged = false;
+            if let Some(active) = plan_world3d_non_primary_press_pick(state, generation, &intent) {
+                self.active = Some(active);
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Pending;
+            }
+            self.queue.retire_front(intent.generation);
+            context.consume_fuel(1);
+            return WorldInteractionAuthorityStep::Complete;
+        }
+        // 🖱️ The MIDDLE button starts no CAMERA gesture of its own: pan is a middle-DRAG, planned by
+        // `plan_world3d_drag` from the moves that follow it. What the press itself answers is the
+        // SELECTION React publishes on any button (`plan_world3d_non_primary_press_pick`); with
+        // neither, the intent used to fall through to the unclaimed-intent fault below, so the FIRST
+        // middle-click on any world surface recorded a frame fault and killed the page
+        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 20,
+        // where React simply pans).
+        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 1 {
+            if intent.down {
+                if let Some(active) = plan_world3d_non_primary_press_pick(state, generation, &intent) {
+                    self.active = Some(active);
+                    context.consume_fuel(1);
+                    return WorldInteractionAuthorityStep::Pending;
+                }
+            }
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
@@ -5680,22 +5938,25 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
+        // 🖱️📋️ A right RELEASE closes the click/drag discrimination and answers nothing else. The
+        // menu itself is the SHELL's (`🐚️Shell/🎯️targets/🧊️wgpu`'s `open_context_menu`, whose
+        // `resolve_context_menu_surface` already fills a World3d surface's `hits`/`selection` from
+        // [`world3d_context_menu_surface`]) and it opens on the PRESS, exactly as React's own
+        // `onContextMenu` does.
+        //
+        // 🩸️ This arm used to run a `WorldContextMenuCursor` and publish `worldContextMenuAt`. No
+        // app declares that verb — React deleted its twin `contextMenuAt` when the target moved onto
+        // the menu REQUEST (`world3dContextMenuSurfaceV1`'s own docstring: "dispatching it anyway
+        // only produced an `undeclaredActionDiagnostic` drop on every right-click"), and the whole
+        // repository had exactly one mention of it left, here. So the wgpu target journalled a verb
+        // the guest refuses where React journals a menu
+        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w10a-world-interaction-journal-parity.md`).
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 2 && !intent.down {
-            let click = self.right_press.take().is_some() && !self.right_dragged;
+            self.right_press = None;
             self.right_dragged = false;
-            if !click {
-                self.queue.retire_front(intent.generation);
-                context.consume_fuel(1);
-                return WorldInteractionAuthorityStep::Complete;
-            }
-            let Some(cursor) = WorldContextMenuCursor::new(state, generation, intent.x, intent.y) else {
-                self.queue.retire_front(intent.generation);
-                context.consume_fuel(1);
-                return WorldInteractionAuthorityStep::Complete;
-            };
-            self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: None });
+            self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
-            return WorldInteractionAuthorityStep::Pending;
+            return WorldInteractionAuthorityStep::Complete;
         }
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && state.active_utility == "select" && !component_mode_active(state) && self.gumball.is_none() && world3d_offers_transform_gumball(state) {
             self.active = Some(WorldInteractionActive::GumballPick { cursor: WorldGumballPickCursor::new(state, generation, intent.x, intent.y), retirement: None });
@@ -5793,6 +6054,7 @@ impl WorldInteractionAuthority {
         }
         let active = match intent.phase {
             WorldInteractionPhase::Wheel => plan_world3d_wheel(state, generation, intent.delta).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
+            WorldInteractionPhase::PointerLeave => plan_world3d_pointer_leave(state, generation).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
             WorldInteractionPhase::PointerDrag => {
                 let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
                 let Some(plan) = plan_world3d_drag(state, generation, intent.dx, intent.dy, intent.button, &modifiers) else {
@@ -5864,6 +6126,28 @@ impl WorldInteractionAuthority {
         let Some(active) = active else {
             if intent.phase == WorldInteractionPhase::Close {
                 return WorldInteractionAuthorityStep::Pending;
+            }
+            // 🚪️ A leave over a surface that publishes no hover has nothing to clear — it is answered,
+            // not refused, wherever it was aimed (the point it left at is usually OUTSIDE this
+            // surface's own rect by construction).
+            if intent.phase == WorldInteractionPhase::PointerLeave {
+                self.queue.retire_front(intent.generation);
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Complete;
+            }
+            // 🖱️ An intent aimed at a point this surface no longer covers is not this surface's to
+            // answer. Every pick cursor is built through `pointer_in_pick_rect`, which refuses a point
+            // outside the CURRENT pick rect — and a queued intent outlives a relayout: dragging the
+            // dock's split gutter moves the pane out from under moves enqueued against its previous
+            // bounds (measured: a hover at x=534.4 against `pick=…+535.6,54.4`). Faulting on that
+            // refusal is a FRAME fault, which kills the page, so the whole shell tore down mid-drag
+            // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15).
+            // A stale aim retires like any other answered intent; a fault stays a fault for a point the
+            // surface DOES cover, which is a real refusal.
+            if !world_pick_rect(state).contains(intent.x, intent.y) {
+                self.queue.retire_front(intent.generation);
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Complete;
             }
             self.faulted = true;
             return WorldInteractionAuthorityStep::Fault;
@@ -6042,47 +6326,7 @@ impl WorldInteractionAuthority {
                     }
                 }
             }
-            WorldInteractionActive::ContextMenu { mut cursor, retirement } => {
-                if let Some(outcome) = retirement {
-                    if cursor.close_step() {
-                        self.queue.retire_front(cursor.generation);
-                        return outcome;
-                    }
-                    self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: Some(outcome) });
-                    context.consume_fuel(1);
-                    return WorldInteractionAuthorityStep::Pending;
-                }
-                match cursor.step(state, generation, context) {
-                    WorldInteractionStep::Pending => {
-                        self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: None });
-                        WorldInteractionAuthorityStep::Pending
-                    }
-                    WorldInteractionStep::Complete => match cursor.finish_plan(state, generation) {
-                        Ok(Some(plan)) => {
-                            self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
-                            WorldInteractionAuthorityStep::Pending
-                        }
-                        Ok(None) => {
-                            self.queue.retire_front(cursor.generation);
-                            WorldInteractionAuthorityStep::Complete
-                        }
-                        Err(outcome) => {
-                            let outcome = if outcome == WorldInteractionStep::Stale { WorldInteractionAuthorityStep::Stale } else { WorldInteractionAuthorityStep::Fault };
-                            self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: Some(outcome) });
-                            WorldInteractionAuthorityStep::Pending
-                        }
-                    },
-                    WorldInteractionStep::Stale => {
-                        self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: Some(WorldInteractionAuthorityStep::Stale) });
-                        WorldInteractionAuthorityStep::Pending
-                    }
-                    WorldInteractionStep::Fault => {
-                        self.active = Some(WorldInteractionActive::ContextMenu { cursor, retirement: Some(WorldInteractionAuthorityStep::Fault) });
-                        self.faulted = true;
-                        WorldInteractionAuthorityStep::Pending
-                    }
-                }
-            }
+
             WorldInteractionActive::MarqueePick { mut cursor, retirement } => {
                 if let Some(outcome) = retirement {
                     if cursor.close_step() {
@@ -6345,6 +6589,99 @@ impl WorldInteractionAuthority {
     }
 }
 
+/** 🧭️ The plan a settled gesture owes: the classified `noteWorldNavigation` when a navigation
+ * actually started AND moved the camera, then the one `setCamera` every pointer-up owes — in that
+ * order, because React's `onNavigationGestures` is immediate and its `reportCamera` is debounced.
+ * See [`WorldCameraSync`] for the reference's own two conditions; `None` when nothing is owed. */
+/** 👻️ Whether this surface has a hover PUBLISHED to the guest — the only thing a pointer leave has
+ * to answer. The renderer asks before it enqueues one, so a pointer travelling over chrome costs the
+ * bounded intent queue nothing once the hover is clear (React's canvas receives no move at all while
+ * the pointer is over a DOM layer above it). */
+pub fn world3d_hover_is_published(state: &World3dState) -> bool {
+    state.local_hover_id.is_some() || state.hovered_vortex_id.is_some() || state.hovered_component_id.is_some() || state.hovered_component_object_id.is_some() || state.hovered_component_mode.is_some()
+}
+
+/** 🚪️ Whether this surface OWES a hover clear that nothing has been enqueued for yet — the exact
+ * predicate a per-FRAME caller must ask, as opposed to the per-EVENT
+ * [`world3d_hover_is_published`] the renderer's move path asks.
+ *
+ * 🩸️ Without the queued term, a frame-driven clear re-enqueues one leave per frame: the published
+ * hover only goes clear when the leave is ANSWERED, and while the leave sits behind the rest of the
+ * queue the predicate stays true. Measured live at `context-menu` — `queued=64 blocked=true` on
+ * `puzzle3d-main-perspective`, the bounded intent queue full of identical leaves, then
+ * `bounded frame input action authority faulted` and a dead page
+ * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w13c-parity-run-20`). */
+pub fn world3d_hover_clear_is_owed(state: &World3dState) -> bool {
+    world3d_hover_is_published(state) && state.interaction_authority.as_ref().is_some_and(|authority| !authority.queue.holds_pointer_leave() && !authority.blocked.is_some_and(|intent| intent.phase == WorldInteractionPhase::PointerLeave))
+}
+
+/** 🚪️ The clear a [`WorldInteractionPhase::PointerLeave`] owes, in whichever hover lane this
+ * surface currently publishes: `setHover` with no args in component mode, `worldVortexHover` with a
+ * null `fullId` under the brush/vertex utilities, and `interactionHover` with empty `targets`
+ * otherwise — the same three clears a hover pick that MISSES produces, which is what React gets from
+ * r3f's `onPointerOut` (`🌍️world/🎨️r3f/🟦️.tsx`'s `dispatchInstanceHover`).
+ *
+ * ⚖️ `None` when nothing is published, so a leave over an already-clear surface is retired without a
+ * journal entry — React's canvas does not re-clear a hover it never had. */
+fn plan_world3d_pointer_leave(state: &World3dState, generation: u64) -> Option<WorldInteractionPlan> {
+    let mut plan = WorldInteractionPlan::new(state.interaction_revision, generation);
+    let controller = plan.push_string(&state.controller_id)?;
+    let surface = plan.push_string(&state.surface_id)?;
+    if component_mode_active(state) {
+        let mode = state.hovered_component_mode.as_deref()?;
+        let mode = plan.push_string(mode)?;
+        let action = WorldFlatAction { kind: WorldFlatActionKind::ComponentHover, strings: [Some(controller), Some(surface), None, Some(mode), None, None, None, None], numbers: [0.0; 10] };
+        return plan.push_action(action).then_some(plan);
+    }
+    if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
+        state.hovered_vortex_id.as_ref()?;
+        let action = WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
+        return plan.push_action(action).then_some(plan);
+    }
+    state.local_hover_id.as_ref()?;
+    let domain = plan.push_string(resolved_domain_id(state))?;
+    let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10] };
+    plan.push_action(action).then_some(plan)
+}
+
+fn plan_world3d_camera_settle(state: &World3dState, generation: u64) -> Option<WorldInteractionPlan> {
+    if !state.camera_sync.owed {
+        return None;
+    }
+    let camera = state.orbit.to_camera();
+    let mut plan = WorldInteractionPlan::new(state.interaction_revision, generation);
+    let controller = plan.push_string(&state.controller_id)?;
+    let surface = plan.push_string(&state.surface_id)?;
+    let gestures = state.camera_sync.start.map(|start| classify_world_navigation_gestures(start, world_navigation_snapshot(state))).unwrap_or([false; 3]);
+    if gestures.iter().any(|moved| *moved) {
+        let mut numbers = [0.0; 10];
+        for (index, moved) in gestures.iter().enumerate() {
+            numbers[index] = if *moved { 1.0 } else { 0.0 };
+        }
+        let navigation = WorldFlatAction { kind: WorldFlatActionKind::Navigation, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers };
+        if !plan.push_action(navigation) {
+            return None;
+        }
+    }
+    let sync = WorldFlatAction {
+        kind: WorldFlatActionKind::Camera,
+        strings: [Some(controller), Some(surface), None, None, None, None, None, None],
+        numbers: [
+            camera.position.x as f64,
+            camera.position.y as f64,
+            camera.position.z as f64,
+            camera.target.x as f64,
+            camera.target.y as f64,
+            camera.target.z as f64,
+            world3d_camera_zoom(&camera),
+            0.0,
+            0.0,
+            0.0,
+        ],
+    };
+    plan.push_action(sync).then_some(plan)
+}
+
 pub fn plan_world3d_wheel(state: &World3dState, generation: u64, delta: f32) -> Option<WorldInteractionPlan> {
     let mut next = state.orbit.clone();
     next.zoom(delta);
@@ -6353,11 +6690,40 @@ pub fn plan_world3d_wheel(state: &World3dState, generation: u64, delta: f32) -> 
     let controller = plan.push_string(&state.controller_id)?;
     let surface = plan.push_string(&state.surface_id)?;
     let action = WorldFlatAction {
-        kind: WorldFlatActionKind::Camera,
+        kind: WorldFlatActionKind::CameraLocal,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
         numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, world3d_camera_zoom(&camera), delta as f64, 0.0, 0.0],
     };
     plan.push_action(action).then_some(plan)
+}
+
+/** 🖱️🎯️ The selection a NON-primary press publishes — the twin of React's own "a press selects,
+ * whatever the button".
+ *
+ * React reaches it through R3F, not through a handler of its own: `🌐️World3dHost/🟦️.tsx`'s
+ * `handlePointerDown` returns immediately for `event.button !== 0`, but the `<Canvas>`'s
+ * `onPointerMissed={handleEmptyClick}` is raised by R3F on a `pointerdown` that resolved no
+ * event-handling object — for ANY button — and `handleEmptyClick` publishes `interactionSelect` over
+ * the target the pane is hovering (or an empty selection when it hovers nothing). A primary press
+ * arms the marquee instead, and its own drag flag (`wasMarqueeDragRef`) then swallows the first of
+ * the two calls; a middle or right press arms nothing, so both land. That is exactly the measured
+ * shape: `orbit-drag` journals ONE `interactionSelect` on React, `pan-drag` and `context-menu` TWO,
+ * and the wgpu pane journalled NONE for the latter two
+ * (`🗑️generated/w12c-parity-run-19/steps.json`, ticket 26/09/17 packet W13c §1).
+ *
+ * 🧭️ The pick is the SAME one a primary click runs — [`WorldRayPickPurpose::Instance`], whose miss
+ * arm publishes the empty selection React's own miss publishes — so the two buttons answer with one
+ * verb in one lane rather than with a second, hand-rolled selection route. `None` outside that lane
+ * (component mode and the brush/vertex utilities own their own press verbs) and for a point this
+ * surface no longer covers, which retires the press as before. */
+fn plan_world3d_non_primary_press_pick(state: &World3dState, generation: u64, intent: &WorldInteractionIntent) -> Option<WorldInteractionActive> {
+    if state.active_utility != "select" || component_mode_active(state) || state.granularity == "vertex" {
+        return None;
+    }
+    WorldRayPickCursor::new(state, generation, WorldRayPickPurpose::Instance, intent.x, intent.y).map(|mut cursor| {
+        cursor.merge = world_merge_code(intent.shift, intent.ctrl, intent.meta);
+        WorldInteractionActive::Pick { cursor, retirement: None }
+    })
 }
 
 pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32, button: i16, modifiers: &PointerModifiers) -> Option<WorldInteractionPlan> {
@@ -6379,7 +6745,7 @@ pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32
     let controller = plan.push_string(&state.controller_id)?;
     let surface = plan.push_string(&state.surface_id)?;
     let action = WorldFlatAction {
-        kind: WorldFlatActionKind::Camera,
+        kind: WorldFlatActionKind::CameraLocal,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
         numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, world3d_camera_zoom(&camera), dx as f64, operation, dy as f64],
     };
@@ -6503,19 +6869,47 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             builder.end_container()?;
             builder.end_container()?;
+            reservation.publish_with(|| {
+                state.camera_sync = WorldCameraSync { hover_owed: true, at: state.camera_sync.at, ..WorldCameraSync::default() };
+                state.interaction_revision = state.interaction_revision.wrapping_add(1);
+            })?;
+        }
+        WorldFlatActionKind::CameraLocal => {
+            if !state.camera_sync.navigating {
+                state.camera_sync.start = Some(world_navigation_snapshot(state));
+                state.camera_sync.navigating = true;
+            }
             let first = action.numbers[7] as f32;
             let operation = action.numbers[8] as u8;
             let second = action.numbers[9] as f32;
-            reservation.publish_with(|| {
-                match operation {
-                    0 => state.orbit.zoom(first),
-                    1 => state.orbit.pan(-first, -second),
-                    2 => state.orbit.orbit(first, second),
-                    _ => unreachable!("world camera plan operation is schema-bounded"),
+            match operation {
+                0 => state.orbit.zoom(first),
+                1 => state.orbit.pan(-first, -second),
+                2 => state.orbit.orbit(first, second),
+                _ => unreachable!("world camera plan operation is schema-bounded"),
+            }
+            state.camera_user_moved = true;
+            state.camera_sync.owed = true;
+            state.interaction_revision = state.interaction_revision.wrapping_add(1);
+        }
+        WorldFlatActionKind::Navigation => {
+            let controller = plan.string(action.strings[0].expect("navigation controller span"));
+            let surface = plan.string(action.strings[1].expect("navigation surface span"));
+            let action_id = "noteWorldNavigation";
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "gestures", WORLD_NAVIGATION_GESTURE_IDS[0], WORLD_NAVIGATION_GESTURE_IDS[1], WORLD_NAVIGATION_GESTURE_IDS[2]])?;
+            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+            let builder = reservation.builder();
+            builder.begin_object(None)?;
+            builder.string(Some("windowId"), surface)?;
+            builder.begin_array(Some("gestures"))?;
+            for (index, name) in WORLD_NAVIGATION_GESTURE_IDS.iter().enumerate() {
+                if action.numbers[index] != 0.0 {
+                    builder.string(None, name)?;
                 }
-                state.camera_user_moved = true;
-                state.interaction_revision = state.interaction_revision.wrapping_add(1);
-            })?;
+            }
+            builder.end_container()?;
+            builder.end_container()?;
+            reservation.publish()?;
         }
         WorldFlatActionKind::PaintStrokeBegin | WorldFlatActionKind::PaintStrokeEnd => {
             let controller = plan.string(action.strings[0].expect("paint controller span"));
@@ -6738,24 +7132,6 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish()?;
         }
-        WorldFlatActionKind::ContextMenu => {
-            let controller = plan.string(action.strings[0].expect("context menu controller span"));
-            let surface = plan.string(action.strings[1].expect("context menu surface span"));
-            let id = plan.string(action.strings[2].expect("context menu id span"));
-            let kind = plan.string(action.strings[3].expect("context menu kind span"));
-            let action_id = "worldContextMenuAt";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "kind", kind, "id", id, "x", "y"])?;
-            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
-            let builder = reservation.builder();
-            builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), surface)?;
-            builder.string(Some("kind"), kind)?;
-            builder.string(Some("id"), id)?;
-            builder.number(Some("x"), action.numbers[0])?;
-            builder.number(Some("y"), action.numbers[1])?;
-            builder.end_container()?;
-            reservation.publish()?;
-        }
     }
     plan.actions[usize::from(plan.cursor)] = None;
     plan.cursor += 1;
@@ -6912,10 +7288,14 @@ fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod:
 /// W7b fixed the spacing but kept the four PROGRESSIVE bands, which React has no counterpart for —
 /// at the puzzle 3d boot camera that stacked 100 · 25 · 5 · 1-unit grids where React paints a single
 /// 10-unit one. React's grid is a shader plane with no finite edge; this is real line geometry, so
-/// the ONE deliberate deviation left is the [`WORLD_GRID_MAX_DIVISIONS`] ceiling: a radius past it
-/// is CLAMPED (and the fade curve clamped with it, so the rim still reaches alpha 0) instead of
-/// dropping the band and leaving the pane gridless
-/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w8b-orthographic-camera-and-3d-parity.md` §3).
+/// ⚖️ The ONE deliberate deviation left is the [`WORLD_GRID_MAX_DIVISIONS`] ceiling: a radius past it
+/// is CLAMPED — and the fade curve is clamped WITH it, so the outermost line still reaches alpha 0
+/// and there is no hard edge to see, which is why a shader plane and this read the same at every
+/// camera the puzzle 3d panes reach. Spending the ceiling on the STEP instead was tried and reverted:
+/// coarsening to cover `camera_grid_fade_distance` (which is React's `visibleRadius × 32` FADE
+/// parameter, not a draw extent) walked the boot camera's band from 10 units to 10 000 and painted
+/// four giant cells where React paints a 10-unit grid
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9b-projection-pane-framing-grid-materials.md` §3).
 fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_factor: f64, anchor: Vec3, camera: &Camera3d, viewport: Rect, base_color: [f32; 4]) {
     let Some(step_world) = lod_grid_step_world(lod, grid_factor) else { return };
     let step = step_world as f32;
@@ -6948,24 +7328,135 @@ fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_f
     }
 }
 
-/// 🎨️ React's `MESH_STYLE_PAINT` row, BAKED into the instance colour.
+/// 🎨️ React's `MeshStyleKind` — the seven paint rows `MESH_STYLE_PAINT` declares
+/// (`🌐️World3dHost/🟦️.tsx`), in React's own priority order, highest first.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MeshStyleKind {
+    Disabled,
+    Provisional,
+    Celebrated,
+    Selected,
+    Highlighted,
+    Hovered,
+    Neutral,
+}
+
+/// 🎨️ What an instance is, before a row is chosen for it — React's `resolveMeshStyle` argument
+/// (`🌐️World3dHost/🟦️.tsx`).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct MeshStyleState {
+    pub disabled: bool,
+    pub provisional: bool,
+    pub celebrating: bool,
+    pub selected: bool,
+    pub highlighted: bool,
+    pub hovered: bool,
+}
+
+/// 🎨️ One resolved row of React's `MESH_STYLE_PAINT`: its fill, its line, its emissive intensity
+/// and its opacity, all in this renderer's linear paints.
+#[derive(Clone, Copy, Debug)]
+pub struct MeshStylePaint {
+    pub fill: [f32; 4],
+    pub line: [f32; 4],
+    pub emissive_intensity: f32,
+    pub opacity: f32,
+    /// 🎉️ The three conic stops React's `CelebratingConicMaterial` spins through
+    /// (`--color-primary` → `--color-secondary` → `--color-tertiary`). Only the `celebrated` row
+    /// carries them; every other row paints its flat `fill`.
+    pub conic: Option<[[f32; 4]; 3]>,
+}
+
+/// 🎉️ React's `CELEBRATE_CONIC_SPIN_SECONDS` (`🌐️World3dHost/🟦️.tsx`).
+pub const CELEBRATE_CONIC_SPIN_SECONDS: f32 = 1.2;
+
+/// 🎨️ React's whole `MESH_STYLE_PAINT` table, resolved against this appearance — ONE place both
+/// renderers read their mesh paint from (`🌐️World3dHost/🟦️.tsx`'s table, verbatim).
 ///
-/// ⚖️ React does not tint a selected mesh — `GlbInstanceMesh` builds a whole new
-/// `MeshStandardMaterial` whose `color` IS the style's fill (`tokenVar("primary")` when selected,
-/// `semanticVar("hover-interactive-fill")` when hovered) and whose `emissiveIntensity` is the
-/// style's (`🌐️World3dHost/🟦️.tsx`). `WORLD3D_SHADER` reads the emissive half off the same two
-/// flags; the fill half has to happen here, because the shader knows no theme. The opacity the
-/// instance already carries is kept: it is the style's `opacity` column.
-fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, mut instance: Instance3d) -> Instance3d {
-    let fill = if instance.selected {
-        theme.celebrate[0]
-    } else if instance.hovered {
-        theme.row_hover
-    } else {
+/// 🩸️ Only two of the seven rows existed here: `selected` and `hovered`, resolved inline by an
+/// `if/else if` with no table behind it. `provisional` was painted by a SECOND, unrelated rule in
+/// `render_world_3d` (`tool_run_provisional_color`, which substituted `theme.accent` for React's
+/// `--color-secondary` on the belief that this theme carries no secondary tone — it does, as
+/// `theme.celebrate[1]`), and `celebrated`, `highlighted` and `disabled` had no wgpu paint at all,
+/// so a disabled instance painted at full opacity where React paints it at 0.45
+/// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
+pub fn mesh_style_paint(theme: &ui_wgpu::wgpu::Theme, kind: MeshStyleKind) -> MeshStylePaint {
+    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
+    match kind {
+        MeshStyleKind::Neutral => MeshStylePaint { fill: rgba(theme.panel), line: rgba(theme.border_normal), emissive_intensity: 0.0, opacity: 1.0, conic: None },
+        MeshStyleKind::Hovered => MeshStylePaint { fill: rgba(theme.row_hover), line: rgba(theme.border_emphasized), emissive_intensity: 0.08, opacity: 1.0, conic: None },
+        MeshStyleKind::Selected => MeshStylePaint { fill: primary, line: primary, emissive_intensity: 0.35, opacity: 1.0, conic: None },
+        MeshStyleKind::Highlighted => MeshStylePaint { fill: secondary, line: secondary, emissive_intensity: 0.2, opacity: 1.0, conic: None },
+        MeshStyleKind::Provisional => MeshStylePaint { fill: secondary, line: secondary, emissive_intensity: 0.2, opacity: ui_styling::metrics::tool_run::PROVISIONAL_OPACITY as f32, conic: None },
+        MeshStyleKind::Celebrated => MeshStylePaint { fill: primary, line: primary, emissive_intensity: 0.55, opacity: 1.0, conic: Some([primary, secondary, tertiary]) },
+        // 🎨️ React's `color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))` — the
+        // 55 % is the muted side, so the mix runs FROM the muted tone TOWARDS the panel by 0.45.
+        MeshStyleKind::Disabled => MeshStylePaint { fill: ui_styling::color::oklab_mix(rgba(theme.text_muted), rgba(theme.panel), 0.45), line: rgba(theme.text_muted), emissive_intensity: 0.0, opacity: 0.45, conic: None },
+    }
+}
+
+/// 🎨️ React's `resolveMeshStyle` — the one priority ladder both renderers pick a row with.
+pub fn resolve_mesh_style(state: MeshStyleState) -> MeshStyleKind {
+    if state.disabled {
+        return MeshStyleKind::Disabled;
+    }
+    if state.provisional {
+        return MeshStyleKind::Provisional;
+    }
+    if state.celebrating {
+        return MeshStyleKind::Celebrated;
+    }
+    if state.selected {
+        return MeshStyleKind::Selected;
+    }
+    if state.highlighted {
+        return MeshStyleKind::Highlighted;
+    }
+    if state.hovered {
+        return MeshStyleKind::Hovered;
+    }
+    MeshStyleKind::Neutral
+}
+
+/// 🎨️ One instance's [`mesh_style_paint`] row, BAKED into its colour.
+///
+/// ⚖️ React does not tint a styled mesh — `GlbInstanceMesh` builds a whole new
+/// `MeshStandardMaterial` whose `color` IS the row's fill and whose `emissiveIntensity` is the
+/// row's (`🌐️World3dHost/🟦️.tsx`). `WORLD3D_SHADER` reads the emissive half off the instance's
+/// own selected/hovered flags; the fill and the opacity have to happen here, because the shader
+/// knows no theme. A `neutral` instance keeps the colour the producer authored — React's neutral
+/// row is `var(--panel)` only for a mesh with no authored material, and every wgpu instance
+/// carries one.
+fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, style: MeshStyleState, mut instance: Instance3d) -> Instance3d {
+    let kind = resolve_mesh_style(style);
+    if kind == MeshStyleKind::Neutral {
         return instance;
-    };
-    instance.color = [fill.r, fill.g, fill.b, instance.color[3]];
+    }
+    let paint = mesh_style_paint(theme, kind);
+    instance.color = [paint.fill[0], paint.fill[1], paint.fill[2], instance.color[3] * paint.opacity];
     instance
+}
+
+/// 🧷️ LAW: a world draw is published only when THIS frame's uploads carry the exact mesh identity it
+/// names — the source half of the prepared-frame residency law.
+///
+/// 🩸️ `mesh_store.get_versioned` answers a prepared world draw at SUBMIT, hundreds of host steps
+/// after the build, and a miss there used to be a FATAL `present_step` fault that quarantined the
+/// whole surface. Five sites published a `SceneDraw3d` whose `ensure_mesh` was conditional on a lease
+/// that is admitted ASYNCHRONOUSLY — every ghost/stand-in path (`brush_preview`,
+/// `catalogue_drop_preview`, the tool-run trace, the vortex arrows, the vertex markers) calls
+/// `begin_world_placeholder_mesh` and then drew the placeholder on the very frame it was still being
+/// built, with no upload behind it. The puzzle3d journey died on the engagement chip with
+/// `prepared frame submit step: prepared world mesh was missing` (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-prepared-world-mesh-missing.md`). React has no such
+/// window: `BrushPreviewGhost` mounts `<boxGeometry>` with the mesh already in hand.
+///
+/// Each of those sites now binds its lease before it pushes; this pass is the STRUCTURAL guarantee
+/// that a sixth one cannot reintroduce the fault — an unbacked draw is dropped for the one frame its
+/// mesh is still landing, exactly as React renders nothing until its loader resolves.
+fn retain_ensured_world_draws(gpu: &World3dBuildContext, draws: &mut Vec<SceneDraw3d>) {
+    draws.retain(|draw| gpu.has_mesh_request(&draw.mesh_key, draw.mesh_version));
 }
 
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
@@ -7431,7 +7922,7 @@ impl WorldTerrainMeshCursor {
 #[cfg(not(test))]
 impl Drop for WorldTerrainMeshCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "terrain mesh cursor reached Drop before its exact page/source witness");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "terrain mesh cursor reached Drop before its exact page/source witness");
     }
 }
 
@@ -7935,7 +8426,7 @@ impl WorldPlaceholderMeshCursor {
 #[cfg(not(test))]
 impl Drop for WorldPlaceholderMeshCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "placeholder mesh cursor reached Drop before its exact authority witness");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "placeholder mesh cursor reached Drop before its exact authority witness");
     }
 }
 
@@ -8958,7 +9449,7 @@ impl WorldFaceOverlayMeshCursor {
 #[cfg(not(test))]
 impl Drop for WorldFaceOverlayMeshCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "face overlay mesh cursor reached Drop before its exact authority witness");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "face overlay mesh cursor reached Drop before its exact authority witness");
     }
 }
 
@@ -9439,15 +9930,57 @@ pub fn apply_world3d_projection(state: &mut World3dState, projection: CameraProj
     true
 }
 
+/// 📐️ A whole `WorldProjectionSpec` onto this surface — the family AND the plane its framing
+/// measures in. React's `handleProjectionKindChange` hands the pending spec to
+/// `seedPendingWorldProjectionCamera`, which re-runs `frameWorldProjectionPose` on it
+/// (`🌐️World3dHost/🟦️.tsx`), so a selection re-frames the pane rather than only re-projecting it.
+///
+/// ⚖️ The framing latches are RELEASED here for exactly that reason: [`apply_world3d_projection`]
+/// arms `camera_user_moved`, which is the gate `sync_world3d_projection_content_frame` refuses on,
+/// so without this a pane switched to `Orthographic` would take the parallel frustum and keep the
+/// perspective pane's zoom forever.
+pub fn apply_world3d_projection_spec(state: &mut World3dState, projection: CameraProjection3d, orientation: ui_wgpu::wgpu::WorldProjectionOrientation, oblique_off_axis: bool) -> bool {
+    let reoriented = state.projection_orientation != orientation || state.projection_oblique_off_axis != oblique_off_axis;
+    let reprojected = apply_world3d_projection(state, projection);
+    if !reoriented && !reprojected {
+        return false;
+    }
+    state.projection_orientation = orientation;
+    state.projection_oblique_off_axis = oblique_off_axis;
+    state.projection_selected = true;
+    state.projection_frame_owed = true;
+    state.projection_frame_key = None;
+    state.projection_frame_zoom = None;
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    true
+}
+
 /// 🕒️ Whether this surface has a camera intent waiting to publish — the settle a projection switch
 /// or a wheel queues.
 pub fn world3d_pending_camera_settle(state: &World3dState) -> bool {
-    state.interaction_authority.as_ref().is_some_and(|authority| authority.queue.len > 0)
+    state.camera_sync.owed || state.interaction_authority.as_ref().is_some_and(|authority| authority.queue.len > 0)
 }
 
 /// 🔎️ This surface's live camera family, for the pane chip that reports it.
 pub fn world3d_camera_projection(state: &World3dState) -> CameraProjection3d {
     state.orbit.projection
+}
+
+/// 🎥️ This surface's LIVE orbit in the very shape `setCamera` carries — the row `dumpMeshStats`
+/// reports beside the wire camera, so a probe can diff "what the guest published" against "what the
+/// pane is looking through". Carries the two members the wire shape has no room for and a local
+/// camera move turns on: the projection FAMILY and the framing ORIENTATION.
+pub fn world3d_live_camera_json(state: &World3dState) -> serde_json::Value {
+    let camera = state.orbit.to_camera();
+    json!({
+        "position": [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
+        "target": [camera.target.x as f64, camera.target.y as f64, camera.target.z as f64],
+        "up": [f64::from(camera.up.x), f64::from(camera.up.y), f64::from(camera.up.z)],
+        "zoom": world3d_camera_zoom(&camera),
+        "fov": f64::from(camera.fov_y.to_degrees()),
+        "projection": { "mode": { "kind": if camera.projection.is_parallel() { "orthographic" } else { "perspective" } }, "orientation": format!("{:?}", state.projection_orientation) },
+        "userMoved": state.camera_user_moved,
+    })
 }
 
 pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
@@ -9582,6 +10115,29 @@ fn publish_world_pixels(state: &mut World3dState, id: String, value: (u32, u32, 
     }
 }
 
+/// 🖼️ Offers ONE reference underlay's decoded payload to the frame, KEEPING the state's own copy.
+///
+/// ⚖️ The copy stays for two reasons: a sibling surface of the same document holds its own
+/// `World3dState` and must be able to offer the same image, and an offer can be LOST — a producer
+/// rides the frame it was admitted into, and a frame whose present is ABORTED drops its staged
+/// texture (`RasterTextureTable::abort_presented_step`). The re-offer on the next render is what
+/// heals that, which is why this lane offers per render rather than once.
+///
+/// 🩸️ It briefly `mem::take`-d the payload, so the image crossed exactly once ever — and both panes
+/// then painted no plan at all, because the one frame that carried it did not commit (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, W9b's `🗑️generated/w9b-final/final.png` against
+/// `🗑️generated/w8b-boot-2/final.png`). What made the per-render offer dangerous was never the offer:
+/// it was reporting a refused admission as a frame fault, which
+/// [`World3dBuildContext::ensure_world_plane_texture`] no longer does.
+///
+/// ⏭️ The honest end state is an upload ACK from the raster table — the worker cannot see `live`, so
+/// it cannot know the texture is resident and must keep offering. Until that exists, the table's own
+/// key-dedupe absorbs the repeat.
+fn reference_underlay_upload(state: &World3dState, url: &str) -> Option<(u32, u32, Vec<u8>)> {
+    let (width, height, pixels) = state.reference_pixels.get(url)?;
+    (!pixels.is_empty()).then(|| (*width, *height, pixels.clone()))
+}
+
 fn retire_world_pixels(state: &mut World3dState, id: &str, paint: bool) -> bool {
     let registry = if paint { &mut state.mesh_paint_textures } else { &mut state.reference_pixels };
     let Some(entry) = registry.remove(id) else {
@@ -9686,7 +10242,17 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             return World3dSnapshotApplyStep::Fault;
         }
         if let Some(orbit) = cursor.staged_orbit.take() {
-            state.orbit = orbit;
+            // 📐️ A LOCALLY selected projection is view state the wire never overrides — React holds
+            // it in `externalPendingProjectionSpec` and only falls back to the delivered
+            // `cameraState.projectionSpec` when the pane has none (`🌐️World3dHost/🟦️.tsx`).
+            //
+            // 🩸️ Without this the switch undid itself within one round trip: the template press
+            // queues a settle, the settle publishes `setCamera`, the guest echoes a camera back, and
+            // `setCamera`'s payload has no `projection` member at all (`orbit_camera_action`), so the
+            // echo always arrives in the DELIVERED family. Measured live: the press moved the pane's
+            // target onto the content centre and `liveCamera` still read `perspective` 8 s later
+            // (`📓️w9b-projection-pane-framing-grid-materials.md` §1).
+            state.orbit = if state.projection_selected { OrbitController { projection: state.orbit.projection, ..orbit } } else { orbit };
         }
         state.interaction_revision = cursor.lease.revision;
         state.snapshot_lease = Some(cursor.lease);
@@ -10052,6 +10618,12 @@ struct World3dSceneCameraRecord {
 struct World3dSceneProjectionRecord {
     #[serde(default)]
     mode: Option<World3dSceneProjectionModeRecord>,
+    /// 📐️ React's `WorldProjectionSpec["orientation"]` — `{type:"cardinal", view:"top"}` or
+    /// `{type:"free", …}`. The pose it implies is already baked into the delivered `position`/`up`,
+    /// but the FRAMING reads it: `worldProjectionViewHalfExtent` measures the content box in the
+    /// plane this orientation names (`🎨️r3f/🟦️.tsx`).
+    #[serde(default)]
+    orientation: Option<World3dSceneProjectionOrientationRecord>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -10061,6 +10633,19 @@ struct World3dSceneProjectionModeRecord {
     kind: Option<String>,
     #[serde(default)]
     fov: Option<f64>,
+    /// 📐️ An oblique mode's variant — `cabinet`/`cavalier`/`military`. Only `military` frames like
+    /// a plan; the other two frame in the `(x, z)` plane (React's `worldProjectionViewHalfExtent`).
+    #[serde(default)]
+    variant: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneProjectionOrientationRecord {
+    #[serde(default, rename = "type")]
+    kind: Option<String>,
+    #[serde(default)]
+    view: Option<String>,
 }
 
 impl World3dSceneCameraRecord {
@@ -10077,6 +10662,25 @@ impl World3dSceneCameraRecord {
     /// mode's, else the 45° `parseCameraState` default.
     fn fov_degrees(&self) -> f64 {
         self.fov.or_else(|| self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).and_then(|mode| mode.fov)).unwrap_or(45.0)
+    }
+
+    /// 📐️ The orientation the framing measures in — React's `spec.orientation`, with an unnamed or
+    /// unknown one reading `free`, which is the isotropic branch of `worldProjectionViewHalfExtent`.
+    fn orientation(&self) -> ui_wgpu::wgpu::WorldProjectionOrientation {
+        self.projection
+            .as_ref()
+            .and_then(|spec| spec.orientation.as_ref())
+            .filter(|orientation| orientation.kind.as_deref() == Some("cardinal"))
+            .and_then(|orientation| orientation.view.as_deref())
+            .and_then(ui_wgpu::wgpu::WorldCardinalView::from_wire)
+            .map_or(ui_wgpu::wgpu::WorldProjectionOrientation::Free, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal)
+    }
+
+    /// 📐️ React's `spec.mode.kind === "oblique" && spec.mode.variant !== "military"` — the one
+    /// non-cardinal case `worldProjectionViewHalfExtent` measures in a real plane instead of the
+    /// isotropic span.
+    fn oblique_off_axis(&self) -> bool {
+        self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).is_some_and(|mode| mode.kind.as_deref() == Some("oblique") && mode.variant.as_deref() != Some("military"))
     }
 }
 
@@ -10112,7 +10716,14 @@ struct World3dSceneFitRecord {
 /// every VISIBLE reference plane's footprint. `camera_user_moved` is the ownership latch — React's
 /// `viewportOwned`.
 fn sync_world3d_projection_content_frame(state: &mut World3dState) {
-    if !state.orbit.projection.is_parallel() || state.camera_user_moved {
+    if !state.orbit.projection.is_parallel() {
+        return;
+    }
+    // 🔒️ `camera_user_moved` protects a camera the USER moved. A projection template press is not
+    // that, and the zero-delta settle it queues to publish the new pose runs through the very
+    // `WorldFlatActionKind::CameraPlan` arm that arms the latch — so without the owed-framing
+    // exemption a selection armed the latch against its own framing and nothing moved.
+    if state.camera_user_moved && !state.projection_frame_owed {
         return;
     }
     let Some((minimum, maximum)) = world3d_content_bounds(state) else { return };
@@ -10120,9 +10731,10 @@ fn sync_world3d_projection_content_frame(state: &mut World3dState) {
     if state.projection_frame_key == Some(key) && state.projection_frame_zoom == Some(state.orbit.zoom) {
         return;
     }
-    let framed = ui_wgpu::wgpu::frame_orbit_to_bounds(&state.orbit, minimum, maximum, state.bounds.w, state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
+    let framed = ui_wgpu::wgpu::frame_projection_orbit_to_bounds(&state.orbit, state.projection_orientation, state.projection_oblique_off_axis, minimum, maximum, state.bounds.w, state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
     state.projection_frame_key = Some(key);
     state.projection_frame_zoom = Some(framed.zoom);
+    state.projection_frame_owed = false;
     state.orbit = framed;
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
 }
@@ -10374,6 +10986,13 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
             cursor.meshes = serde_json::from_str::<Vec<World3dSceneMeshEntry>>(&cursor.meshes_json).unwrap_or_default();
             cursor.instances = serde_json::from_str::<Vec<World3dSceneInstanceEntry>>(&cursor.instances_json).unwrap_or_default();
             cursor.camera = serde_json::from_str::<World3dSceneCameraRecord>(&cursor.camera_json).ok();
+            // 📐️ The delivered spec seeds the framing plane only while the pane holds none of its
+            // own — React's `cameraState.projectionSpec ?? externalPendingProjectionSpec` precedence
+            // (`🌐️World3dHost/🟦️.tsx`), the same rule the snapshot apply keeps for the family.
+            if let Some(camera) = cursor.camera.as_ref().filter(|_| !state.projection_selected) {
+                state.projection_orientation = camera.orientation();
+                state.projection_oblique_off_axis = camera.oblique_off_axis();
+            }
             cursor.meshes.retain(World3dSceneMeshEntry::names_a_mesh);
             for mesh in &mut cursor.meshes {
                 if mesh.data.normals.len() != mesh.data.positions.len() {
@@ -10786,6 +11405,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     sync_world3d_projection_content_frame(state);
     sync_world3d_scene_selection(state, &world.selection_json);
     sync_world3d_scene_document_lanes(state, world);
+    sync_world3d_brush_mesh_feedback(state, world.interaction_json.as_deref());
     let lease = match world.snapshot {
         Some(lease) => lease,
         None => {
@@ -10854,10 +11474,10 @@ fn append_tool_run_trace_draws(state: &mut World3dState, gpu: &mut World3dBuildC
             begin_world_placeholder_mesh(state, &mesh_key, WorldPlaceholderKind::Box);
         }
         let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
-        if let Some(mesh) = state.meshes.get(&mesh_key) {
-            gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
+        if let Some(mesh) = state.meshes.get(&mesh_key).copied() {
+            gpu.ensure_mesh(&mesh_key, mesh_version, mesh);
+            translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances });
         }
-        translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances });
     }
 }
 
@@ -10942,7 +11562,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             .iter()
             .enumerate()
             .filter_map(|(instance_index, instance)| {
-                let mut instance = world3d_style_paint(theme, instance.clone());
+                let style = MeshStyleState { provisional: state.provisional_instance_ids.contains(&instance.id), selected: instance.selected, hovered: instance.hovered, ..MeshStyleState::default() };
+                let mut instance = world3d_style_paint(theme, style, instance.clone());
                 instance.model = retained_gumball_preview_model(state, draw_index, instance_index, instance.model);
                 let position = state.instance_positions.get(&instance.id).copied().unwrap_or([0.0, 0.0, 0.0]);
                 if !instance_chunk_visible(state, position) {
@@ -10962,8 +11583,10 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             gpu.ensure_mesh(&draw.mesh_key, mesh_version, mesh);
         }
         if !provisional.is_empty() {
-            let color = tool_run_trace::tool_run_provisional_color(theme);
-            provisional_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: provisional.into_iter().map(|instance| Instance3d { color, selected: false, hovered: false, ..instance }).collect() });
+            // 🟩️ The colour is already the `provisional` row of [`mesh_style_paint`], which outranks
+            // `selected`/`hovered` exactly as React's `resolveMeshStyle` ladder does — the flags are
+            // cleared so `WORLD3D_SHADER`'s emissive terms do not fight the row that won.
+            provisional_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: provisional.into_iter().map(|instance| Instance3d { selected: false, hovered: false, ..instance }).collect() });
         }
         if !instances.is_empty() {
             culled_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances });
@@ -10995,8 +11618,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         let mesh_version = *state.mesh_versions.get(VERTEX_MARKER_MESH).unwrap_or(&0);
         if let Some(mesh) = state.meshes.get(VERTEX_MARKER_MESH) {
             gpu.ensure_mesh(VERTEX_MARKER_MESH, mesh_version, *mesh);
+            extra_draws.push(SceneDraw3d { mesh_key: VERTEX_MARKER_MESH.into(), mesh_version, instances: vertex_instances });
         }
-        extra_draws.push(SceneDraw3d { mesh_key: VERTEX_MARKER_MESH.into(), mesh_version, instances: vertex_instances });
     }
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
@@ -11008,29 +11631,30 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
         }
         let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
-        if let Some(mesh) = state.meshes.get(&mesh_id) {
-            gpu.ensure_mesh(&mesh_id, mesh_version, *mesh);
+        if let Some(mesh) = state.meshes.get(&mesh_id).copied() {
+            gpu.ensure_mesh(&mesh_id, mesh_version, mesh);
+            translucent_draws.push(SceneDraw3d {
+                mesh_key: mesh_id,
+                mesh_version,
+                instances: vec![Instance3d {
+                    id: "catalogue-drop-preview".into(),
+                    model: Instance3d::model_from_trs([preview.origin[0] as f32, preview.origin[1] as f32, preview.origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]),
+                    color: {
+                        let mut color = parse_color("#59bfff");
+                        color[3] = 0.55;
+                        color
+                    },
+                    selected: false,
+                    hovered: false,
+                }],
+            });
         }
-        translucent_draws.push(SceneDraw3d {
-            mesh_key: mesh_id,
-            mesh_version,
-            instances: vec![Instance3d {
-                id: "catalogue-drop-preview".into(),
-                model: Instance3d::model_from_trs([preview.origin[0] as f32, preview.origin[1] as f32, preview.origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]),
-                color: {
-                    let mut color = parse_color("#59bfff");
-                    color[3] = 0.55;
-                    color
-                },
-                selected: false,
-                hovered: false,
-            }],
-        });
     }
     if let Some(preview) = state.brush_preview.clone() {
         // 👻️ Mirrors `BrushPreviewGhost`: renders whenever `origin` is present, regardless of
         // `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
-        // its GLB hasn't resolved into `state.meshes` yet), not "nothing at all".
+        // its GLB hasn't resolved into `state.meshes` yet), not "nothing at all". The box itself is
+        // a placeholder LEASE, so the ghost appears on the frame that lease lands, never before it.
         if let Some(origin) = preview.origin {
             let mesh_id = ghost_mesh_id(state, preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
@@ -11039,24 +11663,24 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             let rotation = preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             let scale = preview_scale(preview.scale.as_ref());
             let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
-            if let Some(mesh) = state.meshes.get(&mesh_id) {
-                gpu.ensure_mesh(&mesh_id, mesh_version, *mesh);
+            if let Some(mesh) = state.meshes.get(&mesh_id).copied() {
+                gpu.ensure_mesh(&mesh_id, mesh_version, mesh);
+                translucent_draws.push(SceneDraw3d {
+                    mesh_key: mesh_id,
+                    mesh_version,
+                    instances: vec![Instance3d {
+                        id: "brush-preview".into(),
+                        model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [rotation[0] as f32, rotation[1] as f32, rotation[2] as f32, rotation[3] as f32], scale),
+                        color: {
+                            let mut color = parse_color(preview.color.as_deref().unwrap_or("#59bfff"));
+                            color[3] = 0.45;
+                            color
+                        },
+                        selected: false,
+                        hovered: false,
+                    }],
+                });
             }
-            translucent_draws.push(SceneDraw3d {
-                mesh_key: mesh_id,
-                mesh_version,
-                instances: vec![Instance3d {
-                    id: "brush-preview".into(),
-                    model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [rotation[0] as f32, rotation[1] as f32, rotation[2] as f32, rotation[3] as f32], scale),
-                    color: {
-                        let mut color = parse_color(preview.color.as_deref().unwrap_or("#59bfff"));
-                        color[3] = 0.45;
-                        color
-                    },
-                    selected: false,
-                    hovered: false,
-                }],
-            });
         }
     }
     let mut textured_draws = Vec::new();
@@ -11075,20 +11699,19 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     for url in reference_image_urls {
         let _ = reserve_world3d_asset_request(state, WorldAssetRequestKind::ReferenceImage, &url);
     }
-    for reference in &state.references {
-        if reference.hidden.unwrap_or(false) {
-            continue;
-        }
-        let Some(url) = reference.url.as_deref() else {
-            continue;
-        };
-        let origin = reference.origin.unwrap_or([0.0, 0.0, 0.0]);
-        let width = reference.width_world.unwrap_or(1.0) as f32;
+    let visible_references: Vec<(String, [f64; 3], f32)> = state
+        .references
+        .iter()
+        .filter(|reference| !reference.hidden.unwrap_or(false))
+        .filter_map(|reference| reference.url.as_deref().map(|url| (url.to_string(), reference.origin.unwrap_or([0.0, 0.0, 0.0]), reference.width_world.unwrap_or(1.0) as f32)))
+        .collect();
+    for (url, origin, width) in visible_references {
+        let url = url.as_str();
         let aspect = reference_image_aspect(state, url);
         let height = width / aspect.max(0.01);
         textured_instances.push(TexturedInstance3d { texture_key: url.to_string(), model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [width, height, 1.0]), tint: [1.0, 1.0, 1.0, 0.85] });
-        if let Some((pixel_w, pixel_h, pixels)) = state.reference_pixels.get(url) {
-            gpu.ensure_world_plane_texture(url, pixels, *pixel_w, *pixel_h);
+        if let Some((pixel_w, pixel_h, pixels)) = reference_underlay_upload(state, url) {
+            gpu.ensure_world_plane_texture(url, pixels, pixel_w, pixel_h);
         }
     }
     if !textured_instances.is_empty() {
@@ -11102,6 +11725,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     }
     culled_draws.extend(extra_draws);
     culled_draws.extend(terrain_draws);
+    retain_ensured_world_draws(gpu, &mut culled_draws);
+    retain_ensured_world_draws(gpu, &mut translucent_draws);
     ctx.draw.push_scene_pass(ScenePass3d {
         viewport: [inner.x, inner.y, inner.w, inner.h],
         view_proj: view_proj.to_cols_array(),
@@ -11377,24 +12002,9 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
         return pick_select_action(state, x, y, inner, shift, ctrl);
     }
     if button == 2 {
-        // 🖱️ A right-drag (orbit-via-right-button, see `handle_world3d_pointer_drag`) must not
-        // also pop a context menu — only a right-*click* (no meaningful movement since press)
-        // resolves+dispatches a context-menu target, mirroring the React reference's
-        // `onContextMenu` (which only fires on a genuine click, not a drag-then-release).
-        let is_click = state
-            .right_press_point
-            .map(|start| {
-                let dx = x - start[0];
-                let dy = y - start[1];
-                (dx * dx + dy * dy).sqrt() <= CLICK_DRAG_THRESHOLD_PX
-            })
-            .unwrap_or(true);
+        // 🖱️📋️ A right RELEASE owes the unconditional camera report and NOTHING else: the menu is
+        // the shell's, opened on the press (see the authority's own right-release arm).
         state.right_press_point = None;
-        if is_click {
-            if let Some((kind, id)) = resolve_world_context_menu_target(state) {
-                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "contextMenuAt".into(), args: action_args(json!({ "surfaceId": state.surface_id, "kind": kind, "id": id })) });
-            }
-        }
         return Some(orbit_camera_action(state));
     }
     if button == 1 {
@@ -12404,10 +13014,10 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildCon
     ensure_primitive_mesh(state, VORTEX_ARROW_HEAD_MESH);
     for (mesh_key, instances) in [("vortex-marker", point_instances), (VORTEX_ARROW_SHAFT_MESH, shaft_instances), (VORTEX_ARROW_HEAD_MESH, head_instances)] {
         let mesh_version = *state.mesh_versions.get(mesh_key).unwrap_or(&0);
-        if let Some(mesh) = state.meshes.get(mesh_key) {
-            gpu.ensure_mesh(mesh_key, mesh_version, *mesh);
+        if let Some(mesh) = state.meshes.get(mesh_key).copied() {
+            gpu.ensure_mesh(mesh_key, mesh_version, mesh);
+            extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances });
         }
-        extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances });
     }
 }
 //#endregion VortexArrow
@@ -12843,7 +13453,7 @@ impl WorldAssetFetchOwner {
 #[cfg(not(test))]
 impl Drop for WorldAssetFetchOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "WorldAssetFetchOwner reached Drop before every response page and request string reached terminal handback");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "WorldAssetFetchOwner reached Drop before every response page and request string reached terminal handback");
     }
 }
 
@@ -13177,7 +13787,7 @@ pub fn world3d_asset_cancellation_requested(state: &World3dState, token: WorldAs
 #[cfg(not(test))]
 impl Drop for WorldAssetIoAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "WorldAssetIoAuthority reached Drop before every request claim reached terminal handback");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "WorldAssetIoAuthority reached Drop before every request claim reached terminal handback");
     }
 }
 //#endregion 📡️WorldAssetIoAuthority
@@ -13199,6 +13809,315 @@ pub fn publish_world3d_asset_mesh_lease(state: &mut World3dState, url: &str, mes
     state.pending_glb_urls.remove(url);
     Ok(())
 }
+
+//#region 🥽️WorldBrushMeshAnnounce
+/// 📏️ Values — `f32` positions and `u32` indices counted together — one `registerBrushMesh` page
+/// carries at most. The guest's own `PUZZLE3D_MESH_PAGE_VALUES` and React's twin of it
+/// (`🛠️ShellHelpers/🟦️.tsx`): 1 024 values are 4 096 payload bytes and 5 464 base64 characters,
+/// which the shared retained command's [`WORLD_BRUSH_MESH_COMMAND_RAW_BYTES`] carries with the JSON
+/// envelope still inside the limit.
+const WORLD_BRUSH_MESH_PAGE_VALUES: usize = 1_024;
+
+/// 📏️ Raw JSON bytes one retained puzzle command admits — the wire budget
+/// [`world_brush_mesh_page_capacity`] fits an envelope plus its payload inside.
+const WORLD_BRUSH_MESH_COMMAND_RAW_BYTES: usize = 8_192;
+
+/// 🔤️ Base64 padding characters reserved per page — one group per payload string.
+const WORLD_BRUSH_MESH_PAGE_PADDING_CHARS: usize = 8;
+
+/// 🧮️ Longest page run one mesh identity may claim, React's `PUZZLE3D_MESH_UPLOAD_MAX_PAGES`. A run
+/// longer than this uploads nothing rather than emitting a command the guest refuses.
+const WORLD_BRUSH_MESH_MAX_PAGES: u32 = 384;
+
+/// 🚚️ How often one identity's guest-side re-upload request may be claimed under a single guest
+/// instantiation — the page run the request asks for, plus exactly one retry for a run that failed
+/// part-way. React's `PUZZLE3D_MESH_REUPLOAD_CLAIMS`.
+const WORLD_BRUSH_MESH_REUPLOAD_CLAIMS: u32 = 2;
+
+/// 📦️ Mesh identities the process-wide registry tracks at once — the same ceiling the mesh table
+/// this lane announces out of is bounded by.
+const WORLD_BRUSH_MESH_REGISTRY_CAPACITY: usize = WORLD_DYNAMIC_MESH_CAPACITY;
+
+/// 🥽️ One page of a `registerBrushMesh` upload run this surface owns. `bytes` is the mesh's whole
+/// wire payload — little-endian `f32` positions followed by little-endian `u32` indices, the exact
+/// layout the guest's `decode_brush_mesh_page_values` reassembles and its `brush_mesh_digest`
+/// hashes — read back once out of the resident [`Mesh3dLease`] when the run opened.
+struct WorldBrushMeshRun {
+    url: String,
+    digest: String,
+    bytes: Vec<u8>,
+    position_values: usize,
+    capacity: usize,
+    page: u32,
+    page_count: u32,
+    revision: u64,
+}
+
+struct WorldBrushMeshEntry {
+    digest: String,
+    paged: bool,
+}
+
+/// 🥽️ What this PROCESS believes ONE guest instantiation holds — the wgpu twin of React's page-wide
+/// `Puzzle3dBrushMeshRegistry` singleton (`🛠️ShellHelpers/🟦️.tsx`). It is deliberately shared by
+/// every `World3dState`, exactly as React's module-level registry is shared by every mounted
+/// `World3dHost`: the FIRST window pages a mesh's bytes, and every later window announces the same
+/// identity by `{url, digest}` alone instead of paging 294 912 bytes again.
+///
+/// The claim is bounded by the GUEST's lifetime, never by the shell's. Two guest-published facts
+/// close it, both on `interactionJson` and both folded in by
+/// [`sync_world3d_brush_mesh_feedback`]:
+///
+/// - `meshResidency` — the guest's monotone install counter. A value below the high-water mark this
+///   registry saw is proof of a restart and voids every entry, which bumps `generation` so every
+///   surface re-announces.
+/// - `meshReuploadUrls` — identities a refused id-only announcement is waiting on bytes for, claimed
+///   at most [`WORLD_BRUSH_MESH_REUPLOAD_CLAIMS`] times per instantiation so a republished stale
+///   world body cannot re-drive an upload that already ran.
+struct WorldBrushMeshRegistry {
+    residency: i64,
+    generation: u64,
+    entries: HashMap<String, WorldBrushMeshEntry>,
+    claims: HashMap<String, u32>,
+    revisions: HashMap<String, u64>,
+    refused_alias: HashSet<String>,
+}
+
+impl WorldBrushMeshRegistry {
+    fn clear(&mut self) {
+        self.entries.clear();
+        self.claims.clear();
+        self.refused_alias.clear();
+    }
+
+    /// 🪢️ Whether some identity PAGED this exact geometry into the live guest instantiation — React's
+    /// `holdsDigest`, which scans its live entries for the same reason: an entry a re-upload request
+    /// deleted is no longer proof for a sibling id, so the next announcement pages the bytes.
+    fn holds_digest(&self, digest: &str) -> bool {
+        !digest.is_empty() && self.entries.values().any(|entry| entry.paged && entry.digest == digest)
+    }
+}
+
+static WORLD_BRUSH_MESH_REGISTRY: LazyLock<Mutex<WorldBrushMeshRegistry>> =
+    LazyLock::new(|| Mutex::new(WorldBrushMeshRegistry { residency: -1, generation: 0, entries: HashMap::new(), claims: HashMap::new(), revisions: HashMap::new(), refused_alias: HashSet::new() }));
+
+fn with_world_brush_mesh_registry<R>(read: impl FnOnce(&mut WorldBrushMeshRegistry) -> R) -> Option<R> {
+    WORLD_BRUSH_MESH_REGISTRY.lock().ok().map(|mut registry| read(&mut registry))
+}
+
+/// 🔢️ The revision an identity is announced at — React's `brushMeshRevisions.generation +
+/// brushMeshRevisions.urls[url]`. A surface announces once per identity per revision.
+fn world_brush_mesh_revision(url: &str) -> u64 {
+    with_world_brush_mesh_registry(|registry| registry.generation.saturating_add(registry.revisions.get(url).copied().unwrap_or(0))).unwrap_or(0)
+}
+
+/// 🧹️ Drops every claim this process holds, so the next announcement pages afresh. Test-facing and
+/// the reset a fresh guest instantiation performs through [`sync_world3d_brush_mesh_feedback`].
+pub fn reset_world3d_brush_mesh_registry() {
+    with_world_brush_mesh_registry(|registry| {
+        registry.clear();
+        registry.revisions.clear();
+        registry.residency = -1;
+        registry.generation = 0;
+    });
+}
+
+/// 🚚️ Folds the guest's two published facts about what it actually holds into the process registry —
+/// a residency that FELL proves a restarted guest (its mesh store is not part of any checkpoint) and
+/// voids every claim, and `meshReuploadUrls` names identities an announcement already sent is waiting
+/// on bytes for. Either way the answer is the same: bump the revision the surfaces announce at, so
+/// every world pane re-announces its resident meshes and, with the claim gone, takes the page path
+/// instead of the id-only one.
+fn sync_world3d_brush_mesh_feedback(state: &mut World3dState, interaction_json: Option<&str>) {
+    let Some(interaction_json) = interaction_json else { return };
+    let digest = world3d_scene_digest(&[interaction_json]);
+    if state.brush_mesh_feedback_digest == Some(digest) {
+        return;
+    }
+    state.brush_mesh_feedback_digest = Some(digest);
+    let Ok(record) = serde_json::from_str::<World3dBrushMeshFeedbackRecord>(interaction_json) else { return };
+    with_world_brush_mesh_registry(|registry| {
+        if let Some(installs) = record.mesh_residency {
+            let installs = i64::try_from(installs).unwrap_or(i64::MAX);
+            if installs < registry.residency {
+                registry.clear();
+                registry.generation = registry.generation.saturating_add(1);
+            }
+            registry.residency = installs;
+        }
+        for url in &record.mesh_reupload_urls {
+            let claimed = registry.claims.get(url).copied().unwrap_or(0);
+            if claimed >= WORLD_BRUSH_MESH_REUPLOAD_CLAIMS || registry.revisions.len() >= WORLD_BRUSH_MESH_REGISTRY_CAPACITY && !registry.revisions.contains_key(url) {
+                continue;
+            }
+            registry.claims.insert(url.clone(), claimed.saturating_add(1));
+            if registry.entries.get(url).is_some_and(|entry| !entry.paged) {
+                registry.refused_alias.insert(url.clone());
+            }
+            registry.entries.remove(url);
+            let revision = registry.revisions.get(url).copied().unwrap_or(0).saturating_add(1);
+            registry.revisions.insert(url.clone(), revision);
+        }
+    });
+}
+
+#[derive(Deserialize)]
+struct World3dBrushMeshFeedbackRecord {
+    #[serde(rename = "meshResidency")]
+    mesh_residency: Option<u64>,
+    #[serde(rename = "meshReuploadUrls", default)]
+    mesh_reupload_urls: Vec<String>,
+}
+
+/// 📏️ Values this mesh id may put in one page without pushing the JSON envelope past
+/// [`WORLD_BRUSH_MESH_COMMAND_RAW_BYTES`] — React's `puzzle3dBrushMeshPageCapacity`, over the same
+/// probe envelope. Zero means the id alone already exhausts the wire.
+fn world_brush_mesh_page_capacity(surface_id: &str, url: &str, digest: &str) -> usize {
+    let probe = json!({ "surfaceId": surface_id, "windowId": surface_id, "url": url, "digest": digest, "page": 999_999, "pageCount": 999_999, "positionsB64": "", "indicesB64": "" });
+    let envelope = serde_json::to_string(&json!(["registerBrushMesh", probe])).map(|text| text.chars().map(|character| if character.is_ascii() { 1 } else { 6 }).sum::<usize>()).unwrap_or(usize::MAX);
+    let budget = WORLD_BRUSH_MESH_COMMAND_RAW_BYTES.saturating_sub(envelope).saturating_sub(WORLD_BRUSH_MESH_PAGE_PADDING_CHARS);
+    WORLD_BRUSH_MESH_PAGE_VALUES.min(budget.saturating_mul(3) / 16)
+}
+
+/// 🥽️ One resident mesh's whole collision payload, straight out of the lease's own pages: the
+/// positions field's little-endian bytes followed by the indices field's. React welds the same two
+/// arrays out of the loaded GLB (`extractGlbCollisionMesh`) in the same world frame — the wgpu
+/// decoder bakes `glb_world_frame()` into the mesh it seals — so both renderers announce geometry
+/// the guest's brush utilities can test a candidate against.
+fn world_brush_mesh_payload(mesh: Mesh3dLease) -> Option<(Vec<u8>, usize)> {
+    let schema = mesh.schema().ok()?;
+    let position_values = (schema.vertices as usize).checked_mul(3)?;
+    let total_values = position_values.checked_add(schema.indices as usize)?;
+    if total_values == 0 || total_values > WORLD_BRUSH_MESH_MAX_PAGES as usize * WORLD_BRUSH_MESH_PAGE_VALUES {
+        return None;
+    }
+    let mut bytes = Vec::with_capacity(total_values * 4);
+    for field in [Mesh3dField::Positions, Mesh3dField::Indices] {
+        let mut cursor = mesh.page_cursor(field).ok()?;
+        loop {
+            match cursor.next(|chunk| bytes.extend_from_slice(chunk)) {
+                Ok(Some(())) => {}
+                Ok(None) => break,
+                Err(_) => return None,
+            }
+        }
+    }
+    (bytes.len() == total_values * 4).then_some((bytes, position_values))
+}
+
+fn world_brush_mesh_args(surface_id: &str, extra: serde_json::Value) -> Option<semio_framework::DslValue> {
+    let mut args = json!({ "surfaceId": surface_id, "windowId": surface_id });
+    let (Some(object), Some(extra)) = (args.as_object_mut(), extra.as_object()) else { return None };
+    for (key, value) in extra {
+        object.insert(key.clone(), value.clone());
+    }
+    action_args(args)
+}
+
+/// 🥽️ The next `registerBrushMesh` this world surface owes the guest, or `None` when every resident
+/// mesh it names is already announced at the live revision.
+///
+/// This is family B of the parity run's behavioural diff: React's `World3dHost` mounts a
+/// `BrushMeshRegistrar` per loaded GLB per window and announces it to the puzzle guest, while the
+/// wgpu host dispatched nothing at all — so the guest's brush and volume-brush utilities had no
+/// collision geometry on this renderer (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w11a-prepared-world-mesh-missing.md` §6 family B).
+///
+/// Exactly ONE action leaves per call, and the frame drives one call per surface per frame, which is
+/// React's own back pressure (`drainPuzzle3dBrushMeshQueue` awaits each page's settle before it
+/// queues the next): a user action that lands mid-run ever queues behind one page, never behind a
+/// whole 72-command run.
+///
+/// The three shapes, in the order they are taken:
+///
+/// 1. an open page run advances by one page, and its LAST page confirms the identity;
+/// 2. an identity the process registry already holds — because a sibling window paged it, or a
+///    sibling id carries byte-identical geometry — is announced by `{url, digest}` alone;
+/// 3. anything else opens a page run over the resident lease's own bytes.
+pub fn step_world3d_brush_mesh_announce(state: &mut World3dState) -> Option<ActionDescriptor> {
+    if let Some(action) = world_brush_mesh_next_page(state) {
+        return Some(action);
+    }
+    let pending: Vec<(String, String)> = state
+        .mesh_source_urls
+        .iter()
+        .filter(|(mesh_key, _)| state.meshes.contains_key(mesh_key.as_str()))
+        .map(|(mesh_key, url)| (mesh_key.clone(), url.clone()))
+        .filter(|(_, url)| state.brush_mesh_announced.get(url) != Some(&world_brush_mesh_revision(url)))
+        .collect();
+    let (mesh_key, url) = pending.into_iter().min_by(|left, right| left.1.cmp(&right.1))?;
+    let revision = world_brush_mesh_revision(&url);
+    if let Some(digest) = with_world_brush_mesh_registry(|registry| registry.entries.get(&url).map(|entry| entry.digest.clone())).flatten() {
+        state.brush_mesh_announced.insert(url.clone(), revision);
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, json!({ "url": url, "digest": digest })) });
+    }
+    let mesh = state.meshes.get(&mesh_key).copied()?;
+    let Some((bytes, position_values)) = world_brush_mesh_payload(mesh) else {
+        state.brush_mesh_announced.insert(url, revision);
+        return None;
+    };
+    let digest = semio_framework_hash::hash_bytes(&bytes);
+    let aliasable = with_world_brush_mesh_registry(|registry| registry.holds_digest(&digest) && !registry.refused_alias.contains(&url)).unwrap_or(false);
+    if aliasable {
+        with_world_brush_mesh_registry(|registry| registry.entries.insert(url.clone(), WorldBrushMeshEntry { digest: digest.clone(), paged: false }));
+        state.brush_mesh_announced.insert(url.clone(), revision);
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, json!({ "url": url, "digest": digest })) });
+    }
+    let capacity = world_brush_mesh_page_capacity(&state.surface_id, &url, &digest);
+    let total_values = bytes.len() / 4;
+    let page_count = u32::try_from(total_values.div_ceil(capacity.max(1))).unwrap_or(u32::MAX);
+    if capacity == 0 || page_count == 0 || page_count > WORLD_BRUSH_MESH_MAX_PAGES {
+        state.brush_mesh_announced.insert(url, revision);
+        return None;
+    }
+    state.brush_mesh_run = Some(WorldBrushMeshRun { url, digest, bytes, position_values, capacity, page: 0, page_count, revision });
+    world_brush_mesh_next_page(state)
+}
+
+fn world_brush_mesh_next_page(state: &mut World3dState) -> Option<ActionDescriptor> {
+    let run = state.brush_mesh_run.as_mut()?;
+    if run.page >= run.page_count {
+        state.brush_mesh_run = None;
+        return None;
+    }
+    let start = (run.page as usize).saturating_mul(run.capacity);
+    let end = (run.bytes.len() / 4).min(start.saturating_add(run.capacity));
+    let positions = &run.bytes[start.min(run.position_values) * 4..end.min(run.position_values) * 4];
+    let indices = &run.bytes[start.max(run.position_values) * 4..end.max(run.position_values) * 4];
+    let mut page = json!({ "url": run.url, "digest": run.digest, "page": run.page, "pageCount": run.page_count });
+    if let Some(object) = page.as_object_mut() {
+        if !positions.is_empty() {
+            object.insert("positionsB64".into(), json!(base64_codec::base64_standard_encode(positions)));
+        }
+        if !indices.is_empty() {
+            object.insert("indicesB64".into(), json!(base64_codec::base64_standard_encode(indices)));
+        }
+    }
+    let action = ActionDescriptor { controller_id: state.controller_id.clone(), action: "registerBrushMesh".into(), args: world_brush_mesh_args(&state.surface_id, page) };
+    run.page = run.page.saturating_add(1);
+    if run.page == run.page_count {
+        let (url, digest, revision) = (run.url.clone(), run.digest.clone(), run.revision);
+        state.brush_mesh_run = None;
+        with_world_brush_mesh_registry(|registry| {
+            if registry.entries.len() < WORLD_BRUSH_MESH_REGISTRY_CAPACITY || registry.entries.contains_key(&url) {
+                registry.entries.insert(url.clone(), WorldBrushMeshEntry { digest, paged: true });
+            }
+        });
+        state.brush_mesh_announced.insert(url, revision);
+    }
+    Some(action)
+}
+
+/// 🥽️ Whether this surface still owes the guest a `registerBrushMesh` — the per-frame predicate the
+/// renderer's frame gate reads, so a surface mid-run keeps its own frames coming.
+pub fn world3d_brush_mesh_announce_pending(state: &World3dState) -> bool {
+    state.brush_mesh_run.is_some()
+        || state
+            .mesh_source_urls
+            .iter()
+            .any(|(mesh_key, url)| state.meshes.contains_key(mesh_key.as_str()) && state.brush_mesh_announced.get(url) != Some(&world_brush_mesh_revision(url)))
+}
+//#endregion 🥽️WorldBrushMeshAnnounce
 
 // 🌉️ Dead on every target: repo-wide grep found zero callers of `apply_reference_image_bytes`
 // (not even a test). Gated rather than deleted, to keep the diff minimal and reversible if a
@@ -13253,6 +14172,12 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🖱️pointer-gestures/🦀️.rs"]
 mod pointer_gesture_tests;
+
+/// 📜️ The ORDERED action journal one probe gesture publishes, against React's own measured
+/// sequences in `🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json`.
+#[cfg(test)]
+#[path = "🧪️tests/📜️journal-sequences/🦀️.rs"]
+mod journal_sequence_tests;
 
 /// 📇️ Which verbs a surface may emit, read from
 /// `🌐️World3dHost/🧫️fixtures/📇️surface-verbs.json` — the oracle its TypeScript twin answers too.

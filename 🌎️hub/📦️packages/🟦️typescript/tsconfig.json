@@ -21,6 +21,6 @@
       "@semio-tech/framework-os": ["../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "📤️dist", "📜️script.ts"]
+  "include": ["../../**/*.ts", "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts"],
+  "exclude": ["../../**/node_modules/**", "../../**/dist/**", "../../**/📤️dist/**", "../../**/🗑️generated/**", "../../**/🤖️generated/**"]
 }

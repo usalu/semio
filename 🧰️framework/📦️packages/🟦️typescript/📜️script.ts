@@ -2,7 +2,7 @@
 /** @emoji 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
@@ -356,6 +356,13 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
+class TypecheckScript extends BundleScript {
+  run(segments: string[]): void {
+    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -1,0 +1,184 @@
+//! 🎯️ LAWS: who owns a pointer — packet W12a of ticket 26/09/17/WGPU-RENDERER-REACT-PARITY.
+//!
+//! 🩸️ Eight steps of the parity journey pressed the shell's own chrome and ALSO reached the world
+//! pane painted under it: `panel-tool-runs`, `panel-chat`, `panel-chat-close`,
+//! `pane-chip-engagement-toggle`, `split-gutter-drag`, `window-cap-focus`, `window-cap-close` and
+//! `example-switch` each journalled an `interactionHover`/`interactionSelect` the React reference
+//! never emits, and the stray select carried EMPTY targets — so pressing a panel tab cleared the
+//! world selection (`📓️w11a-prepared-world-mesh-missing.md` §6 family A,
+//! `🗑️generated/w11a-parity-run-14/steps.json`). The cause is geometric: the shell paints its chrome
+//! INSIDE a pane's rect (the top-right panel's tabs at `+1380,57.6`, the pane chips at `+6.4,57.6`,
+//! both over `puzzle3d-main-*@…+3,54`), and the renderer routed a pointer by `bounds.contains`.
+//!
+//! ⚖️ React never has the question: its chrome is DOM elements ABOVE the `<canvas>`, so a click on
+//! chrome never reaches the canvas, a hover over chrome clears the canvas's hover, and the element a
+//! `pointerdown` resolved to owns the rest of the sequence. The wgpu target states that as
+//! [`ShellState::pointer_owner_at`] (the layers) and [`PointerCapture`] (the sequence), and the laws
+//! below drive the probe's exact gestures through both.
+
+use super::*;
+
+const WGPU_RENDERER_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+
+/// 🧾️ The eight leaking steps, each with the hit its press actually resolved to in run 14 — kind and
+/// control id as the live hit ledger published them (`steps.json`'s `detail.id`, and for the caps and
+/// the gutter the `os_host pointer hit` lines of `📓️w9c-behaviour-parity-run-2.md` §1.1 and §5).
+const CHROME_PRESS_STEPS: &[(&str, HitKind, &str)] = &[
+    ("panel-tool-runs", HitKind::PanelTab, "framework.panel.toolRun"),
+    ("panel-chat", HitKind::PanelTab, "framework.chat"),
+    ("panel-chat-close", HitKind::PanelTab, "framework.chat"),
+    ("pane-chip-engagement-toggle", HitKind::Toggle, "framework.window.puzzle3dMainTop.engagement.toggle"),
+    ("split-gutter-drag", HitKind::DockSplit, "dock.split..0"),
+    ("window-cap-focus", HitKind::Button, "dock.tab.0.puzzle3d-main-top.focus"),
+    ("window-cap-close", HitKind::Button, "dock.tab.0.puzzle3d-main-top.close"),
+    ("example-switch", HitKind::DropdownItem, "playground.navbar.fixture.option.1"),
+];
+
+fn hit(kind: HitKind, control_id: &str) -> HitTarget<ActionDescriptor> {
+    HitTarget::<ActionDescriptor> { rect: Rect::new(0.0, 54.0, 120.0, 22.4), event: None, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None }
+}
+
+/// 🖱️ The probe's own gesture, phase by phase: one move onto the target, a press, eight interpolated
+/// moves and a release (`🐍️parity-interact-probe.mjs`'s `drag`; its `click` is the same without the
+/// eight). `under_pointer` is what the moves travel over — a drag leaves the chrome it started on,
+/// which is exactly the case pointer capture exists for.
+fn sequence_owners(at_press: PointerHitOwner, under_pointer: PointerHitOwner) -> Vec<PointerHitOwner> {
+    let mut capture = PointerCapture::default();
+    let mut owners = vec![capture.owner_of_move(at_press)];
+    owners.push(capture.press(at_press));
+    for _ in 0..8 {
+        owners.push(capture.owner_of_move(under_pointer));
+    }
+    owners.push(capture.release());
+    owners
+}
+
+//#region 🎯️SequenceOwnership
+
+/// 🎯️ **The sequence law.** For every one of the eight leaking steps the chrome owns the press — and
+/// with it every move that follows and the release — so the world lane receives nothing at all. The
+/// gutter drag is the reason capture and not a per-point test: it starts on `dock.split..0` and its
+/// eight moves travel straight across the pane beside it.
+#[test]
+fn every_chrome_press_of_the_journey_owns_its_whole_pointer_sequence() {
+    for (step, kind, control_id) in CHROME_PRESS_STEPS {
+        let target = hit(*kind, control_id);
+        assert_eq!(ShellState::pointer_hit_owner(Some(&target)), PointerHitOwner::Chrome, "🎯️ {step}: {control_id} is chrome, not the pane painted under it");
+        let owners = sequence_owners(PointerHitOwner::Chrome, PointerHitOwner::Surface);
+        assert_eq!(owners.len(), 11, "🎯️ the probe's gesture is a move, a press, eight moves and a release");
+        assert!(owners.iter().all(|owner| *owner == PointerHitOwner::Chrome), "🎯️ {step}: every phase belongs to the chrome the press landed on: {owners:?}");
+    }
+}
+
+/// 🎯️ …and the converse, which is the same DOM rule read the other way: a press that landed on the
+/// SURFACE keeps the gesture there even where it sweeps over chrome, because three's `OrbitControls`
+/// calls `setPointerCapture` on the canvas (`node_modules/three/examples/jsm/controls/OrbitControls.js`,
+/// its `onPointerDown`). An orbit drag that passes under a panel must not stall.
+#[test]
+fn a_press_on_the_surface_keeps_the_gesture_on_it_and_releases_it_again() {
+    let owners = sequence_owners(PointerHitOwner::Surface, PointerHitOwner::Chrome);
+    assert!(owners.iter().all(|owner| *owner == PointerHitOwner::Surface), "🎯️ a captured surface gesture survives the chrome it travels over: {owners:?}");
+    let mut capture = PointerCapture::default();
+    capture.press(PointerHitOwner::Surface);
+    assert_eq!(capture.release(), PointerHitOwner::Surface);
+    assert_eq!(capture.holder(), None, "🎯️ the release ENDS the sequence");
+    assert_eq!(capture.owner_of_move(PointerHitOwner::Chrome), PointerHitOwner::Chrome, "🎯️ and the next move is answered by what is under the pointer again");
+    assert_eq!(PointerCapture::default().release(), PointerHitOwner::Surface, "🎯️ a release with no press before it — the pointer entered already down — is the surface's, as it is in the DOM");
+}
+
+/// 🌍️ The surface's own body, and a point that hits nothing, still belong to the scene: this is an
+/// ownership model, not a claim on everything.
+#[test]
+fn the_surface_body_and_the_empty_canvas_are_never_chrome() {
+    assert_eq!(ShellState::pointer_hit_owner(Some(&hit(HitKind::World3d, "puzzle3d-main-perspective"))), PointerHitOwner::Surface);
+    assert_eq!(ShellState::pointer_hit_owner(Some(&hit(HitKind::Generic, "puzzle3d-main-perspective.node.7"))), PointerHitOwner::Surface, "🌍️ a scene's own per-element target is the scene's");
+    assert_eq!(ShellState::pointer_hit_owner(None), PointerHitOwner::Surface);
+    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "🌍️ the bool this replaces answers the same");
+}
+
+//#endregion 🎯️SequenceOwnership
+
+//#region 🚧️OverlayLayers
+
+/// 🚧️ **The modal law.** A menu, a dropdown, a dialog and the tour are React overlays with their own
+/// backdrop: while one is open NO pointer reaches the canvas, wherever it lands — including the point
+/// beside the menu, which registers no hit of its own and used to fall straight through to the world.
+#[test]
+fn an_open_overlay_owns_every_pointer_until_it_closes() {
+    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let theme = Theme::light();
+    let input = InputState::<ActionDescriptor>::default();
+    assert!(!shell.pointer_input_is_modal(), "🚧️ a shell with no overlay open is not modal");
+    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Surface);
+
+    shell.context_menu = Some(ContextMenuState::default());
+    assert!(shell.pointer_input_is_modal(), "🚧️ an open context menu is modal");
+    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "🚧️ even where the menu paints nothing");
+    assert!(!shell.wheel_reaches_scene_surface(400.0, 400.0, &input, &theme), "🚧️ and a wheel notch over it never zooms the world");
+    shell.context_menu = None;
+
+    shell.open_selects.insert("playground.navbar.fixture".into(), true);
+    assert!(shell.pointer_input_is_modal(), "🚧️ an open dropdown is modal — `example-switch` presses its option list");
+    shell.open_selects.clear();
+
+    shell.chrome_build.start_introduction();
+    assert!(shell.pointer_input_is_modal(), "🚧️ the tour owns every pointer it covers while it plays");
+    shell.chrome_build.skip_introduction();
+    assert!(!shell.pointer_input_is_modal());
+}
+
+/// 📑️ **The panel-box law.** An open anchored panel is an opaque LAYER, not a set of controls: its
+/// padding, the gaps between its tree rows and the empty space under the last one register no hit at
+/// all, and every one of those points is over the pane the panel floats on. React's panel is a DOM
+/// element, so the canvas beneath it receives nothing anywhere inside its box.
+#[test]
+fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
+    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let theme = Theme::light();
+    let input = InputState::<ActionDescriptor>::default();
+    shell.screen_w = 1594.0;
+    shell.screen_h = 936.0;
+    let body = shell.body_rect(&theme);
+    let centre = [body.x + body.w / 2.0, body.y + body.h / 2.0];
+    assert_eq!(shell.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Surface, "📑️ with every anchor folded the body is the pane's");
+
+    *shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft) = vec![DockTabNode::leaf("framework.panel.artifact", "Artifact", "circle-dot", 0)];
+    shell.anchor_state_mut(PanelAnchor::TopLeft).visible = true;
+    assert!(shell.anchor_open(PanelAnchor::TopLeft), "📑️ the anchor paints a panel now");
+    let panel = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    let inside = [panel.x + panel.w / 2.0, panel.y + panel.h / 2.0];
+    assert!(shell.pointer_is_over_open_panel(inside[0], inside[1], &theme));
+    assert_eq!(shell.pointer_owner_at(inside[0], inside[1], &input, &theme), PointerHitOwner::Chrome, "📑️ a point inside the panel's box is the panel's, hit row or no hit row");
+    assert!(!shell.wheel_reaches_scene_surface(inside[0], inside[1], &input, &theme), "📑️ and the wheel scrolls the panel, never the world under it");
+    let outside = [body.x + body.w - 4.0, body.y + body.h - 4.0];
+    assert!(!shell.pointer_is_over_open_panel(outside[0], outside[1], &theme), "📑️ the pane beside the panel still owns its own points");
+    assert_eq!(shell.pointer_owner_at(outside[0], outside[1], &input, &theme), PointerHitOwner::Surface);
+}
+
+//#endregion 🚧️OverlayLayers
+
+//#region 🧊️RendererIngress
+
+/// 🧊️ **The wiring law.** One predicate, asked by the renderer's own ingress — a routing rule nothing
+/// calls is exactly the shape every defect in this family had (`📓️w9b` §1: the predicate existed and
+/// the press path never reached it; `📓️w9c` §5: the gutter was hit-tested and the shell never saw the
+/// press). The press resolves the capture, the move asks it before it may enqueue a world intent, and
+/// a move the chrome owns hands the surface a LEAVE instead.
+#[test]
+fn the_renderer_ingress_routes_every_pointer_phase_through_the_capture() {
+    let press = "let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };";
+    let claim = "let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));";
+    let moves = "let chrome_owns_pointer = self.pointer_capture.owner_of_move(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) == PointerHitOwner::Chrome;";
+    let leave = "WorldInteractionIntent::pointer_leave(x, y)";
+    let wheel = "let propagates = interaction.shell.wheel_reaches_scene_surface(x, y, &interaction.input, &interaction.theme);";
+    let press_at = WGPU_RENDERER_SOURCE.find(press).expect("🧊️ the press path resolves the pointer's owner through the capture");
+    let claim_at = WGPU_RENDERER_SOURCE[press_at..].find(claim).expect("🧊️ the world3d claim follows it");
+    assert!(claim_at > 0, "🧊️ the ownership question is asked BEFORE any surface may claim the press");
+    let moves_at = WGPU_RENDERER_SOURCE.find(moves).expect("🧊️ the move path asks the capture");
+    let leave_at = WGPU_RENDERER_SOURCE[moves_at..].find(leave).expect("🧊️ and answers a chrome-owned move with a leave");
+    assert!(leave_at > 0);
+    assert!(WGPU_RENDERER_SOURCE.contains(wheel), "🧊️ the wheel is gated by the same ownership answer");
+    assert!(!WGPU_RENDERER_SOURCE.contains("if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {"), "🧊️ and the per-press predicate it replaces is GONE, not left beside it");
+}
+
+//#endregion 🧊️RendererIngress

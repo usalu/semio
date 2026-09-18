@@ -1063,3 +1063,52 @@ mod long {
         assert!(max_err < 0.01 * orbit_radius, "post-loop-closure drift {max_err} exceeds 1% of orbit radius ({})", 0.01 * orbit_radius);
     }
 }
+
+/// ⏱️ Diagnostic (`#[ignore]`): the cost split of one pair-verification unit — a two-hypothesis
+/// five-point batch against a one-round polish — on a 200-correspondence pair with 35 % outliers,
+/// as the minimum and median over repetitions (the minimum is the number the host's load cannot
+/// inflate).
+#[test]
+#[ignore = "timing diagnostic; run explicitly"]
+fn diagnose_pair_verification_unit_cost_split() {
+    let scene = synthetic_scene(10, 8, 260, false);
+    let obs = project_observations(&scene, 0.5, 0.35, 11);
+    let mut by_point: CorrByPoint = HashMap::new();
+    for o in &obs {
+        let entry = by_point.entry(o.point_index).or_insert((None, None));
+        if o.camera_index == 0 {
+            entry.0 = Some(o.pixel);
+        } else if o.camera_index == 1 {
+            entry.1 = Some(o.pixel);
+        }
+    }
+    let mut point_ids: Vec<usize> = by_point.keys().copied().collect();
+    point_ids.sort_unstable();
+    let corr: Vec<([f64; 2], [f64; 2])> = point_ids.iter().filter_map(|pid| by_point[pid].0.zip(by_point[pid].1)).collect();
+    let (intr0, _) = &scene.cameras[0];
+    let threshold = 1.0 / intr0.fx.max(intr0.fy);
+    let mut draws = Vec::new();
+    let mut polishes = Vec::new();
+    let mut polished_inliers = Vec::new();
+    for seed in 0..64u64 {
+        let started = std::time::Instant::now();
+        let candidate = estimate_essential_five_point_bounded(&corr, intr0, intr0, threshold, seed, 2, 0);
+        draws.push(started.elapsed());
+        let Some(candidate) = candidate else { continue };
+        let started = std::time::Instant::now();
+        let raw_inliers = candidate.inliers.len();
+        let polished = polish_essential(candidate, &corr, intr0, threshold);
+        polishes.push(started.elapsed());
+        polished_inliers.push(polished.inliers.len());
+        if polished.inliers.len() > 20 {
+            let started = std::time::Instant::now();
+            let again = polish_essential(polished.clone(), &corr, intr0, threshold);
+            println!("[COST] polish of a true model: raw inliers {raw_inliers} → {} in {:?}; re-polish from {} inliers {:?}", polished.inliers.len(), polishes[polishes.len() - 1], polished.inliers.len(), started.elapsed());
+            let _ = again;
+        }
+    }
+    draws.sort();
+    polishes.sort();
+    println!("[COST] {} correspondences; two-hypothesis batch min {:?} median {:?} max {:?}", corr.len(), draws[0], draws[draws.len() / 2], draws[draws.len() - 1]);
+    println!("[COST] one-round polish min {:?} median {:?} max {:?}; polished inliers {:?}", polishes[0], polishes[polishes.len() / 2], polishes[polishes.len() - 1], polished_inliers);
+}

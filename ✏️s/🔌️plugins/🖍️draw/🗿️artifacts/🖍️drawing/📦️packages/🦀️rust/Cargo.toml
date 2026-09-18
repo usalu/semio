@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-drawing"] }
 semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
 fsm = { path = "../../../../🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
 semio_s_2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", package = "semio-framework-2d" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -33,6 +34,7 @@ base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/�
 semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [dev-dependencies]
+semio-s-artifact-stdio-pdf = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
 semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }

@@ -30,8 +30,8 @@ func binaryPath(repoRoot string) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(binary), 0o755); err != nil {
 		return "", err
 	}
-	build := exec.Command("go", "build", "-o", binary, ".")
-	build.Dir = filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔌️mcp", "📦️packages", "🐹️go", "🚀️bin")
+	build := exec.Command("bun", "./📜️script.ts", "build")
+	build.Dir = filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "🔌️mcp")
 	build.Env = append(os.Environ(), "GOWORK="+filepath.Join(repoRoot, "go.work"), "GOFLAGS=")
 	if output, err := build.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("build semio-repo-mcp: %v: %s", err, output)

@@ -8,9 +8,8 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "types": ["node"],
-    "rootDir": "../..",
     "resolveJsonModule": true
   },
-  "include": ["🟦️.ts", "../../🔍️discovery/**/*.ts", "../../🗂️workspaces/**/*.ts"],
-  "exclude": ["📜️script.ts"]
+  "include": ["**/*.ts", "../../**/*.ts"],
+  "exclude": ["**/node_modules/**", "../../**/node_modules/**", "../../**/dist/**", "../../**/📤️dist/**", "../../**/🗑️generated/**", "../../**/🤖️generated/**"]
 }

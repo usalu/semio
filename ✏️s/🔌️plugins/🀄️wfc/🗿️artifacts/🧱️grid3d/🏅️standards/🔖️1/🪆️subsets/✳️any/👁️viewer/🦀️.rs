@@ -44,6 +44,46 @@ impl ArtifactViewer for Grid3dViewer {
     const DIALECT: Dialect = WFC_GRID3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;
 
+    /// 🗃️♻️ The same owned-store declaration the editor carries: the instance close ladder walks one
+    /// store lane per stage and faults the whole close with `interactive-job.close-owned-disposer-missing`
+    /// (or, one layer down, `artifact store has no owner-supplied bounded disposer`) the moment a lane
+    /// answers `None`. A viewer never edits these stores, but it still owns and must release them.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     /// 👁️ The viewer opens on the subset's own committed default example, exactly as the editor does
     /// — one scene, two surfaces, so a boot `setActiveExample` never finds a different document here.
     fn initial_snapshot() -> Grid3dSnapshot {

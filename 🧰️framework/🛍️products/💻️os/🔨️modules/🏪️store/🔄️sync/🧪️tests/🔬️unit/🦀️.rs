@@ -337,6 +337,7 @@ async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBo
     ensure_demo_codec_registered().await;
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None);
     let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
+    drop(envelope.into_owners());
     let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
     let pack_schema_hash = crate::os_store::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
     let bootstrap = ArtifactBootstrap {
@@ -608,6 +609,95 @@ async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_c
     assert_eq!(pending_required, None);
     assert_eq!(resume.as_deref(), Some("resume-bootstrap"));
     assert!(matches!(remote_state, RemoteState::Live { .. }));
+}
+
+/// 🚏️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — the document socket's bootstrap
+/// ORDER as a law, not just its frame shapes. A hub that relayed a command tail before the snapshot it
+/// rebases on would hand the client envelopes against a document it has never seen, so `on_hub_frame`
+/// refuses a `Commands` frame while an artifact bootstrap is still in flight: nothing is installed, the
+/// refusal is emitted as an `artifactBootstrap` conflict, and the connection drops to reconnect rather
+/// than diverging in silence. The same frame after `ArtifactBootstrapDone` is accepted, which is what
+/// makes this an ordering law and not a blanket rejection.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snapshot() {
+    use crate::os_store::Backbone;
+    async fn ordered_actor(uri: &str) -> (native_actor::ArtifactActor, ChannelBackbone, broadcast::Receiver<ArtifactEvent>) {
+        let (channel, remote) = ChannelBackbone::pair(uri).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, event_receiver) = broadcast::channel(32);
+        let actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-order-test".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        (actor, channel, event_receiver)
+    }
+
+    let (_, pair) = demo_artifact_bootstrap(true).await;
+    let (mut bootstrap, _) = demo_artifact_bootstrap(false).await;
+    let required = bootstrap.required_tail_frontier.clone();
+    let mut combined = pair.pack.clone();
+    combined.extend_from_slice(&pair.spr);
+    let chunk_size = combined.len().div_ceil(3);
+    let chunks: Vec<Vec<u8>> = combined.chunks(chunk_size).map(<[u8]>::to_vec).collect();
+    bootstrap.chunk_count = chunks.len() as u32;
+    let descriptor_hash = bootstrap.descriptor_hash;
+    let welcome = ServerFrame::Welcome {
+        session_id: "session-order".into(),
+        resume_token: "resume-order".into(),
+        server_frontier: required.clone(),
+        bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap.clone())),
+    };
+    let tail = || ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-order-test".into()), frontier: required.clone() };
+
+    let (mut early, _early_channel, mut early_events) = ordered_actor("native-bootstrap-order-early").await;
+    early.inject_hub_frame(welcome).await;
+    early.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") }).await;
+    early.inject_hub_frame(tail()).await;
+    let (early_pack, early_spr, early_frontier, _, _, _, early_remote_state, _) = early.bootstrap_test_state();
+    assert_eq!(early_pack, None, "a tail before the snapshot installs nothing");
+    assert_eq!(early_spr, None, "a tail before the snapshot installs nothing");
+    assert_eq!(early_frontier, None, "and never advances the client's view of the server frontier");
+    assert!(!matches!(early_remote_state, RemoteState::Live { .. }), "an out-of-order bootstrap must not read as a live session");
+    let mut refusal = None;
+    while let Ok(event) = early_events.try_recv() {
+        if let ArtifactEvent::Conflict(message) = event {
+            refusal = Some(message);
+        }
+    }
+    let refusal = refusal.expect("the refusal is emitted, never swallowed");
+    assert_eq!(refusal.code.0, "artifactBootstrap");
+    assert!(refusal.message.contains("tail arrived before artifact bootstrap completion"), "the refusal names the order it enforced: {}", refusal.message);
+
+    let (mut ordered, mut ordered_channel, _ordered_events) = ordered_actor("native-bootstrap-order-ok").await;
+    ordered
+        .inject_hub_frame(ServerFrame::Welcome {
+            session_id: "session-order".into(),
+            resume_token: "resume-order".into(),
+            server_frontier: required.clone(),
+            bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)),
+        })
+        .await;
+    for (index, chunk) in chunks.iter().enumerate() {
+        ordered.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: index as u32, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(chunk).expect("bounded chunk") }).await;
+    }
+    ordered.inject_hub_frame(ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count: chunks.len() as u32 }).await;
+    let _ = ordered_channel.receive().await.expect("installed messages");
+    ordered.inject_hub_frame(tail()).await;
+    let (ordered_pack, ordered_spr, ordered_frontier, ordered_pending, _, _, ordered_remote_state, _) = ordered.bootstrap_test_state();
+    assert_eq!(ordered_pack, Some(pair.pack), "the same tail AFTER the snapshot is accepted");
+    assert_eq!(ordered_spr, Some(pair.spr));
+    assert_eq!(ordered_frontier, Some(required));
+    assert_eq!(ordered_pending, None);
+    assert!(matches!(ordered_remote_state, RemoteState::Live { .. }));
 }
 
 async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {

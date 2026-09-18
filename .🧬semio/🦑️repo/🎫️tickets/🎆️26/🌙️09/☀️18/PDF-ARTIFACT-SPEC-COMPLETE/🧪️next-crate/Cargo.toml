@@ -1,0 +1,22 @@
+# 🧪️ Own-workspace scaffold: compiles the in-flight PDF engine (untracked 🔨️modules + the next
+# snapshot model) without touching the repo workspace or the crate peers build. Deleted when the
+# refactor lands. Never a production target.
+[workspace]
+
+[package]
+name = "pdf-next-scaffold"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework-hash = { path = "../../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-deflate = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust" }
+serde_json = "1"

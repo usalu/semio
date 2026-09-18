@@ -1,0 +1,4 @@
+# 🌅️ Direct set-shading GraphQL payload.
+input SetShadingMutationInput {
+  shading: PdfShadingInput
+}

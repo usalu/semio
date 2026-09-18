@@ -45,6 +45,58 @@ pub fn definition() -> WindowKindDefinition {
 }
 //#endregion 🔖️Definition
 
+
+//#region 🔭️Fit
+/// 🔭️ How wide the whole board is drawn in canvas world units. Slot coordinates are authored in
+/// DOMAIN units (a corridor two units wide), which at camera zoom 1 would be two PIXELS — the board
+/// rendered as an unreadable speck at the pane centre. The projection below scales the document's own
+/// bounds onto this box around the world origin, so every example fills the pane at the default
+/// camera whatever units it was authored in.
+const WFC_2D_PREVIEW_EXTENT: f64 = 640.0;
+
+/// 🔭️ The similarity transform `WFC_2D_PREVIEW_EXTENT` implies for one document — uniform, so tile
+/// media never stretches, and centred, so the board sits under the default camera.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Wfc2dPreviewFit {
+    pub scale: f64,
+    pub offset_x: f64,
+    pub offset_y: f64,
+}
+
+impl Wfc2dPreviewFit {
+    pub fn x(&self, value: f64) -> f64 {
+        value * self.scale + self.offset_x
+    }
+    pub fn y(&self, value: f64) -> f64 {
+        value * self.scale + self.offset_y
+    }
+}
+
+/// 🔭️ The fit a document's slot rectangles imply; an empty board keeps the identity transform.
+pub fn preview_fit(document: &Wfc2dSnapshot) -> Wfc2dPreviewFit {
+    let identity = Wfc2dPreviewFit { scale: 1.0, offset_x: 0.0, offset_y: 0.0 };
+    let Some(first) = document.slots.first() else { return identity };
+    let (mut min_x, mut min_y, mut max_x, mut max_y) = (first.x, first.y, first.x + first.width, first.y + first.height);
+    for slot in &document.slots {
+        min_x = min_x.min(slot.x);
+        min_y = min_y.min(slot.y);
+        max_x = max_x.max(slot.x + slot.width);
+        max_y = max_y.max(slot.y + slot.height);
+    }
+    let extent = (max_x - min_x).max(max_y - min_y);
+    if !extent.is_finite() || extent <= f64::EPSILON {
+        return identity;
+    }
+    let scale = WFC_2D_PREVIEW_EXTENT / extent;
+    Wfc2dPreviewFit { scale, offset_x: -(min_x + max_x) / 2.0 * scale, offset_y: -(min_y + max_y) / 2.0 * scale }
+}
+
+/// 🔭️ One slot as the canvas draws it — the same rectangle through `preview_fit`.
+fn fitted_slot(slot: &crate::schema::snapshot::Wfc2dSlot, fit: Wfc2dPreviewFit) -> crate::schema::snapshot::Wfc2dSlot {
+    crate::schema::snapshot::Wfc2dSlot { id: slot.id.clone(), x: fit.x(slot.x), y: fit.y(slot.y), width: slot.width * fit.scale, height: slot.height * fit.scale, pinned_tile_id: slot.pinned_tile_id.clone() }
+}
+//#endregion 🔭️Fit
+
 //#region 🔖️Paint
 fn rgba(color: &Wfc2dColor) -> String {
     format!("[{:.4},{:.4},{:.4},{:.4}]", f64::from(color.r) / 255.0, f64::from(color.g) / 255.0, f64::from(color.b) / 255.0, f64::from(color.a) / 255.0)
@@ -134,11 +186,12 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
 
 /// 🖼️ The whole board's layer array — one entry per slot, in document order.
 pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient) -> String {
+    let fit = preview_fit(document);
     let mut layers: Vec<String> = Vec::new();
     for slot in &document.slots {
         let tile_id = assigned_tile(transient, &slot.id).map(str::to_string).or_else(|| slot.pinned_tile_id.clone());
         let tile = tile_id.and_then(|id| document.tiles.iter().find(|tile| tile.id == id));
-        slot_layers(slot, tile, &mut layers);
+        slot_layers(&fitted_slot(slot, fit), tile, &mut layers);
     }
     format!("[{}]", layers.join(","))
 }

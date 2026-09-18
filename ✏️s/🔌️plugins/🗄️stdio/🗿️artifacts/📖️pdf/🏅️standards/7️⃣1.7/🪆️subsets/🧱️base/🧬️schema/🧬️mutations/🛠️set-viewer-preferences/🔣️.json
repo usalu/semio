@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🛠️set-viewer-preferences",
+  "semanticKind": "set-viewer-preferences",
+  "displayName": "Set Viewer Preferences",
+  "emoji": "🛠️",
+  "aggregateVariant": "SetViewerPreferences",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-viewer-preferences",
+  "binaryTag": 51,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

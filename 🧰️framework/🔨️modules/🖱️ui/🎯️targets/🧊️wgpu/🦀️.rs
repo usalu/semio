@@ -357,8 +357,9 @@ pub use kernel_3d_scene::{
     Vec3Math, WORLD_FRAME_BOUNDS_MARGIN,
 };
 pub use kernel_3d_scene::{
-    adaptive_orbit_camera_far, camera_grid_visible_radius, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance, world_projection_ortho_zoom, CameraProjection3d,
-    WORLD_LOD_REFERENCE_FOV_DEG, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_ORBIT_CAMERA_NEAR, WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, WORLD_PROJECTION_FRAME_PADDING,
+    adaptive_orbit_camera_far, camera_grid_visible_radius, frame_projection_orbit_to_bounds, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance,
+    world_projection_ortho_zoom, world_projection_view_half_extent, CameraProjection3d, WorldCardinalView, WorldProjectionOrientation, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_ORBIT_CAMERA_NEAR,
+    WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, WORLD_PROJECTION_FRAME_PADDING,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};

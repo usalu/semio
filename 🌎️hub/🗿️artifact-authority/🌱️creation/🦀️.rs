@@ -61,7 +61,7 @@ impl ValidatingCanonicalArtifactAuthority<std::sync::Arc<super::trusted_catalog:
 async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, request: ArtifactGenesisRequest, identity: TrustedArtifactIdentity, dialect: ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactGenesisCandidate, AuthorityError> where C::Codec: TrustedArtifactGenesisCodec {
         context.checkpoint()?;
         let target = directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationReadyV1 {
-            document_id: request.scope.document_id.clone(), kind_id: identity.artifact_kind.clone(), artifact_schema: identity.artifact_schema.clone(),
+            artifact_id: request.scope.document_id.clone(), kind_id: identity.artifact_kind.clone(), artifact_schema: identity.artifact_schema.clone(),
             parent_dialect: directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationDialectV1 { artifact_kind: dialect.artifact_kind.clone(), standard: dialect.standard.clone(), subset: dialect.subset.clone() },
         };
         if !target.validate() || request.scope.space_id.is_empty() || request.scope.space_id.len() > 256 || request.scope.space_id.chars().any(char::is_control) {

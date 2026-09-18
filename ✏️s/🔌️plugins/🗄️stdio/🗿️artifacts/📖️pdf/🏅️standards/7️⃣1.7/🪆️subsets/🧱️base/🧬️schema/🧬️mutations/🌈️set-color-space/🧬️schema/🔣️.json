@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-color-space/schema.json",
+  "title": "SetColorSpace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "colorSpace"
+  ],
+  "properties": {
+    "colorSpace": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedColorSpace"
+    },
+    "mutation": {
+      "const": "setColorSpace",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

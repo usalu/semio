@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📋️set-acro-form",
+  "semanticKind": "set-acro-form",
+  "displayName": "Set Acro Form",
+  "emoji": "📋️",
+  "aggregateVariant": "SetAcroForm",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-acro-form",
+  "binaryTag": 47,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

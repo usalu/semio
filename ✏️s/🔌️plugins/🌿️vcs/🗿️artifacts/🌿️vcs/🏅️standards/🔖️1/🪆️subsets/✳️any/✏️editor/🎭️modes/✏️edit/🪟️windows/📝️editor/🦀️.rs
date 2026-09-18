@@ -4,7 +4,7 @@ use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_node_list, vcs_action};
 use crate::VcsSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::{built_text_node, Buildable, BuiltNode, HasBase, HasChildren, Label, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const VCS_PLAY_WINDOW_EDITOR: &str = "vcs-editor";
@@ -49,8 +49,12 @@ fn editor_text(label: ui::Label) -> UiAssemblyResult<BuiltNode> {
     ui::text(label).try_build().map_err(|_| ui_error("vcs editor text admission failed"))
 }
 
-fn editor_data_text(value: String) -> UiAssemblyResult<BuiltNode> {
-    built_text_node(Label::data(value)).map_err(|_| ui_error("vcs editor data text admission failed"))
+/// 🔑️ Every runtime-data text row carries its own id: `try_build` stamps an unkeyed node `"#0"` and
+/// `try_child` re-keys only EMPTY keys, so two unkeyed siblings under one parent collide as
+/// `DuplicateSiblingKey` and the whole surface refuses to render.
+fn editor_data_text(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
+    let builder = ui::text(data_label(value)?).try_id(format!("vcs-play-editor.{id}")).map_err(|_| ui_error("vcs editor data text id admission failed"))?;
+    builder.try_build().map_err(|_| ui_error("vcs editor data text admission failed"))
 }
 
 fn editor_row(id: &str, children: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<BuiltNode> {
@@ -80,7 +84,7 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiAssemblyRes
         editor_row("vcs-play-editor.commit-row", [editor_button("commit", "git-commit", ui_fixed_label(labels.commit)?, "commitCheckpoint"), editor_button("new-alternative", "git-branch", ui_fixed_label(labels.branch)?, "createAlternative")])?;
     let history_row = editor_row("vcs-play-editor.history-row", [editor_button("undo", "undo", ui_fixed_label(labels.undo)?, "undo"), editor_button("redo", "redo", ui_fixed_label(labels.redo)?, "redo")])?;
     let summary_children =
-        ui_node_list([editor_data_text(format!("{} · {} {}", projection.title, labels.counter.as_str(), projection.counter)), editor_data_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() })])?;
+        ui_node_list([editor_data_text("summary-title", format!("{} · {} {}", projection.title, labels.counter.as_str(), projection.counter)), editor_data_text("summary-notes", if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() })])?;
     let summary = ui::column().try_id("vcs-play-editor.summary").map_err(|_| ui_error("vcs editor summary id admission failed"))?;
     let summary = summary.try_children(summary_children).map_err(|_| ui_error("vcs editor summary children admission failed"))?.try_build().map_err(|_| ui_error("vcs editor summary admission failed"))?;
     let root_children = ui_node_list([Ok(heading), Ok(increment_row), Ok(commit_row), Ok(history_row), Ok(summary)])?;

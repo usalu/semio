@@ -116,7 +116,7 @@
     "InferenceBindingIdentityV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["digest", "catalogGenerationId", "packageId", "packageVersion", "componentSha256", "componentBlake3", "artifactKind", "documentSchema", "parentDialect", "surfaceId", "grantedMode", "serviceId", "serviceVersion", "algorithmVersion"],
+      "required": ["digest", "catalogGenerationId", "packageId", "packageVersion", "componentSha256", "componentBlake3", "artifactKind", "artifactSchema", "parentDialect", "surfaceId", "grantedMode", "serviceId", "serviceVersion", "algorithmVersion"],
       "properties": {
         "digest": { "$ref": "#/$defs/hash" },
         "catalogGenerationId": { "$ref": "#/$defs/hash" },
@@ -125,7 +125,7 @@
         "componentSha256": { "$ref": "#/$defs/hash" },
         "componentBlake3": { "$ref": "#/$defs/hash" },
         "artifactKind": { "const": "s.gis.gismap" },
-        "documentSchema": { "const": "gis.map" },
+        "artifactSchema": { "const": "gis.map" },
         "parentDialect": { "$ref": "#/$defs/InferenceParentDialectV1" },
         "surfaceId": { "const": "s.gis.gismap@1/*#editor" },
         "grantedMode": { "const": "read-write-observe" },
@@ -540,15 +540,13 @@
     "InferenceCatalogServiceV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["owner", "contributor", "artifactKind", "artifactSchema", "artifactSchemaVersion", "documentSchema", "documentSchemaVersion", "inferenceSchema", "inferenceSchemaVersion", "algorithmVersion", "policyVersion", "dependsOn"],
+      "required": ["owner", "contributor", "artifactKind", "artifactSchema", "artifactSchemaVersion", "inferenceSchema", "inferenceSchemaVersion", "algorithmVersion", "policyVersion", "dependsOn"],
       "properties": {
         "owner": { "const": "gis" },
         "contributor": { "const": "gis" },
         "artifactKind": { "const": "s.gis.gismap" },
         "artifactSchema": { "const": "s.gis.gismap" },
         "artifactSchemaVersion": { "const": 1 },
-        "documentSchema": { "const": "gis.map" },
-        "documentSchemaVersion": { "const": 1 },
         "inferenceSchema": { "const": "s.gis.gismap.inference" },
         "inferenceSchemaVersion": { "const": 1 },
         "algorithmVersion": { "const": 1 },
@@ -579,7 +577,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["appChannelVersion"],
-      "properties": { "appChannelVersion": { "const": 15 } }
+      "properties": { "appChannelVersion": { "const": 17 } }
     },
 
     "GisMapFrozenPackageV1": {

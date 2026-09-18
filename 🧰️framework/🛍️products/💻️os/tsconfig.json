@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "tsBuildInfoFile": "../../../node_modules/.cache/tsconfig.os.tsbuildinfo",
+    "types": ["node", "react", "react-dom", "vite/client"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/storybook-static/**",
+    "**/target/**",
+    "🔨️modules/🧑‍💻dev/🧩️extension-modules/**",
+    "🔨️modules/🧑‍💻dev/🔌️plugin-modules/**",
+    "🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/**"
+  ]
+}

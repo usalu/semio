@@ -2,7 +2,7 @@
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -683,8 +683,16 @@ class ColdArtifactPairBrowserCheckScript extends BundleScript {
   }
 }
 
+/** 🩺️ Type-checks every `💻️os` TypeScript source against the product-scoped `tsconfig.json`. */
+class TypecheckScript extends BundleScript {
+  run(segments: string[]): void {
+    runBunx(["tsc", "--noEmit", "-p", "../../tsconfig.json", ...segments], this.root);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
+  .register("typecheck", TypecheckScript)
   .register("generate-wgpu", GenerateWgpuScript)
   .register("check-wgpu", CheckWgpuScript)
   .register("preview-generated", PreviewGeneratedScript)

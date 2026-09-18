@@ -154,6 +154,12 @@
           "lanes": [
             "window-transient"
           ]
+        },
+        {
+          "id": "exportDocument",
+          "lanes": [
+            "host-only"
+          ]
         }
       ],
       "laws": {

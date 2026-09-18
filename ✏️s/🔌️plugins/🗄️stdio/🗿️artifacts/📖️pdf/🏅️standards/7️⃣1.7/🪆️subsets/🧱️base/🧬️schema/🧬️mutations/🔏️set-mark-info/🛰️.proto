@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_mark_info;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🔏️ Direct set-mark-info protobuf payload.
+message SetMarkInfoMutation {
+  PdfMarkInfo info = 1;
+}

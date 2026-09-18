@@ -5,10 +5,18 @@ schema stdio.pdf.1.7.op
 start record
 
 # Exact binary op frame: format byte, direct-owner tag, payload length, then canonical aggregate
-# JSON. `tag` is the `PdfMutation` direct-owner ordinal, exactly 0-15: InsertPage, RemovePage, SetPageMediaBox,
-# SetPageCropBox, AppendPageContent, SetInfo, InsertObject, RemoveObject, SetObjectValue,
-# SetDictEntry, RemoveDictEntry, SetTrailerEntry, RemoveTrailerEntry, MovePage, SetPageContent,
-# SetPageRotation.
+# JSON. `tag` is the `PdfMutation` direct-owner ordinal, exactly 0-59 in declaration order:
+# InsertPage, RemovePage, SetPageMediaBox, SetPageCropBox, AppendPageContent, SetInfo,
+# InsertObject, RemoveObject, SetObjectValue, SetDictEntry, RemoveDictEntry, SetTrailerEntry,
+# RemoveTrailerEntry, MovePage, SetPageContent, SetPageRotation, SetPageBox, SetPageUserUnit,
+# InsertContent, RemoveContent, ReplaceContent, InsertAnnotation, RemoveAnnotation,
+# SetAnnotation, SetFont, RemoveFont, SetImage, RemoveImage, SetForm, RemoveForm,
+# SetExtGState, RemoveExtGState, SetShading, RemoveShading, SetPattern, RemovePattern,
+# SetColorSpace, RemoveColorSpace, SetProperties, RemoveProperties, SetEmbeddedFile,
+# RemoveEmbeddedFile, SetOutlines, SetNamedDestination, RemoveNamedDestination, SetPageLabels,
+# SetOutputIntents, SetAcroForm, SetOptionalContent, SetPageLayout, SetPageMode,
+# SetViewerPreferences, SetOpenAction, SetLanguage, SetMarkInfo, SetMetadata, SetDocumentId,
+# SetEncryption, SetCatalogEntry, RemoveCatalogEntry
 #
 # The schema-derived JSON tail retains recursive PDF values without duplicating their grammar.
 framing record

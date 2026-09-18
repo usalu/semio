@@ -10,7 +10,7 @@
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    engagement_submit, export_document, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::modes::edit;
 use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
@@ -149,6 +149,7 @@ semio_framework_plugin::app_commands! {
         "canvasDoubleClick" as "canvas-double-click" => canvas_double_click::CanvasDoubleClick,
         "canvasCommitDraft" as "canvas-commit-draft" => canvas_commit_draft::CanvasCommitDraft,
         "canvasEscape" as "canvas-escape" => canvas_escape::CanvasEscape,
+        "exportDocument" as "export-document" => export_document::ExportDocument,
     }
 }
 
@@ -263,6 +264,7 @@ mod args_bridge {
             "setSelectedOpacity" => DrawingCommand::SetSelectedOpacity(decode(action, plain())?),
             "engagementSubmit" => DrawingCommand::EngagementSubmit(decode(action, plain())?),
             "addLayer" => DrawingCommand::AddLayer(decode(action, default_key(plain(), "kind", "path"))?),
+            "exportDocument" => DrawingCommand::ExportDocument(decode(action, default_key(plain(), "format", export_document::DEFAULT_EXPORT_FORMAT))?),
             "dropLayerKind" => DrawingCommand::DropLayerKind(decode(action, plain())?),
             "moveLayer" => DrawingCommand::MoveLayer(decode(action, plain())?),
             "deleteLayer" => DrawingCommand::DeleteLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
@@ -297,6 +299,8 @@ mod args_bridge {
             let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"camera":{"x":1,"y":2,"zoom":1.5}}"#).expect("json"));
             assert!(matches!(command_from_action("setCamera", Some(&args)).expect("decodes"), DrawingCommand::SetCamera(_)));
             assert_eq!(command_from_action("addLayer", None).expect("arg-less palette row"), DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }));
+            assert_eq!(command_from_action("exportDocument", None).expect("arg-less palette row"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }));
+            assert_eq!(command_from_action("exportDocument", Some(&dsl::DslValue::Object(vec![("format".into(), dsl::DslValue::String("svg".into()))]))).expect("explicit format"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }));
             assert!(command_from_action("noSuchAction", None).is_err());
         }
     }
@@ -902,6 +906,7 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "engagementInput",
+    "exportDocument",
 ];
 const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
@@ -916,6 +921,7 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1293,7 +1299,8 @@ impl DrawingBoundedProofs {
         tools: [
             "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
-            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput",         ]
+            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument",
+        ]
     }
 }
 //#endregion 🧾️ProofCatalogs
@@ -1705,6 +1712,9 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            // 📤️ Export — a host download effect (`DownloadMediaExport`), never a document operation.
+            .action_with(semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export PDF", "PDF exportieren"), ActionKind::View) })
+            .action_interactive_job("exportDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands.
             .action_with(drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
             .action_interactive_job("setSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)

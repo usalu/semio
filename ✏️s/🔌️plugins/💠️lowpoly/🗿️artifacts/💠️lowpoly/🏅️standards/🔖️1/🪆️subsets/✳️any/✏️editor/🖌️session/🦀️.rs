@@ -267,6 +267,9 @@ pub struct LowpolyScratch {
     /// 🎯️ The object THIS dispatch's mesh-domain selection addresses (`view::selection_object_id`);
     /// `build_doc` edits it instead of the config's active object. Never persisted.
     selection_object_id: Option<String>,
+    /// 🎯️ Every object THIS dispatch's mesh-domain selection names at object granularity — what an
+    /// object-level delete or duplicate acts on (`view::LowpolyWorldSelection::object_ids`).
+    selected_object_ids: Vec<String>,
 }
 
 impl Default for LowpolyScratch {
@@ -282,6 +285,7 @@ impl Default for LowpolyScratch {
             mesh_workspace: crate::schema::default_mesh_workspace(),
             current_selection: LowpolySelection::default(),
             selection_object_id: None,
+            selected_object_ids: Vec::new(),
         }
     }
 }
@@ -296,6 +300,15 @@ impl LowpolyScratch {
     /// e.g. `render`).
     pub fn current_selection(&self) -> &LowpolySelection {
         &self.current_selection
+    }
+
+    /// 🎯️ Sets the object ids THIS dispatch's selection names — see `selected_object_ids`.
+    pub fn set_selected_object_ids(&mut self, object_ids: Vec<String>) {
+        self.selected_object_ids = object_ids;
+    }
+
+    pub fn selected_object_ids(&self) -> &[String] {
+        &self.selected_object_ids
     }
 
     pub fn set_selection_object_id(&mut self, object_id: Option<String>) {
@@ -1034,6 +1047,7 @@ impl LowpolyScratch {
             mesh_workspace: state.mesh_workspace.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
             current_selection,
             selection_object_id: None,
+            selected_object_ids: Vec::new(),
         })
     }
 

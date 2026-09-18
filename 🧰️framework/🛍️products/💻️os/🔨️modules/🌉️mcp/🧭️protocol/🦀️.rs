@@ -849,6 +849,22 @@ enum DispatchOutcome {
 
 /// 🗼️ The single dual-era dispatcher — one `McpServer` per connection (stdio: one per process
 /// lifetime). See this file's module doc for the era-detection contract.
+/// 🧾️ One line describing a tool result for the shell's agent panel: the first text block, or —
+/// for a result that carries only structured content — that content rendered as JSON. Never the
+/// whole payload: `AgentConversation` truncates it, and the panel is a view, not a transport.
+fn tool_result_summary(result: &CallToolResult) -> String {
+    if let Some(text) = result.content.iter().find_map(|block| match block {
+        ContentBlock::Text { text } => Some(text.clone()),
+        _ => None,
+    }) {
+        return text;
+    }
+    match result.structured_content.as_ref() {
+        Some(value) => value.to_string(),
+        None => String::new(),
+    }
+}
+
 pub struct McpServer {
     pub tools: Box<dyn ToolRegistry>,
     pub resources: Box<dyn ResourceRegistry>,
@@ -859,11 +875,30 @@ pub struct McpServer {
     era: Option<ProtocolEra>,
     negotiated_version: Option<String>,
     initialized: bool,
+    /// 💬️ Where this server publishes what the agent is doing, for an attached shell to render.
+    /// `None` is the ordinary case for a gateway with no `/bridge` (stdio) and for every test that
+    /// does not care; it is never an error, and a tool call behaves identically either way.
+    conversation: Option<Arc<crate::bridge::AgentConversation>>,
 }
 
 impl McpServer {
     pub fn new(tools: Box<dyn ToolRegistry>, resources: Box<dyn ResourceRegistry>, prompts: Box<dyn PromptRegistry>, backend: Box<GatewayBackends>) -> Self {
-        Self { tools, resources, prompts, backend, server_name: "semio-os-mcp".to_string(), server_version: env!("CARGO_PKG_VERSION").to_string(), era: None, negotiated_version: None, initialized: false }
+        Self { tools, resources, prompts, backend, server_name: "semio-os-mcp".to_string(), server_version: env!("CARGO_PKG_VERSION").to_string(), era: None, negotiated_version: None, initialized: false, conversation: None }
+    }
+
+    /// 💬️ Publishes this server's `tools/call` traffic onto the shell bridge as
+    /// `AgentToolCall`/`AgentToolResult`/`AgentPresence` frames. Builder-shaped rather than a
+    /// constructor argument because every existing caller (and the whole stdio path) has no bridge
+    /// at all, and adding a parameter would force a `None` through dozens of call sites for a
+    /// capability they never use.
+    pub fn publishing_conversation_to(mut self, conversation: Arc<crate::bridge::AgentConversation>) -> Self {
+        self.conversation = Some(conversation);
+        self
+    }
+
+    /// 💬️ The live conversation sink, if one was published into this server.
+    pub fn conversation(&self) -> Option<&Arc<crate::bridge::AgentConversation>> {
+        self.conversation.as_ref()
     }
 
     /// 🏗️ `NullBackend` + empty in-memory registries — the default a bare `stdio` invocation boots
@@ -989,7 +1024,19 @@ impl McpServer {
         let Some(params) = request.params.as_ref() else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params".to_string(), None) };
         let Some(name) = params.get("name").and_then(|value| value.as_str()) else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params.name".to_string(), None) };
         let arguments = params.get("arguments").cloned().unwrap_or(serde_json::Value::Null);
-        match self.tools.call(name, arguments) {
+        // 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
+        // panel shows the agent's actual calls, in order, with their real arguments and outcomes,
+        // rather than a second bookkeeping path that could drift from what ran.
+        let invocation = self.conversation.as_ref().map(|conversation| conversation.begin_tool_call(name, &arguments));
+        let outcome = self.tools.call(name, arguments);
+        if let (Some(conversation), Some(invocation_id)) = (self.conversation.as_ref(), invocation.as_deref()) {
+            let (ok, summary) = match &outcome {
+                Ok(result) => (!result.is_error, tool_result_summary(result)),
+                Err(error) => (false, error.message.clone()),
+            };
+            conversation.finish_tool_call(invocation_id, name, ok, &summary);
+        }
+        match outcome {
             Ok(result) => DispatchOutcome::Result(serde_json::json!({
                 "resultType": "complete",
                 "content": result.content,

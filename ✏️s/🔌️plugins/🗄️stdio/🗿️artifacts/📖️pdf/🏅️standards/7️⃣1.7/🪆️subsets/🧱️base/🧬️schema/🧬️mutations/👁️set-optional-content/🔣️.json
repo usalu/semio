@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/👁️set-optional-content",
+  "semanticKind": "set-optional-content",
+  "displayName": "Set Optional Content",
+  "emoji": "👁️",
+  "aggregateVariant": "SetOptionalContent",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-optional-content",
+  "binaryTag": 48,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

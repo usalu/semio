@@ -28,15 +28,31 @@ fn never() -> Option<u64> {
     Some(0)
 }
 
-/// 📥️ The committed `synthetic-orbit` document (calibrated camera, parameters, frame table) with its ten
-/// frames bound through `create-asset`, or four checker frames on one stream sampled at stride 1.
+/// 🎞️ Views of the committed orbit the short document keeps, and the long edge it ingests them at.
+const ORBIT_SHORT_FRAMES: usize = 8;
+const ORBIT_SHORT_LONG_EDGE_PX: u32 = 160;
+
+/// 📥️ The committed `synthetic-orbit` document (calibrated camera, parameters, frame table) with its
+/// thirty-six frames bound through `create-asset`; `orbit-short`, the same document cut to its first
+/// [`ORBIT_SHORT_FRAMES`] views and ingested at [`ORBIT_SHORT_LONG_EDGE_PX`] — a capture that
+/// reconstructs (cameras, points, a mesh) in a fraction of the full orbit's time, for the laws that
+/// need a published result; or four identical 24×24 checker frames on one stream sampled at stride 1
+/// — a capture no two-view geometry can be solved from (zero baseline), for the laws about a run
+/// that completes without cameras.
 async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
-    if example == "synthetic-orbit" {
+    if example == "synthetic-orbit" || example == "orbit-short" {
         let mut scene = <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
-        for (asset_id, bytes) in FRAMES {
+        let kept = if example == "orbit-short" { ORBIT_SHORT_FRAMES } else { FRAMES.len() };
+        for (asset_id, bytes) in FRAMES.iter().take(kept) {
             let image = crate::editor::remodeling::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");
             let asset = crate::ImageAsset { mime: FRAME_MIME.into(), data: base64_codec::base64_standard_encode(bytes), width: image.width, height: image.height };
-            scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::create_asset(asset_id.into(), asset)).expect("frame asset applies");
+            scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
+        }
+        if example == "orbit-short" {
+            for stream in &mut scene.streams {
+                stream.frames.truncate(kept);
+            }
+            scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::update_ingest_params(crate::IngestParams { downscale_long_edge_px: ORBIT_SHORT_LONG_EDGE_PX, ..scene.params.ingest.clone() })).expect("ingest params apply");
         }
         return Arc::new(scene);
     }
@@ -416,7 +432,7 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
 
 #[semio_framework_async_macros::async_test]
 async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_it_when_inputs_changed() {
-    let document = imported_document("checker").await;
+    let document = imported_document("orbit-short").await;
     let mut run = fresh_run(Arc::clone(&document));
     let whole = run_to_end(&mut run, WHOLE_TURNS);
     let checkpoint = whole.checkpoints.last().expect("a final checkpoint").clone();
@@ -435,7 +451,7 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
 
 #[semio_framework_async_macros::async_test]
 async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_the_base() {
-    let document = imported_document("checker").await;
+    let document = imported_document("orbit-short").await;
     let mirror = run_to_end(&mut fresh_run(Arc::clone(&document)), WHOLE_TURNS);
     let mut inverses = Vec::new();
     let mut current = (*document).clone();
@@ -469,17 +485,20 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
     for name in law["unitDocuments"].as_array().expect("unit documents").iter().map(|entry| entry.as_str().expect("document")) {
         let document = imported_document(name).await;
         let mut best: Vec<(Duration, &'static str)> = Vec::new();
+        let mut labels: Vec<Option<String>> = Vec::new();
         for run in 0..law["coldRuns"].as_u64().expect("cold runs") as usize {
             let mut job = fresh_run(Arc::clone(&document));
             let mut sequence = 0;
             let cancel = root_cancel_token();
             for index in 0.. {
                 let stage = job.stage.id();
+                let unit = job.engine.as_ref().map(|engine| engine.unit_label());
                 let started = Instant::now();
                 let outcome = InteractiveJob::step(&mut job, &mut StepContext::new(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 0), cancel.clone(), expired_clock, &mut sequence));
                 let elapsed = started.elapsed();
                 if run == 0 {
                     best.push((elapsed, stage));
+                    labels.push(unit);
                 } else {
                     assert!(index < best.len(), "{name}: cold run {run} took more units than the recorded run");
                     best[index].0 = best[index].0.min(elapsed);
@@ -493,11 +512,51 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
         let (worst, stage) = best.iter().copied().max_by_key(|(elapsed, _)| *elapsed).expect("units");
         let over_target = best.iter().filter(|(elapsed, _)| *elapsed >= target).count();
         let over_ceiling = best.iter().filter(|(elapsed, _)| *elapsed >= ceiling).count();
-        let sustained = best.iter().fold((0u32, 0u32), |(run, longest), (elapsed, _)| if *elapsed >= ceiling { (run + 1, longest.max(run + 1)) } else { (0, longest) }).1;
+        // The longest run of consecutive overruns and the index of its last unit.
+        let (mut sustained, mut sustained_end, mut run) = (0u32, 0usize, 0u32);
+        for (index, (elapsed, _)) in best.iter().enumerate() {
+            run = if *elapsed >= ceiling { run + 1 } else { 0 };
+            if run > sustained {
+                sustained = run;
+                sustained_end = index;
+            }
+        }
+        let window: Vec<String> = (sustained_end.saturating_sub(sustained as usize).saturating_add(1)..=sustained_end).map(|index| format!("{:?} {}", best[index].0, labels[index].clone().unwrap_or_default())).collect();
         assert!(
             sustained < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS,
-            "{name}: {sustained} consecutive bounded units overran the {ceiling:?} ceiling, a sustained overrun the watchdog quarantines (worst {worst:?} in stage {stage}; {over_ceiling} over the ceiling and {over_target} over the {target:?} target of {} units)",
+            "{name}: {sustained} consecutive bounded units overran the {ceiling:?} ceiling, a sustained overrun the watchdog quarantines (worst {worst:?} in stage {stage}; {over_ceiling} over the ceiling and {over_target} over the {target:?} target of {} units); the window: {window:#?}",
             best.len()
         );
+    }
+}
+
+/// 🖨️ Prints every fixture case of `🧫️fixtures/🔣️.json` as the current engine produces it, to
+/// re-record the language-neutral fixture after an engine change. Diagnostic, therefore `#[ignore]`:
+/// `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture print_run_fixture_cases`.
+#[semio_framework_async_macros::async_test]
+#[ignore = "re-records the run fixture cases; run explicitly"]
+async fn print_run_fixture_cases() {
+    for document in ["checker", "orbit-short", "synthetic-orbit"] {
+        let mut job = fresh_run(imported_document(document).await);
+        let mirror = run_to_end(&mut job, StepBudget::new(1, u64::MAX));
+        let prefix: Vec<String> = mirror.verdicts.iter().take(24).map(|(_, verdict, reason)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
+        let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
+        let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();
+        let appends = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::AppendContent(_))).count();
+        let commits = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::CommitReconstruction(_))).count();
+        let (kind, reason, args) = mirror.steps.last().expect("a last step");
+        let case = serde_json::json!({
+            "document": document,
+            "final": if mirror.completed { "complete" } else if mirror.faulted { "faulted" } else { "open" },
+            "verdictPrefix": prefix,
+            "verdicts": mirror.verdicts.len(),
+            "counters": counters,
+            "stagesVisited": stages,
+            "appendContentOps": appends,
+            "commitReconstructionOps": commits,
+            "lastStep": { "kind": step_kind_id(*kind), "reason": reason_id(*reason), "args": args },
+            "checkpoints": mirror.checkpoints.len(),
+        });
+        eprintln!("[FIXTURE] {}", serde_json::to_string_pretty(&case).expect("case json"));
     }
 }

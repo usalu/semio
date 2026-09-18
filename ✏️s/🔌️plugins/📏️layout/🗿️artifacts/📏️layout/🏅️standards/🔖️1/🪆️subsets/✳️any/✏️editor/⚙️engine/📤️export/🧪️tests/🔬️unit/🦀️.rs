@@ -49,6 +49,151 @@ fn request(kind: LayoutExportKind) -> LayoutExportRequest {
     LayoutExportRequest { kind, page_id, snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "layout-test-document".into(), canonical_base_revision_hex: "09".repeat(32) }
 }
 
+//#region 📕️PdfDocument
+fn find_bytes(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {
+    haystack.get(from..).and_then(|tail| tail.windows(needle.len()).position(|window| window == needle)).map(|at| from + at)
+}
+
+fn ascii_number(bytes: &[u8], from: usize) -> usize {
+    let digits: String = bytes[from..].iter().take_while(|byte| byte.is_ascii_digit()).map(|byte| *byte as char).collect();
+    digits.parse().unwrap_or_else(|_| panic!("ascii number at {from}: {digits:?}"))
+}
+
+/// 📕️ Parses the xref table the way a viewer does — on raw bytes, since the font stream is binary:
+/// every `N 0 obj` offset must land exactly, every stream's `/Length` (direct or indirect) must equal
+/// its byte count, and `startxref` must point at `xref`. Returns the stream count.
+fn assert_pdf_structure(bytes: &[u8]) -> usize {
+    assert!(bytes.starts_with(b"%PDF-1.4\n"), "pdf header");
+    let startxref = find_bytes(bytes, b"startxref\n", 0).expect("startxref");
+    let xref_offset = ascii_number(bytes, startxref + 10);
+    assert!(bytes[xref_offset..].starts_with(b"xref\n0 "), "startxref lands on the xref table");
+    let size = ascii_number(bytes, xref_offset + 7);
+    let mut row = find_bytes(bytes, b"\n", xref_offset + 7).expect("xref rows") + 1;
+    for id in 0..size {
+        let offset = ascii_number(bytes, row);
+        if id != 0 {
+            let head = format!("{id} 0 obj\n");
+            assert!(bytes[offset..].starts_with(head.as_bytes()), "object {id} offset {offset} lands on its header, found {:?}", String::from_utf8_lossy(&bytes[offset..(offset + 12).min(bytes.len())]));
+        }
+        row += 20;
+    }
+    let mut cursor = 0;
+    let mut streams = 0;
+    while let Some(start) = find_bytes(bytes, b">>\nstream\n", cursor) {
+        let stream_start = start + 10;
+        let dictionary_start = bytes[..start].windows(2).rposition(|window| window == b"<<").expect("stream dictionary");
+        let dictionary = String::from_utf8_lossy(&bytes[dictionary_start..start]).to_string();
+        let length_text = dictionary.split("/Length ").nth(1).expect("stream length").split_whitespace().take(3).collect::<Vec<_>>();
+        let length: usize = if length_text.get(1) == Some(&"0") && length_text.get(2) == Some(&"R") {
+            let id: usize = length_text[0].parse().expect("indirect length id");
+            let head = format!("{id} 0 obj\n");
+            let at = find_bytes(bytes, head.as_bytes(), 0).expect("length object") + head.len();
+            ascii_number(bytes, at)
+        } else {
+            length_text[0].trim_end_matches('/').parse().expect("direct length")
+        };
+        assert!(bytes[stream_start + length..].starts_with(b"\nendstream"), "stream length {length} ends exactly at endstream");
+        streams += 1;
+        cursor = stream_start + length;
+    }
+    streams
+}
+
+#[test]
+fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
+    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, None, None).expect("document pdf");
+    assert_eq!(all.filename, "Demo.pdf");
+    assert_eq!(all.mime_type, "application/pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    // 🔬️ `SEMIO_LAYOUT_PDF_DUMP=<path>` hands the bytes to an external reader (the ticket's `🐍️validate-pdf.py`).
+    if let Ok(path) = std::env::var("SEMIO_LAYOUT_PDF_DUMP") {
+        std::fs::write(path, &bytes).expect("pdf dump");
+    }
+    let text = String::from_utf8_lossy(&bytes).to_string();
+    let streams = assert_pdf_structure(&bytes);
+    assert_eq!(streams, 1 + snapshot.pages.len(), "one font stream plus one content stream per page");
+    assert!(text.contains(&format!("/Count {} >>", snapshot.pages.len())), "every page is a kid");
+    assert_eq!(text.matches("/Type /Page ").count(), snapshot.pages.len());
+    assert!(text.contains("/Subtype /CIDFontType2") && text.contains("/Encoding /Identity-H") && text.contains("/FontFile2 6 0 R"), "embedded CID font");
+    let font_start = find_bytes(&bytes, b"6 0 obj\n", 0).expect("font object");
+    let stream_at = find_bytes(&bytes, b"stream\n", font_start).expect("font stream") + 7;
+    assert!(bytes[stream_at..].starts_with(&[0x00, 0x01, 0x00, 0x00]), "the FontFile2 stream is the raw TrueType");
+    let story_glyphs = snapshot.stories[0].content.chars().count();
+    assert_eq!(text.matches("> Tj ET").count(), story_glyphs, "one positioned glyph per shaped character of \"{}\"", snapshot.stories[0].content);
+    assert!(text.contains(" rg 10.000 450.000 40.000 40.000 re f Q"), "the rect frame is filled at its y-flipped page position");
+    assert!(text.contains("0.4000 0.5000 0.7000 RG 1 w 50.000 370.000 100.000 80.000 re S Q"), "the inherited parent-page frame is stroked");
+    assert!(text.contains("0.92 0.88 0.84 rg 136.000 25.000 60.000 40.000 re f Q"), "a missing image link paints its placeholder");
+
+    let single = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-2"), None).expect("page pdf");
+    let single_bytes = decode_base64(&single.data).expect("base64 pdf");
+    let single_text = String::from_utf8_lossy(&single_bytes);
+    assert_eq!(assert_pdf_structure(&single_bytes), 2);
+    assert!(single_text.contains("/Count 1 >>"));
+    assert_eq!(single_text.matches("> Tj ET").count(), 0, "page-2 carries no text");
+}
+
+/// 🌐️ The browser path, natively: `exportPdf` through the registered, instance-bound app, the host's
+/// continuation turns (maintenance step → publication unit → result page ACK), the Download lane's page
+/// captured exactly where `consumeTypedOperationEffects` captures it, and the chunk drain
+/// `drainSegmentedMediaExport` performs — one bounded chunk per call until `None`.
+#[semio_framework_async_macros::async_test]
+async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_whole_pdf() {
+    use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+    const INSTANCE: u32 = 1;
+    let mut app = crate::editor::layout::unit_tests::context::layout_app_with_registry().await;
+    app.bind_instance_id(INSTANCE).await;
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..Default::default() };
+    let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
+    let result = app.dispatch_typed(crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }), &meta).await.expect("exportPdf dispatch");
+    assert!(result.mutations.is_empty(), "an export never mutates the document");
+    let mut download: Option<(u64, String, String, Option<String>, usize)> = None;
+    let mut turns = 0usize;
+    while app.has_pending_typed_operations() {
+        turns += 1;
+        assert!(turns < 65_536, "the export never quiesced");
+        app.maintenance_step(1, 16_384).expect("maintenance step");
+        app.advance_typed_operation_publication().await.expect("publication unit");
+        if let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
+            assert_ne!(page.lane, TypedOperationResultLane::Fault, "export faulted: {}", String::from_utf8_lossy(page.bytes()));
+            if page.lane == TypedOperationResultLane::Download {
+                let text = String::from_utf8_lossy(page.bytes()).into_owned();
+                let row = dsl::os_pack::json::parse(&text).unwrap_or_else(|_| panic!("download page is JSON: {text}"));
+                let row = row.as_array().unwrap_or_else(|| panic!("download page is a 4-row array: {text}"));
+                download = Some((
+                    page.token.operation,
+                    row[0].as_str().unwrap_or_default().to_string(),
+                    row[1].as_str().unwrap_or_default().to_string(),
+                    row[2].as_str().map(str::to_string),
+                    row[3].as_u64().unwrap_or_default() as usize,
+                ));
+            }
+            assert!(app.acknowledge_typed_operation_result(page.token).expect("ack"), "the presented page accepts its token");
+        }
+        let _ = app.take_typed_operation_effect();
+        let _ = app.take_typed_operation_event();
+        let _ = app.take_typed_operation_completion().await.expect("completion witness");
+        let _ = app.take_typed_operation_ui_scope();
+    }
+    let (operation, filename, mime_type, encoding, declared) = download.expect("exactly one segmented download handle was published");
+    assert_eq!(filename, "Demo.pdf");
+    assert_eq!(mime_type, "application/pdf");
+    assert_eq!(encoding.as_deref(), Some("base64"));
+    let mut assembled = Vec::with_capacity(declared);
+    while let Some(chunk) = app.take_segmented_download_chunk(operation).await.expect("take one chunk") {
+        assert!(!chunk.is_empty() && chunk.len() <= ArtifactOutputChunks::CHUNK_BYTES);
+        assembled.extend_from_slice(&chunk);
+    }
+    assert_eq!(assembled.len(), declared, "the handle declares exactly the drained byte count");
+    let pdf = decode_base64(std::str::from_utf8(&assembled).expect("base64 is ASCII")).expect("base64 payload");
+    assert_eq!(assert_pdf_structure(&pdf), 3, "font stream + two page streams");
+    assert!(String::from_utf8_lossy(&pdf).contains("/Count 2 >>"));
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 📕️PdfDocument
+
 fn drive_dispatched_worker(kind: LayoutExportKind, worker_count: usize, generation: Generation, cancel_before_start: bool) -> (StepOutcome, ArtifactOutputChunks) {
     let operation = operation();
     let bus = semio_framework::ActionBus::new();
@@ -99,7 +244,13 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
         assert!(bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES + 1).is_err());
         let (admission, mut input) = bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES).expect("maximum extent before encoding");
-        let raw = serde_json::to_vec(&(raw_verb, serde_json::json!({ "pageId": null }))).expect("fixture wire");
+        // 🔐️ The wire is the command's `OpBinary` encoding, exactly as the host sends it.
+        let command = match raw_verb {
+            "exportSvg" => crate::editor::layout::LayoutCommand::ExportSvg(crate::editor::layout::commands::export_svg::ExportSvg { page_id: None }),
+            "exportPdf" => crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }),
+            other => panic!("fixture verb {other}"),
+        };
+        let raw = <crate::editor::layout::LayoutCommand as protocol::OpBinary>::encode_op(&command).expect("fixture wire");
         for bytes in raw.chunks(semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES) {
             input.admit_page(semio_framework::action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
         }

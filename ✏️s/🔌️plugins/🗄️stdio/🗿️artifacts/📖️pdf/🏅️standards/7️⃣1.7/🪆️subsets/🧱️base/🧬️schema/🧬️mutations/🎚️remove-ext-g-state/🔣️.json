@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎚️remove-ext-g-state",
+  "semanticKind": "remove-ext-g-state",
+  "displayName": "Remove Ext G State",
+  "emoji": "🎚️",
+  "aggregateVariant": "RemoveExtGState",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-ext-g-state",
+  "binaryTag": 31,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

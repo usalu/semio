@@ -1,0 +1,4 @@
+# 🎚️ Direct remove-ext-g-state GraphQL payload.
+input RemoveExtGStateMutationInput {
+  id: String
+}

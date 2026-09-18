@@ -68,7 +68,7 @@
             "version": "1.0.0"
           },
           {
-            "directoryName": "🏺️aec.building.structure.classic",
+            "directoryName": "🏛️aec.building.structure.classic",
             "id": "aec.building.structure.classic",
             "schema": "spatial.modelDefinition",
             "version": "1.0.0"
@@ -125,7 +125,7 @@
             "count": 88
           },
           {
-            "sourceDirectoryName": "🕹️interactions",
+            "sourceDirectoryName": "🎬️interactions",
             "sourceShape": "direct-semantic-json",
             "manifestSchema": "spatial.interaction",
             "memberEmoji": "🎬️",

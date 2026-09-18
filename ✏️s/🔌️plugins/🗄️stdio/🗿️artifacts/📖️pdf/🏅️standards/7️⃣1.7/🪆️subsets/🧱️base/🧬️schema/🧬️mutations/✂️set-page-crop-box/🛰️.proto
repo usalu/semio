@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_pdf_1_7.mutation.set_page_crop_box;
 
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
 // ✂️ Direct set-page-crop-box protobuf payload.
 message SetPageCropBoxMutation {
   uint64 index = 1;

@@ -1,0 +1,22 @@
+{
+  "schema": "semio.repo.mcp.entrypoint/1",
+  "profileEnvironment": "SEMIO_REPO_MCP_CLIENT",
+  "arguments": [],
+  "protocolVersions": ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"],
+  "profiles": [
+    { "slug": "client", "kind": "generic", "serverName": "repo" },
+    { "slug": "cursor", "kind": "cursor", "serverName": "repo-cursor" },
+    { "slug": "kiro", "kind": "kiro", "serverName": "repo-kiro" },
+    { "slug": "copilot", "kind": "copilot", "serverName": "repo-copilot" },
+    { "slug": "claude", "kind": "claude", "serverName": "repo-claude" },
+    { "slug": "codex", "kind": "codex", "serverName": "repo-codex" }
+  ],
+  "flow": [
+    "initialize",
+    "notifications/initialized",
+    "resources/list",
+    "resources/read:repo://goals",
+    "tools/list",
+    "tools/call"
+  ]
+}

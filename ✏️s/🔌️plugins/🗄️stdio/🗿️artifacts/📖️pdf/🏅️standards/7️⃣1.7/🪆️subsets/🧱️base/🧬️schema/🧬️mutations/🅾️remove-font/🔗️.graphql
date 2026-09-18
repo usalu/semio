@@ -1,0 +1,4 @@
+# 🅾️ Direct remove-font GraphQL payload.
+input RemoveFontMutationInput {
+  id: String
+}

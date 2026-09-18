@@ -4,7 +4,7 @@
   "$defs": {
     "LowpolyInteractiveJobPartition": {
       "title": "LowpolyInteractiveJobPartition",
-      "description": "💠️ The interactive-job partition of the Lowpoly play app: 49 classified routes, the retained byte/work budgets, and the eight `oneOf` lane→preparation signatures a `Migrated` route may carry. The eighth arm (`[\"Artifact\",\"Config\",\"Transient\"]`→`[\"Artifact\",\"Config\"]`) is what makes `addPrimitive` representable.",
+      "description": "💠️ The interactive-job partition of the Lowpoly play app: 51 classified routes, the retained byte/work budgets, and the eight `oneOf` lane→preparation signatures a `Migrated` route may carry. The eighth arm (`[\"Artifact\",\"Config\",\"Transient\"]`→`[\"Artifact\",\"Config\"]`) is what makes `addPrimitive` representable.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -43,8 +43,8 @@
         },
         "routes": {
           "type": "array",
-          "minItems": 49,
-          "maxItems": 49,
+          "minItems": 51,
+          "maxItems": 51,
           "uniqueItems": true,
           "items": {
             "type": "object",

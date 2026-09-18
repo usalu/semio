@@ -57,6 +57,8 @@ const engineTestSuites = [
   engineSuite("🔬️document-opening"),
   engineSuite("🔬️engine-contract"),
   engineSuite("🚪️opening"),
+  engineSuite("🎬️activation-owner"),
+  engineSuite("🎬️wasm-plugin-install"),
   engineSuite("📌️view-state-carriage"),
   engineSuite("🧩️contributions-push"),
   engineSuite("🧩️package-integration"),

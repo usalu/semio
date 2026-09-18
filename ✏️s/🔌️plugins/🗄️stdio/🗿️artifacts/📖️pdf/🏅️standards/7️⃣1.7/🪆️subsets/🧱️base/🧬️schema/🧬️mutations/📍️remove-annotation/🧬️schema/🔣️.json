@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/remove-annotation/schema.json",
+  "title": "RemoveAnnotation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "at"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "at": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "removeAnnotation",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  }
+}

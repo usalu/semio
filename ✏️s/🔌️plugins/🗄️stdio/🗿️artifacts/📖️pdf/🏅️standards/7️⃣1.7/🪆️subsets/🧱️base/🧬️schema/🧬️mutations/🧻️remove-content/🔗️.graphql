@@ -1,0 +1,6 @@
+# 🧻️ Direct remove-content GraphQL payload.
+input RemoveContentMutationInput {
+  index: Int
+  at: Int
+  count: Int
+}

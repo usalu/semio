@@ -1,6 +1,7 @@
 /** 📦️ Direct insert-object TypeScript payload. */
+import type { ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter } from '../../📸️snapshot/🟦️.ts';
 export interface InsertObjectMutation {
   mutation: 'insertObject';
-  id: unknown;
-  value: unknown;
+  id: ObjRef;
+  value: PdfObject;
 }

@@ -996,7 +996,7 @@ fn shell_command_label_for_setting_matches_build_os_commands_and_theme_chrome_la
 #[test]
 fn shell_command_for_control_maps_dock_and_panel_control_ids() {
     assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.close", false), Some(("shell.windowClose", "Close".to_string())));
-    assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.focus", false), Some(("shell.windowMaximize", "Focus".to_string())));
+    assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.focus", false), None, "React notes no `shell.windowMaximize` anywhere — the chip's activation is the only journaled half, and `arm_window_activation_note` owns it");
     assert_eq!(ShellState::shell_command_for_control("shell.layout.compact", false), Some(("shell.applyNamedLayout", "Apply Layout".to_string())));
     assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.details", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string())));
     assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.settings", true), Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string())));
