@@ -1,37 +1,38 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "obj-hull",
-        "patch": {
-          "name": null,
-          "smoothShading": null,
-          "transform": null,
-          "mesh": null
-        },
         "paintLayers": {
           "added": [
             {
               "index": 1,
               "layer": {
-                "name": "Detail",
-                "visible": true,
-                "opacity": 1,
                 "blendMode": "normal",
-                "pixels": "AAAAAAAAAAA="
+                "name": "Detail",
+                "opacity": 1.0,
+                "pixels": "AAAAAAAAAAA=",
+                "visible": true
               }
             }
           ],
-          "removed": [],
           "patched": [],
+          "removed": [],
           "strokes": []
+        },
+        "patch": {
+          "mesh": null,
+          "meshContent": null,
+          "name": null,
+          "smoothShading": null,
+          "transform": null
         }
       }
     ],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null
 }

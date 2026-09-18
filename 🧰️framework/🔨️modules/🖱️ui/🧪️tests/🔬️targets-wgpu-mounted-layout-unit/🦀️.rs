@@ -268,3 +268,183 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     assert!(job.terminal_is_empty());
 }
 
+
+//#region 📐️AuthoredLayoutRects
+use crate::wgpu::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
+use ui_contract::{Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, OverlayLayout, Sizing, SpaceToken, StackLayout};
+
+/// 🧪️ The arena is what layout reads, so a fixture mounts nodes straight into it with the AUTHORED
+/// `LayoutSpec` a `UiNodeRecord` would have carried — the same channel `reconcile`'s document mount
+/// stamps on every node it mounts.
+fn mount(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, spec: LayoutSpec) -> NodeId {
+    let mut mounted = Node::new(NodeKey::Positional(7, ordinal), WidgetSpec(node));
+    mounted.layout_spec = Some(spec);
+    tree.insert_child(parent, mounted)
+}
+
+fn leaf() -> UiNode {
+    UiNode::Separator(crate::wgpu::component::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None })
+}
+
+fn fixed_leaf_spec() -> LayoutSpec {
+    LayoutSpec::Leaf(LeafLayout { width: Sizing::Fixed(SpaceToken::Xxl), height: Sizing::Fixed(SpaceToken::Lg) })
+}
+
+fn stack_spec(axis: Axis, align: Align, justify: Justify, wrap: bool) -> LayoutSpec {
+    LayoutSpec::Stack(StackLayout { axis, gap: SpaceToken::None, padding: EdgeSpace::default(), align, justify, grow: false, wrap })
+}
+
+fn solved(tree: &UiTree, id: NodeId) -> (f32, f32, f32, f32) {
+    tree.mounted_layout(id).unwrap_or_else(|| panic!("published layout"))
+}
+
+/// 📐️ Layout resolves in fractional logical pixels, the way a DOM rect does — the shared ramp's
+/// `Xxl` is 38.4px, not 38 — so a fixture compares within a hairline instead of demanding equality.
+fn close(left: f32, right: f32) -> bool {
+    (left - right).abs() < 0.01
+}
+
+/// 📐️ `justify: SpaceBetween` distributes leftover main-axis space BETWEEN children. The pre-parity
+/// arrange step pushed 100% of it INTO every child unconditionally, so this fixture is the direct
+/// regression guard for "elements placed totally different".
+#[test]
+fn mounted_layout_publishes_space_between_rects_without_growing_children() {
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::SpaceBetween, false));
+    let children: Vec<NodeId> = (0..3).map(|ordinal| mount(&mut tree, Some(root), ordinal + 1, leaf(), fixed_leaf_spec())).collect();
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 300.0, 100.0));
+
+    assert_eq!(solved(&tree, root), (0.0, 0.0, 300.0, 100.0));
+    assert!(close(solved(&tree, children[0]).0, 0.0));
+    assert!(close(solved(&tree, children[1]).0, 130.8), "got {}", solved(&tree, children[1]).0);
+    assert!(close(solved(&tree, children[2]).0, 261.6), "got {}", solved(&tree, children[2]).0);
+    for child in &children {
+        assert!(close(solved(&tree, *child).2, 38.4), "a space-between child keeps its own Fixed(Xxl) width");
+    }
+}
+
+#[test]
+fn mounted_layout_publishes_a_two_column_grid_as_two_columns() {
+    let mut grid = GridLayout::default();
+    assert_eq!(grid.try_push_column(GridTrack::Fraction(1)), Ok(()));
+    assert_eq!(grid.try_push_column(GridTrack::Fraction(1)), Ok(()));
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), LayoutSpec::Grid(grid));
+    let first = mount(&mut tree, Some(root), 1, leaf(), fixed_leaf_spec());
+    let second = mount(&mut tree, Some(root), 2, leaf(), fixed_leaf_spec());
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+
+    assert!(close(solved(&tree, first).0, 0.0));
+    assert!(close(solved(&tree, second).0, 100.0), "the second cell sits in the second COLUMN, never on a second row");
+    assert!(close(solved(&tree, first).1, solved(&tree, second).1));
+}
+
+#[test]
+fn mounted_layout_keeps_an_overlay_out_of_flow() {
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
+    let overlay = mount(&mut tree, Some(root), 1, leaf(), LayoutSpec::Overlay(OverlayLayout { anchor: ui_contract::Anchor::Center, inset: EdgeSpace::All(SpaceToken::Md), dismissible: true }));
+    let sibling = mount(&mut tree, Some(root), 2, leaf(), fixed_leaf_spec());
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+
+    assert!(close(solved(&tree, sibling).1, 0.0), "an overlay must not push its in-flow sibling down");
+    let (x, y, width, height) = solved(&tree, overlay);
+    assert!(close(x, 12.8) && close(y, 12.8) && close(width, 174.4) && close(height, 74.4), "got {:?}", solved(&tree, overlay));
+}
+
+#[test]
+fn mounted_layout_wraps_an_overflowing_row_onto_a_second_line() {
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::Start, true));
+    let children: Vec<NodeId> = (0..4).map(|ordinal| mount(&mut tree, Some(root), ordinal + 1, leaf(), fixed_leaf_spec())).collect();
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 100.0, 100.0));
+
+    assert!(close(solved(&tree, children[0]).1, 0.0));
+    assert!(close(solved(&tree, children[1]).1, 0.0));
+    assert!(solved(&tree, children[2]).1 > 0.0, "the third 38.4px child overflows a 100px line and wraps");
+}
+
+#[test]
+fn mounted_layout_aligns_the_cross_axis_instead_of_always_stretching() {
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Center, Justify::Start, false));
+    let child = mount(&mut tree, Some(root), 1, leaf(), fixed_leaf_spec());
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+
+    let (_, y, _, height) = solved(&tree, child);
+    assert!(close(height, 19.2), "align:center keeps the child's own height, never stretches it, got {height}");
+    assert!(close(y, 40.4), "got {y}");
+}
+
+/// ✍️ A text run inside a narrow flex item wraps the way CSS does — the measured height grows by a
+/// whole line box per wrapped line, from the shaped advances the job already collected.
+#[test]
+fn mounted_layout_wraps_text_inside_a_narrow_flex_item() {
+    let build = |width: f32| {
+        let mut tree = UiTree::new();
+        let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
+        let text = mount(&mut tree, Some(root), 1, UiNode::Text(UiTextNode { value: Label::data("alpha beta gamma delta"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), LayoutSpec::default());
+        tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), width, 400.0));
+        solved(&tree, text)
+    };
+    let (_, _, wide_width, wide_height) = build(600.0);
+    let (_, _, narrow_width, narrow_height) = build(60.0);
+    assert!(wide_height > 0.0);
+    assert!(narrow_height > wide_height, "a narrower item wraps onto more lines, got {narrow_height} vs {wide_height}");
+    assert!(narrow_width <= wide_width);
+}
+//#endregion 📐️AuthoredLayoutRects
+
+//#region 🧩️HostContentLeaf
+/// 🧩️ The panel content-projection ESCAPE HATCH: an `ExternalSlot` reserves the band its host declared
+/// and fills the parent's width, instead of collapsing the way a childless `Leaf` does. This is what
+/// lets a host-painted surface (React hosts an arbitrary subtree through `Tree`'s `emptyState`) live
+/// inside an otherwise declarative document — the shell audit's recommendation 7.
+#[test]
+fn a_host_content_slot_reserves_the_band_its_host_declared() {
+    let declared = 240.0;
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, children: Vec::new(), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None }), LayoutSpec::default());
+    let slot = mount(
+        &mut tree,
+        Some(root),
+        1,
+        UiNode::ExternalSlot(crate::wgpu::component::ui::UiExternalSlotNode {
+            plugin_id: "framework".into(),
+            app_id: "shell".into(),
+            body_key: "framework.chat.transcript".into(),
+            params_json: format!("{{\"hostContentHeight\": {declared}}}"),
+            presence: UiPresence::default(),
+            menu: None,
+        }),
+        LayoutSpec::default(),
+    );
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 320.0, 800.0));
+    let (_, _, width, height) = solved(&tree, slot);
+    assert!(close(height, declared), "🧩️ the host's band is honoured exactly, got {height}");
+    assert!(width > 0.0, "🧩️ and the slot fills its parent's width rather than measuring nothing");
+}
+
+/// 🧩️ A slot whose host declares no height still gets a visible box, and an absurd number is clamped
+/// rather than asking for a band no viewport could hold.
+#[test]
+fn a_host_content_slot_without_a_declared_height_falls_back_and_clamps() {
+    let theme = Theme::default();
+    assert!(close(host_content_height("", &theme), theme.control_height * 6.0), "🧩️ no JSON at all still reserves a visible band");
+    assert!(close(host_content_height("{}", &theme), theme.control_height * 6.0), "🧩️ nor does JSON without the key collapse it");
+    assert!(close(host_content_height("{\"hostContentHeight\": 999999}", &theme), 4096.0), "🧩️ and an absurd number is clamped");
+    assert!(close(host_content_height("{\"hostContentHeight\": -5}", &theme), 0.0), "🧩️ a negative band is nothing, never an inversion");
+}
+//#endregion 🧩️HostContentLeaf

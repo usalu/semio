@@ -1,6 +1,5 @@
-use crate::editor::lowpoly::unit_tests::context::{app, app_with_registry, dispatch, select_face};
+use crate::editor::lowpoly::unit_tests::context::{act, app, app_with_registry, dispatch, select_face};
 use crate::editor::lowpoly::LowpolyCommand;
-use semio_framework_plugin::PluginApp;
 
 /// 🧪️ Rewritten (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law
 /// fix) to assert on the persisted `mesh` HANDLE rather than reconstructing a `LowpolyDocument`
@@ -21,7 +20,7 @@ async fn extrude_selected_face_grows_mesh_and_undo_restores() {
     dispatch(&mut a, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: None })).await;
     let after_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     assert_ne!(after_mesh, before_mesh, "extrude must change the mesh handle");
-    a.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("a")).await.unwrap();
+    act(&mut a, "undo", serde_json::json!({})).await;
     let restored_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     assert_eq!(restored_mesh, before_mesh, "undo restores the pre-extrude mesh handle");
 }

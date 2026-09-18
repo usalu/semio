@@ -231,7 +231,7 @@ fn the_roles_group_exists_exactly_when_the_plugin_declares_both_surfaces_of_the_
         let apps = manifest_apps(&fixture, case["manifest"].as_str().expect("fixture manifest id"));
         let dialect = case["dialect"].as_str().map_or_else(dialectless, |key| fixture_dialect(&fixture["dialects"][key]));
         let open = parity_app("open", AppRole::Editor, dialect.clone(), "Editor", "Editor", &["edit"]);
-        let controls = shell_role_controls(&apps, &open, Terminology::default(), Locale::default());
+        let controls = shell_role_controls(&apps, &open, Terminology::default(), Locale::default(), &[]);
         match case["expected"].as_object() {
             Some(expected) => {
                 assert_eq!(
@@ -328,8 +328,11 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
         assert!(is_reserved_shell_chord(&action, &modifiers), "{}: a shell chord must outrank every app-declared keybinding", case["controlId"]);
         let control_id = case["controlId"].as_str().expect("fixture control id");
         if let Some(role_suffix) = control_id.strip_prefix("playground.navbar.roles.") {
-            assert_eq!(shell_role_chord(&action, &modifiers), Some(fixture_role(role_suffix)), "{control_id}");
-            assert_eq!(shell_mode_step_chord(&action, &modifiers), None, "{control_id}: a role chord is not a mode chord");
+            // ⌨️ Both chord families now resolve through the ONE remappable table
+            // (`SHELL_SHORTCUT_ROWS` → `shell_shortcut_for`), the Rust twin of React's
+            // `SHELL_KEYBINDINGS`; the per-family helpers this law used to call are gone with the
+            // open-coded ladder they read.
+            assert_eq!(shell_shortcut_for(&action, &modifiers), Some(ShellShortcut::SurfaceRole(fixture_role(role_suffix))), "{control_id}");
             let dispatches = &case["dispatches"];
             let target = role_switch_target(&apps, &dialect, fixture_role(dispatches["currentRole"].as_str().expect("fixture current role")), fixture_role(dispatches["requested"].as_str().expect("fixture requested role")));
             assert_eq!(target.map(|app| app.id.as_str()), dispatches["expectedAppId"].as_str(), "{control_id}: the chord opens the app the fixture declares");
@@ -339,8 +342,7 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
                 "ui.shell.mode.previous" => -1,
                 other => panic!("fixture declares an unknown shell keybinding {other:?}"),
             };
-            assert_eq!(shell_mode_step_chord(&action, &modifiers), Some(expected_step), "{control_id}");
-            assert_eq!(shell_role_chord(&action, &modifiers), None, "{control_id}: a mode chord is not a role chord");
+            assert_eq!(shell_shortcut_for(&action, &modifiers), Some(ShellShortcut::ModeStep(expected_step)), "{control_id}");
         }
         rows += 1;
     }
@@ -353,9 +355,9 @@ fn the_alt_axis_never_swallows_a_neighbouring_chord() {
     let accelerator = PointerModifiers { shift: false, ctrl: false, alt: false, meta: true };
     let with_alt = PointerModifiers { alt: true, ..accelerator };
     let bare = PointerModifiers::default();
-    assert_eq!(shell_role_chord(&ui_wgpu::wgpu::KeyAction::Char("e".into()), &accelerator), None, "mod+e is not the role chord — mod+alt+e is");
-    assert_eq!(shell_role_chord(&ui_wgpu::wgpu::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
-    assert_eq!(shell_mode_step_chord(&ui_wgpu::wgpu::KeyAction::ArrowRight, &accelerator), None);
+    assert!(!matches!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");
+    assert_eq!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
+    assert!(!matches!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::ArrowRight, &accelerator), Some(ShellShortcut::ModeStep(_))), "mod+arrowright is not a mode step — mod+alt+arrowright is");
     assert!(is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
     assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
     assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");

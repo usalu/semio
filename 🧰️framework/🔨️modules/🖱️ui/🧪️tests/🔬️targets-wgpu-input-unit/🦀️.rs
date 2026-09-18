@@ -78,3 +78,36 @@ fn action_fault_is_observed_before_another_queued_owner() {
     assert!(matches!(input.take_action_step(), Err(BoundedActionFault::ByteCredits)));
     assert_eq!(input.take_action_step().expect("authority").expect("queued").into_descriptor().expect("descriptor").action, "queued");
 }
+
+//#region 🔢️InputConstraints
+// 🔢️ LAW: `InputProps`' `min`/`max`/`step` are enforced, not decoration. React hands them to a real
+// `<input type="number" min max step>` (`🗣️Interpreter/🟦️.tsx`'s `InputView`) and the browser refuses
+// an out-of-range commit for it; an immediate-mode canvas has no browser, so this target enforces
+// them itself — at the one commit authority, and in the `InputMeta` the chrome's own commit reads.
+
+#[test]
+fn number_constraints_clamp_and_snap_exactly_once_each() {
+    use crate::wgpu::events::constrain_number_input;
+    assert_eq!(constrain_number_input(999.0, Some(0.0), Some(10.0), None), 10.0);
+    assert_eq!(constrain_number_input(-4.0, Some(2.0), Some(10.0), None), 2.0);
+    assert_eq!(constrain_number_input(3.3, None, None, Some(0.5)), 3.5, "snapping is to the nearest step, not a floor");
+    assert_eq!(constrain_number_input(3.4, Some(1.0), None, Some(2.0)), 3.0, "the step ladder starts at `min`, not at zero");
+    assert_eq!(constrain_number_input(7.0, None, None, Some(0.0)), 7.0, "a zero step is no step, never a division");
+    assert_eq!(constrain_number_input(7.25, None, None, None), 7.25);
+    assert!(constrain_number_input(f64::NAN, Some(0.0), Some(10.0), Some(1.0)).is_nan(), "an unparseable buffer stays a refusal — never an invented in-range number");
+}
+
+#[test]
+fn an_input_metas_commit_value_carries_its_own_constraints() {
+    let text = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "text".into(), min: None, max: None, step: None, accept: None };
+    assert_eq!(text.commit_value("12abc"), Some(dsl::DslValue::String("12abc".into())), "a text field commits its text verbatim");
+
+    let number = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "number".into(), min: Some(0.0), max: Some(10.0), step: Some(0.5), accept: None };
+    assert_eq!(number.commit_value("99"), Some(dsl::DslValue::float(10.0)));
+    assert_eq!(number.commit_value("3.3"), Some(dsl::DslValue::float(3.5)));
+    assert_eq!(number.commit_value(""), None, "an empty number buffer commits nothing at all");
+
+    let file = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "file".into(), min: None, max: None, step: None, accept: Some("image/*".into()) };
+    assert_eq!(file.accept.as_deref(), Some("image/*"), "a file field's `accept` reaches the host picker instead of being dropped at the render call site");
+}
+//#endregion 🔢️InputConstraints

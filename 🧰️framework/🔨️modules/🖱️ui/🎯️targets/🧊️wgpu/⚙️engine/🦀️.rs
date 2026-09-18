@@ -10,10 +10,9 @@
 use std::collections::HashMap;
 
 use crate::wgpu::component::layout::WindowLayout;
-#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
-use crate::wgpu::events::{DragPayload, EventRouter, UiCommand, UiEvent};
+use crate::wgpu::events::{resolve_overlay_placement_side, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
 use crate::wgpu::input::{retained_hit_registration, RetainedHitRegistration};
 use crate::wgpu::layout::TreeRowMetrics;
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
@@ -32,6 +31,24 @@ use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDo
 use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
+
+//#region 🪟️OverlayPlacement
+/// 🪟️ One open overlay, already placed against its window's viewport — see
+/// [`Ui::overlay_placements`]. `width`/`height` are the overlay subtree's own mounted layout, so a
+/// caller can draw the surface chrome (`paint::paint_overlay_surface`) without re-measuring.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct UiOverlayPlacement {
+    pub root: crate::wgpu::arena::NodeId,
+    pub kind: OverlayKind,
+    /// 🌫️ `Dialog`/`CommandPalette`: draw `paint::paint_overlay_backdrop` first.
+    pub backdrop: bool,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub side: crate::wgpu::events::OverlaySide,
+}
+//#endregion 🪟️OverlayPlacement
 
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
@@ -160,7 +177,12 @@ impl RetainedPaintWalk {
             // phase and the hit-registry phase walk through here, so a scrolled container can never
             // paint its children at one origin and register them at another.
             let (scroll_x, scroll_y) = tree.node(visit.node).filter(|node| node.flags.contains(NodeFlags::SCROLLABLE)).map_or((0.0, 0.0), |node| node.state.scroll_offset);
-            let child_visit = RetainedPaintVisit { node: child, origin_x: visit.origin_x + layout.x - scroll_x, origin_y: visit.origin_y + layout.y - scroll_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
+            // 🪟️ An OPEN floating overlay's content root ignores its in-flow parent offset and takes
+            // the placement `events::resolve_overlay_placement_side` settled on — the SAME override
+            // `events::hit_test`/`absolute_rect` apply, so what is painted is what is hit
+            // (`UiTree::overlay_origins`). Everything below it accumulates from there as usual.
+            let (child_origin_x, child_origin_y) = tree.overlay_walk_origin(child).unwrap_or((visit.origin_x + layout.x - scroll_x, visit.origin_y + layout.y - scroll_y));
+            let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
             self.visits[self.len] = Some(child_visit);
             self.len += 1;
             return RetainedPaintWalkStep::Scalar;
@@ -243,6 +265,26 @@ impl UiFramePaintCensus {
     }
 }
 
+/// 🖱️ One `ComponentScene` leaf resolved under a point by [`Ui::scene_at`] — the surface's own
+/// identity plus the ABSOLUTE (window-local) rect it was last laid out at, which is the same rect
+/// every per-kind pointer/pick resolver is expressed against.
+#[derive(Clone, Debug, PartialEq)]
+pub struct UiSceneHit {
+    pub node: crate::wgpu::arena::NodeId,
+    pub surface_id: String,
+    pub controller_id: String,
+    pub kind: crate::wgpu::component::ui::SurfaceKind,
+    pub rect: crate::wgpu::geometry::Rect,
+}
+
+/// 🖱️ `node`'s own absolute rect plus its scene identity, when it IS a `ComponentScene` leaf — the
+/// ONE geometry answer `UiTree::absolute_rect` gives, so a scene inside an open floating overlay
+/// resolves at that overlay's placement exactly as the paint and hit walks put it there.
+fn scene_slot_for_node_absolute(tree: &UiTree, id: crate::wgpu::arena::NodeId) -> Option<UiSceneHit> {
+    let UiNode::ComponentScene(scene) = &tree.node(id)?.spec.0 else { return None };
+    Some(UiSceneHit { node: id, surface_id: scene.surface_id.clone(), controller_id: scene.controller_id.clone(), kind: scene.component_kind, rect: tree.absolute_rect(id)? })
+}
+
 /// 🎯️ Appends `node`'s registry entry, if it has one, at the ABSOLUTE rect the paint walk just
 /// painted it at — `origin` is that walk's own accumulated offset, so the two can never diverge.
 fn register_retained_hit(tree: &UiTree, theme: &Theme, node: crate::wgpu::arena::NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<RetainedHitRegistration>) {
@@ -292,7 +334,10 @@ pub struct UiSurfaceToken {
 }
 
 impl UiSurfaceToken {
-    #[cfg(test)]
+    /// 🧪️ Mints one token for a probe. The gate matches `📌️mounted_layout`'s `layout_tree_now`,
+    /// its only non-`cfg(test)` caller — a bare `cfg(test)` here fails every downstream crate that
+    /// enables the `testkit` feature, because the feature compiles that caller into the LIB.
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) const fn new(slot: u8, generation: u64) -> Self {
         Self { slot, generation }
     }
@@ -550,15 +595,8 @@ fn stage_label(stage: LayoutJobStage) -> &'static str {
     match stage {
         LayoutJobStage::CollectNodes => "Layout.CollectNodes",
         LayoutJobStage::ShapeText => "Layout.ShapeText",
-        #[cfg(test)]
-        LayoutJobStage::PruneRemoved => "Layout.PruneRemoved",
-        #[cfg(test)]
-        LayoutJobStage::SyncNodes => "Layout.SyncNodes",
-        #[cfg(test)]
+        LayoutJobStage::MeasureLayout => "Layout.MeasureLayout",
         LayoutJobStage::SolveLayout => "Layout.SolveLayout",
-        LayoutJobStage::MeasureFallback => "Layout.MeasureFallback",
-        LayoutJobStage::ArrangeFallback => "Layout.ArrangeFallback",
-        #[cfg(test)]
         LayoutJobStage::CollectResults => "Layout.CollectResults",
         LayoutJobStage::PublishResults => "Layout.PublishResults",
     }
@@ -662,6 +700,29 @@ impl Ui {
             window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
         }
         self.enqueue_layout_reason(window_id, SurfaceLayoutReason::Metrics);
+    }
+
+    /// 🧭️ Sets `window_id`'s logical flow — React's `FlowProvider` around a `Panel`/`Pane`
+    /// (`🖼️Panel/🟦️.tsx:516`), whose value comes from `UiFlow::for_anchor` on that surface's dock
+    /// anchor. `Rtl` mirrors every anchored overlay this window places and every inline arrow key it
+    /// routes; `Up` is read by paint. Invalidates the layout generation exactly like
+    /// [`Self::set_viewport`], because a direction change re-solves the inline axis.
+    pub fn set_window_flow(&mut self, window_id: &str, flow: ui_contract::UiFlow) {
+        let Some(window) = self.window_mut(window_id) else { return };
+        if !window.router.set_flow(flow) {
+            return;
+        }
+        let Some(next_generation) = window.layout_generation.checked_add(1) else { return };
+        window.layout_generation = next_generation;
+        if let Some(root) = window.tree.root {
+            window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        self.enqueue_layout_reason(window_id, SurfaceLayoutReason::Metrics);
+    }
+
+    /// 🧭️ `window_id`'s current flow, or React's `DEFAULT_FLOW` for a window that has none yet.
+    pub fn window_flow(&self, window_id: &str) -> ui_contract::UiFlow {
+        self.windows.get(window_id).map_or(ui_contract::UiFlow::DEFAULT, |window| window.router.flow())
     }
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
@@ -1223,6 +1284,7 @@ impl Ui {
     /// retirement scalar for one mounted window.
     pub fn frame_step<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> UiFrameStep {
         self.set_viewport(window_id, viewport_width, viewport_height);
+        self.publish_overlay_origins(window_id);
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
@@ -1429,6 +1491,7 @@ impl Ui {
     ) -> UiFrameStep {
         let crate::wgpu::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
+        self.publish_overlay_origins(window_id);
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
@@ -1624,6 +1687,7 @@ impl Ui {
     #[cfg(test)]
     pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
         self.set_viewport(window_id, viewport_width, viewport_height);
+        self.publish_overlay_origins(window_id);
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
         let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
@@ -1662,6 +1726,17 @@ impl Ui {
         let Some(window) = self.windows.get(window_id) else { return false };
         let Some(root) = window.tree.root else { return false };
         window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
+    }
+
+    /// 📐️ The SOLVED height of one surface's root node — the measured content extent a floating panel
+    /// needs in order to HUG its content the way React's `<Panel>` does (`🖼️Panel/🟦️.tsx`: one bonded
+    /// edge plus `maxHeight: calc(100% - 2 * --spacing-single)`, never a `top`+`bottom` pair). `None`
+    /// while the surface has no window, no root or no accepted layout yet, so a caller falls back to
+    /// its own band rather than collapsing the panel to nothing.
+    pub fn surface_content_height(&self, window_id: &str) -> Option<f32> {
+        let window = self.windows.get(window_id)?;
+        let root = window.tree.root?;
+        window.tree.accepted_layout(root).map(|layout| layout.height)
     }
 
     /// 📐️ Re-arms one window's layout lane. Idempotent — a window already queued is left alone — so a
@@ -1748,6 +1823,100 @@ impl Ui {
         commands
     }
 
+    //#region 🪟️OverlayApi
+    /// 🪟️ Opens `root`'s subtree as a floating overlay of `kind`, anchored per `anchor` — the
+    /// façade-level entry point for React's `Popover`/`Dialog`/`CommandPalette` portals
+    /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
+    /// dismissal and the `Dialog`/`CommandPalette` focus trap all come from `events`' own policy.
+    pub fn open_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
+        let Some(window) = self.windows.get_mut(window_id) else { return };
+        window.router.open_overlay(&mut window.tree, root, kind, anchor);
+    }
+
+    /// 🚪️ Closes one open overlay by its content root.
+    pub fn close_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId) -> Vec<UiCommand> {
+        let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
+        let commands = window.router.close_overlay(&mut window.tree, root);
+        self.pending_commands.extend(commands.iter().cloned());
+        commands
+    }
+
+    /** @emoji 🪟️ Republishes every OPEN overlay's resolved placement onto the window's own tree, so
+     * this frame's paint walk, scene walk, hit registry and `events::hit_test`/`absolute_rect` all
+     * read ONE origin for a floating surface (`UiTree::overlay_origins`).
+     *
+     * This is what makes an overlay's BODY paint through the normal node pipeline INSIDE the overlay
+     * rect: the Group/Section children under the content root are walked, laid out and painted
+     * exactly like any other subtree — only the root's walk origin is substituted, so no second paint
+     * pass and no parallel geometry exists for overlay content. React gets the same from a portal
+     * plus `position: fixed` on `PopoverContent`/`DialogContent`
+     * (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`), where the children are ordinary
+     * DOM inside the portalled box. */
+    fn publish_overlay_origins(&mut self, window_id: &str) {
+        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self.overlay_placements(window_id).into_iter().map(|placement| (placement.root, placement.x, placement.y)).collect();
+        if let Some(window) = self.windows.get_mut(window_id) {
+            window.tree.set_overlay_origins(origins);
+        }
+    }
+
+    /// 🥞️ Every open overlay of `window_id`, bottom-to-top, already placed: the resolved top-left the
+    /// overlay's own laid-out size wants against this window's viewport, plus the side a collision
+    /// flip settled on. A paint pass draws these AFTER the document walk — that ordering, not a flag,
+    /// is what puts an overlay above panel content (React gets the same from a portal + `z-menu`).
+    pub fn overlay_placements(&self, window_id: &str) -> Vec<UiOverlayPlacement> {
+        let Some(window) = self.windows.get(window_id) else { return Vec::new() };
+        window
+            .router
+            .open_overlays()
+            .iter()
+            .map(|overlay| {
+                let size = window.tree.mounted_layout(overlay.root).map_or((0.0, 0.0), |(_, _, width, height)| (width, height));
+                let resolved = resolve_overlay_placement_side(&window.tree, overlay.anchor, size, window.viewport, overlay.placement, window.router.flow_inline());
+                UiOverlayPlacement { root: overlay.root, kind: overlay.kind, backdrop: overlay.kind.has_backdrop(), width: size.0, height: size.1, x: resolved.x, y: resolved.y, side: resolved.side }
+            })
+            .collect()
+    }
+
+    /// ⏱️ Feeds the monotonic frame clock to every window's router and answers the hover reveals it
+    /// owes — the immediate-mode replacement for React's tooltip `setTimeout`. A `TooltipStep::Reveal`
+    /// carries the node whose tooltip the caller should now open; [`Ui::tooltip_label`] resolves its
+    /// text from the same `AccessibilitySpec` tiers React's `useControlTooltipText` reads.
+    pub fn advance_clock(&mut self, seconds: f32) -> Vec<(String, TooltipStep)> {
+        let mut steps = Vec::new();
+        let ids: Vec<String> = self.windows.ids().map(|id| id.as_ref().to_string()).collect();
+        for window_id in ids {
+            let Some(window) = self.windows.get_mut(&window_id) else { continue };
+            window.draw.set_clock_seconds(seconds);
+            let (step, commands) = window.router.advance_clock(&mut window.tree, seconds);
+            self.pending_commands.extend(commands);
+            if step != TooltipStep::Idle {
+                steps.push((window_id, step));
+            }
+        }
+        steps
+    }
+
+    /// 💡️ The hover text for one arena node, composed exactly like React's
+    /// `formatControlTooltipText({ label, hotkey })` (`🔨️modules/💡️control-tooltip-presentation/🟦️.ts:16`):
+    /// the record's accessibility label, with its declared shortcut in parentheses when it has one.
+    /// A node with no label of its own has no tooltip, matching `useControlTooltipText`'s own
+    /// `if (!label) return undefined`.
+    pub fn tooltip_label(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<String> {
+        let window = self.windows.get(window_id)?;
+        let document = window.tree.document()?;
+        let id = window.tree.document_bindings().iter().find(|(_, arena)| *arena == node).map(|(id, _)| *id)?;
+        let record = document.record(id)?;
+        if record.accessibility.hidden {
+            return None;
+        }
+        let label = record.accessibility.label.as_ref().map(|label| label.0.as_str().to_string())?;
+        match record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str()) {
+            Some(shortcut) if !shortcut.is_empty() => Some(format!("{label} ({shortcut})")),
+            _ => Some(label),
+        }
+    }
+    //#endregion 🪟️OverlayApi
+
     /// 🪟️ Routes `event` through the shared `🐚️Shell`'s own hit-testing, surfacing chrome-level
     /// `ShellEvent`s (tab activation today; drag/drop is `Shell::dispatch`'s own documented gap).
     pub fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
@@ -1807,6 +1976,29 @@ impl Ui {
     /// 🧬️ Returns the retained tree identity revision used to reject stale interactive intents.
     pub fn tree_revision(&self, window_id: &str) -> Option<u64> {
         self.windows.get(window_id).map(|window| window.revision)
+    }
+
+    /// 🖱️ The `ComponentScene` leaf under a WINDOW-LOCAL point, resolved through the same
+    /// reverse-paint-order walk a real press uses (`events::hit_test`) and the same ancestor-offset
+    /// accumulation `scene_slots` does — but WITHOUT mutating focus, capture, hover or the tree.
+    /// This is the read-only query a right-click needs: the host has to know which surface (and with
+    /// what geometry) a context menu is about to be built for before any event is dispatched, and
+    /// dispatching a `PointerDown` to find out would move focus and arm a press capture.
+    ///
+    /// A point on chrome inside the scene's own subtree still answers that scene, because the walk
+    /// climbs `parent` links until it finds one — the same rule React's `onContextMenu` gets for free
+    /// from DOM event bubbling.
+    pub fn scene_at(&self, window_id: &str, x: f32, y: f32) -> Option<UiSceneHit> {
+        let window = self.windows.get(window_id)?;
+        let root = window.tree.root?;
+        let mut cursor = Some(crate::wgpu::events::hit_test(&window.tree, root, x, y)?);
+        while let Some(id) = cursor {
+            if let Some(slot) = scene_slot_for_node_absolute(&window.tree, id) {
+                return Some(slot);
+            }
+            cursor = window.tree.node(id)?.parent;
+        }
+        None
     }
 
     #[cfg(test)]

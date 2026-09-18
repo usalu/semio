@@ -336,7 +336,12 @@ impl Drop for PreparedRenderProcessPermit {
 //#region 🧩️PagedRasterProducer
 pub const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024;
 const PREPARED_RASTER_KEY_BYTES: usize = 256;
-const PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024;
+/// 🖼️ The straight-RGBA ceiling ONE raster item may carry into a prepared packet. `pub` because a
+/// PRODUCER of raster sources has to size its own decode against it: the world reference underlay
+/// publishes whatever a photograph or plan happens to be, and a source over this ceiling is refused at
+/// admission — which the frame reports as a build fault, not as one missing texture (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
+pub const PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024;
 const PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256;
 const PREPARED_RASTER_PRODUCER_ITEMS: usize = 4_096;
 const PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024;
@@ -1863,7 +1868,16 @@ impl PreparedRenderInput {
     pub fn new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Self {
         match Self::try_new(scene_revision, preview_generation, draw, overlay, time_seconds) {
             Ok(input) => input,
-            Err(_) => panic!("test prepared input must fit fixed process permits"),
+            Err(rejected) => {
+                let ledger = PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire);
+                panic!(
+                    "test prepared input must fit fixed process permits: {} (held items {}/{PREPARED_RENDER_PROCESS_SLOTS} pages {}/{PREPARED_RENDER_PROCESS_PAGES} backing-units {})",
+                    rejected.fault,
+                    (ledger >> PREPARED_RENDER_ITEM_SHIFT) & PREPARED_RENDER_ITEM_MASK,
+                    (ledger >> PREPARED_RENDER_PAGE_SHIFT) & PREPARED_RENDER_PAGE_MASK,
+                    (ledger >> PREPARED_RENDER_BACKING_SHIFT) & PREPARED_RENDER_BACKING_MASK
+                )
+            }
         }
     }
 

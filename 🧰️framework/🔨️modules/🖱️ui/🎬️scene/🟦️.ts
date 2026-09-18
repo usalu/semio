@@ -579,6 +579,31 @@ export function board2dSceneFromLanes(spine: Board2dScene, laneTexts: ReadonlyMa
 }
 //#endregion 🚚️Board2dSceneLanes
 
+//#region 🚚️Paint2dSceneLanes
+/** 🚚️ Reserved carrier-key namespace of the paint-2d lanes. */
+export const PAINT2D_SCENE_LANE_KEY_PREFIX = "framework.scene.paint2d.";
+
+/** 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
+ * `Paint2dSceneLane` / `PAINT2D_SCENE_LANE_*`; both pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json`. Both lanes scale with
+ * the document (the whole `RasterSession` sync channel and one entry per imported bitmap), so either
+ * outgrows the 32 KiB surface doc on a real painting. */
+export const PAINT2D_SCENE_LANES: readonly SceneLane<Paint2dScene>[] = [
+  { lane: "documentSync", field: "documentSyncJson", bodyKey: "framework.scene.paint2d.documentSync", optional: false },
+  { lane: "assets", field: "assetsJson", bodyKey: "framework.scene.paint2d.assets", optional: false },
+];
+
+/** 🚚️ Resolves a retained node key back to the paint-2d lane it carries. */
+export function paint2dSceneLaneForBodyKey(bodyKey: string): SceneLane<Paint2dScene> | undefined {
+  return PAINT2D_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
+}
+
+/** 🚚️ {@link sceneFromLanes} over {@link PAINT2D_SCENE_LANES}. */
+export function paint2dSceneFromLanes(spine: Paint2dScene, laneTexts: ReadonlyMap<string, string>): Paint2dScene {
+  return sceneFromLanes(spine, laneTexts, PAINT2D_SCENE_LANES);
+}
+//#endregion 🚚️Paint2dSceneLanes
+
 /** 🔌️ One port on a node-graph node: identity + display label (direction is implied by whether the
  * record lives in the owning node's `inputs` or `outputs` array). `code`/`abbreviation`/`fullName`/
  * `resourceKind` are set only for OS-workflow app-instance nodes (the wire key stays `resourceKind` —
@@ -899,6 +924,8 @@ export type Paint2dScene = {
   readonly brushOpacity: number;
   readonly viewMode: string;
   readonly compositeViewportJson?: string;
+  /** 🚚️ The spine's lane manifest — see {@link PAINT2D_SCENE_LANES}. */
+  readonly lanes?: readonly SceneLaneRef[];
 };
 
 /** 🎨️ An icon-render preview surface scene payload — mirrors the wasm `componentScene` node's `iconRender` field. */
@@ -994,7 +1021,7 @@ export type Board2dScene = {
 
 /** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. `documentJson` is opaque to the framework: the owning program defines its shape, conventionally an array of items (e.g. stroke | shape | text | image) each carrying its own transform; `selectionJson` is a `string[]` of selected item ids. */
 export type InkCanvasScene = {
-  readonly snapshotJson: string;
+  readonly documentJson: string;
   readonly selectionJson: string;
   readonly hoveredId?: string;
   readonly activeUtility: string;

@@ -22,6 +22,17 @@ import {
   evaluateBrowserBootLiveness,
 } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+
+/** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
+ * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
+ * (`🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts`). */
+function testBootDescriptor(variant: string): WgpuBootDescriptor {
+  return resolveWgpuBootDescriptor({ defaultVariant: variant });
+}
+
+/** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
+const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 
 class FakeWorker implements BrowserFrameWorkerPort {
   onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
@@ -53,11 +64,9 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
       width: 800,
       height: 600,
       dpr: 2,
-      pluginVariant: "s",
       locale: "en",
-      appRole: "editor",
-      appMode: "",
-      appExample: "",
+      descriptor: testBootDescriptor("s"),
+      appearance: TEST_HOST_APPEARANCE,
     },
     setTimer: () => 1,
     clearTimer: () => {},
@@ -249,7 +258,7 @@ describe("browser frame worker transport", () => {
     let now = 0;
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -269,7 +278,7 @@ describe("browser frame worker transport", () => {
     const faults: string[] = [];
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE },
       now: () => 0,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -292,7 +301,7 @@ describe("browser frame worker transport", () => {
     };
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -372,7 +381,8 @@ describe("browser frame worker transport", () => {
     expect(bootSource).toContain("host.semioWgpuIntrospection = { dumpStructure:");
     expect(bootSource).not.toContain("wasmBindings =");
     expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
-    for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
+    for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', 'message.probe === "chrome" ? bindings.dumpChrome', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
+    expect(bootSource).toContain('dumpChrome: probe("chrome")');
     expect(workerSource).toContain("INTROSPECTION_STEP_BUDGET_MS");
   });
 
@@ -420,7 +430,13 @@ describe("browser frame worker transport", () => {
     expect(rustSource).toContain("DispatchEvent::TextEditCommit");
     expect(rustSource).toContain("pending_discrete.saturating_add(discrete_commits)");
     expect(rustSource).not.toContain("stream.text.push_str");
-    expect(bootSource.indexOf("location.search.length")).toBeLessThan(bootSource.indexOf("new URLSearchParams"));
+    // 🧭️ The boot-query capacity guard lives in `🧭️boot-descriptor/🟦️.ts` (the schema-owned parser
+    // both doors share) rather than inline in the page boot, so the law follows it there: the bound
+    // is applied to `location.search` BEFORE the string reaches `URLSearchParams`.
+    const descriptorSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
+    expect(bootSource).not.toContain("new URLSearchParams");
+    expect(descriptorSource.indexOf("WGPU_BOOT_LOCATION_CAPACITY")).toBeLessThan(descriptorSource.indexOf("new URLSearchParams"));
+    expect(descriptorSource).toContain('new URLSearchParams(boundedLocation(input.search ?? "", "location.search"))');
   });
 });
 
@@ -436,7 +452,7 @@ function bootHarness(tongue: "en" | "de" = "en") {
   let nowMs = 0;
   const subject = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: tongue, appRole: "editor", appMode: "", appExample: "" },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: tongue, descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE },
     now: () => nowMs,
     setTimer: (callback, delayMs) => {
       const id = nextTimerId++;
@@ -575,7 +591,7 @@ describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
       const faults: string[] = [];
       const subject = new BrowserFrameTransport({
         worker,
-        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "", appExample: "" },
+        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE },
         now: () => Date.now(),
         setTimer: (callback, delayMs) => setTimeout(callback, delayMs) as unknown as number,
         clearTimer: (handle) => clearTimeout(handle),

@@ -10,6 +10,7 @@ import { createElement, Fragment } from "react";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import type { BuiltNode } from "@semio-tech/framework";
 import { TREE_WINDOW_PATH_SEPARATOR } from "@semio-tech/ui-react";
+import { parseResolvedPluginViewState } from "@semio-tech/framework";
 import { createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -177,6 +178,54 @@ describe("🪟️ tree window scheduler", () => {
     scheduler.setOpen("outliner", "old-doc.a", false);
     scheduler.setOpen("outliner", "old-doc.a", true);
     expect(scheduler.viewStateFields().treeWindows?.find((request) => request.nodeKey === "old-doc.a")?.rows).toBe(20);
+  });
+
+  /** 🚧️ The law that was missing when the fem3d House lane went down: a window path crosses the wasm boundary
+   * inside the view context, which is admitted as ONE object — so anything the scheduler emits must already
+   * satisfy `parseResolvedPluginViewState`. A nested path with the control character U+001F took the whole
+   * crossing with it: every `refreshUi` answered `view context: invalid identifier` and every unrelated
+   * `interactionSelect` was refused. This runs the REAL parser over the scheduler's own output. */
+  it("emits a nested path the real view-context parser admits", () => {
+    const timers = manualTimers();
+    const scheduler = createTreeWindowSchedulerV1({ refresh: () => {}, setTimer: timers.setTimer, clearTimer: timers.clearTimer });
+    const nested = `fem3d-play-artifact.load-cases${TREE_WINDOW_PATH_SEPARATOR}dead`;
+    scheduler.reportWindows("window:fem3d-model/artifact", [{ nodeKey: nested, offset: 0, rows: 26 }], 20);
+    timers.fire();
+    const fields = scheduler.viewStateFields();
+    expect(fields.treeWindows?.map((request) => request.nodeKey)).toEqual([nested]);
+
+    const admitted = parseResolvedPluginViewState({ locale: "en", terminology: "native", ...fields });
+
+    expect(admitted.treeWindows?.[0]?.nodeKey).toBe(nested);
+  });
+
+  it("drops an unsendable path instead of taking the whole view context down with it", () => {
+    const timers = manualTimers();
+    const scheduler = createTreeWindowSchedulerV1({ refresh: () => {}, setTimer: timers.setTimer, clearTimer: timers.clearTimer });
+    const messages: string[] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => void messages.push(String(args[0]));
+    try {
+      scheduler.reportWindows(
+        "outliner",
+        [
+          { nodeKey: "fine", offset: 0, rows: 10 },
+          { nodeKey: `bad\u001fpath`, offset: 0, rows: 10 },
+          { nodeKey: "x".repeat(257), offset: 0, rows: 10 },
+        ],
+        20,
+      );
+      timers.fire();
+      const fields = scheduler.viewStateFields();
+
+      expect(fields.treeWindows?.map((request) => request.nodeKey)).toEqual(["fine"]);
+      expect(() => parseResolvedPluginViewState({ locale: "en", terminology: "native", ...fields })).not.toThrow();
+      // 🧯️ Loud, and once per body + path.
+      scheduler.viewStateFields();
+      expect(messages.filter((message) => message.includes("[tree-window] unsendable path")).length).toBe(2);
+    } finally {
+      console.error = original;
+    }
   });
 
   it("drops every body's state on reset, so a session switch never asks a new guest about old containers", () => {

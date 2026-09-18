@@ -59,8 +59,15 @@ fn pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner() {
     assert_eq!(queue.len(), 0);
 }
 
+/// 🧹️ `PendingRasterUploadCursor` walks the WHOLE process pending registry, not one surface, so this
+/// law first retires whatever a neighbouring test (the interpreter's ui-image resolutions) left
+/// pending — otherwise the first checkout is a FOREIGN surface's producer and the FIFO generation it
+/// asserts belongs to nobody (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba() {
+    let mut authority = begin_pending_raster_authority_close();
+    while !authority.close_step() {}
+    reset_pending_raster_authority();
     let surface_id = "raster-checkout-handback";
     let data_url = tiny_png_data_url(1, 2, 3);
     assert!(queue_canvas_image_upload(surface_id, "layer", &data_url).is_some());
@@ -90,14 +97,22 @@ fn checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba() {
     while !producer.close_step() {}
 }
 
+/// 🧯️ Saturates the raster ledger FROM WHEREVER IT IS rather than demanding all 256 slots: the
+/// producer ledger is process-wide and every neighbouring test that queued an upload still holds one,
+/// so demanding the full capacity made this law `expect`-panic mid-loop and the panic then leaked the
+/// reservations already taken — the cascade that failed the whole raster family in-suite while each
+/// case passed alone (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn admission_saturation_runs_no_hash_dimension_or_pixel_materialization() {
     use std::cell::Cell;
 
     let mut reservations = Vec::with_capacity(256);
     for index in 0..256 {
-        reservations.push(PreparedRasterReservation::try_reserve(format!("held-{index}")).expect("exact live reservation slot"));
+        let Ok(reservation) = PreparedRasterReservation::try_reserve(format!("held-{index}")) else { break };
+        reservations.push(reservation);
     }
+    assert!(!reservations.is_empty(), "the fixed raster ledger admitted nothing at all — the saturation law would pass vacuously");
+    assert!(PreparedRasterReservation::try_reserve("held-plus-one".to_string()).is_err(), "the ledger is saturated once it refuses one more");
     let dimensions_called = Cell::new(false);
     let decode_called = Cell::new(false);
     let result = queue_canvas_image_upload_with(
@@ -295,7 +310,7 @@ fn render_canvas_shape_fill_draws_solid_fill_and_stroke_for_plain_records() {
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let shape_rect = Rect::new(10.0, 10.0, 40.0, 20.0);
     let layer: CanvasLayer = serde_json::from_str(r#"{"kind":"rect","fill":{"color":[0.1,0.2,0.3,1.0]},"stroke":{"color":[1.0,1.0,1.0,1.0],"width":2.0}}"#).unwrap();
-    render_canvas_shape_fill(&mut draw, &viewport, inner, shape_rect, &layer, 1.0, Rgba::new(0.0, 0.0, 0.0, 1.0), Theme::default().canvas_clear, false);
+    render_canvas_shape_fill(&mut draw, &viewport, inner, shape_rect, &layer, 1.0, Rgba::new(0.0, 0.0, 0.0, 1.0), Theme::default().canvas_clear, Theme::default().canvas_clear, false);
     let solids = count_solids(&draw);
     let verts: usize = draw.layers.iter().map(|l| l.vector_vertices.len()).sum();
     assert!(solids > 0, "solid fill should push a rounded-rect instance");

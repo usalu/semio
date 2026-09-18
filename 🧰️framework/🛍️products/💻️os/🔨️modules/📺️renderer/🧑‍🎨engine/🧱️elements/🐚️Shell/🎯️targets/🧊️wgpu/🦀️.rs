@@ -11,15 +11,16 @@ use crate::dock::{push_window_silhouette_border, DockDropZone, DockStackTab};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
 use ui_wgpu::wgpu::push_chrome_group_border;
-#[cfg(test)]
-use ui_wgpu::wgpu::{Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
+// 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
+// leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
+// panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
+use ui_wgpu::wgpu::{Label, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode};
 
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockRenderContext, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_update_catalogue_drop_preview, World3dState, WorldInteractionIntent, WorldInteractionPhase};
-#[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
 use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
@@ -28,7 +29,6 @@ use semio_framework_os_config::opening_config::{
     mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
     UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, UI_PREFERENCES_CONFIG_SCHEMA,
 };
-#[cfg(test)]
 use semio_framework::IconName;
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
@@ -40,25 +40,32 @@ use store_sync::PresencePeer;
 use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
 use ui_contract::UiFixedList;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
-// lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
-// re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
-// shell and the hub's own Rust twin import). Native-only: the browser wgpu build has no native
-// `ArtifactHost`/document-sync path either (see `attach_sync_backbone`'s wasm32 branch), so identity/
-// directory wiring stays inside the same `not(wasm32)` boundary as every other native-only field on
-// `ShellState` (`document_host`, `sync_channel`, `sync_status`).
+// lane 1-D's Rust directory client, consumed as-is (never re-declared:
+// `semio_framework_os_kernel::os_directory` is the single source of truth both this shell and the
+// hub's own Rust twin import).
+//
+// 🌐️ Target-neutral since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e: identity, the
+// directory command FIFO and Space Administration are pure state machinery over `DirectoryClient<T>`,
+// so the platform split lives at `T` — `crate::directory_door::ShellDirectoryTransport` — and not
+// around the features themselves. Only the document-sync backbone (`ArtifactHost`) and the retained
+// Home projection's WebSocket stream remain native-only below.
+use crate::directory_door::{ShellDirectoryClient, ShellDirectoryTransport};
+use semio_framework_os_kernel::os_directory::{
+    client::{DirectoryClient, DirectoryClientError},
+    identity::Identity,
+    mint_directory_command_request_id,
+    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
+    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
-    client::{
-        native::NativeDirectoryTransport, CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryClient, DirectoryClientError, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError,
-    },
-    identity::{actor_id, claimed_local_hub_credential, restore_claimed, Identity, IdentityOutcome, IdentityStatus},
-    mint_directory_command_request_id,
+    client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
+    identity::{actor_id, claimed_local_hub_credential, restore_claimed, IdentityOutcome, IdentityStatus},
     schema::{
         reduce_gis_map_inference_port_v1, DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
         GisMapInferencePortStatusV1, GIS_MAP_INFERENCE_SERVICE_ID,
     },
-    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
-    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
+    DirectoryStreamMessage,
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
@@ -68,16 +75,17 @@ use semio_framework_os_kernel::os_directory::{
 // constructed for identity or directory work.
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
+use semio_framework_async::{CancelToken, OperationContext, TraceId};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_async::{CancelToken, Lane, OperationContext, ScopeOwner, TraceId, WorkerPool};
+use semio_framework_async::{Lane, ScopeOwner, WorkerPool};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, paint_retained_glyph_step, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
-    Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
+    chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor,
+    RetainedGlyphStep, RetainedTextFlow, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
-    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityCategory, UtilityNode, WindowEngagement,
+    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityNode, WindowEngagement,
     WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
 };
 
@@ -100,34 +108,47 @@ fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
 /// `PanelTabKind::SettingsTheme` variant this maps to already existed in `framework/core/rs/lib.rs`
 /// but was completely unwired on this side (see `build_settings_theme_ui`/`right_tabs`).
 const FRAMEWORK_SETTINGS_THEME_TAB_ID: &str = "framework.settings.theme";
-/// 🎛️ wgpu-only: React surfaces its command palette as a persistent `bottom-middle` dock anchor
-/// (`buildCommandCategoryTabs`), which this renderer has no equivalent of (`group_side`/`PanelGroup::
-/// anchor` only ever map to the four corners — see that function's own doc comment). This gives
-/// The local builder remains a test oracle; production panel content now requires retained semantic
-/// document publication.
-const FRAMEWORK_SETTINGS_COMMANDS_TAB_ID: &str = "framework.settings.commands";
 const FRAMEWORK_CHAT_PANEL_ID: &str = "framework.chat";
+/// 🌳️ Byte-identical to React's `FRAMEWORK_CATEGORY_DISPLAY_ID` (`🛠️ShellHelpers/🟦️.tsx:224`) — the
+/// bottom-left anchor's Display branch, the one anchor whose app tabs nest under a category root.
+const FRAMEWORK_CATEGORY_DISPLAY_ID: &str = "framework.category.display";
+/// 🎛️ Byte-identical to React's `FRAMEWORK_CATEGORY_COMMAND_ID` — the bottom-middle Command branch.
+const FRAMEWORK_CATEGORY_COMMAND_ID: &str = "framework.category.command";
+/// 🛠️ Byte-identical to React's `FRAMEWORK_CATEGORY_TOOL_ID` — the bottom-middle Tool branch, ordered
+/// left of Command. wgpu has no mode-level tool leaves to nest under it yet (`📓️w1h-…` remaining gaps).
+const FRAMEWORK_CATEGORY_TOOL_ID: &str = "framework.category.tool";
+/// 🔄️ Byte-identical to React's `frameworkSyncTab` leaf id (`🏛️ShellHost/🟦️.tsx`'s `"s-sync-status"`),
+/// the same id the footer check-in pill already registers.
+const FRAMEWORK_SYNC_PANEL_TAB_ID: &str = "s-sync-status";
+/// 🎛️ One command category's leaf id under the Command branch — React's `command.category.<id>`.
+const FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX: &str = "command.category.";
+/// ⚙️ Byte-identical to React's `FRAMEWORK_SETTINGS_PANEL_ID`/`FRAMEWORK_SETTINGS_BRANCH_ID`
+/// (`📌️ChromePanels/🟦️.tsx`, `🛠️ShellHelpers/🟦️.tsx`) — the bottom-right Settings BRANCH whose children
+/// are the five framework settings leaves, with the app's own Settings-group tabs nested ahead of them.
+const FRAMEWORK_SETTINGS_PANEL_ID: &str = "framework.settings";
+const FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID: &str = "framework.settings.keybindings";
+const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID: &str = "framework.settings.default-apps";
+const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID: &str = "framework.settings.conflicts";
+/// 🛍️ Byte-identical to React's `FRAMEWORK_MARKETPLACE_TAB_ID` — the bottom-right Marketplace leaf.
+const FRAMEWORK_MARKETPLACE_TAB_ID: &str = "framework.marketplace";
+/// 🛠️ One mode tool's leaf id under the Tool branch — React's `tool.<id>` (`🛠️ShellHelpers/🟦️.tsx`'s
+/// `buildToolTabs`/`toolIdFromPanelTabId`). The leaf tab IS the activation control.
+const FRAMEWORK_TOOL_PANEL_TAB_PREFIX: &str = "tool.";
+/// 📱️ Byte-identical to React's synthetic mobile "App" tab (`🏛️ShellHost/🟦️.tsx`'s `mobilePanelTabs`).
+const FRAMEWORK_MOBILE_APP_TAB_ID: &str = "framework.mobile.app";
 const CHROME_ICON_TINY: f32 = 14.0;
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum LeftPanelKind {
-    #[default]
-    Workbench,
-    Display,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum RightPanelKind {
-    #[default]
-    Details,
-    Settings,
-    Chat,
-}
+/// 🫳️ The insert-preview pill's width — React's `panelTabInsertPreviewClass`'s `w-0.5`
+/// (`🧭️PanelTabBar/🟦️.tsx`), the 2 logical px Tailwind's `0.5` step resolves to.
+const TAB_INSERT_PREVIEW_WIDTH_PX: f32 = 2.0;
 
 #[derive(Clone, Debug)]
 pub struct SearchPaletteItem {
     pub id: String,
     pub label: String,
+    /// 🔍️ The palette's secondary line — a command's resolved chords, exactly what React's `UISearch`
+    /// item puts there (`description: commandKeybindingChords(...)`). Ranked at weight 1 (see
+    /// `filtered_search_items`), so typing a chord finds its command.
+    pub description: Option<String>,
     pub group: String,
     pub dispatch_action: Option<ActionDescriptor>,
     pub action: Option<String>,
@@ -359,7 +380,6 @@ fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
 /// `ShellState::new`. Process id + boot-time millis is deliberately simple (CLAUDE.md: concise code,
 /// no cryptographic uniqueness need) — collisions would require two `semio-wgpu-native` processes
 /// booting the same pid at the same millisecond, which the OS itself already rules out.
-#[cfg(not(target_arch = "wasm32"))]
 fn mint_shell_session_id() -> String {
     format!("wgpu-{}", semio_framework_os_kernel::os_identity::time_ordered_id())
 }
@@ -370,6 +390,37 @@ fn mint_shell_session_id() -> String {
 #[cfg(not(target_arch = "wasm32"))]
 fn resolve_identity_env() -> Option<IdentityEnv> {
     IdentityEnv::from_process_env()
+}
+
+/// 🌱️ Browser: the same decision from the boot environment the TypeScript host handed over
+/// (`semioWgpuSetHubEnv`). A page that was never told about a hub stays local-only, exactly as a
+/// native process without `S_*` does.
+#[cfg(target_arch = "wasm32")]
+fn resolve_identity_env() -> Option<IdentityEnv> {
+    BOOT_HUB_ENV.with(|cell| cell.borrow().as_ref().map(|(_, _, data_dir)| IdentityEnv { data_dir: data_dir.as_ref().map(std::path::PathBuf::from) }))
+}
+
+/// 📇️ The base the shell's `DirectoryClient` prefixes every hub path with.
+///
+/// ⚖️ Native talks to the hub origin directly (the credential's own `hub_origin`, filled in by
+/// `DirectoryClient::authenticated`, so this is only the pre-identity default). The browser goes
+/// through the SAME same-origin reverse proxy prefix the React shell's worker uses
+/// (`requestBaseUrl: "/_semio/hub"`, `🏪️store/👷️worker/🟦️.ts`) — same-origin is what lets the
+/// session cookie travel at all, so the two renderers cannot disagree about where the hub is.
+#[cfg(not(target_arch = "wasm32"))]
+fn shell_directory_request_base_url() -> String {
+    std::env::var("S_HUB_URL").ok().filter(|value| !value.trim().is_empty()).unwrap_or_default()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn shell_directory_request_base_url() -> String {
+    "/_semio/hub".to_string()
+}
+
+/// 🔌️ The one transport the shell's directory client is built on for this target.
+#[cfg(target_arch = "wasm32")]
+fn shell_directory_transport() -> ShellDirectoryTransport {
+    ShellDirectoryTransport::default()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -421,7 +472,6 @@ fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&s
 /// (`📓️w2-c-report.md`) — same action ids, same field names, same `share-link` → `create-invite`
 /// sugar (contract §C1 has no directory-schema command kind of its own for it). `None` for an
 /// unrecognized verb, defensive against a foreign/future caller.
-#[cfg(not(target_arch = "wasm32"))]
 fn directory_command_from_action(action_id: &str, args: Option<&Value>) -> Option<DirectoryCommand> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or("").to_string();
     let str_field_or = |key: &str, default: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or(default).to_string();
@@ -509,7 +559,6 @@ fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<O
 
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
 #[cfg(not(target_arch = "wasm32"))]
-#[cfg(test)]
 fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
         return Vec::new();
@@ -600,9 +649,7 @@ fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, art
 /// 📌️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — auto check-in policy
 /// constants, byte-identical to the React shell's `AUTO_CHECKIN_IDLE_MS`/`AUTO_CHECKIN_EDIT_THRESHOLD`
 /// (`ShellHelpers/🟦️.tsx`).
-#[cfg(not(target_arch = "wasm32"))]
 const AUTO_CHECKIN_IDLE_MS: i64 = 20_000;
-#[cfg(not(target_arch = "wasm32"))]
 const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
 
 /// 🧾️ ticket §C5 — folds one `HistoryPatch` into the running per-session entry map, the wgpu twin of
@@ -611,7 +658,6 @@ const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
 /// newer than the tracked cursor is a stale/duplicate reply and is ignored outright. Returns whether
 /// the fold actually changed anything, so callers only re-derive the uncommitted count when it could
 /// have moved.
-#[cfg(not(target_arch = "wasm32"))]
 fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::HistoryEntry>, cursor: &mut u64, patch: &semio_framework::kernel::HistoryPatch, replace: bool) -> bool {
     if !replace && patch.cursor <= *cursor {
         return false;
@@ -630,7 +676,6 @@ fn fold_history_patch(entries: &mut BTreeMap<u64, semio_framework::kernel::Histo
 /// React shell's `uncommittedEditCount` (`ShellHost/🟦️.tsx`) uses — every applied
 /// mutation-kind entry counts, reset to 0 the moment a `commitCheckpoint` history-kind entry is seen,
 /// walked oldest-first (`BTreeMap` keyed by `seq` iterates in order already).
-#[cfg(not(target_arch = "wasm32"))]
 fn uncommitted_edit_count(entries: &BTreeMap<u64, semio_framework::kernel::HistoryEntry>) -> u32 {
     let mut pending = 0u32;
     for entry in entries.values() {
@@ -648,7 +693,6 @@ fn uncommitted_edit_count(entries: &BTreeMap<u64, semio_framework::kernel::Histo
 /// 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint", the wgpu twin of the React shell's
 /// `canCheckIn` (`ShellHelpers/🟦️.tsx`): the one predicate gating both the `#s-checkin`
 /// affordance's presence and the auto check-in poll's arming.
-#[cfg(not(target_arch = "wasm32"))]
 fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
     role == semio_framework::manifest::AppRole::Editor
 }
@@ -661,7 +705,6 @@ fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
 /// since the last uncommitted-count change — and never again while `pending` is already set (mirrors
 /// `AutoCheckinScheduler::notify`'s own storm guard: a fire that's already pending never re-fires
 /// until the caller observes the count return to 0 and clears `pending`).
-#[cfg(not(target_arch = "wasm32"))]
 fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, last_edit_at_ms: Option<i64>, now_ms: i64, idle_ms: i64, threshold: u32) -> bool {
     if uncommitted_count == 0 || pending {
         return false;
@@ -678,7 +721,6 @@ fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, last_edit_at_
 /// 📌️ ticket §C5 item 4 — the pure gate `checkpoint_before_detach` evaluates: checkpoint-on-close
 /// only when the session can check in at all (item 5's viewer guard), a document is actually attached
 /// (nothing to check in otherwise), and there really is something uncommitted.
-#[cfg(not(target_arch = "wasm32"))]
 fn should_checkpoint_before_detach(role: semio_framework::manifest::AppRole, has_attached_document: bool, uncommitted_count: u32) -> bool {
     can_check_in(role) && has_attached_document && uncommitted_count > 0
 }
@@ -688,7 +730,6 @@ fn should_checkpoint_before_detach(role: semio_framework::manifest::AppRole, has
 /// it (`checkpoint_dispatched`) — a checkpoint id present from the very first snapshot (nothing
 /// "landed", the session just mounted with a pre-existing one) or one made by a REMOTE peer must never
 /// trigger a redundant `TouchArtifact` of our own.
-#[cfg(not(target_arch = "wasm32"))]
 fn checkpoint_landed(previous_checkpoint_id: Option<&str>, next_checkpoint_id: Option<&str>, checkpoint_dispatched: bool) -> bool {
     checkpoint_dispatched && next_checkpoint_id.is_some() && next_checkpoint_id != previous_checkpoint_id
 }
@@ -738,6 +779,19 @@ pub struct SpacePanelState {
     pub spawned_apps: Vec<SpawnedAppEntry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_spawned_id: Option<String>,
+}
+
+/** @emoji 🖱️ The `surface` half of one right-click's context-menu request, as
+ * [`ShellState::resolve_context_menu_surface`] resolved it: which surface owns the click, the
+ * camelCase menu/kind vocabulary id React sends for it, and that kind's own per-row hits, selection
+ * groups and (text editor only) text context. */
+#[derive(Clone, Debug, Default)]
+pub struct ContextMenuSurfaceResolution {
+    pub surface_id: String,
+    pub kind: String,
+    pub hits: Vec<ui_wgpu::wgpu::ContextMenuHit>,
+    pub selection: Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>,
+    pub text: Option<ui_wgpu::wgpu::ContextMenuTextContext>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -959,7 +1013,12 @@ pub struct ShellSyncChannel {
 #[derive(Default)]
 struct ShellChromeBuildState {
     find_items: ShellFindItems,
-    content_focus: HashMap<String, bool>,
+    /// 🎯️ Which retained node holds focus per window, `None` for a window whose content is blurred —
+    /// the wgpu twin of React's active-root registry (`🧱️elements/🌈️Surface/🟦️.tsx:186-197`, whose
+    /// `focusin` listener stores `resolveSurfaceActiveRoot(event.target)`, not a boolean). This used to
+    /// be a bare `bool`, which is why `UiCommand::FocusChanged`'s node id was thrown away on arrival
+    /// (ticket 26/09/17 packet W2k).
+    content_focus: HashMap<String, Option<ui_wgpu::wgpu::NodeId>>,
     tooltip_titles: HashMap<String, String>,
     tooltip_hover: Option<ChromeTooltipHover>,
     dialog_stack: Vec<ChromeDialogRequest>,
@@ -972,12 +1031,19 @@ struct ShellChromeBuildState {
     introduction_seen_writes: Vec<String>,
     tutorial_dispatch_internal: bool,
     preferences: ChromePrefsState,
+    /// 🧯️ The one live non-fatal notice — see `🧯️TransientNoticeAndAgentOverlays`.
+    transient_notice: Option<ShellTransientNotice>,
+    /// 🌉️ MCP agent bridge consumer (presence + parked approvals), packet W1j.
+    agent: crate::agent_bridge::AgentBridgeState,
+    /// ✅️ The approvals modal's own open/dismiss state, alongside `agent.pending_approvals`.
+    agent_approvals: crate::agent_approvals::AgentApprovalsModel,
 }
 
 /// 🖥️ UI-thread persistence and platform integration state surrounding chrome construction.
 #[derive(Default)]
 struct ShellChromePresentState {
-    last_persisted_panel_layout: Option<PanelLayoutPersisted>,
+    last_persisted_dock_ui: Option<DockUiState>,
+    last_persisted_dock_skeleton: Option<Option<DockSkeleton>>,
     preferences_loaded: bool,
     last_synced_preferences: Option<UiPrefsSnapshot>,
     maintenance: ShellChromeMaintenance,
@@ -1082,7 +1148,7 @@ impl std::task::Wake for ShellPoolFuture {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-type ShellDirectoryStream = DirectoryStream<NativeDirectoryTransport<TokioHostRuntime>>;
+type ShellDirectoryStream = DirectoryStream<ShellDirectoryTransport>;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn close_unowned_directory_dial<T: DirectoryWsConnection>(result: Result<T, TransportError>) {
@@ -1384,7 +1450,7 @@ impl GisMapInferenceDriverV1 {
 #[cfg(not(target_arch = "wasm32"))]
 struct ShellInferenceRunner {
     pool: WorkerPool,
-    client: std::sync::Arc<DirectoryClient<NativeDirectoryTransport<TokioHostRuntime>>>,
+    client: std::sync::Arc<ShellDirectoryClient>,
     context: OperationContext,
     driver: std::sync::Mutex<GisMapInferenceDriverV1>,
     statuses: std::sync::Mutex<std::collections::VecDeque<GisMapInferencePortStatusV1>>,
@@ -1400,7 +1466,7 @@ impl ShellInferenceRunner {
     const MAX_ACTIONS_PER_TURN: usize = 4;
     const MAX_TURN_MS: u64 = 4;
 
-    fn start(pool: WorkerPool, client: std::sync::Arc<DirectoryClient<NativeDirectoryTransport<TokioHostRuntime>>>, context: OperationContext, driver: GisMapInferenceDriverV1) -> std::sync::Arc<Self> {
+    fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, context: OperationContext, driver: GisMapInferenceDriverV1) -> std::sync::Arc<Self> {
         let runner = std::sync::Arc::new(Self {
             pool,
             client,
@@ -1792,7 +1858,6 @@ mod shell_document_retirement_tests;
 /// 🏛️ Closed lifecycle of the one shell-owned native space-administration operation — the WGPU twin
 /// of the browser worker's `DirectoryAdministrationOperation`. Every terminal phase has already
 /// erased the page, the receipt, and any invite capability.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShellSpaceAdministrationPhaseV1 {
     Loading,
@@ -1806,7 +1871,6 @@ pub enum ShellSpaceAdministrationPhaseV1 {
     Failed,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl ShellSpaceAdministrationPhaseV1 {
     /// 🏁️ A terminal phase never advances again and holds no page, receipt, or capability.
     pub fn is_terminal(self) -> bool {
@@ -1821,7 +1885,6 @@ impl ShellSpaceAdministrationPhaseV1 {
 
 /// 🎬️ The one bounded step the driver may take next. `Idle` means the operation is waiting on the
 /// renderer; `Closed` means it has been retired and must be dropped.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, PartialEq)]
 pub enum ShellSpaceAdministrationTurnV1 {
     FetchPage { cursor: Option<String> },
@@ -1834,7 +1897,6 @@ pub enum ShellSpaceAdministrationTurnV1 {
 /// It owns one canonical page, at most one command request/receipt, and at most one one-shot invite
 /// capability. Administration mutations never auto-retry: an indeterminate transport is terminal
 /// `Failed` ("unknown outcome / refresh required"), so a `create-invite` can never mint twice.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug)]
 pub struct ShellSpaceAdministrationOperationV1 {
     operation_epoch: u64,
@@ -1850,7 +1912,6 @@ pub struct ShellSpaceAdministrationOperationV1 {
     code: Option<DirectoryCommandErrorCodeV1>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl ShellSpaceAdministrationOperationV1 {
     /// 🆕️ Opens the one operation for exactly one space; the first turn fetches its page.
     pub fn open(operation_epoch: u64, space_id: &str) -> Self {
@@ -2012,20 +2073,17 @@ impl ShellSpaceAdministrationOperationV1 {
 
 /// 🛂️ An owner row can never be removed: the server rejects it, so the control is disabled before
 /// dispatch rather than offered and then refused.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn shell_space_administration_member_removable(row: &DirectorySpaceAdministrationMemberRowV1, capabilities: Option<DirectorySpaceAdministrationCapabilitiesV1>) -> bool {
     capabilities.is_some_and(|capabilities| capabilities.remove_member) && !row.owner
 }
 
 /// 🎟️ A revoked or accepted invitation is terminal; only a live one may be revoked.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn shell_space_administration_invite_revocable(row: &DirectorySpaceAdministrationInviteRowV1, capabilities: Option<DirectorySpaceAdministrationCapabilitiesV1>) -> bool {
     capabilities.is_some_and(|capabilities| capabilities.revoke_invite) && !row.revoked && !row.accepted
 }
 
 /// 🗣️ Every visible administration string, in both languages, with no default: the caller passes the
 /// active locale and gets the exact pair member. Mirrors the React pane's own bundle one-for-one.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn shell_space_administration_label(key: &str, german: bool) -> &'static str {
     match (key, german) {
         ("title", false) => "Space administration",
@@ -2075,7 +2133,6 @@ pub fn shell_space_administration_label(key: &str, german: bool) -> &'static str
 }
 
 /// 🗣️ The status line one phase renders, in the active language.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn shell_space_administration_status(phase: ShellSpaceAdministrationPhaseV1, german: bool) -> &'static str {
     let key = match phase {
         ShellSpaceAdministrationPhaseV1::Loading => "loading",
@@ -2095,7 +2152,6 @@ pub fn shell_space_administration_status(phase: ShellSpaceAdministrationPhaseV1,
 /// solely from the server's own capability flags and the operation's settled phase, so the native
 /// renderer offers exactly the affordances the React pane does — and neither derives authority from
 /// a locally stored role.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ShellSpaceAdministrationControlV1 {
     pub control_id: String,
@@ -2106,7 +2162,6 @@ pub struct ShellSpaceAdministrationControlV1 {
 
 /// 🖼️ Builds the pane's complete control set from the canonical page alone. A `member`/`public`
 /// page yields no administration control at all, because it structurally carries no capabilities.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn shell_space_administration_controls(operation: &ShellSpaceAdministrationOperationV1, german: bool) -> Vec<ShellSpaceAdministrationControlV1> {
     let mut controls = Vec::new();
     controls.push(ShellSpaceAdministrationControlV1 {
@@ -2162,22 +2217,22 @@ pub fn shell_space_administration_controls(operation: &ShellSpaceAdministrationO
     controls
 }
 //#endregion 🏛️SpaceAdministration
-
+//#region 🎮️DirectoryCommandQueue
 /// 🎮️ Bounded (contract §C6 "bounded, in-memory") native directory-command FIFO depth.
-#[cfg(not(target_arch = "wasm32"))]
 const MAX_PENDING_DIRECTORY_COMMANDS: usize = 64;
 /// 🧾️ Bounded transient command-result slot depth.
-#[cfg(not(target_arch = "wasm32"))]
 const MAX_DIRECTORY_COMMAND_RESULTS: usize = 64;
 /// ⏳️ Finite per-command deadline; a hung hub can never retain a command turn forever.
-#[cfg(not(target_arch = "wasm32"))]
 const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
+/// ⏳️ Browser identity retry floor: a hub that refuses `/auth/sessions/me` must not be re-asked on
+/// every 100 ms frame pump. Native needs no twin — its bootstrap is a one-shot pool future.
+#[cfg(target_arch = "wasm32")]
+const BROWSER_IDENTITY_RETRY_MS: u64 = 5_000;
 
 /// 🧾️ One transient native command completion: either the authoritative receipt or a closed
 /// terminal code. Never a raw server body, and never a logged capability.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, PartialEq)]
-pub enum NativeDirectoryCommandResultV1 {
+pub enum ShellDirectoryCommandResultV1 {
     Receipt(DirectoryCommandReceiptV1),
     Failed(DirectoryCommandErrorCodeV1),
 }
@@ -2186,15 +2241,13 @@ pub enum NativeDirectoryCommandResultV1 {
 /// request-id-keyed result slot. Every policy this transport owes — fixed capacity, byte-identical
 /// retry of the head, stop-at-the-first-transient-fault, and proceed past a terminal auth/conflict
 /// failure — lives here so it is provable without a renderer, a surface, or a live hub.
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug, Default)]
-pub struct NativeDirectoryCommandQueueV1 {
+pub struct ShellDirectoryCommandQueueV1 {
     pending: Vec<DirectoryCommandRequestV1>,
-    results: Vec<(String, NativeDirectoryCommandResultV1)>,
+    results: Vec<(String, ShellDirectoryCommandResultV1)>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl NativeDirectoryCommandQueueV1 {
+impl ShellDirectoryCommandQueueV1 {
     /// 📥️ Admits one sealed operation, answering the NEWEST intent with a terminal `capacity`
     /// result when full rather than silently discarding an older one the caller believes it issued.
     pub fn admit(&mut self, request: DirectoryCommandRequestV1) {
@@ -2206,7 +2259,7 @@ impl NativeDirectoryCommandQueueV1 {
             None
         };
         match rejection {
-            Some(code) => self.retain(&request.request_id, NativeDirectoryCommandResultV1::Failed(code)),
+            Some(code) => self.retain(&request.request_id, ShellDirectoryCommandResultV1::Failed(code)),
             None => self.pending.push(request),
         }
     }
@@ -2237,19 +2290,19 @@ impl NativeDirectoryCommandQueueV1 {
             Err(code) if code.is_transient() => false,
             Err(code) => {
                 self.pending.remove(0);
-                self.retain(&request, NativeDirectoryCommandResultV1::Failed(code));
+                self.retain(&request, ShellDirectoryCommandResultV1::Failed(code));
                 true
             }
             Ok(receipt) => {
                 self.pending.remove(0);
-                self.retain(&request, NativeDirectoryCommandResultV1::Receipt(receipt));
+                self.retain(&request, ShellDirectoryCommandResultV1::Receipt(receipt));
                 true
             }
         }
     }
 
     /// 🧾️ Reads one retained transient result for the issuing surface.
-    pub fn result(&self, request_id: &str) -> Option<&NativeDirectoryCommandResultV1> {
+    pub fn result(&self, request_id: &str) -> Option<&ShellDirectoryCommandResultV1> {
         self.results.iter().find(|(id, _)| id == request_id).map(|(_, result)| result)
     }
 
@@ -2258,7 +2311,7 @@ impl NativeDirectoryCommandQueueV1 {
         self.pending.len()
     }
 
-    fn retain(&mut self, request_id: &str, result: NativeDirectoryCommandResultV1) {
+    fn retain(&mut self, request_id: &str, result: ShellDirectoryCommandResultV1) {
         self.results.retain(|(id, _)| id != request_id);
         if self.results.len() >= MAX_DIRECTORY_COMMAND_RESULTS {
             self.results.remove(0);
@@ -2266,6 +2319,7 @@ impl NativeDirectoryCommandQueueV1 {
         self.results.push((request_id.to_string(), result));
     }
 }
+//#endregion 🎮️DirectoryCommandQueue
 
 //#region 🧯️BootProgramSelection
 /// 🧯 One plugin whose boot activation faulted, kept as data so the shell can show WHICH plugin is
@@ -2299,9 +2353,12 @@ pub struct ShellSurfaceFault {
 /// and made that plugin's first-step trap the whole shell's boot failure. Falls back to the program
 /// that actually declares the requested app id, and only then to the requested program's first app;
 /// a variant whose plugin is absent resolves to `None` rather than to somebody else's app.
-pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str, app_role: semio_framework::manifest::AppRole) -> Option<(usize, AppDefinition)> {
+pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str, app_role: semio_framework::manifest::AppRole, pinned_app_id: Option<&str>) -> Option<(usize, AppDefinition)> {
     let registry_plugin_id = resolve_registry_plugin_id(plugin_filter);
-    let requested_app_id = resolve_playground_app_id(plugin_filter);
+    // 📌️ `?app=`/`--app`/`appId` PINS the anchor, React's `appId` — a pin the manifest does not
+    // declare is dropped back to the variant's own app, the same "a url is not a place to hard-fail a
+    // shell" rule `?role=`/`?mode=`/`?example=` follow.
+    let requested_app_id = pinned_app_id.filter(|app_id| !app_id.is_empty() && programs.iter().any(|(_, manifest)| manifest.apps.iter().any(|app| app.id == *app_id))).or_else(|| resolve_playground_app_id(plugin_filter));
     let index = programs
         .iter()
         .position(|(plugin_id, _)| *plugin_id == registry_plugin_id)
@@ -2547,15 +2604,24 @@ pub struct ShellState {
     pub spawned_ui: Option<UiDocumentLease>,
     closing_documents: ShellDocumentRetirementRegistry,
     pub active_window_id: Option<String>,
-    pub left_panel_open: bool,
-    pub right_panel_open: bool,
-    pub left_panel_width: f32,
-    pub right_panel_width: f32,
+    /// 🧭️ Every anchor's own open/size/active-path chrome, slotted by `PanelAnchor::index` — the
+    /// wgpu twin of React's `panels[anchor]` reducer state.
+    pub panel_anchors: [PanelAnchorState; 8],
+    /// 🧭️ The live per-anchor tab trees, `apply_dock_skeleton(default_dock, dock_override)`.
+    pub dock_tabs: ShellDock,
+    /// 🗄️ The persisted arrangement override, `None` while the dock equals its computed default.
+    pub dock_override: Option<DockSkeleton>,
+    /// 🌳️ Branch ids folded shut in an anchor's tab bar, keyed `{anchor}/{branchId}`.
+    pub dock_collapsed_branches: HashMap<String, bool>,
+    /// 🎯️ The tab id a pointer is dragging between anchors, plus the anchor it started in.
+    pub dock_tab_drag: Option<(String, PanelAnchor)>,
+    /// 🗄️ The app id whose persisted dock layer is currently loaded — the change detector that reloads
+    /// the override on an app switch without clobbering a reveal on every other chrome sync.
+    dock_loaded_app_id: Option<String>,
     pub scroll_offsets: HashMap<String, f32>,
     pub overlay_state: OverlayState,
     pub collapsed_sections: HashMap<String, bool>,
     pub open_selects: HashMap<String, bool>,
-    pub active_right_tab: Option<String>,
     pub context_menu: Option<ContextMenuState>,
     pub search_open: bool,
     pub find_open: bool,
@@ -2577,6 +2643,13 @@ pub struct ShellState {
     /// painting every OTHER surface and shows this one as a typed fault card, instead of failing the
     /// boot — see [`ShellSurfaceFault`].
     pub surface_faults: Vec<ShellSurfaceFault>,
+    /// 📐️ The content root, in LOGICAL (CSS) pixels — the SAME unit as every chrome constant
+    /// (`chrome_px`, `navbar_height`, `footer_height`, `control_height`, the resize-handle hit
+    /// widths, every font size), which are read verbatim from the generated `ui_styling` tokens
+    /// React's DOM consumes. The surface scale factor never reaches this pair: it sizes the GPU
+    /// surface, the projection divisor and the glyph/icon atlas raster, and nothing else. Sizing this
+    /// in physical pixels while the constants stayed logical was the HiDPI placement bug — ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g (`📓️w1g-dpi-logical-units.md`).
     pub screen_w: f32,
     pub screen_h: f32,
     pub world3d_states: AdmittedSurfaceMap<World3dState>,
@@ -2604,8 +2677,6 @@ pub struct ShellState {
     pub icon_render_states: HashMap<String, World3dState>,
     pub board2d_states: AdmittedSurfaceMap<Board2dSurface>,
     pub dock: DockState,
-    pub active_left_kind: LeftPanelKind,
-    pub active_right_kind: RightPanelKind,
     pub search_query: String,
     pub search_selected: usize,
     pub find_query: String,
@@ -2613,7 +2684,6 @@ pub struct ShellState {
     pub split_resize_index: usize,
     pub split_resize_axis_total: f32,
     pub active_example_id: Option<String>,
-    pub active_left_tab: Option<String>,
     pub find_items: ShellFindItems,
     pub find_selected: usize,
     pub engagement_expanded: HashMap<String, bool>,
@@ -2631,7 +2701,14 @@ pub struct ShellState {
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
     pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
-    pub dock_drag_snapshot: Option<ui_wgpu::wgpu::WindowLayout>,
+    /// 🪟️ The tab whose label is held down, selected on release — React's `onSelectTab` fires from
+    /// the label BUTTON's click, while a drag can only start from the tab's own grip chip.
+    pub pending_dock_tab_select: Option<String>,
+    /// 🖼️ The render-only dock tree this frame paints, hit-tests and solves drop zones against —
+    /// `DockState::render_view` of the committed [`Self::dock`]: the mobile flat stack below React's
+    /// breakpoint, the docked-out tree while a drag floats, and the committed tree otherwise. Written
+    /// once per frame by `plan_dock_windows`, so the plan, the chrome and the pointer never disagree.
+    pub dock_view: DockState,
     pub dock_canvas_bounds: Rect,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
@@ -2684,11 +2761,45 @@ pub struct ShellState {
     pub active_utility_by_window: HashMap<String, String>,
     /// @emoji 📇️ Per-window Actions-rail fold state (absent = folded, the default).
     pub action_panel_folded: HashMap<String, bool>,
+    /// @emoji 🧰️ Per-window Utilities-rail fold state — React's `Window` `utilityBarFolded`
+    /// (`useState(true)`, `🪟️Window/🟦️.tsx:176`), so absent = folded.
+    pub utility_bar_folded: HashMap<String, bool>,
+    /// @emoji 🔀️ Per-window Projection-pane fold state — React's `WorldOrbitProjectionSwitchPane`
+    /// `useState(true)` (`🌐️World3dHost/🟦️.tsx:5190`), so absent = folded.
+    pub projection_pane_folded: HashMap<String, bool>,
+    /// @emoji 🔀️ Per-window selected projection template id — the wgpu twin of React's
+    /// `externalPendingProjectionSpec`, VIEW STATE ONLY and never dispatched, exactly as
+    /// `handleProjectionKindChange` records (`🌐️World3dHost/🟦️.tsx:6574`). Absent =
+    /// [`WORLD_PROJECTION_DEFAULT_TEMPLATE_ID`], the template React's own
+    /// `worldProjectionDefaults("threePoint")` fallback resolves to for a perspective orbit.
+    pub world_projection_template: HashMap<String, String>,
     /// @emoji 📇️ Per-window expanded action id (the accordion-open staged arg form).
     pub action_panel_expanded: HashMap<String, String>,
     /// @emoji 📝️ Staged action argument values keyed `"{window_id}:{action_id}"` — edits buffer here
     /// and never dispatch until Execute (Architecture Decision 8, P2).
     pub staged_action_args: HashMap<String, serde_json::Map<String, Value>>,
+    /// @emoji 🎛️ The command whose staged form the Commands panel should show expanded — the twin of
+    /// React's `SET_COMMAND_EXPANDED`, set when an arg-carrying command is picked from the palette
+    /// (`command-form:` in `activate_search_item`). Keyed by `command_address_stable_key`.
+    pub expanded_command_id: Option<String>,
+    /// @emoji 📝️ Staged command argument values keyed by `command_address_stable_key` — the twin of
+    /// React's `STAGE_COMMAND_ARG`/`RESET_COMMAND_ARGS` buffer, which Execute reads and nothing else
+    /// dispatches from.
+    pub staged_command_args: HashMap<String, serde_json::Map<String, Value>>,
+    /// @emoji ⌨️ The shortcut row whose next key event is a CHORD WRITE rather than a shell verb —
+    /// React's `keybindingCaptureControlId` (`🏛️ShellHost/🟦️.tsx`).
+    pub keybinding_capture_control_id: Option<String>,
+    /// @emoji 👁️✏️ Pinned default app per `"<dialectCoordinate>/<role>"` — the projection React reads
+    /// off `OpeningPreferences`, each value `"<pluginId> <appId>"` or `"none"`.
+    pub default_app_pins: HashMap<String, String>,
+    /// @emoji 💬️ The `framework.chat` transcript — LOCAL state, exactly like React's `BasicChatPanel`,
+    /// which seeds two assistant lines and echoes each send without ever reading the agent bridge.
+    pub agent_chat_messages: Vec<AgentChatMessage>,
+    pub agent_chat_draft: String,
+    /// @emoji 📱️ The single mobile panel's own chrome — React's `mobilePanelVisible`/`mobilePanelPath`,
+    /// the flattened counterpart of the eight `PanelAnchorState`s.
+    pub mobile_panel_visible: bool,
+    pub mobile_panel_path: Vec<String>,
     pub sync_backbone_uri: Option<String>,
     pub sync_card_kind: Option<String>,
     pub sync_card_draft: String,
@@ -2710,20 +2821,19 @@ pub struct ShellState {
     /// 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the restored-or-
     /// minted session, `None` with no hub env (unchanged local-only behaviour) or before boot's
     /// bootstrap thread reports back. Native only, see this region's header note above.
-    #[cfg(not(target_arch = "wasm32"))]
     pub identity: Option<Identity>,
     /// 📶️ Set when `mint_or_restore` degraded to the last cached identity because the hub was
     /// unreachable — never blocks, never clears `identity` itself.
-    #[cfg(not(target_arch = "wasm32"))]
     pub identity_offline: bool,
     /// 🌱️ `S_HUB_URL`/`S_USER`/`S_DATA_DIR`, resolved once at `boot()` — `None` means "no hub env",
     /// the sentinel every identity/binding/directory code path below checks first.
-    #[cfg(not(target_arch = "wasm32"))]
     pub identity_env: Option<IdentityEnv>,
     /// 🎭️ Per-process session id — the `{sessionId}` half of contract §C0's `user:{userId}#{sessionId}`
     /// actor grammar, minted once in `ShellState::new` and stable for this process's lifetime.
-    #[cfg(not(target_arch = "wasm32"))]
     pub shell_session_id: String,
+    /// ⏳️ Browser identity retry floor — see [`BROWSER_IDENTITY_RETRY_MS`].
+    #[cfg(target_arch = "wasm32")]
+    identity_retry_at_ms: u64,
     /// 📡️ Non-blocking identity result channel, completed by a retained-waker pool future.
     #[cfg(not(target_arch = "wasm32"))]
     pub identity_bootstrap_rx: Option<std::sync::mpsc::Receiver<Result<IdentityOutcome, String>>>,
@@ -2732,8 +2842,7 @@ pub struct ShellState {
     identity_bootstrap_task: Option<std::sync::Arc<ShellPoolFuture>>,
     /// 📇️ The hub directory client used to issue `os.directory.*` commands (§C6) — constructed once
     /// identity resolves, holding the session token.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub directory_client: Option<std::sync::Arc<DirectoryClient<NativeDirectoryTransport<TokioHostRuntime>>>>,
+    pub directory_client: Option<std::sync::Arc<ShellDirectoryClient>>,
     /// 💡️ The one retained host-owned inference port, live only while its document's execution
     /// target is verified. It is never a document command and nothing it holds is persisted.
     #[cfg(not(target_arch = "wasm32"))]
@@ -2753,25 +2862,20 @@ pub struct ShellState {
     /// 🔌️ ONE `NativeDirectoryTransport` (cheap to `.clone()` — see its own doc), shared by every
     /// `DirectoryClient` this shell constructs so they all draw on the SAME `HttpPool` byte budget/
     /// outstanding-request accounting rather than each minting a disjoint pool.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub directory_transport: NativeDirectoryTransport<TokioHostRuntime>,
+    pub directory_transport: ShellDirectoryTransport,
     /// 🛑️ Shell-lifetime cancellation root shared by identity, requests, and the directory runner.
-    #[cfg(not(target_arch = "wasm32"))]
     pub directory_cancel: CancelToken,
     /// 🎮️ Bounded FIFO of sealed, idempotency-correlated `os.directory.*` operations plus their
     /// transient result slot — flushed opportunistically every frame once `directory_client` exists
     /// (contract §C6: "commands queue in the shell (bounded, in-memory) and flush on reconnect").
     /// Each entry keeps its exact request bytes, so a retry is the SAME command to the hub's
     /// digest-keyed idempotency store and can never mint a second invitation.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub directory_commands: NativeDirectoryCommandQueueV1,
+    pub directory_commands: ShellDirectoryCommandQueueV1,
     /// 🏛️ The one retained native space-administration operation (fixed capacity: exactly one).
     /// Its page, receipt, and one-shot invite capability are erased by every terminal transition, so
     /// an identity change, a 401/403, or a scoped 4401 leaves nothing administrable behind.
-    #[cfg(not(target_arch = "wasm32"))]
     pub space_administration: Option<ShellSpaceAdministrationOperationV1>,
     /// 🔢️ Monotonic operation epoch; a late turn for a replaced operation is dropped, never applied.
-    #[cfg(not(target_arch = "wasm32"))]
     pub space_administration_epoch: u64,
     /// 👥️ ticket §5 — shell-LOCAL presence roster from the currently attached document's
     /// `ArtifactEvent::Presence`, deliberately NOT folded into the shared kernel `ViewModel`.
@@ -2788,36 +2892,29 @@ pub struct ShellState {
     /// mirror the React shell's `historyProjection` reducer), fed by `ReadHistory`
     /// (session/document mount, `replace=true`) and `AppFrame::Invocation.history_patch` (every
     /// dispatch response, `replace=false`) — see `fold_history_patch`/`observe_invocation_history`.
-    #[cfg(not(target_arch = "wasm32"))]
     pub history_cursor: u64,
-    #[cfg(not(target_arch = "wasm32"))]
     pub history_entries: BTreeMap<u64, semio_framework::kernel::HistoryEntry>,
     /// 🧾️ The most recent checkpoint id `HistoryPatch.currentCheckpointId` reported — compared against
     /// its previous value to detect "a checkpoint landed" (§C5 item 6, `TouchArtifact`).
-    #[cfg(not(target_arch = "wasm32"))]
     pub history_current_checkpoint_id: Option<String>,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
     /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
     /// `None` whenever nothing is uncommitted.
-    #[cfg(not(target_arch = "wasm32"))]
     pub last_uncommitted_edit_at_ms: Option<i64>,
     /// 📌️ The auto check-in poll's own `pending` latch (`AutoCheckinScheduler`'s twin): set the
     /// instant an auto checkpoint is dispatched, cleared the moment `uncommitted_edit_count` returns
     /// to 0 (a landed checkpoint) — the storm guard `auto_checkin_should_fire` reads.
-    #[cfg(not(target_arch = "wasm32"))]
     pub auto_checkin_pending: bool,
     /// 📌️ §C5 item 6 — set right before ANY checkpoint (auto/explicit/close) THIS shell itself asked
     /// for; cleared once the resulting `history_current_checkpoint_id` change is observed and
     /// `TouchArtifact` fires — distinguishes "a checkpoint we asked for landed" from "the session just
     /// mounted with a pre-existing checkpoint" (mirrors React's `checkpointDispatchedRef`).
-    #[cfg(not(target_arch = "wasm32"))]
     pub checkpoint_dispatched: bool,
     /// 📌️ ticket §C5 item 3 — explicit check-in's own message-prompt dialog: `None` when closed,
     /// `Some(draft)` while open. This hand-painted footer chrome has no generic text-input widget (the
     /// `🟦️Interpreter` pipeline's `UiEvent::TextInput` is deliberately bypassed here, same as
     /// `render_presence_bar`'s own design note) — mirrors the pre-existing `sync_card_kind`/
     /// `sync_card_draft` shell-owned keyboard-routed draft-field idiom instead of inventing a new one.
-    #[cfg(not(target_arch = "wasm32"))]
     pub checkin_dialog_draft: Option<String>,
     //#endregion 🔖️CheckIn
     pub window_engagements: HashMap<String, WindowEngagement>,
@@ -2844,6 +2941,12 @@ pub struct ShellState {
     /// is filling.
     pub retained_hit_windows: HashMap<String, (String, Rect)>,
     retained_hit_windows_staging: HashMap<String, (String, Rect)>,
+    /// 🏠️ The surface scope the chrome walk has established for this frame, read by
+    /// [`Self::render_main_window_step`] through `ui_wgpu::wgpu::shell_floor_paints` — React's
+    /// `shellFloorPaints` (`🔨️modules/🏠️shell-floor-presentation/🟦️.ts:14`). `FrameSetup` fills the
+    /// whole surface at [`Level::Base`], which makes the main window's own identical base fill a
+    /// second paint of the same colour over the same pixels; React suppresses exactly that.
+    chrome_floor_scope: Option<ui_wgpu::wgpu::SurfaceScope>,
     /// 👋️ The retained body a pointer move was last routed into, so the move that LEAVES it is
     /// routed there too. `events::EventRouter` is edge-triggered on the moves it receives, so a body
     /// that stops receiving them keeps `NodeFlags::HOVERED` on whatever it last resolved.
@@ -2888,16 +2991,11 @@ impl Drop for ShellState {
 //#region ShellLifecycle
 //#region 🧭️PanelAnchorModel
 /// 🧭️ The framework's generic 8-anchor panel positioning model — mirrors `PanelGroup::anchor()`
-/// (`framework/core/rs/lib.rs`) and React's `Anchor`/`ANCHORS` (`ui/js/react/index.tsx`).
-/// This shell only ever surfaces the four corners today: `left_panel_open`/`right_panel_open` gate
-/// visibility and `active_left_kind`/`active_right_kind` pick which of the two candidates occupies that
-/// side, exactly the same Workbench/Display and Details/Settings corner split `PanelGroup::anchor()`
-/// already declares. Re-homing that onto named anchors here gives future code (drag re-anchoring,
-/// middle-anchor content) one generic surface to target instead of the scattered `group_side` left/right
-/// fold. The four edge-middle anchors (`TopMiddle`/`BottomMiddle`/`LeftMiddle`/`RightMiddle`) are real
-/// anchors with nothing assigned to them yet — matches upstream, where `PanelGroup` never maps to a
-/// middle anchor either.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+/// (`🔨️modules/🛂️manifest/🦀️.rs`) and React's `Anchor`/`ANCHORS`
+/// (`🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`). Every anchor is an independent floating panel slot
+/// carrying its own tab tree ({@link ShellDock}) and its own open/size/active-path chrome state
+/// ({@link PanelAnchorState}) — the same `PanelDock`/`PanelState` pair React's `Layout` maps over.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PanelAnchor {
     TopLeft,
     TopMiddle,
@@ -2925,6 +3023,25 @@ impl PanelAnchor {
         }
     }
 
+    /// 🧭️ Parses one of the eight `ANCHORS` ids — the read side of every persisted dock document.
+    pub fn from_str(value: &str) -> Option<PanelAnchor> {
+        PanelAnchor::ALL.into_iter().find(|anchor| anchor.as_str() == value)
+    }
+
+    /// 🧭️ This anchor's slot in every `[_; 8]` the dock keys by anchor, in `ALL` order.
+    pub fn index(&self) -> usize {
+        match self {
+            PanelAnchor::TopLeft => 0,
+            PanelAnchor::TopMiddle => 1,
+            PanelAnchor::TopRight => 2,
+            PanelAnchor::RightMiddle => 3,
+            PanelAnchor::BottomRight => 4,
+            PanelAnchor::BottomMiddle => 5,
+            PanelAnchor::BottomLeft => 6,
+            PanelAnchor::LeftMiddle => 7,
+        }
+    }
+
     /// 🧭️ `"top"`/`"middle"`/`"bottom"` row of this anchor — the Rust twin of React's `anchorVertical`.
     pub fn vertical(&self) -> &'static str {
         match self {
@@ -2945,12 +3062,358 @@ impl PanelAnchor {
 
     /// 🧭️ Mirrors `PanelGroup::anchor()`'s corner mapping exactly; a group never maps to a middle anchor.
     pub fn from_group(group: PanelGroup) -> PanelAnchor {
-        match group.anchor() {
-            "top-right" => PanelAnchor::TopRight,
-            "bottom-left" => PanelAnchor::BottomLeft,
-            "bottom-right" => PanelAnchor::BottomRight,
-            _ => PanelAnchor::TopLeft,
+        PanelAnchor::from_str(group.anchor()).unwrap_or(PanelAnchor::TopLeft)
+    }
+}
+
+/// 🧭️ One node of an anchor's tab tree — a leaf when `children` is empty, otherwise a collapsible
+/// branch, the Rust twin of React's `PanelTabNode` (`🧭️PanelTabBar/🟦️.tsx`). A leaf's `id` is the
+/// panel surface id whose retained document the open panel paints.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DockTabNode {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    pub order: i32,
+    pub children: Vec<DockTabNode>,
+}
+
+impl DockTabNode {
+    pub fn leaf(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>, order: i32) -> Self {
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), order, children: Vec::new() }
+    }
+
+    pub fn branch(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>, order: i32, children: Vec<DockTabNode>) -> Self {
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), order, children }
+    }
+
+    pub fn is_branch(&self) -> bool {
+        !self.children.is_empty()
+    }
+
+    fn contains(&self, id: &str) -> bool {
+        self.id == id || self.children.iter().any(|child| child.contains(id))
+    }
+}
+
+/// 🧭️ The whole dock: one tab tree per anchor, slotted by `PanelAnchor::index` — React's `PanelDock`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ShellDock {
+    pub anchors: [Vec<DockTabNode>; 8],
+}
+
+impl ShellDock {
+    pub fn tabs(&self, anchor: PanelAnchor) -> &[DockTabNode] {
+        &self.anchors[anchor.index()]
+    }
+
+    pub fn tabs_mut(&mut self, anchor: PanelAnchor) -> &mut Vec<DockTabNode> {
+        &mut self.anchors[anchor.index()]
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.anchors.iter().all(|tabs| tabs.is_empty())
+    }
+
+    /// 🧭️ The anchor and root-to-node path a tab id lives at — React's `findPanelTabInDock` plus `findPanelTabPath`.
+    pub fn locate(&self, tab_id: &str) -> Option<(PanelAnchor, Vec<String>)> {
+        for anchor in PanelAnchor::ALL {
+            if let Some(path) = dock_tab_path(self.tabs(anchor), tab_id) {
+                return Some((anchor, path));
+            }
         }
+        None
+    }
+
+    pub fn node_at(&self, anchor: PanelAnchor, path: &[String]) -> Option<&DockTabNode> {
+        let mut nodes = self.tabs(anchor);
+        let mut found: Option<&DockTabNode> = None;
+        for id in path {
+            let node = nodes.iter().find(|node| &node.id == id)?;
+            nodes = &node.children;
+            found = Some(node);
+        }
+        found
+    }
+
+    /// 🧭️ The path this anchor opens at when nothing is remembered: the first root tab, drilled to its first leaf.
+    pub fn default_path(&self, anchor: PanelAnchor) -> Vec<String> {
+        let mut path = Vec::new();
+        let mut nodes = self.tabs(anchor);
+        while let Some(node) = nodes.first() {
+            path.push(node.id.clone());
+            nodes = &node.children;
+        }
+        path
+    }
+
+    /// 🧭️ Trims a remembered path back onto the tabs that still exist — React's `reconcileActivePath`.
+    pub fn reconcile_path(&self, anchor: PanelAnchor, path: &[String]) -> Vec<String> {
+        let mut kept = Vec::new();
+        let mut nodes = self.tabs(anchor);
+        for id in path {
+            let Some(node) = nodes.iter().find(|node| &node.id == id) else { break };
+            kept.push(node.id.clone());
+            nodes = &node.children;
+        }
+        if kept.is_empty() {
+            return self.default_path(anchor);
+        }
+        while let Some(node) = nodes.first() {
+            kept.push(node.id.clone());
+            nodes = &node.children;
+        }
+        kept
+    }
+}
+
+fn dock_tab_path(nodes: &[DockTabNode], tab_id: &str) -> Option<Vec<String>> {
+    for node in nodes {
+        if node.id == tab_id {
+            return Some(vec![node.id.clone()]);
+        }
+        if let Some(mut rest) = dock_tab_path(&node.children, tab_id) {
+            rest.insert(0, node.id.clone());
+            return Some(rest);
+        }
+    }
+    None
+}
+
+fn remove_dock_tab(nodes: &mut Vec<DockTabNode>, tab_id: &str) -> Option<DockTabNode> {
+    if let Some(index) = nodes.iter().position(|node| node.id == tab_id) {
+        return Some(nodes.remove(index));
+    }
+    for node in nodes.iter_mut() {
+        if let Some(removed) = remove_dock_tab(&mut node.children, tab_id) {
+            return Some(removed);
+        }
+    }
+    None
+}
+
+fn insert_dock_tab_at(nodes: &mut Vec<DockTabNode>, parent_path: &[String], node: DockTabNode, index: usize) -> bool {
+    let Some((head, rest)) = parent_path.split_first() else {
+        let index = index.min(nodes.len());
+        nodes.insert(index, node);
+        return true;
+    };
+    let Some(parent) = nodes.iter_mut().find(|candidate| &candidate.id == head) else { return false };
+    insert_dock_tab_at(&mut parent.children, rest, node, index)
+}
+
+/// 🎯️ Where a dragged tab lands — React's `PanelTabDockTarget`: at `index` under `parent_path`'s
+/// branch (an empty path being the anchor's own root row).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DockTabMoveTarget {
+    pub anchor: PanelAnchor,
+    pub parent_path: Vec<String>,
+    pub index: usize,
+}
+
+/// 🎯️ Pure move transform — removes `tab_id`'s subtree from wherever it lives and reinserts it at
+/// `target`, the Rust twin of React's `moveTabInDock`. Dropping a subtree into itself is refused
+/// (`false`, dock untouched); visibility is never touched here.
+pub fn move_tab_in_dock(dock: &mut ShellDock, tab_id: &str, target: &DockTabMoveTarget) -> bool {
+    let Some((from_anchor, _)) = dock.locate(tab_id) else { return false };
+    let Some(node) = dock.node_at(from_anchor, &dock_tab_path(dock.tabs(from_anchor), tab_id).unwrap_or_default()) else { return false };
+    if target.parent_path.iter().any(|id| node.contains(id)) {
+        return false;
+    }
+    let Some(removed) = remove_dock_tab(dock.tabs_mut(from_anchor), tab_id) else { return false };
+    if insert_dock_tab_at(dock.tabs_mut(target.anchor), &target.parent_path, removed.clone(), target.index) {
+        return true;
+    }
+    dock.tabs_mut(from_anchor).push(removed);
+    false
+}
+
+/// 🗄️ One persisted tab id plus, for a branch, its persisted child order, or, for a leaf, its tree-unit
+/// order — byte-shape identical to React's `DockTabSkeleton` (`🔨️modules/🖥️platform/🟦️.ts`).
+///
+/// 🌳️ `trees` is React's `PanelTreeUnit` id list (`🧭️PanelTabBar/🟦️.tsx`'s `panelTabNodeToSkeleton`). A
+/// wgpu leaf hosts exactly ONE retained document, so its unit list is always the single
+/// `"<leafId>.tree"` id React's `singleTreeLeaf` mints — written so a skeleton this renderer saves
+/// round-trips through React's `applyDockSkeleton` unit resolution instead of losing every leaf's
+/// units, and read back only to be validated, since there is no second unit to reorder.
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+pub struct DockTabSkeleton {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub children: Option<Vec<DockTabSkeleton>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trees: Option<Vec<String>>,
+}
+
+/// 📱️ Trims a remembered mobile-panel path onto the flattened tab list and drills a branch to its
+/// first leaf — the mobile twin of [`ShellDock::reconcile_path`], over one flat list instead of eight.
+pub fn mobile_panel_reconcile_path(tabs: &[DockTabNode], path: &[String]) -> Vec<String> {
+    let mut kept = Vec::new();
+    let mut nodes = tabs;
+    for id in path {
+        let Some(node) = nodes.iter().find(|node| &node.id == id) else { break };
+        kept.push(node.id.clone());
+        nodes = &node.children;
+    }
+    if kept.is_empty() {
+        nodes = tabs;
+    }
+    while let Some(node) = nodes.first() {
+        kept.push(node.id.clone());
+        nodes = &node.children;
+    }
+    kept
+}
+
+/// 🌳️ The single tree-unit id a wgpu leaf carries — React's `singleTreeLeaf` id rule.
+pub fn dock_leaf_tree_unit_id(leaf_id: &str) -> String {
+    format!("{leaf_id}.tree")
+}
+
+/// 🗄️ The full persisted dock arrangement, one tab tree per anchor — React's `DockSkeleton`, stored
+/// under the same `semio.os.config` document's `dockLayouts` so a layout survives a renderer switch.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct DockSkeleton {
+    pub version: u8,
+    pub anchors: BTreeMap<String, Vec<DockTabSkeleton>>,
+}
+
+impl Default for DockSkeleton {
+    fn default() -> Self {
+        Self { version: DOCK_SKELETON_VERSION, anchors: BTreeMap::new() }
+    }
+}
+
+const DOCK_SKELETON_VERSION: u8 = 3;
+
+fn dock_tab_skeleton_of(node: &DockTabNode) -> DockTabSkeleton {
+    DockTabSkeleton {
+        id: node.id.clone(),
+        children: node.is_branch().then(|| node.children.iter().map(dock_tab_skeleton_of).collect()),
+        trees: (!node.is_branch()).then(|| vec![dock_leaf_tree_unit_id(&node.id)]),
+    }
+}
+
+/// 🗄️ Reduces a full {@link ShellDock} to the id-only {@link DockSkeleton} persisted across sessions.
+pub fn dock_skeleton_of(dock: &ShellDock) -> DockSkeleton {
+    let mut anchors = BTreeMap::new();
+    for anchor in PanelAnchor::ALL {
+        anchors.insert(anchor.as_str().to_string(), dock.tabs(anchor).iter().map(dock_tab_skeleton_of).collect());
+    }
+    DockSkeleton { version: DOCK_SKELETON_VERSION, anchors }
+}
+
+/// 🗄️ Structural equality across all eight anchors, absent and empty being the same thing — decides
+/// whether an arrangement equals its computed default and therefore needs no persistence.
+pub fn dock_skeletons_equal(a: Option<&DockSkeleton>, b: Option<&DockSkeleton>) -> bool {
+    match (a, b) {
+        (None, None) => true,
+        (Some(a), Some(b)) => PanelAnchor::ALL.into_iter().all(|anchor| {
+            let empty: Vec<DockTabSkeleton> = Vec::new();
+            a.anchors.get(anchor.as_str()).unwrap_or(&empty) == b.anchors.get(anchor.as_str()).unwrap_or(&empty)
+        }),
+        _ => false,
+    }
+}
+
+fn index_dock_nodes(dock: &ShellDock, into: &mut HashMap<String, DockTabNode>) {
+    fn visit(node: &DockTabNode, into: &mut HashMap<String, DockTabNode>) {
+        into.insert(node.id.clone(), node.clone());
+        for child in &node.children {
+            visit(child, into);
+        }
+    }
+    for anchor in PanelAnchor::ALL {
+        for node in dock.tabs(anchor) {
+            visit(node, into);
+        }
+    }
+}
+
+fn collect_skeleton_mentions(entries: &[DockTabSkeleton], nodes: &HashMap<String, DockTabNode>, mentioned: &mut std::collections::HashSet<String>) {
+    for entry in entries {
+        mentioned.insert(entry.id.clone());
+        if let (Some(default_node), Some(children)) = (nodes.get(&entry.id), entry.children.as_ref()) {
+            if default_node.is_branch() {
+                collect_skeleton_mentions(children, nodes, mentioned);
+            }
+        }
+    }
+}
+
+fn default_subtree_mentioned(node: &DockTabNode, mentioned: &std::collections::HashSet<String>) -> bool {
+    mentioned.contains(&node.id) || node.children.iter().any(|child| default_subtree_mentioned(child, mentioned))
+}
+
+fn resolve_skeleton_node(entry: &DockTabSkeleton, nodes: &HashMap<String, DockTabNode>, mentioned: &std::collections::HashSet<String>, resolved: &mut std::collections::HashSet<String>) -> Option<DockTabNode> {
+    let default_node = nodes.get(&entry.id)?;
+    if !resolved.insert(entry.id.clone()) {
+        return None;
+    }
+    if !default_node.is_branch() {
+        return Some(DockTabNode { children: Vec::new(), ..default_node.clone() });
+    }
+    let Some(children) = entry.children.as_ref() else { return Some(default_node.clone()) };
+    let mut merged: Vec<DockTabNode> = children.iter().filter_map(|child| resolve_skeleton_node(child, nodes, mentioned, resolved)).collect();
+    for child in &default_node.children {
+        if !default_subtree_mentioned(child, mentioned) {
+            resolved.insert(child.id.clone());
+            merged.push(child.clone());
+        }
+    }
+    Some(DockTabNode { children: merged, ..default_node.clone() })
+}
+
+/// 🗄️ Rearranges (never reconstructs) `default_dock`'s nodes to match a persisted skeleton: ids the
+/// default no longer declares are dropped, and any default tab the skeleton never mentions anywhere is
+/// appended at its default location. The Rust twin of React's `applyDockSkeleton`, mention-collection
+/// pass included, so an anchor processed first can never reclaim a tab moved to a later one.
+pub fn apply_dock_skeleton(default_dock: &ShellDock, skeleton: Option<&DockSkeleton>) -> ShellDock {
+    let Some(skeleton) = skeleton else { return default_dock.clone() };
+    let mut nodes = HashMap::new();
+    index_dock_nodes(default_dock, &mut nodes);
+    let mut mentioned = std::collections::HashSet::new();
+    let empty: Vec<DockTabSkeleton> = Vec::new();
+    for anchor in PanelAnchor::ALL {
+        collect_skeleton_mentions(skeleton.anchors.get(anchor.as_str()).unwrap_or(&empty), &nodes, &mut mentioned);
+    }
+    let mut resolved = std::collections::HashSet::new();
+    let mut result = ShellDock::default();
+    for anchor in PanelAnchor::ALL {
+        let entries = skeleton.anchors.get(anchor.as_str()).unwrap_or(&empty);
+        let mut tabs: Vec<DockTabNode> = entries.iter().filter_map(|entry| resolve_skeleton_node(entry, &nodes, &mentioned, &mut resolved)).collect();
+        for tab in default_dock.tabs(anchor) {
+            if !default_subtree_mentioned(tab, &mentioned) {
+                resolved.insert(tab.id.clone());
+                tabs.push(tab.clone());
+            }
+        }
+        *result.tabs_mut(anchor) = tabs;
+    }
+    result
+}
+
+/// 🧭️ One anchor's chrome state — React's `PanelState` (`🐚️Shell/🟦️.tsx`'s `SET_PANEL_VISIBLE`/
+/// `SET_PANEL_SIZE`/`SET_PANEL_PATH` reducer trio) plus the folded/collapsed branch set the tab bar
+/// paints from.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PanelAnchorState {
+    pub visible: bool,
+    pub size: f32,
+    pub path: Vec<String>,
+}
+
+impl Default for PanelAnchorState {
+    fn default() -> Self {
+        Self { visible: false, size: DEFAULT_PANEL_WIDTH_PX, path: Vec::new() }
+    }
+}
+
+impl PanelAnchorState {
+    /// 🧭️ The leaf this anchor currently paints — the last path segment, which is always a leaf id
+    /// because every path write runs through `ShellDock::reconcile_path`.
+    pub fn active_tab(&self) -> Option<&str> {
+        self.path.last().map(String::as_str)
     }
 }
 
@@ -2962,93 +3425,125 @@ pub struct PanelAnchorSnapshot {
     pub active_tab: Option<String>,
 }
 
-/// 🗄️ The subset of panel layout that's actually mutable today, keyed the same way it's persisted — one
-/// JSON blob, localStorage on wasm / a `~/.semio/panel-layout.json` (`%APPDATA%\semio` on Windows) file
-/// on native. See `ShellState::persist_panel_layout`/`load_persisted_panel_layout` below.
+/// 🗄️ One anchor's persisted chrome state — only the fields that differ from the shell's computed
+/// defaults are ever stored, byte-shape identical to React's `DockUiPanelState`.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct PanelLayoutPersisted {
-    #[serde(default)]
-    pub left_panel_open: bool,
-    #[serde(default)]
-    pub right_panel_open: bool,
-    #[serde(default)]
-    pub active_left_kind: Option<String>,
-    #[serde(default)]
-    pub active_right_kind: Option<String>,
-    #[serde(default)]
-    pub left_panel_width: Option<f32>,
-    #[serde(default)]
-    pub right_panel_width: Option<f32>,
+pub struct DockUiPanelState {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<Vec<String>>,
 }
 
-const PANEL_LAYOUT_STORAGE_KEY: &str = "semio.panelLayout.v1";
+/// 🗄️ The persisted per-anchor panel chrome — React's `DockUiState`, same `semio.os.config` document,
+/// same `dockUi` layer split (a per-app entry wins over the shared `os` one).
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct DockUiState {
+    pub version: u8,
+    #[serde(default)]
+    pub anchors: BTreeMap<String, DockUiPanelState>,
+}
+
+impl Default for DockUiState {
+    fn default() -> Self {
+        Self { version: DOCK_SKELETON_VERSION, anchors: BTreeMap::new() }
+    }
+}
+
 /// ↔ Shared starting width for every panel anchor, one compact step wider than the former 280px Document panel.
 const DEFAULT_PANEL_WIDTH_PX: f32 = 300.0;
 
-/// 🗄️ **Dedup note**: this used to be its own `js_sys::Reflect`-based localStorage pair on wasm32
-/// (`local_storage_get_item`/`local_storage_set_item`) plus a parallel native `$HOME/.semio/
-/// panel-layout.json` file store, built independently of and nearly identical to `🗄️PrefsStore`'s
-/// `WebLocalStorage`/`FilePrefsStore` (below, `w3-prefs-i18n-themes` built those for uiPrefs the same
-/// wave) — both landed the same `js_sys::Reflect` workaround for the same "`Storage` web-sys feature
-/// isn't enabled" `Cargo.toml` constraint. Flagged by both `report-w3-panel-dock-6anchor.md` and
-/// `report-w3-prefs-i18n-themes.md` as a wiring/dedup request; resolved here by routing panel layout
-/// through `prefs_get`/`prefs_set` like every other uiPref instead of keeping a second storage mechanism.
-fn decode_panel_layout_field(raw: &str) -> Option<PanelLayoutPersisted> {
-    if raw.len() > SHELL_CHROME_IO_FIELD_BYTES {
-        return None;
-    }
-    let mut fields = raw.splitn(7, '\t');
-    let left_panel_open = fields.next()?.parse::<u8>().ok()? == 1;
-    let right_panel_open = fields.next()?.parse::<u8>().ok()? == 1;
-    let active_left_kind = match fields.next()? {
-        "" => None,
-        value => Some(value.to_string()),
-    };
-    let active_right_kind = match fields.next()? {
-        "" => None,
-        value => Some(value.to_string()),
-    };
-    let left_panel_width = match fields.next()? {
-        "" => None,
-        value => Some(value.parse::<f32>().ok()?),
-    };
-    let right_panel_width = match fields.next()? {
-        "" => None,
-        value => Some(value.parse::<f32>().ok()?),
-    };
-    if fields.next().is_some() {
-        return None;
-    }
-    Some(PanelLayoutPersisted { left_panel_open, right_panel_open, active_left_kind, active_right_kind, left_panel_width, right_panel_width })
+/// 🗄️ **Dedup note**: panel layout used to be its own `semio.panelLayout.v1` preference carrying a
+/// tab-separated left/right pair, which no React shell could ever read. Both dock documents now live
+/// in the one `semio.os.config` document React's `OsShellConfig` owns (`🔨️modules/🖥️platform/🟦️.ts`),
+/// under `dockLayouts` (the arrangement) and `dockUi` (the chrome) — one authority, one storage key,
+/// and a dock rearranged in one renderer opens rearranged in the other.
+fn os_shell_config_document() -> Value {
+    raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)
+        .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
+        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
+        .filter(|config| config.get("version").and_then(Value::as_u64) == Some(1))
+        .unwrap_or_else(empty_os_shell_config)
 }
 
-fn encode_panel_layout_field(layout: &PanelLayoutPersisted) -> Option<String> {
-    let left_kind = layout.active_left_kind.as_deref().unwrap_or("");
-    let right_kind = layout.active_right_kind.as_deref().unwrap_or("");
-    if left_kind.contains('\t') || right_kind.contains('\t') {
-        return None;
+fn write_os_shell_config_document(config: &Value) {
+    if let Ok(raw) = serde_json::to_string(config) {
+        if raw.len() <= OS_SHELL_CONFIG_MAX_BYTES {
+            raw_prefs_set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+        }
     }
-    let encoded = format!(
-        "{}\t{}\t{}\t{}\t{}\t{}",
-        u8::from(layout.left_panel_open),
-        u8::from(layout.right_panel_open),
-        left_kind,
-        right_kind,
-        layout.left_panel_width.map(|value| value.to_string()).unwrap_or_default(),
-        layout.right_panel_width.map(|value| value.to_string()).unwrap_or_default()
-    );
-    (encoded.len() <= SHELL_CHROME_IO_FIELD_BYTES).then_some(encoded)
 }
 
-fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
-    prefs_get(PANEL_LAYOUT_STORAGE_KEY).and_then(|raw| decode_panel_layout_field(&raw))
+/// 🗄️ Reads one dock layer out of an `semio.os.config` DOCUMENT — the per-app entry when it parses,
+/// else the shared `os` one, exactly React's `DockLayoutStore::getSnapshot` precedence. Pure over the
+/// document so the layer rules are provable without the process-global store underneath.
+fn read_os_shell_config_layer<T: serde::de::DeserializeOwned>(config: &Value, section: &str, app_id: Option<&str>) -> Option<T> {
+    let layer = config.get(section)?;
+    if let Some(app_id) = app_id {
+        if let Some(entry) = layer.get("apps").and_then(|apps| apps.get(app_id)) {
+            if let Ok(parsed) = serde_json::from_value::<T>(entry.clone()) {
+                return Some(parsed);
+            }
+        }
+    }
+    serde_json::from_value::<T>(layer.get("os")?.clone()).ok()
 }
 
-fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
-    if let Some(encoded) = encode_panel_layout_field(layout) {
-        prefs_set(PANEL_LAYOUT_STORAGE_KEY, &encoded);
+/// 🗄️ Writes (or, with `None`, removes) one dock layer in an `semio.os.config` document — React's
+/// `DockLayoutStore::save`/`saveOs`, pure over the document for the same reason as its reader.
+fn write_os_shell_config_layer_in<T: Serialize>(config: &mut Value, section: &str, app_id: Option<&str>, value: Option<&T>) {
+    if !config.get(section).is_some_and(Value::is_object) {
+        config[section] = serde_json::json!({ "apps": {} });
     }
+    if !config[section].get("apps").is_some_and(Value::is_object) {
+        config[section]["apps"] = serde_json::json!({});
+    }
+    let encoded = value.and_then(|value| serde_json::to_value(value).ok());
+    match (app_id, encoded) {
+        (Some(app_id), Some(encoded)) => config[section]["apps"][app_id] = encoded,
+        (Some(app_id), None) => {
+            if let Some(apps) = config[section]["apps"].as_object_mut() {
+                apps.remove(app_id);
+            }
+        }
+        (None, Some(encoded)) => config[section]["os"] = encoded,
+        (None, None) => {
+            if let Some(section) = config[section].as_object_mut() {
+                section.remove("os");
+            }
+        }
+    }
+}
+
+fn os_shell_config_layer<T: serde::de::DeserializeOwned>(section: &str, app_id: Option<&str>) -> Option<T> {
+    read_os_shell_config_layer(&os_shell_config_document(), section, app_id)
+}
+
+fn write_os_shell_config_layer<T: Serialize>(section: &str, app_id: Option<&str>, value: Option<&T>) {
+    let mut config = os_shell_config_document();
+    write_os_shell_config_layer_in(&mut config, section, app_id, value);
+    write_os_shell_config_document(&config);
+}
+
+/// 🗄️ Reads the persisted dock arrangement — the per-app layer when present, else the shared `os` one,
+/// exactly the precedence React's `DockLayoutStore::getSnapshot` applies.
+fn load_dock_skeleton_from_store(app_id: Option<&str>) -> Option<DockSkeleton> {
+    os_shell_config_layer::<DockSkeleton>("dockLayouts", app_id).filter(|skeleton| skeleton.version == DOCK_SKELETON_VERSION)
+}
+
+/// 🗄️ Persists (or, with `None`, removes) the dock arrangement at `app_id`'s layer — React's `DockLayoutStore::save`.
+fn save_dock_skeleton_to_store(app_id: Option<&str>, skeleton: Option<&DockSkeleton>) {
+    write_os_shell_config_layer("dockLayouts", app_id, skeleton);
+}
+
+fn load_dock_ui_from_store(app_id: Option<&str>) -> Option<DockUiState> {
+    os_shell_config_layer::<DockUiState>("dockUi", app_id).filter(|state| state.version == DOCK_SKELETON_VERSION)
+}
+
+fn save_dock_ui_to_store(app_id: Option<&str>, state: Option<&DockUiState>) {
+    write_os_shell_config_layer("dockUi", app_id, state);
 }
 
 //#endregion 🧭️PanelAnchorModel
@@ -3294,6 +3789,14 @@ impl ShellState {
     /// keyed on the projected content, so an unchanged overlay pays no ingress.
     fn publish_window_measures(&mut self, window_id: &str, surface: &str, measures: &[WindowMeasure]) -> Result<Option<UiDocumentLease>, String> {
         let Some(records) = window_measures_overlay_records(window_id, measures, self.active_utility_for_window(window_id))? else { return Ok(None) };
+        self.publish_surface_records(surface, records).map(Some)
+    }
+
+    /// 🧾️ Mints one SHELL-OWNED retained document from already-projected records: the revision is the
+    /// content's own hash, so republishing an unchanged body answers `Published` and pays no ingress.
+    /// Every shell-owned panel (the Measures overlay, the Command dock, Settings' five leaves, the Tool
+    /// leaves, the Marketplace leaf) goes through this one ingress.
+    fn publish_surface_records(&mut self, surface: &str, records: Vec<ui_contract::UiNodeRecord>) -> Result<UiDocumentLease, String> {
         let revision = {
             use std::hash::{Hash, Hasher};
             let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -3303,8 +3806,8 @@ impl ShellState {
         let generation = ui_wgpu::wgpu::engine::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
         self.window_measures_minted.insert(surface.to_string(), (revision, generation));
         let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(revision), root: Some(ui_contract::UiNodeId(1)), layout_epoch: 0 };
-        let surface_id = SurfaceId::try_from(surface).map_err(|_| format!("measures surface '{surface}' exceeds the retained contract"))?;
-        UiDocumentLease::try_publish(surface_id, identity, records).map(Some).map_err(|error| crate::program_bridge::retained_publication_refusal(surface, error))
+        let surface_id = SurfaceId::try_from(surface).map_err(|_| format!("shell surface '{surface}' exceeds the retained contract"))?;
+        UiDocumentLease::try_publish(surface_id, identity, records).map_err(|error| crate::program_bridge::retained_publication_refusal(surface, error))
     }
 
     /// 🖌️ One paint opportunity of a window's Measures overlay, over the window body it belongs to:
@@ -3313,7 +3816,10 @@ impl ShellState {
     /// path — painted, absent, folded, or faulted after its opportunity ceiling.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
     fn paint_window_measures_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
-        if self.measures_folded.get(window_id).copied().unwrap_or(false) {
+        if !self.window_measures_documents.contains_key(window_id) {
+            return true;
+        }
+        if self.measures_rail_folded(window_id) {
             return true;
         }
         let Some(document) = self.window_measures_documents.remove(window_id) else { return true };
@@ -3330,7 +3836,8 @@ impl ShellState {
             let open_selects = &mut self.open_selects;
             let widget_maps = &mut self.widget_maps;
             let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: surface.as_str() };
-            let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+            let viewport_height_for_widgets = draw.screen_height();
+            let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
             render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), &mut hosts)
         };
@@ -3349,6 +3856,12 @@ impl ShellState {
         true
     }
 
+    /// 🎛️ React's Window Options fold state: `useState(true)` — the rail starts FOLDED and is opened
+    /// by its own chip (`🖱️ui/🧱️elements/🪟️Window/🟦️.tsx:169-173`).
+    pub(crate) fn measures_rail_folded(&self, window_id: &str) -> bool {
+        self.measures_folded.get(window_id).copied().unwrap_or(true)
+    }
+
     /// 📐️ The Measures overlay's rect inside a window body: right-aligned like React's measures pane,
     /// at the window's own resized width (or the theme default), inset by the panel inset.
     fn window_measures_rect(&self, window_id: &str, body: Rect, theme: &Theme) -> Rect {
@@ -3361,6 +3874,402 @@ impl ShellState {
 #[path = "../../🧪️tests/📏️wgpu-window-measures/🦀️.rs"]
 mod window_measures_tests;
 //#endregion 📏️WindowMeasures
+
+//#region 🧾️PanelRecordsAssembler
+/// 🧾️ Projects one SHELL-OWNED `UiNode` subtree into the `ui_contract` records a retained panel
+/// document carries, pre-order so every parent precedes its children. W1h could only publish the
+/// Commands panel by re-expressing it as `WindowMeasure`s (a `Select`/`Toggle` vocabulary with no
+/// text, no button and no nesting); this is the general assembler, so a shell-owned panel body is
+/// authored once as a `UiNode` — the same dialect React's `📌️ChromePanels/🟦️.tsx` hands its
+/// `buildSettings*Tree` output straight to the Interpreter in — and published as-is.
+///
+/// A node's `key` is its own authored id when it has one (so hits and bindings address the control by
+/// the id React uses), else a positional `n<seq>` key inside the surface, which is stable because the
+/// walk order is.
+pub(crate) fn panel_ui_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_contract::UiNodeRecord>, String> {
+    let mut projection = PanelProjection { surface_id, records: Vec::new(), key_seq: 0 };
+    projection.node(root)?;
+    projection.records.into_iter().collect::<Option<Vec<_>>>().ok_or_else(|| format!("panel '{surface_id}' projection left a reserved record unplaced"))
+}
+
+/// 🧾️ Everything a panel record carries beside its key, component and layout.
+#[derive(Default)]
+struct PanelRecord {
+    children: ui_contract::UiNodeChildren,
+    bindings: ui_contract::UiNodeBindings,
+    activity: ui_contract::Activity,
+    disabled: bool,
+    label: Option<ui_contract::Label>,
+}
+
+/// 🌳️ One shell-owned panel document under construction — same reserve-then-place idiom as
+/// {@link WindowMeasuresProjection}, so the published record order is parent-first.
+struct PanelProjection<'a> {
+    surface_id: &'a str,
+    records: Vec<Option<ui_contract::UiNodeRecord>>,
+    key_seq: u32,
+}
+
+impl PanelProjection<'_> {
+    fn reserve(&mut self) -> ui_contract::UiNodeId {
+        self.records.push(None);
+        ui_contract::UiNodeId(self.records.len() as u64)
+    }
+
+    fn key(&mut self, id: Option<&str>) -> String {
+        self.key_seq += 1;
+        match id.filter(|id| !id.is_empty()) {
+            Some(id) => format!("{}/{id}", self.surface_id),
+            None => format!("{}/n{}", self.surface_id, self.key_seq),
+        }
+    }
+
+    fn place(&mut self, id: ui_contract::UiNodeId, key: String, component: ui_contract::Component, layout: ui_contract::LayoutSpec, record: PanelRecord) -> Result<ui_contract::UiNodeId, String> {
+        if self.records.len() > ui_contract::UI_DOCUMENT_NODES {
+            return Err(format!("panel '{}' exceeds {} document nodes", self.surface_id, ui_contract::UI_DOCUMENT_NODES));
+        }
+        let key = UiText::try_from_string(key).map_err(|key| format!("panel key '{key}' exceeds the retained contract"))?;
+        let PanelRecord { children, bindings, activity, disabled, label } = record;
+        self.records[(id.0 - 1) as usize] = Some(ui_contract::UiNodeRecord {
+            id,
+            key,
+            component,
+            layout,
+            style: Default::default(),
+            activity,
+            disabled,
+            transition: None,
+            accessibility: ui_contract::AccessibilitySpec { label, ..Default::default() },
+            bindings,
+            menu: None,
+            children,
+        });
+        Ok(id)
+    }
+
+    fn stack_layout(axis: ui_contract::Axis, gap: ui_contract::SpaceToken) -> ui_contract::LayoutSpec {
+        ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis, gap, ..Default::default() })
+    }
+
+    fn children_of(&mut self, nodes: &[UiNode]) -> Result<ui_contract::UiNodeChildren, String> {
+        let mut children = ui_contract::UiNodeChildren::default();
+        for child in nodes {
+            let id = self.node(child)?;
+            children.try_push(id).map_err(|_| format!("panel '{}' packs more children than one record admits", self.surface_id))?;
+        }
+        Ok(children)
+    }
+
+    /// 🧾️ One `UiNode` as one (or, for a `Field`, two) records. Every variant a shell-owned builder
+    /// authors is projected; a variable-content variant no shell panel authors (`Tree`, `Image`,
+    /// `ComponentScene`, `ExternalSlot`, `Group`, `Ring`, `IconSelect`, `NumberStepper`) is refused
+    /// loudly rather than silently dropped, so a builder that grows one fails at publication instead
+    /// of painting a hole.
+    fn node(&mut self, node: &UiNode) -> Result<ui_contract::UiNodeId, String> {
+        let presence = node.presence();
+        let activity = match presence.status {
+            ui_wgpu::wgpu::component::ui::UiStatus::Loading => ui_contract::Activity::Loading,
+            ui_wgpu::wgpu::component::ui::UiStatus::Waiting => ui_contract::Activity::Waiting,
+            ui_wgpu::wgpu::component::ui::UiStatus::Finished => ui_contract::Activity::Finished,
+            ui_wgpu::wgpu::component::ui::UiStatus::Idle => ui_contract::Activity::Idle,
+        };
+        let disabled = matches!(presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled);
+        match node {
+            UiNode::Stack(stack) => {
+                let key = self.key(stack.id.as_deref());
+                let id = self.reserve();
+                let children = self.children_of(&stack.children)?;
+                let axis = if stack.direction == "horizontal" { ui_contract::Axis::Horizontal } else { ui_contract::Axis::Vertical };
+                self.place(id, key, ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Plain, None, None)), Self::stack_layout(axis, ui_contract::SpaceToken::Sm), PanelRecord { children, activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::Section(section) => {
+                let key = self.key(Some(section.id.as_str()));
+                let id = self.reserve();
+                let children = self.children_of(&section.children)?;
+                let label = section.label.as_ref().map(|label| label.as_str().to_string());
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Section, label.as_deref(), section.default_open)),
+                    Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::Sm),
+                    PanelRecord { children, activity, disabled, label: label.as_deref().map(measure_label), ..PanelRecord::default() },
+                )
+            }
+            UiNode::Field(field) => {
+                let key = self.key(Some(field.id.as_str()));
+                let id = self.reserve();
+                let mut children = ui_contract::UiNodeChildren::default();
+                let child = self.node(&field.child)?;
+                children.try_push(child).map_err(|_| "panel field admits its control".to_string())?;
+                let label = field.label.as_str().to_string();
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Field, Some(&label), None)),
+                    Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::Xs),
+                    PanelRecord { children, activity, disabled, label: Some(measure_label(&label)), ..PanelRecord::default() },
+                )
+            }
+            UiNode::Text(text) => {
+                let key = self.key(None);
+                let id = self.reserve();
+                let props = ui_contract::TextProps { value: measure_label(text.value.as_str()), emphasize: text.emphasize, data_attributes: None };
+                self.place(id, key, ui_contract::Component::Text(props), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { activity, disabled, label: Some(measure_label(text.value.as_str())), ..PanelRecord::default() })
+            }
+            UiNode::Separator(_) => {
+                let key = self.key(None);
+                let id = self.reserve();
+                self.place(id, key, ui_contract::Component::Separator(ui_contract::SeparatorProps {}), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord::default())
+            }
+            UiNode::Button(button) => {
+                let key = self.key(button.id.as_deref());
+                let id = self.reserve();
+                let props = ui_contract::ButtonProps { icon: UiText::clipped(button.icon_id.as_str()), label: measure_label(button.label.as_str()) };
+                let bindings = measure_bindings(ui_contract::Trigger::Activate, &button.action, None)?;
+                self.place(id, key, ui_contract::Component::Button(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, label: Some(measure_label(button.label.as_str())), ..PanelRecord::default() })
+            }
+            UiNode::Select(select) => {
+                let key = self.key(Some(select.id.as_str()));
+                let id = self.reserve();
+                let mut items = UiFixedList::default();
+                for item in &select.items {
+                    items.try_push(ui_contract::SelectItem { value: UiText::clipped(&item.value), label: measure_label(item.label.as_str()) }).map_err(|_| format!("panel select '{}' has more options than one select admits", select.id))?;
+                }
+                let props = ui_contract::SelectProps { value: UiText::clipped(&select.value), items, placeholder: select.placeholder.as_ref().map(|label| measure_label(label.as_str())) };
+                let bindings = measure_bindings(ui_contract::Trigger::Change, &select.on_change, None)?;
+                self.place(id, key, ui_contract::Component::Select(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::Toggle(toggle) => {
+                let key = self.key(Some(toggle.id.as_str()));
+                let id = self.reserve();
+                let on = presence.selected;
+                let props = ui_contract::ToggleProps { on, icon: UiText::clipped(toggle.icon_id.as_str()), text: toggle.text.as_ref().map(|label| measure_label(label.as_str())) };
+                let bindings = measure_bindings(ui_contract::Trigger::Change, &toggle.on_change, Some(("pressed", DslValue::Bool(!on))))?;
+                self.place(id, key, ui_contract::Component::Toggle(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, label: toggle.text.as_ref().map(|label| measure_label(label.as_str())), ..PanelRecord::default() })
+            }
+            UiNode::Input(input) => {
+                let key = self.key(Some(input.id.as_str()));
+                let id = self.reserve();
+                let kind = match input.input_kind.as_str() {
+                    "number" => ui_contract::InputKind::Number,
+                    "longText" | "textarea" => ui_contract::InputKind::LongText,
+                    "date" => ui_contract::InputKind::Date,
+                    "color" => ui_contract::InputKind::Color,
+                    "file" => ui_contract::InputKind::File,
+                    _ => ui_contract::InputKind::Text,
+                };
+                let props = ui_contract::InputProps {
+                    kind,
+                    value: UiText::clipped(&input.value),
+                    placeholder: input.placeholder.as_ref().map(|label| measure_label(label.as_str())),
+                    commit: input.commit.as_deref().map(UiText::clipped),
+                    min: input.min,
+                    max: input.max,
+                    step: input.step,
+                    accept: input.accept.as_deref().map(UiText::clipped),
+                };
+                let trigger = if input.commit.is_some() { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
+                let bindings = measure_bindings(trigger, &input.on_change, None)?;
+                self.place(id, key, ui_contract::Component::Input(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::KeyValue(list) => {
+                let key = self.key(None);
+                let id = self.reserve();
+                let mut entries = UiFixedList::default();
+                for entry in &list.entries {
+                    entries.try_push(ui_contract::KeyValueEntry { label: measure_label(entry.label.as_str()), value: UiText::clipped(&entry.value) }).map_err(|_| format!("panel '{}' key-value list exceeds one record", self.surface_id))?;
+                }
+                self.place(id, key, ui_contract::Component::KeyValueList(ui_contract::KeyValueListProps { entries }), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::Progress(progress) => {
+                let key = self.key(Some(progress.id.as_str()));
+                let id = self.reserve();
+                let props = ui_contract::ProgressProps { completed: progress.completed, total: progress.total, value_text: measure_label(progress.value_text.as_str()) };
+                self.place(id, key, ui_contract::Component::Progress(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::Slider(slider) => {
+                let key = self.key(Some(slider.id.as_str()));
+                let id = self.reserve();
+                let bindings = measure_bindings(ui_contract::Trigger::Change, &slider.on_change, None)?;
+                self.place(id, key, measure_slider(slider.value, slider.min, slider.max, Some(slider.step)), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+            }
+            other => Err(format!("panel '{}' authored a {} node this assembler does not project", self.surface_id, panel_ui_node_tag(other))),
+        }
+    }
+}
+
+/// 💬️ One transcript row of the `framework.chat` panel — React's `BasicChatMessage`
+/// (`🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`): an id, a role (`"assistant"`/`"user"`) and a body.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AgentChatMessage {
+    pub id: String,
+    pub role: String,
+    pub body: String,
+}
+
+/// 💬️ The two assistant lines React's `createBasicChatMessages` seeds a fresh transcript with, so the
+/// panel is never blank and the ids start the same `framework.chat.assistant.{0,1}` sequence.
+pub(crate) fn seed_agent_chat_messages(is_de: bool) -> Vec<AgentChatMessage> {
+    vec![
+        AgentChatMessage { id: "framework.chat.assistant.0".into(), role: "assistant".into(), body: shell_chrome_string("chat.readyFor", is_de).to_string() },
+        AgentChatMessage { id: "framework.chat.assistant.1".into(), role: "assistant".into(), body: shell_chrome_string("chat.localOnly", is_de).to_string() },
+    ]
+}
+
+/// 👁️✏️ Byte-identical to React's `DEFAULT_APP_NONE_VALUE` (`📌️ChromePanels/🟦️.tsx`) — the
+/// default-apps `Select` value that clears a pin rather than naming an app.
+const DEFAULT_APP_NONE_VALUE: &str = "none";
+
+/// ⚙️ One collapsible settings section — React's `TreeDataSection` with `defaultOpen: true`.
+fn settings_section(id: &str, label: &str, children: Vec<UiNode>) -> UiNode {
+    UiNode::Section(UiSectionNode { id: id.to_string(), label: Some(Label::data(label)), default_open: Some(true), presence: UiPresence::default(), menu: None, children })
+}
+
+/// ⚙️ One control-less text row — React's `TreeDataItem` carrying only a `label`.
+fn settings_text_row(text: &str) -> UiNode {
+    UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(text), emphasize: Some(false), data_attributes: None, menu: None })
+}
+
+/// ⚙️ One labelled `Select` row — React's `{ id, label, control: <Select …/> }` item, whose
+/// `onValueChange` becomes the node's `on_change` over the `"framework"` controller.
+fn settings_select_row(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str) -> UiNode {
+    settings_select_row_with(id, label, value, options, action, None)
+}
+
+/// ⚙️ {@link settings_select_row} plus authored action args — the row's own coordinate, for a table
+/// whose action needs to know WHICH row changed (the default-apps `(dialect × role)` pairing).
+fn settings_select_row_with(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, args: Option<DslValue>) -> UiNode {
+    UiNode::Field(UiFieldNode {
+        id: format!("{id}.field"),
+        label: Label::data(label),
+        description: None,
+        required: None,
+        error: None,
+        child: Box::new(UiNode::Select(UiSelectNode {
+            presence: UiPresence::default(),
+            id: id.to_string(),
+            value: value.to_string(),
+            items: options.into_iter().map(|(value, label)| UiSelectItem { value, label: Label::data(label) }).collect(),
+            placeholder: None,
+            on_change: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
+            menu: None,
+        })),
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+/// 📝️ One staged command argument as a labelled control — the wgpu twin of React's
+/// `renderStagedArgControl` (`🛠️ShellHelpers/🟦️.tsx`), dispatching `stageCommandArg` on change so the
+/// value buffers in {@link ShellState::staged_command_args} and nothing fires until Execute.
+fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef, value: &str, terminology: Terminology, locale: Locale) -> UiNode {
+    let id = format!("command.{}.arg.{}", command_key.replace(':', "."), arg.id);
+    let label = arg.label.resolve(terminology, locale).to_string();
+    let args = crate::action_args_json!({ "command": command_key.to_string(), "arg": arg.id.clone() });
+    let on_change = ActionDescriptor { controller_id: "framework".into(), action: "stageCommandArg".into(), args };
+    let child = match arg.control() {
+        semio_framework::ActionArgControl::Select { options } => UiNode::Select(UiSelectNode {
+            presence: UiPresence::default(),
+            id: id.clone(),
+            value: value.to_string(),
+            items: options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.resolve(terminology, locale)) }).collect(),
+            placeholder: Some(Label::data(label.clone())),
+            on_change: on_change.clone(),
+            menu: None,
+        }),
+        semio_framework::ActionArgControl::Toggle => UiNode::Toggle(UiToggleNode {
+            id: id.clone(),
+            icon_id: IconName::Check,
+            text: Some(Label::data(label.clone())),
+            on_change: on_change.clone(),
+            presence: UiPresence { selected: value == "true", ..UiPresence::default() },
+            menu: None,
+        }),
+        semio_framework::ActionArgControl::Slider { min, max, step, unit } => UiNode::Slider(UiSliderNode {
+            id: id.clone(),
+            value: value.parse::<f64>().unwrap_or(min),
+            min,
+            max,
+            step: step.unwrap_or(1.0),
+            unit,
+            on_change: on_change.clone(),
+            presence: UiPresence::default(),
+            menu: None,
+        }),
+        semio_framework::ActionArgControl::Number { min, max, step } => UiNode::Input(UiInputNode {
+            id: id.clone(),
+            input_kind: "number".into(),
+            value: value.to_string(),
+            placeholder: Some(Label::data(label.clone())),
+            commit: Some("blur".into()),
+            min,
+            max,
+            step,
+            accept: None,
+            on_change: on_change.clone(),
+            presence: UiPresence::default(),
+            menu: None,
+        }),
+        _ => UiNode::Input(UiInputNode {
+            id: id.clone(),
+            input_kind: "text".into(),
+            value: value.to_string(),
+            placeholder: Some(Label::data(label.clone())),
+            commit: Some("blur".into()),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: on_change.clone(),
+            presence: UiPresence::default(),
+            menu: None,
+        }),
+    };
+    UiNode::Field(UiFieldNode { id: format!("{id}.field"), label: Label::data(label), description: arg.description.clone(), required: Some(arg.required), error: None, child: Box::new(child), presence: UiPresence::default(), menu: None })
+}
+
+/// ⌨️ A control id as a readable row label — React's `humanizeControlId`: the last dot segment,
+/// camelCase split on word boundaries, first letter upper-cased.
+fn humanize_control_id(control_id: &str) -> String {
+    let leaf = control_id.rsplit('.').next().unwrap_or(control_id);
+    let mut out = String::new();
+    for (index, ch) in leaf.chars().enumerate() {
+        if index > 0 && ch.is_ascii_uppercase() {
+            out.push(' ');
+            out.push(ch.to_ascii_lowercase());
+            continue;
+        }
+        out.push(if index == 0 { ch.to_ascii_uppercase() } else { ch });
+    }
+    out
+}
+
+/// 🧾️ The variant name a refused `UiNode` reports under — the assembler's own error vocabulary.
+fn panel_ui_node_tag(node: &UiNode) -> &'static str {
+    match node {
+        UiNode::Stack(_) => "stack",
+        UiNode::Text(_) => "text",
+        UiNode::Button(_) => "button",
+        UiNode::Separator(_) => "separator",
+        UiNode::Input(_) => "input",
+        UiNode::Select(_) => "select",
+        UiNode::Toggle(_) => "toggle",
+        UiNode::KeyValue(_) => "keyValue",
+        UiNode::Slider(_) => "slider",
+        UiNode::NumberStepper(_) => "numberStepper",
+        UiNode::Ring(_) => "ring",
+        UiNode::IconSelect(_) => "iconSelect",
+        UiNode::Progress(_) => "progress",
+        UiNode::Field(_) => "field",
+        UiNode::Section(_) => "section",
+        UiNode::Group(_) => "group",
+        UiNode::Tree(_) => "tree",
+        UiNode::Image(_) => "image",
+        UiNode::ComponentScene(_) => "componentScene",
+        UiNode::ExternalSlot(_) => "externalSlot",
+    }
+}
+//#endregion 🧾️PanelRecordsAssembler
 
 //#region ⏯️ToolRunPanel
 /// ⏯️ Whether the freshly rendered framework ToolRun panel `document` holds a run `seen` has not — the moment the shell
@@ -3507,15 +4416,20 @@ impl ShellState {
         // `ComputePool::new`/`with_new_http_pool` are async constructors bridged once here. Runtime,
         // scope, and compute ownership then lives in the transport; no directory thread is retained.
         #[cfg(not(target_arch = "wasm32"))]
-        let (directory_transport, directory_cancel): (NativeDirectoryTransport<TokioHostRuntime>, CancelToken) = {
+        let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
             let pool = crate::renderer_worker_pool();
             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(ScopeOwner::Service("directory_client"), None);
             let compute = std::sync::Arc::new(ComputePool::with_pool(DIRECTORY_COMPUTE_CAPACITY, pool));
-            let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
+            let transport = ShellDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
             (transport, CancelToken::root_now())
         };
+        // 🌐️ The browser half of the same seam: the page door owns no pool, no scope and no socket —
+        // every hop is one `fetch` the page makes on this shell's behalf — so the transport is a unit
+        // value and only the cancellation root has to be minted.
+        #[cfg(target_arch = "wasm32")]
+        let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = (shell_directory_transport(), CancelToken::root_now());
         #[cfg(not(target_arch = "wasm32"))]
         let document_host = {
             let host = ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool()));
@@ -3535,15 +4449,16 @@ impl ShellState {
             spawned_ui: None,
             closing_documents: ShellDocumentRetirementRegistry::default(),
             active_window_id: None,
-            left_panel_open: false,
-            right_panel_open: false,
-            left_panel_width: DEFAULT_PANEL_WIDTH_PX,
-            right_panel_width: DEFAULT_PANEL_WIDTH_PX,
+            panel_anchors: Default::default(),
+            dock_tabs: ShellDock::default(),
+            dock_override: None,
+            dock_collapsed_branches: HashMap::new(),
+            dock_tab_drag: None,
+            dock_loaded_app_id: None,
             scroll_offsets: HashMap::new(),
             overlay_state: OverlayState::None,
             collapsed_sections: HashMap::new(),
             open_selects: HashMap::new(),
-            active_right_tab: None,
             context_menu: None,
             search_open: false,
             find_open: false,
@@ -3571,8 +4486,6 @@ impl ShellState {
             icon_render_states: HashMap::new(),
             board2d_states: AdmittedSurfaceMap::default(),
             dock: DockState::default(),
-            active_left_kind: LeftPanelKind::Workbench,
-            active_right_kind: RightPanelKind::Details,
             search_query: String::new(),
             search_selected: 0,
             find_query: String::new(),
@@ -3580,7 +4493,6 @@ impl ShellState {
             split_resize_index: 0,
             split_resize_axis_total: 1.0,
             active_example_id: None,
-            active_left_tab: None,
             find_items: ShellFindItems::default(),
             find_selected: 0,
             engagement_expanded: HashMap::new(),
@@ -3598,7 +4510,8 @@ impl ShellState {
             tree_drag_origin: (0.0, 0.0),
             dock_drag: None,
             pending_dock_drag: None,
-            dock_drag_snapshot: None,
+            pending_dock_tab_select: None,
+            dock_view: DockState::default(),
             dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
             dock_drop_tab_bars: Vec::new(),
             dock_drop_bodies: Vec::new(),
@@ -3626,8 +4539,19 @@ impl ShellState {
             active_utilities: Vec::new(),
             active_utility_by_window: HashMap::new(),
             action_panel_folded: HashMap::new(),
+            utility_bar_folded: HashMap::new(),
+            projection_pane_folded: HashMap::new(),
+            world_projection_template: HashMap::new(),
             action_panel_expanded: HashMap::new(),
             staged_action_args: HashMap::new(),
+            expanded_command_id: None,
+            staged_command_args: HashMap::new(),
+            keybinding_capture_control_id: None,
+            default_app_pins: HashMap::new(),
+            agent_chat_messages: seed_agent_chat_messages(false),
+            agent_chat_draft: String::new(),
+            mobile_panel_visible: false,
+            mobile_panel_path: Vec::new(),
             sync_backbone_uri: None,
             sync_card_kind: None,
             sync_card_draft: String::new(),
@@ -3641,19 +4565,16 @@ impl ShellState {
             sync_status: None,
             #[cfg(not(target_arch = "wasm32"))]
             sync_bootstrap_progress: None,
-            #[cfg(not(target_arch = "wasm32"))]
             identity: None,
-            #[cfg(not(target_arch = "wasm32"))]
             identity_offline: false,
-            #[cfg(not(target_arch = "wasm32"))]
             identity_env: None,
-            #[cfg(not(target_arch = "wasm32"))]
             shell_session_id: mint_shell_session_id(),
+            #[cfg(target_arch = "wasm32")]
+            identity_retry_at_ms: 0,
             #[cfg(not(target_arch = "wasm32"))]
             identity_bootstrap_rx: None,
             #[cfg(not(target_arch = "wasm32"))]
             identity_bootstrap_task: None,
-            #[cfg(not(target_arch = "wasm32"))]
             directory_client: None,
             #[cfg(not(target_arch = "wasm32"))]
             inference_port: None,
@@ -3663,33 +4584,21 @@ impl ShellState {
             document_execution_target_lease: None,
             #[cfg(not(target_arch = "wasm32"))]
             directory_home: None,
-            #[cfg(not(target_arch = "wasm32"))]
             directory_transport,
-            #[cfg(not(target_arch = "wasm32"))]
             directory_cancel,
-            #[cfg(not(target_arch = "wasm32"))]
-            directory_commands: NativeDirectoryCommandQueueV1::default(),
-            #[cfg(not(target_arch = "wasm32"))]
+            directory_commands: ShellDirectoryCommandQueueV1::default(),
             space_administration: None,
-            #[cfg(not(target_arch = "wasm32"))]
             space_administration_epoch: 0,
             #[cfg(not(target_arch = "wasm32"))]
             presence_peers: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             presence_surface: None,
-            #[cfg(not(target_arch = "wasm32"))]
             history_cursor: 0,
-            #[cfg(not(target_arch = "wasm32"))]
             history_entries: BTreeMap::new(),
-            #[cfg(not(target_arch = "wasm32"))]
             history_current_checkpoint_id: None,
-            #[cfg(not(target_arch = "wasm32"))]
             last_uncommitted_edit_at_ms: None,
-            #[cfg(not(target_arch = "wasm32"))]
             auto_checkin_pending: false,
-            #[cfg(not(target_arch = "wasm32"))]
             checkpoint_dispatched: false,
-            #[cfg(not(target_arch = "wasm32"))]
             checkin_dialog_draft: None,
             window_engagements: HashMap::new(),
             window_measures_documents: HashMap::new(),
@@ -3699,6 +4608,7 @@ impl ShellState {
             window_content_rects: HashMap::new(),
             retained_hit_windows: HashMap::new(),
             retained_hit_windows_staging: HashMap::new(),
+            chrome_floor_scope: None,
             retained_hover_window: None,
             window_silhouettes: HashMap::new(),
             tutorial: None,
@@ -3706,7 +4616,7 @@ impl ShellState {
             chrome_build: ShellChromeBuildState::default(),
             chrome_present: ShellChromePresentState::default(),
         };
-        state.load_persisted_panel_layout();
+        state.load_persisted_dock();
         state
     }
 
@@ -3992,6 +4902,8 @@ impl ShellState {
                 active_tool_id: None,
                 active_utility_by_window_id: HashMap::new(),
                 tool_run_trace_cursor_by_window_id: HashMap::new(),
+                tree_windows: Vec::new(),
+                tree_viewport_rows: None,
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             let session = ActiveSession { plugin_id: host_plugin_id, instance_id, app: s_app, view_state };
@@ -4003,7 +4915,7 @@ impl ShellState {
         } else {
             let selection = {
                 let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
-                select_boot_program(&programs, &self.plugin_filter, Self::boot_app_role())
+                select_boot_program(&programs, &self.plugin_filter, Self::boot_app_role(), crate::boot_app_id().as_deref())
             };
             let Some((index, app)) = selection else {
                 let plugin_id = resolve_registry_plugin_id(&self.plugin_filter).to_string();
@@ -4034,6 +4946,8 @@ impl ShellState {
                     active_tool_id: None,
                     active_utility_by_window_id: HashMap::new(),
                     tool_run_trace_cursor_by_window_id: HashMap::new(),
+                    tree_windows: Vec::new(),
+                    tree_viewport_rows: None,
                 },
             });
         }
@@ -4170,6 +5084,13 @@ impl ShellState {
         // `bootstrap_identity`'s own doc): a slow/unreachable hub must never delay the first frame.
         #[cfg(not(target_arch = "wasm32"))]
         self.bootstrap_identity();
+        // 🌐️ Browser: there is no credential to claim and no pool future to submit — only the boot
+        // environment to record. `poll_browser_identity` (every-frame, retry-floored) does the one
+        // `GET /auth/sessions/me` round trip, so this stays as non-blocking as the native arm.
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.identity_env = resolve_identity_env();
+        }
         // 🧩️ Contributions cross BEFORE the first render, the way React's `refreshUi` starts its
         // publisher before its own first await: a surface rendered against an EMPTY flow-extension
         // registry arms nothing at all (the guest's `may_rearm` gate — a graph whose operator kinds
@@ -4242,6 +5163,16 @@ impl ShellState {
             .unwrap_or_default();
         let resolved = resolve_boot_example_id(self.active_example_id.as_deref().unwrap_or(""), &examples, crate::boot_app_example().as_deref());
         self.active_example_id = (!resolved.is_empty()).then_some(resolved);
+        // 🧭️ The dock's tab sources are the session's own panel tabs, so every chrome sync rebuilds it.
+        // The persisted override layer is keyed by app id, so a NEW app additionally reloads that app's
+        // layer — reloading on every sync would clobber the reveal `apply_host_panel_selection` just made.
+        let app_id = self.dock_store_app_id();
+        if self.dock_loaded_app_id != app_id {
+            self.dock_loaded_app_id = app_id;
+            self.load_persisted_dock();
+        } else {
+            self.sync_dock_tabs();
+        }
     }
 
 
@@ -4294,27 +5225,14 @@ impl ShellState {
         if let Some(home) = self.directory_home.as_mut().filter(|home| home.is_instance(&current_identity.0, current_identity.1)) {
             home.view_state.panel_json = Some(panel_json);
         }
-        match group {
-            PanelGroup::Workbench => {
-                self.active_left_kind = LeftPanelKind::Workbench;
-                self.active_left_tab = Some(tab_id);
-                self.left_panel_open = true;
-            }
-            PanelGroup::Display => {
-                self.active_left_kind = LeftPanelKind::Display;
-                self.active_left_tab = Some(tab_id);
-                self.left_panel_open = true;
-            }
-            PanelGroup::Details => {
-                self.active_right_kind = RightPanelKind::Details;
-                self.active_right_tab = Some(tab_id);
-                self.right_panel_open = true;
-            }
-            PanelGroup::Settings => {
-                self.active_right_kind = RightPanelKind::Settings;
-                self.active_right_tab = Some(tab_id);
-                self.right_panel_open = true;
-            }
+        // 🧭️ Where the tab lives NOW wins over its declared group — a tab dragged to another anchor
+        // must open where the user put it, which is exactly why `reveal_dock_tab` locates it in the live
+        // dock first and only falls back on `PanelGroup::anchor()` when the dock has no node for it yet.
+        if self.reveal_dock_tab(&tab_id).is_none() {
+            let anchor = PanelAnchor::from_group(group);
+            let state = self.anchor_state_mut(anchor);
+            state.path = vec![tab_id];
+            state.visible = true;
         }
         self.sync_session_chrome();
         Some(Ok(()))
@@ -4328,7 +5246,9 @@ impl ShellState {
                     self.dock.active_window_id = self.active_window_id.clone().or_else(|| session.view_state.active_window_kind_id.clone());
                 }
             } else {
+                let mobile = self.dock.mobile;
                 self.dock = DockState::from_app(&session.app, self.active_window_id.as_deref());
+                self.dock.mobile = mobile;
             }
             if let Some(id) = &self.active_window_id {
                 self.dock.sync_active_window(id);
@@ -4361,6 +5281,15 @@ impl ShellState {
         instances
     }
 
+    /// 🪟️ The host-owned fields every refresh restamps onto the session's view state.
+    ///
+    /// ⚠️ GAP (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §2.4, §5): `tree_windows` and
+    /// `tree_viewport_rows` are NOT stamped here, because this shell mounts no tree viewport
+    /// observer. React's `🗣️Interpreter` reports one `TreeWindowRequest` per open container through
+    /// `TreeWindowHostV1::viewStateFields` (`🛠️ShellHelpers/🟦️.tsx`); until a wgpu scroll/open
+    /// observer feeds the same pair, every construction site sends what React sends before its first
+    /// report — no requests and no measured viewport — so a guest paints its own first-paint window
+    /// and scrolling into a spacer band reveals pitch rather than streamed rows.
     fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();
         view_state.locale = self.active_locale();
@@ -4374,19 +5303,12 @@ impl ShellState {
         view_state
     }
 
-    /// 🪪️ The session identity a `ViewModel` carries. `ShellState::identity` is native-only state
-    /// (the whole `🔖️Identity` region is `#[cfg(not(target_arch = "wasm32"))]`), so every browser
-    /// build reports `None` — one accessor rather than a cfg pair repeated at each construction
-    /// site, which is what made the un-gated one break `wasm32-unknown-unknown`.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// 🪪️ The session identity a `ViewModel` carries. ONE accessor on both targets since ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e gave the browser build a real identity of its
+    /// own (`poll_browser_identity`); it used to be a cfg pair whose browser half answered a hard
+    /// `None`, so every guest saw an anonymous session on the browser renderer alone.
     fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
         self.identity.as_ref().map(|identity| ViewSessionIdentity { user_id: identity.user_id.clone(), display_name: identity.display_name.clone() })
-    }
-
-    /// 🪪️ See the native twin — the browser shell mints no identity, so this is always `None`.
-    #[cfg(target_arch = "wasm32")]
-    fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
-        None
     }
 
     fn live_window_kind_id<'a>(&'a self, session: &'a ActiveSession, window_id: &str) -> Option<&'a str> {
@@ -4401,19 +5323,28 @@ impl ShellState {
 
     fn persist_dock_layout(&mut self) {
         self.layout_override = Some(self.dock.to_window_layout());
-        self.dock_drag_snapshot = None;
     }
 
-    fn restore_dock_drag_snapshot(&mut self) {
-        if let Some(layout) = self.dock_drag_snapshot.take() {
-            self.layout_override = Some(layout);
-            self.sync_dock();
-        }
-    }
-
+    /// 🎬️ Arms a dock drag without touching the committed tree — a drag is promoted only once the
+    /// pointer clears [`DOCK_DRAG_PROMOTION_DISTANCE_SQ`], and what floats on the cursor from then on
+    /// is `DockState::render_view`'s derivation, never an edit.
+    ///
+    /// 🩸️ This used to snapshot the whole `WindowLayout` because the very next pointer move REMOVED
+    /// the dragged window from the committed tree; an abandoned drag then had to be undone by
+    /// re-applying that snapshot, and any drop that refused left the shell one `sync_dock` away from
+    /// losing the user's layout.
     fn begin_pending_dock_drag(&mut self, payload: DockDragPayload, x: f32, y: f32) {
-        self.dock_drag_snapshot = Some(self.dock.to_window_layout());
         self.pending_dock_drag = Some((payload, (x, y)));
+    }
+
+    /// 🌫️ React's `deactivateActiveWindow` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1455-1472`), reached by
+    /// pressing the canvas background or a resize gutter: the mode keeps its layout and simply has no
+    /// focused window any more.
+    fn deactivate_active_window(&mut self) {
+        if !self.dock.deactivate_active_window() && self.active_window_id.is_none() {
+            return;
+        }
+        self.active_window_id = None;
     }
 
 
@@ -4526,8 +5457,22 @@ impl ShellState {
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         let panel_view = view_state.for_panel();
         let panel_leaves: Vec<(String, String)> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().filter_map(|tab| tab.body_key.as_deref().map(|body_key| (tab.id().to_string(), body_key.to_string()))).collect();
-        let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).collect();
+        // 🧾️ The SHELL-owned leaves (the Command dock, the five Settings leaves, the Marketplace leaf,
+        // every `tool.<id>` leaf and the chat transcript) are not guest-published: they are retained
+        // beside the guest's own panel surfaces so `retire_documents_outside` never sweeps them.
+        let shell_leaves: Vec<String> = self.shell_owned_panel_leaves();
+        let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).chain(shell_leaves.iter().cloned()).collect();
         self.retire_documents_outside(&retained, false)?;
+        for tab_id in shell_leaves {
+            match self.publish_shell_panel_document(&tab_id) {
+                Ok(Some(document)) => {
+                    let previous = self.panel_documents.insert(tab_id.clone(), document);
+                    self.retire_one_surface_document(previous)?;
+                }
+                Ok(None) => {}
+                Err(error) => faults.push((tab_id.clone(), tab_id.clone(), error)),
+            }
+        }
         for (tab_id, body_key) in panel_leaves {
             if !scope.wants_panel_body(&body_key) {
                 continue;
@@ -4556,8 +5501,10 @@ impl ShellState {
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
+        // 🩸️ The `framework.sync.{file,folder,remote}` toggles used to be appended here and painted in
+        // the footer. React builds the same three leaves but hands them to the bottom-left `s-sync-status`
+        // tab's `SyncAttachCard` (`🏛️ShellHost/🟦️.tsx:9076`) — its footer never carries them.
         self.active_utilities = self.derive_utility_nodes(&session);
-        self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
         // 🛍️ Deliberately unscoped: the GUEST fetch inside is already claimed to once per app
         // instance, and what remains is the local republish onto every live node-graph engine host —
         // the moment a surface minted by THIS pass gets its palette. Skipping that on a partial scope
@@ -4592,6 +5539,8 @@ impl ShellState {
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
                                 tool_run_trace_cursor_by_window_id: HashMap::new(),
+                                tree_windows: Vec::new(),
+                                tree_viewport_rows: None,
                             };
                             if let Some(document) = self.spawned_ui.take() {
                                 if let Err(document) = self.retain_document_for_close(document) {
@@ -4754,6 +5703,9 @@ impl ShellState {
     /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`). One line per completed chrome walk —
     /// tens per minute, not per frame.
     fn trace_engine_surface_sync(states: &AdmittedSurfaceMap<NodeGraphSurface>, registrations: &[crate::engine_canvas::EngineSurfaceRegistration], live_window_ids: &[&str]) {
+        if !semio_framework_trace::runtime_diagnostics_enabled() {
+            return;
+        }
         use std::sync::atomic::{AtomicU64, Ordering};
         static SYNCS: AtomicU64 = AtomicU64::new(0);
         static DRAINS_WITH_GRAPH: AtomicU64 = AtomicU64::new(0);
@@ -5075,8 +6027,10 @@ impl ShellState {
     /// React's full multi-hundred-token editor "out of proportion to this ticket"; this wave only closes
     /// the *reachability* gap (the registry/resolver was already live in `frame()`'s `resolve_theme_for_ids`
     /// call, just invisible — no UI could ever select "mono" or a saved custom theme before this).
-    #[cfg(test)]
-    fn build_settings_theme_ui(&self) -> UiNode {
+    ///
+    /// 🧾️ Published as the `framework.settings.theme` leaf's retained document through
+    /// {@link panel_ui_records} — it was `#[cfg(test)]` (a builder with no reader) until this packet.
+    pub(crate) fn build_settings_theme_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         let active_id = self.chrome_build.preferences.theme_id.clone();
         let mut items = vec![UiSelectItem { value: "semio".into(), label: Label::data("Semio") }, UiSelectItem { value: "mono".into(), label: Label::data("Mono") }];
@@ -5119,6 +6073,417 @@ impl ShellState {
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
+    /// ⚙️ The `framework.settings.general` leaf's body — the wgpu twin of React's
+    /// `buildSettingsGeneralTree` (`📌️ChromePanels/🟦️.tsx`): the app-identity section, then the
+    /// appearance / layout / driver / language / terminology selects and the Reset Dock button, each
+    /// row's id and each option's value byte-identical to React's. Rows whose axis is locked by the
+    /// boot descriptor are omitted entirely (React's own `locks.*` render gates), never disabled.
+    ///
+    /// 📐️ React's third section (the per-axis driver EDITOR plus save/delete) has no wgpu twin here:
+    /// `set_driver_field`/`save_driver`/`delete_driver` have no `"framework"` dispatch arm on this
+    /// side, so the driver row stays a plain selector — the same scoping `build_settings_theme_ui`
+    /// applies to React's multi-hundred-token theme editor.
+    pub(crate) fn build_settings_general_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let locks = crate::boot_locks();
+        let mut children = Vec::new();
+        if let Some(session) = self.session.as_ref() {
+            let app_label = session.app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+            children.push(settings_section(
+                "framework.settings.app",
+                shell_chrome_string("settings.tab.app", is_de),
+                vec![
+                    settings_text_row(&format!("{}: {app_label}", shell_chrome_string("settings.app.name", is_de))),
+                    settings_text_row(&format!("{}: {}", shell_chrome_string("settings.app.id", is_de), session.app.id)),
+                    settings_text_row(&format!("{}: {}", shell_chrome_string("settings.app.controller", is_de), session.app.controller_id)),
+                    settings_text_row(&format!("{}: {}", shell_chrome_string("settings.app.plugin", is_de), session.plugin_id)),
+                ],
+            ));
+        }
+        let mut general = Vec::new();
+        if locks.appearance.is_empty() {
+            general.push(settings_select_row(
+                "framework.settings.appearance",
+                shell_chrome_string("settings.tab.appearance", is_de),
+                &self.appearance_id,
+                vec![
+                    ("system".to_string(), shell_chrome_string("settings.appearance.system", is_de).to_string()),
+                    ("light".to_string(), shell_chrome_string("settings.appearance.light", is_de).to_string()),
+                    ("dark".to_string(), shell_chrome_string("settings.appearance.dark", is_de).to_string()),
+                ],
+                "setAppearance",
+            ));
+        }
+        general.push(settings_select_row(
+            "framework.settings.layout",
+            shell_chrome_string("settings.tab.layout", is_de),
+            &self.chrome_build.preferences.ui_layout,
+            vec![
+                ("desktop".to_string(), shell_chrome_string("settings.layout.desktop", is_de).to_string()),
+                ("tablet".to_string(), shell_chrome_string("settings.layout.tablet", is_de).to_string()),
+            ],
+            "setLayout",
+        ));
+        general.push(settings_select_row(
+            "framework.settings.driver",
+            shell_chrome_string("settings.tab.driver", is_de),
+            &self.driver_id,
+            self.driver_rows(),
+            "setDriver",
+        ));
+        if locks.locale.is_empty() {
+            general.push(settings_select_row(
+                "framework.settings.language",
+                shell_chrome_string("settings.tab.language", is_de),
+                &self.locale_id,
+                vec![("en".to_string(), shell_chrome_string("settings.language.en", is_de).to_string()), ("de".to_string(), shell_chrome_string("settings.language.de", is_de).to_string())],
+                "setLocale",
+            ));
+        }
+        if locks.terminology.is_empty() {
+            general.push(settings_select_row(
+                "framework.settings.terminology",
+                shell_chrome_string("settings.tab.terminology", is_de),
+                &self.terminology_id,
+                self.active_terminologies().into_iter().map(|id| (id.clone(), id)).collect(),
+                "setTerminology",
+            ));
+        }
+        general.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.settings.resetDock".into()),
+            icon_id: IconName::RotateCcw,
+            label: Label::data(shell_chrome_string("settings.resetDock", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "runOsCommand".into(), args: crate::action_args_json!({ "value": "os.resetDock" }) },
+            style: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }));
+        children.push(settings_section("framework.settings.general", shell_chrome_string("settings.tab.general", is_de), general));
+        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.settings.general.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
+    }
+
+    /// 🚗️ Every selectable driver id with its display label — the two built-ins plus whatever the
+    /// preferences carry, React's `uiDriverList = [...builtinUiDrivers(), ...customDrivers]`.
+    fn driver_rows(&self) -> Vec<(String, String)> {
+        let mut rows = vec![("default".to_string(), "Default".to_string()), ("compact".to_string(), "Compact".to_string())];
+        for id in self.chrome_build.preferences.custom_drivers.keys() {
+            if !rows.iter().any(|(existing, _)| existing == id) {
+                rows.push((id.clone(), id.clone()));
+            }
+        }
+        rows
+    }
+
+    /// ⌨️ The `framework.settings.keybindings` leaf's body — the wgpu twin of React's
+    /// `buildSettingsKeybindingsTree` (`📌️ChromePanels/🟦️.tsx`): one row per remappable shortcut,
+    /// carrying the chord in force (through [`format_keybinding_shortcut`]), a conflict marker when a
+    /// later row claims the same first chord, a capture control and a reset control.
+    ///
+    /// ⌨️ React captures the next chord from a live `keydown` on the capture button. The wgpu chord
+    /// capture lives in {@link ShellState::keybinding_capture_control_id}: arming a row makes the next
+    /// key event a chord write instead of a shell verb, which is the same one-gesture remap.
+    pub(crate) fn build_settings_keybindings_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let overrides = &self.chrome_build.preferences.keybinding_overrides;
+        let mut rows = Vec::new();
+        for row in shell_keybinding_rows(overrides) {
+            let capturing = self.keybinding_capture_control_id.as_deref() == Some(row.control_id.as_str());
+            let label = humanize_control_id(&row.control_id);
+            let label = if row.conflicted { format!("{label} ({})", shell_chrome_string("settings.keybindings.conflict", is_de)) } else { label };
+            let mut controls = vec![
+                settings_text_row(&format!("{label} — {}", format_keybinding_shortcut(&row.keys))),
+                UiNode::Button(UiButtonNode {
+                    id: Some(format!("framework.settings.keybindings.capture.{}", row.control_id)),
+                    icon_id: IconName::CircleDot,
+                    label: Label::data(shell_chrome_string(if capturing { "settings.keybindings.pressKeys" } else { "settings.keybindings.capture" }, is_de)),
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "captureKeybinding".into(), args: crate::action_args_json!({ "value": row.control_id.clone() }) },
+                    style: None,
+                    presence: UiPresence { selected: capturing, ..UiPresence::default() },
+                    menu: None,
+                }),
+            ];
+            if row.overridden {
+                controls.push(UiNode::Button(UiButtonNode {
+                    id: Some(format!("framework.settings.keybindings.reset.{}", row.control_id)),
+                    icon_id: IconName::RotateCcw,
+                    label: Label::data(shell_chrome_string("settings.keybindings.reset", is_de)),
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "resetKeybinding".into(), args: crate::action_args_json!({ "value": row.control_id.clone() }) },
+                    style: None,
+                    presence: UiPresence::default(),
+                    menu: None,
+                }));
+            }
+            rows.push(UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: None,
+                padding: None,
+                id: Some(format!("framework.settings.keybindings.{}", row.control_id)),
+                children: controls,
+                presence: UiPresence::default(),
+                activate: None,
+                drop_action: None,
+                drop_overlay: None,
+                menu: None,
+            }));
+        }
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some("framework.settings.keybindings.panel".into()),
+            children: vec![settings_section("framework.settings.keybindings.list", shell_chrome_string("settings.tab.keybindings", is_de), rows)],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 👁️✏️ The `framework.settings.default-apps` leaf's body — the wgpu twin of React's
+    /// `buildSettingsDefaultAppsTree`: one row per (dialect × role) the loaded plugins can open, whose
+    /// `Select` pins that pairing's default app (`"none"` clears it, React's `DEFAULT_APP_NONE_VALUE`),
+    /// value encoded as `"<pluginId> <appId>"` exactly like React's `encodeDefaultAppValue`.
+    pub(crate) fn build_settings_default_apps_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let rows = self.default_app_rows();
+        if rows.is_empty() {
+            return UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: None,
+                padding: None,
+                id: Some("framework.settings.defaultApps.empty".into()),
+                children: vec![settings_text_row(shell_chrome_string("settings.unavailable", is_de))],
+                presence: UiPresence::default(),
+                activate: None,
+                drop_action: None,
+                drop_overlay: None,
+                menu: None,
+            });
+        }
+        let items: Vec<UiNode> = rows
+            .into_iter()
+            .map(|(dialect, role, value, options)| {
+                let mut choices = vec![(DEFAULT_APP_NONE_VALUE.to_string(), shell_chrome_string("settings.defaultApps.none", is_de).to_string())];
+                choices.extend(options);
+                settings_select_row_with(
+                    &format!("framework.settings.defaultApps.{dialect}.{role}"),
+                    &format!("{dialect} — {role}"),
+                    &value,
+                    choices,
+                    "setDefaultApp",
+                    crate::action_args_json!({ "row": format!("{dialect}/{role}") }),
+                )
+            })
+            .collect();
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some("framework.settings.defaultApps.panel".into()),
+            children: vec![settings_section("framework.settings.defaultApps.table", shell_chrome_string("settings.tab.defaultApps", is_de), items)],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 👁️✏️ `(dialect, role, pinned value, options)` per opening pairing the loaded manifests declare —
+    /// React's `defaultAppsRows` memo over `AppRouter.entriesFor` plus the persisted `OpeningPreferences`.
+    fn default_app_rows(&self) -> Vec<(String, String, String, Vec<(String, String)>)> {
+        let mut dialects: Vec<String> = Vec::new();
+        for entry in &self.plugins {
+            for app in &entry.manifest.apps {
+                let dialect = app.dialect.to_coordinate();
+                if !dialects.contains(&dialect) {
+                    dialects.push(dialect);
+                }
+            }
+        }
+        dialects.sort();
+        let mut rows = Vec::new();
+        for dialect in dialects {
+            for role in ["viewer", "editor"] {
+                let options: Vec<(String, String)> = self
+                    .plugins
+                    .iter()
+                    .flat_map(|entry| {
+                        entry.manifest.apps.iter().filter(|app| app.dialect.to_coordinate() == dialect && app.role.as_str() == role).map(|app| (format!("{} {}", entry.plugin_id, app.id), format!("{} · {}", entry.manifest.label, app.id)))
+                    })
+                    .collect();
+                if options.is_empty() {
+                    continue;
+                }
+                let pinned = self.default_app_pins.get(&format!("{dialect}/{role}")).cloned().unwrap_or_else(|| DEFAULT_APP_NONE_VALUE.to_string());
+                rows.push((dialect.clone(), role.to_string(), pinned, options));
+            }
+        }
+        rows
+    }
+
+    /// ⚖️ The `framework.settings.conflicts` leaf's body — the wgpu twin of React's `buildConflictsTree`:
+    /// one row per open conflict with accept/discard controls. The wgpu shell has no conflict projection
+    /// reader yet (React's `selectOpenConflicts` over `🐚️Shell`'s store), so this resolves to React's own
+    /// unavailable row until that lane lands — the leaf exists, is addressable and never paints blank.
+    pub(crate) fn build_settings_conflicts_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some("framework.settings.conflicts.panel".into()),
+            children: vec![settings_section("framework.settings.conflicts.empty", shell_chrome_string("conflict.panel", is_de), vec![settings_text_row(shell_chrome_string("settings.unavailable", is_de))])],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 🛍️ The `framework.marketplace` leaf's body — the wgpu twin of React's `buildMarketplaceTree`:
+    /// one section per plugin SOURCE, a row per plugin carrying `label · version · status`, and a
+    /// reload/uninstall pair per loaded plugin. The wgpu shell's only plugin source is the bridges it
+    /// booted with, so every row reports `loaded` and the install-from-URL/file section is omitted —
+    /// this renderer has no installer lane (React's `installPlugin`/`installExtensionFromUrl`).
+    pub(crate) fn build_marketplace_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let mut rows = Vec::new();
+        let mut ids: Vec<&ProgramBridgeEntry> = self.plugins.iter().collect();
+        ids.sort_by(|left, right| left.plugin_id.cmp(&right.plugin_id));
+        for entry in ids {
+            let status = shell_chrome_string("plugins.status.loaded", is_de);
+            rows.push(settings_text_row(&format!("{} · {} · {status}", entry.manifest.label, entry.manifest.version)));
+        }
+        let children = if rows.is_empty() {
+            vec![settings_text_row(shell_chrome_string("marketplace.unavailable", is_de))]
+        } else {
+            vec![settings_section("framework.marketplace.source.local", shell_chrome_string("plugins.source", is_de), rows)]
+        };
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some("framework.marketplace.panel".into()),
+            children,
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 💬️ Commits the draft into the transcript and appends the local echo React's `sendDraft` does:
+    /// the user's line, then an assistant line quoting a ≤72-character preview. A blank draft is a
+    /// no-op, and the id sequence continues past the two seeded lines exactly as React's does.
+    pub(crate) fn send_agent_chat_draft(&mut self) {
+        let trimmed = self.agent_chat_draft.trim().to_string();
+        if trimmed.is_empty() {
+            return;
+        }
+        let is_de = self.locale_id == "de";
+        let seq = self.agent_chat_messages.len();
+        self.agent_chat_draft.clear();
+        self.agent_chat_messages.push(AgentChatMessage { id: format!("framework.chat.user.{seq}"), role: "user".into(), body: trimmed.clone() });
+        let preview = if trimmed.chars().count() > 72 { format!("{}...", trimmed.chars().take(69).collect::<String>()) } else { trimmed };
+        self.agent_chat_messages.push(AgentChatMessage { id: format!("framework.chat.assistant.{}", seq + 1), role: "assistant".into(), body: format!("{} {preview}", shell_chrome_string("chat.savedLocally", is_de)) });
+    }
+
+    /// 💬️ The `framework.chat` leaf's BODY — the transcript W1j could not paint. React hosts it as an
+    /// arbitrary subtree through `Tree`'s `emptyState` escape hatch (`📌️ChromePanels/🟦️.tsx`'s
+    /// `createFrameworkChatPanelTab`), and its content is `BasicChatPanel`
+    /// (`🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`): a helper line, one row per message carrying the role and the
+    /// body, then a draft box with Clear and Send. The transcript is LOCAL state on both sides —
+    /// `BasicChatPanel` seeds two assistant lines and echoes each send, and never reads the agent
+    /// bridge, which supplies only the header's status dot (W1j's `render_agent_chat_header_step`).
+    ///
+    /// 🧾️ This is the packet's content-projection consumer: the panel body is assembled by the SHELL
+    /// out of shell state rather than rendered by a guest, published through {@link panel_ui_records}
+    /// like every other shell-owned leaf.
+    pub(crate) fn build_agent_chat_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let mut children = vec![settings_text_row(shell_chrome_string("chat.instructions", is_de))];
+        for message in &self.agent_chat_messages {
+            children.push(UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: None,
+                padding: None,
+                id: Some(format!("framework.chat.message.{}", message.id)),
+                children: vec![settings_text_row(&message.role), settings_text_row(&message.body)],
+                presence: UiPresence::default(),
+                activate: None,
+                drop_action: None,
+                drop_overlay: None,
+                menu: None,
+            }));
+        }
+        children.push(UiNode::Input(UiInputNode {
+            id: "framework.chat.draft".into(),
+            input_kind: "longText".into(),
+            value: self.agent_chat_draft.clone(),
+            placeholder: Some(Label::data(shell_chrome_string("chat.placeholder", is_de))),
+            commit: Some("blur".into()),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: ActionDescriptor { controller_id: "framework".into(), action: "setChatDraft".into(), args: None },
+            presence: UiPresence::default(),
+            menu: None,
+        }));
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.chat.clear".into()),
+            icon_id: IconName::Trash2,
+            label: Label::data(shell_chrome_string("common.clear", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "clearChat".into(), args: None },
+            style: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }));
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.chat.send".into()),
+            icon_id: IconName::ArrowRight,
+            label: Label::data(shell_chrome_string("chat.send", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None },
+            style: None,
+            presence: UiPresence {
+                state: if self.agent_chat_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
+                ..UiPresence::default()
+            },
+            menu: None,
+        }));
+        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.chat.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
+    }
+
+    /// 🛠️ One `tool.<id>` leaf's body — the wgpu twin of React's `buildToolTree`: a single headerless
+    /// options section over the tool's own published measures. The leaf tab IS the activation control
+    /// (see {@link ShellState::arm_tool_for_panel_tab}), so this renders no second activation toggle.
+    /// The wgpu program bridge has no `tool_measures` reader yet, so the section carries the tool's
+    /// armed state and stays otherwise empty exactly as React's does with no measures in hand.
+    pub(crate) fn build_tool_panel_ui(&self, tool_id: &str) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let armed = self.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id);
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.panel")),
+            children: vec![settings_section(
+                &format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.options"),
+                shell_chrome_string(if armed { "tool.armed" } else { "tool.idle" }, is_de),
+                Vec::new(),
+            )],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
     fn active_terminologies(&self) -> Vec<String> {
         let mut ids = vec!["native".to_string()];
         if let Some(session) = self.session.as_ref() {
@@ -5132,109 +6497,338 @@ impl ShellState {
     }
 
     //#region 🧭️PanelAnchorAccessors
-    /// 🧭️ Projects the current left/right toggle state onto the named anchor it corresponds to (see
-    /// `🧭️PanelAnchorModel` above). The four edge-middle anchors are always empty — nothing assigns there yet.
+    pub fn anchor_state(&self, anchor: PanelAnchor) -> &PanelAnchorState {
+        &self.panel_anchors[anchor.index()]
+    }
+
+    pub fn anchor_state_mut(&mut self, anchor: PanelAnchor) -> &mut PanelAnchorState {
+        &mut self.panel_anchors[anchor.index()]
+    }
+
+    /// 🧭️ Is this anchor actually painting — open, and carrying at least one tab to paint.
+    pub fn anchor_open(&self, anchor: PanelAnchor) -> bool {
+        self.anchor_state(anchor).visible && !self.dock_tabs.tabs(anchor).is_empty()
+    }
+
+    /// 🧭️ Every anchor this frame paints a floating panel at, in `PanelAnchor::ALL` order.
+    pub fn open_anchors(&self) -> Vec<PanelAnchor> {
+        PanelAnchor::ALL.into_iter().filter(|anchor| self.anchor_open(*anchor)).collect()
+    }
+
+    /// 🧭️ `⌘️B`'s left column and `⌘️⇧️B`'s right column — the two corner anchors that column carries,
+    /// top first, the only place the former hardcoded left/right pair survives.
+    fn column_anchors(left: bool) -> [PanelAnchor; 2] {
+        if left {
+            [PanelAnchor::TopLeft, PanelAnchor::BottomLeft]
+        } else {
+            [PanelAnchor::TopRight, PanelAnchor::BottomRight]
+        }
+    }
+
+    /// 🧭️ Projection kept for the shell's column-level reads (`⌘️B`, the overlay safe area, the tutorial
+    /// snapshot): the left column is open while either of its corner anchors is.
+    pub fn left_panel_open(&self) -> bool {
+        Self::column_anchors(true).into_iter().any(|anchor| self.anchor_open(anchor))
+    }
+
+    pub fn right_panel_open(&self) -> bool {
+        Self::column_anchors(false).into_iter().any(|anchor| self.anchor_open(anchor))
+    }
+
+    /// 🧭️ Opens `anchor` at `tab_id`'s path, or folds it shut when that tab is already the open one —
+    /// the toggle every panel-toggle control and every tab button shares (React's `PanelChromeTabBar`).
+    pub fn toggle_anchor_tab(&mut self, anchor: PanelAnchor, tab_id: &str) {
+        let already = self.anchor_open(anchor) && self.anchor_state(anchor).path.iter().any(|id| id == tab_id);
+        if already {
+            self.anchor_state_mut(anchor).visible = false;
+            return;
+        }
+        let path = self.dock_tabs.reconcile_path(anchor, &[tab_id.to_string()]);
+        let state = self.anchor_state_mut(anchor);
+        state.path = path;
+        state.visible = true;
+    }
+
+    /// 🧭️ Opens whichever anchor hosts `tab_id` today and selects it — the programmatic reveal every
+    /// `setActivePanelTab` outcome, tour step and panel-tab hit funnels through.
+    pub fn reveal_dock_tab(&mut self, tab_id: &str) -> Option<PanelAnchor> {
+        let (anchor, path) = self.dock_tabs.locate(tab_id)?;
+        let path = self.dock_tabs.reconcile_path(anchor, &path);
+        let state = self.anchor_state_mut(anchor);
+        state.path = path;
+        state.visible = true;
+        Some(anchor)
+    }
+
+    /// 🌳️ Is this anchor's branch folded shut in its tab bar.
+    pub fn dock_branch_collapsed(&self, anchor: PanelAnchor, branch_id: &str) -> bool {
+        self.dock_collapsed_branches.get(&format!("{}/{branch_id}", anchor.as_str())).copied().unwrap_or(false)
+    }
+
+    pub fn toggle_dock_branch(&mut self, anchor: PanelAnchor, branch_id: &str) {
+        let key = format!("{}/{branch_id}", anchor.as_str());
+        let next = !self.dock_collapsed_branches.get(&key).copied().unwrap_or(false);
+        self.dock_collapsed_branches.insert(key, next);
+    }
+
+    /// 🧭️ The per-anchor projection the tutorial snapshot and the anchor-model tests read.
     pub fn panel_anchor_snapshot(&self, anchor: PanelAnchor) -> PanelAnchorSnapshot {
-        match anchor {
-            PanelAnchor::TopLeft => {
-                PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()) }
+        let state = self.anchor_state(anchor);
+        if !self.anchor_open(anchor) {
+            return PanelAnchorSnapshot::default();
+        }
+        PanelAnchorSnapshot { visible: true, size: state.size, active_tab: state.active_tab().map(ToOwned::to_owned) }
+    }
+
+    /// 🧭️ The dock arrangement this session's sources declare, before any persisted override — the wgpu
+    /// twin of React's `defaultDock` (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly): app panel tabs routed to
+    /// their `PanelGroup` corner, the framework Display branch and the sync leaf on bottom-left, the
+    /// framework chat leaf on top-right, and the Tool/Command branches on bottom-middle.
+    pub fn default_dock(&self) -> ShellDock {
+        let mut dock = ShellDock::default();
+        let is_de = self.locale_id == "de";
+        let Some(session) = &self.session else { return dock };
+        let terminology = self.active_terminology();
+        let locale = self.active_locale();
+        for tab in &session.app.panel_tabs {
+            let anchor = PanelAnchor::from_group(tab.group);
+            let order = dock.tabs(anchor).len() as i32;
+            dock.tabs_mut(anchor).push(dock_tab_node_of(tab, terminology, locale, order));
+        }
+        // 🧭️ React's own bottom-left order (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly): the FRAMEWORK
+        // Display branch first — its children are the framework's two display leaves
+        // (`createFrameworkDisplayPanelTabs`, `📌️ChromePanels/🟦️.tsx:249`), never the app's tabs —
+        // then the app's own bottom-left tabs as SIBLINGS of that branch, then the sync leaf. The
+        // branch used to be built out of the app's tabs and was therefore absent altogether for an
+        // app that declares none (puzzle3d), which is why the first real wgpu boot's footer showed no
+        // "Display" chip at all while React always shows one.
+        let app_bottom_left: Vec<DockTabNode> = std::mem::take(dock.tabs_mut(PanelAnchor::BottomLeft));
+        let mut bottom_left = vec![DockTabNode::branch(FRAMEWORK_CATEGORY_DISPLAY_ID, shell_chrome_string("panelToggle.display", is_de), "layout-grid", 0, Self::framework_display_tabs(is_de))];
+        let offset = bottom_left.len() as i32;
+        bottom_left.extend(app_bottom_left.into_iter().enumerate().map(|(index, tab)| DockTabNode { order: offset + index as i32, ..tab }));
+        if self.sync_backbone_uri.is_some() {
+            let order = bottom_left.len() as i32;
+            bottom_left.push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, shell_chrome_string("panelToggle.sync", is_de), "refresh-cw", order));
+        }
+        *dock.tabs_mut(PanelAnchor::BottomLeft) = bottom_left;
+        let chat_order = dock.tabs(PanelAnchor::TopRight).len() as i32;
+        dock.tabs_mut(PanelAnchor::TopRight).push(DockTabNode::leaf(FRAMEWORK_CHAT_PANEL_ID, shell_chrome_string("panelToggle.chat", is_de), "message-square", chat_order));
+        // ⚙️ Bottom-right carries ONE Settings branch (the app's own Settings-group tabs first, then the
+        // five framework leaves — React's `integrateAppSettingsPanelTabsIntoFrameworkBranch`, which
+        // re-orders the framework children past the app's), then the Marketplace leaf, then the
+        // framework-owned History leaf React re-adds after filtering it out of the app's own tabs
+        // (`shellRendersPanelTabItself`/`frameworkUtilitiesHistoryTab`).
+        let app_settings: Vec<DockTabNode> = std::mem::take(dock.tabs_mut(PanelAnchor::BottomRight));
+        let (history, app_settings): (Vec<DockTabNode>, Vec<DockTabNode>) = app_settings.into_iter().partition(|tab| tab.id == FRAMEWORK_PANEL_TAB_HISTORY_ID);
+        let mut settings_children = app_settings;
+        let offset = settings_children.len() as i32;
+        for (index, child) in self.framework_settings_tabs().into_iter().enumerate() {
+            settings_children.push(DockTabNode { order: offset + index as i32, ..child });
+        }
+        let mut bottom_right = vec![DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, shell_chrome_string("panelToggle.settings", is_de), "settings", 0, settings_children)];
+        bottom_right.push(DockTabNode::leaf(FRAMEWORK_MARKETPLACE_TAB_ID, shell_chrome_string("marketplace.tab", is_de), "circle-dot", 1));
+        bottom_right.extend(history.into_iter().map(|tab| DockTabNode { order: 1, ..tab }));
+        *dock.tabs_mut(PanelAnchor::BottomRight) = bottom_right;
+        let tool_tabs = self.tool_panel_tabs();
+        if !tool_tabs.is_empty() {
+            dock.tabs_mut(PanelAnchor::BottomMiddle).push(DockTabNode::branch(FRAMEWORK_CATEGORY_TOOL_ID, shell_chrome_string("panelToggle.tool", is_de), "hammer", 0, tool_tabs));
+        }
+        let command_tabs = self.command_category_tabs();
+        if !command_tabs.is_empty() {
+            dock.tabs_mut(PanelAnchor::BottomMiddle).push(DockTabNode::branch(FRAMEWORK_CATEGORY_COMMAND_ID, shell_chrome_string("panelToggle.command", is_de), "wrench", 1, command_tabs));
+        }
+        dock
+    }
+
+    /// 🖥️ The two framework Display leaves in React's own order — `framework.display.windows` then
+    /// `framework.display.layout` (`createFrameworkDisplayPanelTabs`, `📌️ChromePanels/🟦️.tsx:249`,
+    /// orders `-100`/`-99` so they always precede whatever an app adds). Framework-owned and
+    /// session-independent, exactly like `framework_settings_tabs`, which is why the Display chip is
+    /// unconditional chrome in both renderers.
+    fn framework_display_tabs(is_de: bool) -> Vec<DockTabNode> {
+        vec![
+            DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, shell_chrome_string("display.tab.windows", is_de), "layout-grid", 0),
+            DockTabNode::leaf(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, shell_chrome_string("display.tab.layout", is_de), "layout", 1),
+        ]
+    }
+
+    /// ⚙️ The five framework Settings leaves in React's own order (`createFrameworkSettingsPanelTab`):
+    /// general, theme, keybindings, default-apps, conflicts. The theme leaf is omitted outright when
+    /// the boot descriptor locks the theme id — React's `locks.themeId` render gate, which removes the
+    /// tab rather than disabling it.
+    fn framework_settings_tabs(&self) -> Vec<DockTabNode> {
+        let is_de = self.locale_id == "de";
+        let mut tabs = vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, shell_chrome_string("settings.tab.general", is_de), "settings-2", 0)];
+        if crate::boot_locks().theme_id.is_empty() {
+            tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_THEME_TAB_ID, shell_chrome_string("settings.tab.theme", is_de), "paintbrush", 1));
+        }
+        tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, shell_chrome_string("settings.tab.keybindings", is_de), "circle-dot", 2));
+        tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID, shell_chrome_string("settings.tab.defaultApps", is_de), "app-window", 3));
+        tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, shell_chrome_string("conflict.panel", is_de), "triangle-alert", 4));
+        tabs
+    }
+
+    /// 🛠️ One `tool.<id>` leaf per tool the ACTIVE MODE declares, in declared order — React's
+    /// `buildToolTabs` over `resolveModeTools(app, activeModeId)`. Label and icon come off the tool's
+    /// own manifest entry through the live terminology and locale.
+    fn tool_panel_tabs(&self) -> Vec<DockTabNode> {
+        let Some(session) = self.session.as_ref() else { return Vec::new() };
+        let terminology = self.active_terminology();
+        let locale = self.active_locale();
+        let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
+        semio_framework::manifest::resolve_mode_tools(&session.app, &mode_id)
+            .into_iter()
+            .enumerate()
+            .map(|(order, tool)| DockTabNode::leaf(format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{}", tool.id), tool.label.resolve(terminology, locale).to_string(), tool.icon_id.as_str(), order as i32))
+            .collect()
+    }
+
+    /// 🎛️ One leaf per command category, the wgpu twin of React's `buildCommandCategoryTabs` — the
+    /// bottom-middle Command branch's children, whose bodies `build_command_panel_ui` paints.
+    fn command_category_tabs(&self) -> Vec<DockTabNode> {
+        let resolved: Vec<_> = self.resolved_commands().into_iter().filter(|entry| entry.definition.in_palette).collect();
+        command_categories(&resolved).into_iter().enumerate().map(|(order, (id, label))| DockTabNode::leaf(format!("{FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX}{id}"), label, "wrench", order as i32)).collect()
+    }
+
+    /// 📱️ All eight anchors' root tabs flattened into the single mobile panel's tab list, in
+    /// `PanelAnchor::ALL` order, plus the synthetic `framework.mobile.app` leaf React appends when the
+    /// navbar's example/mode/role clusters have no room — React's `mobilePanelTabs`
+    /// (`🏛️ShellHost/🟦️.tsx`), which flattens `defaultDock`, not the override-applied dock.
+    pub fn mobile_panel_tabs(&self) -> Vec<DockTabNode> {
+        let is_de = self.locale_id == "de";
+        let dock = self.default_dock();
+        let mut tabs: Vec<DockTabNode> = PanelAnchor::ALL.into_iter().flat_map(|anchor| dock.tabs(anchor).to_vec()).collect();
+        let has_example = !self.session_example_rows().is_empty() && crate::boot_locks().example_id.is_empty();
+        let has_modes = self.session.as_ref().is_some_and(|session| session.app.modes.len() > 1);
+        if has_example || has_modes {
+            tabs.push(DockTabNode::leaf(FRAMEWORK_MOBILE_APP_TAB_ID, shell_chrome_string("mobilePanel.app", is_de), "circle-dot", 99));
+        }
+        tabs
+    }
+
+    /// 📱️ Below React's `UI_MOBILE_MEDIA_QUERY` breakpoint (`max-width: 767px`, the same
+    /// `dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX` the window dock reads) the eight anchors do not paint at
+    /// all: one mobile panel carries every tab instead. Read off the LOGICAL viewport width W1g
+    /// established, never the physical one.
+    pub fn mobile_panel_active(&self) -> bool {
+        self.screen_w <= crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX
+    }
+
+    /// 🧭️ Recomputes `dock_tabs` from the declared sources plus the persisted override, and reconciles
+    /// every anchor's remembered path onto what still exists — the wgpu twin of the `applyDockSkeleton`
+    /// memo plus React's per-anchor `reconcileActivePath` effects.
+    pub fn sync_dock_tabs(&mut self) {
+        let default_dock = self.default_dock();
+        self.dock_tabs = apply_dock_skeleton(&default_dock, self.dock_override.as_ref());
+        for anchor in PanelAnchor::ALL {
+            if self.dock_tabs.tabs(anchor).is_empty() {
+                let state = self.anchor_state_mut(anchor);
+                state.path.clear();
+                state.visible = false;
+                continue;
             }
-            PanelAnchor::BottomLeft => {
-                PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Display).then(|| "display".to_string()) }
-            }
-            PanelAnchor::TopRight => {
-                PanelAnchorSnapshot { visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details, size: self.right_panel_width, active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()) }
-            }
-            PanelAnchor::BottomRight => PanelAnchorSnapshot {
-                visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
-                size: self.right_panel_width,
-                active_tab: (self.active_right_kind == RightPanelKind::Settings).then(|| "settings".to_string()),
-            },
-            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle | PanelAnchor::LeftMiddle | PanelAnchor::RightMiddle => PanelAnchorSnapshot::default(),
+            let path = self.dock_tabs.reconcile_path(anchor, &self.anchor_state(anchor).path.clone());
+            self.anchor_state_mut(anchor).path = path;
         }
     }
 
-    /// 🗄️ Flattens the mutable subset of panel layout into the persisted shape.
-    pub fn panel_layout_snapshot(&self) -> PanelLayoutPersisted {
-        PanelLayoutPersisted {
-            left_panel_open: self.left_panel_open,
-            right_panel_open: self.right_panel_open,
-            active_left_kind: Some(
-                match self.active_left_kind {
-                    LeftPanelKind::Workbench => "workbench",
-                    LeftPanelKind::Display => "display",
-                }
-                .to_string(),
-            ),
-            active_right_kind: Some(
-                match self.active_right_kind {
-                    RightPanelKind::Details => "details",
-                    RightPanelKind::Settings => "settings",
-                    RightPanelKind::Chat => "chat",
-                }
-                .to_string(),
-            ),
-            left_panel_width: Some(self.left_panel_width),
-            right_panel_width: Some(self.right_panel_width),
+    /// 🎯️ Completes a tab drag onto `target`, persisting the arrangement whenever it stops matching the
+    /// computed default — React's `handleTabDockDrop`.
+    pub fn move_dock_tab(&mut self, tab_id: &str, target: &DockTabMoveTarget) -> bool {
+        let mut dock = self.dock_tabs.clone();
+        if !move_tab_in_dock(&mut dock, tab_id, target) {
+            return false;
         }
+        let next = dock_skeleton_of(&dock);
+        let default_skeleton = dock_skeleton_of(&self.default_dock());
+        self.dock_override = (!dock_skeletons_equal(Some(&next), Some(&default_skeleton))).then_some(next);
+        self.sync_dock_tabs();
+        self.reveal_dock_tab(tab_id);
+        true
     }
 
-    /// 🗄️ Applies a persisted layout snapshot — used both on load and directly by tests.
-    pub fn apply_panel_layout(&mut self, layout: &PanelLayoutPersisted) {
-        self.left_panel_open = layout.left_panel_open;
-        self.right_panel_open = layout.right_panel_open;
-        if let Some(kind) = &layout.active_left_kind {
-            self.active_left_kind = match kind.as_str() {
-                "display" => LeftPanelKind::Display,
-                _ => LeftPanelKind::Workbench,
+    /// 🗄️ The app id whose per-app dock layer wins over the shared `os` one — React's `new DockLayoutStore(storage, session?.app.id)`.
+    fn dock_store_app_id(&self) -> Option<String> {
+        self.session.as_ref().map(|session| session.app.id.clone())
+    }
+
+    /// 🗄️ Flattens every anchor's chrome into the persisted shape, omitting whatever equals the default.
+    pub fn dock_ui_snapshot(&self) -> DockUiState {
+        let mut anchors = BTreeMap::new();
+        for anchor in PanelAnchor::ALL {
+            let state = self.anchor_state(anchor);
+            // 🗄️ Only what DIFFERS from the computed default is stored, React's `dockUiStateStore` rule —
+            // and every anchor's path is reconciled to its own default by `sync_dock_tabs`, so a path
+            // equal to that default is not a user choice and must not turn an untouched anchor into a
+            // persisted entry.
+            let entry = DockUiPanelState {
+                visible: state.visible.then_some(true),
+                size: (state.size != DEFAULT_PANEL_WIDTH_PX).then_some(state.size),
+                path: (!state.path.is_empty() && state.path != self.dock_tabs.default_path(anchor)).then(|| state.path.clone()),
             };
+            if entry != DockUiPanelState::default() {
+                anchors.insert(anchor.as_str().to_string(), entry);
+            }
         }
-        if let Some(kind) = &layout.active_right_kind {
-            self.active_right_kind = match kind.as_str() {
-                "settings" => RightPanelKind::Settings,
-                "chat" => RightPanelKind::Chat,
-                _ => RightPanelKind::Details,
+        DockUiState { version: DOCK_SKELETON_VERSION, anchors }
+    }
+
+    /// 🗄️ Applies a persisted per-anchor chrome snapshot — used both on load and directly by tests.
+    pub fn apply_dock_ui(&mut self, state: &DockUiState) {
+        for anchor in PanelAnchor::ALL {
+            let Some(entry) = state.anchors.get(anchor.as_str()) else {
+                self.anchor_state_mut(anchor).visible = false;
+                continue;
             };
-        }
-        if let Some(width) = layout.left_panel_width {
-            self.left_panel_width = width;
-        }
-        if let Some(width) = layout.right_panel_width {
-            self.right_panel_width = width;
-        }
-    }
-
-    /// 🗄️ Persists the current panel layout so it survives a reload — mirrors `persist_dock_layout` for
-    /// the unrelated `dock`/Mode system.
-    pub fn persist_panel_layout(&mut self) {
-        let snapshot = self.panel_layout_snapshot();
-        save_panel_layout_to_store(&snapshot);
-        self.chrome_present.last_persisted_panel_layout = Some(snapshot);
-    }
-
-    /// 🗄️ Persists the panel layout only when it actually changed since the last persist/load — called
-    /// once per frame from `render_chrome` (`ShellChrome`). **Resolves the previously-flagged wiring
-    /// gap**: `handle_shell_hit`'s `"ui.panelToggle.*"` arms (and the panel-resize-end path) live in the
-    /// do-not-touch `ShellInput` region, so rather than patch each of those call sites individually (which
-    /// this ticket isn't scoped to edit), this hooks persistence to the render loop instead — a dirty-check
-    /// against the owned present-state snapshot keeps it a no-op write on every frame nothing actually moved,
-    /// same shape as `persist_ui_prefs_if_changed` (💾️PrefsSync) one frame refresh away in this same file.
-    pub fn persist_panel_layout_if_changed(&mut self) {
-        let current = self.panel_layout_snapshot();
-        let changed = self.chrome_present.last_persisted_panel_layout.as_ref() != Some(&current);
-        if changed {
-            self.persist_panel_layout();
+            let target = self.anchor_state_mut(anchor);
+            target.visible = entry.visible.unwrap_or(false);
+            if let Some(size) = entry.size {
+                target.size = size;
+            }
+            if let Some(path) = &entry.path {
+                target.path = path.clone();
+            }
         }
     }
 
-    /// 🗄️ Loads any persisted panel layout and applies it — called once from `ShellState::new()`. Seeds
-    /// the owned present-state snapshot from the loaded layout so the very first `render_chrome` frame
-    /// doesn't immediately re-persist a layout that was just read back unchanged.
-    fn load_persisted_panel_layout(&mut self) {
-        if let Some(layout) = load_panel_layout_from_store() {
-            self.apply_panel_layout(&layout);
-            self.chrome_present.last_persisted_panel_layout = Some(self.panel_layout_snapshot());
+    /// 🗄️ Persists the current dock chrome so it survives a reload — the twin of `persist_dock_layout`
+    /// for the unrelated `dock`/Mode system.
+    pub fn persist_dock_ui(&mut self) {
+        let snapshot = self.dock_ui_snapshot();
+        let app_id = self.dock_store_app_id();
+        save_dock_ui_to_store(app_id.as_deref(), Some(&snapshot));
+        self.chrome_present.last_persisted_dock_ui = Some(snapshot);
+    }
+
+    /// 🗄️ Persists the dock chrome only when it actually changed since the last persist/load — called
+    /// once per frame from `render_chrome` (`ShellChrome`), the same dirty-checked render-loop hook
+    /// `persist_ui_prefs_if_changed` (💾️PrefsSync) uses, so no `ui.panelToggle.*` arm has to persist itself.
+    pub fn persist_dock_ui_if_changed(&mut self) {
+        let current = self.dock_ui_snapshot();
+        if self.chrome_present.last_persisted_dock_ui.as_ref() != Some(&current) {
+            self.persist_dock_ui();
         }
+        let skeleton = self.dock_override.clone();
+        if self.chrome_present.last_persisted_dock_skeleton != Some(skeleton.clone()) {
+            let app_id = self.dock_store_app_id();
+            save_dock_skeleton_to_store(app_id.as_deref(), skeleton.as_ref());
+            self.chrome_present.last_persisted_dock_skeleton = Some(skeleton);
+        }
+    }
+
+    /// 🗄️ Loads the persisted arrangement and chrome and applies both — called once from `ShellState::new()`
+    /// and again whenever the session's app changes, since the per-app layer is keyed by app id. Seeds the
+    /// owned present-state snapshots so the first frame doesn't re-persist what was just read back.
+    pub fn load_persisted_dock(&mut self) {
+        let app_id = self.dock_store_app_id();
+        self.dock_override = load_dock_skeleton_from_store(app_id.as_deref());
+        self.sync_dock_tabs();
+        if let Some(state) = load_dock_ui_from_store(app_id.as_deref()) {
+            self.apply_dock_ui(&state);
+            self.sync_dock_tabs();
+        }
+        self.chrome_present.last_persisted_dock_ui = Some(self.dock_ui_snapshot());
+        self.chrome_present.last_persisted_dock_skeleton = Some(self.dock_override.clone());
     }
     //#endregion 🧭️PanelAnchorAccessors
 }
@@ -5415,33 +7009,52 @@ impl ShellState {
 
 
 
-    /// 🚦️ ticket §C5 — the `#s-sync-status` footer pill's text, mirroring the React shell's
-    /// `computeSyncPillState`/`syncPillText` three-way vocabulary (`persisted | pending(n) |
-    /// remote(connected|connecting|backoff|detached)`) exactly, distinct from `sync_status_label`
-    /// above (that one is the manual sync-card's own popover-style summary, unchanged). English-only
-    /// — `active_locale()` resolves plugin-declared `LocalizedLabel`s, not shell-owned plain text like
-    /// this one (same tier `sync_status_label` is already at); a real bilingual pill needs the same
-    /// `Label`/`LocalizedLabel` plumbing gap `📓️w2-b-report.md` already flagged for tree-content
-    /// strings, not invented bespoke here — see `📓️w3-a-report.md`'s "what is NOT done".
-    #[cfg(not(target_arch = "wasm32"))]
-    fn sync_pill_text(status: Option<&ArtifactSyncStatus>, progress: Option<&(u64, u64, u32, u32)>) -> String {
-        if let Some((received_bytes, total_bytes, received_chunks, total_chunks)) = progress {
-            return format!("Recovering {received_bytes}/{total_bytes} bytes · {received_chunks}/{total_chunks} chunks");
+    /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. The browser build
+    /// has no document-sync backbone (`ArtifactHost` is native-only here), so it answers an empty
+    /// roster — which is exactly the state React's own browser footer renders as
+    /// `No one else is here`, not a reason to omit the pill.
+    fn footer_presence_rows(&self) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            match self.presence_surface.as_deref() {
+                Some(surface) => presence_peer_rows_for_surface(&self.presence_peers, Some(surface), surface),
+                None => Vec::new(),
+            }
         }
-        let Some(status) = status else { return "Remote: detached".to_string() };
-        if !matches!(status.remote, RemoteState::Live { .. }) {
-            let remote = match &status.remote {
-                RemoteState::Live { .. } => "connected",
-                RemoteState::Connecting => "connecting",
-                RemoteState::Backoff { .. } => "backoff",
-                RemoteState::Detached => "detached",
-            };
-            return format!("Remote: {remote}");
+        #[cfg(target_arch = "wasm32")]
+        Vec::new()
+    }
+
+    /// 🚦️ The `#s-sync-status` pill's state for the CURRENT session, the wgpu twin of
+    /// `🛠️ShellHelpers/🟦️.tsx`'s `computeSyncPillState`: a non-live remote outranks a pending count,
+    /// and "no status observed yet" reads as `Remote(Detached)`.
+    ///
+    /// Target-neutral because React's footer is: its browser shell paints `Remote: detached` from
+    /// `computeSyncPillState(null)` with no backbone attached at all. The wgpu browser build has no
+    /// `ArtifactHost` either (`store_sync` is native-only here), so it resolves to exactly the same
+    /// state instead of — as before this packet — painting no pill at all.
+    fn sync_pill(&self) -> ShellSyncPill {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Some((received_bytes, total_bytes, received_chunks, total_chunks)) = self.sync_bootstrap_progress {
+                return ShellSyncPill::Recovering { received_bytes, total_bytes, received_chunks, total_chunks };
+            }
+            let Some(status) = self.sync_status.as_ref() else { return ShellSyncPill::Remote(ShellSyncRemote::Detached) };
+            if !matches!(status.remote, RemoteState::Live { .. }) {
+                return ShellSyncPill::Remote(match &status.remote {
+                    RemoteState::Live { .. } => ShellSyncRemote::Connected,
+                    RemoteState::Connecting => ShellSyncRemote::Connecting,
+                    RemoteState::Backoff { .. } => ShellSyncRemote::Backoff,
+                    RemoteState::Detached => ShellSyncRemote::Detached,
+                });
+            }
+            if status.pending_mutations > 0 {
+                return ShellSyncPill::Pending(status.pending_mutations);
+            }
+            ShellSyncPill::Persisted
         }
-        if status.pending_mutations > 0 {
-            return format!("Pending ({})", status.pending_mutations);
-        }
-        "Persisted".to_string()
+        #[cfg(target_arch = "wasm32")]
+        ShellSyncPill::Remote(ShellSyncRemote::Detached)
     }
 
 
@@ -5487,7 +7100,6 @@ impl ShellState {
     /// itself asked for (`checkpoint_dispatched`) is observed to have actually landed — fires
     /// `TouchArtifact` on the space index (§C5 item 6). Called from both `dispatch_action` and
     /// `dispatch_command` right after their own `program.handle_action`/`handle_command` call.
-    #[cfg(not(target_arch = "wasm32"))]
     async fn observe_invocation_history(&mut self, history_patch: Option<&semio_framework::kernel::HistoryPatch>) {
         let Some(patch) = history_patch else { return };
         if !fold_history_patch(&mut self.history_entries, &mut self.history_cursor, patch, false) {
@@ -5508,17 +7120,23 @@ impl ShellState {
             return;
         }
         self.checkpoint_dispatched = false;
-        let Some(space_id) = self.open_space_id.clone() else { return };
-        let Some(document_id) = self.sync_channel.as_ref().map(|channel| channel.document_id.clone()) else { return };
-        if document_id != S_SPACE_INDEX_DOCUMENT_ID {
-            self.touch_space_index_artifact(&space_id, &document_id).await;
+        // 🪐️ `TouchArtifact` on the space index needs the native `ArtifactHost` document-sync
+        // backbone (it opens a second actor for the `s.space` index document). The browser build
+        // links no such host, so the checkpoint still lands and the projection still folds — only
+        // the index touch is skipped, and skipping it is visible in this one place.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let Some(space_id) = self.open_space_id.clone() else { return };
+            let Some(document_id) = self.sync_channel.as_ref().map(|channel| channel.document_id.clone()) else { return };
+            if document_id != S_SPACE_INDEX_DOCUMENT_ID {
+                self.touch_space_index_artifact(&space_id, &document_id).await;
+            }
         }
     }
 
     /// 📌️ ticket §C5 item 2 — the per-frame auto check-in poll, called from `pump_sync_events` (see
     /// that method's own doc: "folded into the same every-frame pump"). Viewer sessions never arm
     /// (`can_check_in`, item 5's guard) — the SAME predicate the `#s-checkin` affordance itself checks.
-    #[cfg(not(target_arch = "wasm32"))]
     async fn poll_auto_checkin(&mut self) {
         let Some(session) = self.session.as_ref() else { return };
         if !can_check_in(session.app.role) {
@@ -5543,7 +7161,6 @@ impl ShellState {
     /// `📓️w3-a-report.md`'s own `sharedFileRequest` — sent anyway so this is ready the moment that
     /// lands). Viewer-guarded (item 5) so a stray call from `checkpoint_before_detach`/`poll_auto_checkin`
     /// can never reach a viewer session even if their own callers' guards were ever relaxed.
-    #[cfg(not(target_arch = "wasm32"))]
     async fn dispatch_checkpoint(&mut self, message: &str) {
         let Some(session) = self.session.clone() else { return };
         if !can_check_in(session.app.role) {
@@ -5676,7 +7293,6 @@ impl ShellState {
     /// the dialog, `cancel` closes it without dispatching, `submit` dispatches with the typed message
     /// (falling back to `"check-in"` for an empty/whitespace-only draft, matching the React shell's own
     /// `submitCheckin`).
-    #[cfg(not(target_arch = "wasm32"))]
     async fn handle_checkin_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
         match action.action.as_str() {
             "open" => {
@@ -5848,6 +7464,10 @@ impl ShellState {
         if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).and_then(window_measures_owner).map(str::to_string) {
             scope_action_to_window(&mut action, &owner);
         }
+        // 🎯️ The chrome ledger's one tap: this fn is the single funnel EVERY input's action crosses, so
+        // recording here is the target's complete answer to "what did that click do"
+        // (`crate::interpreter`'s 🎯️ChromeLedger, diagnostics-gated and bounded).
+        crate::interpreter::note_dispatched_action(&action);
         // 🎬️ Tutorial playback remains shell-local. Recording is armed only after the plugin's shared
         // retained `recordTutorial` route accepts and commits below.
         if action.action == semio_framework::START_TUTORIAL_ACTION_ID {
@@ -5933,6 +7553,114 @@ impl ShellState {
                     }
                     return Ok(());
                 }
+                // 🎛️ The bottom-middle Commands panel's zero-arg rows: every os command that carries no
+                // argument fires straight through `apply_os_command`, the same entry point the ⌘️K
+                // search's `"os-command:"` redirect uses — so `os.resetDock` is reachable from the dock
+                // panel itself now, matching React's always-fireable command rows.
+                "runOsCommand" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        let command_id = value.to_string();
+                        Box::pin(self.apply_os_command(&command_id, None)).await?;
+                    }
+                    return Ok(());
+                }
+                // ⚙️ The Settings General leaf's layout row — React's `setLayout` + its
+                // `os.setLayout` history note.
+                "setLayout" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        self.chrome_build.preferences.ui_layout = if value == "tablet" { "tablet".to_string() } else { "desktop".to_string() };
+                        self.note_shell_setting_command("os.setLayout", Some(value)).await?;
+                    }
+                    return Ok(());
+                }
+                // 👁️✏️ The Default Apps leaf's per-(dialect × role) pin — `"none"` clears it, React's
+                // `clearDefault`/`setDefault` pair over one `Select`.
+                "setDefaultApp" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        let key = action.args.as_ref().and_then(|args| args.get("row")).and_then(|v| v.as_str()).unwrap_or_default().to_string();
+                        if value == DEFAULT_APP_NONE_VALUE {
+                            self.default_app_pins.remove(&key);
+                        } else {
+                            self.default_app_pins.insert(key, value.to_string());
+                        }
+                    }
+                    return Ok(());
+                }
+                // ⌨️ Arms (or disarms) chord capture for one shortcut row — the next key event becomes
+                // that row's override instead of a shell verb.
+                "captureKeybinding" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        let already = self.keybinding_capture_control_id.as_deref() == Some(value);
+                        self.keybinding_capture_control_id = (!already).then(|| value.to_string());
+                    }
+                    return Ok(());
+                }
+                // ⌨️ Drops one row's override, which restores its `SHELL_SHORTCUT_ROWS` default —
+                // React's `resetKeybindingOverride`, whose fold is a `delete` on the override map.
+                "resetKeybinding" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        self.chrome_build.preferences.keybinding_overrides.remove(value);
+                    }
+                    return Ok(());
+                }
+                // 📝️ Buffers one staged command argument — React's `STAGE_COMMAND_ARG`, which writes
+                // only to the buffer and dispatches nothing.
+                "stageCommandArg" => {
+                    let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
+                    if let (Some(command), Some(arg)) = (args.get("command").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
+                        let value = args.get("value").cloned().unwrap_or(Value::Null);
+                        self.staged_command_args.entry(command.to_string()).or_default().insert(arg.to_string(), value);
+                    }
+                    return Ok(());
+                }
+                "resetStagedCommand" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        self.staged_command_args.remove(value);
+                    }
+                    return Ok(());
+                }
+                // 🎛️ Execute of the staged form — the one place the buffered arguments leave the buffer,
+                // React's `onExecute(expanded, effective)`.
+                "executeStagedCommand" => {
+                    if let Some(key) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+                        let staged = self.staged_command_args.get(&key).cloned().unwrap_or_default();
+                        if let Some(entry) = self.resolved_commands().into_iter().find(|entry| command_address_stable_key(&entry.address) == key) {
+                            match &entry.address.owner {
+                                semio_framework::manifest::CommandOwnerAddress::Os => {
+                                    let command_id = entry.definition.id.clone();
+                                    // 🎛️ `apply_os_command` takes the ONE option value every os command
+                                    // carries (React's own single-`value` shape), so the staged form's
+                                    // first argument is what it receives.
+                                    let option = entry.definition.args.first().and_then(|arg| staged.get(&arg.id)).and_then(|value| value.as_str().map(ToOwned::to_owned));
+                                    Box::pin(self.apply_os_command(&command_id, option.as_deref())).await?;
+                                }
+                                _ => {
+                                    let arguments = staged.into_iter().filter_map(|(id, value)| serde_json::from_value::<DslValue>(value).ok().map(|value| (id, value))).collect();
+                                    Box::pin(self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address.clone(), arguments })).await?;
+                                }
+                            }
+                        }
+                        self.staged_command_args.remove(&key);
+                        self.expanded_command_id = None;
+                    }
+                    return Ok(());
+                }
+                // 💬️ The chat panel's own three verbs — React's `setDraft`/`sendDraft`/`clearMessages`.
+                "setChatDraft" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        self.agent_chat_draft = value.to_string();
+                    }
+                    return Ok(());
+                }
+                "sendChatDraft" => {
+                    self.send_agent_chat_draft();
+                    return Ok(());
+                }
+                "clearChat" => {
+                    self.agent_chat_messages = seed_agent_chat_messages(self.locale_id == "de");
+                    self.agent_chat_draft.clear();
+                    return Ok(());
+                }
                 "resetThemeId" => {
                     set_active_theme_id("semio");
                     self.chrome_build.preferences.theme_id = "semio".to_string();
@@ -5959,7 +7687,6 @@ impl ShellState {
         // 📌️ ticket §C5 item 3 — explicit check-in's own dedicated controller (`#s-checkin`'s
         // open/cancel/submit dialog funnel), same shell-owned-chrome treatment as `framework.sync`
         // above.
-        #[cfg(not(target_arch = "wasm32"))]
         if action.controller_id == "framework.checkin" {
             return self.handle_checkin_action(action).await;
         }
@@ -6007,7 +7734,6 @@ impl ShellState {
         let mut result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
         // 🧾️ ticket §C5 — fold this dispatch's own `history_patch` into the check-in projection (idle
         // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
-        #[cfg(not(target_arch = "wasm32"))]
         self.observe_invocation_history(result.history_patch.as_ref()).await;
         if record_tutorial_after_acceptance {
             self.tutorial_start_recording();
@@ -6076,7 +7802,6 @@ impl ShellState {
         // 🧾️ ticket §C5 — same fold `dispatch_action` performs; a command-boundary edit (e.g. a
         // plugin-owned command dispatched from the command palette) is just as real an uncommitted
         // edit as an action-boundary one.
-        #[cfg(not(target_arch = "wasm32"))]
         self.observe_invocation_history(result.history_patch.as_ref()).await;
         // 🧾️ ONE host-effect funnel for both dispatch paths. This arm used to be a SECOND,
         // shorter hand-rolled fold, and every effect it did not name was dropped without a trace —
@@ -6109,10 +7834,10 @@ impl ShellState {
     }
 
     //#region 🔖️DirectoryAndIdentity
+    //#region 📇️DirectoryLane
     /// 📇️ ticket §C6/§3/§4 — dispatches a `ReplayShellCommand`'s `action_id`/`args` onto the
     /// directory funnel or the opening relay; every other action id is a documented no-op (see this
     /// region's callers' own comment).
-    #[cfg(not(target_arch = "wasm32"))]
     async fn handle_replay_shell_command(&mut self, action_id: &str, args: Option<&DslValue>) {
         let args_json = args.map(dsl_value_as_json);
         if action_id == "os.directory.open-administration" {
@@ -6124,6 +7849,10 @@ impl ShellState {
             self.dispatch_directory_command(command).await;
             return;
         }
+        // 📂️ The opening relay is the ONE half of this funnel that is still native-only: it ends in
+        // `open_document`, which needs the native `ArtifactHost` document-sync backbone the browser
+        // wgpu build does not link (see `attach_sync_backbone`'s own wasm32 branch).
+        #[cfg(not(target_arch = "wasm32"))]
         if action_id == "os.open-artifact" || action_id == "os.open-artifact-with" {
             self.handle_open_artifact_relay(action_id, args_json.as_ref()).await;
         }
@@ -6131,7 +7860,6 @@ impl ShellState {
 
     /// 🏛️ Installs the one retained administration operation for exactly one space, retiring any
     /// predecessor first. Nothing is administrable until the hub's own canonical page has landed.
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn open_space_administration(&mut self, space_id: &str) {
         if space_id.trim().is_empty() || self.identity.is_none() {
             return;
@@ -6142,7 +7870,6 @@ impl ShellState {
     }
 
     /// 🧯️ Retires the operation: page, receipt, and capability are erased before anything observes it.
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn close_space_administration(&mut self) {
         if let Some(operation) = self.space_administration.as_mut() {
             operation.terminate(ShellSpaceAdministrationPhaseV1::Cancelled, Some(DirectoryCommandErrorCodeV1::Cancelled));
@@ -6151,7 +7878,6 @@ impl ShellState {
     }
 
     /// 🎁️ Hands the one-shot invite capability to the caller exactly once, erasing it in the same turn.
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn acknowledge_space_administration_capability(&mut self) -> Option<String> {
         self.space_administration.as_mut().and_then(ShellSpaceAdministrationOperationV1::acknowledge_capability)
     }
@@ -6160,7 +7886,6 @@ impl ShellState {
     /// `true` while the operation still has work, so the frame loop can pump it without spinning.
     /// A mutation is never retried: an indeterminate transport settles `Failed`, and only an exact
     /// server receipt advances the operation, always followed by a mandatory page refresh.
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_space_administration(&mut self) -> bool {
         let Some(client) = self.directory_client.clone() else { return false };
         let epoch = self.space_administration_epoch;
@@ -6202,35 +7927,11 @@ impl ShellState {
         }
     }
 
-    /// 📂️ Opens the relay's exact `documentId`/`schema` pair with `spaceId` pinning
-    /// `open_space_id` first so default binding computation sees it. An app-only relay is a no-op.
-    #[cfg(not(target_arch = "wasm32"))]
-    async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
-        let target = match open_artifact_relay_target(action_id, args) {
-            Ok(target) => target,
-            Err(error) => {
-                Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay rejected: {error}"));
-                return;
-            }
-        };
-        if let Some(space_id) = target.space_id {
-            self.open_space_id = Some(space_id);
-        }
-        let (Some(document_id), Some(schema)) = (target.document_id, target.schema) else {
-            return;
-        };
-        let (bindings, surface) = self.default_bindings_for_current_session();
-        if let Err(error) = self.open_document(document_id, schema, bindings, surface).await {
-            Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
-        }
-    }
-
     /// 🪪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): builds this shell's
     /// `OperationContext` for one directory request — `cancel` is a `.child()` of `directory_cancel`
     /// (this shell's ONE root, see that field's own doc), so cancelling `directory_cancel` once
     /// transitively cancels every in-flight directory request/stream at once. No deadline yet (see
     /// the packet report's honest gaps).
-    #[cfg(not(target_arch = "wasm32"))]
     fn directory_ctx(&self) -> OperationContext {
         OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: self.directory_cancel.child_now(), capability: None }
     }
@@ -6239,12 +7940,100 @@ impl ShellState {
     /// hung hub can never retain a command turn forever. Cancelling the wait does NOT cancel a
     /// command already past its server linearization point — the operation becomes indeterminate and
     /// keeps its request id for an explicit later resolution, never a silently fresh one.
-    #[cfg(not(target_arch = "wasm32"))]
     fn directory_command_ctx(&self) -> OperationContext {
         let mut context = self.directory_ctx();
-        context.deadline_ms = Some(crate::renderer_worker_pool().now_ms().saturating_add(DIRECTORY_COMMAND_DEADLINE_MS));
+        context.deadline_ms = Some(Self::directory_now_ms().saturating_add(DIRECTORY_COMMAND_DEADLINE_MS));
         context
     }
+
+    /// ⏱️ The clock a directory deadline is measured against — necessarily the SAME one the linked
+    /// transport compares it to. Native hands the shared `WorkerPool`'s own monotonic millis (what
+    /// `NativeDirectoryTransport`'s `HttpPool` reads); the browser door has no pool and the page
+    /// answers every hop with `fetch`'s own timing, so `Date.now()` is the only shared reading.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn directory_now_ms() -> u64 {
+        crate::renderer_worker_pool().now_ms()
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn directory_now_ms() -> u64 {
+        let millis = chrome_now_ms();
+        if millis.is_finite() && millis > 0.0 { millis as u64 } else { 0 }
+    }
+
+    /// 📇️ ticket §4/§C6 — seals one `os.directory.*` command under a fresh idempotency correlation
+    /// and issues it against the hub, dropping it when no identity is signed in at all, else leaving
+    /// it queued on a transient failure (the "same offline queueing behaviour as the React side" the
+    /// brief asks for — React's worker queues in-memory and flushes on reconnect; this shell's
+    /// `directory_commands` + `flush_pending_directory_commands` (called every frame from
+    /// `pump_directory_events`) is the native twin of that policy).
+    async fn dispatch_directory_command(&mut self, command: DirectoryCommand) {
+        if self.identity.is_none() {
+            return;
+        }
+        self.directory_commands.admit_first(DirectoryCommandRequestV1::new(mint_directory_command_request_id(), command));
+        self.flush_pending_directory_commands().await;
+    }
+
+    /// ♻️ Drives the FIFO in order: a transient fault retains the head and its byte-identical sealed
+    /// request and stops the queue; a terminal auth/conflict/validation failure produces a result and
+    /// lets the queue proceed, so one forbidden command can never wedge every later one.
+    async fn flush_pending_directory_commands(&mut self) {
+        let Some(client) = self.directory_client.clone() else { return };
+        while let Some(request) = self.directory_commands.head().cloned() {
+            let outcome = client.command(&self.directory_command_ctx(), &request).await.map(|canonical| canonical.receipt);
+            if !self.directory_commands.settle(outcome) {
+                break;
+            }
+        }
+    }
+
+    /// 🪪️ Browser identity bootstrap. The hub session on this target is a same-origin COOKIE, not an
+    /// inherited one-shot fd-3 credential, so there is nothing to `restore_claimed`: the shell asks
+    /// the SAME `GET /auth/sessions/me` the React shell's `directoryClient.me()` asks, through an
+    /// unauthenticated client whose door sends `credentials: "include"`. A refusal parks the retry
+    /// floor instead of retrying every frame, and never clears an identity already resolved.
+    #[cfg(target_arch = "wasm32")]
+    async fn poll_browser_identity(&mut self) -> bool {
+        if self.identity.is_some() || self.identity_env.is_none() {
+            return false;
+        }
+        let now_ms = Self::directory_now_ms();
+        if now_ms < self.identity_retry_at_ms {
+            return false;
+        }
+        self.identity_retry_at_ms = now_ms.saturating_add(BROWSER_IDENTITY_RETRY_MS);
+        let client = std::sync::Arc::new(DirectoryClient::new(shell_directory_transport(), shell_directory_request_base_url()));
+        match client.me(&self.directory_ctx()).await {
+            Ok(session) => {
+                self.identity = Some(Identity { user_id: session.user_id, email: session.email, display_name: session.display_name, hub_base_url: client.base_url().to_string(), issued_at_ms: chrome_now_ms() as i64 });
+                self.identity_offline = false;
+                self.directory_client = Some(client);
+                true
+            }
+            Err(error) => {
+                self.identity_offline = true;
+                Self::debug_log(&format!("[DEBUG] wgpu shell browser identity bootstrap failed: {error}"));
+                false
+            }
+        }
+    }
+
+    /// 📇️ The browser's every-frame directory turn — the same three steps the native
+    /// `pump_directory_events` takes, minus the two halves whose transports this target has no door
+    /// for: the retained Home projection (needs the directory WebSocket) and the document-sync
+    /// backbone. Identity, the bounded administration operation and the command FIFO are the SAME
+    /// code compiled for both targets.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn pump_directory_events(&mut self) -> bool {
+        let identity_changed = self.poll_browser_identity().await;
+        let administration_changed = self.pump_space_administration().await;
+        self.poll_auto_checkin().await;
+        self.flush_pending_directory_commands().await;
+        identity_changed || administration_changed
+    }
+
+    //#endregion 📇️DirectoryLane
 
     //#region 💡️InferencePort
     /// 🪪️ The native precondition: a port may only start while this shell retains a VERIFIED, live
@@ -6334,32 +8123,26 @@ impl ShellState {
     }
     //#endregion 💡️InferencePort
 
-    /// 📇️ ticket §4/§C6 — seals one `os.directory.*` command under a fresh idempotency correlation
-    /// and issues it against the hub, dropping it when no identity is signed in at all, else leaving
-    /// it queued on a transient failure (the "same offline queueing behaviour as the React side" the
-    /// brief asks for — React's worker queues in-memory and flushes on reconnect; this shell's
-    /// `directory_commands` + `flush_pending_directory_commands` (called every frame from
-    /// `pump_directory_events`) is the native twin of that policy).
+    /// 📂️ Opens the relay's exact `documentId`/`schema` pair with `spaceId` pinning
+    /// `open_space_id` first so default binding computation sees it. An app-only relay is a no-op.
     #[cfg(not(target_arch = "wasm32"))]
-    async fn dispatch_directory_command(&mut self, command: DirectoryCommand) {
-        if self.identity.is_none() {
-            return;
-        }
-        self.directory_commands.admit_first(DirectoryCommandRequestV1::new(mint_directory_command_request_id(), command));
-        self.flush_pending_directory_commands().await;
-    }
-
-    /// ♻️ Drives the FIFO in order: a transient fault retains the head and its byte-identical sealed
-    /// request and stops the queue; a terminal auth/conflict/validation failure produces a result and
-    /// lets the queue proceed, so one forbidden command can never wedge every later one.
-    #[cfg(not(target_arch = "wasm32"))]
-    async fn flush_pending_directory_commands(&mut self) {
-        let Some(client) = self.directory_client.clone() else { return };
-        while let Some(request) = self.directory_commands.head().cloned() {
-            let outcome = client.command(&self.directory_command_ctx(), &request).await.map(|canonical| canonical.receipt);
-            if !self.directory_commands.settle(outcome) {
-                break;
+    async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
+        let target = match open_artifact_relay_target(action_id, args) {
+            Ok(target) => target,
+            Err(error) => {
+                Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay rejected: {error}"));
+                return;
             }
+        };
+        if let Some(space_id) = target.space_id {
+            self.open_space_id = Some(space_id);
+        }
+        let (Some(document_id), Some(schema)) = (target.document_id, target.schema) else {
+            return;
+        };
+        let (bindings, surface) = self.default_bindings_for_current_session();
+        if let Err(error) = self.open_document(document_id, schema, bindings, surface).await {
+            Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
         }
     }
 
@@ -6852,6 +8635,8 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tree_windows: Vec::new(),
+            tree_viewport_rows: None,
         };
         let next_view_state = view_state.unwrap_or(default_view_state);
         self.active_window_id = Some(app.window_kinds.first().id.clone());
@@ -6913,6 +8698,8 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tree_windows: Vec::new(),
+            tree_viewport_rows: None,
         };
         self.layout_override = None;
         self.active_window_id = Some(landing_window_id);
@@ -6985,6 +8772,8 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tree_windows: Vec::new(),
+            tree_viewport_rows: None,
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
@@ -7080,14 +8869,21 @@ impl ShellState {
 //#region ShellInput
 impl ShellChromeBuildState {
     fn content_has_focus(&self, window_id: &str) -> bool {
-        self.content_focus.get(window_id).copied().unwrap_or(false)
+        self.content_focus_node(window_id).is_some()
+    }
+
+    /// 🎯️ WHICH retained node holds focus in `window_id` — React's `surfaceActiveRoot`. A chrome verb
+    /// that must address the focused content node (a panel-level Copy, an inspector commit) reads this
+    /// instead of re-deriving focus from the tree.
+    fn content_focus_node(&self, window_id: &str) -> Option<ui_wgpu::wgpu::NodeId> {
+        self.content_focus.get(window_id).copied().flatten()
     }
 
     fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
         for command in commands {
             if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
                 ShellState::debug_log(&format!("[DEBUG] wgpu-shell content focus window={window_id} node={node:?}"));
-                self.content_focus.insert(window_id.clone(), node.is_some());
+                self.content_focus.insert(window_id.clone(), *node);
             }
         }
     }
@@ -7144,22 +8940,22 @@ impl ShellState {
         input.pointer_down = down;
         input.pointer_button = button;
         if !down {
+            if let Some((tab_id, from_anchor)) = self.dock_tab_drag.take() {
+                self.finish_dock_tab_drag(&tab_id, from_anchor, x, y, theme);
+            }
             if self.dock_drag.is_some() {
                 self.finish_dock_drag(x, y, input).await?;
-            } else if let Some((payload, _)) = self.pending_dock_drag.take() {
-                if let Some(hit) = input.hit_at(x, y) {
-                    if let Some(rest) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("dock.tab.")) {
-                        let rest = rest.strip_suffix(".focus").or_else(|| rest.strip_suffix(".close")).or_else(|| rest.strip_suffix(".new")).unwrap_or(rest);
-                        if let Some((path_str_value, window_id)) = rest.split_once('.') {
-                            if window_id == payload.window_id {
-                                let path = parse_path(path_str_value);
-                                self.dock.set_stack_active(&path, window_id);
-                                self.active_window_id = Some(window_id.to_string());
-                            }
-                        }
-                    }
+            } else {
+                self.pending_dock_drag = None;
+            }
+            // 📑️ React's tab label is a `<button onClick={() => onSelectTab(tab.id)}>`: the select
+            // lands on RELEASE over the same label, and it is addressed by window ID, never by the
+            // stack path the chip happens to be painted at — the mobile flat stack renders every tab
+            // at the root path.
+            if let Some(window_id) = self.pending_dock_tab_select.take() {
+                if input.hit_at(x, y).and_then(|hit| hit.control_id.as_deref().and_then(dock_tab_select_window_id)) == Some(window_id.as_str()) && self.dock.activate_window(&window_id) {
+                    self.active_window_id = Some(window_id);
                 }
-                self.restore_dock_drag_snapshot();
             }
             if self.tree_drag.is_some() {
                 self.finish_tree_drag(x, y, input).await?;
@@ -7194,12 +8990,24 @@ impl ShellState {
         }
         if button == 2 {
             let hit = input.hit_at(x, y).cloned();
+            // 📋️ Alt + secondary press on a text editor is the completions gesture, not a menu —
+            // React's own `onContextMenu` takes that branch first (`✏️TextEditor/🟦️.tsx:413`).
+            if input.modifiers.alt && self.claim_text_editor_alt_completions(x, y) {
+                self.right_click = RightClickState { pending: true, x, y };
+                return Ok(());
+            }
             self.open_context_menu(x, y, hit).await;
             self.right_click = RightClickState { pending: true, x, y };
             return Ok(());
         }
         if self.dismiss_overlays(x, y, input) {
             return Ok(());
+        }
+        // 🌫️ Pressing the mode canvas where no chrome and no window body answers is React's
+        // `handleCanvasBackgroundPointerDown` on `[data-slot="mode-body"]` itself
+        // (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1461-1471`): the mode keeps its layout and loses its focus.
+        if input.hit_at(x, y).is_none() && self.dock_canvas_bounds.contains(x, y) {
+            self.deactivate_active_window();
         }
         if let Some(hit) = input.hit_at(x, y).cloned() {
             // 🎯️ A retained window body owns its own targets end to end: the node's declared action
@@ -7219,12 +9027,16 @@ impl ShellState {
                     }
                 }
                 let body = self.body_rect(theme);
-                let width = if hit.control_id.as_deref() == Some("panel.resize.left") { floating_panel_width(self.left_panel_width, body, theme) } else { floating_panel_width(self.right_panel_width, body, theme) };
-                self.panel_resize_origin_width = width;
+                let anchor = hit.control_id.as_deref().and_then(panel_resize_anchor).map(|(anchor, _)| anchor).unwrap_or(PanelAnchor::TopLeft);
+                self.panel_resize_origin_width = floating_panel_width(self.anchor_state(anchor).size, body, theme);
                 input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Horizontal), Some(hit.kind));
                 return Ok(());
             }
             if matches!(hit.kind, HitKind::DockSplit | HitKind::DockJoinCorner) {
+                // 🌫️ A resize gutter is canvas BACKGROUND as far as focus goes: React's
+                // `handleCanvasBackgroundPointerDown` deactivates on any `data-slot="resizable-panel"`
+                // press (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1461-1471`) and still starts the resize.
+                self.deactivate_active_window();
                 if let Some(id) = hit.control_id.as_deref() {
                     if let Some(rest) = id.strip_prefix("dock.corner.r/") {
                         if let Some((row_part, col_part)) = rest.split_once("/c/") {
@@ -7272,8 +9084,14 @@ impl ShellState {
                 return Ok(());
             }
             if let Some(id) = hit.control_id.as_deref() {
-                if let Some(rest) = id.strip_prefix("dock.tab.") {
-                    let rest = rest.strip_suffix(".focus").or_else(|| rest.strip_suffix(".close")).or_else(|| rest.strip_suffix(".new")).unwrap_or(rest);
+                if let Some(window_id) = dock_tab_select_window_id(id) {
+                    self.pending_dock_tab_select = Some(window_id.to_string());
+                    return Ok(());
+                }
+                // 🎬️ Only the tab's grip chip starts a drag, exactly like React's `DragHandle`
+                // `onPointerDown` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1101`); the label beside it selects
+                // on release and never travels.
+                if let Some(rest) = id.strip_prefix("dock.tab.").and_then(|rest| rest.strip_suffix(".drag")) {
                     if let Some((path_str_value, window_id)) = rest.split_once('.') {
                         let path = parse_path(path_str_value);
                         let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
@@ -7294,6 +9112,12 @@ impl ShellState {
                         self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
+                }
+            }
+            if hit.kind == HitKind::PanelTab {
+                if let Some((tab_id, anchor)) = hit.control_id.as_deref().and_then(|id| Some((id.to_string(), self.panel_tab_anchor(id)?))) {
+                    self.dock_tab_drag = Some((tab_id, anchor));
+                    input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Both), Some(hit.kind));
                 }
             }
             if hit.kind == HitKind::Slider {
@@ -7399,15 +9223,20 @@ impl ShellState {
                 }
             }
         }
+        // 📱️ Below React's breakpoint a tab cannot travel at all — the dock context hands
+        // `startTabDrag: mobile ? noopDrag : startTabDrag` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1852`),
+        // because a mobile mode is ONE flat stack with nothing to drop into.
+        //
+        // 🩸️ Promotion used to REMOVE the dragged window from the committed tree here; it is now a
+        // pure state transition and the removal lives in `DockState::render_view`'s derivation.
         if let Some((payload, origin)) = &self.pending_dock_drag {
-            if down {
+            if down && !self.dock.mobile {
                 let dx = x - origin.0;
                 let dy = y - origin.1;
                 if self.dock_drag.is_none() && (dx * dx + dy * dy) > 25.0 {
                     let payload = payload.clone();
                     let origin = *origin;
                     self.pending_dock_drag = None;
-                    self.dock.remove_window(&payload.window_id);
                     self.dock_drag = Some(DockDragState { payload, x: origin.0, y: origin.1, drop_zone: None });
                 }
             }
@@ -7429,13 +9258,16 @@ impl ShellState {
                             self.measures_width.insert(window_id, next);
                         }
                     }
-                    "panel.resize.left" => {
-                        let body = self.body_rect(theme);
-                        self.left_panel_width = (self.panel_resize_origin_width + dx).clamp(theme.panel_min_width, floating_panel_max_width(body, theme));
-                    }
-                    "panel.resize.right" => {
-                        let body = self.body_rect(theme);
-                        self.right_panel_width = (self.panel_resize_origin_width - dx).clamp(theme.panel_min_width, floating_panel_max_width(body, theme));
+                    id if id.starts_with("panel.resize.") => {
+                        // ↔ `delta_factor` from React's `PanelResizeHandle`: an outer (canvas-facing) handle
+                        // grows the panel with the pointer, an inner one against it, and a centred
+                        // middle-column panel grows from both edges at once, hence the doubled step.
+                        if let Some((anchor, inner)) = panel_resize_anchor(id) {
+                            let body = self.body_rect(theme);
+                            let factor = if anchor.horizontal() == "middle" { 2.0 } else { 1.0 } * if inner { -1.0 } else { 1.0 };
+                            let next = (self.panel_resize_origin_width + dx * factor).clamp(theme.panel_min_width, floating_panel_max_width(body, theme));
+                            self.anchor_state_mut(anchor).size = next;
+                        }
                     }
                     dock_id if dock_id.starts_with("dock.corner.") => {
                         if let Some(path) = self.split_resize_path.clone() {
@@ -7470,6 +9302,8 @@ impl ShellState {
         if drag.drop_zone.is_none() {
             drag.drop_zone = compute_dock_drop_zone(x, y, &self.dock_drop_tab_bars, &self.dock_drop_bodies, self.dock_canvas_bounds);
         }
+        // 🎯️ An abandoned or refused drop is simply nothing: the committed tree was never touched, so
+        // there is no snapshot to re-apply and no `sync_dock` to pay for.
         if let Some(zone) = drag.drop_zone {
             if self.dock.apply_drop(&drag.payload, &zone) {
                 self.active_window_id = Some(drag.payload.window_id.clone());
@@ -7479,13 +9313,8 @@ impl ShellState {
                     let note = Self::note_shell_command_action(&controller_id, "shell.windowMove", shell_chrome_string("command.moveWindow", self.locale_id == "de"), Some(serde_json::json!({ "windowId": drag.payload.window_id })));
                     self.dispatch_action(note).await?;
                 }
-            } else {
-                self.restore_dock_drag_snapshot();
             }
-        } else {
-            self.restore_dock_drag_snapshot();
         }
-        self.dock_drag_snapshot = None;
         let _ = input;
         Ok(())
     }
@@ -7514,6 +9343,7 @@ impl ShellState {
     fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
         std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
         input.publish_hits();
+        crate::interpreter::note_chrome_hit_registry(input.hits(), &self.retained_hit_windows);
     }
 
     /// 🖱️ DOM-standard `MouseEvent.button` code onto the retained event's own button identity.
@@ -7581,7 +9411,13 @@ impl ShellState {
         if down {
             let owner = window_measures_owner(window_id).unwrap_or(window_id).to_string();
             let sibling = if owner == window_id { window_measures_surface_id(&owner) } else { owner.clone() };
-            self.chrome_build.content_focus.insert(sibling, false);
+            self.chrome_build.content_focus.insert(sibling, None);
+            // 🪟️ React's `activateWindow` is `setActiveWindowInLayout(prev, windowId)` plus
+            // `onActiveWindowChange` (`🧱️elements/🎨️Canvas/🟦️.tsx:1446-1452`) — the DOCK's notion of the
+            // active stack moves with the shell's active window, which is what paints the stack accent.
+            // Setting `active_window_id` alone left `dock.active_stack` on the previously focused
+            // stack, so a body press focused a window whose stack never lit up.
+            self.dock.sync_active_window(&owner);
             self.active_window_id = Some(owner);
         }
         if matches!(kind, HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect) {
@@ -7649,8 +9485,16 @@ impl ShellState {
     /// ⚖️ Chrome KINDS only, never a control-id list: the shell must not learn which overlay controls
     /// exist, and the same rule already decides an overlay dismiss (`dismiss_overlays`'s own
     /// `on_overlay`).
+    /// 🛑️ Whether a press at this point is the SHELL's rather than the engine surface's underneath.
+    ///
+    /// 🧯️ The `ui.introduction.` row is the tour's veil and its three card controls. They are
+    /// `HitKind::Button`, which this predicate deliberately does not claim in general (a pane chip
+    /// inside a surface must not steal the surface's press), but React's introduction veil owns EVERY
+    /// pointer in the app while it blocks — without this row a press on Skip also reached the 3D
+    /// surface beneath the card and orbited/picked the scene
+    /// (`📓️w5b-interaction-parity-probe.md` §4.3).
     pub fn pointer_press_belongs_to_shell_chrome(hit: Option<&HitTarget<ActionDescriptor>>) -> bool {
-        hit.is_some_and(|hit| matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select))
+        hit.is_some_and(|hit| matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select) || hit.control_id.as_deref().is_some_and(|id| id.starts_with("ui.introduction.")))
     }
 
     pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta: f32, input: &InputState<ActionDescriptor>) -> bool {
@@ -7820,8 +9664,51 @@ impl ShellState {
             }
             id if id.starts_with("shell.action.fold.") => {
                 let window_id = id.trim_start_matches("shell.action.fold.");
-                let folded = self.action_panel_folded.get(window_id).copied().unwrap_or(true);
+                let folded = self.window_actions_folded(window_id);
                 self.action_panel_folded.insert(window_id.to_string(), !folded);
+                return Ok(true);
+            }
+            // 🧰️ The pane's own Utilities chip — React's `framework.window.<id>.utilityBar.{unfold,fold}`
+            // (`🪟️Window/🟦️.tsx:406`). The rail it opens is painted by `paint_window_utilities_step`.
+            id if id.starts_with("shell.utilityBar.unfold.") => {
+                let window_id = id.trim_start_matches("shell.utilityBar.unfold.");
+                self.utility_bar_folded.insert(window_id.to_string(), false);
+                return Ok(true);
+            }
+            id if id.starts_with("shell.utilityBar.fold.") => {
+                let window_id = id.trim_start_matches("shell.utilityBar.fold.");
+                self.utility_bar_folded.insert(window_id.to_string(), true);
+                return Ok(true);
+            }
+            // 🔀️ The pane's own Projection chip — React's `framework.worldOrbit.projection.<segment>.pane.fold`,
+            // ONE id on both sides of the fold (`Pane`'s `chromeToggleId = toggleId ?? childElementId(id,
+            // "pane", "fold")`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10006`), flipping the pane's own local
+            // `folded` state and nothing else.
+            id if id.starts_with("shell.projection.template.") => {
+                if let Some((window_id, template_id)) = id.trim_start_matches("shell.projection.template.").split_once("::") {
+                    self.world_projection_template.insert(window_id.to_string(), world_projection_template(template_id).id.to_string());
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.projection.fold.") => {
+                let window_id = id.trim_start_matches("shell.projection.fold.");
+                let folded = self.projection_pane_folded(window_id);
+                self.projection_pane_folded.insert(window_id.to_string(), !folded);
+                return Ok(true);
+            }
+            // 🔎️ The pane's own Search chip — React's `….search.toggle` drives the SAME `actionsFolded`
+            // its Actions pane does (`🪟️Window/🟦️.tsx:388`), scoped to that pane: focusing the window is
+            // what makes the palette answer for it.
+            id if id.starts_with("shell.window.search.toggle.") => {
+                let window_id = id.trim_start_matches("shell.window.search.toggle.").to_string();
+                let folded = self.window_actions_folded(&window_id);
+                self.action_panel_folded.insert(window_id.clone(), !folded);
+                if self.dock.activate_window(&window_id) {
+                    self.active_window_id = Some(window_id);
+                }
+                self.search_open = folded;
+                self.find_open = false;
+                self.overlay_state = if self.search_open { OverlayState::Search } else { OverlayState::None };
                 return Ok(true);
             }
             id if id.starts_with("shell.action.expand::") => {
@@ -7876,52 +9763,30 @@ impl ShellState {
                 return Ok(true);
             }
             "ui.panelToggle.display" => {
-                if self.left_panel_open && self.active_left_kind == LeftPanelKind::Display {
-                    self.left_panel_open = false;
-                } else {
-                    self.active_left_kind = LeftPanelKind::Display;
-                    self.left_panel_open = true;
-                }
+                self.toggle_anchor(PanelAnchor::BottomLeft);
                 return Ok(true);
             }
             "ui.panelToggle.workbench" => {
-                if self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench {
-                    self.left_panel_open = false;
-                } else {
-                    self.active_left_kind = LeftPanelKind::Workbench;
-                    self.left_panel_open = true;
-                }
+                self.toggle_anchor(PanelAnchor::TopLeft);
                 return Ok(true);
             }
             "ui.panelToggle.details" => {
-                if self.right_panel_open && self.active_right_kind == RightPanelKind::Details {
-                    self.right_panel_open = false;
-                } else {
-                    self.active_right_kind = RightPanelKind::Details;
-                    self.right_panel_open = true;
-                }
+                self.toggle_anchor(PanelAnchor::TopRight);
                 self.note_panel_toggle_command(id, "details").await?;
                 return Ok(true);
             }
             "ui.panelToggle.settings" => {
-                if self.right_panel_open && self.active_right_kind == RightPanelKind::Settings {
-                    self.right_panel_open = false;
-                } else {
-                    self.active_right_kind = RightPanelKind::Settings;
-                    self.right_panel_open = true;
-                }
+                self.toggle_anchor(PanelAnchor::BottomRight);
                 self.note_panel_toggle_command(id, "settings").await?;
                 return Ok(true);
             }
             "ui.panelToggle.chat" => {
-                if self.right_panel_open && self.active_right_kind == RightPanelKind::Chat {
-                    self.right_panel_open = false;
-                } else {
-                    self.active_right_kind = RightPanelKind::Chat;
-                    self.active_right_tab = Some(FRAMEWORK_CHAT_PANEL_ID.to_string());
-                    self.right_panel_open = true;
-                }
+                self.toggle_anchor_tab(PanelAnchor::TopRight, FRAMEWORK_CHAT_PANEL_ID);
                 self.note_panel_toggle_command(id, "chat").await?;
+                return Ok(true);
+            }
+            "ui.panelToggle.command" => {
+                self.toggle_anchor_tab(PanelAnchor::BottomMiddle, FRAMEWORK_CATEGORY_COMMAND_ID);
                 return Ok(true);
             }
             "ui.fullscreen.toggle" => {
@@ -7952,10 +9817,9 @@ impl ShellState {
                 return Ok(true);
             }
             id if id.starts_with("dock.tab.") && id.ends_with(".close") => {
-                if let Some((path, window_id)) = Self::parse_dock_tab_action_id(id, "close") {
-                    if self.dock.close_window_in_stack(&path, window_id) {
-                        self.active_window_id = self.dock.active_window_id.clone();
-                        self.persist_dock_layout();
+                if let Some((_, window_id)) = Self::parse_dock_tab_action_id(id, "close") {
+                    let window_id = window_id.to_string();
+                    if self.close_dock_window(&window_id) {
                         self.note_control_command(id, None).await?;
                     }
                 }
@@ -7982,17 +9846,49 @@ impl ShellState {
                 self.appearance_id = id.trim_start_matches("framework.settings.appearance.").to_string();
                 return Ok(true);
             }
-            id if id.starts_with("shell.panel.tab.left.") => {
-                let tab_id = id.trim_start_matches("shell.panel.tab.left.");
-                self.select_left_panel_tab(tab_id).await?;
+            // 🎓️ The introduction's own four controls, answered HERE rather than by a rect test inside
+            // the painter — React wires them as ordinary `onClick`/`onPointerDown` handlers on real
+            // elements, and routing them through the one press funnel is what makes the veil able to
+            // swallow a press instead of letting it through to the surface below.
+            UI_INTRODUCTION_VEIL_CONTROL_ID | UI_INTRODUCTION_SKIP_CONTROL_ID => {
+                match self.session.as_ref().map(|session| session.app.id.clone()) {
+                    Some(app_id) => self.chrome_build.dismiss_introduction(&app_id),
+                    None => self.chrome_build.skip_introduction(),
+                }
                 return Ok(true);
             }
-            id if id.starts_with("shell.panel.tab.right.") => {
-                let tab_id = id.trim_start_matches("shell.panel.tab.right.");
-                if let Some(controller_id) = self.session.as_ref().filter(|_| self.host_config().is_some()).map(|session| session.app.controller_id.clone()) {
-                    self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
-                } else {
-                    self.active_right_tab = Some(tab_id.to_string());
+            UI_INTRODUCTION_NEXT_CONTROL_ID => {
+                if let Some(step) = self.chrome_tour_active_step() {
+                    self.chrome_tour_advance_current_step(&step);
+                }
+                return Ok(true);
+            }
+            UI_INTRODUCTION_BACK_CONTROL_ID => {
+                self.chrome_build.back_introduction();
+                return Ok(true);
+            }
+            // 📱️ The mobile panel's flattened tab row selects a path in the ONE mobile panel instead
+            // of an anchor's, and a tool leaf arms its tool exactly as the desktop row does.
+            id if id.starts_with("shell.panel.tab.mobile.") => {
+                let tab_id = id.trim_start_matches("shell.panel.tab.mobile.").to_string();
+                let tabs = self.mobile_panel_tabs();
+                self.mobile_panel_path = mobile_panel_reconcile_path(&tabs, &[tab_id.clone()]);
+                self.mobile_panel_visible = true;
+                self.arm_tool_for_panel_tab(&self.mobile_panel_path.clone()).await?;
+                return Ok(true);
+            }
+            "ui.mobilePanel.toggle" => {
+                self.mobile_panel_visible = !self.mobile_panel_visible;
+                return Ok(true);
+            }
+            // 📑️ A panel tab is addressed by React's own BARE id (`framework.panel.artifact`), so the
+            // anchor is derived here from whichever anchor's tab tree carries it — exactly as React
+            // derives it from the tab's own `group` — instead of being carried in the control id.
+            id if self.panel_tab_anchor(id).is_some() => {
+                if let Some(anchor) = self.panel_tab_anchor(id) {
+                    let tab_id = id.to_string();
+                    self.select_panel_tab(anchor, &tab_id).await?;
+                    self.arm_tool_for_panel_tab(&self.anchor_state(anchor).path.clone()).await?;
                 }
                 return Ok(true);
             }
@@ -8020,9 +9916,15 @@ impl ShellState {
                     let path = context_menu_path_for_item_id(&menu.items, id, &mut prefix)?;
                     context_menu_item_at_path(&menu.items, &path)?.action.clone()
                 });
+                let origin = self.context_menu.as_ref().map(|menu| (menu.x, menu.y));
                 self.context_menu = None;
                 if let Some(action) = action {
-                    self.dispatch_action(action).await?;
+                    // 🍿️ A row the surface answers ITSELF never reaches the guest — React's
+                    // `dispatchTextEditorMenu` short-circuits its own `localActions` the same way.
+                    let claimed = origin.is_some_and(|(x, y)| self.claim_text_editor_menu_action(&action, x, y));
+                    if !claimed {
+                        self.dispatch_action(action).await?;
+                    }
                 }
                 return Ok(true);
             }
@@ -8595,13 +10497,68 @@ impl ShellState {
         }
     }
 
-    async fn select_left_panel_tab(&mut self, tab_id: &str) -> Result<(), String> {
-        let controller_id = self.session.as_ref().filter(|_| self.host_config().is_some()).map(|session| session.app.controller_id.clone());
-        if let Some(controller_id) = controller_id {
-            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
-        } else {
-            self.active_left_tab = Some(tab_id.to_string());
+    /// 📑️ One tab-bar press: a branch folds/unfolds in place, a leaf opens its anchor at that leaf —
+    /// routed through the host's own `setActivePanelTab` action first whenever this session claims that
+    /// leaf, so the host panel document stays the single authority on which leaf is active.
+    /// 📑️ Which anchor owns `tab_id` — the wgpu twin of React reading a tab's own `group`
+    /// (`panelAnchorForGroup`), and the reason a panel-tab control id no longer has to spell its
+    /// anchor out. `None` for anything that is not a dock tab, which is what makes it safe as the
+    /// guard of `handle_shell_hit`'s panel-tab arm.
+    pub(crate) fn panel_tab_anchor(&self, tab_id: &str) -> Option<PanelAnchor> {
+        PanelAnchor::ALL.into_iter().find(|anchor| self.dock_tabs.tabs(*anchor).iter().any(|node| dock_tab_node_carries(node, tab_id)))
+    }
+
+    /// 📑️ Journals what React journals for the same gesture: `shell.panelTab` when the anchor's path
+    /// moves, `shell.panelToggle` when its visibility flips (`🏛️ShellHost/🟦️.tsx:10014`, `:10042`).
+    ///
+    /// 🩸️ This renderer used to journal NOTHING for a panel press — the surface appeared and
+    /// disappeared in `dumpStructure` with no action crossing `dispatch_action` at all, so the parity
+    /// probe read every panel step as a difference (`📓️w5b-interaction-parity-probe.md` §4.4).
+    async fn journal_panel_selection(&mut self, anchor: PanelAnchor, tab_id: &str, was_visible: bool, was_path: Option<String>) -> Result<(), String> {
+        let Some(controller_id) = self.session.as_ref().map(|session| session.app.controller_id.clone()) else { return Ok(()) };
+        let is_de = self.locale_id == "de";
+        let visible = self.anchor_open(anchor);
+        let path = self.anchor_state(anchor).path.first().cloned();
+        if visible != was_visible {
+            let label = shell_chrome_string("shellCommand.panelToggle", is_de);
+            let detail = serde_json::json!({ "anchor": anchor.as_str(), "visible": visible });
+            self.dispatch_action(Self::note_shell_command_action(&controller_id, "shell.panelToggle", label, Some(detail))).await?;
         }
+        if path != was_path {
+            let label = shell_chrome_string("shellCommand.panelTab", is_de);
+            let detail = serde_json::json!({ "anchor": anchor.as_str(), "tabId": tab_id });
+            self.dispatch_action(Self::note_shell_command_action(&controller_id, "shell.panelTab", label, Some(detail))).await?;
+        }
+        Ok(())
+    }
+
+    async fn select_panel_tab(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
+        let was_visible = self.anchor_open(anchor);
+        let was_path = self.anchor_state(anchor).path.first().cloned();
+        let outcome = self.select_panel_tab_step(anchor, tab_id).await;
+        self.journal_panel_selection(anchor, tab_id, was_visible, was_path).await?;
+        outcome
+    }
+
+    async fn select_panel_tab_step(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
+        if self.dock_tabs.locate(tab_id).and_then(|(found, path)| self.dock_tabs.node_at(found, &path)).is_some_and(DockTabNode::is_branch) {
+            // 🌳️ A branch already showing its children row folds that row; otherwise the press opens
+            // the anchor at that branch — React's `PanelTabRow` drill-down, one press per level.
+            if self.anchor_open(anchor) && self.anchor_state(anchor).path.first().is_some_and(|id| id == tab_id) && !self.dock_branch_collapsed(anchor, tab_id) {
+                self.toggle_dock_branch(anchor, tab_id);
+            } else {
+                self.dock_collapsed_branches.remove(&format!("{}/{tab_id}", anchor.as_str()));
+                self.toggle_anchor_tab(anchor, tab_id);
+            }
+            return Ok(());
+        }
+        let claimed = self.session.as_ref().filter(|_| self.host_config().is_some()).map(|session| session.app.controller_id.clone());
+        let is_app_leaf = self.session.as_ref().is_some_and(|session| Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().any(|leaf| leaf.id() == tab_id));
+        if let Some(controller_id) = claimed.filter(|_| is_app_leaf) {
+            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
+            return Ok(());
+        }
+        self.toggle_anchor_tab(anchor, tab_id);
         Ok(())
     }
 
@@ -8630,15 +10587,15 @@ impl ShellState {
     async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
         let node_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())));
         let edge_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())));
-        let (surface_id, kind, hits) = self.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref());
+        let ContextMenuSurfaceResolution { surface_id, kind, hits, selection: selection_groups, text: text_context } = self.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref());
         let window_instance_id = self.context_window_instance_id(x, y).map(str::to_string);
         let is_de = self.locale_id == "de";
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
             let shortcut_by_action: HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
             let view_state = self.live_view_state(&session);
-            let selection: Vec<Value> = Vec::new();
-            let text: Option<Value> = None;
+            let selection = selection_groups.clone();
+            let text: Option<Value> = text_context.as_ref().and_then(|text| serde_json::to_value(text).ok());
             let request = serde_json::json!({
                 "menu": { "id": kind.clone() },
                 "viewState": view_state,
@@ -8718,35 +10675,77 @@ impl ShellState {
         self.overlay_state = OverlayState::None;
     }
 
-    fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>) -> (String, String, Vec<ui_wgpu::wgpu::ContextMenuHit>) {
-        let mut hits = Vec::new();
+    /** @emoji 🖱️ Which SURFACE a right-click belongs to, and that kind's own `hits`/`selection`/
+     * `text` — the `surface` half of React's `openSurfaceContextMenu` request, resolved for EVERY
+     * scene kind rather than the four the shell happens to keep a state map for.
+     *
+     * The component scene under the pointer is asked first (`interpreter::surface_context_menu_target`
+     * → `scenes::scene_context_menu_target`), because every one of the fifteen kinds IS a
+     * `ComponentScene` leaf in the window's retained tree — that is the one lookup that covers
+     * tables, feeds, canvases, editors, graphs, boards and maps alike, and it resolves against the
+     * SAME rect the surface painted at. `World3d` is the single kind whose hover/selection authority
+     * lives outside the tree (the shell's own `world3d_states`), so its target is filled from
+     * `infinite_world::world::world3d_context_menu_surface` here.
+     *
+     * A point over chrome no scene owns answers the shell's own `"window"` menu, carrying the
+     * node/edge the hit control id named as a fallback (a chrome-registered graph row).
+     */
+    fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>) -> ContextMenuSurfaceResolution {
+        let mut fallback_hits = Vec::new();
         if let Some(node_id) = node_id {
-            hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
+            fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
         }
         if let Some(edge_id) = edge_id {
-            hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
+            fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
-        for (surface_id, surface) in self.node_graph_states.iter() {
-            if surface.bounds.contains(x, y) {
-                return (surface_id.clone(), "nodeGraph".into(), hits);
+        if let Some((window_id, body)) = self.retained_context_menu_window(x, y) {
+            if let Some(resolved) = crate::interpreter::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
+                let kind = crate::scenes::context_menu_surface_kind_id(resolved.kind).to_string();
+                let crate::scenes::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
+                if resolved.kind == ui_wgpu::wgpu::SurfaceKind::World3d {
+                    if let Some(state) = self.world3d_states.get(&resolved.surface_id) {
+                        let (world_hits, world_selection) = infinite_world::world::world3d_context_menu_surface(state);
+                        hits = world_hits;
+                        selection = world_selection;
+                    }
+                }
+                if hits.is_empty() {
+                    hits = fallback_hits;
+                }
+                return ContextMenuSurfaceResolution { surface_id: resolved.surface_id, kind, hits, selection, text };
             }
         }
-        for (surface_id, surface) in self.tiled_map_states.iter() {
-            if surface.bounds.contains(x, y) {
-                return (surface_id.clone(), "tiledMap".into(), hits);
+        ContextMenuSurfaceResolution { surface_id: "shell".into(), kind: "window".into(), hits: fallback_hits, selection: Vec::new(), text: None }
+    }
+
+    /// 🍿️ Hands one activated context-menu row to the text editor under the menu's own origin when
+    /// that row is local to the editor (`interpreter::text_editor_claim_menu_action`). `true` means
+    /// the row is answered on the surface and must NOT be dispatched to the guest.
+    fn claim_text_editor_menu_action(&self, action: &ActionDescriptor, x: f32, y: f32) -> bool {
+        let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
+            return false;
+        };
+        crate::interpreter::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
+    }
+
+    /// 📋️ Alt + secondary press on a text editor opens its completions dropdown instead of a menu.
+    fn claim_text_editor_alt_completions(&self, x: f32, y: f32) -> bool {
+        let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
+            return false;
+        };
+        crate::interpreter::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
+    }
+
+    /// 🪟️ The retained body a right-click landed in, as `(window_id, body_rect)` — the hit registry's
+    /// own owner map first (a press on a registered row inside the body), then the dock body the point
+    /// falls in, so a click on a scene that registers no target of its own still resolves its window.
+    fn retained_context_menu_window(&self, x: f32, y: f32) -> Option<(String, Rect)> {
+        if let Some(window_id) = self.context_window_instance_id(x, y) {
+            if let Some(body) = self.retained_window_body_rect(window_id) {
+                return Some((window_id.to_string(), body));
             }
         }
-        for (surface_id, surface) in self.board2d_states.iter() {
-            if surface.bounds.contains(x, y) {
-                return (surface_id.clone(), "board2d".into(), hits);
-            }
-        }
-        for (surface_id, surface) in self.world3d_states.iter() {
-            if surface.bounds.contains(x, y) {
-                return (surface_id.clone(), "world3d".into(), hits);
-            }
-        }
-        ("shell".into(), "window".into(), hits)
+        self.retained_hit_windows.values().find(|(_, body)| body.contains(x, y)).cloned()
     }
 
     fn sync_context_menu_hover(&mut self, input: &InputState<ActionDescriptor>) {
@@ -8856,16 +10855,22 @@ impl ShellState {
         }
     }
 
+    /// 🔍️ Every palette row, in React's own declaration order (`🏛️ShellHost/🟦️.tsx`'s `searchItems`
+    /// memo): panel tabs, window kinds, resolved commands, then the host-app verbs. Declaration order is
+    /// what the ranker breaks ties on and what a cold (empty-query) palette shows, so it is part of the
+    /// contract, not an accident.
     fn build_search_items(&self) -> Vec<SearchPaletteItem> {
-        let mut items = self.command_search_items();
+        let is_de = self.locale_id == "de";
         let Some(session) = &self.session else {
-            return items;
+            return self.command_search_items();
         };
+        let mut items = Vec::new();
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             items.push(SearchPaletteItem {
                 id: format!("panel.{}", tab.id()),
                 label: tab.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
-                group: "Panels".into(),
+                description: None,
+                group: shell_chrome_string("palette.group.panels", is_de).into(),
                 dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab.id() }) }),
                 action: None,
                 category: None,
@@ -8875,21 +10880,42 @@ impl ShellState {
             items.push(SearchPaletteItem {
                 id: format!("window.{}", kind.id),
                 label: kind.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
-                group: "Windows".into(),
+                description: None,
+                group: shell_chrome_string("palette.group.windows", is_de).into(),
                 dispatch_action: None,
                 action: Some(format!("window:{}", kind.id)),
                 category: None,
             });
         }
+        items.extend(self.command_search_items());
+        // ⌨️ App-declared keybindings, as one palette row each — a wgpu-only superset of React's palette
+        // (React reaches these verbs through the window's own Actions rail, which this renderer's palette
+        // has no equivalent of). It obeys React's OWN P3/P4 rule rather than inventing a third one: an
+        // arg-carrying verb redirects to its staged form (`action-panel:`) instead of silent-firing the
+        // declared defaults from a cold palette selection, which is what this row used to do.
         for binding in &session.app.keybindings {
-            items.push(SearchPaletteItem { id: format!("keybinding.{}", binding.keys), label: binding.action.action.clone(), group: "Actions".into(), dispatch_action: Some(binding.action.clone()), action: None, category: None });
+            let action_id = binding.action.action.as_str();
+            let owner = session.app.window_kinds.iter().find(|kind| kind.actions.iter().any(|action| action.id == action_id));
+            let definition = owner.and_then(|kind| kind.actions.iter().find(|action| action.id == action_id));
+            let label = definition.map_or_else(|| action_id.to_string(), |action| action.label.resolve(self.active_terminology(), self.active_locale()).to_string());
+            let staged = definition.is_some_and(|action| !action.args.is_empty());
+            items.push(SearchPaletteItem {
+                id: format!("keybinding.{}", binding.keys),
+                label: if staged { format!("{label}…") } else { label },
+                description: Some(format_keybinding_shortcut(&binding.keys)),
+                group: shell_chrome_string("palette.group.actions", is_de).into(),
+                dispatch_action: (!staged).then(|| binding.action.clone()),
+                action: staged.then(|| format!("action-panel:{}:{action_id}", owner.map_or(action_id, |kind| kind.id.as_str()))),
+                category: None,
+            });
         }
         if let Some(controller_id) = self.host_controller_id() {
-            for action in ["undo", "redo", "commitCheckpoint"] {
+            for (action, label_key) in [("undo", "palette.undo"), ("redo", "palette.redo"), ("commitCheckpoint", "palette.commitCheckpoint"), ("goHome", "contextMenu.goHome")] {
                 items.push(SearchPaletteItem {
                     id: format!("studio.{action}"),
-                    label: action.into(),
-                    group: "Space".into(),
+                    label: shell_chrome_string(label_key, is_de).into(),
+                    description: None,
+                    group: shell_chrome_string("palette.group.hostApp", is_de).into(),
                     dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: action.into(), args: None }),
                     action: None,
                     category: None,
@@ -8899,31 +10925,37 @@ impl ShellState {
         items
     }
 
+    /// 🔍️ The palette's visible rows — ranked by the SAME algorithm, fields, weights, threshold and
+    /// limit React's `UISearch` passes `rankFuzzyItems` (`🔎️ShellSearch/🟦️.tsx`): `label` ×2,
+    /// `description` ×1, the group heading ×0.5, threshold `0.4`, limit `20`.
     fn filtered_search_items(&self) -> Vec<SearchPaletteItem> {
-        let query = self.search_query.clone();
-        let items = self.build_search_items();
-        if query.trim().is_empty() {
-            return items.into_iter().take(20).collect();
-        }
-        // 🔍️ Fuzzy subsequence match (see `fuzzy_match_score` in `shell::ActionPanelAndUtilities`) —
-        // replaces the previous pure-substring `.contains()` filter so e.g. "stlc" finds "Set Locale".
-        let mut scored: Vec<(i64, SearchPaletteItem)> = items
-            .into_iter()
-            .filter_map(|item| {
-                let score = fuzzy_match_score(&query, &item.label).into_iter().chain(fuzzy_match_score(&query, &item.group)).max();
-                score.map(|score| (score, item))
-            })
-            .collect();
-        scored.sort_by(|a, b| b.0.cmp(&a.0));
-        scored.into_iter().take(20).map(|(_, item)| item).collect()
+        rank_fuzzy_items(
+            self.build_search_items(),
+            &self.search_query,
+            &[
+                (|item: &SearchPaletteItem| Some(item.label.as_str()), 2.0),
+                (|item: &SearchPaletteItem| item.description.as_deref(), 1.0),
+                (|item: &SearchPaletteItem| Some(item.group.as_str()), 0.5),
+            ],
+            FUZZY_SEARCH_THRESHOLD,
+            FUZZY_SEARCH_LIMIT,
+        )
     }
 
+    /// 🔍️ Find-in-content rows — React's `UIFind` ranks its own `UIFindItem[]` through the very same
+    /// `rankFuzzyItems` call (same fields/weights/threshold/limit), so this is not a second algorithm.
     fn filtered_find_items(&self) -> Vec<ShellFindItem> {
-        let query = self.find_query.to_lowercase();
-        if query.trim().is_empty() {
-            return self.find_items.iter().take(20).cloned().collect();
-        }
-        self.find_items.iter().filter(|item| item.label.to_lowercase().contains(&query) || item.description.as_ref().is_some_and(|d| d.to_lowercase().contains(&query))).take(20).cloned().collect()
+        rank_fuzzy_items(
+            self.find_items.iter().cloned().collect(),
+            &self.find_query,
+            &[
+                (|item: &ShellFindItem| Some(item.label.as_str()), 2.0),
+                (|item: &ShellFindItem| item.description.as_deref(), 1.0),
+                (|item: &ShellFindItem| item.category.as_deref(), 0.5),
+            ],
+            FUZZY_SEARCH_THRESHOLD,
+            FUZZY_SEARCH_LIMIT,
+        )
     }
 
     pub async fn activate_search_item(&mut self, index: usize) -> Result<(), String> {
@@ -8962,6 +10994,14 @@ impl ShellState {
             } else if let Some(command_json) = action.strip_prefix("command:") {
                 let invocation: semio_framework::manifest::CommandInvocation = dsl::os_pack::json::from_json_str(command_json).map_err(|error| error.to_string())?;
                 self.dispatch_command(invocation).await?;
+            } else if let Some(command_key) = action.strip_prefix("command-form:") {
+                // 🎛️ P3 redirect for an arg-carrying command — React opens the Command panel at the
+                // command's category and expands its staged form (`SET_PANEL_VISIBLE`/`SET_PANEL_PATH`/
+                // `SET_COMMAND_EXPANDED`). `reveal_dock_tab` is this target's spelling of the first two;
+                // `expanded_command_id` is the third, and the Commands dock reads it to open that form.
+                let command_key = command_key.to_string();
+                self.reveal_dock_tab(FRAMEWORK_CATEGORY_COMMAND_ID);
+                self.expanded_command_id = Some(command_key);
             }
         }
         self.search_open = false;
@@ -9013,8 +11053,7 @@ impl ShellState {
     pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
         if action == ui_wgpu::wgpu::KeyAction::Escape {
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
-                self.restore_dock_drag_snapshot();
-                self.dock_drag_snapshot = None;
+                self.pending_dock_tab_select = None;
                 return;
             }
             // 🪟️ Escape closes exactly the topmost overlay first — matches ui_wgpu's overlay-manager
@@ -9037,17 +11076,19 @@ impl ShellState {
             }
         }
         // 🎓️ Tour keys take precedence over every other chord below (mirrors Escape closing the topmost
-        // overlay above) but never fire while a field is focused or the sync-attach card is open — same
-        // "not editing" guard the rest of this function uses (computed inline here since `editing` itself
-        // isn't bound until after this block).
-        if input.focused_id.is_none() && self.sync_card_kind.is_none() {
+        // overlay above) and — unlike every other chord in this function — fire even while a field has
+        // focus: React binds all three with `enableOnFormTags: true` (`UIIntroduction`), because a veil
+        // that owns every pointer must always be answerable from the keyboard. The sync-attach card
+        // still outranks them, since it is the one overlay painted above the tour.
+        if self.sync_card_kind.is_none() {
             if let Some(step) = self.chrome_tour_active_step() {
                 match action {
                     ui_wgpu::wgpu::KeyAction::Escape => {
                         if let Some(session) = self.session.as_ref() {
-                            self.chrome_build.mark_introduction_seen(&session.app.id);
+                            self.chrome_build.dismiss_introduction(&session.app.id);
+                        } else {
+                            self.chrome_build.skip_introduction();
                         }
-                        self.chrome_build.skip_introduction();
                         return;
                     }
                     ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::ArrowRight => {
@@ -9064,63 +11105,35 @@ impl ShellState {
                 }
             }
         }
-        let meta = modifiers.meta || modifiers.ctrl;
         // ⌨️ Hardcoded shell chords never fire while a text field (or the sync-attach draft buffer)
         // has focus — matches `os-shell.tsx`'s `isEditableEventTarget`/`useActionHotkey` (backed by
         // react-hotkeys-hook, which by default does not fire on form tags): "hotkeys never fire while
         // the user is typing". Previously these six chords fired unconditionally, so e.g. Ctrl+B while
         // typing in a focused Input would silently toggle the left panel instead of inserting "b".
+        //
+        // 🛡️ Every chord is now one row of `SHELL_SHORTCUT_ROWS` (the transcription of React's
+        // `SHELL_KEYBINDINGS`) rather than an open-coded `meta && Char("b")` ladder: the palette/find
+        // toggles, the three nav verbs, all eight panel anchors and the three window verbs resolve
+        // through the same table `is_reserved_shell_chord` reserves, so a chord can no longer be
+        // reserved-but-dead (which is exactly how the six missing panel anchors and the three window
+        // verbs read before this wave).
         let editing = Self::content_is_editing(input.focused_id.as_deref(), self.sync_card_kind.is_some());
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
-            self.search_open = !self.search_open;
-            self.find_open = false;
-            self.overlay_state = if self.search_open { OverlayState::Search } else { OverlayState::None };
-            self.search_query.clear();
-            self.search_selected = 0;
-            input.focused_id = self.search_open.then(|| "shell.search.input".into());
-            Self::debug_log(&format!("[DEBUG] wgpu-shell palette chord search-open={} overlay={:?} focused={:?}", self.search_open, self.overlay_state, input.focused_id));
-            return;
-        }
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
-            self.find_open = !self.find_open;
-            self.search_open = false;
-            self.overlay_state = if self.find_open { OverlayState::Find } else { OverlayState::None };
-            input.focused_id = self.find_open.then(|| "shell.find.input".into());
-            return;
-        }
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c == "[") {
-            if self.uri_index > 0 {
-                self.uri_index -= 1;
+        let palette_open = matches!(self.overlay_state, OverlayState::Search | OverlayState::Find);
+        // ⌨️ An ARMED Keybindings row swallows the next key event and becomes that row's override —
+        // React's `chordFromKeyboardEvent` on the capture button, ahead of every other rung so a chord
+        // being remapped never also fires its own verb.
+        if self.keybinding_capture_control_id.is_some() {
+            if self.capture_keybinding_chord(&action, modifiers) {
+                return;
             }
-            self.pending_shell_uri_apply = true;
-            return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c == "]") {
-            if self.uri_index + 1 < self.uri_history.len() {
-                self.uri_index += 1;
-            }
-            self.pending_shell_uri_apply = true;
-            return;
-        }
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::ArrowUp) {
-            let uri = self.shell_uri();
-            if let Some(parent) = uri.rsplit_once('/').map(|(p, _)| p.to_string()) {
-                if !parent.is_empty() {
-                    self.push_uri(parent);
+        if !editing {
+            if let Some(shortcut) = shell_shortcut_for_in(&self.shortcut_table(), &action, modifiers) {
+                if self.apply_sync_shell_shortcut(shortcut, palette_open, input) {
+                    return;
                 }
             }
-            self.pending_shell_uri_apply = true;
-            return;
         }
-        if !editing && meta && modifiers.shift && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
-            self.right_panel_open = !self.right_panel_open;
-            return;
-        }
-        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
-            self.left_panel_open = !self.left_panel_open;
-            return;
-        }
-        let palette_open = matches!(self.overlay_state, OverlayState::Search | OverlayState::Find);
         // 🪟️ Tab/Shift+Tab cycles the active window across the *whole* dock (cross-window focus order)
         // whenever nothing else claims focus — this renderer has no DOM, so there was no cross-window
         // Tab order at all before this fix (only ever within a single scene, e.g. the text editor's own
@@ -9289,18 +11302,17 @@ impl ShellState {
             }
         }
         let idle = input.focused_id.is_none() && self.overlay_state == OverlayState::None && self.sync_card_kind.is_none() && self.dock_drag.is_none();
-        // 👁️✏️🔁️ The two SHELL axes React declares in `SHELL_KEYBINDINGS` — `mod+alt+e`/`mod+alt+v`
-        // and `mod+alt+→`/`mod+alt+←`. Both are pure shell-state transitions that never reach the
-        // guest, so an app keybinding structurally could not express them; they are matched here,
-        // ahead of every app-declared chord, exactly as `is_reserved_shell_chord` reserves them.
+        // 👁️✏️🔁️🖥️ The `SHELL_SHORTCUT_ROWS` verbs that need the async funnel — the surface-role axis
+        // (`mod+alt+e`/`mod+alt+v`), the mode-cycle axis (`mod+alt+→`/`mod+alt+←`) and full-screen
+        // (`mod+shift+f`). All three are shell transitions an app keybinding structurally could not
+        // express, so they are matched here, ahead of every app-declared chord, exactly as
+        // `is_reserved_shell_chord` reserves them. Every other row of the same table is a synchronous
+        // chrome-state transition answered by `handle_keyboard`'s own table dispatch below.
         if idle {
-            if let Some(role) = shell_role_chord(&action, modifiers) {
-                self.switch_to_session_role(role).await?;
-                return Ok(());
-            }
-            if let Some(step) = shell_mode_step_chord(&action, modifiers) {
-                self.apply_mode_step(step).await?;
-                return Ok(());
+            if let Some(shortcut) = shell_shortcut_for_in(&self.shortcut_table(), &action, modifiers) {
+                if shortcut.is_async() && self.apply_async_shell_shortcut(shortcut).await? {
+                    return Ok(());
+                }
             }
         }
         let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
@@ -9312,7 +11324,7 @@ impl ShellState {
             .await?;
             return Ok(());
         }
-        if idle && !is_reserved_shell_chord(&action, modifiers) {
+        if idle && !is_reserved_shell_chord_in(&self.shortcut_table(), &action, modifiers) {
             let platform = command_host_platform();
             let command = self
                 .resolved_commands()
@@ -9356,7 +11368,10 @@ impl ShellState {
                 }
             }
         }
-        // 🧰️ Escape deactivates the active utility for the focused window (P5).
+        // 🧰️🛠️ Escape deactivates the focused window's active utility (P5) — and, when no utility is
+        // active, the active MODE-LEVEL TOOL. Both rungs and their order are React's
+        // (`🏛️ShellHost/🟦️.tsx` `handleAppKeydown`: utility first, then `SET_ACTIVE_TOOL_ACTION_ID` with
+        // an empty id); the tool rung was missing here, so Escape left an armed tool armed.
         if idle && action == ui_wgpu::wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
                 if self.active_utility_by_window.remove(&window_id).is_some() {
@@ -9364,10 +11379,16 @@ impl ShellState {
                     return Ok(());
                 }
             }
+            let armed_tool = self.session.as_ref().and_then(|session| session.view_state.active_tool_id.clone()).is_some_and(|tool_id| !tool_id.is_empty());
+            if armed_tool {
+                let controller_id = self.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+                self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: crate::action_args_json!({ "toolId": "" }) }).await?;
+                return Ok(());
+            }
         }
         // ⌨️ App-declared keybinding dispatch (Architecture Decision 8, P4) — NET-NEW for the wgpu
         // shell, which previously only handled hardcoded shell chords. Reserved shell chords still win.
-        if idle && !is_reserved_shell_chord(&action, modifiers) {
+        if idle && !is_reserved_shell_chord_in(&self.shortcut_table(), &action, modifiers) {
             if let Some(descriptor) = self.match_app_keybinding(&action, modifiers) {
                 self.dispatch_app_keybinding(descriptor).await?;
                 // 🖐️ A chord is a user gesture exactly as a click is: `mod+o` is the ONLY door the
@@ -9376,6 +11397,23 @@ impl ShellState {
                 self.drain_gesture_bound_work().await;
                 self.owe_settle();
                 return Ok(());
+            }
+        }
+        // ⏪️ Framework-universal undo/redo chords — LAST, after the app-keybinding loop, so an app that
+        // declares `mod+z` itself shadows them, exactly as React's `handleAppKeydown` orders its own
+        // `mod+z`/`mod+shift+z`/`mod+y` tail. Routed through the same `dispatch_action` funnel the
+        // History panel's Undo/Redo rows and the palette's `studio.undo`/`studio.redo` entries use, so
+        // the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
+        // at all: undo was reachable only by opening the palette and typing "undo".
+        if idle {
+            if let Some(verb) = shell_edit_verb_for(&action, modifiers) {
+                let controller_id = self.session.as_ref().map(|session| session.app.controller_id.clone());
+                if let Some(controller_id) = controller_id {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell edit chord verb={} controller={controller_id}", verb.action_id()));
+                    self.dispatch_action(ActionDescriptor { controller_id, action: verb.action_id().into(), args: None }).await?;
+                    self.owe_settle();
+                    return Ok(());
+                }
             }
         }
         self.handle_keyboard(action, modifiers, input);
@@ -9413,7 +11451,11 @@ impl ShellState {
                 .find(|action| action.id == descriptor.action)
                 .map_or_else(|| descriptor.action.clone(), |action| action.label.resolve(self.active_terminology(), self.active_locale()).to_string());
             let chord = session.app.keybindings.iter().find(|binding| binding.action.action == descriptor.action).map_or_else(String::new, |binding| binding.keys.clone());
-            self.error = Some(keybinding_unowned_text_v1(self.active_locale().as_str(), &chord, &label));
+            // 🧯️ Packet W1j: React raises this through `showTransientNotice(..., "info",
+            // KEYBINDING_UNOWNED_CODE)`, not through a persistent error line — an unowned chord is a
+            // momentary "nothing here answers that", which is exactly what the banner is for.
+            let text = keybinding_unowned_text_v1(self.active_locale().as_str(), &chord, &label);
+            self.show_transient_notice(text, semio_framework::Severity::Info, Some(KEYBINDING_UNOWNED_CODE));
             return Ok(());
         };
         if target_kind == WindowScopeTargetKindV1::Owner {
@@ -9487,11 +11529,310 @@ impl ShellState {
         let (path, next_id) = order[next_index].clone();
         self.dock.set_stack_active(&path, &next_id);
     }
+
+    //#region ⌨️ShellShortcutDispatch
+    /// 🪟️ The dock stack path holding `window_id`, read off the same order walk Tab cycling uses.
+    fn dock_stack_path_for(&self, window_id: &str) -> Option<crate::dock::DockPath> {
+        let mut order = Vec::new();
+        Self::dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
+        order.into_iter().find(|(_, id)| id == window_id).map(|(path, _)| path)
+    }
+
+    /// 🧭️ Toggles one named panel anchor — the wgpu twin of React's per-anchor `SET_PANEL_VISIBLE`
+    /// toggle that `ui.shell.panelAnchor.*` binds. An anchor carrying no tab is a witnessed no-op
+    /// (`false`) rather than an empty box appearing over the canvas.
+    fn toggle_panel_anchor(&mut self, anchor: PanelAnchor) -> bool {
+        if self.dock_tabs.tabs(anchor).is_empty() {
+            return false;
+        }
+        self.toggle_anchor(anchor);
+        true
+    }
+
+    /// 🧭️ Opens this anchor at its remembered (or default) path, or folds it shut when it is already open.
+    pub fn toggle_anchor(&mut self, anchor: PanelAnchor) {
+        if self.anchor_open(anchor) {
+            self.anchor_state_mut(anchor).visible = false;
+            return;
+        }
+        let path = self.dock_tabs.reconcile_path(anchor, &self.anchor_state(anchor).path.clone());
+        let state = self.anchor_state_mut(anchor);
+        state.path = path;
+        state.visible = true;
+    }
+
+    /// 🧭️ `⌘️B`/`⌘️⇧️B` — folds a whole column shut when any of its anchors is open, else reopens its
+    /// top corner, the column-level chord the two former `left_panel_open`/`right_panel_open` flags carried.
+    pub fn toggle_column(&mut self, left: bool) {
+        let anchors = Self::column_anchors(left);
+        if anchors.into_iter().any(|anchor| self.anchor_open(anchor)) {
+            for anchor in anchors {
+                self.anchor_state_mut(anchor).visible = false;
+            }
+            return;
+        }
+        self.toggle_anchor(anchors[0]);
+    }
+
+    /// 🪟️ Closes one window wherever it sits — the ONE close lane React's `closeWindow(windowId)`
+    /// (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1475-1485`) is: the tab's own chip, the `mod+shift+w` chord
+    /// and any future caller collapse the layout by the same rule, refocus `children[0]`, and tear
+    /// down whatever the window was hosting.
+    pub(crate) fn close_dock_window(&mut self, window_id: &str) -> bool {
+        if !self.dock.close_window(window_id) {
+            return false;
+        }
+        self.active_window_id = self.dock.active_window_id.clone();
+        self.teardown_spawned_window(window_id);
+        self.persist_dock_layout();
+        true
+    }
+
+    /// 🪶️ Destroys the plugin instance a closed window was hosting and drops its panel entry —
+    /// React's `onWindowClose` (`🏛️ShellHost/🟦️.tsx:10533-10555`). Without it the guest instance ran
+    /// forever behind a window that no longer exists (the teardown gap
+    /// REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT documented). A window that hosts no spawned app is
+    /// simply nothing to tear down.
+    fn teardown_spawned_window(&mut self, window_id: &str) {
+        let Some(session) = self.session.as_ref() else {
+            return;
+        };
+        let Ok(Some(mut panel)) = Self::panel_state_from_view(&session.view_state) else {
+            return;
+        };
+        let Some(closed) = Self::take_spawned_entry(&mut panel, window_id) else {
+            return;
+        };
+        if let Ok(json) = Self::panel_json(&panel) {
+            if let Some(session) = self.session.as_mut() {
+                session.view_state.panel_json = Some(json);
+            }
+        }
+        if let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == closed.plugin_id) {
+            program.destroy_app(closed.instance_id);
+            Self::debug_log(&format!("[DEBUG] wgpu-shell closed window {window_id} destroyed spawned {} instance {}", closed.plugin_id, closed.instance_id));
+        }
+    }
+
+    /// 🪶️ Drops the spawned-app entry a closed window owned and re-points `active_spawned_id` at
+    /// whatever is left — the pure half of [`Self::teardown_spawned_window`], mirroring React's
+    /// `buildSpacePanelState(nextSpawned, tab, nextSpawned[0]?.id)` (`🏛️ShellHost/🟦️.tsx:10537`).
+    pub(crate) fn take_spawned_entry(panel: &mut SpacePanelState, window_id: &str) -> Option<SpawnedAppEntry> {
+        let slot = panel.spawned_apps.iter().position(|entry| entry.id == window_id)?;
+        let closed = panel.spawned_apps.remove(slot);
+        panel.active_spawned_id = panel.spawned_apps.first().map(|entry| entry.id.clone());
+        Some(closed)
+    }
+
+    /// 🪟️ `mod+shift+w` — closes the active window through [`Self::close_dock_window`], last window of
+    /// the mode included.
+    fn close_active_window(&mut self) -> bool {
+        let Some(window_id) = self.active_window_id.clone() else {
+            return false;
+        };
+        self.close_dock_window(&window_id)
+    }
+
+    /// 🪟️ `mod+shift+enter` — the same maximize toggle the window's own focus control performs. React
+    /// gates it on `canMaximize` (more than one window in the mode); a single-window mode has nothing to
+    /// maximize away from, so this refuses there too.
+    fn focus_active_window(&mut self) -> bool {
+        let Some(window_id) = self.active_window_id.clone() else {
+            return false;
+        };
+        let mut order = Vec::new();
+        Self::dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
+        if order.len() <= 1 {
+            return false;
+        }
+        let Some(path) = order.into_iter().find(|(_, id)| *id == window_id).map(|(path, _)| path) else {
+            return false;
+        };
+        self.dock.set_stack_active(&path, &window_id);
+        self.dock.toggle_maximize(&path);
+        self.persist_dock_layout();
+        true
+    }
+
+    /// 🪟️ `mod+shift+n` — "Open in New Window" is a second INSTANCE of the active window's kind split to
+    /// the right of its stack, never an OS window: the exact shape of React's `onWindowOpenInNewWindow`
+    /// (`🏛️ShellHost/🟦️.tsx`), down to the `{kindId}-{n}` instance id and the right-hand split.
+    fn open_active_window_in_new_window(&mut self) -> bool {
+        let Some(window_id) = self.active_window_id.clone() else {
+            return false;
+        };
+        let Some(session) = self.session.as_ref() else {
+            return false;
+        };
+        let Some(window_kind_id) = self.live_window_kind_id(session, &window_id).map(str::to_string) else {
+            return false;
+        };
+        let taken: Vec<String> = self.dock.window_instances().into_iter().map(|(id, _)| id).collect();
+        let instance_id = (2..)
+            .map(|index| format!("{window_kind_id}-{index}"))
+            .find(|candidate| !taken.contains(candidate))
+            .expect("an unbounded counter always clears a finite dock roster");
+        let Some(path) = self.dock_stack_path_for(&window_id) else {
+            return false;
+        };
+        if !self.dock.split_stack_with_instance(&path, &instance_id, &window_kind_id, crate::dock::DockSide::Right) {
+            return false;
+        }
+        self.active_window_id = Some(instance_id);
+        self.persist_dock_layout();
+        true
+    }
+
+    /// 🛠️ A selected `tool.<id>` leaf IS that tool's activation — React's `reconcileToolTabSelection`,
+    /// whose whole point is that activation and selection are one state with two representations, so
+    /// every route into the path (a press, a restored arrangement, a tour step) ends at the same place.
+    /// A path that selects no tool leaf is left alone rather than deactivating, so browsing another
+    /// category keeps the armed tool live exactly as React's "skip while not the active root" rule does.
+    async fn arm_tool_for_panel_tab(&mut self, path: &[String]) -> Result<(), String> {
+        let Some(tool_id) = path.last().and_then(|id| id.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX)).map(ToOwned::to_owned) else {
+            return Ok(());
+        };
+        let Some(controller_id) = self.session.as_ref().map(|session| session.app.controller_id.clone()) else {
+            return Ok(());
+        };
+        if self.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id.as_str()) {
+            return Ok(());
+        }
+        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: crate::action_args_json!({ "toolId": tool_id }) }).await
+    }
+
+    /// ⌨️ This session's REMAPPED shortcut table — [`SHELL_SHORTCUT_ROWS`] with the persisted
+    /// `keybindingOverrides` applied. Every key-event reader goes through this, so a remap takes effect
+    /// for dispatch, for reservation and for the shortcut rows W1c paints, from one source.
+    pub(crate) fn shortcut_table(&self) -> Vec<(String, String)> {
+        shell_shortcut_table(&self.chrome_build.preferences.keybinding_overrides)
+    }
+
+    /// ⌨️ Writes the armed Keybindings row's override from one key event — the wgpu twin of React's
+    /// `chordFromKeyboardEvent`: the fixed `ctrl, meta, alt, shift` modifier order then the key, with
+    /// Escape cancelling the capture and a bare modifier press ignored. `true` when the event was
+    /// consumed by the capture (which includes the Escape cancel).
+    fn capture_keybinding_chord(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+        let Some(control_id) = self.keybinding_capture_control_id.clone() else { return false };
+        if matches!(action, ui_wgpu::wgpu::KeyAction::Escape) {
+            self.keybinding_capture_control_id = None;
+            return true;
+        }
+        let Some(key) = keybinding_capture_key_token(action) else { return true };
+        let mut parts: Vec<&str> = Vec::new();
+        if modifiers.ctrl {
+            parts.push("ctrl");
+        }
+        if modifiers.meta {
+            parts.push("meta");
+        }
+        if modifiers.alt {
+            parts.push("alt");
+        }
+        if modifiers.shift {
+            parts.push("shift");
+        }
+        let chord = parts.into_iter().chain(std::iter::once(key.as_str())).collect::<Vec<_>>().join("+");
+        self.chrome_build.preferences.keybinding_overrides.insert(control_id.clone(), chord.clone());
+        self.keybinding_capture_control_id = None;
+        Self::debug_log(&format!("[DEBUG] wgpu-shell keybinding override {control_id} -> {chord}"));
+        true
+    }
+
+    /// ⌨️ Applies the shell verbs that are pure chrome-state transitions (no guest round-trip, no os
+    /// command) — the synchronous half of the one [`SHELL_SHORTCUT_ROWS`] table. Returns whether the key
+    /// was consumed; an unconsumed key falls through to the rest of `handle_keyboard` untouched.
+    fn apply_sync_shell_shortcut(&mut self, shortcut: ShellShortcut, palette_open: bool, input: &mut InputState<ActionDescriptor>) -> bool {
+        match shortcut {
+            ShellShortcut::ToggleSearch => {
+                self.search_open = !self.search_open;
+                self.find_open = false;
+                self.overlay_state = if self.search_open { OverlayState::Search } else { OverlayState::None };
+                self.search_query.clear();
+                self.search_selected = 0;
+                input.focused_id = self.search_open.then(|| "shell.search.input".into());
+                Self::debug_log(&format!("[DEBUG] wgpu-shell palette chord search-open={} overlay={:?} focused={:?}", self.search_open, self.overlay_state, input.focused_id));
+                true
+            }
+            ShellShortcut::ToggleFind => {
+                self.find_open = !self.find_open;
+                self.search_open = false;
+                self.overlay_state = if self.find_open { OverlayState::Find } else { OverlayState::None };
+                input.focused_id = self.find_open.then(|| "shell.find.input".into());
+                true
+            }
+            ShellShortcut::NavBack => {
+                if palette_open {
+                    return false;
+                }
+                self.uri_index = self.uri_index.saturating_sub(1);
+                self.pending_shell_uri_apply = true;
+                true
+            }
+            ShellShortcut::NavForward => {
+                if palette_open {
+                    return false;
+                }
+                if self.uri_index + 1 < self.uri_history.len() {
+                    self.uri_index += 1;
+                }
+                self.pending_shell_uri_apply = true;
+                true
+            }
+            ShellShortcut::NavUp => {
+                if palette_open {
+                    return false;
+                }
+                let uri = self.shell_uri();
+                if let Some(parent) = uri.rsplit_once('/').map(|(parent, _)| parent.to_string()) {
+                    if !parent.is_empty() {
+                        self.push_uri(parent);
+                    }
+                }
+                self.pending_shell_uri_apply = true;
+                true
+            }
+            ShellShortcut::TogglePanelAnchor(anchor) => {
+                if palette_open {
+                    return false;
+                }
+                self.toggle_panel_anchor(anchor)
+            }
+            ShellShortcut::CloseWindow => !palette_open && self.close_active_window(),
+            ShellShortcut::FocusWindow => !palette_open && self.focus_active_window(),
+            ShellShortcut::NewWindow => !palette_open && self.open_active_window_in_new_window(),
+            ShellShortcut::ToggleFullscreen | ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) => false,
+        }
+    }
+
+    /// ⌨️ Applies the shell verbs that need the async funnel — the other half of the same table.
+    async fn apply_async_shell_shortcut(&mut self, shortcut: ShellShortcut) -> Result<bool, String> {
+        match shortcut {
+            ShellShortcut::ToggleFullscreen => {
+                self.apply_os_command("os.toggleFullscreen", None).await?;
+                Ok(true)
+            }
+            ShellShortcut::ModeStep(step) => {
+                self.apply_mode_step(step).await?;
+                Ok(true)
+            }
+            ShellShortcut::SurfaceRole(role) => {
+                self.switch_to_session_role(role).await?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+    //#endregion ⌨️ShellShortcutDispatch
 }
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-shell-input/🦀️.rs"]
 mod shell_input_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/⌨️wgpu-shell-shortcuts-palette/🦀️.rs"]
+mod shell_shortcuts_palette_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🧲️engine-surface-retention/🦀️.rs"]
@@ -9506,22 +11847,39 @@ mod shell_boot_isolation_tests;
 /// the eleven overlay/dropdown/status painters below that draw a whole scalar in one pass. It was
 /// `#[cfg(test)]`-gated, which made every one of those production call sites `E0425` on every target
 /// (the reason this crate compiled on neither `wasm32-unknown-unknown` nor natively).
-#[cfg(test)]
 fn chrome_text(target: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = framework_widget_context(target, None, atlas, None, input, theme, &mut scroll, &mut collapsed, &mut selects, None);
+    let mut ctx = framework_widget_context(target, None, atlas, None, input, theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
     draw_text(&mut ctx, text, x, y, size, color);
 }
 
-/// ✍️ Advances one Shell text scalar and at most one pre-admitted glyph.
+/// ✍️ Advances one Shell text scalar and at most one pre-admitted glyph. Shell chrome text flows
+/// [`RetainedTextFlow::Clip`] — React's chrome labels are all `whitespace-nowrap truncate`
+/// (`🎛️chrome-control-presentation/🟦️.ts`, `🏛️ShellHost/🟦️.tsx`'s chip/tab/pill labels), so a label
+/// that outgrows its box loses its tail rather than dropping a second line inside a 22px chip.
 fn chrome_text_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
-    paint_retained_glyph_step(text, Rect::new(x, y - size, width.max(1.0), size), size, color, atlas, target, cursor)
+    paint_retained_glyph_step_flowed(text, Rect::new(x, y - size, width.max(1.0), size), size, color, RetainedTextFlow::Clip, atlas, target, cursor)
 }
 
 fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
     match chrome_text_step(target, atlas, text, x, y, width, size, color, cursor) {
+        RetainedGlyphStep::Pending => Ok(false),
+        RetainedGlyphStep::Complete => {
+            cursor.reset();
+            Ok(true)
+        }
+        RetainedGlyphStep::Fault => Err(()),
+    }
+}
+
+/// ✍️ The WRAPPING twin of [`chrome_text_complete_step`], for the one piece of shell chrome whose copy
+/// is prose rather than a chip label: the introduction card's body paragraphs, which React renders as
+/// `<p class="whitespace-pre-line">` inside a `max-w-sm` box and therefore wraps. `rect` is the flow
+/// box — its own top, not a baseline.
+fn chrome_text_wrapped_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, rect: Rect, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
+    match paint_retained_glyph_step_flowed(text, rect, size, color, RetainedTextFlow::Wrap, atlas, target, cursor) {
         RetainedGlyphStep::Pending => Ok(false),
         RetainedGlyphStep::Complete => {
             cursor.reset();
@@ -9544,6 +11902,23 @@ fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y:
         draw.push_textured([x, y, size, size], uv, color);
     }
 }
+
+/// 🪧️ The identity tint for a FULL-COLOUR atlas cell. `UI_SHADER`'s textured branch is
+/// `icon.rgb * in.color.rgb` (`🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs:144`), which is what makes a
+/// Lucide glyph wear `theme.text`: every Lucide cell is rasterised as a WHITE tint mask
+/// (`rasterize_svg(svg, tint_mask = id != "semio-logo", …)`, `🖼️IconRenderHost/🎯️targets/🧊️wgpu/🦀️.rs:111`).
+///
+/// 🩸️ The brand mark is the one cell rasterised in its real colours — navy disc, orange/red/teal
+/// bars — and the navbar multiplied it by `theme.text` anyway, which collapsed all four hues into the
+/// text colour and painted the BLACK DISC of `📓️audit-visual-parity-puzzle3d.md` §2/§4. React paints
+/// `<SemioLogo>` as an untinted SVG, so the identity is what parity means here.
+const LOGO_UNTINTED: Rgba = Rgba::new(1.0, 1.0, 1.0, 1.0);
+
+/// 🪧️ React's `size-workbench` on the navbar brand mark (`🏛️ShellHost/🟦️.tsx:10056`), in `--ui-spacing`
+/// units: `--size-workbench` is `1.5 × --size-small` and `--size-small` is `5 × --ui-spacing`
+/// (`🖱️ui/🎨️styling/🖌️ui/🎨️.css:736-737`), so the mark is 7.5 spacings — TALLER than a 7-spacing chip,
+/// which is why it used to be sized off `control_height` and read visibly small.
+const SHELL_NAVBAR_LOGO_UI_SPACING: f32 = 7.5;
 
 
 
@@ -9568,14 +11943,27 @@ enum RetainedChromeGroupStep {
     Fault,
 }
 
-/// 📐️ Computes the conservative fixed-cost width admitted for one retained chrome item.
-fn retained_chrome_group_item_width(theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
-    let label_bytes = item.label.map(str::len).unwrap_or(0);
-    if label_bytes > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+/// 📐️ The box one retained chrome item (navbar/footer chip, dropdown row, surface control) occupies
+/// — its own padding, its optional leading icon, and its label's MEASURED paint width, read off the
+/// very atlas [`render_retained_chrome_group_item_step`] then paints that label with.
+///
+/// ⚠️ It used to price the label at `label.len() × font_size_small × 0.6`, a per-byte guess that has
+/// no relation to the advances the painter actually pens: at `--text-xs` (11.2px) the guess is
+/// 6.72px per byte, while the painter walks `FontAtlas::measure_text`'s real advances (10px flat for
+/// the 8×16 ASCII fallback face). Every chip therefore laid out NARROWER than its own label and
+/// `paint_retained_glyph_step` broke the run mid-word inside the chip — the "Concrete F/orest",
+/// "Edit/or", "Transf/orm" two-line chips of the first real wgpu boot. React's chip labels are
+/// `whitespace-nowrap truncate` and their box hugs the measured text
+/// (`🎛️chrome-control-presentation/🟦️.ts`), which is what measuring here restores. A multi-byte
+/// scalar also no longer inflates its chip by its UTF-8 length.
+fn retained_chrome_group_item_width(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
+    let label = item.label.unwrap_or("");
+    if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
         return None;
     }
     let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);
-    Some(theme.padding_standard * 2.0 + icon_w + label_bytes as f32 * theme.font_size_small * 0.6)
+    let label_w = if label.is_empty() { 0.0 } else { atlas.measure_text(label, theme.font_size_small).0 };
+    Some(theme.padding_standard * 2.0 + icon_w + label_w)
 }
 
 /// 🧱️ Emits at most one retained chrome item scalar, glyph, hit, or border per grant.
@@ -9680,6 +12068,76 @@ fn floating_panel_width(width: f32, body: Rect, theme: &Theme) -> f32 {
     width.clamp(theme.panel_min_width, floating_panel_max_width(body, theme))
 }
 
+/// 📑️ The window id behind a dock tab's LABEL target (`dock.tab.<path>.<windowId>`) — `None` for the
+/// action chips (`….focus`/`….close`/`….drag`), which carry one dot more. React's label is its own
+/// `<button>` beside those chips (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1049-1071`).
+fn dock_tab_select_window_id(control_id: &str) -> Option<&str> {
+    let rest = control_id.strip_prefix("dock.tab.")?;
+    let (_, window_id) = rest.split_once('.')?;
+    (!window_id.contains('.')).then_some(window_id)
+}
+
+/// 📑️ Whether this dock tab subtree carries `tab_id` anywhere — root row or drilled-down child.
+fn dock_tab_node_carries(node: &DockTabNode, tab_id: &str) -> bool {
+    node.id == tab_id || node.children.iter().any(|child| dock_tab_node_carries(child, tab_id))
+}
+
+/// ↔ Which anchor a `panel.resize.<anchor>.<inner|outer>` control belongs to, and whether it is the
+/// inner (canvas-facing) handle — the one id shape both the registration and the drag arm parse.
+fn panel_resize_anchor(control_id: &str) -> Option<(PanelAnchor, bool)> {
+    let rest = control_id.strip_prefix("panel.resize.")?;
+    let (anchor_id, side) = rest.rsplit_once('.')?;
+    Some((PanelAnchor::from_str(anchor_id)?, side == "inner"))
+}
+
+/// 🧭️ Top-to-bottom order the anchors of one column band themselves in — the row order React's
+/// `anchorVertical` names, used to slot an open anchor within its column.
+const ANCHOR_COLUMN_ORDER: [PanelAnchor; 8] = [PanelAnchor::TopLeft, PanelAnchor::LeftMiddle, PanelAnchor::BottomLeft, PanelAnchor::TopMiddle, PanelAnchor::BottomMiddle, PanelAnchor::TopRight, PanelAnchor::RightMiddle, PanelAnchor::BottomRight];
+
+/// 🧭️ One anchor's floating-panel box inside the body band, the Rust twin of React's
+/// `anchorPositionStyle` (`🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): a left/right column insets by
+/// `--spacing-single` (`theme.panel_inset`) from that edge, a middle column centres on the body, a
+/// top/bottom row insets from that edge and the middle row centres — with React's
+/// `calc(100% - spacing*2)` clamp applied to both axes.
+///
+/// 📐️ The one honest divergence: React's panel HUGS ITS CONTENT up to that clamp (`maxHeight`, never a
+/// fixed `bottom`), which needs a measured retained-document height this renderer has no read of yet.
+/// A column's visible anchors therefore share its height in equal bands instead — identical to the old
+/// full-height single panel whenever a column carries exactly one open anchor, and never overlapping
+/// when it carries two. See `📓️w1h-panel-anchors-and-command-dock.md`'s remaining gaps.
+fn anchor_panel_rect(anchor: PanelAnchor, size: f32, content_h: Option<f32>, column_slots: usize, column_index: usize, body: Rect, theme: &Theme) -> Rect {
+    let inset = theme.panel_inset;
+    let width = floating_panel_width(size, body, theme);
+    let available_h = (body.h - inset * 2.0).max(0.0);
+    let slots = column_slots.max(1) as f32;
+    let gap = if column_slots > 1 { theme.gap_standard } else { 0.0 };
+    let band = ((available_h - gap * (slots - 1.0)) / slots).max(0.0);
+    // 📐️ Content hug: a measured document takes exactly its own height, clamped to React's
+    // `calc(100% - spacing*2)` — and, when a column carries more than one open anchor, to that
+    // anchor's share of the column so two hugging panels can never overlap. No measurement yet (the
+    // surface's first frame) keeps the full band, which is what this renderer did before.
+    let height = content_h.map_or(band, |content| content.clamp(0.0, band));
+    let x = match anchor.horizontal() {
+        "left" => body.x + inset,
+        "right" => body.x + body.w - inset - width,
+        _ => body.x + (body.w - width) * 0.5,
+    };
+    // 📐️ One BONDED vertical edge, never a `top`+`bottom` pair (`anchorPositionStyle`): a top anchor
+    // grows down from its own inset, a bottom anchor grows up from the body's bottom inset, and a
+    // middle anchor centres on its band.
+    let slot_top = body.y + inset + (band + gap) * column_index as f32;
+    // 📐️ The slack is computed BEFORE it is added to the origin: `slot_top + band - height` loses a
+    // float step on a full-band panel (693.6 added then subtracted), which is visible as a one-thousandth
+    // drift off the declared inset.
+    let slack = (band - height).max(0.0);
+    let y = match anchor.vertical() {
+        "top" => slot_top,
+        "bottom" => slot_top + slack,
+        _ => slot_top + slack * 0.5,
+    };
+    Rect::new(x, y, width, height)
+}
+
 
 
 
@@ -9726,63 +12184,8 @@ fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconA
     chrome_group_border(draw, rect, theme);
 }
 
-fn footer_utility_label<'a>(label: &'a Option<String>, text: &'a Option<String>, title: &'a Option<String>, id: &'a str) -> &'a str {
+fn utility_node_label<'a>(label: &'a Option<String>, text: &'a Option<String>, title: &'a Option<String>, id: &'a str) -> &'a str {
     title.as_deref().or(label.as_deref()).or(text.as_deref()).unwrap_or(id)
-}
-
-fn backbone_kind_from_uri(uri: &str) -> &'static str {
-    if uri.starts_with("file://") {
-        "file"
-    } else if uri.starts_with("folder://") {
-        "folder"
-    } else if uri.starts_with("remote://") {
-        "remote"
-    } else {
-        "unknown"
-    }
-}
-
-fn framework_sync_utilities(active_uri: Option<&str>) -> Vec<UtilityNode> {
-    let active_kind = active_uri.map(backbone_kind_from_uri);
-    let pressed = |kind: &str| active_kind == Some(kind);
-    vec![
-        UtilityNode::Toggle {
-            id: "framework.sync.file".into(),
-            icon_id: "file-json".into(),
-            label: Some("File".into()),
-            text: None,
-            title: None,
-            order: Some(0),
-            pressed: Some(pressed("file")),
-            disabled: None,
-            category: Some(UtilityCategory::Sync),
-            on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "selectFile".into(), args: None },
-        },
-        UtilityNode::Toggle {
-            id: "framework.sync.folder".into(),
-            icon_id: "folder".into(),
-            label: Some("Folder".into()),
-            text: None,
-            title: None,
-            order: Some(1),
-            pressed: Some(pressed("folder")),
-            disabled: None,
-            category: Some(UtilityCategory::Sync),
-            on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "selectFolder".into(), args: None },
-        },
-        UtilityNode::Toggle {
-            id: "framework.sync.remote".into(),
-            icon_id: "cloud".into(),
-            label: Some("Remote".into()),
-            text: None,
-            title: None,
-            order: Some(2),
-            pressed: Some(pressed("remote")),
-            disabled: None,
-            category: Some(UtilityCategory::Sync),
-            on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "selectRemote".into(), args: None },
-        },
-    ]
 }
 
 #[cfg(test)]
@@ -9790,10 +12193,10 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
     let mut buckets: [Vec<UtilityNode>; 4] = [vec![], vec![], vec![], vec![]];
     for utility in utilities {
         let idx = match utility.category() {
-            UtilityCategory::Selection => 0,
-            UtilityCategory::Utilities => 1,
-            UtilityCategory::History => 2,
-            UtilityCategory::Sync => 3,
+            ui_wgpu::wgpu::UtilityCategory::Selection => 0,
+            ui_wgpu::wgpu::UtilityCategory::Utilities => 1,
+            ui_wgpu::wgpu::UtilityCategory::History => 2,
+            ui_wgpu::wgpu::UtilityCategory::Sync => 3,
         };
         buckets[idx].push(utility.clone());
     }
@@ -9802,69 +12205,104 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
 
 
 
-/// 🚦️ ticket §C5 — `#s-sync-status` status pill + `#s-checkin` explicit check-in, painted directly in
-/// the footer left-to-right (same `ChromeGroupItem`/`render_chrome_group`/`measure_chrome_group_item`
-/// immediate-mode primitives `render_presence_bar` above already uses, for the identical reason: these
-/// are SHELL-owned chrome, not a plugin-declared `UtilityNode`/`active_utilities` entry). `#s-checkin`
-/// is simply absent for a viewer session — contract §C5 "viewers never checkpoint" — never rendered
-/// disabled, mirroring `render_footer_utility_nodes`'s own undo/redo precedent one region up in the
-/// React twin. `uncommitted_count` mirrors React's own `(${count})` suffix on the button label; the
-/// button itself now opens the `#s-checkin-*` message-prompt card (`render_overlay`'s own doc note)
-/// through `framework.checkin`'s `open` action rather than dispatching a fixed-message checkpoint
-/// straight away.
-#[cfg(not(target_arch = "wasm32"))]
-fn render_sync_status_and_checkin(
+//#region 🚦️SyncPill
+/// 🚦️ The remote half of the pill vocabulary — React's
+/// `SyncPillState["remote"]` (`🛠️ShellHelpers/🟦️.tsx`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellSyncRemote {
+    Connected,
+    Connecting,
+    Backoff,
+    Detached,
+}
+
+/// 🚦️ The `#s-sync-status` pill's state — React's `SyncPillState`, plus this renderer's own
+/// `Recovering` arm for the native bootstrap-progress readout React has no twin for (it is produced
+/// only by `ShellState::sync_pill`'s native branch and is documented as a declared divergence).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellSyncPill {
+    Persisted,
+    Pending(usize),
+    Remote(ShellSyncRemote),
+    Recovering { received_bytes: u64, total_bytes: u64, received_chunks: u32, total_chunks: u32 },
+}
+
+/// 🚦️ Localized pill text, term for term with `syncPillText` (`🛠️ShellHelpers/🟦️.tsx`) — including
+/// its German column, which this side used to lack: the pill was English-only, so a `de` shell read
+/// `Remote: detached` where React reads `Remote: getrennt`. The strings live in
+/// [`shell_chrome_string`] with every other shell-owned label rather than inline here.
+pub(crate) fn shell_sync_pill_text(pill: ShellSyncPill, is_de: bool) -> String {
+    match pill {
+        ShellSyncPill::Recovering { received_bytes, total_bytes, received_chunks, total_chunks } => {
+            format!("{} {received_bytes}/{total_bytes} · {received_chunks}/{total_chunks}", shell_chrome_string("sync.recovering", is_de))
+        }
+        ShellSyncPill::Persisted => shell_chrome_string("sync.persisted", is_de).to_string(),
+        ShellSyncPill::Pending(count) => format!("{} ({count})", shell_chrome_string("sync.pending", is_de)),
+        ShellSyncPill::Remote(remote) => {
+            let state = match remote {
+                ShellSyncRemote::Connected => "sync.remote.connected",
+                ShellSyncRemote::Connecting => "sync.remote.connecting",
+                ShellSyncRemote::Backoff => "sync.remote.backoff",
+                ShellSyncRemote::Detached => "sync.remote.detached",
+            };
+            format!("{}: {}", shell_chrome_string("sync.remote", is_de), shell_chrome_string(state, is_de))
+        }
+    }
+}
+//#endregion 🚦️SyncPill
+
+/// 🚦️ `#s-sync-status` and `#s-presence-peers`, the two shell-owned footer pills, each painted at the
+/// x its own BAND resolves (see [`ShellState::footer_pill_anchors`]) with the same
+/// `ChromeGroupItem`/`render_retained_chrome_group_item_step` immediate-mode primitives every other
+/// shell pill uses — these are SHELL chrome, not plugin-declared `UtilityNode` entries.
+///
+/// 🩸️ Target-neutral since packet W4a. It was `cfg(not(wasm32))` — with the whole footer phase that
+/// calls it gated the same way — because its input was a native-only `ArtifactSyncStatus`, so the
+/// BROWSER wgpu shell painted no sync pill and no presence pill at all where React's browser shell
+/// paints `Remote: detached` and `No one else is here`. The native-only types now stop at
+/// [`ShellState::sync_pill`] and [`ShellState::footer_presence_rows`], which answer a target-neutral
+/// projection on both.
+///
+/// 🩸️ It also used to paint `#s-checkin` as a third footer chip, and to paint all three AHEAD of the
+/// bottom-left tab band, which is what made the wgpu footer read
+/// `Remote: detached · No one else is here · Check In · Display · …` where React's reads
+/// `Display · Remote: detached · … · No one else is here · Settings · …`
+/// (`📓️audit-visual-parity-puzzle3d.md` §7 item 5). React has NO footer check-in affordance at all:
+/// `#s-checkin` is a row of the History panel's own tree (`framework.history.checkin`,
+/// `🏛️ShellHost/🟦️.tsx:9016`), gated by `canCheckIn(session.app.role)` and reachable only with that
+/// panel open — so the chip is gone rather than moved.
+#[allow(clippy::too_many_arguments, reason = "one arg per pill input; the footer cursor cannot carry a measured row")]
+fn render_footer_pills_step(
     cursor: &mut ShellChromeChildCursor,
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,
     input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
-    status: Option<&ArtifactSyncStatus>,
-    progress: Option<&(u64, u64, u32, u32)>,
-    session: Option<&ActiveSession>,
-    uncommitted_count: u32,
+    pill: ShellSyncPill,
+    presence: &[ui_wgpu::wgpu::PresencePeerRow],
+    locale: Locale,
     is_de: bool,
-    x: f32,
+    anchors: FooterPillAnchors,
     btn_y: f32,
     btn_h: f32,
-) -> Result<Option<f32>, ()> {
-    if cursor.item == 0 {
-        if cursor.window.is_none() {
-            cursor.window = Some(UiText::try_from_string(ShellState::sync_pill_text(status, progress)).map_err(|_| ())?);
-        }
-        let Some(label) = cursor.window.as_ref() else { return Err(()) };
-        let item = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
-        if cursor.rect.is_none() {
-            let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
-            cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
-        }
-        let Some(rect) = cursor.rect else { return Err(()) };
-        match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
-            RetainedChromeGroupStep::Pending => return Ok(None),
-            RetainedChromeGroupStep::Fault => return Err(()),
-            RetainedChromeGroupStep::Complete => {}
-        }
-        input.register_hit(HitTarget { rect, event: None, control_id: Some("s-sync-status".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        cursor.x = x + rect.w + theme.gap_standard * 0.5;
-        cursor.window = None;
-        cursor.rect = None;
-        cursor.item = 1;
-        return Ok(None);
-    }
-    if !session.is_some_and(|session| can_check_in(session.app.role)) {
-        return Ok(Some(cursor.x));
-    }
+) -> Result<Option<()>, ()> {
+    let (control_id, text, right_aligned) = if cursor.item == 0 {
+        ("s-sync-status", shell_sync_pill_text(pill, is_de), false)
+    } else if cursor.item == 1 {
+        ("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_text(presence, None, locale), true)
+    } else {
+        return Ok(Some(()));
+    };
     if cursor.window.is_none() {
-        let checkin = shell_chrome_string("command.checkIn", is_de);
-        let label = if uncommitted_count > 0 { format!("{checkin} ({uncommitted_count})") } else { checkin.to_string() };
-        cursor.window = Some(UiText::try_from_string(label).map_err(|_| ())?);
+        cursor.window = Some(UiText::try_from_string(text).map_err(|_| ())?);
     }
     let Some(label) = cursor.window.as_ref() else { return Err(()) };
-    let item = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+    let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
     if cursor.rect.is_none() {
-        let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
-        cursor.rect = Some(Rect::new(cursor.x, btn_y, width, btn_h));
+        let width = retained_chrome_group_item_width(atlas, theme, &item).ok_or(())?;
+        let x = if right_aligned { anchors.presence_right - width } else { anchors.sync_left };
+        cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
     }
     let Some(rect) = cursor.rect else { return Err(()) };
     match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
@@ -9872,19 +12310,32 @@ fn render_sync_status_and_checkin(
         RetainedChromeGroupStep::Fault => return Err(()),
         RetainedChromeGroupStep::Complete => {}
     }
-    let event = ActionDescriptor { controller_id: "framework.checkin".into(), action: "open".into(), args: None };
-    input.register_hit(HitTarget { rect, event: Some(event), control_id: Some("s-checkin".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id.into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
     cursor.window = None;
     cursor.rect = None;
-    Ok(Some(cursor.x + rect.w + theme.gap_standard * 0.5))
+    cursor.item += 1;
+    Ok(None)
 }
 
-fn render_footer_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
+/// 📐️ Where each footer pill sits, once its neighbouring tab band is measured — React's footer is
+/// `[bottom-left tabs][centred bottom-middle tabs][fill][presence][bottom-right tabs]`
+/// (`🏛️ShellHost/🟦️.tsx:10613-10635`) and `#s-sync-status` is the bottom-left band's own sync TAB
+/// (`frameworkSyncTab`, `:9070`), so the sync pill trails the leading band and the presence pill
+/// leads the trailing one.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct FooterPillAnchors {
+    /// 🚦️ Leading edge of `#s-sync-status`, immediately after the bottom-left tab band.
+    pub sync_left: f32,
+    /// 👥️ TRAILING edge of `#s-presence-peers`, immediately before the bottom-right tab band.
+    pub presence_right: f32,
+}
+
+fn render_utility_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
     draw.push_solid([x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0], theme.border_normal);
     x + theme.gap_standard
 }
 
-fn footer_utility_at_path<'utility>(roots: &'utility [UtilityNode], path: &[u16; 64], depth: usize) -> Option<&'utility UtilityNode> {
+fn utility_at_path<'utility>(roots: &'utility [UtilityNode], path: &[u16; 64], depth: usize) -> Option<&'utility UtilityNode> {
     let mut siblings = roots;
     for level in 0..=depth {
         let node = siblings.get(path[level] as usize)?;
@@ -9897,16 +12348,16 @@ fn footer_utility_at_path<'utility>(roots: &'utility [UtilityNode], path: &[u16;
     None
 }
 
-fn footer_utility_sibling_count(roots: &[UtilityNode], path: &[u16; 64], depth: usize) -> Option<usize> {
+fn utility_sibling_count(roots: &[UtilityNode], path: &[u16; 64], depth: usize) -> Option<usize> {
     if depth == 0 {
         return Some(roots.len());
     }
-    let parent = footer_utility_at_path(roots, path, depth - 1)?;
+    let parent = utility_at_path(roots, path, depth - 1)?;
     let UtilityNode::Collection { children, .. } = parent else { return None };
     Some(children.len())
 }
 
-fn render_footer_utility_node(
+fn render_utility_node_step(
     cursor: &mut ShellChromeChildCursor,
     chrome: &mut ShellChromeBuildState,
     draw: &mut DrawList,
@@ -9921,11 +12372,11 @@ fn render_footer_utility_node(
     collection_expanded: &HashMap<String, bool>,
 ) -> Result<Option<(f32, bool)>, ()> {
     match utility {
-        UtilityNode::Separator { .. } => Ok(Some((render_footer_section_divider(draw, theme, x, btn_y, btn_h), false))),
+        UtilityNode::Separator { .. } => Ok(Some((render_utility_section_divider(draw, theme, x, btn_y, btn_h), false))),
         UtilityNode::Button { id, icon_id, label, text, title, disabled, on_press, .. } if !disabled.unwrap_or(false) => {
-            let item = ChromeGroupItem { control_id: "framework.utility.button", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: false, disabled: false, kind: HitKind::Button };
+            let item = ChromeGroupItem { control_id: "framework.utility.button", icon_id: Some(icon_id.as_str()), label: Some(utility_node_label(label, text, title, id)), active: false, disabled: false, kind: HitKind::Button };
             if cursor.rect.is_none() {
-                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                let width = retained_chrome_group_item_width(atlas, theme, &item).ok_or(())?;
                 cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
             }
             let Some(rect) = cursor.rect else { return Err(()) };
@@ -9940,9 +12391,9 @@ fn render_footer_utility_node(
             Ok(Some((x + rect.w + theme.gap_standard * 0.5, false)))
         }
         UtilityNode::Toggle { id, icon_id, label, text, title, pressed, disabled, on_change, .. } if !disabled.unwrap_or(false) => {
-            let item = ChromeGroupItem { control_id: "framework.utility.toggle", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: pressed.unwrap_or(false), disabled: false, kind: HitKind::Toggle };
+            let item = ChromeGroupItem { control_id: "framework.utility.toggle", icon_id: Some(icon_id.as_str()), label: Some(utility_node_label(label, text, title, id)), active: pressed.unwrap_or(false), disabled: false, kind: HitKind::Toggle };
             if cursor.rect.is_none() {
-                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                let width = retained_chrome_group_item_width(atlas, theme, &item).ok_or(())?;
                 cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
             }
             let Some(rect) = cursor.rect else { return Err(()) };
@@ -9958,9 +12409,9 @@ fn render_footer_utility_node(
         }
         UtilityNode::Collection { id, icon_id, label, text, title, disabled, children, .. } if !disabled.unwrap_or(false) => {
             let expanded = collection_expanded.get(id).copied().unwrap_or(false);
-            let item = ChromeGroupItem { control_id: "framework.utility.collection", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: expanded, disabled: false, kind: HitKind::Button };
+            let item = ChromeGroupItem { control_id: "framework.utility.collection", icon_id: Some(icon_id.as_str()), label: Some(utility_node_label(label, text, title, id)), active: expanded, disabled: false, kind: HitKind::Button };
             if cursor.rect.is_none() {
-                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                let width = retained_chrome_group_item_width(atlas, theme, &item).ok_or(())?;
                 cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
             }
             let Some(rect) = cursor.rect else { return Err(()) };
@@ -9978,7 +12429,7 @@ fn render_footer_utility_node(
 }
 
 #[cfg(test)]
-fn render_footer_utility_nodes(
+fn render_utility_nodes(
     chrome: &mut ShellChromeBuildState,
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
@@ -9994,13 +12445,13 @@ fn render_footer_utility_nodes(
     for utility in utilities {
         match utility {
             UtilityNode::Separator { .. } => {
-                x = render_footer_section_divider(draw, theme, x, btn_y, btn_h);
+                x = render_utility_section_divider(draw, theme, x, btn_y, btn_h);
             }
             UtilityNode::Button { id, icon_id, label, text, title, disabled, on_press, .. } => {
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let label_text = footer_utility_label(label, text, title, id);
+                let label_text = utility_node_label(label, text, title, id);
                 let item = ChromeGroupItem { control_id: "framework.utility.button", icon_id: Some(icon_id.as_str()), label: Some(label_text), active: false, disabled: false, kind: HitKind::Button };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
@@ -10013,7 +12464,7 @@ fn render_footer_utility_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let label_text = footer_utility_label(label, text, title, id);
+                let label_text = utility_node_label(label, text, title, id);
                 let item = ChromeGroupItem { control_id: "framework.utility.toggle", icon_id: Some(icon_id.as_str()), label: Some(label_text), active: pressed.unwrap_or(false), disabled: false, kind: HitKind::Button };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
@@ -10031,7 +12482,7 @@ fn render_footer_utility_nodes(
                 // segment lives somewhere inside it (recursively, through further nested `Collection`s) —
                 // `active-path` tracking, ported from the React ribbon's recursive reconciliation.
                 let on_active_path = expanded || utility_subtree_has_active_path(children);
-                let label_text = footer_utility_label(label, text, title, id);
+                let label_text = utility_node_label(label, text, title, id);
                 let item = ChromeGroupItem { control_id: "framework.utility.collection", icon_id: Some(icon_id.as_str()), label: Some(label_text), active: on_active_path, disabled: false, kind: HitKind::Button };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
@@ -10044,7 +12495,7 @@ fn render_footer_utility_nodes(
                     // on the full, unfiltered `children` supports arbitrary nesting depth; each nested
                     // `Collection` gets its own `collection_expanded` entry (already a flat `id`-keyed map,
                     // so no path-keying change needed) and paints its own active-path highlight in turn.
-                    x = render_footer_utility_nodes(chrome, draw, atlas, icons, input, theme, x, btn_y, btn_h, children, collection_expanded);
+                    x = render_utility_nodes(chrome, draw, atlas, icons, input, theme, x, btn_y, btn_h, children, collection_expanded);
                 }
             }
         }
@@ -10082,9 +12533,6 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     if tab.id() == FRAMEWORK_SETTINGS_THEME_TAB_ID {
         return "paintbrush";
     }
-    if tab.id() == FRAMEWORK_SETTINGS_COMMANDS_TAB_ID {
-        return "wrench";
-    }
     if tab.id() == FRAMEWORK_PANEL_TAB_CATALOGUE_ID {
         return "library";
     }
@@ -10094,25 +12542,16 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     "circle-dot"
 }
 
-/// 🧭️ This renderer only has a 2-panel (left/right) layout; fold the framework's 6-anchor model back down to
-/// left/right. A middle anchor would fold right (the details/overflow side) but never occurs here — `PanelGroup`
-/// only ever maps to the four corner anchors.
-fn group_side(group: PanelGroup) -> &'static str {
-    if group.anchor().ends_with("left") {
-        "left"
-    } else {
-        "right"
-    }
-}
-
-fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static str {
-    match kind {
-        "display" => "layout-grid",
-        "workbench" => session.and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "left")).map(|tab| panel_tab_icon_id(tab)).unwrap_or("folder"),
-        "details" => session.and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "right")).map(|tab| panel_tab_icon_id(tab)).unwrap_or("info"),
-        "settings" => "settings-2",
-        "chat" => "message-square",
-        _ => "circle-dot",
+/// 🧭️ One app-declared panel tab as a dock node, children included — the wgpu twin of React's
+/// `panelTabDefinitionToNode`. The label comes off the manifest's own `LocalizedLabel` through the live
+/// terminology and locale, so this carries no shell dictionary and no default language.
+fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminology, locale: Locale, order: i32) -> DockTabNode {
+    DockTabNode {
+        id: tab.id().to_string(),
+        label: tab.label.resolve(terminology, locale).to_string(),
+        icon_id: panel_tab_icon_id(tab).to_string(),
+        order,
+        children: tab.children.iter().enumerate().map(|(index, child)| dock_tab_node_of(child, terminology, locale, index as i32)).collect(),
     }
 }
 
@@ -10186,13 +12625,21 @@ fn semio_cursor_from_name(name: &str) -> ui_wgpu::wgpu::SemioCursor {
     }
 }
 
-/// ⌨️ Formats the first chord of a keybinding for context-menu shortcut labels (mirrors ui-react formatKeybindingShortcut).
+/// ⌨️ Formats the first chord of a keybinding for chip badges, palette rows and context-menu shortcut
+/// labels — the port of `formatKeybindingShortcut`
+/// (`🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts`), pinned glyph for glyph by
+/// `🐚️Shell/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json`, which React's own suite reads too.
+///
+/// 🩸️ `apple` used to be `cfg!(target_os = "macos")`. That is a COMPILE-time fact and it is FALSE on
+/// `wasm32-unknown-unknown`, so every browser boot — macOS included — painted `Ctrl+Alt+E` where
+/// React painted `⌘️⌥️E`. It now reads the host's own platform, published by whoever owns a
+/// `navigator` (`🧊️renderer/🦀️.rs`, region ⌨️HostPlatform).
 fn format_keybinding_shortcut(keys: &str) -> String {
     let chord = keys.split(',').next().unwrap_or(keys).trim().to_ascii_lowercase();
     if chord.is_empty() {
         return String::new();
     }
-    let apple = cfg!(target_os = "macos");
+    let apple = crate::host_platform_uses_meta();
     let glyph = |part: &str| -> String {
         match part {
             "mod" if apple => "⌘️".into(),
@@ -10210,10 +12657,10 @@ fn format_keybinding_shortcut(keys: &str) -> String {
             "enter" => "Enter".into(),
             "escape" if apple => "⎋️".into(),
             "escape" => "Esc".into(),
-            "up" => "↑".into(),
-            "down" => "↓".into(),
-            "left" => "←".into(),
-            "right" => "→".into(),
+            "up" | "arrowup" => "↑".into(),
+            "down" | "arrowdown" => "↓".into(),
+            "left" | "arrowleft" => "←".into(),
+            "right" | "arrowright" => "→".into(),
             other if other.len() == 1 => other.to_ascii_uppercase(),
             other => {
                 let mut s = other.to_string();
@@ -10239,25 +12686,19 @@ fn format_keybinding_shortcut(keys: &str) -> String {
 /// `SHELL_KEYBINDINGS` entries for `playground.navbar.roles.{editor,viewer}` and
 /// `ui.shell.mode.{next,previous}` — see `🧱️elements/🏛️ShellHost/🟦️.tsx` and
 /// `🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json`'s `keybindings` rows, which pin both spellings.
+#[cfg(test)]
 pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+    is_reserved_shell_chord_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
+}
+
+/// ⌨️ {@link is_reserved_shell_chord} against a RESOLVED table, so a REMAPPED shell chord is reserved
+/// at its new spelling and the default it replaced becomes an app's to claim — React's
+/// `reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides)`.
+pub(crate) fn is_reserved_shell_chord_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
     if matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta) {
         return true;
     }
-    let accelerator = modifiers.meta || modifiers.ctrl;
-    if !accelerator {
-        return false;
-    }
-    if shell_role_chord(action, modifiers).is_some() || shell_mode_step_chord(action, modifiers).is_some() {
-        return true;
-    }
-    if modifiers.alt {
-        return false;
-    }
-    match action {
-        ui_wgpu::wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
-        ui_wgpu::wgpu::KeyAction::ArrowUp => true,
-        _ => false,
-    }
+    shell_shortcut_for_in(table, action, modifiers).is_some()
 }
 
 //#region 🔀️ChromeParity
@@ -10274,6 +12715,39 @@ pub(crate) struct ShellNavbarControl {
     pub icon_id: Option<&'static str>,
     pub label: String,
     pub active: bool,
+}
+
+/// 🗺️ What the navbar centre reads with no session open. React's `navbarItems` answers `[]` in that
+/// case and paints no cluster at all; this renderer's chrome walk has no "paint nothing" arm, so it
+/// keeps the product name it has always shown.
+pub(crate) const SHELL_NAVBAR_SESSIONLESS_TITLE: &str = "semio · os";
+
+/// 🗺️ The navbar centre title — React's `appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))`
+/// (`🏛️ShellHost/🟦️.tsx:10058`), through the SAME `semio_framework::manifest` pair React's
+/// `🛠️ShellHelpers/🟦️.tsx:1348-1355` twins, so `" · "` is one separator constant and a terminology
+/// override (`reuse` → `Entwerfen mit Bestand · Aggregator`) lands identically on both renderers.
+pub(crate) fn shell_navbar_title(app: &AppDefinition, terminology_id: &str) -> String {
+    semio_framework::manifest::app_breadcrumb(semio_framework::manifest::resolve_app_breadcrumb(app, terminology_id))
+}
+
+/// 👁️✏️ React's `surfaceRoleChipText` (`🛠️ShellHelpers/🟦️.tsx:2422`) — the frozen `{en, de}` pair of the
+/// navbar's read-only role badge, term for term.
+pub(crate) fn shell_surface_role_chip_text(role: semio_framework::manifest::AppRole, is_de: bool) -> &'static str {
+    match (role, is_de) {
+        (semio_framework::manifest::AppRole::Viewer, false) => "Viewer",
+        (semio_framework::manifest::AppRole::Viewer, true) => "Betrachter",
+        (semio_framework::manifest::AppRole::Editor, _) => "Editor",
+    }
+}
+
+/// ⌨️ The inline hotkey badge React's `ControlHotkeyBadge` paints INSIDE a chrome control
+/// (`🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx:32`) whenever the active driver's `hotkeys` axis is
+/// `"inline"` — which `DEFAULT_UI_DRIVER` sets (`🧱️elements/🚗️UiDriver/🟦️.tsx:41`), so the desktop
+/// navbar's role buttons read `Editor ⌘️⌥️E` / `Viewer ⌘️⌥️V`. The chord comes from this session's own
+/// remappable table, so an override is reflected in the badge exactly as React's
+/// `useControlHotkey(id)` reads `controlKeybindings`.
+pub(crate) fn shell_control_hotkey_badge(table: &[(String, String)], control_id: &str) -> Option<String> {
+    table.iter().find(|(id, _)| id == control_id).map(|(_, keys)| format_keybinding_shortcut(keys))
 }
 
 /// 📚️ One row of the open `playground.navbar.fixture` dropdown. `control_id` is what the click
@@ -10374,17 +12848,23 @@ pub(crate) fn role_switch_target<'a>(
 /// deliberately NOT each app's own `icon_id`: both surfaces of one artifact carry the same artifact
 /// icon, which would make the two buttons indistinguishable. Labels are each target
 /// `AppDefinition`'s own `LocalizedLabel` — no shell dictionary, no default language.
-pub(crate) fn shell_role_controls(apps: &[AppDefinition], app: &AppDefinition, terminology: Terminology, locale: Locale) -> Vec<ShellNavbarControl> {
+///
+/// ⌨️ Each label carries its chord INLINE (`Editor ⌘️⌥️E`), because React's `ButtonGroupItem` paints a
+/// `ControlHotkeyBadge` beside its own inline label whenever the driver's `hotkeys` axis is `"inline"`
+/// — which the default driver sets — and `playground.navbar.roles.*` are the two `SHELL_KEYBINDINGS`
+/// rows that can be per-button at all (`🔨️modules/🕹️control-keybinding-context/🟦️.tsx:162`). The chord
+/// is read off this session's own remappable table, never off the frozen defaults.
+pub(crate) fn shell_role_controls(apps: &[AppDefinition], app: &AppDefinition, terminology: Terminology, locale: Locale, shortcuts: &[(String, String)]) -> Vec<ShellNavbarControl> {
     let Some((editor, viewer)) = surface_role_apps(apps, &app.dialect) else {
         return Vec::new();
     };
     [(editor, semio_framework::manifest::AppRole::Editor, "pencil"), (viewer, semio_framework::manifest::AppRole::Viewer, "eye")]
         .into_iter()
-        .map(|(target, role, icon_id)| ShellNavbarControl {
-            control_id: format!("playground.navbar.roles.{}", role.as_str()),
-            icon_id: Some(icon_id),
-            label: target.label.resolve(terminology, locale).to_string(),
-            active: app.role == role,
+        .map(|(target, role, icon_id)| {
+            let control_id = format!("playground.navbar.roles.{}", role.as_str());
+            let label = target.label.resolve(terminology, locale).to_string();
+            let label = shell_control_hotkey_badge(shortcuts, &control_id).map_or_else(|| label.clone(), |badge| format!("{label} {badge}"));
+            ShellNavbarControl { control_id, icon_id: Some(icon_id), label, active: app.role == role }
         })
         .collect()
 }
@@ -10401,32 +12881,12 @@ pub(crate) fn step_mode_id(mode_ids: &[String], active_mode_id: Option<&str>, st
     Some(mode_ids[(index + step).rem_euclid(len) as usize].clone())
 }
 
-/// 👁️✏️ The surface role a `mod+alt+e`/`mod+alt+v` chord asks for.
-pub(crate) fn shell_role_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<semio_framework::manifest::AppRole> {
-    if !modifiers.alt || !(modifiers.meta || modifiers.ctrl) {
-        return None;
-    }
-    let ui_wgpu::wgpu::KeyAction::Char(key) = action else {
-        return None;
-    };
-    match key.to_ascii_lowercase().as_str() {
-        "e" => Some(semio_framework::manifest::AppRole::Editor),
-        "v" => Some(semio_framework::manifest::AppRole::Viewer),
-        _ => None,
-    }
-}
-
-/// 🔁️ The mode-cycle direction a `mod+alt+→`/`mod+alt+←` chord asks for.
-pub(crate) fn shell_mode_step_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<i32> {
-    if !modifiers.alt || !(modifiers.meta || modifiers.ctrl) {
-        return None;
-    }
-    match action {
-        ui_wgpu::wgpu::KeyAction::ArrowRight => Some(1),
-        ui_wgpu::wgpu::KeyAction::ArrowLeft => Some(-1),
-        _ => None,
-    }
-}
+/// 👁️✏️🔁️ **Dedup note**: the surface-role (`mod+alt+e`/`mod+alt+v`) and mode-cycle
+/// (`mod+alt+→`/`mod+alt+←`) chords used to be hand-rolled predicates run AHEAD of the shortcut
+/// table, which made both rows unremappable by construction (an override could add a chord but never
+/// retire the hardcoded one) and matched a chord held with Shift that React's own
+/// `keyboardEventMatchesChord` refuses. They are now ordinary [`SHELL_SHORTCUT_ROWS`] rows resolved
+/// by [`shell_shortcut_for_in`] like every other verb.
 
 /// 🛑️ The declared shape of a `World3dScene.statusJson` cancel affordance — the projection of
 /// [`World3dComputeStatus`] the overlay control layer needs and nothing more.
@@ -10712,6 +13172,418 @@ pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComput
 }
 //#endregion 🔀️ChromeParity
 
+//#region 🪟️WindowPaneChrome
+/// 🪟️ One chip a window pane's own overlay rows carry. React mounts each as a FOLDED `Pane` inside
+/// `window-body` at its own anchor (`🪟️Window/🟦️.tsx:320-412`), plus the world's projection pane
+/// portalled into the same host (`🌐️World3dHost/🟦️.tsx:5188`): a top row `Actions` (leading) ·
+/// `Search` (centre) · `Window Options` (trailing) and a bottom row `Utilities` (leading) ·
+/// `Projection` (trailing).
+///
+/// 🩸️ wgpu painted NONE of them. Its only per-pane chrome was the Measures fold chip — an icon-only
+/// square with no label — and the app's utilities sat on a FOOTER rail that React has no counterpart
+/// for at all (`Transform · Brush · Volume Brush · Relocate` in the first real boot).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum WindowPaneChip {
+    Actions,
+    Search,
+    WindowOptions,
+    Utilities,
+    Projection,
+}
+
+impl WindowPaneChip {
+    /// 🪟️ Every chip, in React's own mount order inside `window-body`.
+    pub(crate) const ALL: [Self; 5] = [Self::Actions, Self::Search, Self::WindowOptions, Self::Utilities, Self::Projection];
+
+    /// 🧭️ The `Pane` anchor React mounts this chip at.
+    pub(crate) fn anchor(self) -> PanelAnchor {
+        match self {
+            Self::Actions => PanelAnchor::TopLeft,
+            Self::Search => PanelAnchor::TopMiddle,
+            Self::WindowOptions => PanelAnchor::TopRight,
+            Self::Utilities => PanelAnchor::BottomLeft,
+            Self::Projection => PanelAnchor::BottomRight,
+        }
+    }
+
+    /// 🖼️ React's FIXED semantic pane icon, never a fold-direction chevron
+    /// (`WINDOW_PANE_*_ICON`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:8201-8204`).
+    ///
+    /// 🔀️ `Projection` is React's one exception: its `Pane` takes `icon={worldProjectionSpecIconId(spec)}`
+    /// (`🌐️World3dHost/🟦️.tsx:5202`), so the chip wears the SELECTED template's icon. This answers the
+    /// icon of [`WORLD_PROJECTION_DEFAULT_TEMPLATE_ID`] — the spec React synthesises for a pane whose
+    /// camera declares none — and [`ShellState::window_pane_chip_icon_id`] resolves the live one.
+    pub(crate) fn icon_id(self) -> &'static str {
+        match self {
+            Self::Actions => "play",
+            Self::Search => "search",
+            Self::WindowOptions => "settings-2",
+            Self::Utilities => "hammer",
+            Self::Projection => world_projection_template(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID).icon_id,
+        }
+    }
+
+    fn label_key(self) -> &'static str {
+        match self {
+            Self::Actions => "common.actions",
+            Self::Search => "window.search.title",
+            Self::WindowOptions => "common.windowOptions",
+            Self::Utilities => "common.utilities",
+            Self::Projection => "common.projection",
+        }
+    }
+
+    /// 🎯️ The control id this chip's press dispatches — the wgpu twin of React's `toggleId`
+    /// (`childElementId("framework.window", id, …)`), carrying the same fold/unfold split. `Actions`
+    /// and `Search` both drive the window's ONE `actionsFolded` state, exactly as React's two panes
+    /// share `setEngagementBarFolded` (`🪟️Window/🟦️.tsx:369`/`:388`).
+    pub(crate) fn control_id(self, window_id: &str, folded: bool) -> String {
+        match self {
+            Self::Actions => format!("shell.action.fold.{window_id}"),
+            Self::Search => format!("shell.window.search.toggle.{window_id}"),
+            Self::WindowOptions if folded => format!("shell.measures.unfold.{window_id}"),
+            Self::WindowOptions => format!("shell.measures.fold.{window_id}"),
+            Self::Utilities if folded => format!("shell.utilityBar.unfold.{window_id}"),
+            Self::Utilities => format!("shell.utilityBar.fold.{window_id}"),
+            Self::Projection => format!("shell.projection.fold.{window_id}"),
+        }
+    }
+}
+
+/// 🔀️ One selectable row of the Projection pane — the flattened Rust twin of React's
+/// `createWorldProjectionTemplates` taxonomy (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx:3097`):
+/// `Parallel > Orthographic | Axonometric (Isometric/Dimetric/Trimetric) | Oblique
+/// (Cabinet/Cavalier/Military)` and `Perspective > 1-Point/2-Point/3-Point/Curvilinear`, in that
+/// order, each carrying its own `projection-*` icon.
+///
+/// 🌍️ The labels are FROZEN English on both renderers: React's templates hard-code them
+/// (`leaf("orthographic", "Orthographic", …)`) rather than resolving a `LocalizedLabel`, so
+/// translating them here would make the two shells read differently for the same row.
+pub(crate) struct WorldProjectionTemplate {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub icon_id: &'static str,
+    /// 🌲️ Depth in React's template tree — a branch is 0, its leaves are 1.
+    pub depth: u8,
+}
+
+/// 🔀️ React's projection taxonomy, depth-first, branch before its own leaves.
+pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
+    WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0 },
+    WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1 },
+    WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1 },
+    WorldProjectionTemplate { id: "axonometric-isometric", label: "Isometric", icon_id: "projection-isometric", depth: 2 },
+    WorldProjectionTemplate { id: "axonometric-dimetric", label: "Dimetric", icon_id: "projection-dimetric", depth: 2 },
+    WorldProjectionTemplate { id: "axonometric-trimetric", label: "Trimetric", icon_id: "projection-trimetric", depth: 2 },
+    WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1 },
+    WorldProjectionTemplate { id: "oblique-cabinet", label: "Cabinet", icon_id: "projection-oblique-cabinet", depth: 2 },
+    WorldProjectionTemplate { id: "oblique-cavalier", label: "Cavalier", icon_id: "projection-oblique-cavalier", depth: 2 },
+    WorldProjectionTemplate { id: "oblique-military", label: "Military", icon_id: "projection-oblique-military", depth: 2 },
+    WorldProjectionTemplate { id: "perspective", label: "Perspective", icon_id: "projection-perspective", depth: 0 },
+    WorldProjectionTemplate { id: "one-point", label: "1-Point", icon_id: "projection-one-point", depth: 1 },
+    WorldProjectionTemplate { id: "two-point", label: "2-Point", icon_id: "projection-two-point", depth: 1 },
+    WorldProjectionTemplate { id: "three-point", label: "3-Point", icon_id: "projection-three-point", depth: 1 },
+    WorldProjectionTemplate { id: "curvilinear", label: "Curvilinear", icon_id: "projection-curvilinear", depth: 1 },
+];
+
+/// 🔀️ The template a pane with no explicit selection reads. React resolves
+/// `cameraState.projectionSpec ?? worldProjectionDefaults("threePoint")` for a non-orthographic
+/// camera (`🌐️World3dHost/🟦️.tsx`'s `worldProjectionSpec`), and this renderer's orbit is
+/// perspective-only (`♾️infinite/🌍️world/🦀️.rs`'s `WORLD3D_PERSPECTIVE_CAMERA_ZOOM`), so both
+/// shells open on 3-Point.
+pub(crate) const WORLD_PROJECTION_DEFAULT_TEMPLATE_ID: &str = "three-point";
+
+/// 📐️ The width of the whole projection column — the widest indented row, so every level reads
+/// against one trailing edge instead of each row hugging the pane's on its own, which is what React's
+/// `Tree` block layout gives the same taxonomy.
+pub(crate) fn world_projection_column_width(atlas: &mut FontAtlas, theme: &Theme) -> f32 {
+    WORLD_PROJECTION_TEMPLATES
+        .iter()
+        .map(|template| {
+            let item = ChromeGroupItem { control_id: "", icon_id: Some(template.icon_id), label: Some(template.label), active: false, disabled: false, kind: HitKind::DropdownItem };
+            f32::from(template.depth) * theme.tree_indent_per_level + retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0)
+        })
+        .fold(0.0_f32, f32::max)
+}
+
+/// 🔀️ The template row `id` names, or the default one for an id no template declares.
+pub(crate) fn world_projection_template(id: &str) -> &'static WorldProjectionTemplate {
+    WORLD_PROJECTION_TEMPLATES
+        .iter()
+        .find(|template| template.id == id)
+        .or_else(|| WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == WORLD_PROJECTION_DEFAULT_TEMPLATE_ID))
+        .expect("the default projection template is declared")
+}
+
+/// 📐️ The box one pane overlay chip occupies inside a window body — React's `anchorPositionStyle`
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:6864`) on this target's own token: a corner anchor insets
+/// `--spacing-single` (`PANEL_INSET_UI_SPACING`, the same 1 × ui-spacing `theme.panel_inset` carries)
+/// on BOTH its edges, a middle anchor centres on that axis. One chip per anchor, so a band is one box.
+pub(crate) fn window_pane_chip_rect(theme: &Theme, body: Rect, anchor: PanelAnchor, width: f32) -> Rect {
+    let x = match anchor.horizontal() {
+        "left" => body.x + theme.panel_inset,
+        "right" => body.x + body.w - theme.panel_inset - width,
+        _ => body.x + (body.w - width) * 0.5,
+    };
+    let y = match anchor.vertical() {
+        "top" => body.y + theme.panel_inset,
+        "bottom" => body.y + body.h - theme.panel_inset - theme.control_height,
+        _ => body.y + (body.h - theme.control_height) * 0.5,
+    };
+    Rect::new(x, y, width, theme.control_height)
+}
+
+impl ShellState {
+    /// 🎛️ React's `Window` `utilityBarFolded` — `useState(true)`, so a pane's Utilities rail starts
+    /// FOLDED and is opened by its own chip (`🪟️Window/🟦️.tsx:176-177`).
+    pub(crate) fn utility_bar_folded(&self, window_id: &str) -> bool {
+        self.utility_bar_folded.get(window_id).copied().unwrap_or(true)
+    }
+
+    /// 🔀️ React's `WorldOrbitProjectionSwitchPane` `folded` — `useState(true)`
+    /// (`🌐️World3dHost/🟦️.tsx:5190`), so absent means folded.
+    pub(crate) fn projection_pane_folded(&self, window_id: &str) -> bool {
+        self.projection_pane_folded.get(window_id).copied().unwrap_or(true)
+    }
+
+    /// 🔀️ The projection template this pane shows as selected — React's `worldProjectionSpec`
+    /// fallback chain, collapsed onto this renderer's flat template ids.
+    pub(crate) fn world_projection_template_id(&self, window_id: &str) -> &str {
+        self.world_projection_template.get(window_id).map_or(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, String::as_str)
+    }
+
+    /// 🎛️ React's `Window` `actionsFolded` — the ONE fold both the Actions pane and the Search pane
+    /// read (`🪟️Window/🟦️.tsx:208`/`:214`); absent means folded.
+    pub(crate) fn window_actions_folded(&self, window_id: &str) -> bool {
+        self.action_panel_folded.get(window_id).copied().unwrap_or(true)
+    }
+
+    /// 🪟️ The overlay chips ONE pane paints this frame, each with its fold state and whether its
+    /// toggle is live. React mounts the projection pane only from inside a world surface
+    /// (`🌐️World3dHost/🟦️.tsx:5210`) and mounts every other pane unconditionally, DISABLING the
+    /// toggle of one with no body to open (`toggleDisabled={!utilityBar}`, `🪟️Window/🟦️.tsx:403`) —
+    /// which is the rule this follows for the Utilities rail and the Measures rail alike.
+    ///
+    /// 🔀️ `Projection` is mounted ENABLED for every world pane, because React's never is anything
+    /// else: `WorldOrbitProjectionSwitchPane` passes no `toggleDisabled` at all and is handed
+    /// `cameraState.projectionSpec ?? worldProjectionDefaults(…)` (`🌐️World3dHost/🟦️.tsx:6598`), so
+    /// the spec is SYNTHESISED whenever the camera carries none and the chip is always pressable.
+    ///
+    /// 🩸️ It used to be `(chip, true, true)` — permanently disabled — on the reading that a pane
+    /// with no `WorldProjectionSpec` is React's disabled-toggle case. That reading was wrong, and
+    /// because `paint_window_pane_chips_step` registers no hit for a disabled chip it made the ONLY
+    /// painted chip in the whole shell with no hit target: every sibling registered one, this one
+    /// did not (`📓️audit-visual-parity-puzzle3d.md` §3 P0).
+    pub(crate) fn window_pane_chips(&self, window_id: &str) -> Vec<(WindowPaneChip, bool, bool)> {
+        let has_utilities = self.session.as_ref().is_some_and(|session| !self.derive_window_utility_nodes(session, window_id).is_empty());
+        WindowPaneChip::ALL
+            .into_iter()
+            .filter_map(|chip| match chip {
+                WindowPaneChip::WindowOptions => Some((chip, self.measures_rail_folded(window_id), !self.window_measures_documents.contains_key(window_id))),
+                WindowPaneChip::Utilities => Some((chip, self.utility_bar_folded(window_id), !has_utilities)),
+                WindowPaneChip::Projection => self.world3d_states.contains_key(window_id).then_some((chip, self.projection_pane_folded(window_id), false)),
+                WindowPaneChip::Actions | WindowPaneChip::Search => Some((chip, self.window_actions_folded(window_id), false)),
+            })
+            .collect()
+    }
+
+    /// 🖼️ The icon ONE pane chip wears this frame — [`WindowPaneChip::icon_id`] for every fixed one,
+    /// and the SELECTED projection template's icon for `Projection`, which is the one React resolves
+    /// per pane (`icon={worldProjectionSpecIconId(spec)}`, `🌐️World3dHost/🟦️.tsx:5202`).
+    pub(crate) fn window_pane_chip_icon_id(&self, chip: WindowPaneChip, window_id: &str) -> &'static str {
+        match chip {
+            WindowPaneChip::Projection => world_projection_template(self.world_projection_template_id(window_id)).icon_id,
+            _ => chip.icon_id(),
+        }
+    }
+
+    /// 🖌️ One paint opportunity of ONE pane's overlay chip row. Steps chip by chip through
+    /// `cursor.scalar` so a long label never blocks the chrome walk, and registers each chip's hit
+    /// above the window body's own `ScrollRegion`. `true` once the whole row is off the critical path.
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn paint_window_pane_chips_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
+        if !surface_fits_overlay(theme, window_rect) {
+            return true;
+        }
+        let chips = self.window_pane_chips(window_id);
+        let Some((chip, folded, disabled)) = chips.get(cursor.scalar).copied() else { return true };
+        let is_de = self.locale_id == "de";
+        let label = shell_chrome_string(chip.label_key(), is_de);
+        let control_id = chip.control_id(window_id, folded);
+        let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(self.window_pane_chip_icon_id(chip, window_id)), label: Some(label), active: !folded, disabled, kind: HitKind::Toggle };
+        if cursor.rect.is_none() {
+            let Some(width) = retained_chrome_group_item_width(atlas, theme, &item) else {
+                self.error = Some("Shell pane chip exceeded the retained chrome boundary".to_string());
+                return true;
+            };
+            cursor.rect = Some(window_pane_chip_rect(theme, window_rect, chip.anchor(), width));
+        }
+        let Some(rect) = cursor.rect else { return true };
+        // 🫧️ ONE glass region per chip, pushed on its first opportunity and RE-ENTERED on every later
+        // one — pushing a region per paint opportunity would stack the same frosted band until the
+        // fixed layer filled, and painting the chip outside its own content layer is precisely the
+        // defect W3c §3 found (the glass samples the label away again).
+        if cursor.depth == 0 {
+            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+        }
+        draw.begin_glass_content(cursor.depth - 1);
+        let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);
+        draw.end_glass_content();
+        match step {
+            RetainedChromeGroupStep::Pending => return false,
+            RetainedChromeGroupStep::Complete => {}
+            RetainedChromeGroupStep::Fault => self.error = Some("Shell pane chip exceeded the retained glyph boundary".to_string()),
+        }
+        if !disabled {
+            input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
+        }
+        cursor.rect = None;
+        cursor.depth = 0;
+        cursor.scalar += 1;
+        false
+    }
+
+    /// 🧰️ One paint opportunity of ONE pane's UNFOLDED Utilities rail — the app's own utility tree,
+    /// walked with the very stepper the footer rail used, laid out to the RIGHT of the `Utilities`
+    /// chip on the pane's bottom-left row. This is where React puts them (`utilityBarNode(utilities,
+    /// instance.id, …)` handed to the `bottom-left` `Pane`, `🏛️ShellHost/🟦️.tsx:10263`).
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn paint_window_utilities_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
+        if self.utility_bar_folded(window_id) || !surface_fits_overlay(theme, window_rect) {
+            return true;
+        }
+        let Some(session) = self.session.clone() else { return true };
+        let utilities = self.derive_window_utility_nodes(&session, window_id);
+        if utilities.is_empty() {
+            return true;
+        }
+        let btn_y = window_rect.y + window_rect.h - theme.panel_inset - theme.control_height;
+        if cursor.x <= 0.0 {
+            let chip = ChromeGroupItem { control_id: "", icon_id: Some(WindowPaneChip::Utilities.icon_id()), label: Some(shell_chrome_string(WindowPaneChip::Utilities.label_key(), self.locale_id == "de")), active: true, disabled: false, kind: HitKind::Toggle };
+            let chip_w = retained_chrome_group_item_width(atlas, theme, &chip).unwrap_or(theme.control_height);
+            cursor.x = window_pane_chip_rect(theme, window_rect, PanelAnchor::BottomLeft, chip_w).x + chip_w + theme.gap_standard;
+            // 🖼️ The rail's own surface, pushed ONCE — React's unfolded `Pane` body carries a panel
+            // background, and a rail painted straight onto a 3D scene is unreadable.
+            draw.push_solid([cursor.x, btn_y, (window_rect.x + window_rect.w - theme.panel_inset - cursor.x).max(0.0), theme.control_height], theme.panel);
+        }
+        if cursor.flag {
+            let Some(next_depth) = cursor.depth.checked_add(1).filter(|depth| *depth < cursor.path.0.len()) else { return true };
+            cursor.depth = next_depth;
+            cursor.path.0[next_depth] = 0;
+            cursor.flag = false;
+            return false;
+        }
+        let Some(utility) = utility_at_path(&utilities, &cursor.path.0, cursor.depth) else {
+            let siblings = utility_sibling_count(&utilities, &cursor.path.0, cursor.depth).unwrap_or(0);
+            let next = cursor.path.0[cursor.depth] as usize + 1;
+            if next < siblings {
+                cursor.path.0[cursor.depth] = next as u16;
+                return false;
+            }
+            if cursor.depth > 0 {
+                cursor.depth -= 1;
+                return false;
+            }
+            return true;
+        };
+        let x = cursor.x;
+        let result = render_utility_node_step(cursor, &mut self.chrome_build, draw, atlas, icons, input, theme, x, btn_y, theme.control_height, utility, &self.utility_collection_expanded);
+        let advanced = match result {
+            Ok(result) => result,
+            Err(()) => {
+                self.error = Some("Shell pane utility exceeded the retained chrome boundary".to_string());
+                return true;
+            }
+        };
+        let Some((next_x, descend)) = advanced else { return false };
+        cursor.x = next_x;
+        cursor.flag = descend;
+        if descend {
+            return false;
+        }
+        let siblings = utility_sibling_count(&utilities, &cursor.path.0, cursor.depth).unwrap_or(0);
+        let next = cursor.path.0[cursor.depth] as usize + 1;
+        if next < siblings {
+            cursor.path.0[cursor.depth] = next as u16;
+            return false;
+        }
+        if cursor.depth > 0 {
+            cursor.depth -= 1;
+            return false;
+        }
+        true
+    }
+
+    /// 🔀️ One paint opportunity of ONE pane's UNFOLDED Projection pane — React's
+    /// `WorldProjectionKindSwitch` tree (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx:1991`) as a column of rows
+    /// above the `Projection` chip, on the pane's bottom-right corner, one row per
+    /// [`WORLD_PROJECTION_TEMPLATES`] entry in React's own depth-first order.
+    ///
+    /// 🧭️ Selecting a row is VIEW STATE and dispatches nothing, which is React's own rule for this
+    /// pane verbatim: `handleProjectionKindChange` only sets `externalPendingProjectionSpec`, because
+    /// the single `setProjection` consumer takes granular `{field, value}` pairs and has no lossless
+    /// mapping from a whole spec (`🌐️World3dHost/🟦️.tsx:6574`). Here the selection is observable in
+    /// the chip's own icon; making the ORBIT follow it needs an orthographic frustum this renderer's
+    /// `OrbitController` does not carry yet (`♾️infinite/🌍️world/🦀️.rs`'s
+    /// `WORLD3D_PERSPECTIVE_CAMERA_ZOOM`) — the World3d lane's gap, not this one's.
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn paint_window_projection_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
+        if self.projection_pane_folded(window_id) || !self.world3d_states.contains_key(window_id) || !surface_fits_overlay(theme, window_rect) {
+            return true;
+        }
+        let Some(template) = WORLD_PROJECTION_TEMPLATES.get(cursor.scalar) else { return true };
+        let selected = self.world_projection_template_id(window_id) == template.id;
+        let control_id = format!("shell.projection.template.{window_id}::{}", template.id);
+        let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(template.icon_id), label: Some(template.label), active: selected, disabled: false, kind: HitKind::DropdownItem };
+        if cursor.rect.is_none() {
+            let Some(width) = retained_chrome_group_item_width(atlas, theme, &item) else {
+                self.error = Some("Shell projection row exceeded the retained chrome boundary".to_string());
+                return true;
+            };
+            let row_h = theme.control_height;
+            let indent = f32::from(template.depth) * theme.tree_indent_per_level;
+            let column_w = world_projection_column_width(atlas, theme);
+            // 🧭️ The pane grows UP from its own chip, so the last row sits one row above the chip's
+            // top edge and the tree reads top-down in React's declared order, each level indented by
+            // the same per-level step React's `Tree` uses.
+            let chip_top = window_rect.y + window_rect.h - theme.panel_inset - row_h;
+            let rows = WORLD_PROJECTION_TEMPLATES.len() as f32;
+            let y = chip_top - (rows - cursor.scalar as f32) * row_h;
+            let column_x = window_rect.x + window_rect.w - theme.panel_inset - column_w;
+            if y < window_rect.y + theme.panel_inset || column_x < window_rect.x {
+                return true;
+            }
+            cursor.rect = Some(Rect::new(column_x + indent, y, width, row_h));
+        }
+        let Some(rect) = cursor.rect else { return true };
+        if cursor.depth == 0 {
+            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+        }
+        draw.begin_glass_content(cursor.depth - 1);
+        let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);
+        draw.end_glass_content();
+        match step {
+            RetainedChromeGroupStep::Pending => return false,
+            RetainedChromeGroupStep::Complete => {}
+            RetainedChromeGroupStep::Fault => self.error = Some("Shell projection row exceeded the retained glyph boundary".to_string()),
+        }
+        input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
+        cursor.rect = None;
+        cursor.depth = 0;
+        cursor.scalar += 1;
+        false
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🪟️wgpu-window-pane-chrome/🦀️.rs"]
+mod window_pane_chrome_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🧭️wgpu-navbar-footer-parity/🦀️.rs"]
+mod navbar_footer_parity_tests;
+//#endregion 🪟️WindowPaneChrome
+
 fn command_host_platform() -> semio_framework::manifest::Platform {
     #[cfg(target_os = "macos")]
     {
@@ -10904,6 +13776,225 @@ pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifie
     }
 }
 
+/// ⌨️ The key token a captured chord writes for one key event — the inverse of
+/// [`key_event_matches_chord`]'s key arm, so a chord this renderer captures is one it can match again.
+/// `None` for a key no chord can name (a bare modifier never reaches here as a `KeyAction`).
+pub(crate) fn keybinding_capture_key_token(action: &ui_wgpu::wgpu::KeyAction) -> Option<String> {
+    Some(match action {
+        ui_wgpu::wgpu::KeyAction::Char(key) => {
+            let key = key.trim().to_ascii_lowercase();
+            if key.is_empty() {
+                return None;
+            }
+            key
+        }
+        ui_wgpu::wgpu::KeyAction::Enter => "enter".into(),
+        ui_wgpu::wgpu::KeyAction::Escape => return None,
+        ui_wgpu::wgpu::KeyAction::Backspace => "backspace".into(),
+        ui_wgpu::wgpu::KeyAction::Delete => "delete".into(),
+        ui_wgpu::wgpu::KeyAction::Tab => "tab".into(),
+        ui_wgpu::wgpu::KeyAction::ArrowLeft => "arrowleft".into(),
+        ui_wgpu::wgpu::KeyAction::ArrowRight => "arrowright".into(),
+        ui_wgpu::wgpu::KeyAction::ArrowUp => "arrowup".into(),
+        ui_wgpu::wgpu::KeyAction::ArrowDown => "arrowdown".into(),
+        ui_wgpu::wgpu::KeyAction::Function(number) => format!("f{number}"),
+        ui_wgpu::wgpu::KeyAction::Space(_) => "space".into(),
+    })
+}
+
+//#region ⌨️ShellShortcutTable
+/// ⌨️ The shell's OWN shortcut table, control id → chords, transcribed from React's `SHELL_KEYBINDINGS`
+/// (`🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`). One table drives all three consumers —
+/// [`shell_shortcut_for`] (what a key event means), [`is_reserved_shell_chord`] (what an app may not
+/// shadow) and the report's shortcut matrix — so a row can never be reserved without being dispatched,
+/// or dispatched without being reserved.
+///
+/// Only the rows whose verb is a SHELL-chrome transition live here. React's `ui.introduction.*`,
+/// `ui.dialog.*` rows carry no accelerator (`escape`/`enter`/arrows): they belong to whichever overlay
+/// has focus, and this target answers them in `handle_keyboard`'s tour/sync-card/palette arms ahead of
+/// this table, exactly as React answers them inside the dialog/introduction components.
+pub(crate) const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
+    ("ui.search.toggle", "mod+p"),
+    ("ui.find.toggle", "mod+f"),
+    ("os.toggleFullscreen", "mod+shift+f"),
+    ("ui.nav.back", "mod+["),
+    ("ui.nav.forward", "mod+]"),
+    ("ui.nav.up", "mod+up"),
+    ("ui.shell.panelAnchor.topLeft", "ctrl+b,meta+b"),
+    ("ui.shell.panelAnchor.topMiddle", "ctrl+m,meta+m"),
+    ("ui.shell.panelAnchor.topRight", "ctrl+shift+b,meta+shift+b"),
+    ("ui.shell.panelAnchor.rightMiddle", "ctrl+shift+m,meta+shift+m"),
+    ("ui.shell.panelAnchor.bottomRight", "ctrl+alt+shift+b,meta+alt+shift+b"),
+    ("ui.shell.panelAnchor.bottomMiddle", "ctrl+alt+m,meta+alt+m"),
+    ("ui.shell.panelAnchor.bottomLeft", "ctrl+alt+b,meta+alt+b"),
+    ("ui.shell.panelAnchor.leftMiddle", "ctrl+alt+shift+m,meta+alt+shift+m"),
+    ("ui.window.close", "mod+shift+w"),
+    ("ui.window.focus", "mod+shift+enter"),
+    ("ui.window.newWindow", "mod+shift+n"),
+    ("ui.shell.mode.next", "mod+alt+arrowright"),
+    ("ui.shell.mode.previous", "mod+alt+arrowleft"),
+    ("playground.navbar.roles.editor", "mod+alt+e"),
+    ("playground.navbar.roles.viewer", "mod+alt+v"),
+];
+
+/// ⌨️ The verb one [`SHELL_SHORTCUT_ROWS`] row asks for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellShortcut {
+    ToggleSearch,
+    ToggleFind,
+    ToggleFullscreen,
+    NavBack,
+    NavForward,
+    NavUp,
+    TogglePanelAnchor(PanelAnchor),
+    CloseWindow,
+    FocusWindow,
+    NewWindow,
+    ModeStep(i32),
+    SurfaceRole(semio_framework::manifest::AppRole),
+}
+
+impl ShellShortcut {
+    /// ⌨️ Whether this verb needs the async dispatch funnel (a guest round-trip or an os command) —
+    /// `false` means `handle_keyboard`'s synchronous chrome-state arms answer it.
+    pub(crate) fn is_async(self) -> bool {
+        matches!(self, ShellShortcut::ToggleFullscreen | ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_))
+    }
+}
+
+/// ⌨️ The verb a control id names — the single mapping from React's control ids to this target's chrome.
+pub(crate) fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellShortcut> {
+    Some(match control_id {
+        "ui.search.toggle" => ShellShortcut::ToggleSearch,
+        "ui.find.toggle" => ShellShortcut::ToggleFind,
+        "os.toggleFullscreen" => ShellShortcut::ToggleFullscreen,
+        "ui.nav.back" => ShellShortcut::NavBack,
+        "ui.nav.forward" => ShellShortcut::NavForward,
+        "ui.nav.up" => ShellShortcut::NavUp,
+        "ui.shell.panelAnchor.topLeft" => ShellShortcut::TogglePanelAnchor(PanelAnchor::TopLeft),
+        "ui.shell.panelAnchor.topMiddle" => ShellShortcut::TogglePanelAnchor(PanelAnchor::TopMiddle),
+        "ui.shell.panelAnchor.topRight" => ShellShortcut::TogglePanelAnchor(PanelAnchor::TopRight),
+        "ui.shell.panelAnchor.rightMiddle" => ShellShortcut::TogglePanelAnchor(PanelAnchor::RightMiddle),
+        "ui.shell.panelAnchor.bottomRight" => ShellShortcut::TogglePanelAnchor(PanelAnchor::BottomRight),
+        "ui.shell.panelAnchor.bottomMiddle" => ShellShortcut::TogglePanelAnchor(PanelAnchor::BottomMiddle),
+        "ui.shell.panelAnchor.bottomLeft" => ShellShortcut::TogglePanelAnchor(PanelAnchor::BottomLeft),
+        "ui.shell.panelAnchor.leftMiddle" => ShellShortcut::TogglePanelAnchor(PanelAnchor::LeftMiddle),
+        "ui.window.close" => ShellShortcut::CloseWindow,
+        "ui.window.focus" => ShellShortcut::FocusWindow,
+        "ui.window.newWindow" => ShellShortcut::NewWindow,
+        "ui.shell.mode.next" => ShellShortcut::ModeStep(1),
+        "ui.shell.mode.previous" => ShellShortcut::ModeStep(-1),
+        "playground.navbar.roles.editor" => ShellShortcut::SurfaceRole(semio_framework::manifest::AppRole::Editor),
+        "playground.navbar.roles.viewer" => ShellShortcut::SurfaceRole(semio_framework::manifest::AppRole::Viewer),
+        _ => return None,
+    })
+}
+
+/// ⌨️ The REMAPPABLE shortcut table: [`SHELL_SHORTCUT_ROWS`] with the user's `keybindingOverrides`
+/// applied per control id — the Rust twin of React's `composeControlKeybindings`
+/// (`🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`), whose precedence is
+/// shell defaults, then app-declared action bindings (only for ids the shell does not claim), then
+/// the user override, unconditionally. App-declared bindings never enter *this* table: they are
+/// keyed by action id and dispatched by `match_app_keybinding` on the rung below the shell's, so the
+/// only layer over the defaults here is the override map.
+///
+/// An override whose value carries no parsable chord is dropped rather than blanking the row, exactly
+/// like React's `parseUiKeybindingOverrides` gate.
+pub(crate) fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(String, String)> {
+    SHELL_SHORTCUT_ROWS
+        .iter()
+        .map(|(control_id, keys)| {
+            let resolved = overrides.get(*control_id).filter(|keys| keys.split(',').any(|chord| !chord.trim().is_empty())).map(String::as_str).unwrap_or(keys);
+            ((*control_id).to_string(), resolved.to_string())
+        })
+        .collect()
+}
+
+/// ⌨️ The shell verb a key event asks for against a RESOLVED table, or `None` when the event belongs
+/// to the app/content. First matching row wins, in table order, exactly like React's own scan.
+pub(crate) fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+    table
+        .iter()
+        .find(|(_, keys)| keys.split(',').any(|chord| key_event_matches_chord(action, modifiers, chord.trim())))
+        .and_then(|(control_id, _)| shell_shortcut_for_control_id(control_id))
+}
+
+/// ⌨️ The shell verb a key event asks for with NO override applied — the default-table projection the
+/// shortcut LAWS assert against (production always resolves through `ShellState::shortcut_table`, so an
+/// override is never bypassed).
+#[cfg(test)]
+pub(crate) fn shell_shortcut_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+    shell_shortcut_for_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
+}
+
+/// ⌨️ One row's remapped state for the Keybindings settings leaf: the chord in force, whether it is a
+/// user override, and whether some LATER row claims the same first chord — React's
+/// `buildSettingsKeybindingsTree` conflict marker (`📌️ChromePanels/🟦️.tsx`), whose rule is
+/// last-writer-wins over the first chord of every row, so exactly the earlier row of a colliding pair
+/// is flagged.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ShellKeybindingRow {
+    pub control_id: String,
+    pub keys: String,
+    pub overridden: bool,
+    pub conflicted: bool,
+}
+
+/// ⌨️ Every shortcut row with its remapped chord and conflict marker, sorted by control id like
+/// React's own `localeCompare` row order.
+pub(crate) fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<ShellKeybindingRow> {
+    let table = shell_shortcut_table(overrides);
+    let first_chord = |keys: &str| keys.split(',').map(str::trim).find(|chord| !chord.is_empty()).map(str::to_ascii_lowercase);
+    let mut chord_owners: HashMap<String, String> = HashMap::new();
+    for (control_id, keys) in &table {
+        if let Some(chord) = first_chord(keys) {
+            chord_owners.insert(chord, control_id.clone());
+        }
+    }
+    let mut rows: Vec<ShellKeybindingRow> = table
+        .iter()
+        .map(|(control_id, keys)| ShellKeybindingRow {
+            conflicted: first_chord(keys).is_some_and(|chord| chord_owners.get(&chord) != Some(control_id)),
+            control_id: control_id.clone(),
+            keys: keys.clone(),
+            overridden: overrides.contains_key(control_id),
+        })
+        .collect();
+    rows.sort_by(|left, right| left.control_id.cmp(&right.control_id));
+    rows
+}
+
+/// ⏪️ The framework-universal edit chords React hardcodes at the very END of `handleAppKeydown`
+/// (`🏛️ShellHost/🟦️.tsx`): `mod+z`, `mod+shift+z` and the `mod+y` redo alias. Deliberately NOT part of
+/// [`SHELL_SHORTCUT_ROWS`] — React dispatches them AFTER the app-declared keybinding loop, so an app
+/// that declares `mod+z` itself shadows them, and they are therefore never reserved chords.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellEditVerb {
+    Undo,
+    Redo,
+}
+
+impl ShellEditVerb {
+    pub(crate) fn action_id(self) -> &'static str {
+        match self {
+            ShellEditVerb::Undo => "undo",
+            ShellEditVerb::Redo => "redo",
+        }
+    }
+}
+
+/// ⏪️ The undo/redo verb a key event asks for.
+pub(crate) fn shell_edit_verb_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
+    if key_event_matches_chord(action, modifiers, "mod+z") {
+        return Some(ShellEditVerb::Undo);
+    }
+    if key_event_matches_chord(action, modifiers, "mod+shift+z") || key_event_matches_chord(action, modifiers, "mod+y") {
+        return Some(ShellEditVerb::Redo);
+    }
+    None
+}
+//#endregion ⌨️ShellShortcutTable
+
 impl ShellState {
     // #region utility-derivation
     /// 🧰️ The window kind whose utilities/actions the shell chrome currently scopes to (the focused window,
@@ -10916,13 +14007,23 @@ impl ShellState {
             .unwrap_or_else(|| session.app.window_kinds.first())
     }
 
-    /// 🧰️ Derives the footer utility bar `UtilityNode`s from the app's declared utilities scoped to the active
-    /// window kind, marking the host-owned active utility pressed (Architecture Decision 5).
+    /// 🧰️ Derives the ACTIVE window's utility `UtilityNode`s — the roster the shell's own hit router and
+    /// keybinding lane address by collection path. The chrome that PAINTS them is each pane's own
+    /// `Utilities` group, so this answers `active_utility_bar_window_kind`'s window, never the footer.
     fn derive_utility_nodes(&self, session: &ActiveSession) -> Vec<UtilityNode> {
+        self.derive_window_utility_nodes(session, self.active_utility_bar_window_kind(session).id.as_str())
+    }
+
+    /// 🧰️ Derives ONE window instance's utility bar from the app's declared utilities scoped to that
+    /// window's kind, marking the host-owned active utility pressed (Architecture Decision 5) — React's
+    /// `resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, …)`
+    /// (`🏛️ShellHost/🟦️.tsx:10249`), which is derived PER PANE, never once for the shell.
+    fn derive_window_utility_nodes(&self, session: &ActiveSession, window_id: &str) -> Vec<UtilityNode> {
         if session.app.utilities.is_empty() {
             return Vec::new();
         }
-        let window_kind = self.active_utility_bar_window_kind(session);
+        let kind_id = self.live_window_kind_id(session, window_id).unwrap_or(window_id).to_string();
+        let window_kind = session.app.window_kinds.iter().find(|kind| kind.id == kind_id).unwrap_or_else(|| session.app.window_kinds.first());
         let resolved = resolve_window_utilities(&session.app, window_kind);
         if resolved.is_empty() {
             return Vec::new();
@@ -10937,7 +14038,7 @@ impl ShellState {
                 category: utility.category,
             })
             .collect();
-        let active = self.active_window_id.as_deref().and_then(|window_id| self.active_utility_by_window.get(window_id)).map(String::as_str);
+        let active = self.active_utility_by_window.get(window_id).map(String::as_str);
         ui_wgpu::wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
@@ -11190,15 +14291,22 @@ impl ShellState {
         resolve_commands(os_commands, self.active_plugin_manifest(), &session.plugin_id, &session.app, active_mode_id)
     }
 
-    /// 🔍️ Flattens `resolved_commands()` into quick-search-palette entries. Zero-arg commands (any source)
-    /// dispatch immediately; an os-scope command with a single `Select` arg — every os command declares
-    /// exactly that shape (see `build_os_commands`) — expands into one concrete item per option (e.g. "Set
-    /// Appearance: Light") rather than redirecting to a staged form, since (unlike window-scoped actions)
-    /// os commands have no hosting window whose Actions rail could show that form. Arg-carrying Plugin/
-    /// App/Mode-scope commands are skipped here — there is no `ArtifactApp::handle_command` RPC wired on
-    /// the plugin bridge yet (only `handle_action` exists; see `ProgramBridgeEntry`), so the same staged
-    /// redirect would open a form with no way to actually execute; they still appear in
-    /// `resolved_commands()`/`build_command_panel_ui()` for completeness.
+    /// 🔍️ Flattens `resolved_commands()` into quick-search-palette entries — EVERY in-palette command,
+    /// whatever its owner, exactly as React's `searchItems` memo lists every `resolvedCommands` entry.
+    ///
+    /// 🩸️ This used to SKIP every arg-carrying Plugin/App/Mode-scope command on the premise that "there
+    /// is no `ArtifactApp::handle_command` RPC wired on the plugin bridge yet (only `handle_action`
+    /// exists)". That premise is stale: `ProgramBridgeEntry::handle_command` is wired on both the JS and
+    /// the wasm backend (`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`) and `dispatch_command` already drives
+    /// it — so those commands were merely invisible, not unexecutable.
+    ///
+    /// Three shapes, all reachable:
+    /// - zero args → fires immediately (os commands locally, everything else across the command boundary);
+    /// - exactly one `Select` arg → one concrete row per option ("Set Appearance: Light"), each firing
+    ///   with that argument bound. Bounded to a SINGLE arg on purpose: expanding one arg of a multi-arg
+    ///   command would silent-fire the other args' declared defaults, which is exactly what P4 forbids;
+    /// - anything else (multi-arg, or a first arg that is not a `Select`) → React's `…`-suffixed row
+    ///   that redirects to the command's staged form (`command-form:`) rather than firing a guess.
     pub(crate) fn command_search_items(&self) -> Vec<SearchPaletteItem> {
         let mut items = Vec::new();
         for entry in self.resolved_commands() {
@@ -11208,12 +14316,17 @@ impl ShellState {
             }
             let category = address.owner.clone();
             let group = command_category_label(&definition.category);
+            let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
+            let platform = command_host_platform();
+            let chords: Vec<String> = definition.keybindings.iter().filter(|binding| binding.platform.is_none_or(|declared| declared == platform)).map(|binding| format_keybinding_shortcut(&binding.chord)).collect();
+            let description = (!chords.is_empty()).then(|| chords.join(","));
+            let label = definition.label.resolve(self.active_terminology(), self.active_locale()).to_string();
             if definition.args.is_empty() {
-                let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
                 let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::new() };
                 items.push(SearchPaletteItem {
                     id: format!("command.{}", command_address_stable_key(&address)),
-                    label: definition.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
+                    label,
+                    description,
                     group,
                     dispatch_action: None,
                     action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
@@ -11221,21 +14334,33 @@ impl ShellState {
                 });
                 continue;
             }
-            if let Some(arg) = definition.args.first() {
-                if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
-                    for option in options {
-                        let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
-                        let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg.id.clone(), DslValue::String(option.value.clone()))]) };
-                        items.push(SearchPaletteItem {
-                            id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
-                            label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
-                            group: group.clone(),
-                            dispatch_action: None,
-                            action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
-                            category: Some(category.clone()),
-                        });
-                    }
-                }
+            let single_select = (definition.args.len() == 1).then(|| definition.args.first()).flatten().and_then(|arg| match arg.control() {
+                semio_framework::ActionArgControl::Select { options } => Some((arg.id.clone(), options)),
+                _ => None,
+            });
+            let Some((arg_id, options)) = single_select else {
+                items.push(SearchPaletteItem {
+                    id: format!("command.{}", command_address_stable_key(&address)),
+                    label: format!("{label}…"),
+                    description,
+                    group,
+                    dispatch_action: None,
+                    action: Some(format!("command-form:{}", command_address_stable_key(&address))),
+                    category: Some(category.clone()),
+                });
+                continue;
+            };
+            for option in options {
+                let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg_id.clone(), DslValue::String(option.value.clone()))]) };
+                items.push(SearchPaletteItem {
+                    id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
+                    label: format!("{label}: {}", option.label.resolve(self.active_terminology(), self.active_locale())),
+                    description: description.clone(),
+                    group: group.clone(),
+                    dispatch_action: None,
+                    action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
+                    category: Some(category.clone()),
+                });
             }
         }
         items
@@ -11288,6 +14413,18 @@ impl ShellState {
             "os.resetDock" => {
                 self.layout_override = None;
                 self.sync_dock();
+                // 🧭️ React's `RESET_DOCK` clears BOTH persisted dock layers — the arrangement override
+                // (`dockLayoutStore`) and the per-anchor chrome (`dockUiStateStore`) — so the panel dock
+                // returns to its computed default, not just the window layout.
+                self.dock_override = None;
+                self.panel_anchors = Default::default();
+                self.dock_collapsed_branches.clear();
+                self.sync_dock_tabs();
+                let app_id = self.dock_store_app_id();
+                save_dock_skeleton_to_store(app_id.as_deref(), None);
+                save_dock_ui_to_store(app_id.as_deref(), None);
+                self.chrome_present.last_persisted_dock_skeleton = Some(None);
+                self.chrome_present.last_persisted_dock_ui = Some(self.dock_ui_snapshot());
                 Ok(())
             }
             "os.setAppearance" | "os.setDriver" | "os.setLocale" | "os.setTerminology" | "os.setThemeId" => {
@@ -11409,25 +14546,141 @@ impl ShellState {
     /// flag — the caller has already flipped `right_panel_open`/`active_right_kind` before this runs,
     /// so `visible` reads the POST-toggle state directly (no separate before/after bookkeeping).
     async fn note_panel_toggle_command(&mut self, control_id: &str, panel: &str) -> Result<(), String> {
-        let visible = self.right_panel_open
-            && match panel {
-                "details" => self.active_right_kind == RightPanelKind::Details,
-                "settings" => self.active_right_kind == RightPanelKind::Settings,
-                "chat" => self.active_right_kind == RightPanelKind::Chat,
-                _ => false,
-            };
+        let visible = match panel {
+            "details" => self.anchor_open(PanelAnchor::TopRight),
+            "settings" => self.anchor_open(PanelAnchor::BottomRight),
+            "chat" => self.anchor_open(PanelAnchor::TopRight) && self.anchor_state(PanelAnchor::TopRight).active_tab() == Some(FRAMEWORK_CHAT_PANEL_ID),
+            _ => false,
+        };
         self.note_control_command(control_id, Some(serde_json::json!({ "panel": panel, "visible": visible }))).await
     }
     //#endregion ShellCommandHistory
 
-    /// 🎛️ Data-complete "Commands" panel content — the wgpu mirror of React's
-    /// `buildCommandCategoryTabs`/`buildCommandCategoryTree`, folded into a single flat, category-headed
-    /// `UiNode` tree (the honestly-scoped fallback: React surfaces this as a persistent `bottom-middle`
-    /// dock anchor, which this renderer has no equivalent of — `PanelGroup::anchor` only ever maps to the
-    /// four corners, and the two middle anchors "start empty... never via a `PanelGroup`" per its own doc
-    /// comment; building a real middle anchor would mean touching `dock`/restructuring `ShellTypes`'s
-    /// hardcoded 2-column model, both out of scope). This builder is a test oracle until framework
-    /// chrome publishes through the retained semantic document boundary.
+    /// 🎛️ One command-category leaf's retained document — the shell's OWN publication, minted through
+    /// the same `publish_window_measures` ingress every window overlay uses (revision-keyed, so an
+    /// unchanged category pays no ingress). This is what makes the `bottom-middle` Command anchor a real
+    /// painted panel rather than a builder with no reader.
+    fn publish_command_panel_document(&mut self, tab_id: &str, category_id: &str) -> Result<Option<UiDocumentLease>, String> {
+        let node = self.build_command_category_ui(category_id);
+        let records = panel_ui_records(tab_id, &node)?;
+        self.publish_surface_records(tab_id, records).map(Some)
+    }
+
+    /// 🧾️ Every SHELL-OWNED panel leaf id this frame publishes a retained document for — the Command
+    /// categories, the five Settings leaves, the Marketplace leaf, each mode tool's leaf and the chat
+    /// transcript. Derived from `default_dock`'s own sources, so a leaf can never be dockable without
+    /// a body or carry a body without being dockable.
+    fn shell_owned_panel_leaves(&self) -> Vec<String> {
+        let mut leaves: Vec<String> = self.command_category_tabs().into_iter().map(|tab| tab.id).collect();
+        leaves.extend(self.framework_settings_tabs().into_iter().map(|tab| tab.id));
+        leaves.push(FRAMEWORK_MARKETPLACE_TAB_ID.to_string());
+        leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
+        leaves.extend(self.tool_panel_tabs().into_iter().map(|tab| tab.id));
+        leaves
+    }
+
+    /// 🧾️ One shell-owned leaf's retained document, routed by leaf id to its builder and minted through
+    /// {@link panel_ui_records} + {@link ShellState::publish_surface_records} — the same revision-keyed
+    /// ingress every window overlay uses, so an unchanged body pays no ingress. `None` for a leaf whose
+    /// builder has nothing to show (React's own "no rows, no tree" case).
+    fn publish_shell_panel_document(&mut self, tab_id: &str) -> Result<Option<UiDocumentLease>, String> {
+        if let Some(category) = tab_id.strip_prefix(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX).map(ToOwned::to_owned) {
+            return self.publish_command_panel_document(tab_id, &category);
+        }
+        let node = match tab_id {
+            FRAMEWORK_SETTINGS_GENERAL_TAB_ID => self.build_settings_general_ui(),
+            FRAMEWORK_SETTINGS_THEME_TAB_ID => self.build_settings_theme_ui(),
+            FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID => self.build_settings_keybindings_ui(),
+            FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID => self.build_settings_default_apps_ui(),
+            FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => self.build_settings_conflicts_ui(),
+            FRAMEWORK_MARKETPLACE_TAB_ID => self.build_marketplace_ui(),
+            FRAMEWORK_CHAT_PANEL_ID => self.build_agent_chat_ui(),
+            other => match other.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX) {
+                Some(tool_id) => self.build_tool_panel_ui(tool_id),
+                None => return Ok(None),
+            },
+        };
+        let records = panel_ui_records(tab_id, &node)?;
+        self.publish_surface_records(tab_id, records).map(Some)
+    }
+
+    /// 🎛️ One category leaf's body — the wgpu twin of React's `buildCommandCategoryTree`
+    /// (`🛠️ShellHelpers/🟦️.tsx`): the STAGED FORM section for the expanded command first (so a bottom
+    /// anchor's reversed section order paints it above the list, exactly as React's does), then the
+    /// list of every other command in the category.
+    ///
+    /// 🎛️ This is [`ShellState::expanded_command_id`]'s reader — the gap `📓️w1c` recorded. React's
+    /// `autoExpandedSingleton` rule is honoured too: a category with exactly one arg-carrying command
+    /// opens that command's form with no expansion write at all.
+    pub(crate) fn build_command_category_ui(&self, category_id: &str) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let terminology = self.active_terminology();
+        let locale = self.active_locale();
+        let entries: Vec<ResolvedCommand> = self.resolved_commands().into_iter().filter(|entry| entry.definition.in_palette && entry.definition.category == category_id).collect();
+        let arg_carrying: Vec<&ResolvedCommand> = entries.iter().filter(|entry| !entry.definition.args.is_empty()).collect();
+        let expanded_key = match self.expanded_command_id.as_deref() {
+            Some(key) if arg_carrying.iter().any(|entry| command_address_stable_key(&entry.address) == key) => Some(key.to_string()),
+            _ => (arg_carrying.len() == 1).then(|| command_address_stable_key(&arg_carrying[0].address)),
+        };
+        let mut sections = Vec::new();
+        if let Some(expanded) = expanded_key.as_ref().and_then(|key| entries.iter().find(|entry| &command_address_stable_key(&entry.address) == key)) {
+            let key = command_address_stable_key(&expanded.address);
+            let staged = self.staged_command_args.get(&key);
+            let mut rows: Vec<UiNode> = Vec::new();
+            for arg in &expanded.definition.args {
+                let value = staged.and_then(|staged| staged.get(&arg.id)).map(|value| value.to_string()).unwrap_or_default();
+                let value = value.trim_matches('"').to_string();
+                rows.push(staged_command_arg_row(&key, arg, &value, terminology, locale));
+            }
+            let missing = expanded.definition.args.iter().any(|arg| arg.required && staged.and_then(|staged| staged.get(&arg.id)).is_none());
+            rows.push(UiNode::Button(UiButtonNode {
+                id: Some(format!("command-{}-execute", key.replace(':', "-"))),
+                icon_id: IconName::Check,
+                label: Label::data(shell_chrome_string("common.execute", is_de)),
+                action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: crate::action_args_json!({ "value": key.clone() }) },
+                style: None,
+                presence: UiPresence { state: if missing { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                menu: None,
+            }));
+            rows.push(UiNode::Button(UiButtonNode {
+                id: Some(format!("command-{}-reset", key.replace(':', "-"))),
+                icon_id: IconName::Undo,
+                label: Label::data(shell_chrome_string("common.reset", is_de)),
+                action: ActionDescriptor { controller_id: "framework".into(), action: "resetStagedCommand".into(), args: crate::action_args_json!({ "value": key.clone() }) },
+                style: None,
+                presence: UiPresence::default(),
+                menu: None,
+            }));
+            sections.push(settings_section(&format!("command.category.{category_id}.form"), &expanded.definition.label.resolve(terminology, locale), rows));
+        }
+        let list: Vec<UiNode> = entries
+            .iter()
+            .filter(|entry| expanded_key.as_deref() != Some(command_address_stable_key(&entry.address).as_str()))
+            .map(|entry| self.build_command_panel_row(entry))
+            .collect();
+        if !list.is_empty() {
+            sections.push(settings_section("command.category.list", &command_category_label(category_id), list));
+        }
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(format!("shell.commands.category.{category_id}")),
+            children: sections,
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 🎛️ ALL categories' command rows in one tree — the language-agnostic ORACLE the command-registry
+    /// law asserts against. What the `bottom-middle` Command anchor actually publishes is
+    /// {@link ShellState::build_command_category_ui}, one document per category leaf with the staged
+    /// form for the expanded command; this function's value is that it enumerates every category and
+    /// every row in one structure, which is exactly what a parity assertion needs and what a per-leaf
+    /// body must never be.
     /// Every row for a command whose id already has a `"framework"` `dispatch_action` arm
     /// (appearance/driver/locale/terminology/themeId) is fully interactive; `os.resetDock` has no such
     /// arm to attach a plain `ActionDescriptor` to (only the ⌘️K search's `"os-command:"` string redirect
@@ -11472,7 +14725,6 @@ impl ShellState {
     /// has a "framework" `dispatch_action` arm, else a plain (non-interactive) label — see
     /// `build_command_panel_ui`'s doc comment for why `os.resetDock` and any future arg-carrying
     /// Plugin/App/Mode command fall into that last case.
-    #[cfg(test)]
     fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
         let definition = &entry.definition;
         if let Some(arg) = definition.args.first() {
@@ -11576,7 +14828,6 @@ pub(crate) fn command_category_label(category: &str) -> String {
 
 /// 🎛️ Ordered, deduped `(category id, display label)` pairs derived from whatever commands actually
 /// resolved — the wgpu mirror of `os-shell.tsx`'s `commandCategories`.
-#[cfg(test)]
 pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, String)> {
     let mut seen = std::collections::HashSet::new();
     let mut categories = Vec::new();
@@ -11589,43 +14840,180 @@ pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, S
     categories
 }
 
-/// 🔍️ Case-insensitive fuzzy subsequence match: every char of `query`, in order, must appear somewhere in
-/// `target` (not necessarily contiguously). Returns `None` when `query` isn't a subsequence of `target`,
-/// else a score that rewards contiguous runs and word-start matches and lightly penalizes long targets —
-/// replaces `filtered_search_items`'/`filtered_find_items`'-style pure `.contains()` substring filtering
-/// (no fuzzy-search crate exists in this workspace's dependency tree; deliberately hand-rolled rather than
-/// adding one — see `Cargo.lock`).
-pub(crate) fn fuzzy_match_score(query: &str, target: &str) -> Option<i64> {
-    let query = query.trim();
-    if query.is_empty() {
-        return Some(0);
+//#region 🔎️FuzzyRankingParity
+/// 🔎️ The Rust twin of `🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts` — the SAME ranking both shell
+/// search surfaces use in React (`🔎️ShellSearch/🟦️.tsx`'s `UISearch`/`UIFind` both call `rankFuzzyItems`
+/// with `label` ×2, `description` ×1, `category` ×0.5, threshold `0.4`, limit `20`).
+///
+/// It replaces this target's former hand-rolled `fuzzy_match_score` (a plain subsequence scorer with no
+/// threshold, no per-field weights, no token splitting and no typo tolerance): identical queries ranked
+/// differently in the two renderers, and a query matching nothing still returned every item in id order
+/// rather than an empty palette. Ported branch for branch — prefix, substring, gapped-subsequence and
+/// bounded Damerau–Levenshtein — so the constants below are the TypeScript constants, not new ones.
+///
+/// 🩹️ One documented divergence: JavaScript's `String.normalize("NFKD")` has no std equivalent and this
+/// codebase takes no external runtime dependency, so combining marks already present in the input are
+/// stripped but pre-composed characters are not decomposed first. Every ASCII query ranks identically.
+const FUZZY_TEXT_LIMIT: usize = 96;
+const FUZZY_SEARCH_THRESHOLD: f64 = 0.4;
+const FUZZY_SEARCH_LIMIT: usize = 20;
+
+/// 🔎️ Whether a char is a Unicode combining mark — the `\p{M}` class the TypeScript twin strips.
+fn is_combining_mark(value: char) -> bool {
+    matches!(value, '\u{0300}'..='\u{036f}' | '\u{0483}'..='\u{0489}' | '\u{1ab0}'..='\u{1aff}' | '\u{1dc0}'..='\u{1dff}' | '\u{20d0}'..='\u{20f0}' | '\u{fe20}'..='\u{fe2f}')
+}
+
+/// 🔎️ `normalizeFuzzyText` — lowercase, marks stripped, trimmed, bounded.
+fn normalize_fuzzy_text(value: &str) -> String {
+    let lowered: String = value.chars().flat_map(char::to_lowercase).filter(|candidate| !is_combining_mark(*candidate)).collect();
+    lowered.trim().chars().take(FUZZY_TEXT_LIMIT).collect()
+}
+
+/// 🔎️ `boundedDamerauLevenshtein` — edit distance with transpositions, abandoned past `maximum`.
+fn bounded_damerau_levenshtein(left: &[char], right: &[char], maximum: usize) -> Option<usize> {
+    if left.len().abs_diff(right.len()) > maximum {
+        return None;
     }
-    let query_chars: Vec<char> = query.chars().flat_map(char::to_lowercase).collect();
-    let target_chars: Vec<char> = target.chars().flat_map(char::to_lowercase).collect();
-    let mut target_index = 0usize;
-    let mut score: i64 = 0;
-    let mut consecutive: i64 = 0;
-    for &query_char in &query_chars {
-        let mut matched = false;
-        while target_index < target_chars.len() {
-            let candidate = target_chars[target_index];
-            let at_word_start = target_index == 0 || !target_chars[target_index - 1].is_alphanumeric();
-            target_index += 1;
-            if candidate == query_char {
-                score += 10 + consecutive * 5 + if at_word_start { 8 } else { 0 };
-                consecutive += 1;
-                matched = true;
-                break;
-            }
-            consecutive = 0;
+    let width = right.len() + 1;
+    let mut previous_previous = vec![0usize; width];
+    let mut previous: Vec<usize> = (0..width).collect();
+    let mut current = vec![0usize; width];
+    for row in 1..=left.len() {
+        current[0] = row;
+        let mut row_minimum = row;
+        let from = row.saturating_sub(maximum).max(1);
+        let to = (row + maximum).min(right.len());
+        for slot in current.iter_mut().take(from).skip(1) {
+            *slot = maximum + 1;
         }
-        if !matched {
+        for column in from..=to {
+            let substitution = previous[column - 1] + usize::from(left[row - 1] != right[column - 1]);
+            let mut distance = (previous[column] + 1).min(current[column - 1] + 1).min(substitution);
+            if row > 1 && column > 1 && left[row - 1] == right[column - 2] && left[row - 2] == right[column - 1] {
+                distance = distance.min(previous_previous[column - 2] + 1);
+            }
+            current[column] = distance;
+            row_minimum = row_minimum.min(distance);
+        }
+        for slot in current.iter_mut().take(width).skip(to + 1) {
+            *slot = maximum + 1;
+        }
+        if row_minimum > maximum {
             return None;
         }
+        core::mem::swap(&mut previous_previous, &mut previous);
+        core::mem::swap(&mut previous, &mut current);
     }
-    score -= (target_chars.len() as i64 - query_chars.len() as i64).max(0);
-    Some(score)
+    (previous[right.len()] <= maximum).then_some(previous[right.len()])
 }
+
+/// 🔎️ `fuzzyTokenScore` — LOWER is better, `None` means "no match at all". Both already normalized.
+pub(crate) fn fuzzy_token_score(query: &str, value: &str, threshold: f64) -> Option<f64> {
+    if value.is_empty() {
+        return None;
+    }
+    if value == query {
+        return Some(0.0);
+    }
+    let query_chars: Vec<char> = query.chars().collect();
+    let value_chars: Vec<char> = value.chars().collect();
+    let query_len = query_chars.len() as f64;
+    let value_len = value_chars.len() as f64;
+    let extra_ratio = (value_len - query_len).max(0.0) / value_len.max(1.0);
+    if value.starts_with(query) {
+        return Some(0.04 + extra_ratio * 0.12);
+    }
+    if let Some(byte_index) = value.find(query) {
+        let substring_index = value[..byte_index].chars().count() as f64;
+        return Some(0.1 + (substring_index / value_len) * 0.12 + extra_ratio * 0.12);
+    }
+    let mut query_index = 0usize;
+    let mut first_index: Option<usize> = None;
+    let mut last_index = 0usize;
+    for (value_index, candidate) in value_chars.iter().enumerate() {
+        if query_index >= query_chars.len() {
+            break;
+        }
+        if *candidate != query_chars[query_index] {
+            continue;
+        }
+        first_index.get_or_insert(value_index);
+        last_index = value_index;
+        query_index += 1;
+    }
+    if query_index == query_chars.len() {
+        let first_index = first_index.unwrap_or(0);
+        let span = (last_index - first_index + 1) as f64;
+        let gaps = (span - query_len).max(0.0);
+        let score = 0.2 + (gaps / span.max(1.0)) * 0.18 + extra_ratio * 0.08 + (first_index as f64 / value_len) * 0.06;
+        if score <= threshold {
+            return Some(score);
+        }
+    }
+    let maximum_distance = ((query_len * threshold) as usize).max(1);
+    let mut best_distance: Option<usize> = None;
+    for candidate in value.split(|character: char| !character.is_alphanumeric()) {
+        if candidate.is_empty() {
+            continue;
+        }
+        let candidate_chars: Vec<char> = candidate.chars().collect();
+        if let Some(distance) = bounded_damerau_levenshtein(&query_chars, &candidate_chars, maximum_distance) {
+            if best_distance.is_none_or(|current| distance < current) {
+                best_distance = Some(distance);
+            }
+        }
+    }
+    let score = 0.18 + (best_distance? as f64 / query_len.max(1.0)) * 0.45;
+    (score <= threshold).then_some(score)
+}
+
+/// 🔎️ `rankFuzzyItems` — weighted multi-field, multi-token ranking; ties break on declaration order.
+/// An empty query keeps the declared order (React's `items.slice(0, limit)`), so the palette's cold list
+/// is never reshuffled by the ranker.
+pub(crate) fn rank_fuzzy_items<Item>(items: Vec<Item>, query: &str, fields: &[(fn(&Item) -> Option<&str>, f64)], threshold: f64, limit: usize) -> Vec<Item> {
+    if limit == 0 {
+        return Vec::new();
+    }
+    let normalized_query = normalize_fuzzy_text(query);
+    if normalized_query.is_empty() {
+        let mut items = items;
+        items.truncate(limit);
+        return items;
+    }
+    let tokens: Vec<String> = normalized_query.split_whitespace().map(str::to_string).collect();
+    let maximum_weight = fields.iter().fold(1.0f64, |best, (_, weight)| best.max(weight.max(0.0)));
+    let mut ranked: Vec<(f64, usize, Item)> = Vec::new();
+    for (ref_index, item) in items.into_iter().enumerate() {
+        let values: Vec<(String, f64)> = fields.iter().map(|(read, weight)| (normalize_fuzzy_text(read(&item).unwrap_or_default()), weight.max(0.0))).collect();
+        let mut score = 0.0;
+        let mut matched = true;
+        for token in &tokens {
+            let mut token_score: Option<f64> = None;
+            for (value, weight) in &values {
+                let Some(field_score) = fuzzy_token_score(token, value, threshold) else {
+                    continue;
+                };
+                let weighted = field_score + ((maximum_weight - weight) / maximum_weight) * 0.08;
+                if token_score.is_none_or(|best| weighted < best) {
+                    token_score = Some(weighted);
+                }
+            }
+            match token_score {
+                Some(value) if value <= threshold => score += value,
+                _ => {
+                    matched = false;
+                    break;
+                }
+            }
+        }
+        if matched {
+            ranked.push((score / tokens.len() as f64, ref_index, item));
+        }
+    }
+    ranked.sort_by(|left, right| left.0.partial_cmp(&right.0).unwrap_or(core::cmp::Ordering::Equal).then(left.1.cmp(&right.1)));
+    ranked.into_iter().take(limit).map(|(_, _, item)| item).collect()
+}
+//#endregion 🔎️FuzzyRankingParity
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-command-registry/🦀️.rs"]
@@ -11656,13 +15044,184 @@ struct ChromeTooltipHover {
     started_ms: f64,
 }
 
-const CHROME_TOOLTIP_DELAY_MS: f64 = 500.0;
+/// ⏱️ Hover-to-tooltip delay — the React chrome's own `CHROME_CONTROL_TOOLTIP_DELAY_MS`
+/// (`💡️ChromeControlHint/🟦️.tsx:20`). It was 500 ms here, which made every wgpu tooltip feel a fifth
+/// of a second slower than the same control under React; WGPU-RENDERER-REACT-PARITY packet W1j
+/// aligns the number, since the surrounding arm/dismiss behaviour was already identical.
+const CHROME_TOOLTIP_DELAY_MS: f64 = 400.0;
 
 /// ⏱️ Pure delay-threshold check, factored out of `render_chrome_tooltip` so it's unit-testable without
 /// a `DrawList`/`FontAtlas` fixture.
 fn chrome_tooltip_ready(hover: &ChromeTooltipHover, now_ms: f64) -> bool {
     now_ms - hover.started_ms >= CHROME_TOOLTIP_DELAY_MS
 }
+
+//#region 🧯️TransientNoticeAndAgentOverlays
+// 🧯️ WGPU-RENDERER-REACT-PARITY packet W1j. React's `showTransientNotice` (`🏛️ShellHost/🟦️.tsx`) is
+// the ONE channel every non-fatal shell fault reaches the user through — viewer-read-only,
+// mutation-rejected, render-error, keybinding-unowned, a guest `Effect::Notify`, a degraded remote
+// merge. This shell had no equivalent at all: such faults either set the persistent bottom-left
+// `self.error` line (which never clears) or vanished. The three rules below are React's, exactly:
+// ONE notice at a time (a new one replaces rather than queues), auto-dismiss after 4 s, and an
+// explicit close control.
+
+/// ⏱️ `setTimeout(…, 4000)` in `showTransientNotice` — the auto-dismiss deadline.
+const TRANSIENT_NOTICE_AUTO_DISMISS_MS: f64 = 4000.0;
+
+/// 📐️ `top-workbench` — React pins the banner `navbar_height + 8px` from the top, horizontally
+/// centred (`left-1/2 -translate-x-1/2`).
+const TRANSIENT_NOTICE_TOP_GAP: f32 = 8.0;
+
+/// 📐️ Width cap before the message wraps to the banner's own width — the banner is `px-double
+/// py-single` around one line of `text-sm` on the React side.
+const TRANSIENT_NOTICE_MAX_WIDTH: f32 = 520.0;
+
+/// 🆔️ The banner's own dismiss control.
+const TRANSIENT_NOTICE_CLOSE_CONTROL_ID: &str = "shell.notice.close";
+
+/// 🧯️ The single live notice. `severity` is `semio_framework::Severity` — the same frozen four-level
+/// vocabulary React's `TransientNotice.kind` carries, not a renderer-local enum — and `code` is the
+/// frozen `Fault.code` (`viewer.read-only`, `mutation.rejected`, …) a probe asserts on, mirroring
+/// React's `data-notice-code` attribute.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShellTransientNotice {
+    pub message: String,
+    pub severity: semio_framework::Severity,
+    pub code: Option<String>,
+    pub shown_at_ms: f64,
+}
+
+/// ⏱️ Pure deadline check, factored out so the 4 s rule is testable without a frame clock.
+fn transient_notice_expired(notice: &ShellTransientNotice, now_ms: f64) -> bool {
+    now_ms - notice.shown_at_ms >= TRANSIENT_NOTICE_AUTO_DISMISS_MS
+}
+
+/// 🎨️ `(border, fill, text)` per severity — the themed counterpart of
+/// `TRANSIENT_NOTICE_TONE_CLASS`: `info` takes the neutral popover chrome, `warning` the amber
+/// tint, `error`/`fatal` the destructive one. Every channel comes from a `Theme` token, never a
+/// literal, so the banner re-tints with the active theme like the rest of the chrome.
+fn transient_notice_tone(severity: semio_framework::Severity, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+    use semio_framework::Severity;
+    match severity {
+        Severity::Info => (theme.border_normal, theme.level_bg[Level::Menu.index()], theme.text),
+        Severity::Warning => (theme.warning, theme.warning.with_alpha(0.1), theme.warning),
+        Severity::Error | Severity::Fatal => (theme.error, theme.error, theme.active_foreground),
+    }
+}
+
+/// 📐️ The banner's rect: top-centre, `navbar_height + 8px` down, sized to one line of the message
+/// plus the close control. The width estimate is the same monospace approximation
+/// `render_chrome_tooltip` already uses — this renderer measures glyphs only while painting them.
+fn transient_notice_rect(notice: &ShellTransientNotice, close_label: &str, width: f32, theme: &Theme) -> Rect {
+    let glyphs = notice.message.chars().count() + close_label.chars().count() + 2;
+    let text_w = glyphs as f32 * theme.font_size_small * 0.6;
+    let banner_w = (text_w + theme.padding_standard * 4.0).min(TRANSIENT_NOTICE_MAX_WIDTH).min((width - theme.padding_standard * 2.0).max(1.0));
+    let banner_h = theme.font_size_small * 1.6 + theme.padding_standard * 2.0;
+    Rect::new(((width - banner_w) * 0.5).max(0.0), theme.navbar_height + TRANSIENT_NOTICE_TOP_GAP, banner_w, banner_h)
+}
+
+/// 📐️ The close control inside the banner — right-aligned, the `ml-single underline` button React
+/// renders after the message.
+fn transient_notice_close_rect(banner: Rect, close_label: &str, theme: &Theme) -> Rect {
+    let label_w = (close_label.chars().count() as f32 * theme.font_size_small * 0.6).max(theme.font_size_small);
+    Rect::new(banner.x + banner.w - theme.padding_standard - label_w, banner.y + theme.padding_standard, label_w, banner.h - theme.padding_standard * 2.0)
+}
+
+impl ShellChromeBuildState {
+    /// 🧯️ Shows a non-blocking, auto-dismissing notice, replacing whatever is currently showing —
+    /// `showTransientNotice`'s own contract ("only one can render at a time").
+    fn show_transient_notice(&mut self, message: impl Into<String>, severity: semio_framework::Severity, code: Option<&str>, now_ms: f64) {
+        self.transient_notice = Some(ShellTransientNotice { message: message.into(), severity, code: code.map(str::to_string), shown_at_ms: now_ms });
+    }
+
+    fn dismiss_transient_notice(&mut self) {
+        self.transient_notice = None;
+    }
+
+    /// ⏱️ Clears the notice once its 4 s deadline passed; returns `true` when one is still showing.
+    fn expire_transient_notice(&mut self, now_ms: f64) -> bool {
+        if self.transient_notice.as_ref().is_some_and(|notice| transient_notice_expired(notice, now_ms)) {
+            self.transient_notice = None;
+        }
+        self.transient_notice.is_some()
+    }
+}
+
+/// 🔒️ Frozen fault codes the dispatch funnel recognises — the exact strings the guest raises
+/// (`🔌️plugin/🦀️.rs`'s `viewer.read-only`, and the mutation-outcomes contract's `mutation.rejected`),
+/// which is also what React's `SURFACE_FAULT_CODES.ViewerReadOnly`/`MUTATION_REJECTED_FAULT_CODE`
+/// match on.
+const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
+const MUTATION_REJECTED_FAULT_CODE: &str = "mutation.rejected";
+
+/// 🧯️ Classifies one dispatch-fault string into the banner React would show for it: a read-only
+/// viewer is an `info` with its own frozen copy, a rejected mutation is an `error` carrying the
+/// frozen code, anything else is the generic render-error `error`. Pure, so the mapping is testable
+/// without a live plugin bridge.
+fn classify_dispatch_fault_notice(error: &str, locale: Locale) -> (String, semio_framework::Severity, Option<&'static str>) {
+    use semio_framework::Severity;
+    let terminology = Terminology::ALL[0];
+    if error.contains(VIEWER_READ_ONLY_FAULT_CODE) {
+        let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
+        return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE));
+    }
+    if error.contains(MUTATION_REJECTED_FAULT_CODE) {
+        let title = LocalizedLabel::native("Change rejected", "Änderung abgelehnt").resolve(terminology, locale).to_string();
+        return (format!("{title}: {error}"), Severity::Error, Some(MUTATION_REJECTED_FAULT_CODE));
+    }
+    (error.to_string(), Severity::Error, None)
+}
+
+/// ✅️ One step of the approvals modal's flat paint program — the retained chrome step walks this
+/// list by index, so a glyph run that needs another opportunity simply does not advance the index.
+enum AgentApprovalPaintOp {
+    Scrim,
+    Modal(Rect),
+    Fill { rect: Rect, color: Rgba },
+    Text { value: String, x: f32, y: f32, max_w: f32, size: f32, color: Rgba },
+    Hit { rect: Rect, control_id: String },
+    Clicks,
+}
+
+impl ShellState {
+    /// 🧯️ The shell-wide entry point every non-fatal fault path calls — the wgpu twin of React's
+    /// `showTransientNoticeRef.current(...)`.
+    pub fn show_transient_notice(&mut self, message: impl Into<String>, severity: semio_framework::Severity, code: Option<&str>) {
+        let now = chrome_now_ms();
+        self.chrome_build.show_transient_notice(message, severity, code, now);
+    }
+
+    /// 🧯️ Read side for probes and tests — the live notice, if any.
+    pub fn transient_notice(&self) -> Option<&ShellTransientNotice> {
+        self.chrome_build.transient_notice.as_ref()
+    }
+
+    /// 🧯️ The dispatch-fault funnel: one failed `dispatch_action` becomes one banner, classified the
+    /// way React's three call sites classify theirs. This replaces parking the string in
+    /// `self.error`, which never cleared and sat in the bottom-left corner far from the gesture.
+    pub fn note_dispatch_fault(&mut self, error: &str) {
+        let (message, severity, code) = classify_dispatch_fault_notice(error, self.active_locale());
+        self.show_transient_notice(message, severity, code);
+    }
+
+    /// 🌉️ The agent bridge consumer this shell drives — a transport hands it one socket message at a
+    /// time and drains [`crate::agent_bridge::AgentBridgeState::take_outbox_encoded`] afterwards.
+    pub fn apply_agent_bridge_frame(&mut self, bytes: &[u8]) -> Result<(), crate::agent_bridge::BridgeFrameFault> {
+        let now = chrome_now_ms();
+        self.chrome_build.agent.apply_encoded_frame(bytes, now)
+    }
+
+    /// 🌉️ Frames the transport must write back (approval decisions, hello, ping, bye).
+    pub fn take_agent_bridge_outbox(&mut self) -> Vec<Vec<u8>> {
+        self.chrome_build.agent.take_outbox_encoded()
+    }
+
+    /// 🚦️ Live agent status/presence — what the chat panel header's indicator paints.
+    pub fn agent_presence_tone(&self) -> crate::agent_presence::AgentPresenceTone {
+        crate::agent_presence::agent_presence_tone(self.chrome_build.agent.status, &self.chrome_build.agent.presence)
+    }
+}
+//#endregion 🧯️TransientNoticeAndAgentOverlays
 
 /// 🗨️ A generic modal confirmation/message dialog request — the minimal generic mechanism
 /// `os-shell.tsx`'s `DialogDefinition`/`Effect::OpenDialog` calls for (title + body +
@@ -11715,7 +15274,6 @@ impl ShellChromeBuildState {
         self.dialog_stack.pop();
     }
 
-    #[cfg(test)]
     fn start_introduction(&mut self) {
         self.tour_state = Some(ChromeTourState { step_index: 0, completed_interactions: Vec::new() });
     }
@@ -11752,6 +15310,32 @@ impl ShellChromeBuildState {
             self.introduction_seen_writes.push(app_id.to_string());
         }
     }
+
+    /// 🎓️ Ends the tour AND records the answer, the wgpu twin of `🏛️ShellHost/🟦️.tsx`'s
+    /// `dismissIntroduction` — which persists the device-local seen flag on Skip exactly as it does on
+    /// Done, so a tour the user answered never comes back. [`skip_introduction`] stays the
+    /// answer-less variant, for the two places a TUTORIAL takes the surface over (Design Decision 8).
+    fn dismiss_introduction(&mut self, app_id: &str) {
+        self.tour_state = None;
+        self.mark_introduction_seen(app_id);
+    }
+}
+
+/// 🎓️ One app's tour, offered at most once per device — the wgpu twin of
+/// `🧱️elements/🐚️Shell/🟦️.tsx`'s `shouldAutoStartIntroduction`, which is a pure predicate there for
+/// the same reason it is one here: the app definition the introduction hangs off is REPUBLISHED on
+/// every refresh, plugin hot-swap and re-established session, so the arming site re-runs many times
+/// per boot and a tour whose veil owns every pointer must never come back once answered.
+///
+/// Two of React's seven terms have no wgpu counterpart and are deliberately absent rather than
+/// stubbed: `suppressed` belongs to embedded multi-shell hosts (the demonstrator grid), and this
+/// renderer mounts exactly one shell per surface; `replayOnLoad` is a BRAND property, and the wgpu
+/// shell has no brand registry yet (`📓️w1d-boot-axis-parity.md`'s remaining gap 1). React's
+/// `dismissedAppIds` session set and its `seenOnDevice` storage read collapse into `seen` here,
+/// because [`ShellChromeBuildState::introduction_seen`] IS the in-memory projection of that storage
+/// key and [`ShellChromeBuildState::mark_introduction_seen`] writes it before the store does.
+fn should_auto_start_introduction(app_id: &str, has_introduction: bool, tutorial_active: bool, seen: bool) -> bool {
+    !app_id.is_empty() && has_introduction && !tutorial_active && !seen
 }
 
 
@@ -11759,7 +15343,7 @@ impl ShellChromeBuildState {
 /// 🧭️ Item 5's "active-path tracking": true if `nodes` (recursively, through nested `Collection`s)
 /// contains a pressed `Toggle` — used so a *collapsed* ribbon `Collection` still highlights when the
 /// user's current selection lives inside it, mirroring `ui/js/react/index.tsx`'s recursive picker
-/// active-path reconciliation. Called from `render_footer_utility_nodes` (an off-limits `ShellInput`-
+/// active-path reconciliation. Called from `render_utility_nodes` (an off-limits `ShellInput`-
 /// adjacent function this wave — see the report's coordination note).
 #[cfg(test)]
 fn utility_subtree_has_active_path(nodes: &[UtilityNode]) -> bool {
@@ -11847,7 +15431,6 @@ impl ShellChromeBuildState {
 /// here: `push_solid` quads tile with no seam (no per-quad backdrop-filter to discontinue), a real glass
 /// veil can't work in this renderer (see `introduction_veil_bands`'s doc), and 3D window content lives in
 /// separate `scene_passes` that can't be repainted above an overlay at all.
-#[cfg(test)]
 fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     let top = band.y.max(hole.y);
     let left = band.x.max(hole.x);
@@ -11871,7 +15454,6 @@ fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
 /// overlay glass regions composite *before* the overlay's own instance pass, i.e. beneath that chrome
 /// regardless of push order. A solid-fill veil with real geometric holes is therefore the correct choice,
 /// not a shortcut — and it's seam-free by construction (no per-quad backdrop-filter exists to discontinue).
-#[cfg(test)]
 fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
     let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
     for cutout in cutouts {
@@ -11900,13 +15482,11 @@ fn introduced_pulse_thickness(now_ms: f64, hairline: f32, focus: f32) -> f32 {
     hairline + (focus - hairline) * 0.5 * (1.0 - (phase * std::f32::consts::TAU).cos())
 }
 
-#[cfg(test)]
 const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
 
 /// 🎓️ Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
 /// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
 /// anchor-less step) centers the box.
-#[cfg(test)]
 fn resolve_introduction_placement(placement: semio_framework::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
     use semio_framework::IntroductionPlacement;
     let (box_w, box_h) = box_size;
@@ -11942,6 +15522,180 @@ fn resolve_introduction_placement(placement: semio_framework::IntroductionPlacem
         "left" => (clamp_left(anchor.x - box_w - gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
         "right" => (clamp_left(anchor.x + anchor.w + gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
         _ => centered,
+    }
+}
+
+/// 🎓️ React's card is `w-fit max-w-sm` (`UIIntroduction`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx`) — 24rem of
+/// content at the widest, and never so narrow that a two-word step reads as a label.
+const INTRODUCTION_BOX_MAX_WIDTH: f32 = 384.0;
+const INTRODUCTION_BOX_MIN_WIDTH: f32 = 240.0;
+
+/// 🎓️ Port of `splitIntroductionBodyParagraphs` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:4900`): a blank line
+/// starts a new `[data-slot="introduction-body-paragraph"]`, empties are dropped.
+fn split_introduction_body_paragraphs(body: &str) -> Vec<String> {
+    let mut paragraphs = Vec::new();
+    for raw in body.split("\n\n") {
+        let trimmed = raw.trim();
+        if !trimmed.is_empty() {
+            paragraphs.push(trimmed.to_string());
+        }
+    }
+    paragraphs
+}
+
+/// 🎓️ Where the element `step.introduce`/`step.show` names actually IS on this frame's screen — the
+/// wgpu twin of React's `useIntroductionAnchorRect`/`useIntroductionElevation`, which resolve the id
+/// through `elementIdSelector` and read the DOM rect. Three registries answer here, in React's own
+/// order of specificity: the per-frame logical rect registry (`register_element_rect` — utility bar
+/// buttons, panel tab chips, window bodies), then the dock's own window content rects for a
+/// `framework.window.<kind>` id, then nothing.
+fn chrome_tour_anchor_rect(state: &ShellState, element_id: &str) -> Option<Rect> {
+    if let Some(rect) = state.chrome_build.resolve_element_rect(element_id) {
+        return Some(rect);
+    }
+    let rest = element_id.strip_prefix("framework.window.")?;
+    let segment = rest.split_once(".action.").map_or(rest, |(segment, _)| segment);
+    let session = state.session.as_ref()?;
+    let kind = session.app.window_kinds.iter().find(|kind| semio_framework::element_id_segment(&kind.id) == segment)?;
+    state
+        .dock
+        .window_instances()
+        .into_iter()
+        .filter(|(_, kind_id)| kind_id == &kind.id)
+        .find_map(|(window_id, _)| state.window_content_rects.get(&window_id).copied())
+}
+
+/// 🎓️ One tour step's whole geometry, measured once per walk step so the card, the veil holes and the
+/// hit targets can never disagree about where anything is.
+struct ChromeTourLayout {
+    card: Rect,
+    title: String,
+    title_rect: Rect,
+    skip: Rect,
+    back: Rect,
+    next: Rect,
+    counter: Rect,
+    counter_text: String,
+    skip_label: &'static str,
+    back_label: &'static str,
+    next_label: &'static str,
+    paragraphs: Vec<(String, Rect)>,
+    checklist: Vec<(String, bool, Rect)>,
+    cutouts: Vec<Rect>,
+    veil_blocks_pointer: bool,
+    shows_back: bool,
+    advances_by_button: bool,
+}
+
+/// 🎓️ Measures one step into a [`ChromeTourLayout`] — React's own card, term for term: Skip in the cap
+/// row beside the title, the body's blank-line paragraphs, the interaction checklist with its
+/// check/circle bullets, and a footer of Back (from step 2 on) / `i / n` / Next-or-Done. The box is
+/// sized to its copy and placed by `resolve_introduction_placement` against the step's own anchor.
+///
+/// 🩸️ What this replaces: a `Rect::new((width - 320.0) * 0.5, (height - 168.0) * 0.5, 320.0, 168.0)`
+/// — a fixed box, always centred, which clipped any step whose copy outgrew 168px, ignored
+/// `step.placement` entirely (`resolve_introduction_placement` was `#[cfg(test)]`, i.e. production-dead)
+/// and painted neither the checklist nor the spotlight.
+fn chrome_tour_layout(state: &ShellState, atlas: &mut FontAtlas, theme: &Theme, step: &semio_framework::IntroductionStepDefinition, step_index: usize, step_count: usize, width: f32, height: f32) -> ChromeTourLayout {
+    let is_de = state.locale_id == "de";
+    let is_last = step_index + 1 == step_count;
+    let advances_by_button = step.interactions.is_empty();
+    let shows_back = step_index > 0;
+    let pad = theme.padding_standard * 2.0;
+    let gap = theme.gap_standard;
+    let cap_h = theme.control_height;
+    let line_h = theme.font_size_small * 1.6;
+    let title = step.title.resolve(state.active_terminology(), state.active_locale()).to_string();
+    let paragraph_texts = split_introduction_body_paragraphs(&step.body.resolve(state.active_terminology(), state.active_locale()));
+    let checklist_texts: Vec<(String, bool)> = step
+        .interactions
+        .iter()
+        .enumerate()
+        .map(|(index, interaction)| {
+            let done = state.chrome_build.tour_state.as_ref().is_some_and(|tour| tour.completed_interactions.contains(&index));
+            let label = if step.ordered { format!("{}. {}", index + 1, interaction.label) } else { interaction.label.clone() };
+            (label, done)
+        })
+        .collect();
+    let skip_label = shell_chrome_string("introduction.skip", is_de);
+    let back_label = shell_chrome_string("introduction.back", is_de);
+    let next_label = shell_chrome_string(if is_last { "introduction.done" } else { "introduction.next" }, is_de);
+    let counter_text = format!("{} / {step_count}", step_index + 1);
+    let chip_w = |atlas: &mut FontAtlas, label: &str| atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 4.0;
+    let skip_w = chip_w(atlas, skip_label);
+    let back_w = chip_w(atlas, back_label);
+    let next_w = chip_w(atlas, next_label);
+    let counter_w = atlas.measure_text(&counter_text, theme.font_size_small).0 + theme.padding_standard * 2.0;
+    let title_w = atlas.measure_text(&title, theme.font_size_body).0;
+    let footer_w = if shows_back { back_w + gap } else { 0.0 } + counter_w + gap + if advances_by_button { next_w } else { 0.0 };
+    let mut content_w = (title_w + gap + skip_w).max(footer_w);
+    for paragraph in &paragraph_texts {
+        content_w = content_w.max(atlas.measure_text(paragraph, theme.font_size_small).0);
+    }
+    for (label, _) in &checklist_texts {
+        content_w = content_w.max(theme.font_size_small + gap + atlas.measure_text(label, theme.font_size_small).0);
+    }
+    let content_w = content_w.clamp(INTRODUCTION_BOX_MIN_WIDTH, (INTRODUCTION_BOX_MAX_WIDTH - pad * 2.0).max(INTRODUCTION_BOX_MIN_WIDTH));
+    let paragraph_heights: Vec<f32> = paragraph_texts.iter().map(|paragraph| atlas.measure_text_wrapped(paragraph, content_w, theme.font_size_small).1.max(line_h)).collect();
+    let body_h = paragraph_heights.iter().sum::<f32>() + gap * paragraph_heights.len().saturating_sub(1) as f32;
+    let checklist_h = line_h * checklist_texts.len() as f32;
+    let card_w = content_w + pad * 2.0;
+    let card_h = pad * 2.0 + cap_h + if body_h > 0.0 { gap + body_h } else { 0.0 } + if checklist_h > 0.0 { gap + checklist_h } else { 0.0 } + gap + theme.control_height;
+    let mut cutouts: Vec<Rect> = Vec::new();
+    let anchor = step.introduce.as_deref().and_then(|id| chrome_tour_anchor_rect(state, id));
+    if let Some(anchor) = anchor {
+        cutouts.push(anchor);
+    }
+    for id in &step.show {
+        if let Some(rect) = chrome_tour_anchor_rect(state, id) {
+            cutouts.push(rect);
+        }
+    }
+    // 🧯️ React's `veilBlocksPointer`: only a screen-style step (`introduce == null`) or one whose
+    // target actually resolved owns every pointer — an unresolved target would otherwise trap the
+    // user behind an opaque veil with no way to reveal it (`UIIntroduction`).
+    let veil_blocks_pointer = step.introduce.is_none() || anchor.is_some() || !cutouts.is_empty();
+    let (left, top) = resolve_introduction_placement(step.placement, anchor, (card_w, card_h), (width, height));
+    let card = Rect::new(left, top, card_w, card_h);
+    let cap_y = card.y + pad;
+    let skip = Rect::new(card.x + card.w - pad - skip_w, cap_y, skip_w, cap_h);
+    let title_rect = Rect::new(card.x + pad, cap_y, (skip.x - gap - card.x - pad).max(1.0), cap_h);
+    let mut flow_y = cap_y + cap_h + if body_h > 0.0 { gap } else { 0.0 };
+    let mut paragraphs = Vec::new();
+    for (paragraph, paragraph_h) in paragraph_texts.into_iter().zip(paragraph_heights) {
+        paragraphs.push((paragraph, Rect::new(card.x + pad, flow_y, content_w, paragraph_h)));
+        flow_y += paragraph_h + gap;
+    }
+    if !paragraphs.is_empty() {
+        flow_y -= gap;
+    }
+    if checklist_h > 0.0 {
+        flow_y += gap;
+    }
+    let mut checklist = Vec::new();
+    for (label, done) in checklist_texts {
+        checklist.push((label, done, Rect::new(card.x + pad, flow_y, content_w, line_h)));
+        flow_y += line_h;
+    }
+    let footer_y = card.y + card.h - pad - theme.control_height;
+    ChromeTourLayout {
+        card,
+        title,
+        title_rect,
+        skip,
+        back: Rect::new(card.x + pad, footer_y, back_w, theme.control_height),
+        next: Rect::new(card.x + card.w - pad - next_w, footer_y, next_w, theme.control_height),
+        counter: Rect::new(card.x + (card.w - counter_w) * 0.5, footer_y, counter_w, theme.control_height),
+        counter_text,
+        skip_label,
+        back_label,
+        next_label,
+        paragraphs,
+        checklist,
+        cutouts,
+        veil_blocks_pointer,
+        shows_back,
+        advances_by_button,
     }
 }
 
@@ -12149,27 +15903,16 @@ fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> se
 /// today (`activeToolId` has one — `ViewModel.active_tool_id`; `expandedTreeIds` does not) are noted
 /// inline rather than inventing new cross-cutting state to fill them.
 fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework::TutorialUiSnapshot {
+    // 🧭️ The snapshot is keyed by PanelGroup, which only names the four corners; each open corner
+    // anchor reports its own active leaf under the group that anchor is the default home of.
     let mut active_panel_tab_by_group: HashMap<String, String> = HashMap::new();
-    if state.left_panel_open {
-        if let Some(tab) = &state.active_left_tab {
-            let group = match state.active_left_kind {
-                LeftPanelKind::Workbench => "workbench",
-                LeftPanelKind::Display => "display",
-            };
-            active_panel_tab_by_group.insert(group.into(), tab.clone());
+    for group in [PanelGroup::Workbench, PanelGroup::Details, PanelGroup::Display, PanelGroup::Settings] {
+        let anchor = PanelAnchor::from_group(group);
+        if let Some(tab) = state.panel_anchor_snapshot(anchor).active_tab {
+            active_panel_tab_by_group.insert(group.as_str().to_string(), tab);
         }
     }
-    if state.right_panel_open {
-        if let Some(tab) = &state.active_right_tab {
-            let group = match state.active_right_kind {
-                RightPanelKind::Details => "details",
-                RightPanelKind::Settings => "settings",
-                RightPanelKind::Chat => "chat",
-            };
-            active_panel_tab_by_group.insert(group.into(), tab.clone());
-        }
-    }
-    let command_panel_open = state.right_panel_open && state.active_right_kind == RightPanelKind::Settings && state.active_right_tab.as_deref() == Some(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID);
+    let command_panel_open = state.anchor_open(PanelAnchor::BottomMiddle) && state.anchor_state(PanelAnchor::BottomMiddle).path.first().is_some_and(|id| id == FRAMEWORK_CATEGORY_COMMAND_ID);
     semio_framework::TutorialUiSnapshot {
         active_mode_id: state.session.as_ref().and_then(|s| s.view_state.active_mode_id.clone()),
         focused_window_id: state.active_window_id.clone(),
@@ -12206,31 +15949,24 @@ fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework
     if let Some(layout) = &snapshot.layout {
         state.dock.apply_layout_diff(layout);
     }
-    let workbench = snapshot.active_panel_tab_by_group.get("workbench");
-    let display = snapshot.active_panel_tab_by_group.get("display");
-    if let Some(tab) = workbench.or(display) {
-        state.left_panel_open = true;
-        state.active_left_kind = if workbench.is_some() { LeftPanelKind::Workbench } else { LeftPanelKind::Display };
-        state.active_left_tab = Some(tab.clone());
-    } else {
-        state.left_panel_open = false;
-    }
-    let details = snapshot.active_panel_tab_by_group.get("details");
-    let settings = snapshot.active_panel_tab_by_group.get("settings");
-    if let Some(tab) = details.or(settings) {
-        state.right_panel_open = true;
-        state.active_right_kind = if details.is_some() { RightPanelKind::Details } else { RightPanelKind::Settings };
-        state.active_right_tab = Some(tab.clone());
-    } else {
-        state.right_panel_open = false;
+    for group in [PanelGroup::Workbench, PanelGroup::Details, PanelGroup::Display, PanelGroup::Settings] {
+        let anchor = PanelAnchor::from_group(group);
+        match snapshot.active_panel_tab_by_group.get(group.as_str()) {
+            Some(tab) => {
+                if state.reveal_dock_tab(tab).is_none() {
+                    let anchor_state = state.anchor_state_mut(anchor);
+                    anchor_state.path = vec![tab.clone()];
+                    anchor_state.visible = true;
+                }
+            }
+            None => state.anchor_state_mut(anchor).visible = false,
+        }
     }
     if snapshot.open_dialog_id.is_none() {
         state.chrome_build.dialog_stack.clear();
     }
     if snapshot.command_panel_open {
-        state.right_panel_open = true;
-        state.active_right_kind = RightPanelKind::Settings;
-        state.active_right_tab = Some(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into());
+        state.reveal_dock_tab(FRAMEWORK_CATEGORY_COMMAND_ID);
     }
 }
 
@@ -12802,12 +16538,19 @@ enum ShellChromeFramePhase {
     PersistLayout,
     FrameSetup,
     MainWindow,
-    LeftPanel,
-    RightPanel,
+    Panels,
+    /// 💬️ The agent chat panel's own header (packet W1j) — title + `🚦️AgentPresence` indicator,
+    /// painted over whichever anchor is currently showing the `framework.chat` tab.
+    AgentChatHeader,
     Navbar,
     TutorialBar,
     Footer,
     Overlay,
+    /// ✅️ The agent approvals modal (packet W1j) — above every other overlay, like React's
+    /// unconditionally mounted `<AgentApprovals>` dialog.
+    AgentApprovals,
+    /// 🧯️ The transient notice banner (packet W1j) — painted last of the overlays so it sits on top.
+    TransientNotice,
     TreeDrag,
     TutorialGesture,
     Error,
@@ -12872,7 +16615,10 @@ impl ShellState {
                         self.retained_hit_windows_staging.clear();
                     }
                     1 => overlay.set_screen_height(h),
-                    2 => draw.push_solid([0.0, 0.0, w, h], theme.background),
+                    2 => {
+                        draw.push_solid([0.0, 0.0, w, h], theme.background);
+                        self.chrome_floor_scope = Some(ui_wgpu::wgpu::SurfaceScope { level: ui_wgpu::wgpu::Level::Base, fill: ui_wgpu::wgpu::SurfaceFill::Surface });
+                    }
                     3 => {
                         if self.chrome_build.find_items.pop_front().is_some() {
                             return false;
@@ -12991,16 +16737,31 @@ impl ShellState {
                 if !self.chrome_build.find_items.terminal_is_empty() {
                     return false;
                 }
-                cursor.advance(ShellChromeFramePhase::LeftPanel);
+                cursor.setup = 0;
+                cursor.advance(ShellChromeFramePhase::Panels);
             }
-            ShellChromeFramePhase::LeftPanel => {
-                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body, world_resources) {
+            // 📱️ Below React's mobile breakpoint the eight anchors do not paint at all: ONE mobile
+            // panel carries every anchor's tabs flattened (`mobile_panel_tabs`), filling the body
+            // instead of floating — React's `LayoutMobilePanel`, an in-flow sibling of the canvas.
+            ShellChromeFramePhase::Panels if self.mobile_panel_active() => {
+                if !self.render_mobile_panel_step(&mut cursor.child, overlay, atlas, icons, input, theme, body, world_resources) {
                     return false;
                 }
-                cursor.advance(ShellChromeFramePhase::RightPanel);
+                cursor.advance(ShellChromeFramePhase::AgentChatHeader);
             }
-            ShellChromeFramePhase::RightPanel => {
-                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body, world_resources) {
+            ShellChromeFramePhase::Panels => {
+                let Some(anchor) = PanelAnchor::ALL.get(cursor.setup as usize).copied() else {
+                    cursor.advance(ShellChromeFramePhase::AgentChatHeader);
+                    return false;
+                };
+                if self.anchor_open(anchor) && !self.render_panel_step(&mut cursor.child, anchor, overlay, None, atlas, icons, input, theme, body, world_resources) {
+                    return false;
+                }
+                cursor.setup += 1;
+                cursor.child = ShellChromeChildCursor::default();
+            }
+            ShellChromeFramePhase::AgentChatHeader => {
+                if !self.render_agent_chat_header_step(&mut cursor.child, overlay, atlas, input, theme, body) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Navbar);
@@ -13025,6 +16786,18 @@ impl ShellState {
             }
             ShellChromeFramePhase::Overlay => {
                 if !self.render_overlay_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::AgentApprovals);
+            }
+            ShellChromeFramePhase::AgentApprovals => {
+                if !self.render_agent_approvals_step(&mut cursor.child, overlay, atlas, input, theme, w, h) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::TransientNotice);
+            }
+            ShellChromeFramePhase::TransientNotice => {
+                if !self.render_transient_notice_step(&mut cursor.child, overlay, atlas, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::TreeDrag);
@@ -13088,19 +16861,59 @@ impl ShellState {
         }
     }
 
-    /// 🗄️ Coalesces one bounded panel-layout page for the shared I/O lane.
+    /// 🎓️ Arms the open app's introduction the first time it launches on this device, the wgpu twin of
+    /// `🏛️ShellHost/🟦️.tsx:4139-4166`'s auto-start effect. It runs from the ONE place the answer to
+    /// "has this app been seen" becomes known — the `ui.introduction.seen.<appId>` read landing — so it
+    /// can neither arm before the flag is readable nor re-arm afterwards: the read is requested only
+    /// while `introduction_seen` lacks the key, and the key is written here.
+    ///
+    /// 🩸️ What this replaces: NOTHING called `start_introduction`. It was `#[cfg(test)]`, so the whole
+    /// `🔖️ChromeOverlaysAndTour` tour — veil, info box, advance-by-doing, reveal, keyboard — was
+    /// reachable only from its own unit tests, and every wgpu boot painted no tour at all where React
+    /// painted `Welcome to Puzzle 3D`.
+    fn auto_start_introduction(&mut self, app_id: &str, seen: bool) {
+        let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
+        if !should_auto_start_introduction(app_id, has_introduction, self.tutorial.is_some(), seen) {
+            return;
+        }
+        self.chrome_build.start_introduction();
+    }
+
+    /// 🗄️ Coalesces one bounded panel-layout page for the shared I/O lane, and ONLY when the dock
+    /// actually moved — see [`Self::request_chrome_preferences_persist`] for why an unconditional
+    /// arm is not "free".
     fn request_panel_layout_persist(&mut self) {
-        self.chrome_present.maintenance.layout_requested = true;
+        if self.chrome_present.last_persisted_dock_ui.as_ref() != Some(&self.dock_ui_snapshot()) || self.chrome_present.last_persisted_dock_skeleton.as_ref() != Some(&self.dock_override) {
+            self.chrome_present.maintenance.layout_requested = true;
+        }
     }
 
-    /// 💓️ Coalesces one bounded presence preview page for the shared I/O lane.
+    /// 💓️ Coalesces one bounded presence preview page for the shared I/O lane. A shell with no sync
+    /// channel has no peer to heartbeat to, and the browser has no sync backbone at all, so the step
+    /// there would only clear its own flag.
     fn request_presence_preview(&mut self) {
-        self.chrome_present.maintenance.presence_requested = true;
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.sync_channel.is_some() {
+            self.chrome_present.maintenance.presence_requested = true;
+        }
     }
 
-    /// 💾️ Coalesces changed preference fields for the shared I/O lane.
+    /// 💾️ Coalesces CHANGED preference fields for the shared I/O lane.
+    ///
+    /// 🩸️ The three arms above used to fire unconditionally at the end of EVERY chrome walk, so a
+    /// settled shell asked the deferred I/O lane for five steps per frame that all had nothing to do.
+    /// Each of those steps is a full `check_out_interaction("frame-deferred")` plus an async hand-back,
+    /// and `FrameTransaction::step` refuses to run at all while the interaction state is out
+    /// (`AppFrameTransactionStep::Superseded`) — so every frame build re-armed the lane, the lane took
+    /// the state, the build was superseded, and the next build re-armed it again. Measured on the
+    /// puzzle3d wgpu playground as ONE presented frame per boot: the canvas was byte-identical from
+    /// t≈9 s to t≈45 s, and the concrete-forest GLB that becomes resident at t≈12 s could never reach
+    /// a presented packet (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c). Maintenance is
+    /// pressure-driven: no pressure, no checkout.
     fn request_chrome_preferences_persist(&mut self) {
-        self.chrome_present.maintenance.persist_requested = true;
+        if self.chrome_present.last_synced_preferences.as_ref() != Some(&UiPrefsSnapshot::capture(self)) {
+            self.chrome_present.maintenance.persist_requested = true;
+        }
     }
 
     /// 🧵️ Reports whether the frame has retained chrome I/O or preview work to resume.
@@ -13119,11 +16932,12 @@ impl ShellState {
             self.advance_chrome_preferences_load_step();
         } else if let Some(app_id) = self.chrome_present.maintenance.introduction_read.take() {
             let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
-            let seen = prefs_get_bounded(&key).as_deref() == Some("true");
-            self.chrome_build.introduction_seen.insert(app_id, seen);
+            let seen = stored_field_get(&key).as_deref() == Some("true");
+            self.chrome_build.introduction_seen.insert(app_id.clone(), seen);
+            self.auto_start_introduction(&app_id, seen);
         } else if let Some(app_id) = self.chrome_present.maintenance.introduction_write.take() {
             let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
-            prefs_set_bounded(&key, "true");
+            stored_field_set(&key, "true");
         } else if self.chrome_present.maintenance.layout_requested {
             self.advance_panel_layout_persist_step();
         } else if self.chrome_present.maintenance.presence_requested {
@@ -13140,7 +16954,7 @@ impl ShellState {
             0 => {
                 let preferences = read_ui_preferences();
                 let custom_themes = custom_themes_from(&preferences);
-                self.appearance_id = env_lock("SEMIO_LOCKED_APPEARANCE").unwrap_or_else(|| appearance_id(preferences.appearance));
+                self.appearance_id = resolve_appearance_id(&preferences);
                 self.locale_id = env_lock("SEMIO_LOCKED_LOCALE").unwrap_or_else(|| locale_id(preferences.locale));
                 self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
@@ -13154,7 +16968,7 @@ impl ShellState {
                 with_chrome_prefs(|current| *current = loaded);
             }
             1 => {
-                self.chrome_build.preferences.worker_count = prefs_get_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+                self.chrome_build.preferences.worker_count = stored_field_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
             }
             _ => {
                 self.chrome_present.preferences_loaded = true;
@@ -13168,13 +16982,7 @@ impl ShellState {
     }
 
     fn advance_panel_layout_persist_step(&mut self) {
-        let snapshot = self.panel_layout_snapshot();
-        if self.chrome_present.last_persisted_panel_layout.as_ref() != Some(&snapshot) {
-            if let Some(raw) = encode_panel_layout_field(&snapshot) {
-                prefs_set_bounded(PANEL_LAYOUT_STORAGE_KEY, &raw);
-                self.chrome_present.last_persisted_panel_layout = Some(snapshot);
-            }
-        }
+        self.persist_dock_ui_if_changed();
         self.chrome_present.maintenance.layout_requested = false;
     }
 
@@ -13210,7 +17018,7 @@ impl ShellState {
                 persist_ui_preferences(self, self.chrome_present.last_synced_preferences.as_ref());
             }
             1 if self.chrome_present.last_synced_preferences.as_ref().map(|synced| synced.worker_count) != Some(snapshot.worker_count) => {
-                prefs_set_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
+                stored_field_set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
             }
             0..=1 => {}
             _ => {
@@ -13243,34 +17051,147 @@ impl ShellState {
         self.uri_history.get(self.uri_index).cloned().unwrap_or_else(|| self.session.as_ref().map(|s| format!("os://{}/{}", s.plugin_id, s.app.id)).unwrap_or_else(|| "os://home".into()))
     }
 
-    fn has_left_tabs(&self) -> bool {
-        self.session.is_some()
+
+
+
+
+
+
+
+
+
+    /// 📑️ The `index`-th folded root tab of ONE anchor, in the anchor's own declared order.
+    fn anchor_tab_row_item(&self, anchor: PanelAnchor, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+        self.dock_tabs.tabs(anchor).get(index).map(|node| (anchor, node.clone()))
     }
 
-    fn has_right_tabs(&self) -> bool {
-        self.session.is_some()
+    /// 📑️ The LEADING navbar tab row: top-left's root tabs, left to right. React's `navbarItems`
+    /// opens with `<PanelChromeTabBar anchor="top-left" />` before the fill that pushes everything
+    /// else right (`🏛️ShellHost/🟦️.tsx:10088`), so `Artifact · Catalogue` sits at the navbar's own
+    /// leading edge — not bundled onto the trailing side with the details anchors, which is what this
+    /// renderer did while ONE right-to-left row carried all three navbar-hosted anchors.
+    fn navbar_leading_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+        self.anchor_tab_row_item(PanelAnchor::TopLeft, index)
     }
 
+    /// 📑️ The TRAILING navbar tab row, in PAINT order — right to left, so the caller's
+    /// `cursor.right` walk lays the tabs out left-to-right in declared order. React's trailing side
+    /// is `top-middle` then `top-right` then the `ms-auto` fullscreen cluster
+    /// (`🏛️ShellHost/🟦️.tsx:10090-10099`), which puts `Inspection · Tool runs · Chat` in declared
+    /// order with Chat nearest `Fullscreen`.
+    fn navbar_trailing_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+        let row: Vec<(PanelAnchor, DockTabNode)> = [PanelAnchor::TopMiddle, PanelAnchor::TopRight].into_iter().flat_map(|anchor| self.dock_tabs.tabs(anchor).iter().cloned().map(move |node| (anchor, node))).collect();
+        let last = row.len().checked_sub(1)?;
+        row.get(last.checked_sub(index)?).cloned()
+    }
 
+    /// 📑️ The footer half of the same split: bottom-left, bottom-middle and bottom-right root tabs,
+    /// left to right, the row React's `footerItems` carries.
+    fn footer_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+        let mut seen = 0;
+        for anchor in [PanelAnchor::BottomLeft, PanelAnchor::BottomMiddle, PanelAnchor::BottomRight] {
+            let tabs = self.dock_tabs.tabs(anchor);
+            if index < seen + tabs.len() {
+                return Some((anchor, tabs[index - seen].clone()));
+            }
+            seen += tabs.len();
+        }
+        None
+    }
 
+    /// 📐️ The chip box the `index`-th footer tab occupies, in React's own three-band footer:
+    /// bottom-left hugs the leading edge, bottom-middle is CENTRED on the footer
+    /// (`footerItems`' `centered: true`, `🏛️ShellHost/🟦️.tsx:10619`) and bottom-right is pushed to
+    /// the trailing edge by the fill that precedes it (`:10624`/`:10634`). Every band's chips are
+    /// measured on the same atlas that paints them, so the bands can be placed before the first chip
+    /// is drawn without the retained cursor having to hold a list.
+    ///
+    /// 🚦️👥️ The two shell pills' anchors for this footer width, measured on the painting atlas so
+    /// they are known before the first chip is drawn — see [`FooterPillAnchors`].
+    fn footer_pill_anchors(&self, atlas: &mut FontAtlas, theme: &Theme, width: f32) -> FooterPillAnchors {
+        let leading = self.footer_band_width(atlas, theme, PanelAnchor::BottomLeft);
+        let trailing = self.footer_band_width(atlas, theme, PanelAnchor::BottomRight);
+        FooterPillAnchors { sync_left: theme.padding_standard + leading, presence_right: width - theme.padding_standard - trailing - theme.gap_standard }
+    }
 
+    /// 📐️ The painted width of ONE footer tab band, measured on the atlas that paints it.
+    fn footer_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, anchor: PanelAnchor) -> f32 {
+        self.dock_tabs
+            .tabs(anchor)
+            .to_vec()
+            .iter()
+            .map(|node| {
+                let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+                retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0)
+            })
+            .sum()
+    }
 
+    /// 🚦️👥️ The bottom-left band opens at the padding and the bottom-right band ends at
+    /// `width − padding`; the sync pill trails the first and the presence pill leads the second, which
+    /// is React's own footer order (`Display · Remote: detached | Tool · Command | No one else is here
+    /// · Settings · Marketplace · History`). The wgpu-only footer utility rail this method's `lead_x`
+    /// once made room for is gone (packet W4b), and so is the `#s-checkin` chip that followed it
+    /// (see [`render_footer_pills_step`]).
+    #[allow(clippy::too_many_arguments, reason = "one arg per band input; the footer cursor cannot carry a measured row")]
+    fn footer_tab_row_rect(&self, atlas: &mut FontAtlas, theme: &Theme, index: usize, width: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
+        let (anchor, node) = self.footer_tab_row_item(index)?;
+        let band = self.dock_tabs.tabs(anchor).to_vec();
+        let position = band.iter().position(|candidate| candidate.id == node.id)?;
+        let mut lead = 0.0;
+        for ahead in &band[..position] {
+            let item = ChromeGroupItem { control_id: "", icon_id: Some(ahead.icon_id.as_str()), label: Some(ahead.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+            lead += retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0);
+        }
+        let band_w = self.footer_band_width(atlas, theme, anchor);
+        let origin = match anchor {
+            PanelAnchor::BottomMiddle => (width - band_w) * 0.5,
+            PanelAnchor::BottomRight => width - theme.padding_standard - band_w,
+            _ => theme.padding_standard,
+        };
+        let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+        let item_w = retained_chrome_group_item_width(atlas, theme, &item)?;
+        Some((anchor, node, Rect::new(origin.max(theme.padding_standard) + lead, btn_y, item_w, btn_h)))
+    }
 
-
-
+    /// 📐️ The chip box the `index`-th LEADING navbar tab occupies — top-left's band at the navbar's
+    /// leading edge, after the logo/title cluster's own start is pushed past it.
+    fn navbar_leading_tab_row_rect(&self, atlas: &mut FontAtlas, theme: &Theme, index: usize, lead_x: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
+        let (anchor, node) = self.navbar_leading_tab_row_item(index)?;
+        let band = self.dock_tabs.tabs(anchor).to_vec();
+        let position = band.iter().position(|candidate| candidate.id == node.id)?;
+        let mut x = lead_x.max(theme.padding_standard);
+        for ahead in &band[..position] {
+            let item = ChromeGroupItem { control_id: "", icon_id: Some(ahead.icon_id.as_str()), label: Some(ahead.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+            x += retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0);
+        }
+        let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+        let item_w = retained_chrome_group_item_width(atlas, theme, &item)?;
+        Some((anchor, node, Rect::new(x, btn_y, item_w, btn_h)))
+    }
 
     fn has_display_tabs(&self) -> bool {
         self.session.as_ref().is_some_and(|s| !s.app.window_kinds.is_empty())
     }
 
-    fn floating_panel_rect(&self, left: bool, body: Rect, theme: &Theme) -> Rect {
-        let inset = theme.panel_inset;
-        let width = if left { floating_panel_width(self.left_panel_width, body, theme) } else { floating_panel_width(self.right_panel_width, body, theme) };
-        if left {
-            Rect::new(body.x + inset, body.y + inset, width, body.h - inset * 2.0)
-        } else {
-            Rect::new(body.x + body.w - inset - width, body.y + inset, width, body.h - inset * 2.0)
-        }
+    /// 🧭️ This frame's box for one OPEN anchor: `anchor_panel_rect` plus the anchor's slot in its own
+    /// column, so two open anchors in one column band it between them instead of painting over each
+    /// other — and the anchor's MEASURED content height, so the panel hugs its content exactly as
+    /// React's `<Panel>` does instead of filling its band.
+    fn anchor_rect(&self, anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+        let column: Vec<PanelAnchor> = ANCHOR_COLUMN_ORDER.into_iter().filter(|candidate| candidate.horizontal() == anchor.horizontal() && self.anchor_open(*candidate)).collect();
+        let index = column.iter().position(|candidate| *candidate == anchor).unwrap_or(0);
+        anchor_panel_rect(anchor, self.anchor_state(anchor).size, self.anchor_content_height(anchor, theme), column.len().max(1), index, body, theme)
+    }
+
+    /// 📐️ The height one anchor's panel WANTS: its tab bar plus the active leaf's measured document,
+    /// plus the content inset the panel adds around that document. `None` while the leaf has no
+    /// accepted layout yet (its very first frame), which keeps the anchor on its full column band
+    /// rather than collapsing it to a hairline.
+    fn anchor_content_height(&self, anchor: PanelAnchor, theme: &Theme) -> Option<f32> {
+        let leaf = self.anchor_state(anchor).active_tab()?;
+        let document = crate::interpreter::retained_content_height(leaf)?;
+        Some(self.anchor_tab_bar_height(anchor, theme) + document + theme.gap_standard * 2.0)
     }
 
     /// 🗣️ The per-INSTANCE tab label and icon the dock chrome reads, resolved off the app manifest's
@@ -13284,11 +17205,18 @@ impl ShellState {
         };
         let terminology = self.active_terminology();
         let locale = self.active_locale();
+        // 🏷️ React's `windowTitlesById[instance.id] ?? instance.title` — an EXTRA instance wears the
+        // title its layout node authored (`Top`, `Perspective`), and only a bare kind falls back to
+        // the manifest label. The map is a SIDE map keyed by instance id, exactly like React's
+        // `extraWindowInstancesRef`, so a pane the user drags around keeps its authored title even
+        // though this renderer's own captured layout carries no titles on its window nodes.
+        let mut instance_titles = session.app.default_layout.as_ref().map(crate::dock::window_layout_instance_titles).unwrap_or_default();
+        instance_titles.extend(self.layout_override.as_ref().map(crate::dock::window_layout_instance_titles).unwrap_or_default());
         for (window_id, window_kind_id) in self.dock.window_instances() {
             let Some(kind) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id) else {
                 continue;
             };
-            labels.insert(window_id.clone(), kind.label.resolve(terminology, locale).to_string());
+            labels.insert(window_id.clone(), instance_titles.get(&window_id).cloned().unwrap_or_else(|| kind.label.resolve(terminology, locale).to_string()));
             let icon_id = kind.icon_id.as_str();
             if !icon_id.is_empty() {
                 icon_ids.insert(window_id, icon_id.to_string());
@@ -13303,6 +17231,13 @@ impl ShellState {
     /// one non-dock case and stays a single full-bounds pane.
     fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
         self.dock_canvas_bounds = rect;
+        // 📱️ React reads `UI_MOBILE_MEDIA_QUERY` off the VIEWPORT, not the dock canvas — see
+        // `crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX`. One assignment per plan keeps every tab-width
+        // and hit-registration pass of this frame on the same answer.
+        self.dock.mobile = self.screen_w <= crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+        // 🖼️ One derivation per frame: the mobile flat stack, the docked-out tree of a live drag, or
+        // the committed tree — everything below (plan, drop registries, chrome, hits) reads THIS.
+        self.dock_view = self.dock.render_view(self.dock_drag.as_ref().map(|drag| &drag.payload));
         if self.space_mode && self.spawned_ui.is_some() {
             self.dock_window_plan = vec![("spawned".to_string(), rect)];
             self.dock_drop_bodies = Vec::new();
@@ -13312,8 +17247,8 @@ impl ShellState {
             return;
         }
         let (labels, _icon_ids) = self.dock_chrome_maps();
-        let (bodies, silhouettes) = self.dock.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
-        self.dock_drop_tab_bars = self.dock.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
+        let (bodies, silhouettes) = self.dock_view.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
+        self.dock_drop_tab_bars = self.dock_view.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
         self.dock_window_plan = bodies.iter().map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
         self.window_content_rects = bodies.iter().map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
         self.window_silhouettes = silhouettes;
@@ -13328,7 +17263,9 @@ impl ShellState {
     fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         match cursor.phase {
             0 => {
-                draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
+                if ui_wgpu::wgpu::shell_floor_paints(self.chrome_floor_scope) {
+                    draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
+                }
                 cursor.rect = Some(bounds.inset(theme.panel_inset));
                 cursor.phase = 1;
             }
@@ -13386,7 +17323,8 @@ impl ShellState {
                     let open_selects = &mut self.open_selects;
                     let widget_maps = &mut self.widget_maps;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window_id.as_str() };
-                    let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                    let viewport_height_for_widgets = draw.screen_height();
+                    let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
                     render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), &mut hosts)
                 };
@@ -13430,6 +17368,63 @@ impl ShellState {
                 cursor.document = UiDocumentFrameCursor::default();
                 cursor.scalar = 0;
                 cursor.flag = false;
+                cursor.group_phase = 0;
+                cursor.rect = None;
+                cursor.depth = 0;
+                cursor.phase = 9;
+            }
+            // 🪟️ The pane's own overlay rows — `Actions · Search · Window Options` on top,
+            // `Utilities · Projection` at the bottom, at React's `Pane` anchors. Painted AFTER the
+            // body and the measures rail so the chips outrank both in `InputState::hit_at`'s
+            // reverse scan, exactly as React's `z-pane` overlay sits over `window-body`.
+            9 => {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                if !self.paint_window_pane_chips_step(cursor, draw, atlas, icons, input, theme, &window_id, window_rect) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.group_phase = 0;
+                cursor.rect = None;
+                cursor.x = 0.0;
+                cursor.flag = false;
+                cursor.depth = 0;
+                cursor.path = ShellUtilityPath::default();
+                cursor.phase = 10;
+            }
+            10 => {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                if !self.paint_window_utilities_step(cursor, draw, atlas, icons, input, theme, &window_id, window_rect) {
+                    return false;
+                }
+                cursor.x = 0.0;
+                cursor.flag = false;
+                cursor.depth = 0;
+                cursor.path = ShellUtilityPath::default();
+                cursor.group_phase = 0;
+                cursor.rect = None;
+                cursor.scalar = 0;
+                cursor.phase = 11;
+            }
+            // 🔀️ The pane's own UNFOLDED Projection switch, last so its rows outrank every chip they
+            // grow over — React's `WorldOrbitProjectionSwitchPane` body, portalled into the same host.
+            11 => {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                if !self.paint_window_projection_step(cursor, draw, atlas, icons, input, theme, &window_id, window_rect) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.depth = 0;
+                cursor.group_phase = 0;
+                cursor.rect = None;
                 cursor.item += 1;
                 cursor.phase = 3;
             }
@@ -13438,8 +17433,8 @@ impl ShellState {
                     let (labels, icon_ids) = self.dock_chrome_maps();
                     let bounds = self.dock_canvas_bounds;
                     let mut ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &labels, window_icon_ids: &icon_ids };
-                    self.dock.paint_chrome(&mut ctx, bounds, false);
-                    self.dock.register_resize_hits(&mut ctx, bounds);
+                    self.dock_view.paint_chrome(&mut ctx, bounds, false);
+                    self.dock_view.register_resize_hits(&mut ctx, bounds);
                 }
                 cursor.phase = 6;
             }
@@ -13453,13 +17448,191 @@ impl ShellState {
         false
     }
 
-    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, left: bool, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    /// 🎯️ Completes a tab drag: the anchor under the pointer wins, and a drop back on the tab's own
+    /// anchor is a no-op — React's `handleTabDockDrop` over `computeTabDockDropZone`'s anchor pick.
+    fn finish_dock_tab_drag(&mut self, tab_id: &str, from_anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) {
+        let Some(target_anchor) = self.anchor_at_point(x, y, theme) else { return };
+        if target_anchor == from_anchor {
+            return;
+        }
+        // 🫳️ The index the preview pill painted, so what drops is what was shown: the chip half the
+        // pointer released over, or the row's end.
+        let index = self.dock_tab_drop_index(target_anchor, x, y, theme).unwrap_or_else(|| self.dock_tabs.tabs(target_anchor).len());
+        if self.move_dock_tab(tab_id, &DockTabMoveTarget { anchor: target_anchor, parent_path: Vec::new(), index }) {
+            self.anchor_state_mut(target_anchor).visible = true;
+            Self::debug_log(&format!("[DEBUG] wgpu-shell dock tab {tab_id} re-anchored {} -> {}", from_anchor.as_str(), target_anchor.as_str()));
+        }
+    }
+
+    /// 🫳️ The ROOT-ROW index a drop at `(x, y)` lands at inside `anchor`, over the same chip-half rule
+    /// the insert preview paints — `None` when the point is not on that anchor's own root tab row (a
+    /// drop anywhere else in the anchor appends, React's own `index: buttons.length` fallback).
+    fn dock_tab_drop_index(&self, anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) -> Option<usize> {
+        if !self.anchor_open(anchor) {
+            return None;
+        }
+        let panel = self.anchor_rect(anchor, self.body_rect(theme), theme);
+        let row_rect = Rect::new(panel.x, panel.y, panel.w, theme.control_height);
+        if !row_rect.contains(x, y) {
+            return None;
+        }
+        let row = self.dock_tabs.tabs(anchor);
+        let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
+        let mut cursor = panel.x + theme.gap_standard;
+        for (index, node) in row.iter().enumerate() {
+            let chip_w = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + node.label.chars().count() as f32 * theme.font_size_small * 0.5;
+            if dragged != Some(node.id.as_str()) && x >= cursor && x < cursor + chip_w {
+                let fraction = if chip_w > 0.0 { (x - cursor) / chip_w } else { 0.5 };
+                return Some(if fraction >= 0.5 { index + 1 } else { index });
+            }
+            cursor += chip_w + theme.gap_standard;
+        }
+        Some(row.len())
+    }
+
+    /// 🧭️ Which anchor a screen point belongs to: an open anchor's own painted box first, then the
+    /// body quadrant the point falls in, so a tab can be dropped onto a FOLDED anchor too.
+    fn anchor_at_point(&self, x: f32, y: f32, theme: &Theme) -> Option<PanelAnchor> {
+        let body = self.body_rect(theme);
+        for anchor in self.open_anchors() {
+            if self.anchor_rect(anchor, body, theme).contains(x, y) {
+                return Some(anchor);
+            }
+        }
+        if !body.contains(x, y) {
+            return None;
+        }
+        let third = |value: f32, origin: f32, extent: f32| ((value - origin) / (extent / 3.0)).floor().clamp(0.0, 2.0) as u8;
+        let column = third(x, body.x, body.w);
+        let row = third(y, body.y, body.h);
+        Some(match (column, row) {
+            (0, 0) => PanelAnchor::TopLeft,
+            (0, 1) => PanelAnchor::LeftMiddle,
+            (0, _) => PanelAnchor::BottomLeft,
+            (1, 0) => PanelAnchor::TopMiddle,
+            (1, 1) => return None,
+            (1, _) => PanelAnchor::BottomMiddle,
+            (_, 0) => PanelAnchor::TopRight,
+            (_, 1) => PanelAnchor::RightMiddle,
+            (_, _) => PanelAnchor::BottomRight,
+        })
+    }
+
+    /// 📑️ The rows this anchor's tab bar paints: the root row, then one row per branch the active path
+    /// has drilled into and not folded shut — React's `buildPanelSelectionProps` row stack.
+    fn anchor_tab_rows(&self, anchor: PanelAnchor) -> Vec<Vec<DockTabNode>> {
+        let mut rows = vec![self.dock_tabs.tabs(anchor).to_vec()];
+        let path = self.anchor_state(anchor).path.clone();
+        let mut nodes = self.dock_tabs.tabs(anchor).to_vec();
+        for id in &path {
+            let Some(node) = nodes.iter().find(|node| &node.id == id).cloned() else { break };
+            if !node.is_branch() || self.dock_branch_collapsed(anchor, &node.id) {
+                break;
+            }
+            rows.push(node.children.clone());
+            nodes = node.children;
+        }
+        rows
+    }
+
+    fn anchor_tab_bar_height(&self, anchor: PanelAnchor, theme: &Theme) -> f32 {
+        self.anchor_tab_rows(anchor).len() as f32 * theme.control_height
+    }
+
+    /// 🧭️ The box the anchor's active leaf document paints into — the panel minus its tab bar.
+    fn anchor_content_rect(&self, anchor: PanelAnchor, panel: Rect, theme: &Theme) -> Rect {
+        let bar = self.anchor_tab_bar_height(anchor, theme);
+        Rect::new(panel.x, panel.y + bar, panel.w, (panel.h - bar).max(0.0)).inset(theme.gap_standard)
+    }
+
+    /// 📑️ Paints and hit-tests one anchor's tab bar: a branch row toggles open/shut, a leaf row selects,
+    /// and every row is a `PanelTab` drag source so a tab can be carried to another anchor.
+    ///
+    /// 🫳️ While a tab drag is live, the row under the pointer paints the INSERT PREVIEW — React's
+    /// `panelTabInsertPreviewClass` (`🧭️PanelTabBar/🟦️.tsx`), a `w-0.5` accent pill the height of the
+    /// row, drawn before the chip the drop would land in front of (and after the last chip when the
+    /// drop index is past the end). The index is React's own rule: the half of the chip the pointer is
+    /// over (`fraction >= 0.5` → after), or the row's length when the pointer is past every chip.
+    fn paint_anchor_tab_bar(&mut self, anchor: PanelAnchor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect) {
+        let rows = self.anchor_tab_rows(anchor);
+        let active: Vec<String> = self.anchor_state(anchor).path.clone();
+        let row_h = theme.control_height;
+        let dragging = self.dock_tab_drag.is_some();
+        for (row_index, row) in rows.iter().enumerate() {
+            let mut x = panel.x + theme.gap_standard;
+            let y = panel.y + row_index as f32 * row_h;
+            let preview = dragging.then(|| self.dock_tab_insert_preview(row, atlas, theme, panel, Rect::new(panel.x, y, panel.w, row_h), input.pointer_x, input.pointer_y)).flatten();
+            for node in row {
+                if preview == Some(x) {
+                    draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
+                }
+                let is_active = active.get(row_index).is_some_and(|id| id == &node.id);
+                let label_w = atlas.measure_text(&node.label, theme.font_size_small).0;
+                let chip_w = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
+                if x + chip_w > panel.x + panel.w {
+                    break;
+                }
+                let chip = Rect::new(x, y + (row_h - theme.control_height) * 0.5, chip_w, theme.control_height);
+                if is_active {
+                    draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent, theme.border_radius);
+                }
+                let fg = if is_active { theme.active_foreground } else { theme.text_muted };
+                let icon_id = if node.is_branch() && self.dock_branch_collapsed(anchor, &node.id) { "chevron-right" } else { node.icon_id.as_str() };
+                chrome_icon(draw, icons, icon_id, chip.x + theme.padding_standard, chip.y + (chip.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, fg);
+                chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
+                input.register_hit(HitTarget {
+                    rect: chip,
+                    event: None,
+                    control_id: Some(node.id.as_str().into()),
+                    kind: HitKind::PanelTab,
+                    drag_axis: Some(DragAxis::Both),
+                    drag_data: None,
+                });
+                x += chip_w + theme.gap_standard;
+            }
+            if preview == Some(x) {
+                draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
+            }
+        }
+        draw.push_solid([panel.x, panel.y + rows.len() as f32 * row_h - theme.stroke_hairline, panel.w, theme.stroke_hairline], theme.border_normal);
+    }
+
+    /// 🫳️ The x the insert preview paints at for one tab row, or `None` when the pointer is outside it.
+    /// React's `computeTabDockDropZone` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): the chip the pointer is over
+    /// decides by its own half (`fraction >= 0.5` inserts after), and a pointer inside the row but past
+    /// every chip inserts at the row's end. The dragged tab's own chip is excluded, exactly as React's
+    /// `excludedIds` excludes the dragged subtree.
+    #[allow(clippy::too_many_arguments, reason = "the tab row's own geometry, forwarded unchanged")]
+    fn dock_tab_insert_preview(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, panel: Rect, row_rect: Rect, pointer_x: f32, pointer_y: f32) -> Option<f32> {
+        if !row_rect.contains(pointer_x, pointer_y) {
+            return None;
+        }
+        let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
+        let mut x = panel.x + theme.gap_standard;
+        for node in row {
+            let label_w = atlas.measure_text(&node.label, theme.font_size_small).0;
+            let chip_w = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
+            if x + chip_w > panel.x + panel.w {
+                break;
+            }
+            if dragged != Some(node.id.as_str()) && pointer_x >= x && pointer_x < x + chip_w {
+                let fraction = if chip_w > 0.0 { (pointer_x - x) / chip_w } else { 0.5 };
+                return Some(if fraction >= 0.5 { x + chip_w + theme.gap_standard } else { x });
+            }
+            x += chip_w + theme.gap_standard;
+        }
+        Some(x)
+    }
+
+    /// 🧭️ One OPEN anchor's floating panel: its own tab bar (branch toggles and leaf tabs, hit-tested and
+    /// draggable between anchors), then the active leaf's retained document, then its resize handle — the
+    /// wgpu twin of React's `<Panel anchor=… />` from the `ANCHORS.map` loop in `📐️Layout/🟦️.tsx`.
+    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, anchor: PanelAnchor, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         match cursor.phase {
             0 => {
-                cursor.rect = Some(self.floating_panel_rect(left, body, theme));
-                let active = if left { self.active_left_tab.as_deref().unwrap_or(FRAMEWORK_PANEL_TAB_ARTIFACT_ID) } else { self.active_right_tab.as_deref().unwrap_or(FRAMEWORK_SETTINGS_GENERAL_TAB_ID) };
-                cursor.window = UiText::try_from_str(active);
+                cursor.rect = Some(self.anchor_rect(anchor, body, theme));
+                cursor.window = self.anchor_state(anchor).active_tab().and_then(UiText::try_from_str);
                 cursor.phase = 1;
             }
             1 => {
@@ -13494,7 +17667,8 @@ impl ShellState {
                     cursor.phase = u16::MAX;
                     return false;
                 };
-                let content = panel.inset(theme.gap_standard);
+                self.paint_anchor_tab_bar(anchor, panel_draw, atlas, icons, input, theme, panel);
+                let content = self.anchor_content_rect(anchor, panel, theme);
                 panel_draw.push_scissor(content);
                 cursor.phase = 8;
             }
@@ -13512,14 +17686,15 @@ impl ShellState {
                     cursor.phase = 9;
                     return false;
                 };
-                let content = panel.inset(theme.gap_standard);
+                let content = self.anchor_content_rect(anchor, panel, theme);
                 let complete = {
                     let scroll_offsets = &mut self.scroll_offsets;
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
                     let widget_maps = &mut self.widget_maps;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window.as_str() };
-                    let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                    let viewport_height_for_widgets = panel_draw.screen_height();
+                    let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
                     render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
                 };
@@ -13548,15 +17723,123 @@ impl ShellState {
                     cursor.phase = u16::MAX;
                     return false;
                 };
-                let resize_id = if left { "panel.resize.left" } else { "panel.resize.right" };
-                let resize_handle = if left { Rect::new(panel.x + panel.w - PANEL_RESIZE_HIT_PX, panel.y, PANEL_RESIZE_HIT_PX, panel.h) } else { Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h) };
-                input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
+                // ↔ A corner or edge-middle anchor grows inward, so its one handle sits on the
+                // canvas-facing edge; a middle-column anchor is centred and grows both ways, so it
+                // carries one on each edge — React's `resizeSides` in `🖼️Panel/🟦️.tsx`.
+                let inner_left = anchor.horizontal() == "right";
+                for (side, id) in [(inner_left, format!("panel.resize.{}.inner", anchor.as_str())), (!inner_left, format!("panel.resize.{}.outer", anchor.as_str()))] {
+                    if anchor.horizontal() != "middle" && !side {
+                        continue;
+                    }
+                    let handle = if side { Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h) } else { Rect::new(panel.x + panel.w - PANEL_RESIZE_HIT_PX, panel.y, PANEL_RESIZE_HIT_PX, panel.h) };
+                    input.register_hit(HitTarget { rect: handle, event: None, control_id: Some(id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
+                }
                 cursor.phase = 12;
             }
             12 => return true,
             _ => return false,
         }
         false
+    }
+
+    /// 📱️ The ONE mobile panel every anchor flattens into below React's breakpoint — React's
+    /// `LayoutMobilePanel` (`🖱️ui/🧱️elements/📐️Layout/🟦️.tsx`): not a floating box but an in-flow pane
+    /// filling the body while the canvas is hidden, carrying one tab row over
+    /// {@link ShellState::mobile_panel_tabs} and the active leaf's retained document beneath it.
+    /// Toggled by `ui.mobilePanel.toggle`, invisible until then, exactly as React's own
+    /// `mobilePanelVisible` gate.
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn render_mobile_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, panel_draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+        let tabs = self.mobile_panel_tabs();
+        if !self.mobile_panel_visible || tabs.is_empty() {
+            return true;
+        }
+        match cursor.phase {
+            0 => {
+                let path = self.mobile_panel_path.clone();
+                let path = mobile_panel_reconcile_path(&tabs, &path);
+                self.mobile_panel_path = path.clone();
+                cursor.rect = Some(body);
+                cursor.window = path.last().and_then(|id| UiText::try_from_str(id));
+                cursor.phase = 1;
+            }
+            1 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
+                self.paint_mobile_tab_bar(panel_draw, atlas, icons, input, theme, rect, &tabs);
+                cursor.phase = 2;
+            }
+            2 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let Some(window) = cursor.window.clone() else {
+                    cursor.phase = 3;
+                    return false;
+                };
+                let content = Rect::new(rect.x, rect.y + theme.control_height, rect.w, (rect.h - theme.control_height).max(0.0)).inset(theme.gap_standard);
+                let controller = self.document_controller_id();
+                let Some(document) = self.panel_documents.remove(window.as_str()) else {
+                    cursor.phase = 3;
+                    return false;
+                };
+                let complete = {
+                    let scroll_offsets = &mut self.scroll_offsets;
+                    let collapsed_sections = &mut self.collapsed_sections;
+                    let open_selects = &mut self.open_selects;
+                    let widget_maps = &mut self.widget_maps;
+                    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window.as_str() };
+                    let viewport_height_for_widgets = panel_draw.screen_height();
+                    let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
+                    ctx.pick_clip = Some(content);
+                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), &mut hosts)
+                };
+                self.panel_documents.insert(window.as_str().to_string(), document);
+                if !complete {
+                    if !cursor.document.terminal_is_fault() {
+                        return false;
+                    }
+                    self.record_document_paint_fault(window.as_str());
+                } else {
+                    self.clear_document_paint_fault(window.as_str());
+                }
+                self.register_retained_body_hits(window.as_str(), content, input);
+                cursor.phase = 3;
+            }
+            3 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    /// 📱️ The mobile panel's single tab row: every flattened tab as one chip, registering the same
+    /// `shell.panel.tab.mobile.<tabId>` ids the mobile path reader answers.
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn paint_mobile_tab_bar(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect, tabs: &[DockTabNode]) {
+        let mut x = panel.x + theme.gap_standard;
+        let active = self.mobile_panel_path.first().cloned().unwrap_or_default();
+        for node in tabs {
+            let label_w = atlas.measure_text(&node.label, theme.font_size_small).0;
+            let chip_w = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
+            if x + chip_w > panel.x + panel.w {
+                break;
+            }
+            let chip = Rect::new(x, panel.y, chip_w, theme.control_height);
+            let is_active = node.id == active;
+            if is_active {
+                draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent, theme.border_radius);
+            }
+            let fg = if is_active { theme.active_foreground } else { theme.text_muted };
+            chrome_icon(draw, icons, node.icon_id.as_str(), chip.x + theme.padding_standard, chip.y + (chip.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, fg);
+            chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
+            input.register_hit(HitTarget { rect: chip, event: None, control_id: Some(format!("shell.panel.tab.mobile.{}", node.id).into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
+            x += chip_w + theme.gap_standard;
+        }
+        draw.push_solid([panel.x, panel.y + theme.control_height - theme.stroke_hairline, panel.w, theme.stroke_hairline], theme.border_normal);
     }
 
     fn render_navbar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
@@ -13572,17 +17855,77 @@ impl ShellState {
             1 => {
                 let hovered = Rect::new(0.0, 0.0, width, theme.navbar_height).contains(input.pointer_x, input.pointer_y);
                 draw.push_solid([0.0, theme.navbar_height - theme.stroke_hairline, width, theme.stroke_hairline], if hovered { theme.border_emphasized } else { theme.border_normal });
-                cursor.phase = 2;
+                cursor.item = 0;
+                cursor.rect = None;
+                cursor.phase = 10;
+            }
+            // 📑️ Phase 10 runs BETWEEN phase 1 and phase 2 (the numbering is append-only, the paint
+            // order is this arm's): top-left's folded root tab row at the navbar's own LEADING edge,
+            // React's first `navbarItems` entry (`🏛️ShellHost/🟦️.tsx:10088`). The logo/title cluster
+            // then opens after it, so `Artifact · Catalogue` reads left of the app switcher exactly as
+            // it does in React instead of being packed onto the trailing side with the details tabs.
+            10 => {
+                if self.mobile_panel_active() {
+                    cursor.item = 0;
+                    cursor.rect = None;
+                    cursor.phase = 2;
+                    return false;
+                }
+                let Some((anchor, node, chip)) = self.navbar_leading_tab_row_rect(atlas, theme, cursor.item, cursor.x, btn_y, btn_h) else {
+                    cursor.item = 0;
+                    cursor.rect = None;
+                    cursor.phase = 2;
+                    return false;
+                };
+                let control_id = node.id.clone();
+                let item = ChromeGroupItem {
+                    control_id: control_id.as_str(),
+                    icon_id: Some(node.icon_id.as_str()),
+                    label: Some(node.label.as_str()),
+                    active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id),
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
+                if cursor.rect.is_none() {
+                    cursor.rect = Some(chip);
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell navbar leading panel tab exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.x = rect.x + rect.w + theme.gap_standard;
+                cursor.rect = None;
+                cursor.item += 1;
+                return false;
             }
             2 => {
-                let size = btn_h - theme.gap_standard;
-                chrome_icon(draw, icons, "semio-logo", cursor.x, btn_y + (btn_h - size) * 0.5, size, theme.text);
+                let size = theme.gap_standard * SHELL_NAVBAR_LOGO_UI_SPACING;
+                chrome_icon(draw, icons, "semio-logo", cursor.x, btn_y + (btn_h - size) * 0.5, size, LOGO_UNTINTED);
                 cursor.x += size + theme.gap_standard;
                 cursor.phase = 3;
             }
+            // 🗺️ React's `<span data-slot="app-name">` reads `appBreadcrumb(resolveAppBreadcrumb(session.app,
+            // uiTerminology))` (`🏛️ShellHost/🟦️.tsx:10058`) — the app's OWN breadcrumb, joined by
+            // `APP_BREADCRUMB_SEPARATOR` (`" · "`, `🛠️ShellHelpers/🟦️.tsx:240`), so puzzle3d reads
+            // `semio · puzzle · 3d`. This painted `session.app.id`, i.e. the raw artifact-dialect id
+            // `s.puzzle.puzzle3d@1/*#editor` (`📓️audit-visual-parity-puzzle3d.md` §2). The Rust twin of
+            // both functions already existed and had no navbar caller.
             3 => {
-                let title = self.session.as_ref().map_or("semio · os", |session| session.app.id.as_str());
-                match chrome_text_complete_step(draw, atlas, title, cursor.x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, (width - cursor.x).max(1.0), theme.font_size_body, theme.text, &mut cursor.glyph) {
+                if cursor.window.is_none() {
+                    let title = self.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.terminology_id));
+                    let Ok(title) = UiText::try_from_string(title) else {
+                        self.error = Some("Shell navbar title exceeded the retained text boundary".to_string());
+                        cursor.item = 0;
+                        cursor.rect = None;
+                        cursor.phase = 4;
+                        return false;
+                    };
+                    cursor.window = Some(title);
+                }
+                let Some(title) = cursor.window.as_ref() else { return false };
+                match chrome_text_complete_step(draw, atlas, title.as_str(), cursor.x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, (width - cursor.x).max(1.0), theme.font_size_body, theme.text, &mut cursor.glyph) {
                     Ok(false) => return false,
                     Ok(true) => {}
                     Err(()) => {
@@ -13590,16 +17933,54 @@ impl ShellState {
                         cursor.glyph.reset();
                     }
                 }
-                cursor.x += atlas.measure_text(title, theme.font_size_body).0 + theme.gap_standard * 2.0;
+                cursor.x += atlas.measure_text(title.as_str(), theme.font_size_body).0 + theme.gap_standard * 2.0;
+                cursor.window = None;
                 cursor.item = 0;
                 cursor.rect = None;
+                cursor.phase = 11;
+            }
+            // 👁️✏️ React's `<span data-slot="surface-role-chip">` — the read-only badge that follows the
+            // title inside the very same `logoAndTitle` cluster (`🏛️ShellHost/🟦️.tsx:10062`), reading
+            // `surfaceRoleChipText(session.app.role, uiLocale)` (`Editor`/`Viewer`, `Editor`/`Betrachter`).
+            // It is a BADGE, not a control: React gives it no `id` and no `onClick`, so it registers no
+            // hit here either — the role SWITCH is the `playground.navbar.roles.*` group of phase 6.
+            11 => {
+                let Some(role) = self.session.as_ref().map(|session| session.app.role) else {
+                    cursor.item = 0;
+                    cursor.rect = None;
+                    cursor.phase = 4;
+                    return false;
+                };
+                let label = shell_surface_role_chip_text(role, self.locale_id == "de");
+                let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(label), active: false, disabled: false, kind: HitKind::Button };
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
+                        self.error = Some("Shell navbar role chip exceeded the retained chrome boundary".to_string());
+                        cursor.phase = 4;
+                        return false;
+                    };
+                    cursor.rect = Some(Rect::new(cursor.x, btn_y, item_w, btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell navbar role chip exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.x = rect.x + rect.w + theme.gap_standard;
+                cursor.rect = None;
+                cursor.item = 0;
                 cursor.phase = 4;
             }
             // 📚️ The `playground.navbar.fixture` example picker — React's own control id, so the dead
             // `shell.example.<id>` handler this shell already carried becomes reachable and one probe
             // drives both renderers (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             4 => {
-                let controls: Vec<ShellNavbarControl> = shell_example_control(&self.session_example_rows(), matches!(&self.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.locale_id == "de").into_iter().collect();
+                // 🔒️ A LOCKED example removes the picker entirely, React's own
+                // `exampleOptions.length > 0 && !locks.exampleId` render gate: the CLI asked for no
+                // in-app switching, so the control must not merely refuse — it must not be there.
+                let rows = if crate::boot_locks().example_id.is_empty() { self.session_example_rows() } else { Vec::new() };
+                let controls: Vec<ShellNavbarControl> = shell_example_control(&rows, matches!(&self.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.locale_id == "de").into_iter().collect();
                 if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
                     return false;
                 }
@@ -13619,7 +18000,7 @@ impl ShellState {
                 let controls = self
                     .session
                     .as_ref()
-                    .and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| shell_role_controls(&entry.manifest.apps, &session.app, self.active_terminology(), self.active_locale())))
+                    .and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| shell_role_controls(&entry.manifest.apps, &session.app, self.active_terminology(), self.active_locale(), &self.shortcut_table())))
                     .unwrap_or_default();
                 if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
                     return false;
@@ -13637,7 +18018,7 @@ impl ShellState {
                     kind: HitKind::Toggle,
                 };
                 if cursor.rect.is_none() {
-                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                         self.error = Some("Shell fullscreen item exceeded the retained chrome boundary".to_string());
                         cursor.phase = 8;
                         return false;
@@ -13652,75 +18033,57 @@ impl ShellState {
                     RetainedChromeGroupStep::Fault => self.error = Some("Shell fullscreen item exceeded the retained glyph boundary".to_string()),
                 }
                 cursor.rect = None;
+                cursor.item = 0;
                 cursor.phase = 8;
             }
             8 => {
-                let is_de = self.locale_id == "de";
-                let display = self.has_display_tabs();
-                let item = match (display, cursor.item) {
-                    (true, 0) | (false, 0) => Some(ChromeGroupItem {
-                        control_id: "ui.panelToggle.chat",
-                        icon_id: Some(panel_toggle_icon_id("chat", self.session.as_ref())),
-                        label: Some(shell_chrome_string("panelToggle.chat", is_de)),
-                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Chat,
-                        disabled: false,
-                        kind: HitKind::Toggle,
-                    }),
-                    (true, 1) => Some(ChromeGroupItem {
-                        control_id: "ui.panelToggle.display",
-                        icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
-                        label: Some(shell_chrome_string("panelToggle.display", is_de)),
-                        active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
-                        disabled: false,
-                        kind: HitKind::Toggle,
-                    }),
-                    (true, 2) | (false, 1) => Some(ChromeGroupItem {
-                        control_id: "ui.panelToggle.workbench",
-                        icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
-                        label: Some(shell_chrome_string("panelToggle.workbench", is_de)),
-                        active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
-                        disabled: false,
-                        kind: HitKind::Toggle,
-                    }),
-                    (true, 3) | (false, 2) => Some(ChromeGroupItem {
-                        control_id: "ui.panelToggle.details",
-                        icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
-                        label: Some(shell_chrome_string("panelToggle.details", is_de)),
-                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
-                        disabled: false,
-                        kind: HitKind::Toggle,
-                    }),
-                    (true, 4) | (false, 3) => Some(ChromeGroupItem {
-                        control_id: "ui.panelToggle.settings",
-                        icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
-                        label: Some(shell_chrome_string("panelToggle.settings", is_de)),
-                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
-                        disabled: false,
-                        kind: HitKind::Toggle,
-                    }),
-                    _ => None,
-                };
-                if let Some(item) = item {
-                    if cursor.rect.is_none() {
-                        let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
-                            self.error = Some("Shell panel toggle exceeded the retained chrome boundary".to_string());
-                            cursor.phase = 9;
-                            return false;
-                        };
-                        cursor.right -= item_w;
-                        cursor.rect = Some(Rect::new(cursor.right, btn_y, item_w, btn_h));
-                    }
-                    let Some(rect) = cursor.rect else { return false };
-                    match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
-                        RetainedChromeGroupStep::Pending => return false,
-                        RetainedChromeGroupStep::Complete => {}
-                        RetainedChromeGroupStep::Fault => self.error = Some("Shell panel toggle exceeded the retained glyph boundary".to_string()),
-                    }
-                    cursor.rect = None;
-                    cursor.item += 1;
+                // 📑️ The TRAILING half of that row: top-middle then top-right, painted right to left
+                // off `cursor.right` so they read in declared order with the last one nearest the
+                // `Fullscreen` chip — React's `navbarItems` tail (`🏛️ShellHost/🟦️.tsx:10090-10099`).
+                // Top-left is the leading band, phase 10. Same `shell.panel.tab.<anchor>.<tabId>` ids
+                // the open panel's own bar registers.
+                // 📱️ On mobile the eight anchors have no navbar tab rows at all: the whole dock is one
+                // panel behind a single `ui.mobilePanel.toggle` chip, React's own `navbarItems` gate.
+                let mobile = self.mobile_panel_active();
+                if mobile && cursor.item > 0 {
+                    cursor.phase = 9;
                     return false;
                 }
-                cursor.phase = 9;
+                let row = (!mobile).then(|| self.navbar_trailing_tab_row_item(cursor.item)).flatten();
+                if !mobile && row.is_none() {
+                    cursor.phase = 9;
+                    return false;
+                }
+                let control_id = row.as_ref().map_or_else(|| "ui.mobilePanel.toggle".to_string(), |(_, node)| node.id.clone());
+                let item = match row.as_ref() {
+                    Some((anchor, node)) => ChromeGroupItem {
+                        control_id: control_id.as_str(),
+                        icon_id: Some(node.icon_id.as_str()),
+                        label: Some(node.label.as_str()),
+                        active: self.anchor_open(*anchor) && self.anchor_state(*anchor).path.first() == Some(&node.id),
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    },
+                    None => ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some("panel-left"), label: None, active: self.mobile_panel_visible, disabled: false, kind: HitKind::Toggle },
+                };
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
+                        self.error = Some("Shell panel toggle exceeded the retained chrome boundary".to_string());
+                        cursor.phase = 9;
+                        return false;
+                    };
+                    cursor.right -= item_w;
+                    cursor.rect = Some(Rect::new(cursor.right, btn_y, item_w, btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell panel toggle exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.rect = None;
+                cursor.item += 1;
+                return false;
             }
             9 => return true,
             _ => return false,
@@ -13749,14 +18112,7 @@ impl ShellState {
     /// one publication a surface's overlay row reserves against (`chrome_panel_safe_area`).
     fn open_floating_panel_rects(&self, theme: &Theme) -> Vec<Rect> {
         let body = self.body_rect(theme);
-        let mut rects = Vec::new();
-        if self.left_panel_open && self.has_left_tabs() {
-            rects.push(self.floating_panel_rect(true, body, theme));
-        }
-        if self.right_panel_open && self.has_right_tabs() {
-            rects.push(self.floating_panel_rect(false, body, theme));
-        }
-        rects
+        self.open_anchors().into_iter().map(|anchor| self.anchor_rect(anchor, body, theme)).collect()
     }
 
     /// ⏳️🖼️ Each live World3d surface with the compute-status document it published — the one input
@@ -13820,7 +18176,7 @@ impl ShellState {
         };
         let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
         if cursor.rect.is_none() {
-            let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+            let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                 self.error = Some("Shell navbar cluster item exceeded the retained chrome boundary".to_string());
                 cursor.item += 1;
                 return false;
@@ -13864,7 +18220,7 @@ impl ShellState {
                 let playing = mode == TutorialMode::Playing;
                 let item = ChromeGroupItem { control_id: "shell.tutorial.playPause", icon_id: Some(if playing { "pause" } else { "play" }), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
                 if cursor.rect.is_none() {
-                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                         cursor.phase = 9;
                         return false;
                     };
@@ -13887,7 +18243,7 @@ impl ShellState {
             3 => {
                 let item = ChromeGroupItem { control_id: "shell.tutorial.stop", icon_id: Some("square"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
                 if cursor.rect.is_none() {
-                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                         cursor.phase = 9;
                         return false;
                     };
@@ -13936,7 +18292,7 @@ impl ShellState {
                 };
                 let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label), active: (rate - value).abs() < 0.01, disabled: false, kind: HitKind::Toggle };
                 if cursor.rect.is_none() {
-                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                    let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                         self.error = Some("Shell tutorial rate exceeded the retained chrome boundary".to_string());
                         cursor.phase = 6;
                         return false;
@@ -14001,75 +18357,62 @@ impl ShellState {
                 cursor.x = theme.padding_standard;
                 cursor.phase = 1;
             }
+            // 🩸️ Phase 2 used to be the footer UTILITY rail — `Transform · Brush · Volume Brush ·
+            // Relocate` plus the three sync toggles, walked out of `active_utilities`. React has NO
+            // footer counterpart: its utilities live on each window pane's own `Utilities` chip
+            // (`🪟️Window/🟦️.tsx:399`, `anchor="bottom-left"`), which `render_window_utilities_step`
+            // now paints. The footer's leading band therefore opens at the padding again.
             1 => {
                 let hovered = Rect::new(0.0, y, width, theme.footer_height).contains(input.pointer_x, input.pointer_y);
                 draw.push_solid([0.0, y, width, theme.stroke_hairline], if hovered { theme.border_emphasized } else { theme.border_normal });
-                cursor.phase = 2;
-            }
-            2 if self.session.is_some() => {
-                if cursor.scalar == 0 {
-                    let Some(utility) = footer_utility_at_path(&self.active_utilities, &cursor.path.0, cursor.depth) else {
-                        cursor.phase = 3;
-                        return false;
-                    };
-                    let x = cursor.x;
-                    let result = render_footer_utility_node(cursor, &mut self.chrome_build, draw, atlas, icons, input, theme, x, btn_y, btn_h, utility, &self.utility_collection_expanded);
-                    let Some((next_x, descend)) = (match result {
-                        Ok(result) => result,
-                        Err(()) => {
-                            self.error = Some("Shell footer utility exceeded the retained chrome boundary".to_string());
-                            cursor.phase = 4;
-                            return false;
-                        }
-                    }) else {
-                        return false;
-                    };
-                    cursor.x = next_x;
-                    cursor.flag = descend;
-                    cursor.scalar = 1;
-                    return false;
-                }
-                if cursor.flag {
-                    let Some(next_depth) = cursor.depth.checked_add(1).filter(|depth| *depth < cursor.path.0.len()) else {
-                        cursor.phase = u16::MAX;
-                        return false;
-                    };
-                    cursor.depth = next_depth;
-                    cursor.path.0[next_depth] = 0;
-                    cursor.flag = false;
-                    cursor.scalar = 0;
-                    return false;
-                }
-                let sibling_count = footer_utility_sibling_count(&self.active_utilities, &cursor.path.0, cursor.depth).unwrap_or(0);
-                let next = cursor.path.0[cursor.depth] as usize + 1;
-                if next < sibling_count {
-                    cursor.path.0[cursor.depth] = next as u16;
-                    cursor.scalar = 0;
-                    return false;
-                }
-                if cursor.depth > 0 {
-                    cursor.depth -= 1;
-                    return false;
-                }
                 cursor.phase = 3;
             }
-            2 => cursor.phase = 4,
             3 => {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    let count = uncommitted_edit_count(&self.history_entries);
-                    let x = cursor.x;
-                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), count, self.locale_id == "de", x, btn_y, btn_h) {
-                        Ok(Some(next_x)) => cursor.x = next_x,
-                        Ok(None) => return false,
-                        Err(()) => {
-                            self.error = Some("Shell sync footer exceeded the retained chrome boundary".to_string());
-                            cursor.phase = 4;
-                            return false;
-                        }
+                let pill = self.sync_pill();
+                let presence = self.footer_presence_rows();
+                let locale = self.active_locale();
+                let anchors = self.footer_pill_anchors(atlas, theme, width);
+                match render_footer_pills_step(cursor, draw, atlas, icons, input, theme, pill, &presence, locale, self.locale_id == "de", anchors, btn_y, btn_h) {
+                    Ok(Some(())) => {}
+                    Ok(None) => return false,
+                    Err(()) => {
+                        self.error = Some("Shell sync footer exceeded the retained chrome boundary".to_string());
+                        cursor.phase = 4;
+                        return false;
                     }
                 }
-                cursor.phase = 4;
+                cursor.item = 0;
+                cursor.phase = 5;
+            }
+            5 => {
+                // 📑️ The footer half of React's `PANEL_TAB_BAR_HOSTS` split: the folded root tab row of
+                // bottom-left, bottom-middle and bottom-right, so those anchors' tabs — the Command
+                // branch included — are reachable without the panel being open.
+                let Some((anchor, node, band_rect)) = self.footer_tab_row_rect(atlas, theme, cursor.item, width, btn_y, btn_h) else {
+                    cursor.phase = 4;
+                    return false;
+                };
+                let control_id = node.id.clone();
+                let item = ChromeGroupItem {
+                    control_id: control_id.as_str(),
+                    icon_id: Some(node.icon_id.as_str()),
+                    label: Some(node.label.as_str()),
+                    active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id),
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
+                if cursor.rect.is_none() {
+                    cursor.rect = Some(band_rect);
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell footer panel tab exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.rect = None;
+                cursor.item += 1;
+                return false;
             }
             4 => return true,
             _ => return false,
@@ -14173,7 +18516,7 @@ impl ShellState {
                 cursor.phase = 6;
             }
             6 => {
-                if !self.render_chrome_tour_step(cursor, overlay, atlas, input, theme, width, height) {
+                if !self.render_chrome_tour_step(cursor, overlay, atlas, icons, input, theme, width, height) {
                     return false;
                 }
                 cursor.item = 0;
@@ -14248,7 +18591,7 @@ impl ShellState {
                     return false;
                 };
                 let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
-                let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                     self.error = Some("Shell surface control exceeded the retained chrome boundary".to_string());
                     cursor.item += 1;
                     return false;
@@ -14370,7 +18713,7 @@ impl ShellState {
                 }
                 let Some(text) = UiText::try_from_str(title) else { return true };
                 let padding = theme.padding_standard * 0.5;
-                let text_w = text.as_str().len() as f32 * theme.font_size_small * 0.6;
+                let text_w = atlas.measure_text(text.as_str(), theme.font_size_small).0;
                 let text_h = theme.font_size_small * 1.25;
                 cursor.rect =
                     Some(Rect::new((hover.anchor_x + 12.0).clamp(0.0, (width - text_w - padding * 2.0).max(0.0)), (hover.anchor_y + 18.0).clamp(0.0, (height - text_h - padding * 2.0).max(0.0)), text_w + padding * 2.0, text_h + padding * 2.0));
@@ -14400,6 +18743,236 @@ impl ShellState {
             _ => return false,
         }
         false
+    }
+
+    /// 💬️ Paints the agent chat panel's header — title on the left, `🚦️AgentPresence` dot + status on
+    /// the right, a hairline under it — over whichever anchor currently shows the `framework.chat`
+    /// tab. Packet W1j; React mounts the same pair as `AgentChatPanel`'s own header row. The
+    /// transcript below it is still host-gapped (see `💬️AgentChatPanel/🎯️targets/🧊️wgpu`).
+    fn render_agent_chat_header_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
+        use crate::agent_chat_panel as chat;
+        let Some(anchor) = PanelAnchor::ALL.into_iter().find(|anchor| self.anchor_open(*anchor) && self.anchor_state(*anchor).active_tab() == Some(chat::AGENT_CHAT_PANEL_ID)) else {
+            return true;
+        };
+        let panel = self.anchor_rect(anchor, body, theme);
+        let content = self.anchor_content_rect(anchor, panel, theme);
+        let locale = self.active_locale();
+        let plan = chat::plan_agent_chat_header(content, self.chrome_build.agent.status, &self.chrome_build.agent.presence, theme, locale);
+        let baseline = plan.header.y + (plan.header.h + theme.font_size_small) * 0.5 - 1.0;
+        match cursor.scalar {
+            0 => overlay.push_solid([plan.header.x, plan.header.y + plan.header.h - theme.stroke_hairline, plan.header.w, theme.stroke_hairline], theme.border_normal),
+            1 => overlay.push_rounded([plan.dot.x, plan.dot.y, plan.dot.w, plan.dot.h], plan.dot_color, plan.dot.w * 0.5),
+            2..=4 => {
+                let (value, x, max_w, size, color, y) = match cursor.scalar {
+                    2 => (plan.title.clone(), plan.header.x + theme.padding_standard, (plan.dot.x - plan.header.x - theme.padding_standard * 2.0).max(1.0), theme.font_size_body, theme.text, baseline),
+                    3 => {
+                        let x = plan.dot.x + crate::agent_presence::AGENT_PRESENCE_DOT_PX + crate::agent_presence::AGENT_PRESENCE_GAP_PX;
+                        (plan.status_text.clone(), x, (plan.header.x + plan.header.w - theme.padding_standard - x).max(1.0), theme.font_size_small, theme.text_muted, baseline)
+                    }
+                    _ => (
+                        chat::agent_chat_empty_text(locale),
+                        content.x + theme.padding_standard,
+                        (content.w - theme.padding_standard * 2.0).max(1.0),
+                        theme.font_size_small,
+                        theme.text_muted,
+                        plan.header.y + plan.header.h + theme.gap_standard + theme.font_size_small,
+                    ),
+                };
+                match chrome_text_complete_step(overlay, atlas, &value, x, y, max_w, size, color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell agent-chat header text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+            }
+            5 => {
+                let hit = Rect::new(plan.dot.x, plan.header.y, (plan.header.x + plan.header.w - plan.dot.x).max(1.0), plan.header.h);
+                self.chrome_build.tooltip_titles.insert(crate::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string(), crate::agent_presence::agent_presence_status_label(locale));
+                input.register_hit(HitTarget { rect: hit, event: None, control_id: Some(crate::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+            }
+            _ => return true,
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// 🧯️ Paints the one live transient notice, top-centre at `navbar_height + 8px`, and expires it
+    /// at the 4 s deadline. Packet W1j — React's only non-fatal surfacing channel, ported.
+    fn render_transient_notice_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+        if !self.chrome_build.expire_transient_notice(chrome_now_ms()) {
+            return true;
+        }
+        let is_de = self.locale_id == "de";
+        let close_label = shell_chrome_string("common.close", is_de);
+        let Some(notice) = self.chrome_build.transient_notice.clone() else { return true };
+        let banner = transient_notice_rect(&notice, close_label, width, theme);
+        let close = transient_notice_close_rect(banner, close_label, theme);
+        let (border, fill, text_color) = transient_notice_tone(notice.severity, theme);
+        let hair = theme.stroke_hairline;
+        match cursor.scalar {
+            0 => overlay.push_rounded([banner.x, banner.y, banner.w, banner.h], fill, theme.border_radius),
+            1..=4 => {
+                let edge = match cursor.scalar {
+                    1 => [banner.x, banner.y, banner.w, hair],
+                    2 => [banner.x, banner.y + banner.h - hair, banner.w, hair],
+                    3 => [banner.x, banner.y, hair, banner.h],
+                    _ => [banner.x + banner.w - hair, banner.y, hair, banner.h],
+                };
+                overlay.push_solid(edge, border);
+            }
+            5 | 6 => {
+                let (value, x, max_w, color) = if cursor.scalar == 5 {
+                    (notice.message.as_str(), banner.x + theme.padding_standard, (close.x - banner.x - theme.padding_standard * 2.0).max(1.0), text_color)
+                } else {
+                    (close_label, close.x, close.w.max(1.0), text_color)
+                };
+                let baseline = banner.y + (banner.h + theme.font_size_small) * 0.5 - 1.0;
+                match chrome_text_complete_step(overlay, atlas, value, x, baseline, max_w, theme.font_size_small, color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell transient notice text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+            }
+            7 => input.register_hit(HitTarget { rect: close, event: None, control_id: Some(TRANSIENT_NOTICE_CLOSE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            8 => {
+                if self.chrome_build.clicked_this_frame && close.contains(input.pointer_x, input.pointer_y) {
+                    self.chrome_build.dismiss_transient_notice();
+                }
+            }
+            _ => return true,
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// ✅️ Paints the agent approvals modal — opened purely by a non-empty queue, listing every
+    /// parked request's capability/change-summary/requested-by/risk with the three decision buttons
+    /// that emit an `Approval` frame back over the bridge. Packet W1j.
+    fn render_agent_approvals_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        self.chrome_build.agent_approvals.observe(&self.chrome_build.agent.pending_approvals);
+        if !self.chrome_build.agent_approvals.is_open(&self.chrome_build.agent.pending_approvals) {
+            return true;
+        }
+        let ops = self.agent_approvals_paint_ops(width, height, theme);
+        let Some(op) = ops.get(cursor.scalar) else { return true };
+        match op {
+            AgentApprovalPaintOp::Scrim => overlay.push_solid([0.0, 0.0, width, height], theme.overlay_shadow),
+            AgentApprovalPaintOp::Modal(rect) => {
+                overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
+            }
+            AgentApprovalPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
+            AgentApprovalPaintOp::Text { value, x, y, max_w, size, color } => {
+                match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell agent-approval text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+            }
+            AgentApprovalPaintOp::Hit { rect, control_id } => {
+                input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None })
+            }
+            AgentApprovalPaintOp::Clicks => {
+                if self.chrome_build.clicked_this_frame {
+                    let (x, y) = (input.pointer_x, input.pointer_y);
+                    let hit = ops.iter().find_map(|op| match op {
+                        AgentApprovalPaintOp::Hit { rect, control_id } if rect.contains(x, y) => Some(control_id.clone()),
+                        _ => None,
+                    });
+                    if let Some(control_id) = hit {
+                        self.resolve_agent_approval_control(&control_id);
+                    }
+                }
+            }
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// ✅️ Applies one click on an approvals-modal control: a decision button resolves that request
+    /// over the bridge, the close control dismisses the dialog without deciding (the request stays
+    /// parked, exactly as React's `onOpenChange` leaves it).
+    fn resolve_agent_approval_control(&mut self, control_id: &str) {
+        if control_id == crate::agent_approvals::APPROVALS_CLOSE_CONTROL_ID {
+            self.chrome_build.agent_approvals.dismiss();
+            return;
+        }
+        if let Some((approval_id, decision)) = crate::agent_approvals::parse_approval_decision_control_id(control_id) {
+            self.chrome_build.agent.resolve_approval(&approval_id, decision, None);
+        }
+    }
+
+    /// ✅️ This frame's flat paint program for the approvals modal — rebuilt per opportunity (it is
+    /// pure and small) so the retained step only has to carry an index, not a nested cursor.
+    fn agent_approvals_paint_ops(&self, width: f32, height: f32, theme: &Theme) -> Vec<AgentApprovalPaintOp> {
+        use crate::agent_approvals as approvals;
+        let locale = self.active_locale();
+        let pad = theme.padding_standard;
+        let line_h = theme.font_size_small * 1.6;
+        let parsed: Vec<(String, approvals::ParsedApprovalSummary)> =
+            self.chrome_build.agent.pending_approvals.iter().map(|approval| (approval.approval_id.clone(), approvals::parse_approval_summary(&approval.summary))).collect();
+        let heights: Vec<f32> = parsed.iter().map(|(_, summary)| approvals::approval_row_height(summary, theme)).collect();
+        let modal = approvals::approvals_modal_rect(width, height, &heights, theme);
+        let list = approvals::approvals_list_rect(modal, theme);
+        let close_label = shell_chrome_string("common.close", locale == Locale::De);
+        let close_w = (close_label.chars().count() as f32 * theme.font_size_small * 0.6).max(theme.font_size_small);
+        let close = Rect::new(modal.x + modal.w - pad - close_w, modal.y + pad * 0.5, close_w, theme.font_size_small * 1.6);
+
+        let mut ops = vec![AgentApprovalPaintOp::Scrim, AgentApprovalPaintOp::Modal(modal)];
+        let text = |value: String, x: f32, y: f32, max_w: f32, size: f32, color: Rgba| AgentApprovalPaintOp::Text { value, x, y, max_w: max_w.max(1.0), size, color };
+        ops.push(text(approvals::approvals_title(locale), modal.x + pad, modal.y + pad + theme.font_size_body, modal.w - pad * 2.0 - close_w, theme.font_size_body, theme.text));
+        ops.push(text(approvals::approvals_description(locale), modal.x + pad, modal.y + pad + theme.font_size_body + line_h, modal.w - pad * 2.0, theme.font_size_small, theme.text_muted));
+        ops.push(text(close_label.to_string(), close.x, close.y + theme.font_size_small, close.w, theme.font_size_small, theme.text_muted));
+        ops.push(AgentApprovalPaintOp::Hit { rect: close, control_id: approvals::APPROVALS_CLOSE_CONTROL_ID.to_string() });
+
+        if parsed.is_empty() {
+            ops.push(text(approvals::approvals_empty(locale), list.x, list.y + theme.font_size_small, list.w, theme.font_size_small, theme.text_muted));
+        }
+        let mut row_y = list.y;
+        for ((approval_id, summary), row_h) in parsed.iter().zip(heights.iter()) {
+            if row_y + row_h > list.y + list.h {
+                break;
+            }
+            let row = Rect::new(list.x, row_y, list.w, *row_h);
+            let mut line_y = row.y + theme.font_size_small;
+            let mut line = |ops: &mut Vec<AgentApprovalPaintOp>, value: String, color: Rgba| {
+                ops.push(AgentApprovalPaintOp::Text { value, x: row.x, y: line_y, max_w: row.w.max(1.0), size: theme.font_size_small, color });
+                line_y += line_h;
+            };
+            if let Some(capability) = summary.capability_id.as_ref() {
+                line(&mut ops, format!("{}: {capability}", approvals::approvals_capability_label(locale)), theme.text);
+            }
+            line(&mut ops, format!("{}: {}", approvals::approvals_diff_label(locale), summary.diff_summary), theme.text);
+            if let Some(requested_by) = summary.requested_by.as_ref() {
+                line(&mut ops, format!("{}: {requested_by}", approvals::approvals_requested_by_label(locale)), theme.text_muted);
+            }
+            if let Some(risk) = summary.risk {
+                line(&mut ops, format!("{}: {}", approvals::approvals_risk_label(locale), risk.label(locale)), risk.color(theme));
+            }
+            for (decision, rect) in approvals::approval_decision_rects(row, theme) {
+                let label_color = if matches!(decision, crate::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
+                ops.push(AgentApprovalPaintOp::Fill { rect, color: theme.button });
+                ops.push(AgentApprovalPaintOp::Text {
+                    value: approvals::approvals_decision_label(decision, locale),
+                    x: rect.x + theme.gap_standard * 2.0,
+                    y: rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
+                    max_w: (rect.w - theme.gap_standard * 4.0).max(1.0),
+                    size: theme.font_size_small,
+                    color: label_color,
+                });
+                ops.push(AgentApprovalPaintOp::Hit { rect, control_id: approvals::approval_decision_control_id(approval_id, decision) });
+            }
+            row_y += row_h;
+        }
+        ops.push(AgentApprovalPaintOp::Clicks);
+        ops
     }
 
     fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
@@ -14434,7 +19007,7 @@ impl ShellState {
             return false;
         }
         match cursor.scalar {
-            0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
+            0 => overlay.push_solid([0.0, 0.0, width, height], theme.veil(Level::Dialog)),
             1 => {
                 overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog));
             }
@@ -14457,39 +19030,42 @@ impl ShellState {
         false
     }
 
-    fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    /// 🎓️ Paints the armed introduction over the whole shell — the wgpu twin of `UIIntroduction`
+    /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): a veil with the step's own targets cut out of it, a pulsing
+    /// ring on the introduced element, and a card carrying the title, Skip, the body's paragraphs, the
+    /// interaction checklist and a Back / `i / n` / Next-or-Done footer.
+    ///
+    /// 🧯️ The veil is a real hit target (`ui.introduction.veil`), not just paint. React's veil is
+    /// `pointer-events-auto` while it blocks, so a press anywhere on it ends the tour and NOTHING under
+    /// it ever sees the pointer; here the press used to fall straight through to the 3D surface below,
+    /// which is how clicking Skip also orbited and picked in the scene
+    /// (`📓️w5b-interaction-parity-probe.md` §4.3).
+    fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if cursor.flag {
             self.error = Some("Shell tour text exceeded the retained glyph boundary".to_string());
             cursor.flag = false;
             return true;
         }
-        let Some(session) = self.session.as_ref() else {
+        if self.session.is_none() {
             self.chrome_build.tour_state = None;
             return true;
-        };
-        let Some(introduction) = session.app.introduction.as_ref() else { return true };
+        }
+        let Some(step) = self.chrome_tour_active_step() else { return true };
         let Some(step_index) = self.chrome_build.tour_state.as_ref().map(|state| state.step_index) else { return true };
-        let Some(step) = introduction.steps.get(step_index) else { return true };
-        let rect = Rect::new((width - 320.0) * 0.5, (height - 168.0) * 0.5, 320.0, 168.0);
-        let pad = theme.padding_standard;
-        let skip = Rect::new(rect.x + pad, rect.y + rect.h - pad - theme.control_height, 70.0, theme.control_height);
-        let next = Rect::new(rect.x + rect.w - pad - 90.0, rect.y + rect.h - pad - theme.control_height, 90.0, theme.control_height);
+        let Some(step_count) = self.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()) else { return true };
+        let layout = chrome_tour_layout(self, atlas, theme, &step, step_index, step_count, width, height);
+        let card = layout.card;
+        let chip_text = |rect: Rect, size: f32| (rect.x + theme.padding_standard * 2.0, rect.y + (rect.h + size) * 0.5 - 1.0, (rect.w - theme.padding_standard * 4.0).max(1.0));
         let text = match cursor.scalar {
-            2 => Some((step.title.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body, rect.w - pad * 2.0, theme.font_size_body, theme.text)),
-            3 => Some((step.body.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, rect.w - pad * 2.0, theme.font_size_small, theme.text_muted)),
-            5 => Some((shell_chrome_string("introduction.skip", self.locale_id == "de"), skip.x + 10.0, skip.y + (skip.h + theme.font_size_small) * 0.5 - 1.0, skip.w - 20.0, theme.font_size_small, theme.text)),
-            7 if step.interactions.is_empty() => Some((
-                shell_chrome_string(if step_index + 1 == introduction.steps.len() { "introduction.done" } else { "introduction.next" }, self.locale_id == "de"),
-                next.x + 10.0,
-                next.y + (next.h + theme.font_size_small) * 0.5 - 1.0,
-                next.w - 20.0,
-                theme.font_size_small,
-                theme.active_foreground,
-            )),
+            3 => Some((layout.title.clone(), (layout.title_rect.x, layout.title_rect.y + (layout.title_rect.h + theme.font_size_body) * 0.5 - 1.0, layout.title_rect.w), theme.font_size_body, theme.text)),
+            5 => Some((layout.skip_label.to_string(), chip_text(layout.skip, theme.font_size_small), theme.font_size_small, theme.text)),
+            7 if layout.advances_by_button => Some((layout.next_label.to_string(), chip_text(layout.next, theme.font_size_small), theme.font_size_small, theme.active_foreground)),
+            9 if layout.shows_back => Some((layout.back_label.to_string(), chip_text(layout.back, theme.font_size_small), theme.font_size_small, theme.text)),
+            10 => Some((layout.counter_text.clone(), chip_text(layout.counter, theme.font_size_small), theme.font_size_small, theme.text_muted)),
             _ => None,
         };
-        if let Some((value, x, y, text_width, size, color)) = text {
-            match chrome_text_complete_step(overlay, atlas, value, x, y, text_width, size, color, &mut cursor.glyph) {
+        if let Some((value, (x, y, text_width), size, color)) = text {
+            match chrome_text_complete_step(overlay, atlas, &value, x, y, text_width, size, color, &mut cursor.glyph) {
                 Ok(false) => return false,
                 Ok(true) => {}
                 Err(()) => {
@@ -14502,43 +19078,83 @@ impl ShellState {
             return false;
         }
         match cursor.scalar {
-            0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
-            1 => {
-                overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
-            }
-            4 => overlay.push_rounded([skip.x, skip.y, skip.w, skip.h], theme.button, theme.border_radius),
-            6 if step.interactions.is_empty() => overlay.push_rounded([next.x, next.y, next.w, next.h], theme.accent, theme.border_radius),
-            8 => input.register_hit(HitTarget { rect: skip, event: None, control_id: Some("shell.tour.skip".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
-            9 if step.interactions.is_empty() => input.register_hit(HitTarget { rect: next, event: None, control_id: Some("shell.tour.next".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
-            10 => {
-                if self.chrome_build.clicked_this_frame {
-                    if next.contains(input.pointer_x, input.pointer_y) && step.interactions.is_empty() {
-                        self.chrome_build.advance_introduction(introduction.steps.len());
-                    } else if skip.contains(input.pointer_x, input.pointer_y) {
-                        self.chrome_build.skip_introduction();
-                    }
+            0 => {
+                for band in introduction_veil_bands(width, height, &layout.cutouts) {
+                    overlay.push_solid([band.x, band.y, band.w, band.h], theme.veil(Level::Dialog));
                 }
             }
-            11 => return true,
+            1 => {
+                overlay.push_glass([card.x, card.y, card.w, card.h], theme.border_radius, theme.glass(Level::Dialog));
+            }
+            2 => {
+                // 🎯️ React pulses `data-introduced` on the introduced element itself; the instanced
+                // breathing ring is this renderer's own twin of those keyframes.
+                if let Some(anchor) = layout.cutouts.first() {
+                    overlay.push_introducing_border([anchor.x, anchor.y, anchor.w, anchor.h], theme.accent, theme.border_radius, theme.stroke_hairline * 2.0);
+                }
+            }
+            4 => overlay.push_rounded([layout.skip.x, layout.skip.y, layout.skip.w, layout.skip.h], theme.button, theme.border_radius),
+            6 if layout.advances_by_button => overlay.push_rounded([layout.next.x, layout.next.y, layout.next.w, layout.next.h], theme.accent, theme.border_radius),
+            8 if layout.shows_back => overlay.push_rounded([layout.back.x, layout.back.y, layout.back.w, layout.back.h], theme.button, theme.border_radius),
+            11 => {
+                let Some((paragraph, rect)) = layout.paragraphs.get(cursor.item) else {
+                    cursor.item = 0;
+                    cursor.scalar = 12;
+                    return false;
+                };
+                let (paragraph, rect) = (paragraph.clone(), *rect);
+                match chrome_text_wrapped_complete_step(overlay, atlas, &paragraph, rect, theme.font_size_small, theme.text_muted, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        cursor.glyph.reset();
+                        cursor.flag = true;
+                        return false;
+                    }
+                }
+                cursor.item += 1;
+                return false;
+            }
+            12 => {
+                let Some((label, done, row)) = layout.checklist.get(cursor.item) else {
+                    cursor.item = 0;
+                    cursor.group_phase = 0;
+                    cursor.scalar = 13;
+                    return false;
+                };
+                let (label, done, row) = (label.clone(), *done, *row);
+                let color = if done { theme.text } else { theme.text_muted };
+                if cursor.group_phase == 0 {
+                    chrome_icon(overlay, icons, if done { "check" } else { "circle" }, row.x, row.y + (row.h - theme.font_size_small) * 0.5, theme.font_size_small, color);
+                    cursor.group_phase = 1;
+                    return false;
+                }
+                let text_x = row.x + theme.font_size_small + theme.gap_standard;
+                match chrome_text_complete_step(overlay, atlas, &label, text_x, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, (row.w - theme.font_size_small - theme.gap_standard).max(1.0), theme.font_size_small, color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        cursor.glyph.reset();
+                        cursor.flag = true;
+                        return false;
+                    }
+                }
+                cursor.group_phase = 0;
+                cursor.item += 1;
+                return false;
+            }
+            // 🧯️ The veil registers FIRST so the three card controls, registered after it, win
+            // `InputState::hit_at`'s reverse-order resolution over the sheet they sit on.
+            13 if layout.veil_blocks_pointer => input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some(UI_INTRODUCTION_VEIL_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            14 => input.register_hit(HitTarget { rect: layout.skip, event: None, control_id: Some(UI_INTRODUCTION_SKIP_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            15 if layout.advances_by_button => input.register_hit(HitTarget { rect: layout.next, event: None, control_id: Some(UI_INTRODUCTION_NEXT_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            16 if layout.shows_back => input.register_hit(HitTarget { rect: layout.back, event: None, control_id: Some(UI_INTRODUCTION_BACK_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            17 => return true,
             _ => {}
         }
         cursor.scalar += 1;
         false
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     //#region SilhouetteContent
 
@@ -14591,7 +19207,7 @@ impl ShellState {
         let content_h = text_h + padding * 2.0;
         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
         let (x, y) =
-            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
+            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement(), ui_contract::FlowInline::Ltr);
         overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
     }
@@ -14606,14 +19222,13 @@ impl ShellState {
         let Some(request) = self.chrome_build.dialog_stack.last().cloned() else {
             return;
         };
-        // 🌫️ `Theme` has no dedicated veil/scrim color (`overlay_shadow` is actually the disabled-control
-        // tint, always alpha 0 in the one constructor that sets it) — a fixed dark translucency matches
-        // `ui-veil`'s own theme-agnostic dimming in `ui/js/react/index.tsx`.
-        overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
+        // 🌫️ `Theme::veil` is the token-derived twin of React's `ui-veil` utility: the dialog level's
+        // own surface fill at `levels::VEIL_ALPHA` (`--veil-alpha`), not a theme-agnostic black.
+        overlay.push_solid([0.0, 0.0, width, height], theme.veil(Level::Dialog));
         let dialog_w = 360.0_f32;
         let dialog_h = 168.0_f32;
         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement());
+        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement(), ui_contract::FlowInline::Ltr);
         let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
         overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, theme.glass(Level::Dialog));
         let pad = theme.padding_standard;
@@ -14660,22 +19275,12 @@ impl ShellState {
     /// hit handler exactly (including their differing `setActivePanelTab` dispatch conditions) so the
     /// tour's programmatic reveal behaves identically to the user clicking the tab themselves.
     fn chrome_tour_reveal_panel_tab(&mut self, session: &ActiveSession, tab_id: &str) {
-        let leaf = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().find(|tab| tab.id() == tab_id);
-        let is_left = leaf.is_some_and(|tab| group_side(tab.group) == "left");
-        let is_right = leaf.is_some_and(|tab| group_side(tab.group) == "right");
-        if self.host_config().is_some() && (is_left || is_right) {
+        let is_app_leaf = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().any(|tab| tab.id() == tab_id);
+        if self.host_config().is_some() && is_app_leaf {
             self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) });
             return;
         }
-        if is_left {
-            self.left_panel_open = true;
-            self.active_left_kind = LeftPanelKind::Workbench;
-            self.active_left_tab = Some(tab_id.to_string());
-        } else if is_right {
-            self.right_panel_open = true;
-            self.active_right_kind = RightPanelKind::Details;
-            self.active_right_tab = Some(tab_id.to_string());
-        }
+        self.reveal_dock_tab(tab_id);
     }
 
     /// 🎓️ Force-reveals whatever the active step's `introduce`/`show` ids target — folded action rails,
@@ -14957,6 +19562,22 @@ impl ShellState {
 const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerCount";
 /// 🔑️ Byte-identical to `UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX` (`ui/js/react/index.tsx:2305`).
 const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX: &str = "ui.introduction.seen.";
+
+/// 🆔️ The introduction chrome's control ids, byte-identical to React's own
+/// (`UIIntroduction`'s `close={{ id: "ui.introduction.skip" }}`, `<Button id="ui.introduction.back">`,
+/// `<Button id="ui.introduction.next">`, and the keybinding rows in
+/// `🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`).
+///
+/// 🩸️ This renderer used to mint `shell.tour.{skip,next,back}` — ids React has never had, so a parity
+/// probe driving ONE journey across both renderers had to carry an alias table and every tour step read
+/// as a difference (`📓️w5b-interaction-parity-probe.md` §4.1).
+const UI_INTRODUCTION_SKIP_CONTROL_ID: &str = "ui.introduction.skip";
+const UI_INTRODUCTION_NEXT_CONTROL_ID: &str = "ui.introduction.next";
+const UI_INTRODUCTION_BACK_CONTROL_ID: &str = "ui.introduction.back";
+/// 🧯️ The blocking veil itself. React's scrim is a real `pointer-events-auto` element with its own
+/// `onPointerDown={skip}`; giving it a control id is what lets `pointer_press_belongs_to_shell_chrome`
+/// claim the press before any 3D surface under it can.
+const UI_INTRODUCTION_VEIL_CONTROL_ID: &str = "ui.introduction.veil";
 /// 🔑️ Byte-identical to `UI_TERMINOLOGY_NATIVE` (`ui/js/react/index.tsx:2183`).
 const UI_TERMINOLOGY_NATIVE: &str = "native";
 //#endregion 🔑️StorageKeys
@@ -14964,51 +19585,21 @@ const UI_TERMINOLOGY_NATIVE: &str = "native";
 //#region 🗄️PrefsStore
 const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 
-/// 🗄️ Cross-platform key-value persistence for uiPrefs. `web-sys`'s "Storage" feature isn't enabled
-/// on this crate (`Cargo.toml` is a reserved wave-3 choke point), so the wasm32 backend reaches
-/// `localStorage` via raw `js_sys::Reflect`/`js_sys::Function` calls against the already-enabled
-/// "Window" feature rather than requesting a new one. The native backend is a small JSON file next
-/// to no new dependency (`serde_json` is already a dep) — zero-touch across devcontainer/win/mac/linux.
-#[cfg(any(target_arch = "wasm32", test))]
+/// 🗄️ Cross-platform key-value persistence for uiPrefs, over React's OWN key spellings. The native
+/// backend is a bounded file page per key; the browser backend is the page-serviced [`🚪️StorageDoor`]
+/// below. No new dependency either way (`serde_json` is already a dep) — zero-touch across
+/// devcontainer/win/mac/linux.
+///
+/// 🩸️ What the browser backend replaces: a `WebLocalStorage` shim that resolved `localStorage` through
+/// `web_sys::window()`. The wgpu shell runs inside the frame Worker, whose realm owns NO `window`, so
+/// the shim silently resolved to `None` and EVERY `prefs_get`/`prefs_set` on the browser build was a
+/// no-op — appearance, locale, terminology, themes, custom drivers, keybinding overrides, the compute
+/// worker count, the dock skeleton and `ui.introduction.seen.*` all read as empty and written to
+/// nothing (`📓️w4a-boot-appearance-and-tour.md` §6, hand-off 1).
+#[cfg(test)]
 trait PrefsStore {
     fn get(&self, key: &str) -> Option<String>;
     fn set(&mut self, key: &str, value: &str);
-}
-
-#[cfg(target_arch = "wasm32")]
-struct WebLocalStorage {
-    storage: Option<wasm_bindgen::JsValue>,
-}
-
-#[cfg(target_arch = "wasm32")]
-impl WebLocalStorage {
-    fn new() -> Self {
-        let storage = web_sys::window().and_then(|window| js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")).ok());
-        Self { storage }
-    }
-
-    fn call(&self, method: &str, args: &[&str]) -> Option<wasm_bindgen::JsValue> {
-        use wasm_bindgen::JsCast;
-        let storage = self.storage.as_ref()?;
-        let func = js_sys::Reflect::get(storage, &wasm_bindgen::JsValue::from_str(method)).ok()?;
-        let func: js_sys::Function = func.dyn_into().ok()?;
-        match args.len() {
-            1 => func.call1(storage, &wasm_bindgen::JsValue::from_str(args[0])).ok(),
-            2 => func.call2(storage, &wasm_bindgen::JsValue::from_str(args[0]), &wasm_bindgen::JsValue::from_str(args[1])).ok(),
-            _ => None,
-        }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-impl PrefsStore for WebLocalStorage {
-    fn get(&self, key: &str) -> Option<String> {
-        self.call("getItem", &[key]).and_then(|value| value.as_string())
-    }
-
-    fn set(&mut self, key: &str, value: &str) {
-        self.call("setItem", &[key, value]);
-    }
 }
 
 #[cfg(all(not(target_arch = "wasm32"), test))]
@@ -15139,12 +19730,6 @@ impl PrefsStore for FilePrefsStore {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-thread_local! {
-    #[cfg(target_arch = "wasm32")]
-    static PREFS_STORE: std::cell::RefCell<WebLocalStorage> = std::cell::RefCell::new(WebLocalStorage::new());
-}
-
 #[cfg(all(not(target_arch = "wasm32"), test))]
 static PREFS_STORE: std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<FilePrefsStore>>> = std::sync::OnceLock::new();
 
@@ -15216,10 +19801,12 @@ fn native_pref_write_page(key: &str, value: &str) -> bool {
     semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), max_bytes).is_ok()
 }
 
+/// 🗝️ One TOP-LEVEL storage key — React's `StoragePort.get` (`🖥️platform/🟦️.ts`), the flat
+/// `localStorage` entry, NOT a field of the `semio.os.config` document.
 fn raw_prefs_get(key: &str) -> Option<String> {
     #[cfg(target_arch = "wasm32")]
     {
-        PREFS_STORE.with(|store| store.borrow().get(key))
+        host_storage_get(key)
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -15227,15 +19814,40 @@ fn raw_prefs_get(key: &str) -> Option<String> {
     }
 }
 
+/// 🗝️ React's `StoragePort.set`. On the browser build the write lands in this isolate's cache FIRST
+/// and crosses the door afterwards, so a read that follows a write in the same frame answers the
+/// written value — the door is asynchronous and a frame is not.
 fn raw_prefs_set(key: &str, value: &str) {
     #[cfg(target_arch = "wasm32")]
-    PREFS_STORE.with(|store| store.borrow_mut().set(key, value));
+    host_storage_set(key, value);
     #[cfg(not(target_arch = "wasm32"))]
     {
         let _ = native_pref_write_page(key, value);
     }
 }
 
+/// 🗝️ One bounded top-level key, the shape every per-frame chrome reader uses. It is deliberately NOT
+/// [`prefs_get`]: React keeps `ui.compute.workerCount` and `ui.introduction.seen.<appId>` as their own
+/// flat entries and only `os.config.ui-preferences` inside `semio.os.config`'s `preferences` map, so a
+/// renderer that nested them would answer nothing to a profile React had written.
+fn stored_field_get(key: &str) -> Option<String> {
+    if key.len() > SHELL_CHROME_IO_FIELD_BYTES {
+        return None;
+    }
+    raw_prefs_get(key).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES)
+}
+
+/// 🗝️ The writer twin of [`stored_field_get`].
+fn stored_field_set(key: &str, value: &str) {
+    if key.len() <= SHELL_CHROME_IO_FIELD_BYTES && value.len() <= SHELL_CHROME_IO_FIELD_BYTES {
+        raw_prefs_set(key, value);
+    }
+}
+
+/// 🎚️ One field of the `semio.os.config` document's `preferences` map — React's
+/// `OsShellConfig.getPreference` (`🖥️platform/🟦️.ts`). Its ONE key is `os.config.ui-preferences`, the
+/// UI-preferences event log; every other durable key React keeps is a flat entry reached through
+/// [`stored_field_get`].
 fn prefs_get(key: &str) -> Option<String> {
     let raw = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)?;
     if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
@@ -15244,6 +19856,9 @@ fn prefs_get(key: &str) -> Option<String> {
     serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
 }
 
+/// 🎚️ React's `OsShellConfig.setPreference`: re-read the complete document, apply one field, write it
+/// back — so a sibling projection (`dockLayouts`, `dockUi`, `namedLayouts`, `windowPanes`) is never
+/// clobbered by a preference write.
 fn prefs_set(key: &str, value: &str) {
     let mut config = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)
         .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
@@ -15261,19 +19876,251 @@ fn prefs_set(key: &str, value: &str) {
     }
 }
 
-fn prefs_get_bounded(key: &str) -> Option<String> {
-    if key.len() > SHELL_CHROME_IO_FIELD_BYTES {
-        return None;
-    }
-    prefs_get(key).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES)
+//#endregion 🗄️PrefsStore
+
+//#region 🚪️StorageDoor
+/// 🚪️ The browser backend of [`🗄️PrefsStore`]: one bounded storage door on the SAME page mailbox the
+/// file and directory doors already use (`🚪️host-io/🟦️.ts`, `🎞️frame-worker/🟦️.ts` ⇄
+/// `🚚️browser-frame-transport/🟦️.ts` ⇄ `🚀️browser-boot/🟦️.ts`), plus the synchronous cache a frame can
+/// actually read from.
+///
+/// ⚖️ Why a cache AND a door, not just a door: `prefs_get` is called from the frame build — the shell
+/// resolves appearance, `ui.introduction.seen.<appId>` and the dock skeleton while it paints — and the
+/// door is a `Promise`. So the page reads the whole carried census ONCE, before the shell boots, and
+/// hands it over with the boot descriptor ([`seed_host_storage`]); every later write updates this cache
+/// first and crosses the door afterwards. A read that follows a write in the same frame therefore
+/// answers the written value, and a boot never paints a default it has to correct a frame later.
+///
+/// 🔑️ Every key is React's own spelling, because both renderers share one browser origin: a host that
+/// chose Light, dismissed a tour or rearranged its dock under React must find all three again under
+/// this renderer. See [`HOST_STORAGE_KEY_CENSUS`].
+pub const STORAGE_DOOR_OP: &str = "storage";
+
+/// 📏️ Per-value ceiling, the same 64 KiB the shell already refuses a larger `semio.os.config` document
+/// at, so the door cannot become the wider hole.
+pub const HOST_STORAGE_VALUE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES;
+
+/// 📏️ Ceiling on the whole boot snapshot — it is structured-cloned into this isolate before the first
+/// frame, so it is priced like any other boot payload instead of growing with the origin's store.
+pub const HOST_STORAGE_SNAPSHOT_MAX_BYTES: usize = 128 * 1024;
+
+/// 🔑️ What one durable browser key is to THIS renderer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HostStorageKeyKind {
+    /// 🗄️ Carried: one fixed key the boot snapshot holds and the door may address.
+    Carried,
+    /// 🗄️ Carried FAMILY: a prefix whose tail is a runtime app id, so the page scans for members.
+    CarriedFamily,
+    /// 🧩️ The standalone `🖱️ui` surface library's own key (`useUiTerminology`, `UiDriver`, the locale
+    /// detector). React's OS shell does not read it either — it persists through
+    /// `semio.os.config`'s `os.config.ui-preferences` event log, and so does this renderer — so
+    /// carrying it would be dead payload in the frame Worker.
+    UiLibrary,
+    /// 👥️ `sessionStorage`, and credential-bearing (a presence identity pack). Off the boot snapshot
+    /// on purpose; reachable only through an explicit [`StorageDoorScope::Session`] call, which
+    /// nothing makes yet because document presence is native-only (`📓️w1e` gap 2).
+    Session,
 }
 
-fn prefs_set_bounded(key: &str, value: &str) {
-    if key.len() <= SHELL_CHROME_IO_FIELD_BYTES && value.len() <= SHELL_CHROME_IO_FIELD_BYTES {
-        prefs_set(key, value);
+/// 🔑️ EVERY durable key React's shell stack spells, classified. This is the parity ledger: the law
+/// `the_key_census_covers_reacts_own_key_list` re-reads React's own constants out of
+/// `🖱️ui/🎯️targets/⚛️react/🟦️.tsx`, `🖥️platform/🟦️.ts`, `💾️keybinding-persistence/🟦️.ts`,
+/// `🚗️UiDriver/🟦️.tsx`, `🏛️ShellHost/🟦️.tsx` and `🛠️ShellHelpers/🟦️.tsx` and refuses any key this
+/// table does not classify — so a key React adds cannot quietly go unserved here.
+pub const HOST_STORAGE_KEY_CENSUS: &[(&str, HostStorageKeyKind)] = &[
+    ("SEMIO_RUNTIME_DIAGNOSTICS", HostStorageKeyKind::Carried),
+    ("semio.os.config", HostStorageKeyKind::Carried),
+    ("ui.compute.workerCount", HostStorageKeyKind::Carried),
+    ("ui.introduction.seen.", HostStorageKeyKind::CarriedFamily),
+    ("semio.presence.client", HostStorageKeyKind::Session),
+    ("ui.chrome.appearance", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.driver", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.layout", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.locale", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.terminology", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.theme", HostStorageKeyKind::UiLibrary),
+    ("ui.chrome.theme.snapshot", HostStorageKeyKind::UiLibrary),
+    ("ui.drivers.custom", HostStorageKeyKind::UiLibrary),
+    ("ui.keybindings.overrides", HostStorageKeyKind::UiLibrary),
+    ("ui.themes.custom", HostStorageKeyKind::UiLibrary),
+];
+
+/// 🔑️ Whether the door and the snapshot carry `key` at all. The door is an ALLOWLIST, not a general
+/// `localStorage` proxy: the shell is its only caller and its census is closed, so an unknown key is a
+/// defect worth refusing loudly rather than a value worth serving.
+pub fn host_storage_carries_key(key: &str) -> bool {
+    HOST_STORAGE_KEY_CENSUS.iter().any(|(name, kind)| match kind {
+        HostStorageKeyKind::Carried => *name == key,
+        HostStorageKeyKind::CarriedFamily => key.len() > name.len() && key.starts_with(name),
+        HostStorageKeyKind::UiLibrary | HostStorageKeyKind::Session => false,
+    })
+}
+
+/// 🚪️ What one door call does to the addressed key — React's `StoragePort`, whole.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StorageDoorVerb {
+    Get,
+    Set,
+    Remove,
+}
+
+impl StorageDoorVerb {
+    pub fn as_id(self) -> &'static str {
+        match self {
+            Self::Get => "get",
+            Self::Set => "set",
+            Self::Remove => "remove",
+        }
     }
 }
-//#endregion 🗄️PrefsStore
+
+/// 🗄️ Which of the browser's two stores one call addresses — React uses both, so the door speaks both.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum StorageDoorScope {
+    #[default]
+    Local,
+    Session,
+}
+
+impl StorageDoorScope {
+    pub fn as_id(self) -> &'static str {
+        match self {
+            Self::Local => "local",
+            Self::Session => "session",
+        }
+    }
+}
+
+/// 📨️ Seals one storage hop for the page. Refused HERE — never sent and silently dropped there — when
+/// the key is outside the census or the value outside the bound, because both are caller defects and a
+/// door that answered them would be a wider hole than the store it fronts.
+pub fn encode_storage_door_request(verb: StorageDoorVerb, scope: StorageDoorScope, key: &str, value: Option<&str>) -> Result<String, String> {
+    if !host_storage_carries_key(key) {
+        return Err(format!("storage door refuses uncarried key {key:?}"));
+    }
+    if value.is_some_and(|value| value.len() > HOST_STORAGE_VALUE_MAX_BYTES) {
+        return Err(format!("storage door refuses {key} over {HOST_STORAGE_VALUE_MAX_BYTES} bytes"));
+    }
+    let mut request = serde_json::json!({ "op": STORAGE_DOOR_OP, "verb": verb.as_id(), "scope": scope.as_id(), "key": key });
+    if let Some(value) = value {
+        request["value"] = Value::String(value.to_string());
+    }
+    Ok(request.to_string())
+}
+
+/// 📬️ Reads one door answer. `Ok(None)` is "the store holds nothing under this key" and is the answer
+/// a `set`/`remove` also gives; `Err` is "the call was refused". The two are different outcomes and a
+/// refusal is never flattened into an empty read.
+pub fn decode_storage_door_answer(answer: &str) -> Result<Option<String>, String> {
+    let value: Value = serde_json::from_str(answer).map_err(|error| format!("storage door answer unreadable: {error}"))?;
+    if let Some(error) = value.get("error").and_then(Value::as_str) {
+        return Err(error.to_string());
+    }
+    match value.get("value") {
+        Some(Value::String(text)) => Ok(Some(text.clone())),
+        Some(Value::Null) | None => Ok(None),
+        Some(other) => Err(format!("storage door answered a non-string value: {other}")),
+    }
+}
+
+/// 🗄️ Reads one boot snapshot — the page's `{key: value}` read of the carried census. Uncarried keys
+/// and oversized values are DROPPED rather than failing the whole snapshot: one unreadable preference
+/// must not cost a boot every other preference it could have served.
+pub fn decode_host_storage_snapshot(snapshot_json: &str) -> BTreeMap<String, String> {
+    let mut entries = BTreeMap::new();
+    if snapshot_json.len() > HOST_STORAGE_SNAPSHOT_MAX_BYTES {
+        return entries;
+    }
+    let Ok(Value::Object(object)) = serde_json::from_str::<Value>(snapshot_json) else { return entries };
+    let mut bytes = 0usize;
+    for (key, value) in object {
+        let Some(text) = value.as_str() else { continue };
+        if !host_storage_carries_key(&key) || text.len() > HOST_STORAGE_VALUE_MAX_BYTES {
+            continue;
+        }
+        bytes += key.len() + text.len();
+        if bytes > HOST_STORAGE_SNAPSHOT_MAX_BYTES {
+            break;
+        }
+        entries.insert(key, text.to_string());
+    }
+    entries
+}
+
+thread_local! {
+    static HOST_STORAGE: std::cell::RefCell<BTreeMap<String, String>> = const { std::cell::RefCell::new(BTreeMap::new()) };
+}
+
+/// 🗄️ Installs the page's read of the carried census as this isolate's synchronous store, replacing
+/// whatever it held: the page's store IS the authority, and the only re-seed after boot is a `storage`
+/// event, which fires for OTHER documents on the origin only — this isolate's own writes went out
+/// through the door and are already in both halves. Answers how many entries it accepted.
+pub fn seed_host_storage(snapshot_json: &str) -> usize {
+    let entries = decode_host_storage_snapshot(snapshot_json);
+    let accepted = entries.len();
+    HOST_STORAGE.with(|store| *store.borrow_mut() = entries);
+    accepted
+}
+
+/// 🗄️ One carried key, synchronously.
+pub fn host_storage_get(key: &str) -> Option<String> {
+    HOST_STORAGE.with(|store| store.borrow().get(key).cloned())
+}
+
+/// 🗄️ Writes one carried key into this isolate's store and then through the door to the page's. The
+/// cache write lands first so the next read in this frame sees it; the door hop is fire-and-forget
+/// because a preference write must never fault a surface, and a refusal is logged rather than swallowed.
+pub fn host_storage_set(key: &str, value: &str) {
+    if !host_storage_carries_key(key) || value.len() > HOST_STORAGE_VALUE_MAX_BYTES {
+        return;
+    }
+    HOST_STORAGE.with(|store| store.borrow_mut().insert(key.to_string(), value.to_string()));
+    host_storage_write_through(StorageDoorVerb::Set, key, Some(value));
+}
+
+/// 🗄️ The remover of React's `StoragePort` trio, mirrored whole so the door is the port rather than a
+/// subset of it. No shell lane deletes a preference today — React's own `OsShellConfig.reset()` has no
+/// wgpu twin, because the ephemeral brand does not (`📓️w1d` gap) — so this is the door's surface, not
+/// a live path.
+pub fn host_storage_remove(key: &str) {
+    if !host_storage_carries_key(key) {
+        return;
+    }
+    HOST_STORAGE.with(|store| store.borrow_mut().remove(key));
+    host_storage_write_through(StorageDoorVerb::Remove, key, None);
+}
+
+#[cfg(target_arch = "wasm32")]
+fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value: Option<&str>) {
+    let request = match encode_storage_door_request(verb, StorageDoorScope::Local, key, value) {
+        Ok(request) => request,
+        Err(error) => {
+            ShellState::debug_log(&format!("[DEBUG] wgpu-shell storage write refused: {error}"));
+            return;
+        }
+    };
+    let key = key.to_string();
+    crate::spawn_app_task(async move {
+        match host_io_call(&request, None).await.map_err(|error| error).and_then(|answer| decode_storage_door_answer(&answer)) {
+            Ok(_) => {}
+            Err(error) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell storage {key} not persisted: {error}")),
+        }
+    });
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn host_storage_write_through(_verb: StorageDoorVerb, _key: &str, _value: Option<&str>) {}
+
+/// 🗄️ wasm storage hook — the twin of `semioWgpuSetHostAppearance`. The frame Worker owns no
+/// `localStorage`, so the page reads the carried census and hands it here with the boot descriptor, and
+/// again whenever another document on this origin rewrites one of those keys.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuSetHostStorage)]
+pub fn semio_wgpu_set_host_storage(snapshot_json: String) {
+    let accepted = seed_host_storage(&snapshot_json);
+    ShellState::debug_log(&format!("[DEBUG] wgpu-shell host storage seeded entries={accepted}"));
+}
+//#endregion 🚪️StorageDoor
 
 //#region 🔒️PrefLocks
 /// 🔒️ `SEMIO_LOCKED_*` env-driven pref locks — mirrors `os-shell.tsx`'s `FrameworkOsLocks`
@@ -15291,8 +20138,22 @@ struct ShellPrefLocks {
     theme_id: Option<String>,
 }
 
+/// 🔒️ Resolves one `SEMIO_LOCKED_*` lock through the BOOT DESCRIPTOR rather than the process env.
+/// The descriptor already carries the native env seeds (`resolve_environment_boot_descriptor`), so a
+/// native deployment behaves exactly as before — and a BROWSER build, which has no process env at all
+/// and was therefore unlockable, now locks from `<meta name="semio-locked-*">`/the library door's
+/// `locks` option through the same one vocabulary React reads as `FrameworkOsLocks`.
 fn env_lock(name: &str) -> Option<String> {
-    std::env::var(name).ok().filter(|value| !value.is_empty())
+    let locks = crate::boot_locks();
+    let value = match name {
+        "SEMIO_LOCKED_APPEARANCE" => locks.appearance,
+        "SEMIO_LOCKED_LOCALE" => locks.locale,
+        "SEMIO_LOCKED_TERMINOLOGY" => locks.terminology,
+        "SEMIO_LOCKED_THEME" => locks.theme_id,
+        "SEMIO_LOCKED_EXAMPLE" => locks.example_id,
+        _ => String::new(),
+    };
+    (!value.is_empty()).then_some(value)
 }
 
 #[cfg(test)]
@@ -15394,7 +20255,7 @@ fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> Chrome
 }
 
 fn load_chrome_prefs() -> ChromePrefsState {
-    let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+    let worker_count = stored_field_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
     project_chrome_prefs(read_ui_preferences(), worker_count)
 }
 
@@ -15532,69 +20393,6 @@ fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) 
     theme
 }
 
-/// 🎨️ The "mono" premade's real chrome palette (`ui/styling/theme/🔣️.json`), resolved once
-/// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
-/// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
-/// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/
-/// `from_chrome` aren't `pub`), and `Cargo.toml` is a reserved wave-3 choke point, so a generated
-/// `MONO_LIGHT`/`MONO_DARK` constant isn't reachable this wave — these are real resolved values, not
-/// invented ones. Metrics/fonts/checker/diagram/error/focus-ring-alpha etc. are shared with "semio"
-/// via `Theme::light()/dark()`'s struct-update base (mono only recolors chrome paints).
-fn mono_theme(dark: bool) -> Theme {
-    let base = if dark { Theme::dark() } else { Theme::light() };
-    let (canvas, panel, window, foreground, accent, active_hover, hover_interactive_fill, border_normal, border_emphasized, temporary) = if dark {
-        (
-            Rgba::from_srgb8(25, 25, 25, 255),
-            Rgba::from_srgb8(40, 40, 40, 255),
-            Rgba::from_srgb8(21, 21, 21, 255),
-            Rgba::from_srgb8(243, 243, 243, 255),
-            Rgba::from_srgb8(140, 140, 140, 255),
-            Rgba::from_srgb8(126, 126, 126, 255),
-            Rgba::from_srgb8(128, 128, 128, 255),
-            Rgba::from_srgb8(128, 128, 128, 255),
-            Rgba::from_srgb8(243, 243, 243, 255),
-            Rgba::from_srgb8(47, 47, 47, 255),
-        )
-    } else {
-        (
-            Rgba::from_srgb8(236, 236, 236, 255),
-            Rgba::from_srgb8(199, 199, 199, 255),
-            Rgba::from_srgb8(232, 232, 232, 255),
-            Rgba::from_srgb8(14, 14, 14, 255),
-            Rgba::from_srgb8(140, 140, 140, 255),
-            Rgba::from_srgb8(126, 126, 126, 255),
-            Rgba::from_srgb8(128, 128, 128, 255),
-            Rgba::from_srgb8(128, 128, 128, 255),
-            Rgba::from_srgb8(14, 14, 14, 255),
-            Rgba::from_srgb8(154, 154, 154, 255),
-        )
-    };
-    Theme {
-        background: canvas,
-        panel,
-        panel_border: border_normal,
-        navbar: window,
-        text: foreground,
-        text_muted: hover_interactive_fill,
-        accent,
-        accent_hover: active_hover,
-        active_foreground: foreground,
-        button: window,
-        button_hover: hover_interactive_fill,
-        input_bg: canvas,
-        separator: border_normal,
-        selected: accent,
-        canvas_clear: canvas,
-        temporary,
-        row_hover: hover_interactive_fill,
-        border_normal,
-        border_emphasized,
-        text_element: hover_interactive_fill,
-        focus_ring: accent.with_alpha(0.6),
-        ..base
-    }
-}
-
 fn custom_theme_definition_from(prefs: &ChromePrefsState, custom_id: &str) -> Option<CustomChromeTheme> {
     let raw = prefs.custom_themes.get(custom_id)?;
     serde_json::from_str(&raw).ok()
@@ -15611,7 +20409,7 @@ fn custom_theme_definition(custom_id: &str) -> Option<CustomChromeTheme> {
 pub fn resolve_theme_for_ids(theme_id: &str, appearance_id: &str) -> Theme {
     match theme_id {
         "" | "semio" => crate::resolve_theme(appearance_id),
-        "mono" => mono_theme(crate::appearance_is_dark(appearance_id)),
+        "mono" => Theme::mono(crate::appearance_is_dark(appearance_id)),
         custom_id if custom_id.starts_with("custom.") => match custom_theme_definition(custom_id) {
             Some(custom) => {
                 let base = resolve_theme_for_ids(&custom.base, appearance_id);
@@ -15648,6 +20446,88 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("surface.faulted", true) => "Fläche nicht verfügbar",
         ("settings.tab.theme", false) => "Theme",
         ("settings.tab.theme", true) => "Design",
+        ("settings.tab.app", false) => "App",
+        ("settings.tab.app", true) => "App",
+        ("settings.app.name", false) => "Name",
+        ("settings.app.name", true) => "Name",
+        ("settings.app.id", false) => "Id",
+        ("settings.app.id", true) => "Id",
+        ("settings.app.controller", false) => "Controller",
+        ("settings.app.controller", true) => "Controller",
+        ("settings.app.plugin", false) => "Plugin",
+        ("settings.app.plugin", true) => "Plugin",
+        ("settings.tab.appearance", false) => "Appearance",
+        ("settings.tab.appearance", true) => "Darstellung",
+        ("settings.appearance.system", false) => "System",
+        ("settings.appearance.system", true) => "System",
+        ("settings.appearance.light", false) => "Light",
+        ("settings.appearance.light", true) => "Hell",
+        ("settings.appearance.dark", false) => "Dark",
+        ("settings.appearance.dark", true) => "Dunkel",
+        ("settings.tab.layout", false) => "Layout",
+        ("settings.tab.layout", true) => "Layout",
+        ("settings.layout.desktop", false) => "Desktop",
+        ("settings.layout.desktop", true) => "Desktop",
+        ("settings.layout.tablet", false) => "Tablet",
+        ("settings.layout.tablet", true) => "Tablet",
+        ("settings.tab.driver", false) => "Driver",
+        ("settings.tab.driver", true) => "Steuerung",
+        ("settings.tab.language", false) => "Language",
+        ("settings.tab.language", true) => "Sprache",
+        ("settings.language.en", false) => "English",
+        ("settings.language.en", true) => "Englisch",
+        ("settings.language.de", false) => "German",
+        ("settings.language.de", true) => "Deutsch",
+        ("settings.tab.terminology", false) => "Terminology",
+        ("settings.tab.terminology", true) => "Terminologie",
+        ("settings.resetDock", false) => "Reset Dock",
+        ("settings.resetDock", true) => "Dock zurücksetzen",
+        ("settings.tab.keybindings", false) => "Keybindings",
+        ("settings.tab.keybindings", true) => "Tastenkürzel",
+        ("settings.keybindings.capture", false) => "Change",
+        ("settings.keybindings.capture", true) => "Ändern",
+        ("settings.keybindings.pressKeys", false) => "Press keys…",
+        ("settings.keybindings.pressKeys", true) => "Tasten drücken…",
+        ("settings.keybindings.reset", false) => "Reset",
+        ("settings.keybindings.reset", true) => "Zurücksetzen",
+        ("settings.keybindings.conflict", false) => "conflict",
+        ("settings.keybindings.conflict", true) => "Konflikt",
+        ("settings.tab.defaultApps", false) => "Default Apps",
+        ("settings.tab.defaultApps", true) => "Standard-Apps",
+        ("settings.defaultApps.none", false) => "None",
+        ("settings.defaultApps.none", true) => "Keine",
+        ("settings.unavailable", false) => "Unavailable",
+        ("settings.unavailable", true) => "Nicht verfügbar",
+        ("conflict.panel", false) => "Conflicts",
+        ("conflict.panel", true) => "Konflikte",
+        ("marketplace.tab", false) => "Marketplace",
+        ("marketplace.tab", true) => "Marktplatz",
+        ("marketplace.unavailable", false) => "Marketplace unavailable",
+        ("marketplace.unavailable", true) => "Marktplatz nicht verfügbar",
+        ("plugins.source", false) => "Source",
+        ("plugins.source", true) => "Quelle",
+        ("plugins.status.loaded", false) => "loaded",
+        ("plugins.status.loaded", true) => "geladen",
+        ("tool.armed", false) => "Options (armed)",
+        ("tool.armed", true) => "Optionen (aktiv)",
+        ("tool.idle", false) => "Options",
+        ("tool.idle", true) => "Optionen",
+        ("mobilePanel.app", false) => "App",
+        ("mobilePanel.app", true) => "App",
+        ("chat.instructions", false) => "Messages stay on this device.",
+        ("chat.instructions", true) => "Nachrichten bleiben auf diesem Gerät.",
+        ("chat.readyFor", false) => "Ready.",
+        ("chat.readyFor", true) => "Bereit.",
+        ("chat.localOnly", false) => "This transcript is local only.",
+        ("chat.localOnly", true) => "Dieser Verlauf ist nur lokal.",
+        ("chat.savedLocally", false) => "Saved locally:",
+        ("chat.savedLocally", true) => "Lokal gespeichert:",
+        ("chat.placeholder", false) => "Message",
+        ("chat.placeholder", true) => "Nachricht",
+        ("chat.send", false) => "Send",
+        ("chat.send", true) => "Senden",
+        ("common.clear", false) => "Clear",
+        ("common.clear", true) => "Leeren",
         ("settings.tab.commands", false) => "Commands",
         ("settings.tab.commands", true) => "Befehle",
         ("settings.theme.select", false) => "Theme",
@@ -15670,10 +20550,24 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("panelToggle.settings", true) => "Einstellungen",
         ("panelToggle.chat", false) => "Chat",
         ("panelToggle.chat", true) => "Chat",
+        ("panelToggle.command", false) => "Command",
+        ("panelToggle.command", true) => "Befehl",
+        ("panelToggle.tool", false) => "Tool",
+        ("panelToggle.tool", true) => "Werkzeug",
+        ("panelToggle.sync", false) => "Sync",
+        ("panelToggle.sync", true) => "Abgleich",
         ("common.home", false) => "Home",
         ("common.home", true) => "Startseite",
         ("common.windowOptions", false) => "Window Options",
         ("common.windowOptions", true) => "Fensteroptionen",
+        ("common.actions", false) => "Actions",
+        ("common.actions", true) => "Aktionen",
+        ("common.utilities", false) => "Utilities",
+        ("common.utilities", true) => "Werkzeuge",
+        ("common.projection", false) => "Projection",
+        ("common.projection", true) => "Projektion",
+        ("window.search.title", false) => "Search",
+        ("window.search.title", true) => "Suchen",
         ("common.focus", false) => "Focus",
         ("common.focus", true) => "Fokussieren",
         ("common.unfocus", false) => "Unfocus",
@@ -15682,6 +20576,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("common.execute", true) => "Ausführen",
         ("common.reset", false) => "Reset",
         ("common.reset", true) => "Zurücksetzen",
+        ("shellCommand.panelToggle", false) => "Toggle Panel",
+        ("shellCommand.panelToggle", true) => "Panel umschalten",
+        ("shellCommand.panelTab", false) => "Switch Panel Tab",
+        ("shellCommand.panelTab", true) => "Panel-Tab wechseln",
         ("introduction.skip", false) => "Skip",
         ("introduction.skip", true) => "Überspringen",
         ("introduction.back", false) => "Back",
@@ -15690,6 +20588,24 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("introduction.next", true) => "Weiter",
         ("introduction.done", false) => "Done",
         ("introduction.done", true) => "Fertig",
+        // 🚦️ `#s-sync-status`'s vocabulary, term for term with `syncPillText`'s own `FrozenLabel`s
+        // (`🛠️ShellHelpers/🟦️.tsx`). `sync.recovering` has no React twin — see `ShellSyncPill`.
+        ("sync.persisted", false) => "Persisted",
+        ("sync.persisted", true) => "Gespeichert",
+        ("sync.pending", false) => "Pending",
+        ("sync.pending", true) => "Ausstehend",
+        ("sync.remote", false) => "Remote",
+        ("sync.remote", true) => "Remote",
+        ("sync.remote.connected", false) => "connected",
+        ("sync.remote.connected", true) => "verbunden",
+        ("sync.remote.connecting", false) => "connecting",
+        ("sync.remote.connecting", true) => "verbindet",
+        ("sync.remote.backoff", false) => "backoff",
+        ("sync.remote.backoff", true) => "erneuter Versuch",
+        ("sync.remote.detached", false) => "detached",
+        ("sync.remote.detached", true) => "getrennt",
+        ("sync.recovering", false) => "Recovering",
+        ("sync.recovering", true) => "Wiederherstellung",
         ("common.cancel", false) => "Cancel",
         ("common.cancel", true) => "Abbrechen",
         ("example.picker", false) => "Example",
@@ -15720,6 +20636,20 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("command.moveWindow", true) => "Fenster verschieben",
         ("command.resizeWindow", false) => "Resize Window",
         ("command.resizeWindow", true) => "Fenster anpassen",
+        ("palette.undo", false) => "Undo",
+        ("palette.undo", true) => "Rückgängig",
+        ("palette.redo", false) => "Redo",
+        ("palette.redo", true) => "Wiederholen",
+        ("palette.commitCheckpoint", false) => "Commit Checkpoint",
+        ("palette.commitCheckpoint", true) => "Prüfpunkt festschreiben",
+        ("palette.group.panels", false) => "Panels",
+        ("palette.group.panels", true) => "Bereiche",
+        ("palette.group.windows", false) => "Windows",
+        ("palette.group.windows", true) => "Fenster",
+        ("palette.group.actions", false) => "Actions",
+        ("palette.group.actions", true) => "Aktionen",
+        ("palette.group.hostApp", false) => "Space",
+        ("palette.group.hostApp", true) => "Raum",
         (other, _) => other,
     }
 }
@@ -15805,13 +20735,32 @@ fn read_ui_preferences() -> UiPreferences {
     replay_ui_preferences(&read_ui_preferences_event_log())
 }
 
-fn appearance_id(value: Option<OsUiAppearance>) -> String {
-    match value {
-        Some(OsUiAppearance::Light) => "light",
-        Some(OsUiAppearance::Dark) => "dark",
-        _ => "system",
+/// 🌓️ The persisted appearance this shell's OWN preference store answered, or `None` when it holds
+/// no `setAppearance` event — React's `preferences.appearance`, before its `?? "system"` fallback,
+/// so [`resolve_appearance_id`] can slot the host's read in between.
+fn appearance_id(value: Option<OsUiAppearance>) -> Option<String> {
+    match value? {
+        OsUiAppearance::Light => Some("light".to_string()),
+        OsUiAppearance::Dark => Some("dark".to_string()),
+        OsUiAppearance::System => Some("system".to_string()),
     }
-    .to_string()
+}
+
+/// 🌓️ The ONE appearance-resolution law, mirroring `🏛️ShellHost/🟦️.tsx:2174`'s
+/// `locks.appearance ?? resolveUiPreferences(preferences, { appearance: "system", … }).appearance`
+/// term for term — a lock wins, then this process's own preference store, then the HOST's read of
+/// that same store, then React's own `"system"` seed.
+///
+/// The host term is the page's own replay of that same log, published through
+/// `semioWgpuSetHostAppearance`. It is a fallback and never an override, and since the
+/// [`🚪️StorageDoor`] seeds this isolate's store before the shell boots, this process's own term now
+/// answers on the browser too — the host term survives for the embeddable door and for a realm whose
+/// snapshot was refused.
+fn resolve_appearance_id(preferences: &UiPreferences) -> String {
+    env_lock("SEMIO_LOCKED_APPEARANCE")
+        .or_else(|| appearance_id(preferences.appearance))
+        .or_else(|| crate::host_appearance_preference().map(ToOwned::to_owned))
+        .unwrap_or_else(|| "system".to_string())
 }
 
 fn locale_id(value: Option<OsUiLocale>) -> String {
@@ -15923,7 +20872,7 @@ impl ShellState {
         self.chrome_present.preferences_loaded = true;
         let locks = shell_pref_locks();
         let preferences = read_ui_preferences();
-        self.appearance_id = locks.appearance.clone().unwrap_or_else(|| appearance_id(preferences.appearance));
+        self.appearance_id = resolve_appearance_id(&preferences);
         self.locale_id = locks.locale.clone().unwrap_or_else(|| locale_id(preferences.locale));
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
@@ -15945,7 +20894,7 @@ impl ShellState {
             return;
         }
         persist_ui_preferences(self, self.chrome_present.last_synced_preferences.as_ref());
-        prefs_set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
+        stored_field_set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
         self.chrome_present.last_synced_preferences = Some(snapshot);
     }
 }
@@ -15958,10 +20907,36 @@ mod ui_prefs_themes_i18n_tests;
 //#endregion 🧪️UiPrefsThemesI18nTests
 // #endregion 💾️🎨️🌐️ UiPrefsThemesI18n
 
+//#region 🗄️BrowserPrefsPersistenceTests
+/// 🧪️ WGPU-RENDERER-REACT-PARITY packet W5a — the page-serviced preference door, its key census
+/// against React's own, the boot snapshot and the encodings both renderers share.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🗄️browser-prefs-persistence/🦀️.rs"]
+mod browser_prefs_persistence_tests;
+//#endregion 🗄️BrowserPrefsPersistenceTests
+
+//#region 🌓️AppearanceTourAndFooterPillTests
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🌓️appearance-tour-and-footer-pills/🦀️.rs"]
+mod appearance_tour_and_footer_pill_tests;
+//#endregion 🌓️AppearanceTourAndFooterPillTests
+
+//#region 🎓️TourOverlayAndChordGlyphTests
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🎓️tour-overlay-and-chord-glyphs/🦀️.rs"]
+mod tour_overlay_and_chord_glyph_tests;
+//#endregion 🎓️TourOverlayAndChordGlyphTests
+
 //#region 🧪️ChromeOverlaysAndTourTests
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-chrome-overlays-tour/🦀️.rs"]
 mod chrome_overlays_tour_tests;
+
+/// 🧪️ WGPU-RENDERER-REACT-PARITY packet W1j — transient notice, agent approvals modal, agent
+/// presence in the chat panel header, and the tooltip-delay alignment.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🔬️wgpu-agent-overlays/🦀️.rs"]
+mod agent_overlays_tests;
 //#endregion 🧪️ChromeOverlaysAndTourTests
 
 //#endregion ShellChrome
@@ -16089,7 +21064,7 @@ async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) 
 /// all, while every other hop of both journeys was already correct
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
 #[cfg(target_arch = "wasm32")]
-async fn host_io_call(request_json: &str, bytes: Option<&[u8]>) -> Result<String, String> {
+pub(crate) async fn host_io_call(request_json: &str, bytes: Option<&[u8]>) -> Result<String, String> {
     use wasm_bindgen::JsCast;
     let global = js_sys::global();
     let door = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioWgpuHostIo"))
@@ -16323,3 +21298,7 @@ mod context_menu_keyboard_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/⬇️wgpu-media-export-encoding/🦀️.rs"]
 mod media_export_encoding_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/📐️wgpu-dpi-logical-units/🦀️.rs"]
+mod dpi_logical_units_tests;

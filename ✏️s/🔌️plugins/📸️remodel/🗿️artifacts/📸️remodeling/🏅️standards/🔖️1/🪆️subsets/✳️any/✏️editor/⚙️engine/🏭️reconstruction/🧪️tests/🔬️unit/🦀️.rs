@@ -446,6 +446,11 @@ mod long {
         params.match_mutual = true;
         params.target_feature_count = 400;
         params.texture_enabled = false;
+        // 🧊️ Six of the eight registered views, spread around the orbit: the interactive pipeline
+        // meshes exactly what the depth maps observed (a closed shell one truncation band thick,
+        // never a re-voxelised blob), so the cube must be seen from around for its shell to be one
+        // connected surface whose extent is the cube's.
+        params.max_dense_cameras = 6;
         let mut engine = ReconstructionEngine::new(&params);
 
         let opts = remodeling_video::VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
@@ -499,6 +504,10 @@ mod long {
         let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx])).unzip();
         let gauge = crate::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
         println!("[long] gauge-fixing Sim3 from {} registered camera(s): scale={:.4}", recovered_centers.len(), gauge.s);
+        for (slot, &(frame_idx, _)) in recon_cameras.iter().enumerate() {
+            let aligned = gauge.act(recovered_centers[slot]);
+            println!("[long]   camera frame {frame_idx}: aligned centre {aligned:?} true {:?} off by {:.3}", true_centers[slot], norm3(sub3(aligned, true_centers[slot])));
+        }
 
         let mut gauged_lo = [f64::INFINITY; 3];
         let mut gauged_hi = [f64::NEG_INFINITY; 3];
@@ -608,7 +617,13 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
     .expect("engine worker");
 }
 
+/// 🔭️ Stage-by-stage trace of the shipped `synthetic-orbit` example through the bare engine (pair
+/// table, registered cameras, fused-cloud extent, terminal mesh census). Diagnostic, therefore
+/// `#[ignore]`: `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture
+/// debug_probe_synthetic_orbit`; the asserting run of this fixture is the app-level
+/// `reconstructs_the_synthetic_orbit_against_ground_truth`.
 #[test]
+#[ignore = "diagnostic stage trace: minutes of dense stereo, run explicitly"]
 fn debug_probe_synthetic_orbit() {
     let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
@@ -644,13 +659,8 @@ fn debug_probe_synthetic_orbit() {
                             engine.descriptors_per_frame[frame] = d;
                         }
                     }
-                    for (frame, keypoints) in engine.keypoints_per_frame.iter().enumerate() {
-                        let max_y = keypoints.iter().map(|k| k.y as i32).max().unwrap_or(0);
-                        let _ = max_y;
-                    }
                 }
                 EngineStage::MatchingFeatures => {
-                    if let Some(sfm) = engine.sfm.as_ref() { let _ = sfm; }
                     eprintln!("[DEBUG] tracks {}", engine.tracks.as_ref().map_or(0, |t| t.tracks.len()));
                     eprintln!("[DEBUG] pairs {:?}", engine.pairwise_matches.iter().map(|(a, b, m)| (*a, *b, m.len())).collect::<Vec<_>>());
                 }
@@ -677,4 +687,229 @@ fn debug_probe_synthetic_orbit() {
             }
         }
     }
+}
+
+/// 🔭️ Match and seed-pose quality of the shipped `synthetic-orbit` example against its ground
+/// truth: for every matched pair, how many matches satisfy the TRUE epipolar geometry, and for the
+/// registered cameras, the rotation and translation-direction error of the recovered relative
+/// poses. Diagnostic, therefore `#[ignore]`:
+/// `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture diagnose_synthetic_orbit_geometry`.
+#[test]
+#[ignore = "diagnostic geometry audit against the fixture's ground truth, run explicitly"]
+fn diagnose_synthetic_orbit_geometry() {
+    use crate::lie::{Quatd, Se3, So3};
+    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    let number = |node: &serde_json::Value| node.as_f64().expect("number");
+    let world_to_camera: Vec<Se3> = truth["extrinsics"]
+        .as_array()
+        .expect("extrinsics")
+        .iter()
+        .map(|node| {
+            let q = node["rotationWxyzWorldToCamera"].as_array().expect("quaternion");
+            let rotation = So3::from_quat(Quatd { w: number(&q[0]), x: number(&q[1]), y: number(&q[2]), z: number(&q[3]) });
+            let c = node["cameraCenterM"].as_array().expect("centre");
+            let centre = [number(&c[0]), number(&c[1]), number(&c[2])];
+            Se3 { r: rotation, t: scale3(rotation.act(centre), -1.0) }
+        })
+        .collect();
+    let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let mut engine = ReconstructionEngine::new(&params);
+    let mut intrinsics = None;
+    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
+        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+        intrinsics.get_or_insert_with(|| default_intrinsics(image.width, image.height, params.assumed_focal_ratio, params.distortion));
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+    }
+    let intrinsics = intrinsics.expect("one frame");
+    // One unit at a time: the first pose-estimation unit hands the pair table to the SfM.
+    while engine.stage() != EngineStage::EstimatingPoses {
+        if let EngineStatus::Failed(message) = engine.advance(1) {
+            panic!("engine failed before pose estimation: {message}");
+        }
+    }
+    let relative = |a: usize, b: usize| world_to_camera[b].semio_compose_rs(&world_to_camera[a].inverse());
+    let essential = |pose: &Se3| {
+        let t = pose.t;
+        let skew = [[0.0, -t[2], t[1]], [t[2], 0.0, -t[0]], [-t[1], t[0], 0.0]];
+        let r = mat3d_to_array_local(&pose.r.0);
+        let mut e = [[0.0; 3]; 3];
+        for i in 0..3 {
+            for j in 0..3 {
+                e[i][j] = (0..3).map(|k| skew[i][k] * r[k][j]).sum();
+            }
+        }
+        e
+    };
+    fn mat3d_to_array_local(m: &crate::algebra::Mat3d) -> [[f64; 3]; 3] {
+        std::array::from_fn(|r| std::array::from_fn(|c| m.cols[c][r]))
+    }
+    let sampson = |e: &[[f64; 3]; 3], a: [f64; 3], b: [f64; 3]| {
+        let ea: [f64; 3] = std::array::from_fn(|i| (0..3).map(|k| e[i][k] * a[k]).sum());
+        let etb: [f64; 3] = std::array::from_fn(|i| (0..3).map(|k| e[k][i] * b[k]).sum());
+        let numerator: f64 = (0..3).map(|k| b[k] * ea[k]).sum::<f64>().powi(2);
+        numerator / (ea[0] * ea[0] + ea[1] * ea[1] + etb[0] * etb[0] + etb[1] * etb[1]).max(1e-18)
+    };
+    for (a, b, matches) in &engine.pairwise_matches {
+        let e = essential(&relative(*a, *b));
+        let mut good = 0usize;
+        let mut errors: Vec<f64> = Vec::new();
+        for matched in matches {
+            let ka = engine.keypoints_per_frame[*a][matched.a as usize];
+            let kb = engine.keypoints_per_frame[*b][matched.b as usize];
+            let ra = intrinsics.unproject_ray([f64::from(ka.x), f64::from(ka.y)]);
+            let rb = intrinsics.unproject_ray([f64::from(kb.x), f64::from(kb.y)]);
+            let error = sampson(&e, [ra[0], ra[1], 1.0], [rb[0], rb[1], 1.0]).sqrt();
+            errors.push(error);
+            if error < 0.005 {
+                good += 1;
+            }
+        }
+        errors.sort_by(f64::total_cmp);
+        let median = errors.get(errors.len() / 2).copied().unwrap_or(f64::NAN);
+        eprintln!("[GEO] pair ({a},{b}): {} matches, {good} true-epipolar inliers (<0.005 normalized), median sampson {median:.4}", matches.len());
+    }
+    // 🎯️ Detector repeatability and matcher correctness through the true scene: every frame-0
+    // keypoint on the cube is transferred to frame 1 by ray-casting the known cube, then compared with
+    // (a) the nearest frame-1 keypoint and (b) the keypoint the matcher paired it with.
+    {
+        let cube_half = number(&truth["scene"]["halfExtentM"]);
+        let camera_to_world = |frame: usize| world_to_camera[frame].inverse();
+        let hit = |origin: [f64; 3], direction: [f64; 3]| -> Option<[f64; 3]> {
+            let (mut t_min, mut t_max) = (-1.0e30f64, 1.0e30f64);
+            for axis in 0..3 {
+                let (d, o) = (direction[axis], origin[axis]);
+                if d.abs() < 1e-12 {
+                    if o.abs() > cube_half {
+                        return None;
+                    }
+                    continue;
+                }
+                let (t1, t2) = ((-cube_half - o) / d, (cube_half - o) / d);
+                let (lo, hi) = if t1 <= t2 { (t1, t2) } else { (t2, t1) };
+                t_min = t_min.max(lo);
+                t_max = t_max.min(hi);
+            }
+            if t_max < t_min.max(0.0) || t_min <= 0.0 {
+                return None;
+            }
+            Some(add3(origin, scale3(direction, t_min)))
+        };
+        let project = |frame: usize, point: [f64; 3]| -> Option<[f64; 2]> {
+            let camera = world_to_camera[frame].act(point);
+            (camera[2] > 1e-9).then(|| [intrinsics.cx + intrinsics.fx * camera[0] / camera[2], intrinsics.cy + intrinsics.fy * camera[1] / camera[2]])
+        };
+        let (a, b) = (0usize, 1usize);
+        let pose_a = camera_to_world(a);
+        let mut nearest_errors = Vec::new();
+        let mut matched_errors = Vec::new();
+        let mut off_cube = 0usize;
+        let pair = engine.pairwise_matches.iter().find(|(x, y, _)| *x == a && *y == b).map(|(_, _, m)| m.clone()).unwrap_or_default();
+        for (index, keypoint) in engine.keypoints_per_frame[a].iter().enumerate() {
+            let ray = intrinsics.unproject_ray([f64::from(keypoint.x), f64::from(keypoint.y)]);
+            let direction = normalize3(pose_a.r.act(ray));
+            let Some(point) = hit(pose_a.t, direction) else { off_cube += 1; continue };
+            let Some(expected) = project(b, point) else { continue };
+            let nearest = engine.keypoints_per_frame[b].iter().map(|k| ((f64::from(k.x) - expected[0]).powi(2) + (f64::from(k.y) - expected[1]).powi(2)).sqrt()).fold(f64::INFINITY, f64::min);
+            nearest_errors.push(nearest);
+            if let Some(matched) = pair.iter().find(|m| m.a as usize == index) {
+                let k = engine.keypoints_per_frame[b][matched.b as usize];
+                matched_errors.push(((f64::from(k.x) - expected[0]).powi(2) + (f64::from(k.y) - expected[1]).powi(2)).sqrt());
+            }
+        }
+        nearest_errors.sort_by(f64::total_cmp);
+        matched_errors.sort_by(f64::total_cmp);
+        let quantile = |v: &[f64], q: f64| v.get(((v.len() as f64 - 1.0) * q) as usize).copied().unwrap_or(f64::NAN);
+        eprintln!("[GEO] frame {a}: {} keypoints, {off_cube} off the cube; nearest frame-{b} keypoint to the true transfer: median {:.2} px, 25% {:.2}, 75% {:.2}, within 2 px {}", engine.keypoints_per_frame[a].len(), quantile(&nearest_errors, 0.5), quantile(&nearest_errors, 0.25), quantile(&nearest_errors, 0.75), nearest_errors.iter().filter(|e| **e < 2.0).count());
+        eprintln!("[GEO] matched keypoints vs true transfer: {} matched, median {:.2} px, within 2 px {}, within 5 px {}", matched_errors.len(), quantile(&matched_errors, 0.5), matched_errors.iter().filter(|e| **e < 2.0).count(), matched_errors.iter().filter(|e| **e < 5.0).count());
+        let first: Vec<(f32, f32, u8, f32)> = engine.keypoints_per_frame[a].iter().take(8).map(|k| (k.x, k.y, k.octave, k.response)).collect();
+        eprintln!("[GEO] first frame-{a} keypoints (x, y, octave, response): {first:?}");
+        // 🧬️ Descriptor discrimination over TRUE pairs: for every base-level frame-0 keypoint whose
+        // transfer lands within 1.5 px of a base-level frame-1 keypoint, the Hamming distance of that
+        // true pair against the best distance to any other frame-1 descriptor.
+        let mut true_distances = Vec::new();
+        let mut best_other = Vec::new();
+        let mut angle_deltas = Vec::new();
+        let mut octaves = [0usize; 4];
+        for keypoint in &engine.keypoints_per_frame[a] {
+            octaves[usize::from(keypoint.octave).min(3)] += 1;
+        }
+        for (index, keypoint) in engine.keypoints_per_frame[a].iter().enumerate() {
+            if keypoint.octave != 0 {
+                continue;
+            }
+            let ray = intrinsics.unproject_ray([f64::from(keypoint.x), f64::from(keypoint.y)]);
+            let direction = normalize3(pose_a.r.act(ray));
+            let Some(point) = hit(pose_a.t, direction) else { continue };
+            let Some(expected) = project(b, point) else { continue };
+            let Some((partner, _)) = engine.keypoints_per_frame[b].iter().enumerate().filter(|(_, k)| k.octave == 0).map(|(j, k)| (j, ((f64::from(k.x) - expected[0]).powi(2) + (f64::from(k.y) - expected[1]).powi(2)).sqrt())).filter(|(_, d)| *d < 1.5).min_by(|x, y| x.1.total_cmp(&y.1)) else { continue };
+            let descriptor = &engine.descriptors_per_frame[a][index];
+            let distance = descriptor_distance(descriptor, &engine.descriptors_per_frame[b][partner]);
+            let other = engine.descriptors_per_frame[b].iter().enumerate().filter(|(j, _)| *j != partner).map(|(_, d)| descriptor_distance(descriptor, d)).min().unwrap_or(u32::MAX);
+            true_distances.push(distance);
+            best_other.push(other);
+            let delta = (keypoint.angle - engine.keypoints_per_frame[b][partner].angle).rem_euclid(std::f32::consts::TAU);
+            angle_deltas.push(delta.min(std::f32::consts::TAU - delta).to_degrees());
+        }
+        true_distances.sort_unstable();
+        best_other.sort_unstable();
+        angle_deltas.sort_by(f32::total_cmp);
+        let mid = |v: &[u32]| v.get(v.len() / 2).copied().unwrap_or(0);
+        eprintln!("[GEO] octaves of frame-{a} keypoints: {octaves:?}; {} true base-level pairs: median Hamming of the true pair {} (min {}), median best other {}, median |Δangle| {:.1}°", true_distances.len(), mid(&true_distances), true_distances.first().copied().unwrap_or(0), mid(&best_other), angle_deltas.get(angle_deltas.len() / 2).copied().unwrap_or(0.0));
+    }
+    let mut seen_cursor = usize::MAX;
+    while engine.stage() == EngineStage::EstimatingPoses {
+        if let EngineStatus::Failed(message) = engine.advance(1) {
+            panic!("engine failed during pose estimation: {message}");
+        }
+        if engine.pose_cursor != seen_cursor {
+            seen_cursor = engine.pose_cursor;
+            if let Some(sfm) = engine.sfm.as_ref() {
+                if seen_cursor < engine.frames.len() {
+                    eprintln!("[GEO] registering frame {seen_cursor}: {} 2D-3D correspondences, {} points, {} cameras so far", sfm.correspondence_count(seen_cursor), sfm.point_count(), sfm.registered_count());
+                    // 🔍️ Why a frame's registration is starved: its tracks by how many registered
+                    // frames they span and whether they carry a point.
+                    if seen_cursor <= 8 {
+                        let registered: std::collections::BTreeSet<usize> = (0..seen_cursor).filter(|&f| sfm.camera_pose(f).is_some()).collect();
+                        let mut by_span = std::collections::BTreeMap::<usize, (usize, usize)>::new();
+                        for (track, has_point) in sfm.tracks_observing(seen_cursor) {
+                            let span = track.iter().filter(|(f, _)| registered.contains(f)).count();
+                            let entry = by_span.entry(span).or_insert((0, 0));
+                            entry.0 += 1;
+                            if has_point {
+                                entry.1 += 1;
+                            }
+                        }
+                        eprintln!("[GEO]   frame {seen_cursor} tracks by registered span (span: tracks/with point): {by_span:?}");
+                    }
+                }
+            }
+        }
+    }
+    let report = |label: &str, registered: &[(usize, remodeling_camera::CameraPose)]| {
+        eprintln!("[GEO] {label}: registered {:?}", registered.iter().map(|(frame, _)| *frame).collect::<Vec<_>>());
+        let (first, first_pose) = registered[0];
+        let mut worst = 0.0f64;
+        for &(frame, pose) in &registered[1..] {
+            let recovered = pose.0.semio_compose_rs(&first_pose.0.inverse());
+            let expected = relative(first, frame);
+            let rotation_error = norm3(expected.r.inverse().semio_compose_rs(&recovered.r).log()).to_degrees();
+            worst = worst.max(rotation_error);
+            let direction = |t: [f64; 3]| normalize3(t);
+            let cosine = { let (u, v) = (direction(recovered.t), direction(expected.t)); u[0] * v[0] + u[1] * v[1] + u[2] * v[2] };
+            eprintln!("[GEO] {label}: camera {frame} relative to {first}: rotation error {rotation_error:.2}°, translation direction error {:.2}°, baseline recovered {:.3} true {:.3}", cosine.clamp(-1.0, 1.0).acos().to_degrees(), norm3(recovered.t), norm3(expected.t));
+        }
+        eprintln!("[GEO] {label}: worst rotation error {worst:.2}°");
+    };
+    let reconstruction = engine.sfm.as_ref().expect("sfm");
+    let registered: Vec<(usize, remodeling_camera::CameraPose)> = (0..engine.frames.len()).filter_map(|frame| reconstruction.camera_pose(frame).map(|pose| (frame, pose))).collect();
+    report("after registration", &registered);
+    // 🌐️ Through the bundle stage: the global adjustment and the cleanup, then the finalized snapshot.
+    while engine.stage() == EngineStage::BundleAdjusting {
+        if let EngineStatus::Failed(message) = engine.advance(64) {
+            panic!("engine failed during bundle adjustment: {message}");
+        }
+    }
+    let finalized = engine.reconstruction.as_ref().expect("finalized reconstruction");
+    report("after bundle", &finalized.cameras);
 }

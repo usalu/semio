@@ -56,8 +56,8 @@ ui_host = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖥️h
 # already named `ui_render::{FrameScheduler, InvalidationReason, DispatchEvent, CursorRequest, ...}`
 # without this crate ever declaring the dependency. Workspace-internal, 238→238.
 ui_render = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-# 🧬️ Same defect again — `kernel_seam.rs` already named `ui_contract::UiIntent`. Workspace-internal,
-# 238→238.
+# 🧬️ The renderer-neutral UI contract: `🐚️Shell/🎯️targets/🧊️wgpu` reads `ui_contract::FlowInline` for
+# the shared anchored-overlay positioner (ticket 26/09/17 packet W2k). Workspace-internal, 238→238.
 ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 # 🎨️ Same undeclared-dependency shape once more — `🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`
 # reads `ui_styling::metrics::label::LEGIBLE_MIN_PX` for its engine-surface label gate. Workspace-internal.

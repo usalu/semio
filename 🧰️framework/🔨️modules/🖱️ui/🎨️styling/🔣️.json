@@ -181,6 +181,7 @@
     "disabledPanelMixAlpha": 128,
     "labelHaloAlpha": 200,
     "selectionPreviewStrokeAlpha": 180,
+    "chromeFocusRingAlpha": 0.6,
     "handleFillTransparent": 0
   },
   "metrics": {
@@ -347,17 +348,26 @@
       "navbarHeightUiSpacing": 9.0,
       "footerHeightUiSpacing": 9.0,
       "controlHeightUiSpacing": 7.0,
+      "controlHeightSmallUiSpacing": 5.0,
+      "iconInlineUiSpacing": 5.0,
+      "sizeTinyUiSpacing": 3.0,
       "panelHeaderHeightUiSpacing": 7.0,
       "gapStandardUiSpacing": 1.0,
       "paddingStandardUiSpacing": 1.0,
-      "panelInsetUiSpacing": 1.0
+      "panelInsetUiSpacing": 1.0,
+      "celebrateBorderDurationSeconds": 1.2
     },
     "typography": {
       "text2xsPx": 9.6,
       "textXsPx": 11.2,
       "textSmPx": 12.8,
       "textBasePx": 14.4,
-      "textLgPx": 16.0
+      "textLgPx": 16.0,
+      "text2xsLineHeightPx": 14.4,
+      "textXsLineHeightPx": 16.0,
+      "textSmLineHeightPx": 19.2,
+      "textBaseLineHeightPx": 22.4,
+      "textLgLineHeightPx": 25.6
     },
     "dom": {
       "iconTinyUiSpacing": 3.75,
@@ -392,6 +402,8 @@
     "glassBlurStepPx": 8,
     "glassSaturate": 1.45,
     "veilAlphaExtraSteps": 1,
+    "veilAlpha": 0.4,
+    "veilBlurPx": 8,
     "zStep": 10
   },
   "presence": {
@@ -473,6 +485,7 @@
       "chrome": {
         "base": { "token": "light" },
         "foreground": { "token": "dark" },
+        "muted": { "token": "light-8-9" },
         "mutedForeground": { "token": "gray" },
         "accent": { "token": "primary" },
         "accentForeground": { "token": "dark" },
@@ -483,6 +496,24 @@
         "borderNormal": { "token": "gray" },
         "borderEmphasized": { "token": "dark" },
         "borderElement": { "token": "gray" }
+      },
+      "outcome": {
+        "error": { "token": "danger" },
+        "warning": { "token": "warning" },
+        "success": { "token": "success" },
+        "progress": { "token": "secondary" }
+      },
+      "diagram": {
+        "checkerLight": { "token": "gray-900" },
+        "checkerDark": { "token": "gray-700" },
+        "stroke": { "token": "secondary", "alpha": 0.95 },
+        "seam": { "token": "tertiary", "alpha": 0.95 },
+        "accent": { "mix": ["secondary", "gray", 0.55], "alpha": 0.9 },
+        "accentFill": { "mix": ["secondary", "gray", 0.35], "alpha": 0.8 },
+        "shapeOutline": { "token": "gray", "alpha": 0.9 },
+        "fieldResidual": { "token": "warning" },
+        "fieldReaction": { "token": "primary" },
+        "fieldDisplacement": { "token": "success" }
       }
     },
     "dark": {
@@ -558,6 +589,7 @@
       "chrome": {
         "base": { "token": "dark" },
         "foreground": { "token": "light" },
+        "muted": { "token": "dark-8-9" },
         "mutedForeground": { "token": "gray" },
         "accent": { "token": "primary" },
         "accentForeground": { "token": "light" },
@@ -568,6 +600,24 @@
         "borderNormal": { "token": "gray" },
         "borderEmphasized": { "token": "light" },
         "borderElement": { "token": "gray" }
+      },
+      "outcome": {
+        "error": { "token": "danger" },
+        "warning": { "token": "warning" },
+        "success": { "token": "success" },
+        "progress": { "token": "secondary" }
+      },
+      "diagram": {
+        "checkerLight": { "token": "dark-gray" },
+        "checkerDark": { "token": "dark-dark-gray" },
+        "stroke": { "token": "secondary", "alpha": 0.95 },
+        "seam": { "token": "tertiary", "alpha": 0.95 },
+        "accent": { "mix": ["secondary", "gray", 0.55], "alpha": 0.9 },
+        "accentFill": { "mix": ["secondary", "gray", 0.35], "alpha": 0.8 },
+        "shapeOutline": { "token": "gray", "alpha": 0.9 },
+        "fieldResidual": { "token": "warning" },
+        "fieldReaction": { "token": "primary" },
+        "fieldDisplacement": { "token": "success" }
       }
     }
   }

@@ -14,7 +14,7 @@ use ui_wgpu::wgpu::{screen_select_components, screen_select_instances};
 use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
 use ui_wgpu::wgpu::{
     axis_rotate_angle, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
+    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
     Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
     Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
 };
@@ -496,6 +496,40 @@ struct WorldReferenceRecord {
     width_world: Option<f64>,
     #[value(default)]
     hidden: Option<bool>,
+}
+
+/// 🤝️ One item of the `engagementPreview` lane — the live construction feedback a plugin's
+/// interaction statechart publishes for the state it is in (`cad`'s `preview_display_items`). Same
+/// four wire kinds React's `World3dHost` parses (`WorldEngagementPreviewItem`, `🟦️.tsx:344-372`):
+/// `point`, `segment`, `box-preview`, `linear-handle`.
+///
+/// 🩸️ The lane had NO wgpu reader at all before ticket 26/09/17 packet W2f, so every rubber-band
+/// point, segment, footprint box and height handle of every plugin construction interaction was
+/// invisible on this target while React drew them.
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+struct WorldEngagementPreviewRecord {
+    #[value(default)]
+    kind: Option<String>,
+    #[value(default)]
+    role: Option<String>,
+    #[value(default)]
+    position: Option<[f64; 3]>,
+    #[value(default)]
+    from: Option<[f64; 3]>,
+    #[value(default)]
+    to: Option<[f64; 3]>,
+    #[value(default)]
+    corner_a: Option<[f64; 3]>,
+    #[value(default)]
+    corner_b: Option<[f64; 3]>,
+    #[value(default)]
+    height: Option<f64>,
+    #[value(default)]
+    axis: Option<[f64; 3]>,
+    #[value(default)]
+    origin: Option<[f64; 3]>,
 }
 
 #[derive(Clone, Debug)]
@@ -1302,6 +1336,7 @@ pub struct World3dState {
     attractions: Vec<WorldAttractionRecord>,
     target_volumes: Vec<WorldTargetVolumeRecord>,
     references: Vec<WorldReferenceRecord>,
+    engagement_preview: Vec<WorldEngagementPreviewRecord>,
     brush_preview: Option<WorldBrushPreviewRecord>,
     catalogue_drop_preview: Option<WorldCatalogueDropPreviewRecord>,
     active_utility: String,
@@ -1379,6 +1414,8 @@ pub struct World3dState {
     terrain_visible_tiles: HashSet<(u32, u32, u32)>,
     terrain_built_tiles: HashSet<(u32, u32, u32)>,
     pending_terrain_tile_urls: HashMap<String, (u32, u32, u32)>,
+    terrain_tile_misses: HashSet<(u32, u32, u32)>,
+    asset_url_misses: HashSet<String>,
     #[cfg(test)]
     right_press_point: Option<[f32; 2]>,
     gizmo_hovered_tip: Option<usize>,
@@ -1470,6 +1507,30 @@ impl World3dState {
             self.snapshot_lease.is_some(),
             self.snapshot_fault,
         )
+    }
+
+    /// 🩺️🧊️ One row per RESIDENT mesh — its key, its published vertex/index counts and its local
+    /// bounds. `state-meshes=5` is ambiguous between "five real meshes" and "five empty leases", and a
+    /// draw that submits an empty GPU mesh paints exactly nothing while every count above it reads
+    /// healthy (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3d-world3d-glb-url-lane.md`).
+    pub fn mesh_geometry_census(&self) -> String {
+        let mut rows = String::from("meshes=[");
+        for (index, key) in self.meshes.keys().enumerate() {
+            let Some(mesh) = self.meshes.get(key) else { continue };
+            let schema = mesh.schema().ok();
+            let bounds = mesh.aabb().ok();
+            if index > 0 {
+                rows.push(',');
+            }
+            rows.push_str(&format!(
+                "{key}:v{}/i{}{}",
+                schema.map_or(0, |schema| schema.vertices),
+                schema.map_or(0, |schema| schema.indices),
+                bounds.map_or_else(String::new, |(min, max)| format!("@[{:.2},{:.2},{:.2}]..[{:.2},{:.2},{:.2}]", min[0], min[1], min[2], max[0], max[1], max[2]))
+            ));
+        }
+        rows.push(']');
+        rows
     }
 
     /// 🕹️ What this surface's INTERACTION authority actually holds, for the one `[DEBUG] ` line the
@@ -1570,6 +1631,7 @@ impl World3dState {
             attractions: Vec::new(),
             target_volumes: Vec::new(),
             references: Vec::new(),
+            engagement_preview: Vec::new(),
             brush_preview: None,
             catalogue_drop_preview: None,
             active_utility: "select".into(),
@@ -1633,6 +1695,8 @@ impl World3dState {
             terrain_visible_tiles: HashSet::new(),
             terrain_built_tiles: HashSet::new(),
             pending_terrain_tile_urls: HashMap::new(),
+            terrain_tile_misses: HashSet::new(),
+            asset_url_misses: HashSet::new(),
             #[cfg(test)]
             right_press_point: None,
             gizmo_hovered_tip: None,
@@ -4531,14 +4595,13 @@ struct WorldContextMenuCursor {
 
 impl WorldContextMenuCursor {
     fn new(state: &World3dState, generation: u64, x: f32, y: f32) -> Option<Self> {
-        let (kind, id) = if let Some(id) = state.hovered_vortex_id.as_deref() {
-            (WorldContextTargetKind::Vortex, id)
-        } else if state.hovered_component_mode.is_some() {
-            (WorldContextTargetKind::Object, state.hovered_component_object_id.as_deref()?)
-        } else {
-            (WorldContextTargetKind::Reference, state.local_hover_id.as_deref()?.strip_prefix("reference:")?)
+        let (domain, id) = resolve_world_context_menu_target(state)?;
+        let kind = match domain {
+            "vortex" => WorldContextTargetKind::Vortex,
+            "reference" => WorldContextTargetKind::Reference,
+            _ => WorldContextTargetKind::Object,
         };
-        Some(Self { revision: state.interaction_revision, generation, kind, id: WorldInteractionId::new(id)?, x, y, slot: 0, target: None, complete: false })
+        Some(Self { revision: state.interaction_revision, generation, kind, id: WorldInteractionId::new(&id)?, x, y, slot: 0, target: None, complete: false })
     }
 
     fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
@@ -6275,7 +6338,7 @@ pub fn plan_world3d_wheel(state: &World3dState, generation: u64, delta: f32) -> 
     let action = WorldFlatAction {
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, next.fov_y.to_degrees() as f64, delta as f64, 0.0, 0.0],
+        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, WORLD3D_PERSPECTIVE_CAMERA_ZOOM, delta as f64, 0.0, 0.0],
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6301,7 +6364,7 @@ pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32
     let action = WorldFlatAction {
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, next.fov_y.to_degrees() as f64, dx as f64, operation, dy as f64],
+        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, WORLD3D_PERSPECTIVE_CAMERA_ZOOM, dx as f64, operation, dy as f64],
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6385,7 +6448,7 @@ pub fn publish_world3d_plan_step(
             let controller = plan.string(action.strings[0].expect("camera controller span"));
             let surface = plan.string(action.strings[1].expect("camera surface span"));
             let action_id = "setCamera";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "camera", "position", "target", "fov"])?;
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "camera", "position", "target", "zoom", "up"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -6411,7 +6474,16 @@ pub fn publish_world3d_plan_step(
                 builder.number(None, *value)?;
             }
             builder.end_container()?;
-            builder.number(Some("fov"), action.numbers[6])?;
+            // 📷️ `zoom`/`up`, never `fov`: `buildWorldCameraDispatchArgs` sends exactly
+            // `{position, target, zoom, up?}`, and the guest camera value has no `fov` member — a
+            // `fov` key makes the whole `camera` object fail deserialization and silently drops the
+            // dispatch, the same trap React's own docstring records for a bare `projection` string.
+            builder.number(Some("zoom"), action.numbers[6])?;
+            builder.begin_array(Some("up"))?;
+            for value in WORLD3D_ORBIT_UP {
+                builder.number(None, value)?;
+            }
+            builder.end_container()?;
             builder.end_container()?;
             builder.end_container()?;
             let first = action.numbers[7] as f32;
@@ -6844,10 +6916,54 @@ fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, 
             if !retire_world_mesh(state, &key) || !retire_world_pixels(state, &key, true) {
                 return;
             }
-            state.mesh_source_urls.remove(&key);
-            state.pending_glb_urls.remove(&key);
+            // 🥽️ `pending_glb_urls` is keyed by URL, `mesh_source_urls` by mesh key — evicting the
+            // pool entry has to drop the url the ledger bound to it, not the key itself, or the
+            // lane refuses to re-fetch a mesh the scene names again.
+            if let Some(url) = state.mesh_source_urls.remove(&key) {
+                state.pending_glb_urls.remove(&url);
+            }
             gpu.evict_mesh(&key);
         }
+    }
+}
+
+/// 🥽️📡️ Admits one url-declared mesh into the bounded world-asset pipeline
+/// (`WorldAssetRequestKind::Glb`), the same lane DEM tiles and reference images travel: the renderer
+/// host drains it (`take_next_world3d_asset`), streams the bytes through the GLB structure/schema
+/// decoders and hands the sealed `Mesh3dLease` back through [`publish_world3d_asset_mesh_lease`],
+/// which stores it under `mesh_id_from_url` — the very id the wire names the mesh by. The wgpu twin
+/// of React's `GlbInstanceMesh`'s `useLoader(GLTFLoader, meshAssetTransportUrl(url))`; the
+/// `/mesh/…` → catalog-path rewrite happens at the fetch boundary on both lanes (the frame Worker's
+/// `meshAssetTransportUrl`, the native `native_renderer_asset_path`), exactly as it does in React.
+///
+/// `pending_glb_urls` is this lane's live predicate: the missing-mesh loop re-derives its urls from
+/// the scene EVERY frame, so without it every frame walks the request table again. Back-pressure is
+/// not a fault — an unpended url is re-offered next frame — but a structural refusal is a miss, the
+/// same split [`reserve_terrain_tile_fetch`] makes.
+fn reserve_world3d_mesh_fetch(state: &mut World3dState, url: &str) {
+    match reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, url) {
+        Ok(_) => {
+            state.pending_glb_urls.insert(url.to_owned());
+        }
+        Err(WorldAssetFault::ItemCapacity | WorldAssetFault::ByteCapacity | WorldAssetFault::Closing | WorldAssetFault::Stale) => {}
+        Err(_) => mark_world3d_asset_miss(state, url),
+    }
+}
+
+/// 🥽️📡️ The per-frame offer: every draw the scene published whose mesh the wire named by url and
+/// that has not landed yet. Re-derived from the live draw list every frame — a scene that stops
+/// naming a mesh stops asking for it — with [`World3dState::pending_glb_urls`] and
+/// [`World3dState::asset_url_misses`] as the two ledgers that keep the offer idempotent.
+fn offer_missing_mesh_fetches(state: &mut World3dState) {
+    let missing_mesh_urls: HashSet<String> = state
+        .draws
+        .iter()
+        .filter(|draw| !state.meshes.contains_key(&draw.mesh_key))
+        .filter_map(|draw| state.mesh_source_urls.get(&draw.mesh_key).cloned())
+        .filter(|url| !state.asset_url_misses.contains(url) && !state.pending_glb_urls.contains(url))
+        .collect();
+    for url in missing_mesh_urls {
+        reserve_world3d_mesh_fetch(state, &url);
     }
 }
 
@@ -6859,9 +6975,7 @@ fn queue_lod_mesh_fetch(state: &mut World3dState, logical_id: &str, scene_lod: f
         pick_closest_mesh_url(&entries, scene_lod, fallback).or(fallback).map(str::to_owned)
     };
     if let Some(url) = url {
-        if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, &url).is_err() {
-            mark_world_dynamic_fault(state, WorldDynamicFault::RegistryCapacity);
-        }
+        reserve_world3d_mesh_fetch(state, &url);
     }
 }
 
@@ -6904,13 +7018,6 @@ fn environment_clear_color(environment: &WorldEnvironmentRecord, theme_clear: Rg
 //#endregion Environment
 
 //#region Terrain
-/// 🧮️ Elevation-band count for terrain tile shading — `Instance3d`/`World3dVertex` carry no
-/// per-vertex color channel (wiring gap, see report), so the continuous hypsometric ramp from the
-/// React reference is approximated by bucketing each tile's triangles into flat-colored bands by
-/// their (per-tile-normalized) average elevation, reusing the same per-color-bucket technique as
-/// `append_component_face_translucent_overlays`.
-const TERRAIN_COLOR_BANDS: usize = 10;
-
 #[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct TerrainVisibleTileRow {
     z: u32,
@@ -6932,8 +7039,49 @@ fn terrain_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
     template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
 }
 
-fn terrain_band_mesh_key(surface_id: &str, z: u32, x: u32, y: u32, band: usize) -> String {
-    format!("terrain:{surface_id}:{z}:{x}:{y}:{band}")
+fn terrain_tile_mesh_key(surface_id: &str, z: u32, x: u32, y: u32) -> String {
+    format!("terrain:{surface_id}:{z}:{x}:{y}")
+}
+
+/// 🏔️📡️ Admits one visible-but-unloaded DEM tile into the bounded world-asset pipeline
+/// (`WorldAssetRequestKind::Terrain`), the same lane GLB meshes and reference images travel — the
+/// renderer host drains it (`take_next_world3d_asset`) and hands the bytes back through
+/// [`apply_world3d_terrain_tile_bytes`]. Mirrors `TerrainTileRenderer.uploadOne` in
+/// `🗺️WorldTerrainLayer/🟦️.tsx`, including its `tileMiss` set: a tile whose bytes the terrain
+/// session refuses is never re-requested for this style.
+fn reserve_terrain_tile_fetch(state: &mut World3dState, tile_url_template: &str, (z, x, y): (u32, u32, u32)) {
+    if state.terrain_tile_misses.contains(&(z, x, y)) {
+        return;
+    }
+    let url = terrain_tile_url(tile_url_template, z, x, y);
+    if state.pending_terrain_tile_urls.contains_key(&url) {
+        return;
+    }
+    match reserve_world3d_asset_request(state, WorldAssetRequestKind::Terrain { z, x, y }, &url) {
+        Ok(_) => {
+            state.pending_terrain_tile_urls.insert(url, (z, x, y));
+        }
+        // 📡️ A full request table is back-pressure, not a fault: the next frame re-offers the tile.
+        Err(WorldAssetFault::ItemCapacity | WorldAssetFault::ByteCapacity | WorldAssetFault::Closing | WorldAssetFault::Stale) => {}
+        Err(_) => {
+            state.terrain_tile_misses.insert((z, x, y));
+        }
+    }
+}
+
+/// 🏔️📥️ Decodes one fetched DEM tile into the terrain session — the wgpu twin of
+/// `TerrainTileRenderer.uploadOne`'s `upload_elevation_tile` call. A refusal (not a terrarium PNG)
+/// records a tile miss so the pipeline stops re-requesting it; the banded meshes are built by the
+/// next `sync_terrain_state` pass, which now sees a non-`null` `terrain_tile_mesh_json`.
+pub fn apply_world3d_terrain_tile_bytes(state: &mut World3dState, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
+    let uploaded = state.terrain_session.upload_elevation_tile(z, x, y, bytes);
+    if let Some(style) = state.terrain_style.as_ref() {
+        state.pending_terrain_tile_urls.remove(&terrain_tile_url(&style.tile_url_template, z, x, y));
+    }
+    if !uploaded {
+        state.terrain_tile_misses.insert((z, x, y));
+    }
+    uploaded
 }
 
 /// 🎨️ Vertical hypsometric ramp — same stops as `getHypsometricTexture` in `world-terrain-layer.tsx`
@@ -6955,15 +7103,14 @@ fn hypsometric_color(t: f32) -> [f32; 4] {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum WorldTerrainMeshPhase {
-    Count,
     Begin,
     Allocate,
     Positions,
     Normals,
+    Colors,
     Indices,
     Seal,
     Publish,
-    NextBand,
     RetireSource,
 }
 
@@ -6976,11 +7123,9 @@ struct WorldTerrainMeshCursor {
     generation: u64,
     source_revision: u64,
     terrain_revision: u64,
-    band: u8,
     phase: WorldTerrainMeshPhase,
     triangle: u32,
     vertex: u8,
-    matched: u32,
     item: u32,
     owner: WorldPlaceholderOwner,
     close_started: bool,
@@ -7010,11 +7155,9 @@ impl WorldTerrainMeshCursor {
             generation,
             source_revision,
             terrain_revision,
-            band: 0,
-            phase: WorldTerrainMeshPhase::Count,
+            phase: WorldTerrainMeshPhase::Begin,
             triangle: 0,
             vertex: 0,
-            matched: 0,
             item: 0,
             owner: WorldPlaceholderOwner::Empty,
             close_started: false,
@@ -7037,13 +7180,16 @@ impl WorldTerrainMeshCursor {
         Ok(result)
     }
 
-    fn triangle_band(&self, triangle: u32) -> Result<u8, WorldDynamicFault> {
-        let indices = self.triangle_indices(triangle)?;
-        let elevation = indices.map(|index| self.payload.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
-        if elevation.iter().any(|value| !value.is_finite()) {
+    /// 🎨️ The hypsometric colour of ONE vertex of a triangle, sampled from the tile mesh's own
+    /// per-vertex elevation ratio (`uvs[i * 2 + 1]`, what `build_terrain_tile_mesh` writes there and
+    /// what React's `getHypsometricTexture` samples with) — a continuous ramp, not a band bucket.
+    fn vertex_color(&self, triangle: u32, vertex: u8) -> Result<[f32; 4], WorldDynamicFault> {
+        let index = self.triangle_indices(triangle)?[usize::from(vertex)] as usize;
+        let elevation = self.payload.uvs.get(index * 2 + 1).copied().unwrap_or(0.0);
+        if !elevation.is_finite() {
             return Err(WorldDynamicFault::ByteCapacity);
         }
-        Ok((((elevation[0] + elevation[1] + elevation[2]) / 3.0 * TERRAIN_COLOR_BANDS as f32) as usize).min(TERRAIN_COLOR_BANDS - 1) as u8)
+        Ok(hypsometric_color(elevation))
     }
 
     fn value(&self, triangle: u32, vertex: u8, normal: bool) -> Result<[f32; 3], WorldDynamicFault> {
@@ -7088,21 +7234,14 @@ impl WorldTerrainMeshCursor {
 
     fn step_live(&mut self) -> Result<WorldTerrainMeshStep, WorldDynamicFault> {
         match self.phase {
-            WorldTerrainMeshPhase::Count => {
-                if self.triangle == self.triangle_count() {
-                    self.triangle = 0;
-                    self.phase = if self.matched == 0 { WorldTerrainMeshPhase::NextBand } else { WorldTerrainMeshPhase::Begin };
+            WorldTerrainMeshPhase::Begin => {
+                let items = self.triangle_count().checked_mul(3).ok_or(WorldDynamicFault::InstanceCapacity)?;
+                if items == 0 {
+                    self.phase = WorldTerrainMeshPhase::RetireSource;
                     return Ok(WorldTerrainMeshStep::Pending);
                 }
-                if self.triangle_band(self.triangle)? == self.band {
-                    self.matched = self.matched.checked_add(1).ok_or(WorldDynamicFault::InstanceCapacity)?;
-                }
-                self.triangle += 1;
-            }
-            WorldTerrainMeshPhase::Begin => {
-                let items = self.matched.checked_mul(3).ok_or(WorldDynamicFault::InstanceCapacity)?;
-                let generation = self.generation.checked_add(u64::from(self.band)).ok_or(WorldDynamicFault::StaleToken)?;
-                self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, self.source_revision, Mesh3dSchema::triangle_mesh(items, items)).map_err(|_| WorldDynamicFault::ByteCapacity)?);
+                let schema = Mesh3dSchema { vertices: items, indices: items, face_ids: 0, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: items };
+                self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(self.generation, self.source_revision, schema).map_err(|_| WorldDynamicFault::ByteCapacity)?);
                 self.phase = WorldTerrainMeshPhase::Allocate;
             }
             WorldTerrainMeshPhase::Allocate => {
@@ -7110,19 +7249,24 @@ impl WorldTerrainMeshCursor {
                     self.phase = WorldTerrainMeshPhase::Positions;
                 }
             }
-            WorldTerrainMeshPhase::Positions | WorldTerrainMeshPhase::Normals => {
+            WorldTerrainMeshPhase::Positions | WorldTerrainMeshPhase::Normals | WorldTerrainMeshPhase::Colors => {
                 if self.triangle == self.triangle_count() {
                     self.triangle = 0;
                     self.vertex = 0;
-                    self.phase = if self.phase == WorldTerrainMeshPhase::Positions { WorldTerrainMeshPhase::Normals } else { WorldTerrainMeshPhase::Indices };
+                    self.phase = match self.phase {
+                        WorldTerrainMeshPhase::Positions => WorldTerrainMeshPhase::Normals,
+                        WorldTerrainMeshPhase::Normals => WorldTerrainMeshPhase::Colors,
+                        _ => WorldTerrainMeshPhase::Indices,
+                    };
                     return Ok(WorldTerrainMeshStep::Pending);
                 }
-                if self.triangle_band(self.triangle)? != self.band {
-                    self.triangle += 1;
-                    return Ok(WorldTerrainMeshStep::Pending);
+                match self.phase {
+                    WorldTerrainMeshPhase::Colors => mesh3d_write_vec4(self.token()?, Mesh3dField::Colors, self.vertex_color(self.triangle, self.vertex)?).map_err(|_| WorldDynamicFault::Closing)?,
+                    phase => {
+                        let normal = phase == WorldTerrainMeshPhase::Normals;
+                        mesh3d_write_vec3(self.token()?, if normal { Mesh3dField::Normals } else { Mesh3dField::Positions }, self.value(self.triangle, self.vertex, normal)?).map_err(|_| WorldDynamicFault::Closing)?;
+                    }
                 }
-                let normal = self.phase == WorldTerrainMeshPhase::Normals;
-                mesh3d_write_vec3(self.token()?, if normal { Mesh3dField::Normals } else { Mesh3dField::Positions }, self.value(self.triangle, self.vertex, normal)?).map_err(|_| WorldDynamicFault::Closing)?;
                 self.vertex += 1;
                 if self.vertex == 3 {
                     self.vertex = 0;
@@ -7130,7 +7274,7 @@ impl WorldTerrainMeshCursor {
                 }
             }
             WorldTerrainMeshPhase::Indices => {
-                let items = self.matched * 3;
+                let items = self.triangle_count() * 3;
                 mesh3d_write_u32(self.token()?, Mesh3dField::Indices, self.item).map_err(|_| WorldDynamicFault::Closing)?;
                 self.item += 1;
                 if self.item == items {
@@ -7146,16 +7290,8 @@ impl WorldTerrainMeshCursor {
             WorldTerrainMeshPhase::Publish => {
                 let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(WorldDynamicFault::StaleToken) };
                 self.owner = WorldPlaceholderOwner::Empty;
-                self.phase = WorldTerrainMeshPhase::NextBand;
-                return Ok(WorldTerrainMeshStep::Ready(terrain_band_mesh_key(&self.surface_id, self.z, self.x, self.y, usize::from(self.band)), lease));
-            }
-            WorldTerrainMeshPhase::NextBand => {
-                self.band += 1;
-                self.matched = 0;
-                self.triangle = 0;
-                self.vertex = 0;
-                self.item = 0;
-                self.phase = if usize::from(self.band) == TERRAIN_COLOR_BANDS { WorldTerrainMeshPhase::RetireSource } else { WorldTerrainMeshPhase::Count };
+                self.phase = WorldTerrainMeshPhase::RetireSource;
+                return Ok(WorldTerrainMeshStep::Ready(terrain_tile_mesh_key(&self.surface_id, self.z, self.x, self.y), lease));
             }
             WorldTerrainMeshPhase::RetireSource => {
                 if self.close_step() && self.terminal_is_empty() {
@@ -7269,17 +7405,17 @@ struct LegacyMeshOracleData {
     colors: Vec<f32>,
 }
 
+/// 🏔️🎨️ Language-neutral oracle for `WorldTerrainMeshCursor`: the de-indexed, vertex-coloured tile
+/// mesh the cursor must produce — one triangle soup with the CONTINUOUS hypsometric ramp sampled per
+/// vertex from the tile's own elevation ratio, which is what React's textured `MeshStandardMaterial`
+/// shows.
 #[cfg(test)]
-fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_count: usize) -> Option<LegacyMeshOracleData> {
+fn build_terrain_tile_mesh_oracle(mesh: &TerrainTileMeshPayload) -> Option<LegacyMeshOracleData> {
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut indices = Vec::new();
+    let mut colors = Vec::new();
     for triangle in mesh.indices.as_chunks::<3>().0 {
-        let elevations = triangle.map(|index| mesh.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
-        let selected = (((elevations[0] + elevations[1] + elevations[2]) / 3.0 * band_count as f32) as usize).min(band_count - 1);
-        if selected != band {
-            continue;
-        }
         let base = (positions.len() / 3) as u32;
         for index in triangle {
             let offset = *index as usize * 3;
@@ -7287,10 +7423,11 @@ fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_coun
             let normal = mesh.normals.get(offset..offset + 3).unwrap_or(&[0.0, 0.0, 1.0]);
             positions.extend_from_slice(position);
             normals.extend_from_slice(normal);
+            colors.extend_from_slice(&hypsometric_color(mesh.uvs.get(*index as usize * 2 + 1).copied().unwrap_or(0.0)));
         }
         indices.extend_from_slice(&[base, base + 1, base + 2]);
     }
-    (!positions.is_empty()).then_some(LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() })
+    (!positions.is_empty()).then_some(LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors })
 }
 
 /// 🔄️ GPU-free half of `apply_terrain_style_if_changed`: applies `state.terrain_style` to the tile
@@ -7319,6 +7456,7 @@ fn apply_terrain_style_if_changed_state(state: &mut World3dState) -> Vec<String>
     }
     state.terrain_built_tiles.clear();
     state.pending_terrain_tile_urls.clear();
+    state.terrain_tile_misses.clear();
     if let Some(style) = &state.terrain_style {
         state.terrain_session.set_project_origin(style.project_origin_lon, style.project_origin_lat);
         state.terrain_session.set_exaggeration(style.exaggeration);
@@ -7335,10 +7473,12 @@ fn apply_terrain_style_if_changed(state: &mut World3dState, gpu: &mut World3dBui
 
 /// 🏔️ One terrain band's resolved GPU draw inputs: mesh key/version (already present in
 /// `state.meshes`/`state.mesh_versions`) plus the flat hypsometric color for that band.
-struct TerrainBandDraw {
+/// 🏔️ One terrain tile's resolved GPU draw inputs: mesh key/version (already present in
+/// `state.meshes`/`state.mesh_versions`). The hypsometric ramp rides the mesh's OWN per-vertex
+/// colours, so the instance tint is neutral white — one draw per tile, never one per colour band.
+struct TerrainTileDraw {
     mesh_key: String,
     mesh_version: u64,
-    color: [f32; 4],
 }
 
 fn terrain_family_visible(state: &World3dState, tile: (u32, u32, u32)) -> bool {
@@ -7346,11 +7486,11 @@ fn terrain_family_visible(state: &World3dState, tile: (u32, u32, u32)) -> bool {
 }
 
 /// 🏔️ GPU-free half of `sync_terrain`: asks `TerrainSessionCore` which DEM tiles are visible for
-/// the current camera, evicts (CPU-side) tiles that scrolled out of view, queues byte-fetches for
-/// tiles not yet uploaded (see `fetch_pending_terrain_tiles`), and builds/caches banded meshes for
-/// tiles whose elevation data is already available. Returns the bands to draw this frame plus the
-/// mesh keys the caller must evict from the GPU.
-fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<TerrainBandDraw>, Vec<String>) {
+/// the current camera, evicts (CPU-side) tiles that scrolled out of view, admits byte-fetches for
+/// tiles not yet uploaded (see `reserve_terrain_tile_fetch`), and builds/caches one vertex-coloured
+/// mesh per tile whose elevation data is already available. Returns the tiles to draw this frame
+/// plus the mesh keys the caller must evict from the GPU.
+fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<TerrainTileDraw>, Vec<String>) {
     let Some(style) = state.terrain_style.clone() else {
         return (Vec::new(), Vec::new());
     };
@@ -7368,30 +7508,27 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
     for (z, x, y) in stale {
         state.terrain_session.evict_terrain_tile(z, x, y);
         state.terrain_built_tiles.remove(&(z, x, y));
-        for band in 0..TERRAIN_COLOR_BANDS {
-            let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
-            if !retire_world_mesh(state, &mesh_key) {
-                return (Vec::new(), evicted_mesh_keys);
-            }
-            evicted_mesh_keys.push(mesh_key);
+        let mesh_key = terrain_tile_mesh_key(&state.surface_id, z, x, y);
+        if !retire_world_mesh(state, &mesh_key) {
+            return (Vec::new(), evicted_mesh_keys);
         }
+        evicted_mesh_keys.push(mesh_key);
     }
     state.pending_terrain_tile_urls.retain(|_, tile| visible_set.contains(tile));
     state.terrain_visible_tiles = visible_set.clone();
     step_world_terrain_mesh(state);
 
-    let mut band_draws = Vec::new();
+    let mut tile_draws = Vec::new();
     for (z, x, y) in visible_set {
         if !terrain_family_visible(state, (z, x, y)) {
             let mesh_json = state.terrain_session.terrain_tile_mesh_json(z, x, y);
             if mesh_json == "null" {
-                state.pending_terrain_tile_urls.insert(terrain_tile_url(&style.tile_url_template, z, x, y), (z, x, y));
+                reserve_terrain_tile_fetch(state, &style.tile_url_template, (z, x, y));
             } else if state.terrain_build.is_none() && state.dynamic_mesh_close.is_none() && state.dynamic_blocked_mesh.is_none() && state.snapshot_fault.is_none() {
                 if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
-                    let next = state.placeholder_generation.checked_add(TERRAIN_COLOR_BANDS as u64);
+                    let next = state.placeholder_generation.checked_add(1);
                     if let Some(next) = next {
-                        let generation = state.placeholder_generation + 1;
-                        match WorldTerrainMeshCursor::new(&state.surface_id, (z, x, y), mesh_payload, generation, state.terrain_revision, state.terrain_revision) {
+                        match WorldTerrainMeshCursor::new(&state.surface_id, (z, x, y), mesh_payload, next, state.terrain_revision, state.terrain_revision) {
                             Ok(cursor) => {
                                 state.placeholder_generation = next;
                                 state.terrain_build = Some(cursor);
@@ -7405,33 +7542,34 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
             }
             continue;
         }
-        for band in 0..TERRAIN_COLOR_BANDS {
-            let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
-            if !state.meshes.contains_key(&mesh_key) {
-                continue;
-            }
-            let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
-            let band_center = (band as f32 + 0.5) / TERRAIN_COLOR_BANDS as f32;
-            band_draws.push(TerrainBandDraw { mesh_key, mesh_version, color: hypsometric_color(band_center) });
+        let mesh_key = terrain_tile_mesh_key(&state.surface_id, z, x, y);
+        if !state.meshes.contains_key(&mesh_key) {
+            continue;
         }
+        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        tile_draws.push(TerrainTileDraw { mesh_key, mesh_version });
     }
-    (band_draws, evicted_mesh_keys)
+    (tile_draws, evicted_mesh_keys)
 }
 
 /// 🏔️ Per-frame terrain sync entry point used by `render_world_3d` — see `sync_terrain_state` for
-/// the (unit-testable) tile-visibility/meshing/fetch-queueing logic this wraps with GPU upload and
+/// the (unit-testable) tile-visibility/meshing/fetch-admission logic this wraps with GPU upload and
 /// eviction calls.
 fn sync_terrain(state: &mut World3dState, gpu: &mut World3dBuildContext, camera: &Camera3d) -> Vec<SceneDraw3d> {
-    let (band_draws, evicted_mesh_keys) = sync_terrain_state(state, camera);
+    let (tile_draws, evicted_mesh_keys) = sync_terrain_state(state, camera);
     for key in evicted_mesh_keys {
         gpu.evict_mesh(&key);
     }
-    band_draws
+    tile_draws
         .into_iter()
-        .filter_map(|band| {
-            let mesh = state.meshes.get(&band.mesh_key)?;
-            gpu.ensure_mesh(&band.mesh_key, band.mesh_version, *mesh);
-            Some(SceneDraw3d { mesh_key: band.mesh_key.clone(), mesh_version: band.mesh_version, instances: vec![Instance3d { id: format!("terrain-{}", band.mesh_key), model: Mat4::identity(), color: band.color, selected: false, hovered: false }] })
+        .filter_map(|tile| {
+            let mesh = state.meshes.get(&tile.mesh_key)?;
+            gpu.ensure_mesh(&tile.mesh_key, tile.mesh_version, *mesh);
+            Some(SceneDraw3d {
+                mesh_key: tile.mesh_key.clone(),
+                mesh_version: tile.mesh_version,
+                instances: vec![Instance3d { id: format!("terrain-{}", tile.mesh_key), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }],
+            })
         })
         .collect()
 }
@@ -8214,6 +8352,78 @@ fn instance_hovered_component_id(state: &World3dState, instance_id: &str) -> Opt
 
 fn append_component_vertex_spheres(_state: &mut World3dState) -> Vec<Instance3d> {
     Vec::new()
+}
+
+/// 📐️ Axis-aligned box wireframe as 12 line segments between `min` and `max`.
+fn append_box_wireframe_lines(lines: &mut Vec<LineVertex3d>, min: Vec3, max: Vec3, color: [f32; 4]) {
+    let corner = |ix: usize, iy: usize, iz: usize| Vec3::new(if ix == 0 { min.x } else { max.x }, if iy == 0 { min.y } else { max.y }, if iz == 0 { min.z } else { max.z });
+    const EDGES: [((usize, usize, usize), (usize, usize, usize)); 12] = [
+        ((0, 0, 0), (1, 0, 0)),
+        ((1, 0, 0), (1, 1, 0)),
+        ((1, 1, 0), (0, 1, 0)),
+        ((0, 1, 0), (0, 0, 0)),
+        ((0, 0, 1), (1, 0, 1)),
+        ((1, 0, 1), (1, 1, 1)),
+        ((1, 1, 1), (0, 1, 1)),
+        ((0, 1, 1), (0, 0, 1)),
+        ((0, 0, 0), (0, 0, 1)),
+        ((1, 0, 0), (1, 0, 1)),
+        ((1, 1, 0), (1, 1, 1)),
+        ((0, 1, 0), (0, 1, 1)),
+    ];
+    for ((ax, ay, az), (bx, by, bz)) in EDGES {
+        lines.push(LineVertex3d { position: corner(ax, ay, az).to_array(), color });
+        lines.push(LineVertex3d { position: corner(bx, by, bz).to_array(), color });
+    }
+}
+
+/// 🤝️ Paints the `engagementPreview` lane as world-space lines — the wgpu twin of React's
+/// `EngagementPreviewLayer` (`🌐️World3dHost/🟦️.tsx:4027`), which draws the same four kinds with
+/// `colors.hover` (the `hover-interactive-fill` token, `theme.row_hover` here).
+///
+/// 🖍️ A `point` becomes a three-axis cross rather than a sphere and a `box-preview` a wireframe
+/// rather than a wireframe mesh: this target has one line pipeline and no per-item mesh, and React
+/// already draws the box `wireframe`, so the silhouette matches. The `0.05` floors on width/depth/
+/// height and the "height extrudes up from `cornerA.z`, never from `cornerB.z`" rule are React's.
+fn append_engagement_preview_lines(state: &World3dState, lines: &mut Vec<LineVertex3d>, color: [f32; 4]) {
+    const POINT_CROSS_EXTENT: f32 = 0.08;
+    const PREVIEW_MIN_EXTENT: f64 = 0.05;
+    for item in &state.engagement_preview {
+        match item.kind.as_deref().unwrap_or_default() {
+            "point" => {
+                let Some(position) = item.position else { continue };
+                let center = Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32);
+                for axis in [Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 1.0)] {
+                    lines.push(LineVertex3d { position: center.sub(axis.scale(POINT_CROSS_EXTENT)).to_array(), color });
+                    lines.push(LineVertex3d { position: center.add(axis.scale(POINT_CROSS_EXTENT)).to_array(), color });
+                }
+            }
+            "segment" => {
+                let (Some(from), Some(to)) = (item.from, item.to) else { continue };
+                lines.push(LineVertex3d { position: [from[0] as f32, from[1] as f32, from[2] as f32], color });
+                lines.push(LineVertex3d { position: [to[0] as f32, to[1] as f32, to[2] as f32], color });
+            }
+            "box-preview" => {
+                let (Some(corner_a), Some(corner_b)) = (item.corner_a, item.corner_b) else { continue };
+                let half_width = (corner_b[0] - corner_a[0]).abs().max(PREVIEW_MIN_EXTENT) * 0.5;
+                let half_depth = (corner_b[1] - corner_a[1]).abs().max(PREVIEW_MIN_EXTENT) * 0.5;
+                let height = item.height.unwrap_or(PREVIEW_MIN_EXTENT).abs().max(PREVIEW_MIN_EXTENT);
+                let center_x = (corner_a[0] + corner_b[0]) * 0.5;
+                let center_y = (corner_a[1] + corner_b[1]) * 0.5;
+                let min = Vec3::new((center_x - half_width) as f32, (center_y - half_depth) as f32, corner_a[2] as f32);
+                let max = Vec3::new((center_x + half_width) as f32, (center_y + half_depth) as f32, (corner_a[2] + height) as f32);
+                append_box_wireframe_lines(lines, min, max, color);
+            }
+            "linear-handle" => {
+                let (Some(axis), Some(origin)) = (item.axis, item.origin) else { continue };
+                let start = Vec3::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
+                let end = start.add(Vec3::new(axis[0] as f32, axis[1] as f32, axis[2] as f32));
+                lines.push(LineVertex3d { position: start.to_array(), color });
+                lines.push(LineVertex3d { position: end.to_array(), color });
+            }
+            _ => {}
+        }
+    }
 }
 
 fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>) {
@@ -9131,13 +9341,25 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
 /// (`AppRuntime::frame`'s `pending_camera_dispatch_deadlines_ms`) can build the same `setCamera`
 /// action the pointer-release path below already dispatches — one orbit-to-action mapping, two
 /// trigger sites (immediate on release, debounced on wheel settle).
+/// 🔎️ Orthographic-zoom scalar of this surface's `setCamera` pose. The wgpu orbit is perspective-
+/// only (it carries `fov_y`, never an orthographic frustum), and React's `captureNavigationSnapshot`
+/// reports `camera instanceof ThreeOrthographicCamera ? camera.zoom : 1` — so a perspective pose
+/// dispatches the identity zoom on both renderers, and `orbitCameraZoomForProjection`'s 50 is only
+/// ever reached through a projection switch this surface does not expose yet.
+const WORLD3D_PERSPECTIVE_CAMERA_ZOOM: f64 = 1.0;
+
+/// 🧭️ The orbit's up vector — `OrbitController::to_camera` hard-codes Z-up, so the pose React
+/// reports from `camera.up` is this constant on the wgpu side; it rides the wire because
+/// `buildWorldCameraDispatchArgs` sends `up` whenever the reported pose carries one, and it does.
+const WORLD3D_ORBIT_UP: [f64; 3] = [0.0, 0.0, 1.0];
+
 pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     let camera = state.orbit.to_camera();
     ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "setCamera".into(),
         args: action_args(json!({
-            "surfaceId": state.surface_id,
+            "windowId": state.surface_id,
             "camera": {
                 "position": [
                     camera.position.x as f64,
@@ -9149,7 +9371,8 @@ pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
                     camera.target.y as f64,
                     camera.target.z as f64,
                 ],
-                "fov": state.orbit.fov_y.to_degrees() as f64,
+                "zoom": WORLD3D_PERSPECTIVE_CAMERA_ZOOM,
+                "up": WORLD3D_ORBIT_UP,
             }
         })),
     }
@@ -9433,7 +9656,9 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                     return World3dSnapshotApplyStep::Fault;
                 }
             };
-            begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::Box);
+            if !scene_mesh_awaits_its_asset(state, mesh_key) {
+                begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::Box);
+            }
             let descriptor = WorldDrawRebuildDescriptor { generation: state.draw_generation.wrapping_add(1), revision: state.interaction_revision, draw_count: 1, instance_count, byte_count };
             let mesh_version = live_world3d_mesh_version(state, mesh_key);
             let admitted = begin_world3d_draw_rebuild(state, descriptor).and_then(|()| world3d_draw_rebuild_admit_draw(state, mesh_key, mesh_version, u16::try_from(instance_count).map_err(|_| WorldDynamicFault::InstanceCapacity)?));
@@ -9597,15 +9822,82 @@ pub fn close_world3d_snapshot_apply_step(state: &mut World3dState, context: &mut
 /// typical procedural preview in a handful of turns.
 const WORLD3D_BRIDGE_MESH_WRITES_PER_STEP: u32 = 4_096;
 
-/// 🌉️ One `World3dScene.meshes_json` entry — `{"id": …, "data": {positions, normals, indices, …}}`,
-/// the shape every `World3d` producer publishes (generation3d's `preview_payload`, CAD, puzzle) and
-/// the React `🌐️World3dHost/🟦️.tsx` reads.
+/// 🌉️📡️ Records how one geometry-less `meshes_json` entry resolves.
+///
+/// A `url` entry is left PENDING on purpose: its id is bound to the url in
+/// [`World3dState::mesh_source_urls`], which is the ledger `render_world_3d`'s missing-mesh loop
+/// reads to reserve a [`WorldAssetRequestKind::Glb`] fetch — the mesh table itself stays empty until
+/// the decoded GLB lands through [`publish_world3d_asset_mesh_lease`]. Publishing a placeholder box
+/// here would be worse than drawing nothing: the loop offers a url only while
+/// `!state.meshes.contains_key(key)`, so a stand-in mesh would suppress the fetch forever, which is
+/// precisely the shape of the dead url lane this replaces (ticket 26/09/17/WGPU-RENDERER-REACT-
+/// PARITY, `📓️w3a-asset-decoder-boot-fault.md` §6). React draws nothing for an unloaded url either —
+/// `GlbInstanceMesh` suspends until `useLoader` resolves.
+///
+/// A `kind` entry is the opposite: both renderers own the generator, so it resolves immediately
+/// through the same fixed-credit placeholder ladder inline buffers ride.
+///
+/// Bounded by the mesh registry's own capacity and id budget — an id that could never publish a mesh
+/// is not worth a ledger row, and the ledger never outgrows the table it indexes.
+fn declare_scene_mesh_source(state: &mut World3dState, id: &str, url: Option<&str>, kind: Option<&str>) {
+    if let Some(url) = url {
+        if id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY || url.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
+            return;
+        }
+        if state.mesh_source_urls.len() >= WORLD_DYNAMIC_MESH_CAPACITY && !state.mesh_source_urls.contains_key(id) {
+            return;
+        }
+        state.mesh_source_urls.insert(id.to_owned(), url.to_owned());
+        return;
+    }
+    if let Some(kind) = kind {
+        begin_world_placeholder_mesh(state, id, WorldPlaceholderKind::resolve(kind));
+    }
+}
+
+/// 🥽️ Whether this mesh key's geometry is owed by the world-asset pipeline rather than by the
+/// placeholder ladder. The snapshot apply consults it before minting a stand-in box — see
+/// [`declare_scene_mesh_source`].
+fn scene_mesh_awaits_its_asset(state: &World3dState, mesh_key: &str) -> bool {
+    state.mesh_source_urls.contains_key(mesh_key)
+}
+
+/// 🌉️ One `World3dScene.meshes_json` entry. Three mutually exclusive ways a producer names one
+/// mesh, all of which React's `WorldMeshRecord` (`🌐️World3dHost/🟦️.tsx`) accepts:
+///
+/// - `{"id": …, "data": {positions, normals, indices, …}}` — INLINE geometry (generation3d's
+///   `preview_payload`, CAD, fem).
+/// - `{"id": "mesh:…", "url": "/mesh/….glb"}` — a GLB the renderer fetches itself
+///   (`world3d_meshes_json_from_urls`). React loads it with `GLTFLoader`; here it rides the bounded
+///   world-asset pipeline as a [`WorldAssetRequestKind::Glb`], see [`declare_scene_mesh_source`].
+/// - `{"id": "box", "kind": "box"}` — a built-in procedural kind
+///   (`world3d_mesh_kind_entry`), a REFERENCE whose tessellation both renderers own. React resolves
+///   it through `meshDataFromKind`, this one through [`WorldPlaceholderKind::resolve`].
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct World3dSceneMeshEntry {
     id: String,
     #[serde(default)]
     data: WorldMeshBuffers,
+    #[serde(default)]
+    url: Option<String>,
+    #[serde(default)]
+    kind: Option<String>,
+}
+
+impl World3dSceneMeshEntry {
+    /// 🧊️ Whether the entry carries a drawable triangle buffer of its own. `false` means the entry
+    /// is a REFERENCE (`url` or `kind`) the renderer resolves, not a mesh the wire already spelled.
+    fn has_inline_geometry(&self) -> bool {
+        self.data.vertex_count() > 0 && self.data.indices.len() >= 3
+    }
+
+    /// 🌉️ Whether this entry names a mesh at all. A wire-only record (a polyline preview that
+    /// carries `data` with fewer than three indices and neither a url nor a kind) names none, and is
+    /// dropped exactly as it always was.
+    fn names_a_mesh(&self) -> bool {
+        self.has_inline_geometry() || self.url.is_some() || self.kind.is_some()
+    }
 }
 
 /// 🌉️ One `World3dScene.instances_json` entry — a placement of one mesh, carrying the
@@ -9869,7 +10161,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
             cursor.meshes = serde_json::from_str::<Vec<World3dSceneMeshEntry>>(&cursor.meshes_json).unwrap_or_default();
             cursor.instances = serde_json::from_str::<Vec<World3dSceneInstanceEntry>>(&cursor.instances_json).unwrap_or_default();
             cursor.camera = serde_json::from_str::<World3dSceneCameraRecord>(&cursor.camera_json).ok();
-            cursor.meshes.retain(|mesh| mesh.data.vertex_count() > 0 && mesh.data.indices.len() >= 3);
+            cursor.meshes.retain(World3dSceneMeshEntry::names_a_mesh);
             for mesh in &mut cursor.meshes {
                 if mesh.data.normals.len() != mesh.data.positions.len() {
                     mesh.data.compute_normals();
@@ -9896,6 +10188,14 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 state.scene_bridge = Some(cursor);
                 return World3dSceneBridgeStep::Pending;
             };
+            if !entry.has_inline_geometry() {
+                let (id, url, kind) = (entry.id.clone(), entry.url.clone(), entry.kind.clone());
+                declare_scene_mesh_source(state, &id, url.as_deref(), kind.as_deref());
+                cursor.mesh_cursor += 1;
+                cursor.retiring_mesh = false;
+                state.scene_bridge = Some(cursor);
+                return World3dSceneBridgeStep::Pending;
+            }
             let digest = world3d_mesh_buffers_digest(&entry.data);
             if state.scene_mesh_digests.get(&entry.id) == Some(&digest) && state.meshes.contains_key(&entry.id) {
                 cursor.mesh_cursor += 1;
@@ -10024,7 +10324,10 @@ fn world3d_scene_bridge_has_pages(state: &World3dState, cursor: &World3dSceneBri
     if cursor.camera_changed && cursor.camera.is_some() {
         return true;
     }
-    cursor.meshes.iter().any(|mesh| state.meshes.contains_key(&mesh.id) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
+    cursor
+        .meshes
+        .iter()
+        .any(|mesh| (state.meshes.contains_key(&mesh.id) || scene_mesh_awaits_its_asset(state, &mesh.id)) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
 }
 
 fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
@@ -10036,7 +10339,12 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     state.provisional_instance_ids = cursor.instances.iter().filter(|instance| instance.provisional).map(|instance| instance.id.clone()).collect();
     let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
     for mesh in &cursor.meshes {
-        if !state.meshes.contains_key(&mesh.id) {
+        // 🥽️ A url-declared mesh has no geometry yet and still earns its draw: the draw is what
+        // `render_world_3d`'s missing-mesh loop reads to reserve the GLB fetch, and what starts
+        // painting by itself the frame the decoded mesh lands under this key. Dropping it here was
+        // the second half of the dead url lane — the bridge kept the instances and then threw the
+        // draw away, so `state-draws=0 state-instances=0` (`📓️w3a-asset-decoder-boot-fault.md` §6).
+        if !state.meshes.contains_key(&mesh.id) && !scene_mesh_awaits_its_asset(state, &mesh.id) {
             continue;
         }
         let instances: Vec<&World3dSceneInstanceEntry> = cursor.instances.iter().filter(|instance| instance.mesh_id == mesh.id).collect();
@@ -10198,6 +10506,7 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         world.attractions_json.as_deref().unwrap_or(""),
         world.target_volumes_json.as_deref().unwrap_or(""),
         world.references_json.as_deref().unwrap_or(""),
+        world.engagement_preview_json.as_deref().unwrap_or(""),
     ]);
     if state.scene_document_lanes_digest == Some(digest) {
         return;
@@ -10220,6 +10529,11 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         .unwrap_or_default();
     state.references = world
         .references_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).unwrap_or_default())
+        .unwrap_or_default();
+    state.engagement_preview = world
+        .engagement_preview_json
         .as_deref()
         .map(|json| serde_json::from_str(json).unwrap_or_default())
         .unwrap_or_default();
@@ -10385,12 +10699,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     let mut provisional_draws = Vec::new();
     let mut culled_count = 0u32;
     let mut needed_mesh_keys = HashSet::new();
-    let missing_mesh_urls: HashSet<String> = state.draws.iter().filter(|draw| !state.meshes.contains_key(&draw.mesh_key)).filter_map(|draw| state.mesh_source_urls.get(&draw.mesh_key).cloned()).collect();
-    for url in missing_mesh_urls {
-        if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, &url).is_err() {
-            mark_world_dynamic_fault(state, WorldDynamicFault::RegistryCapacity);
-        }
-    }
+    offer_missing_mesh_fetches(state);
     for (draw_index, draw) in state.draws.iter().enumerate() {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
             continue;
@@ -10437,6 +10746,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         append_lod_grid_lines(&mut line_vertices, current_lod, state.lod.grid_factor, anchor, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
     }
     append_component_overlays(state, &mut line_vertices);
+    append_engagement_preview_lines(state, &mut line_vertices, [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
     for attraction in &state.attractions {
         let Some(from) = attraction.from else { continue };
         let Some(to) = attraction.to else { continue };
@@ -10462,7 +10772,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     translucent_draws.append(&mut provisional_draws);
     append_tool_run_trace_draws(state, gpu, theme, &mut translucent_draws);
     if let Some(preview) = state.catalogue_drop_preview.clone() {
-        let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
+        let mesh_id = ghost_mesh_id(state, preview.mesh_url.as_deref());
         if !state.meshes.contains_key(&mesh_id) {
             begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
         }
@@ -10491,7 +10801,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         // `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
         // its GLB hasn't resolved into `state.meshes` yet), not "nothing at all".
         if let Some(origin) = preview.origin {
-            let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
+            let mesh_id = ghost_mesh_id(state, preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
                 begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
             }
@@ -10529,6 +10839,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         .filter(|reference| !reference.hidden.unwrap_or(false))
         .filter_map(|reference| reference.url.clone())
         .filter(|url| !state.reference_pixels.contains_key(url))
+        .filter(|url| !state.asset_url_misses.contains(url))
         .collect();
     for url in reference_image_urls {
         let _ = reserve_world3d_asset_request(state, WorldAssetRequestKind::ReferenceImage, &url);
@@ -10862,12 +11173,12 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
 }
 
 /// 🖱️📋️ Resolves which entity a right-click context menu targets, in the React reference's exact
-/// priority order — `resolveWorldContextMenuTarget` in `world-3d-host.tsx`: a hovered vortex wins
-/// first, then a hovered mesh component (vertex/edge/face — reported as kind `"object"`, the
-/// component's owning instance, matching the React source's own naming), then a hovered reference
-/// image plane; `None` (no context menu) if nothing is currently hovered.
-#[cfg(test)]
-fn resolve_world_context_menu_target(state: &World3dState) -> Option<(&'static str, String)> {
+/// priority order — `resolveWorldContextMenuTarget` in `🧱️elements/🌐️World3dHost/🟦️.tsx:1893`: a
+/// hovered vortex wins first, then a hovered mesh component (vertex/edge/face — reported as kind
+/// `"object"`, the component's owning instance, matching the React source's own naming), then a
+/// hovered reference image plane, then any other plain hover as `"object"`; `None` (no target) if
+/// nothing is currently hovered.
+pub fn resolve_world_context_menu_target(state: &World3dState) -> Option<(&'static str, String)> {
     if let Some(vortex_id) = state.hovered_vortex_id.clone() {
         return Some(("vortex", vortex_id));
     }
@@ -10876,10 +11187,28 @@ fn resolve_world_context_menu_target(state: &World3dState) -> Option<(&'static s
             return Some(("object", object_id));
         }
     }
-    if let Some(reference_id) = state.local_hover_id.as_deref().and_then(|hovered| hovered.strip_prefix("reference:")) {
+    let hovered = state.local_hover_id.as_deref()?;
+    if let Some(reference_id) = hovered.strip_prefix("reference:") {
         return Some(("reference", reference_id.to_string()));
     }
-    None
+    Some(("object", hovered.to_string()))
+}
+
+/// 🪧️ The `surface` half of one world right-click's context-menu request: the entity under the
+/// pointer as the single `hits` row, and the painted selection as per-domain `selection` groups —
+/// the Rust twin of `world3dContextMenuSurfaceV1`
+/// (`🧱️elements/🌐️World3dHost/🟦️.tsx:1909`). The hit target rides THIS request; no separate
+/// target-recording dispatch precedes the menu.
+pub fn world3d_context_menu_surface(state: &World3dState) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
+    let hits = resolve_world_context_menu_target(state).map(|(domain, id)| ui_wgpu::wgpu::ContextMenuHit { domain: domain.to_string(), id, label: None }).into_iter().collect();
+    let mut selection = Vec::new();
+    if !state.selected_ids.is_empty() {
+        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "object".into(), ids: state.selected_ids.clone() });
+    }
+    if !state.component_ids.is_empty() {
+        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "feature".into(), ids: state.component_ids.clone() });
+    }
+    (hits, selection)
 }
 
 #[cfg(test)]
@@ -11999,6 +12328,22 @@ fn brush_preview_mesh_id(mesh_url: Option<&str>) -> String {
     mesh_url.map_or_else(|| "box".to_string(), mesh_id_from_url)
 }
 
+/// 👻️ The key a GHOST actually draws through. React's `BrushPreviewGhost` renders a translucent unit
+/// box until its GLB resolves and the real mesh after — but React's ghost owns a separate three.js
+/// object, while here every draw shares ONE mesh table keyed by mesh id. Minting the ghost's box
+/// under a `mesh:…` id the scene is still waiting on would make that id resident, and
+/// `offer_missing_mesh_fetches` offers a url only while its key is NOT resident — the ghost would
+/// permanently suppress the fetch for the mesh it is standing in for. So a ghost over an unresolved
+/// url draws through the shared `box` primitive instead, and switches to the real id the frame its
+/// mesh lands.
+fn ghost_mesh_id(state: &World3dState, mesh_url: Option<&str>) -> String {
+    let id = brush_preview_mesh_id(mesh_url);
+    if state.meshes.contains_key(&id) || !scene_mesh_awaits_its_asset(state, &id) {
+        return id;
+    }
+    "box".to_string()
+}
+
 fn append_box_wireframe(lines: &mut Vec<LineVertex3d>, origin: [f64; 3], orientation: [f64; 4], scale: [f64; 3], color: [f32; 4]) {
     let corners = [[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [-0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]];
     let model = Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [orientation[0] as f32, orientation[1] as f32, orientation[2] as f32, orientation[3] as f32], [scale[0] as f32, scale[1] as f32, scale[2] as f32]);
@@ -12220,6 +12565,13 @@ impl WorldAssetFetchOwner {
         self.received_bytes
     }
 
+    /// 🔏️ Whether this response already sealed its exact byte claim. A host that must RETRY a seal —
+    /// because the surface's own state was momentarily checked out by an apply — reads this to skip
+    /// the half it already completed; sealing twice is refused by the authority's own witness.
+    pub fn is_sealed(&self) -> bool {
+        self.sealed
+    }
+
     pub fn begin_close(&mut self) {
         self.closing = true;
     }
@@ -12393,6 +12745,13 @@ impl WorldAssetIoAuthority {
         Ok(claim.owner.take().expect("validated completed asset owner"))
     }
 
+    /// 📡️ Whether any claim holds a sealed response the decode pump has not taken yet — the
+    /// non-consuming twin of [`Self::take_next_completed_step`]. See also
+    /// [`WorldAssetFetchOwner::is_sealed`].
+    pub fn has_completed_step(&self) -> bool {
+        self.slots.iter().flatten().any(|claim| !claim.in_flight && claim.fetch_complete && claim.owner.as_ref().is_some_and(|owner| owner.sealed))
+    }
+
     pub fn take_next_completed_step(&mut self) -> Option<WorldAssetFetchOwner> {
         let slot = usize::from(self.completed_cursor);
         self.completed_cursor = ((slot + 1) % WORLD_ASSET_REQUEST_CAPACITY) as u8;
@@ -12474,6 +12833,22 @@ pub fn reserve_world3d_asset(state: &mut World3dState, kind: WorldAssetRequestKi
     Ok(token)
 }
 
+/// 🗑️ Records that the renderer's decoder REFUSED this url's bytes, so this surface stops offering
+/// it. The mesh and reference-image request loops re-derive their missing urls from the scene every
+/// frame, so without this ledger one refused response is re-fetched for the lifetime of the surface.
+/// Sticky on purpose — the same shape as [`World3dState::terrain_tile_misses`] and as React's own
+/// loader caches, where a failed texture url is not retried until the scene names a different one.
+pub fn mark_world3d_asset_miss(state: &mut World3dState, url: &str) {
+    state.asset_url_misses.insert(url.to_string());
+    state.pending_image_urls.remove(url);
+    state.pending_glb_urls.remove(url);
+}
+
+/// 🗑️ Whether [`mark_world3d_asset_miss`] refused this url for this surface.
+pub fn world3d_asset_url_missed(state: &World3dState, url: &str) -> bool {
+    state.asset_url_misses.contains(url)
+}
+
 pub fn reserve_world3d_asset_request(state: &mut World3dState, kind: WorldAssetRequestKind, url: &str) -> Result<WorldAssetRequestToken, WorldAssetFault> {
     let generation = state.asset_generation.wrapping_add(1).max(1);
     let token = state.asset_io.reserve_request(generation, state.interaction_revision, kind, url)?;
@@ -12509,6 +12884,20 @@ pub fn take_next_completed_world3d_asset_step(state: &mut World3dState) -> Optio
     state.asset_io.take_next_completed_step()
 }
 
+/// 📡️🎞️ Whether this surface holds a fetched asset response the decode pump still owes a turn.
+///
+/// ⚖️ The decode ladder runs INSIDE the frame transaction, so on an event-driven shell it advances
+/// only while frames happen. A GLB arrives long after the document that named it has settled — the
+/// puzzle3d playground fetches its 86 KB concrete-forest mesh at t≈11.8 s, on the very last frame
+/// the boot produces — and nothing then turned that sealed response into another frame: the mesh sat
+/// undecoded for the rest of the session. This is the same per-frame predicate shape as
+/// [`world3d_cursor_work_pending`]: the browser tick turns it into `request_frame`, so the work the
+/// frame transaction drives keeps its own frames coming
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3d-world3d-glb-url-lane.md`).
+pub fn world3d_asset_decode_pending(state: &World3dState) -> bool {
+    state.asset_io.has_completed_step()
+}
+
 #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
 pub fn finish_world3d_asset(state: &mut World3dState, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     state.asset_io.finish(owner)
@@ -12516,10 +12905,21 @@ pub fn finish_world3d_asset(state: &mut World3dState, owner: WorldAssetFetchOwne
 
 /// 📦️ Concatenates every page of a sealed world-asset response — used when a retained decode
 /// finishes without materializing a typed mesh lease (reference images).
+/// 📥️ The whole sealed response as ONE payload, for the kinds whose applier takes bytes rather than
+/// a cursor (reference images, DEM tiles, UI images, map tiles).
+///
+/// 🩸️ This walked `decode_page()` in a `while let` and never advanced the cursor, so it re-read page 0
+/// forever and grew the payload until `RawVec` refused a capacity past `isize::MAX` — a
+/// `capacity overflow` panic that killed the whole frame Worker. It went unseen because every lane
+/// that calls it was dead until 2026-09-17 (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, W1f/W2a and
+/// `📓️w3a-asset-decoder-boot-fault.md`); the first real response it ever saw was the puzzle3d
+/// playground's 483 496-byte reference plan. It is a BOUNDED walk over the sealed page index now, so
+/// the loop's length is the response's own page count and cannot depend on a cursor at all.
 pub fn collect_world3d_asset_bytes(owner: &mut WorldAssetFetchOwner) -> Result<Vec<u8>, WorldAssetFault> {
-    owner.rewind_decode_pages()?;
+    let pages = owner.decode_page_len()?;
     let mut bytes = Vec::with_capacity(owner.received_bytes());
-    while let Some(page) = owner.decode_page()? {
+    for index in 0..pages {
+        let Some(page) = owner.decode_page_at(index)? else { break };
         bytes.extend_from_slice(page.bytes());
     }
     owner.rewind_decode_pages()?;
@@ -12547,11 +12947,17 @@ fn mesh_id_from_url(url: &str) -> String {
     format!("mesh:{slug}")
 }
 
+/// 🥽️📥️ Stores one decoded GLB under the id the wire names it by — `mesh_id_from_url` is the exact
+/// twin of the guest's `world3d_mesh_id_from_url`, which is what makes a `{"id": "mesh:x", "url":
+/// "/mesh/x.glb"}` entry's draw start painting the moment its bytes land. Clears the url's pending
+/// mark on success so the lane stops offering it (see [`reserve_world3d_mesh_fetch`]).
 pub fn publish_world3d_asset_mesh_lease(state: &mut World3dState, url: &str, mesh: Mesh3dLease) -> Result<(), WorldDynamicRejected<Mesh3dLease>> {
     if mesh.revision() != state.interaction_revision {
         return Err(WorldDynamicRejected { fault: WorldDynamicFault::StaleToken, id: mesh_id_from_url(url), value: mesh });
     }
-    publish_world3d_mesh_lease(state, mesh_id_from_url(url), mesh)
+    publish_world3d_mesh_lease(state, mesh_id_from_url(url), mesh)?;
+    state.pending_glb_urls.remove(url);
+    Ok(())
 }
 
 // 🌉️ Dead on every target: repo-wide grep found zero callers of `apply_reference_image_bytes`
@@ -12562,13 +12968,35 @@ pub fn publish_world3d_asset_mesh_lease(state: &mut World3dState, url: &str, mes
 // `🔍️research/📓️infinite-host-deps-split.md`) still needs it unconditionally. RUNTIME-DEPENDENCY-
 // ELIMINATION ticket 26/09/01.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+/// 🖼️ The straight-RGBA budget ONE reference underlay may publish: HALF the raster lane's per-item
+/// ceiling, because the producer ledger reserves a source twice over (the source plus its peak
+/// workspace, `PreparedRasterProducer::try_admit`). A plan or photograph over the budget is scaled to
+/// fit it — the plane it textures never covers more than a viewport, so this is a texture LOD and not
+/// a dropped feature, and it is what keeps a 2275×2560 scan (23 296 000 bytes) from being refused at
+/// raster admission, which the frame reports as a BUILD FAULT that quarantines the whole surface
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
+const WORLD_REFERENCE_TEXTURE_BYTES: usize = ui_wgpu::wgpu::PREPARED_RASTER_ITEM_BYTES / 2;
+
+/// 🖼️ `image` scaled to at most [`WORLD_REFERENCE_TEXTURE_BYTES`] of RGBA, aspect preserved.
+fn bounded_reference_image(image: image::DynamicImage) -> image::DynamicImage {
+    let pixels = u64::from(image.width()).saturating_mul(u64::from(image.height()));
+    let budget = (WORLD_REFERENCE_TEXTURE_BYTES / 4) as u64;
+    if pixels <= budget || pixels == 0 {
+        return image;
+    }
+    let scale = ((budget as f64) / (pixels as f64)).sqrt();
+    let width = ((f64::from(image.width()) * scale) as u32).max(1);
+    let height = ((f64::from(image.height()) * scale) as u32).max(1);
+    image.resize(width, height, image::imageops::FilterType::Triangle)
+}
+
 pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
     let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok();
     let Some(reader) = reader else {
         return;
     };
     if let Ok(image) = reader.decode() {
-        let rgba = image.to_rgba8();
+        let rgba = bounded_reference_image(image).to_rgba8();
         if !publish_world_pixels(state, url.to_string(), (rgba.width(), rgba.height(), rgba.into_raw()), false) {
             return;
         }

@@ -95,11 +95,26 @@ pub fn fill_entropy(_bytes: &mut [u8]) -> Result<(), EntropyError> {
 // #region 🔖️Identity
 static ID_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
+/// ⏱️ Milliseconds since the Unix epoch, capped to the 48 bits a UUID-v7 timestamp carries.
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+fn unix_millis() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| duration.as_millis().min((1u128 << 48) - 1) as u64)
+}
+
+/// ⏱️ Browser: `std`'s `SystemTime::now()` has no implementation on `wasm32-unknown-unknown` and
+/// PANICS there rather than erroring, so a browser-hosted id must read the platform clock through
+/// `Date.now()` — the same boundary `fill_entropy` already crosses for `crypto.getRandomValues`.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn unix_millis() -> u64 {
+    let millis = js_sys::Date::now();
+    if millis.is_finite() && millis > 0.0 { (millis as u64).min((1u64 << 48) - 1) } else { 0 }
+}
+
 /// 🪪️ Returns a UUID-v7-shaped, lexically time-ordered identifier using owned formatting and the
 /// platform entropy interface. The monotonic process sequence remains mixed in when the clock has
 /// insufficient resolution or the entropy boundary is temporarily unavailable.
 pub fn time_ordered_id() -> String {
-    let millis = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| duration.as_millis().min((1u128 << 48) - 1) as u64);
+    let millis = unix_millis();
     let sequence = ID_SEQUENCE.fetch_add(1, Ordering::Relaxed);
     let mut bytes = [0u8; 16];
     if fill_entropy(&mut bytes[6..]).is_err() {

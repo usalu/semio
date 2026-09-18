@@ -4595,6 +4595,11 @@ pub struct ViewModel {
 #[value(rename_all = "camelCase")]
 pub struct TreeWindowRequest {
     pub body_key: String,
+    /// 🔑️ A **view-context identifier**: printable (no C0 control or DEL code point) and at most 256
+    /// code points, the same law `parseResolvedPluginViewState`/`admitCrossingViewContext` applies to
+    /// every other identifier a view context carries (`🛂️manifest/🟦️.ts`). A path that cannot satisfy
+    /// it is one the host never sends, and the guest then renders that container as unrequested.
+    ///
     /// 🔑️ The container's **window path**, not a bare node key: the node keys of its enclosing
     /// windowed containers, outermost first, then its own key, joined by
     /// `semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR` (U+001F). A top-level section's path

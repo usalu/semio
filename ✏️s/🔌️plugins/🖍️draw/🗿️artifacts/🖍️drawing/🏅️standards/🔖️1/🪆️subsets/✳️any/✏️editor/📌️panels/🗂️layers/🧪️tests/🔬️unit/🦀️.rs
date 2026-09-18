@@ -30,6 +30,12 @@ fn open(node_key: &str, offset: u32, rows: u32) -> TreeWindowRequest {
     TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: node_key.into(), open: Some(true), offset, rows }
 }
 
+/// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
+/// first, then its own key — so a nested group is addressed under the section that builds it.
+fn nested_path(keys: &[&str]) -> String {
+    keys.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 /// 🪟️ Law (a): the section AND the nested group stamp their FULL extent, materialise at most one
 /// viewport between them, and never grow a `+N` continuation row.
 #[test]
@@ -50,7 +56,7 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
     assert!(json.contains("\"total\":305"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("drawing-play-layers.add.path"), "a closed section materialises no rows: {json}");
 
-    let nested = window_body(&document, vec![open("drawing-play-layers", 0, 8), TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: "drawing-play-layers.group.group-0".into(), open: Some(false), offset: 0, rows: 0 }]);
+    let nested = window_body(&document, vec![open("drawing-play-layers", 0, 8), TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: nested_path(&["drawing-play-layers", "drawing-play-layers.group.group-0"]), open: Some(false), offset: 0, rows: 0 }]);
     assert!(nested.contains("\"total\":40"), "a closed group still stamps its extent: {nested}");
     assert!(!nested.contains("drawing-play-layers.shape.nested-0"), "a closed group materialises no children: {nested}");
 }
@@ -68,7 +74,7 @@ fn host_windows_materialise_exactly_their_slice() {
     assert!(!json.contains("drawing-play-layers.shape.shape-99\""), "the row before the window stays out: {json}");
     assert!(!json.contains("drawing-play-layers.shape.shape-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open("drawing-play-layers", 5, 1), open("drawing-play-layers.group.group-0", 12, 4)]);
+    let nested = window_body(&document, vec![open("drawing-play-layers", 5, 1), open(&nested_path(&["drawing-play-layers", "drawing-play-layers.group.group-0"]), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
         assert!(nested.contains(&format!("drawing-play-layers.shape.nested-{index}\"")), "nested child {index} is inside the window: {nested}");

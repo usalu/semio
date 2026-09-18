@@ -6293,6 +6293,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-ui-styling",

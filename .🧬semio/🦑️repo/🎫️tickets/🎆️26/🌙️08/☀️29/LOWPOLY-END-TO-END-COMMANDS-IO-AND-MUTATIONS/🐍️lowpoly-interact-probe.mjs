@@ -15,7 +15,11 @@ mkdirSync(outDir, { recursive: true });
 const lines = [];
 const t0 = Date.now();
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
-const page = await (await browser.newContext({ viewport: { width: 1600, height: 1000 } })).newPage();
+const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+// 🩺️ SEMIO_PROBE_DIAGNOSTICS=1 arms the guest's runtime `[DEBUG]` traces (shard worker url stamp, see
+// 🎭️actor/🩺️diagnostics) before the first script runs.
+if (process.env.SEMIO_PROBE_DIAGNOSTICS === "1") await context.addInitScript(() => { try { localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"); } catch {} });
+const page = await context.newPage();
 page.on("console", (m) => lines.push(`${Date.now() - t0} ${m.type()} ${m.text().slice(0, m.type() === "error" ? 6000 : 600)}`));
 page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e).slice(0, 2000)}`));
 const report = { url, steps: [] };
@@ -43,6 +47,8 @@ const state = () => page.evaluate(() => {
     actionRows: [...document.querySelectorAll('[id^="action."]')].map((el) => el.id),
     selectToggles: [...document.querySelectorAll('[id*="lowpoly-select-"]')].map((el) => el.id),
     bodyHead: document.body.innerText.replace(/\s+/g, " ").slice(0, 400),
+    history: parse(document.querySelector("[data-history-json]")?.getAttribute("data-history-json") ?? "null"),
+    executes: [...document.querySelectorAll('[id$=".execute"]')].map((el) => ({ id: el.id.split(".").slice(-2).join("."), disabled: el.hasAttribute("disabled") || el.getAttribute("aria-disabled") === "true" })),
   };
 });
 const faces = (s) => s.meshes.reduce((sum, m) => sum + m.faces, 0);
@@ -96,7 +102,7 @@ const baseFaces = faces(s);
   const from = lines.length;
   const a = await submitAction("extrude", {});
   const after = await settle((x) => faces(x) > baseFaces, 30);
-  await note("extrude", { ...a, baseFaces, faces: faces(after), grew: faces(after) > baseFaces, meshes: after.meshes }, from);
+  await note("extrude", { ...a, baseFaces, faces: faces(after), grew: faces(after) > baseFaces, meshes: after.meshes, history: after.history, executes: after.executes }, from);
 }
 {
   const from = lines.length;
@@ -104,15 +110,35 @@ const baseFaces = faces(s);
   await page.mouse.move(10, 10);
   await page.keyboard.press(process.platform === "darwin" ? "Meta+z" : "Control+z");
   const after = await settle((x) => faces(x) === baseFaces, 30);
-  await note("undo-extrude", { before, faces: faces(after), restored: faces(after) === baseFaces }, from);
+  await note("undo-extrude", { before, faces: faces(after), restored: faces(after) === baseFaces, history: after.history, executes: after.executes }, from);
+}
+{
+  // 🔁️ No re-pick: the native oracle extrudes straight after undo on the surviving face selection.
+  const from = lines.length;
+  const selectionAfterUndo = (await state()).selection;
+  const a = await submitAction("extrude", {});
+  const first = await settle((x) => faces(x) > baseFaces || x.history?.cursor !== 8, 8);
+  const firstFaults = faultLines(from).length;
+  // 🔁️ Second execute click 8 s later: tells a swallowed click apart from a guest refusal.
+  const b = await submitAction("extrude", {});
+  const after = await settle((x) => faces(x) > baseFaces || x.history?.cursor !== 8, 12);
+  await note("extrude-after-undo-no-repick", { first: { ...a, faces: faces(first), history: first.history, faults: firstFaults }, second: { ...b, faults: faultLines(from).length - firstFaults }, selectionAfterUndo, selection: after.selection, faces: faces(after), grew: faces(after) > baseFaces, history: after.history, executes: after.executes }, from);
+}
+{
+  // 🔦️ Second verb after the store-level undo: does ANY command land, or is the lane wedged?
+  const from = lines.length;
+  const before = await state();
+  const a = await submitAction("toggleSmooth", {});
+  const after = await settle((x) => JSON.stringify(x.history) !== JSON.stringify(before.history), 15);
+  await note("toggle-smooth-after-undo", { ...a, historyBefore: before.history, history: after.history, executes: after.executes, bodyHead: after.bodyHead }, from);
 }
 {
   const from = lines.length;
   const clicked = await clickWorldCenter();
-  await settle((x) => (x.selection?.componentIds ?? []).length > 0, 10);
+  const picked = await settle((x) => (x.selection?.componentIds ?? []).length > 0, 10);
   const a = await submitAction("extrude", {});
   const after = await settle((x) => faces(x) > baseFaces, 30);
-  await note("extrude-after-undo", { clicked, ...a, faces: faces(after), grew: faces(after) > baseFaces }, from);
+  await note("extrude-after-undo", { clicked, pickedSelection: picked.selection, ...a, faces: faces(after), grew: faces(after) > baseFaces }, from);
 }
 {
   const from = lines.length;

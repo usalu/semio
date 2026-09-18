@@ -70,7 +70,7 @@ fn dispatch_json(event: &DispatchEvent) -> Value {
 
 /// 📏️ Compares a projected dispatch with the fixture's, reading numbers at the wire's own precision.
 ///
-/// The wire carries coordinates as `f32` — `160.696` physical pixels round-trips as
+/// The wire carries coordinates as `f32` — `160.696` LOGICAL (CSS) pixels round-trips as
 /// `160.6959991455078` — while the fixture states them in decimal, as a language-neutral oracle must:
 /// its TypeScript twin reads the same rows as `f64`. Structure and spelling are compared exactly;
 /// only the numeric leaves get the one ulp-scale tolerance a 32-bit carrier makes unavoidable.

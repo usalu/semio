@@ -1,5 +1,5 @@
 use super::*;
-use crate::{schema::default_snapshot, LowpolyObject};
+use crate::{schema::default_snapshot, LowpolyObject, LowpolySnapshot};
 use protocol::{Mutation, MutationDiff};
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
@@ -123,3 +123,54 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+//#region 🔄FixtureRefresh
+fn fixture_json_encode<T: dsl::ToValue>(value: &T) -> String {
+    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(value))).expect("fixture json encode") + "\n"
+}
+
+fn fixture_json_decode<T: dsl::FromValue>(text: &str) -> T {
+    let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
+    dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+}
+
+/// 🔄️ Re-encodes every committed mutation quintet under `🧫️fixtures/🧬️mutations` when
+/// `REFRESH_LOWPOLY_MUTATION_FIXTURES=1`.
+#[test]
+fn refresh_lowpoly_mutation_fixtures_when_requested() {
+    if std::env::var("REFRESH_LOWPOLY_MUTATION_FIXTURES").ok().as_deref() != Some("1") {
+        return;
+    }
+    use std::path::{Path, PathBuf};
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    fn collect_cases(dir: &Path, cases: &mut Vec<PathBuf>) {
+        for entry in std::fs::read_dir(dir).expect("read fixtures dir") {
+            let path = entry.expect("fixture dir entry").path();
+            if !path.is_dir() {
+                continue;
+            }
+            if path.join("🦠️mutation/🔣️.json").is_file() {
+                cases.push(path);
+            } else {
+                collect_cases(&path, cases);
+            }
+        }
+    }
+    let mut cases = Vec::new();
+    collect_cases(&root, &mut cases);
+    for case in cases {
+        let before_path = case.join("📸️snapshot/⬅️before/🔣️.json");
+        let after_path = case.join("📸️snapshot/➡️after/🔣️.json");
+        let mutation_path = case.join("🦠️mutation/🔣️.json");
+        let diff_path = case.join("🔺️diff/🔣️.json");
+        let before: LowpolySnapshot = fixture_json_decode(&std::fs::read_to_string(&before_path).expect("read before"));
+        let mutation: LowpolyMutation = fixture_json_decode(&std::fs::read_to_string(&mutation_path).expect("read mutation"));
+        std::fs::write(&before_path, fixture_json_encode(&before)).expect("write before");
+        std::fs::write(&mutation_path, fixture_json_encode(&mutation)).expect("write mutation");
+        let (after, _) = protocol::apply_mutation(&before, &mutation).expect("apply mutation");
+        std::fs::write(&after_path, fixture_json_encode(&after)).expect("write after");
+        let raised = <LowpolyMutation as Mutation<LowpolySnapshot>>::diff(&mutation, &before);
+        std::fs::write(&diff_path, fixture_json_encode(raised.diff())).expect("write diff");
+    }
+}
+//#endregion 🔄FixtureRefresh

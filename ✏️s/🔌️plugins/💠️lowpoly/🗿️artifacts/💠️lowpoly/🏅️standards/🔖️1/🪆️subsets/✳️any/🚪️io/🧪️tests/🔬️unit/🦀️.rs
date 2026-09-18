@@ -4,7 +4,7 @@ use crate::{mesh_child_handle, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot
 /// structurally representative fixture: two objects, one carrying a mesh handle and a paint
 /// layer, the other bare -- exercising every field kind `LowpolySnapshot` actually has.
 fn box_mesh_json() -> String {
-    semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
+    HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
 }
 
 fn fixture() -> LowpolySnapshot {

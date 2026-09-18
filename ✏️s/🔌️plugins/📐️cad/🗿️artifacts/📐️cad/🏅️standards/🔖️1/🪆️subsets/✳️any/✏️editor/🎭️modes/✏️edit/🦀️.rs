@@ -3,7 +3,9 @@
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
 use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
+use crate::editor::cad::engine::interaction::{accepts_selection, keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
+use crate::editor::cad::engine::picking;
+use crate::editor::cad::engine::typology::resolve_typology_style;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
@@ -109,7 +111,7 @@ pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) ->
                 ("rotation".to_string(), f64_array_value(&object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))),
                 ("scale".to_string(), f64_array_value(&object_scale_json(object))),
                 ("label".to_string(), DslValue::String(object.label.clone())),
-                ("color".to_string(), DslValue::String(if selected { "#3b82f6" } else { "#64748b" }.to_string())),
+                ("color".to_string(), DslValue::String(resolve_typology_style(&object.typology).color)),
                 ("selected".to_string(), DslValue::Bool(selected)),
                 ("hovered".to_string(), DslValue::Bool(hovered)),
             ])
@@ -335,6 +337,51 @@ pub(crate) fn cad_pane_working_objects(scene: &CadWorkingScene, pane: CadPaneId)
     }
 }
 
+/// 🧲️ How many pick-target preview items one pane may publish per frame. The `engagementPreview`
+/// lane is a bounded scene payload, and a Concrete-Forest pane offers thousands of kernel targets,
+/// so the overlay is capped and the coarsest kinds (object → face → edge → vertex, the pick
+/// generality order both hosts sort by) are kept first.
+pub const CAD_PICK_OVERLAY_ITEM_BUDGET: usize = 192;
+
+/// 🧲️ The geometry pick overlay as `engagementPreview` items — the wire-level equivalent of React's
+/// `SpatialPickGeometryLayer`, which has no counterpart on the OS-shell path on either target.
+/// Vertex targets become preview `point`s, every other kind becomes `segment`s along the entity's
+/// own straight edges (a face/solid therefore draws as its wireframe, exactly as React does).
+pub(crate) fn pick_target_preview_items(objects: &[CadObject], geometry: Option<&CadGeometry>, pane: CadPaneId) -> Vec<DslValue> {
+    let Some(geometry) = geometry else { return Vec::new() };
+    let model_definition_id = pane.model_definition_id();
+    let targets = picking::create_spatial_pick_targets(objects, Some(geometry), Some(model_definition_id));
+    let targets = picking::filter_spatial_pick_targets_for_active_view(targets, Some(model_definition_id));
+    let visibility = picking::spatial_scene_kind_toggles_for_model_definition(Some(model_definition_id), &picking::default_spatial_primitive_toggles());
+    let mut targets = picking::filter_spatial_pick_targets_for_visibility(targets, visibility);
+    let flags = |entity_id: &str| picking::resolve_spatial_entity_flags(objects, geometry, model_definition_id, entity_id);
+    targets = picking::filter_spatial_pick_targets_for_entity_flags(targets, &flags);
+    targets.sort_by_key(|target| target.kind.generality());
+    let buckets = picking::geometry_buckets(geometry);
+    let mut items: Vec<DslValue> = Vec::new();
+    for target in targets {
+        if items.len() >= CAD_PICK_OVERLAY_ITEM_BUDGET {
+            break;
+        }
+        let role = DslValue::String(picking::spatial_pick_target_key(&target));
+        if target.kind == picking::SpatialPickTargetKind::Vertex {
+            items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), role), ("position".to_string(), f64_array_value(&target.point))]));
+            continue;
+        }
+        let Some(geometry_kind) = picking::pick_target_primitive_kind(&target) else {
+            items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), role), ("position".to_string(), f64_array_value(&target.point))]));
+            continue;
+        };
+        for (from, to) in buckets.entity_wire_segments(geometry_kind, &target.id) {
+            if items.len() >= CAD_PICK_OVERLAY_ITEM_BUDGET {
+                break;
+            }
+            items.push(DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), role.clone()), ("from".to_string(), f64_array_value(&from)), ("to".to_string(), f64_array_value(&to))]));
+        }
+    }
+    items
+}
+
 pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
     let working_scene = cad_pane_working_scene(&envelope.document, pane);
     let empty: &[CadObject] = &[];
@@ -347,8 +394,15 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
     );
     scene.references_json = world_references_json(&envelope.document, pane);
     // 🤝️ The live construction preview (rubber-band points/segments/box/height handle) of the
-    // session this pane owns — the statechart's own `display` items for its current state.
-    scene.engagement_preview_json = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(|session| protocol::json::to_json_string(&DslValue::Array(preview_display_items(session))));
+    // session this pane owns — the statechart's own `display` items for its current state, plus the
+    // geometry pick overlay while that state is waiting for a selection.
+    scene.engagement_preview_json = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(|session| {
+        let mut items = preview_display_items(session);
+        if accepts_selection(session) {
+            items.extend(pick_target_preview_items(objects, geometry, pane));
+        }
+        protocol::json::to_json_string(&DslValue::Array(items))
+    });
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/

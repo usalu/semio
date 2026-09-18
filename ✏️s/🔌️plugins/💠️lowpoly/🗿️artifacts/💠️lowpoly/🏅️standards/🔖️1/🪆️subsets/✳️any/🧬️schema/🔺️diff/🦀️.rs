@@ -80,6 +80,7 @@ pub struct LowpolyPaintStrokeAt {
 pub struct PixelRun {
     pub offset: u32,
     #[serde(with = "pixel_run_bytes_base64")]
+    #[value(with = "crate::bytes_base64")]
     pub bytes: Vec<u8>,
 }
 

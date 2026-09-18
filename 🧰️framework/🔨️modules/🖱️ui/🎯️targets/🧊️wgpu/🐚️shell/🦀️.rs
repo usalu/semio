@@ -22,8 +22,8 @@ use crate::wgpu::Locale;
 const SHELL_AXIS: u32 = 200;
 const SHELL_STACK: u32 = 201;
 
-/// 📤️ What `Shell::dispatch` surfaces to the host: chrome-level interactions that aren't app
-/// `ActionDescriptor`s (those still flow through `events::UiCommand::App`).
+/// 📤️ What `Shell::dispatch` surfaces to the host: chrome-level interactions that aren't a document
+/// node's own gesture (those flow through `events::UiCommand::App` as an addressed `UiIntentCommand`).
 #[derive(Clone, Debug, PartialEq)]
 pub enum ShellEvent {
     /// 🫳️ A window-cap/tab-header press started a potential drag. `Shell::dispatch` never emits this

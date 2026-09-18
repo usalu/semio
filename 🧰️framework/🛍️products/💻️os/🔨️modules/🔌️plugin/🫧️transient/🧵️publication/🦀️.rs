@@ -44,8 +44,15 @@ where
     P: Clone + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
+    /// 🎒️ The byte cost is admitted by `preflight` against the one-item bound, so the per-turn grant
+    /// PACES the ladder rather than authorising the apply. Gating the apply on
+    /// `grant.maximum_bytes >= retained_bytes` deadlocked every transient root larger than one
+    /// publication page (`TYPED_OPERATION_RESULT_PAGE_BYTES`, 4 KiB): `advance_publish_one` returned
+    /// `Blocked` forever, with no fault and no progress, so the typed operation never retired —
+    /// measured on lowpoly, whose transient carries the live mesh workspace (ticket
+    /// 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if self.cancelled || !grant.permits_one() || grant.maximum_bytes < self.retained_bytes {
+        if self.cancelled || !grant.permits_one() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.prepared.is_none() {
@@ -81,9 +88,15 @@ where
         self.closing = true;
     }
 
+    /// 🎒️ Pages its byte accounting instead of demanding the whole root in one grant — the closing
+    /// half of the same deadlock `advance` documents above.
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < self.retained_bytes {
+        if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.retained_bytes > grant.maximum_bytes {
+            self.retained_bytes -= grant.maximum_bytes;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: grant.maximum_bytes });
         }
         if self.prepared.take().is_some() || self.request.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
@@ -102,9 +115,15 @@ struct BoundedTransientRootRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransientRootRetirement<P> {
+    /// 🎒️ Pages its byte accounting: a displaced transient root larger than one grant (lowpoly's mesh
+    /// workspace) otherwise never retires, and every later publication blocks behind it.
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < self.retained_bytes {
+        if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.retained_bytes > maximum_bytes {
+            self.retained_bytes -= maximum_bytes;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: maximum_bytes });
         }
         if self.root.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
@@ -175,8 +194,13 @@ where
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.retired.is_some() {
-            if maximum_items == 0 || maximum_bytes < self.retained_bytes {
+            if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            // 🎒️ Same paging as the root retirement above.
+            if self.retained_bytes > maximum_bytes {
+                self.retained_bytes -= maximum_bytes;
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: maximum_bytes });
             }
             self.retired = None;
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: self.retained_bytes });

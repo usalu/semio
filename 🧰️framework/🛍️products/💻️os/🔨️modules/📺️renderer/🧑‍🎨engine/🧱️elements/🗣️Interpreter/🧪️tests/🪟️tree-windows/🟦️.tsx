@@ -348,6 +348,33 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(nodeCost(last.requests)).toBeLessThanOrEqual(TREE_WINDOW_BODY_NODE_BUDGET);
     });
 
+    /** 🧯️ The cad lane's `structure-classic`: a default-open container below the fold at a 440 px viewport,
+     * answered `rows: 0` on first paint. `rows: 0` renders as an open container with a full-height spacer and
+     * no rows — to a reader, indistinguishable from an empty one, wearing the pending ring. It must be seeded
+     * with one row while it is off screen, and it must materialise its real window within ONE refresh of
+     * being scrolled into view. */
+    it("seeds a never-materialised container below the fold, then gives it a real window when it scrolls in", () => {
+      const rows = (offset: number, length: number, firstTopRows: number) => Array.from({ length }, (_, index) => ({ index: offset + index, top: (firstTopRows + index) * rowHeightPx }));
+      const onScreen = { key: "shape", total: 200, offset: 0, length: 20, top: 0, height: 200 * rowHeightPx, rows: rows(0, 20, 0) };
+      // 📐️ Never materialised, and its whole extent sits below a 20-row viewport.
+      const belowFold = { key: "structure-classic", total: 11, offset: 0, length: 0, top: 200 * rowHeightPx, height: 11 * rowHeightPx };
+
+      const first = treeWindowBodyRequestsV1([onScreen, belowFold], 20 * rowHeightPx, rowHeightPx);
+      const seeded = first.find((request: AnyRecord) => request.key === "structure-classic")!;
+      expect(seeded).toEqual({ key: "structure-classic", offset: 0, rows: 1 });
+      expect(first.find((request: AnyRecord) => request.key === "shape")!.rows).toBeGreaterThan(0);
+
+      // 🖱️ The reader scrolls it into view — the guest answered the seed, so it now shows one row.
+      const scrolledIn = { ...belowFold, length: 1, top: -2 * rowHeightPx, rows: rows(0, 1, -2) };
+      const after = treeWindowBodyRequestsV1([{ ...onScreen, top: -202 * rowHeightPx }, scrolledIn], 20 * rowHeightPx, rowHeightPx);
+      const materialised = after.find((request: AnyRecord) => request.key === "structure-classic")!;
+
+      expect(materialised.rows).toBeGreaterThan(1);
+      // 🎯️ …and within that ONE refresh the whole container fits, so nothing is left behind a spacer.
+      expect(materialised).toEqual({ key: "structure-classic", offset: 0, rows: 11 });
+      expect(after.find((request: AnyRecord) => request.key === "shape")!.rows).toBe(0);
+    });
+
     /** 🔑️ `📐️cad` builds the same `object.id` under four pane sections and `🏗️fem` builds `case.id` and
      * `combination.id` in one body — and that key is also the pick target id, so it cannot be namespaced
      * (📓️f2-sdk-body-node-ledger.md §10). Under key identity the two containers would share one open state,

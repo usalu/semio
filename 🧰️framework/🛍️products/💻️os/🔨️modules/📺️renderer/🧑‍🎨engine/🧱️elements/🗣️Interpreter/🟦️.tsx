@@ -1623,11 +1623,20 @@ export function treeWindowReportSignatureV1(requests: readonly TreeWindowReportV
   return `${viewportRows}|${requests.map((request) => `${request.nodeKey}:${request.offset}:${request.rows}`).join(",")}`;
 }
 
-/** 🪟️ The rows an off-screen container is asked for. Zero: it is in the body, so it costs its own node in
- * the guest's ledger either way, but nobody is looking at its rows and every one of them would be a row a
- * VISIBLE container does not get. It keeps the offset it already has, so scrolling back to it lands where
- * the reader left it rather than at row 0 (📓️s3-review-streaming-loop.md §3). */
+/** 🪟️ The rows an off-screen container that has already materialised something is asked for. Zero: it is in
+ * the body, so it costs its own node in the guest's ledger either way, but nobody is looking at its rows and
+ * every one of them would be a row a VISIBLE container does not get. It keeps the offset it already has, so
+ * scrolling back to it lands where the reader left it rather than at row 0 (📓️s3-review-streaming-loop.md §3). */
 const TREE_WINDOW_OFFSCREEN_ROWS = 0;
+
+/** 🌱️ …but an off-screen container that has materialised NOTHING yet is asked for one row, not zero.
+ *
+ * 🧯️ A default-open container below the fold is answered `rows: 0` on first paint, and `rows: 0` renders as an
+ * open container with a full-height spacer and no rows — indistinguishable, to a reader, from an empty or
+ * collapsed one, wearing the pending ring for as long as it stays off screen (the cad lane's
+ * `structure-classic`, 0/11 at a 440 px viewport). One row costs one node, proves the container is not empty
+ * and clears the ring; the real window arrives the moment it is scrolled into view. */
+const TREE_WINDOW_OFFSCREEN_SEED_ROWS = 1;
 
 /** 🪟️ Every windowed container of one body, priced together: the ones the viewport covers with the rows
  * they need, the rest as spacer-only windows at the offset they already hold. The whole set goes through
@@ -1637,7 +1646,13 @@ const TREE_WINDOW_OFFSCREEN_ROWS = 0;
 export function treeWindowBodyRequestsV1(containers: readonly TreeWindowContainerMeasure[], viewportHeight: number, rowHeightPx: number): readonly TreeWindowRequest[] {
   const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight, rowHeightPx);
   const wanted = new Map(treeWindowRequestsForViewport(containers, 0, viewportHeight, rowHeightPx, TREE_WINDOW_OVERSCAN_ROWS).map((request) => [request.key, request] as const));
-  const requests = containers.map((container) => wanted.get(container.key) ?? { key: container.key, offset: Math.min(Math.max(0, Math.floor(container.offset)), Math.max(0, Math.floor(container.total) - 1)), rows: TREE_WINDOW_OFFSCREEN_ROWS });
+  const requests = containers.map((container) => {
+    const known = wanted.get(container.key);
+    if (known) return known;
+    const total = Math.max(0, Math.floor(container.total));
+    const rows = Math.floor(container.length) > 0 ? TREE_WINDOW_OFFSCREEN_ROWS : Math.min(TREE_WINDOW_OFFSCREEN_SEED_ROWS, total);
+    return { key: container.key, offset: Math.min(Math.max(0, Math.floor(container.offset)), Math.max(0, total - rows)), rows };
+  });
   return capTreeWindowRequests(requests, visible, TREE_WINDOW_BODY_NODE_BUDGET);
 }
 

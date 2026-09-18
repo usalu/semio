@@ -4,6 +4,7 @@
 import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🔌️browser-interactive-job-port/🟦️.ts";
 import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict } from "../⏱️turn-budget/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootSilence, evaluateBrowserBootLiveness, type BrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
+import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
@@ -103,9 +104,11 @@ export type BrowserFrameDomEvent =
   | { readonly type: "keydown" | "keyup"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
   | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
 
-/** @emoji 📏️ The ONE place a CSS pixel becomes a physical pixel. `offsetX`/`offsetY` are CSS pixels
- * relative to the canvas; the renderer's layout, hit registry and dock plan are all physical. Scroll
- * deltas are already device-independent and are never scaled. */
+/** @emoji 📏️ The ONE place a CSS pixel becomes a physical pixel — and it is used for the SURFACE
+ * EXTENT ONLY. The GPU surface is configured in device pixels; the renderer's layout, hit registry,
+ * dock plan and every chrome constant are CSS/logical pixels, exactly like the React host's DOM, so
+ * pointer coordinates cross this wire unscaled. Scroll deltas are device-independent either way.
+ * Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g. */
 function physical(css: number, devicePixelRatio: number): number {
   return css * devicePixelRatio;
 }
@@ -116,12 +119,14 @@ function pointerButtonName(button: number | undefined): "primary" | "secondary" 
   return button === 2 ? "secondary" : button === 1 ? "middle" : "primary";
 }
 
-function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" }>, devicePixelRatio: number): BrowserFramePointer {
+/** @emoji 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
+ * renderer hit-tests in logical pixels. */
+function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" }>): BrowserFramePointer {
   return {
     pointerId: event.pointerId,
     pointerKind: event.pointerType === "touch" || event.pointerType === "pen" || event.pointerType === "eraser" ? event.pointerType : "mouse",
-    x: physical(event.offsetX, devicePixelRatio),
-    y: physical(event.offsetY, devicePixelRatio),
+    x: event.offsetX,
+    y: event.offsetY,
     ...(event.pressure ? { pressure: event.pressure } : {}),
     ...(event.tiltX ? { tiltX: event.tiltX } : {}),
     ...(event.tiltY ? { tiltY: event.tiltY } : {}),
@@ -136,12 +141,12 @@ function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove
  * imports, is what lets `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` be answered without a browser and
  * by the Rust law on the other side of the same fixture.
  *
- * A `resize` is expressed in physical pixels by the caller's own surface measurement, so it carries
- * `dpr` and is not scaled again here. */
+ * `devicePixelRatio` reaches exactly one event kind: `resize`, whose width/height ARE the physical
+ * surface extent. Pointer and wheel positions stay CSS pixels. */
 export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixelRatio: number): BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent {
-  if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event, devicePixelRatio) };
-  if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event, devicePixelRatio), button: pointerButtonName(event.button) };
-  if (event.type === "wheel") return { kind: "wheel", x: physical(event.offsetX, devicePixelRatio), y: physical(event.offsetY, devicePixelRatio), deltaX: event.deltaX, deltaY: event.deltaY };
+  if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event) };
+  if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event), button: pointerButtonName(event.button) };
+  if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY };
   if (event.type === "resize") return { kind: "resize", width: Math.max(1, Math.round(physical(event.clientWidth, devicePixelRatio))), height: Math.max(1, Math.round(physical(event.clientHeight, devicePixelRatio))), dpr: devicePixelRatio };
   return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
 }
@@ -162,16 +167,37 @@ export type BrowserFrameWorkerBoot = {
   readonly width: number;
   readonly height: number;
   readonly dpr: number;
-  readonly pluginVariant: string;
   readonly locale: "en" | "de";
-  readonly appRole: string;
-  /** @emoji 🎭️ `?mode=`'s value, or `""` when the url named none — the boot-time mode axis beside `appRole`. */
-  readonly appMode: string;
-  /** @emoji 📚️ `?example=`'s value, or `""` when the url named none — the boot-time example axis. An id
-   * the open dialect does not author is dropped by the shell, never a boot failure. */
-  readonly appExample: string;
-  readonly hub?: { readonly hubUrl: string; readonly user: string; readonly dataDir: string };
+  /** @emoji 🧭️ Every boot axis in ONE shape (`../🧭️boot-descriptor/🟦️.ts`), forwarded verbatim to the
+   * renderer wasm's `semioWgpuSetBootDescriptor`. It used to be four loose fields here, which is how
+   * the three wgpu doors came to carry three different subsets of the same vocabulary. */
+  readonly descriptor: WgpuBootDescriptor;
+  /** @emoji 🌓️ The page realm's appearance reads (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+   * renderer's `semioWgpuSetHostAppearance`. An environment axis beside `locale`/`dpr`, never a boot
+   * axis: the Worker cannot make either read itself, and both keep changing after boot. */
+  readonly appearance: WgpuHostAppearance;
+  /** @emoji ⌨️ The page realm's platform read (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+   * renderer's `semioWgpuSetHostPlatform` so `mod` formats as `⌘️` on Apple and `Ctrl` elsewhere.
+   * Constant for the life of a navigation, so unlike `appearance` it never gets a live message. */
+  readonly platform: WgpuHostPlatform;
+  /** @emoji 🗄️ The page realm's read of every durable preference key the shell owns
+   * (`../🧭️boot-descriptor/🟦️.ts`'s 🗄️HostStorage census), forwarded to the renderer's
+   * `semioWgpuSetHostStorage`. It travels WITH the boot so the shell's first frame answers
+   * appearance, `ui.introduction.seen.*` and the dock skeleton synchronously instead of painting a
+   * default and correcting it a frame later. Later writes cross the host-io door one at a time. */
+  readonly storage: WgpuHostStorageSnapshot;
 };
+
+/** @emoji 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
+ * is the only way the page learns of one (`storage` never fires for the writer's own document). Carries
+ * the whole re-read snapshot rather than a delta: the page's store IS the authority and a delta would
+ * need a second ordering guarantee against the door's own write-through. */
+export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly lifecycle: number; readonly storage: WgpuHostStorageSnapshot };
+
+/** @emoji 🌓️ One live appearance change — the OS flipped `prefers-color-scheme`, or another tab
+ * rewrote the persisted preference. Same shape as the boot field, so the Worker applies both through
+ * one call. */
+export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
 export type BrowserFrameWorkerBatch = {
   readonly kind: "batch";
@@ -196,7 +222,7 @@ export type BrowserFrameWireLosslessEvent =
  * tree out of the isolate so the UI thread can mirror it into a real ARIA subtree beside the canvas.
  * A DOM renderer writes those attributes onto the elements it already renders; a GPU canvas has no
  * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats";
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "chrome";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 
@@ -210,7 +236,7 @@ export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shar
  * alone, exactly like `introspection`, so no host-side request table beyond the pending map exists. */
 export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readonly lifecycle: number; readonly requestId: number; readonly json: string | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | { readonly kind: "close"; readonly lifecycle: number };
 
 /** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -485,6 +511,33 @@ export class BrowserFrameTransport {
       this.uiTurnClock.leave();
       this.fail("worker-message-failed", error instanceof Error ? error.message : String(error));
       return false;
+    }
+  }
+
+  /** @emoji 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a
+   * theme flip must never fault a surface, and the Worker simply keeps the last value it was given.
+   * The frame it requests afterwards is what makes the change visible — the renderer re-resolves its
+   * theme every frame build, so nothing else has to be invalidated. */
+  setHostAppearance(appearance: WgpuHostAppearance): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-appearance", lifecycle: this.lifecycle, appearance });
+      this.requestFrame();
+    } catch {
+      /* a Worker that cannot take an appearance change is already failing on its own channel */
+    }
+  }
+
+  /** @emoji 🗄️ Re-seeds the Worker's synchronous preference cache from the page's store. Fire-and-forget
+   * for the same reason {@link setHostAppearance} is: a preference another tab changed must never fault
+   * a surface. It requests no frame — nothing repaints on a storage change by itself; the next read of
+   * the affected key is what observes it. */
+  setHostStorage(storage: WgpuHostStorageSnapshot): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-storage", lifecycle: this.lifecycle, storage });
+    } catch {
+      /* a Worker that cannot take a storage change is already failing on its own channel */
     }
   }
 

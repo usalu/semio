@@ -7,9 +7,25 @@ use crate::wgpu::geometry::Rect;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Rgba, Theme};
 
-pub const ICON_TINY: f32 = 14.0;
+/// 🔣️ Inline icon box inside a control (button/toggle/select/tree chevron) — React paints the same
+/// icons with `size-small` (`calc(5 × --ui-spacing)` = 16px), so this reads
+/// `chrome.iconInlineUiSpacing` rather than carrying its own px literal.
+pub const ICON_TINY: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::ICON_INLINE_UI_SPACING) as f32;
 
-pub const TRANSPARENT: Rgba = Rgba::new(0.0, 0.0, 0.0, 0.0);
+/// 📐️ CSS's `--size-tiny` (`calc(3 × --ui-spacing)` = 9.6px), the step BELOW the `size-small` box
+/// inline control icons get. React draws a `Tree` row's fold toggle at this size
+/// (`🌳️Tree/🟦️.tsx:4576`) and sizes a `Progress` track with it (`h-tiny`,
+/// `🗣️Interpreter/🟦️.tsx:2114`); section/group/property headers keep [`ICON_TINY`]
+/// (`🌳️Tree/🟦️.tsx:251, 2182, 2609, 4401`).
+pub const SIZE_TINY: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::SIZE_TINY_UI_SPACING) as f32;
+
+/// 🌳️ A `Tree` row's own leading icon and its row actions — the Interpreter asks for a literal
+/// `12` there (`🗣️Interpreter/🟦️.tsx:251, 1861, 1874`), which is `dom.iconTinyUiSpacing`'s px value
+/// and NOT the `size-small` box inline control icons use.
+pub const ICON_TREE_ROW: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::ICON_TINY_UI_SPACING) as f32;
+
+/// 🫥️ Re-export of the "paint nothing" identity — see [`Rgba::TRANSPARENT`].
+pub const TRANSPARENT: Rgba = Rgba::TRANSPARENT;
 
 pub fn push_chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
     let hair = theme.stroke_hairline;

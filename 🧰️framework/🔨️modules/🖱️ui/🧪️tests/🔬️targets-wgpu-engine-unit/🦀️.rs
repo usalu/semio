@@ -156,7 +156,7 @@ fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
     ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
     let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
 
-    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action: fired_action, .. } if *fired_action == action())));
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == action())));
     let drained = ui.drain_commands();
     assert!(!drained.is_empty(), "commands dispatched should also be queryable via drain_commands");
     assert!(ui.drain_commands().is_empty(), "a second drain with nothing new dispatched must be empty");
@@ -428,6 +428,137 @@ impl SceneHost for RecordingSceneHost {
     }
 }
 
+//#region 🖱️SceneAtTests
+/// 🖱️ `Ui::scene_at` answers the `ComponentScene` leaf under a window-local point with its identity
+/// AND the absolute rect it was laid out at — the two things a right-click needs before any event is
+/// dispatched (see [`Ui::scene_at`]).
+#[test]
+fn scene_at_answers_the_component_scene_leaf_under_the_point() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.at")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    let hit = ui.scene_at("w", 200.0, 200.0).expect("a point inside the scene resolves it");
+    assert_eq!(hit.surface_id, "surface.at");
+    assert_eq!(hit.controller_id, "ctrl");
+    assert_eq!(hit.kind, SurfaceKind::World3d);
+    assert!(hit.rect.contains(200.0, 200.0), "the reported rect must be the one the point fell in, got {:?}", hit.rect);
+}
+
+/// 🖱️ A point OUTSIDE every scene answers `None`, which is what sends a right-click to the shell's
+/// own `"window"` menu instead of inventing a surface for it.
+#[test]
+fn scene_at_answers_none_outside_every_scene() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![button_ui("b", "Button")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    assert!(ui.scene_at("w", 10.0, 10.0).is_none());
+    assert!(ui.scene_at("missing-window", 10.0, 10.0).is_none());
+}
+
+/// 🖱️ The query must NOT move focus, arm a press capture or emit a command: a right-click resolving
+/// its surface is not a press, and React's `onContextMenu` calls `preventDefault()` rather than
+/// letting one through. A real `PointerDown` at the same point DOES emit one — that contrast is the
+/// whole reason `scene_at` exists instead of dispatching an event to find out.
+#[test]
+fn scene_at_is_read_only_where_a_press_is_not() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.readonly")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    let _ = ui.scene_at("w", 200.0, 200.0);
+    assert!(ui.dispatch_event("w", UiEvent::PointerMove { x: 380.0, y: 380.0 }).iter().all(|command| !matches!(command, UiCommand::FocusChanged { .. })));
+    let pressed = ui.dispatch_event("w", UiEvent::PointerDown { x: 200.0, y: 200.0, button: PointerButton::Primary });
+    assert!(pressed.iter().any(|command| matches!(command, UiCommand::Scene { .. })), "a real press reaches the scene lane, got {pressed:?}");
+}
+//#endregion 🖱️SceneAtTests
+
+//#region 🪟️OverlayBodyTests
+/// 🪟️ The first `ComponentScene` leaf's arena id — overlay tests need a real content root and the
+/// façade exposes node ids only through the tree itself.
+fn first_component_scene_node(ui: &Ui, window_id: &str) -> crate::wgpu::arena::NodeId {
+    let tree = ui.tree(window_id).expect("window has a tree");
+    let root = tree.root.expect("tree has a root");
+    let mut stack = vec![root];
+    while let Some(id) = stack.pop() {
+        if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::ComponentScene(_))) {
+            return id;
+        }
+        stack.extend(tree.children(id));
+    }
+    panic!("no ComponentScene leaf in {window_id}");
+}
+
+/// 🪟️ f32 round-trip tolerance: the walk origin is `placement - layout`, and the walk adds `layout`
+/// back, so the recovered coordinate is the placement to within one f32 rounding step.
+fn assert_close(left: (f32, f32), right: (f32, f32), what: &str) {
+    assert!((left.0 - right.0).abs() < 0.01 && (left.1 - right.1).abs() < 0.01, "{what}: {left:?} != {right:?}");
+}
+
+/** @emoji 🪟️ An OPEN floating overlay's BODY is positioned at its resolved placement, not at the
+ * in-flow slot it was authored in — and the body's own content keeps painting through the normal node
+ * pipeline, which is what `scene_at` resolving the scene INSIDE the overlay proves (the walk that
+ * answers it is the paint walk's own geometry). React gets the same from a portal plus
+ * `PopoverContent`'s fixed positioning. */
+#[test]
+fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    let content = first_component_scene_node(&ui, "w");
+    let in_flow = ui.scene_at("w", 200.0, 200.0).expect("the scene resolves in flow").rect;
+
+    ui.open_overlay("w", content, OverlayKind::Popover, OverlayAnchor::Point { x: 40.0, y: 30.0 });
+    let _ = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None);
+    let placement = *ui.overlay_placements("w").first().expect("one open overlay");
+    assert_eq!(placement.root, content);
+
+    let placed = ui.scene_at("w", placement.x + 2.0, placement.y + 2.0).expect("the overlay body resolves at its placement");
+    assert_eq!(placed.surface_id, "surface.popover");
+    assert_close((placed.rect.x, placed.rect.y), (placement.x, placement.y), "the overlay body must sit at its placement");
+    assert!((in_flow.y - placement.y).abs() > 0.5, "this fixture must actually move the body, in-flow {in_flow:?} vs placement {placement:?}");
+}
+
+/// 🪟️ Closing the overlay returns its body to the in-flow position — the origin override is per
+/// frame, never a stored offset, so nothing has to be unwound.
+#[test]
+fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    let content = first_component_scene_node(&ui, "w");
+    let in_flow = ui.scene_at("w", 200.0, 200.0).expect("in flow").rect;
+
+    ui.open_overlay("w", content, OverlayKind::Popover, OverlayAnchor::Point { x: 40.0, y: 30.0 });
+    let _ = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None);
+    let _ = ui.close_overlay("w", content);
+    let _ = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None);
+
+    let restored = ui.scene_at("w", 200.0, 200.0).expect("in flow again").rect;
+    assert_close((restored.x, restored.y), (in_flow.x, in_flow.y), "a closed overlay is back in flow");
+}
+
+/// 🪟️ A `Dialog`/`CommandPalette` is CENTERED rather than anchored, and its body follows the same
+/// one origin rule — `OverlayKind::default_placement`'s `Centered` branch.
+#[test]
+fn a_modal_overlays_body_is_centered_in_the_viewport() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.dialog")]));
+    drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
+    let content = first_component_scene_node(&ui, "w");
+    ui.open_overlay("w", content, OverlayKind::Dialog, OverlayAnchor::Point { x: 0.0, y: 0.0 });
+    let _ = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None);
+    let placement = *ui.overlay_placements("w").first().expect("one open overlay");
+    assert!(placement.backdrop, "a Dialog draws a scrim");
+    let placed = ui.scene_at("w", placement.x + 2.0, placement.y + 2.0).expect("the modal body resolves at its placement");
+    assert_close((placed.rect.x, placed.rect.y), (placement.x, placement.y), "a centered modal body sits at its placement");
+}
+//#endregion 🪟️OverlayBodyTests
+
 #[test]
 fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
     let mut ui = Ui::new();
@@ -502,6 +633,10 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             value: input.value.clone(),
             placeholder: input.placeholder.clone().map(|l| l.to_string()),
             commit: input.commit.clone(),
+            min: input.min,
+            max: input.max,
+            step: input.step,
+            accept: input.accept.clone(),
             on_change: Some(input.on_change.clone()),
         },
         UiNode::Select(select) => WidgetNode::Select {
@@ -553,7 +688,7 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
     match control {
         UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
         UiControlNode::Input(n) => {
-            ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) }
+            ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), min: n.min, max: n.max, step: n.step, accept: n.accept.clone(), on_change: Some(n.on_change.clone()) }
         }
         UiControlNode::Select(n) => ControlNode::Select {
             id: n.id.clone(),
@@ -578,7 +713,7 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
     match control {
         UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
         UiControlNode::Input(n) => {
-            WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) }
+            WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), min: n.min, max: n.max, step: n.step, accept: n.accept.clone(), on_change: Some(n.on_change.clone()) }
         }
         UiControlNode::Select(n) => WidgetNode::Select {
             id: n.id.clone(),
@@ -668,6 +803,7 @@ fn immediate_stats(node: &UiNode, bounds: Rect) -> (usize, usize, usize) {
         open_selects: &mut open_selects,
         interaction_maps: None,
         pick_clip: None,
+        viewport_height: 0.0,
     };
     render_widget(&widget, bounds, &mut ctx);
     stats(&draw)
@@ -1049,6 +1185,7 @@ impl WidgetHarness {
             open_selects: &mut self.open_selects,
             interaction_maps: Some(&mut self.maps),
             pick_clip: None,
+        viewport_height: 0.0,
         }
     }
 }
@@ -1171,7 +1308,7 @@ fn measure_widget_tree_skips_dimmed_items_in_height() {
 #[test]
 fn widget_interaction_maps_clear_frame_empties_every_map() {
     let mut maps = WidgetInteractionMaps::<ActionDescriptor>::default();
-    maps.input_metas.insert("i".into(), InputMeta { on_change: action(), commit: None, value: "v".into() });
+    maps.input_metas.insert("i".into(), InputMeta { on_change: action(), commit: None, value: "v".into(), input_kind: "text".into(), min: None, max: None, step: None, accept: None });
     maps.select_metas.insert("s".into(), action());
     maps.toggle_metas.insert("t".into(), (true, action()));
     maps.slider_metas.insert("sl".into(), SliderMeta { on_change: action(), min: 0.0, max: 1.0, step: 0.1, value: 0.5, bounds_x: 0.0, bounds_w: 10.0 });
@@ -1201,7 +1338,7 @@ fn widget_interaction_maps_clear_frame_empties_every_map() {
 #[test]
 fn render_widget_input_registers_interaction_meta_when_maps_present() {
     let mut h = WidgetHarness::new();
-    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: Some("blur".into()), on_change: Some(action()) };
+    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: Some("blur".into()), min: None, max: None, step: None, accept: None, on_change: Some(action()) };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     let meta = h.maps.input_metas.get("in").expect("register_input_meta must populate the map when interaction_maps is Some and on_change is Some");
     assert_eq!(meta.value, "hello");
@@ -1211,7 +1348,7 @@ fn render_widget_input_registers_interaction_meta_when_maps_present() {
 #[test]
 fn render_widget_input_with_no_on_change_does_not_register_meta() {
     let mut h = WidgetHarness::new();
-    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: None, on_change: None };
+    let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     assert!(h.maps.input_metas.is_empty(), "no on_change means nothing should be wired for the host to fire");
 }
@@ -1266,7 +1403,7 @@ fn render_widget_ring_registers_meta_and_live_value() {
 #[test]
 fn render_widget_field_draws_label_and_delegates_to_control() {
     let mut h = WidgetHarness::new();
-    let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name").to_string(), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
+    let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name").to_string(), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: Some(action()) } };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     assert!(h.maps.input_metas.contains_key("in"), "Field must render its child control (an Input here), which registers its own interaction meta");
     let total: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();

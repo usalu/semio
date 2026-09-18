@@ -76,6 +76,9 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
             app.take_typed_operation_effect();
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
+            // 🧹️ The terminal witness lands in its own completion outbox, which `has_pending_typed_operations`
+            // counts — left undrained this loop spins to its deadline (`window config operations did not finish`).
+            while app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?.is_some() {}
             std::thread::yield_now();
         }
         if receipts != fixture["cases"].as_array().unwrap().len() {

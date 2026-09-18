@@ -75,8 +75,12 @@ pub struct QueryResult {
     pub kind: QueryResultKind,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
+    /// 📦️ Boxed: a `JackSnapshot` is ~330 inline bytes, and the results-window transient that
+    /// carries a `QueryResult` moves through the ephemeral transfer lane, whose admission bounds
+    /// inline owner metadata at 256 bytes (`ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES`) —
+    /// the heap payload stays owned either way, only the inline footprint must fit.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub graph_fixture: Option<JackSnapshot>,
+    pub graph_fixture: Option<Box<JackSnapshot>>,
 }
 
 impl dsl::DslField for QueryResult {
@@ -102,7 +106,7 @@ impl QueryResult {
     }
 
     pub fn graph(columns: Vec<String>, graph_fixture: JackSnapshot) -> Self {
-        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(graph_fixture) }
+        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(Box::new(graph_fixture)) }
     }
 }
 // #endregion 🔖️Ast

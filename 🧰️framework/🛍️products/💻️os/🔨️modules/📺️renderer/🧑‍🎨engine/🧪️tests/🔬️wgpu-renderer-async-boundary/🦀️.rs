@@ -74,7 +74,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let engine_reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
     let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
-    let upload_stage = &draw[draw.find("pub fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
+    let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
     let gpu_stage = &draw[draw.find("pub fn stage_gpu_bind_group").unwrap_or(draw.len())..draw.find("pub fn begin_presenting").unwrap_or(draw.len())];
     let cancellation = &draw[draw.find("pub fn cancel_engine_texture_admission").unwrap_or(draw.len())..draw.find("fn claim_stage_before_gpu_allocation").unwrap_or(draw.len())];
     let upload_close = &draw[draw.find("pub fn close_upload_step(&mut self) -> RasterTextureCleanupStep").unwrap_or(draw.len())..];
@@ -342,7 +342,7 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
 #[test]
 fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_malformed_length() {
     fn semantic_glb() -> Vec<u8> {
-        let mut json = br#"{"scene":0,"scenes":[{"nodes":[0]}],"nodes":[{"mesh":0,"translation":[1,2,3]}],"accessors":[{"bufferView":0,"componentType":5126,"count":4,"type":"VEC3"},{"bufferView":1,"componentType":5120,"count":4,"type":"VEC3","normalized":true},{"bufferView":2,"componentType":5123,"count":4,"type":"VEC2","normalized":true},{"bufferView":3,"componentType":5121,"count":4,"type":"SCALAR"}],"bufferViews":[{"buffer":0,"byteOffset":0,"byteLength":64,"byteStride":16},{"buffer":0,"byteOffset":64,"byteLength":16,"byteStride":4},{"buffer":0,"byteOffset":80,"byteLength":16,"byteStride":4},{"buffer":0,"byteOffset":96,"byteLength":4}],"meshes":[{"primitives":[{"attributes":{"POSITION":0,"NORMAL":1,"TEXCOORD_0":2},"indices":3,"mode":5}]}]}"#.to_vec();
+        let mut json = br#"{"scene":0,"scenes":[{"nodes":[0]}],"nodes":[{"mesh":0,"translation":[1,2,3]}],"buffers":[{"byteLength":100}],"accessors":[{"bufferView":0,"componentType":5126,"count":4,"type":"VEC3"},{"bufferView":1,"componentType":5120,"count":4,"type":"VEC3","normalized":true},{"bufferView":2,"componentType":5123,"count":4,"type":"VEC2","normalized":true},{"bufferView":3,"componentType":5121,"count":4,"type":"SCALAR"}],"bufferViews":[{"buffer":0,"byteOffset":0,"byteLength":64,"byteStride":16},{"buffer":0,"byteOffset":64,"byteLength":16,"byteStride":4},{"buffer":0,"byteOffset":80,"byteLength":16,"byteStride":4},{"buffer":0,"byteOffset":96,"byteLength":4}],"meshes":[{"primitives":[{"attributes":{"POSITION":0,"NORMAL":1,"TEXCOORD_0":2},"indices":3,"mode":5}]}]}"#.to_vec();
         while !json.len().is_multiple_of(4) {
             json.push(b' ');
         }
@@ -398,6 +398,7 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
                 ready = true;
                 break;
             }
+            RendererAssetProbeStep::Reject(detail) => panic!("valid retained GLB structure was refused: {detail}"),
             RendererAssetProbeStep::Fault(detail) => panic!("valid retained GLB structure faulted: {detail}"),
         }
     }
@@ -419,9 +420,14 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     while let Some(Mesh3dItem::U32(value)) = index_cursor.read_next().unwrap() {
         indices.push(value);
     }
+    // 🌍️ The retained decoder mounts every GLB scene root under the world frame (`glb_world_frame`,
+    // glTF's Y-up → the world's Z-up), which is React's `<group rotation={[π/2, 0, 0]}>` around
+    // `GlbInstanceMesh`. The legacy oracle decodes raw glTF space, so it is compared through the
+    // same rotation: `(x, y, z)` → `(x, -z, y)`.
+    let world_frame = |values: &[f32]| -> Vec<f32> { values.chunks_exact(3).flat_map(|axis| [axis[0], -axis[2], axis[1]]).collect() };
     let legacy = semio_framework::mesh_from_glb(&valid).expect("legacy glTF oracle");
-    assert_eq!(positions, legacy.positions);
-    assert_eq!(normals, legacy.normals);
+    assert_eq!(positions, world_frame(&legacy.positions));
+    assert_eq!(normals, world_frame(&legacy.normals));
     assert_eq!(indices, legacy.indices);
     cursor.begin_close();
     while !cursor.close_step() {}
@@ -433,9 +439,87 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     let (mut authority, mut cursor) = probe(malformed, 7);
     assert!(matches!(cursor.step(), RendererAssetProbeStep::Pending));
     assert!(matches!(cursor.step(), RendererAssetProbeStep::Pending));
-    assert!(matches!(cursor.step(), RendererAssetProbeStep::Fault("asset response format probe rejected malformed input")));
+    assert!(matches!(cursor.step(), RendererAssetProbeStep::Reject("asset response format probe rejected malformed input")));
     while !cursor.close_step() {}
     let RendererAssetFetchOwner::Shared(owner) = cursor.take_terminal_owner().unwrap() else { panic!("shared probe") };
+    authority.finish(owner).unwrap();
+    assert!(authority.terminal_is_empty());
+}
+
+/// 🖼️ The reference underlay the puzzle3d playground ships
+/// (`/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`, 2275×2560 = 23 296 000
+/// straight-RGBA bytes) must DECODE — React's `WorldReferenceLayer` paints it — and a genuine pixel
+/// bomb must be REFUSED as one missing asset, never as a frame fault that quarantines the surface.
+#[test]
+fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_without_faulting() {
+    fn jpeg(width: u16, height: u16) -> Vec<u8> {
+        let [height_high, height_low] = height.to_be_bytes();
+        let [width_high, width_low] = width.to_be_bytes();
+        vec![0xff, 0xd8, 0xff, 0xc0, 0, 11, 8, height_high, height_low, width_high, width_low, 1, 1, 0x11, 0, 0xff, 0xd9]
+    }
+    fn png(width: u32, height: u32) -> Vec<u8> {
+        [b"\x89PNG\r\n\x1a\n".as_slice(), &[0, 0, 0, 13], b"IHDR", &width.to_be_bytes(), &height.to_be_bytes(), &[8, 6, 0, 0, 0], &[0; 4], &[0, 0, 0, 1], b"IDAT", &[0], &[0; 4], &[0, 0, 0, 0], b"IEND", &[0; 4]].concat()
+    }
+    fn feed(bytes: &[u8], cursor: &mut RendererAssetFormatCursor) -> Result<(), &'static str> {
+        for block in bytes.chunks(RENDERER_ASSET_PARSE_BLOCK_BYTES) {
+            cursor.feed(block)?;
+        }
+        cursor.finish()
+    }
+    fn probe_image(bytes: &[u8]) -> (WorldAssetIoAuthority, RendererAssetProbe) {
+        let mut authority = WorldAssetIoAuthority::default();
+        authority.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "reference.jpg", bytes.len()).unwrap();
+        let mut owner = authority.take_next().unwrap();
+        owner.push_page(WorldAssetResponsePage::try_from_owned(bytes.to_vec()).unwrap()).unwrap();
+        owner.seal().unwrap();
+        authority.return_owner(owner).unwrap();
+        let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed probe owner");
+        (authority, RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)))
+    }
+    fn drive(bytes: &[u8]) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
+        let (authority, mut probe) = probe_image(bytes);
+        for _ in 0..4_096 {
+            match probe.step() {
+                RendererAssetProbeStep::Pending => {}
+                step => return (authority, probe, step),
+            }
+        }
+        panic!("bounded image probe never reached a terminal step");
+    }
+
+    let plan = jpeg(2275, 2560);
+    let mut cursor = RendererAssetFormatCursor::new(WorldAssetRequestKind::ReferenceImage, &plan, plan.len()).expect("JPEG format cursor");
+    feed(&plan, &mut cursor).expect("a 2275x2560 reference plan is a legal image, not a bomb");
+    let plan = png(2275, 2560);
+    let mut cursor = RendererAssetFormatCursor::new(WorldAssetRequestKind::ReferenceImage, &plan, plan.len()).expect("PNG format cursor");
+    feed(&plan, &mut cursor).expect("the same dimensions decode through the PNG scanner");
+
+    assert_eq!(RENDERER_ASSET_PIXEL_BYTES, 64 * 1024 * 1024, "the ceiling is 16 megapixels of straight RGBA");
+    let bomb = jpeg(4097, 4097);
+    let mut cursor = RendererAssetFormatCursor::new(WorldAssetRequestKind::ReferenceImage, &bomb, bomb.len()).expect("JPEG format cursor");
+    assert_eq!(feed(&bomb, &mut cursor), Err("JPEG dimensions exceeded fixed pixel credits"));
+    let bomb = png(4097, 4097);
+    let mut cursor = RendererAssetFormatCursor::new(WorldAssetRequestKind::ReferenceImage, &bomb, bomb.len()).expect("PNG format cursor");
+    assert_eq!(feed(&bomb, &mut cursor), Err("PNG dimensions exceeded fixed pixel credits"));
+
+    let (mut authority, mut probe, step) = drive(&jpeg(2275, 2560));
+    assert!(matches!(step, RendererAssetProbeStep::Ready), "the playground's own reference plan reaches Ready");
+    probe.begin_close();
+    while !probe.close_step() {}
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
+    authority.finish(owner).unwrap();
+
+    let (mut authority, mut probe, step) = drive(&jpeg(4097, 4097));
+    assert!(
+        matches!(step, RendererAssetProbeStep::Reject("JPEG dimensions exceeded fixed pixel credits")),
+        "a refused image is ONE missing asset — a Fault here quarantines the whole surface"
+    );
+    let (detail, kind, url) = probe.take_rejection().expect("a rejection carries the lane its miss belongs to");
+    assert_eq!(detail, "JPEG dimensions exceeded fixed pixel credits");
+    assert_eq!(kind, WorldAssetRequestKind::ReferenceImage);
+    assert_eq!(url, "reference.jpg", "the url is captured BEFORE begin_close clears it");
+    while !probe.close_step() {}
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
     assert!(authority.terminal_is_empty());
 }
@@ -506,7 +590,7 @@ fn runtime_mailbox_reserves_completion_capacity_and_coalesces_only_matching_keys
 #[test]
 fn native_binary_owns_exactly_one_entrypoint_driver() {
     assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
-    assert_eq!(BINARY_SOURCE.matches("drive_entrypoint(").count(), 2);
+    assert_eq!(BINARY_SOURCE.matches("drive_entrypoint(").count(), 3);
 }
 
 #[test]
@@ -945,4 +1029,231 @@ fn presenter_ack_retirement_source_mutations_are_denied() {
     for (glue, prepared, gpu, draw, host, winit) in mutations {
         assert!(!presenter_retirement_contract(&glue, &prepared, &gpu, &draw, &host, &winit));
     }
+}
+
+/// 🥽️📥️ The url half of the World3d mesh lane, end to end inside one surface: a fetched GLB becomes
+/// the RESIDENT mesh under the very id the wire names it by, carrying real positions and indices, in
+/// the world's Z-up frame.
+///
+/// 🩸️ Nothing in the repo ever reserved a `WorldAssetRequestKind::Glb` in production — the bridge
+/// dropped every url-declared mesh before anything could ask for it, so this whole path (probe →
+/// GLB structure → schema → materializer → `publish_world3d_asset_mesh_lease`) had never run once.
+/// Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3d-world3d-glb-url-lane.md`.
+#[test]
+fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
+    use infinite_world::world::{
+        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response,
+        step_world3d_dynamic_retirement, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
+    };
+
+    let mut json = br#"{"scene":0,"scenes":[{"nodes":[0]}],"nodes":[{"mesh":0}],"accessors":[{"bufferView":0,"componentType":5126,"count":3,"type":"VEC3"},{"bufferView":1,"componentType":5121,"count":3,"type":"SCALAR"}],"bufferViews":[{"buffer":0,"byteOffset":0,"byteLength":36},{"buffer":0,"byteOffset":36,"byteLength":3}],"meshes":[{"primitives":[{"attributes":{"POSITION":0},"indices":1,"mode":4}]}]}"#.to_vec();
+    while !json.len().is_multiple_of(4) {
+        json.push(b' ');
+    }
+    let mut bin = Vec::new();
+    for position in [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] {
+        for component in position {
+            bin.extend_from_slice(&component.to_le_bytes());
+        }
+    }
+    bin.extend_from_slice(&[0, 1, 2, 0]);
+    let total = 12 + 8 + json.len() + 8 + bin.len();
+    let mut glb = Vec::with_capacity(total);
+    glb.extend_from_slice(b"glTF");
+    glb.extend_from_slice(&2u32.to_le_bytes());
+    glb.extend_from_slice(&(total as u32).to_le_bytes());
+    glb.extend_from_slice(&(json.len() as u32).to_le_bytes());
+    glb.extend_from_slice(b"JSON");
+    glb.extend_from_slice(&json);
+    glb.extend_from_slice(&(bin.len() as u32).to_le_bytes());
+    glb.extend_from_slice(b"BIN\0");
+    glb.extend_from_slice(&bin);
+
+    let url = "/mesh/🧊️probe.glb";
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, url).expect("the surface admits its own GLB request");
+    let mut owner = take_next_world3d_asset(&mut state).expect("the host drains exactly the admitted request");
+    assert_eq!(owner.url(), url);
+    reserve_world3d_asset_response(&mut state, &mut owner, glb.len()).expect("response credits");
+    for chunk in glb.chunks(64) {
+        owner.push_page(WorldAssetResponsePage::try_from_owned(chunk.to_vec()).expect("bounded response page")).expect("page admission");
+    }
+    seal_world3d_asset_response(&mut state, &mut owner).expect("sealed response");
+    return_world3d_asset(&mut state, owner).expect("handback");
+
+    let owner = take_next_completed_world3d_asset_step(&mut state).expect("completed decode owner");
+    let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    let mut ready = false;
+    for _ in 0..16_384 {
+        match probe.step() {
+            RendererAssetProbeStep::Pending => {}
+            RendererAssetProbeStep::Ready => {
+                ready = true;
+                break;
+            }
+            RendererAssetProbeStep::Reject(detail) => panic!("a valid world GLB was refused: {detail}"),
+            RendererAssetProbeStep::Fault(detail) => panic!("a valid world GLB faulted: {detail}"),
+        }
+    }
+    assert!(ready, "the GLB decode must reach Ready");
+    let lease = probe.take_ready_mesh_lease().expect("the decoded mesh lease");
+    publish_world3d_asset_mesh_lease(&mut state, url, lease).expect("the decoded GLB publishes under the url's own mesh id");
+
+    let resident = state.mesh_lease("mesh:🧊️probe").expect("the mesh is resident under `mesh_id_from_url`, the id the wire names it by");
+    let schema = resident.schema().expect("resident mesh schema");
+    assert_eq!((schema.vertices, schema.indices), (3, 3), "the resident mesh carries real positions and indices, not an empty placeholder");
+    let mut positions = Vec::new();
+    let mut cursor = resident.cursor(Mesh3dField::Positions).unwrap();
+    while let Some(Mesh3dItem::Vec3(value)) = cursor.read_next().unwrap() {
+        positions.push(value);
+    }
+    assert_eq!(positions, vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "glTF's Y-up geometry arrives in the world's Z-up frame, the way React's `<group rotation={{[π/2, 0, 0]}}>` delivers it");
+
+    probe.begin_close();
+    while !probe.close_step() {}
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("terminal owner") else { panic!("shared probe") };
+    finish_world3d_asset(&mut state, owner).expect("terminal handback");
+    assert!(begin_world3d_dynamic_retirement(&mut state));
+    for _ in 0..4_096 {
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(
+            semio_framework_job::OperationId(1),
+            semio_framework_job::Generation(1),
+            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_us,
+            &mut sequence,
+        );
+        if step_world3d_dynamic_retirement(&mut state, &mut context) {
+            break;
+        }
+    }
+    assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+}
+
+/// 🧊️ A REAL catalogued mesh — a whole-building export, not a synthetic four-vertex fixture —
+/// rides the surface's own asset lane into its mesh table. Every fixed credit on the way is a
+/// ceiling this asset could hit: `GLB_SCHEMA_ITEM_CAPACITY` (the metabolism capsule and the
+/// puzzle3d concrete-forest halves each declare over 200 accessors and bufferViews, and the forest
+/// packs 76 primitives into ONE mesh), `GLB_SCHEMA_OUTPUT_BYTES`, `WORLD_ASSET_RESPONSE_PAGE_BYTES`
+/// (a 16 KiB BYOB page, so a real asset always spans several) and the mesh authority's own schema.
+///
+/// Measured on this asset: 1 472 vertices / 5 250 indices / 1 472 uvs in 26 174 bounded probe steps;
+/// `/mesh/🧊️hexagonal-cut-concrete-forest-left.glb`, the puzzle3d playground's own, answers
+/// 847 / 2 874 / 847 in 19 884. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w3d-world3d-glb-url-lane.md`.
+#[test]
+fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_mesh_table() {
+    use infinite_world::world::{
+        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response,
+        step_world3d_dynamic_retirement, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
+    };
+    let glb: &[u8] = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let url = "/mesh/🧊️capsule_J.glb";
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, url).unwrap();
+    let mut owner = take_next_world3d_asset(&mut state).unwrap();
+    reserve_world3d_asset_response(&mut state, &mut owner, glb.len()).unwrap();
+    for chunk in glb.chunks(16 * 1024) {
+        owner.push_page(WorldAssetResponsePage::try_from_owned(chunk.to_vec()).unwrap()).unwrap();
+    }
+    seal_world3d_asset_response(&mut state, &mut owner).unwrap();
+    return_world3d_asset(&mut state, owner).unwrap();
+    let owner = take_next_completed_world3d_asset_step(&mut state).unwrap();
+    let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    let mut steps = 0u64;
+    loop {
+        steps += 1;
+        match probe.step() {
+            RendererAssetProbeStep::Pending => {}
+            RendererAssetProbeStep::Ready => break,
+            RendererAssetProbeStep::Reject(detail) => panic!("a catalogued mesh was refused after {steps} steps: {detail}"),
+            RendererAssetProbeStep::Fault(detail) => panic!("a catalogued mesh faulted after {steps} steps: {detail}"),
+        }
+        assert!(steps < 1_000_000, "no Ready within the step ceiling");
+    }
+    let lease = probe.take_ready_mesh_lease().unwrap();
+    publish_world3d_asset_mesh_lease(&mut state, url, lease).unwrap();
+    let resident = state.mesh_lease("mesh:🧊️capsule_J").unwrap();
+    let schema = resident.schema().unwrap();
+    assert_eq!((schema.vertices, schema.indices, schema.uvs), (1_472, 5_250, 1_472), "the whole export lands, every primitive welded into one mesh");
+    assert!(steps < 100_000, "the decode stays inside a bounded step count: {steps}");
+    probe.begin_close();
+    while !probe.close_step() {}
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!() };
+    finish_world3d_asset(&mut state, owner).unwrap();
+    assert!(begin_world3d_dynamic_retirement(&mut state));
+    for _ in 0..8_192 {
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(
+            semio_framework_job::OperationId(1),
+            semio_framework_job::Generation(1),
+            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_us,
+            &mut sequence,
+        );
+        if step_world3d_dynamic_retirement(&mut state, &mut context) {
+            break;
+        }
+    }
+    assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+}
+
+/// 🖼️ LAW: the swapchain texture is acquired, written and presented inside ONE prepared opportunity,
+/// and nothing before it may touch the surface.
+///
+/// 🩸️ A browser expires the canvas's current texture at the end of the task that obtained it and
+/// presents whatever it held at that moment. The ladder used to acquire in `AcquireSurface`, then
+/// yield at the host pump's own deadline, and only later blit the scene onto it — so on every boot
+/// where those two landed in different pumps the canvas presented the untouched (opaque black)
+/// texture and the composite was thrown away. Measured 6/6 on the live serve: every black boot had
+/// `gpu ladder 2->3` and `gpu ladder 6->7` in DIFFERENT `pump=` values, every painted boot had them
+/// in the same one (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `🗑️generated/w3c-ladder-2`). The ladder now composites into `PreparedCompositeTarget` and the
+/// terminal `Present` phase is the only code in the file that names `get_current_texture`.
+#[test]
+fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity() {
+    let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
+    let ladder = &ladder[..ladder.find("fn encode_prepared_draw_scalar").unwrap_or(ladder.len())];
+    assert_eq!(ladder.matches("get_current_texture").count(), 1, "exactly one phase may acquire the surface");
+    assert_eq!(ladder.matches("frame.present()").count(), 1, "and exactly one presents it");
+    assert!(!GPU_SOURCE.contains("PreparedGpuPresentPhase::AcquireSurface"), "acquiring in its own phase is the defect this law exists for");
+    assert!(!GPU_SOURCE.contains("PreparedGpuPresentPhase::CreateView"), "and so is viewing it in its own phase");
+
+    let present = ladder.split("PreparedGpuPresentPhase::Present =>").nth(1).expect("the terminal present phase");
+    let present = &present[..present.find("PreparedGpuPresentPhase::Complete").unwrap_or(present.len())];
+    let acquire = present.find("get_current_texture").expect("the acquire");
+    let blit = present.find("blit_prepared_composite").expect("the composite blit onto the acquired texture");
+    let submit = present.find("self.queue.submit").expect("the submit");
+    let present_call = present.find("frame.present()").expect("the present");
+    assert!(acquire < blit && blit < submit && submit < present_call, "acquire, write, submit and present are one straight line inside one opportunity");
+
+    let composite = ladder.split("PreparedGpuPresentPhase::EncodeComposite =>").nth(1).expect("the composite phase");
+    assert!(composite[..composite.find("PreparedGpuPresentPhase::GlassCommands =>").unwrap_or(composite.len())].contains("composite.view()"), "the scene blit lands offscreen");
+    let glass = ladder.split("PreparedGpuPresentPhase::GlassCommands =>").nth(1).expect("the glass phase");
+    assert!(glass[..glass.find("PreparedGpuPresentPhase::ForegroundCommands =>").unwrap_or(glass.len())].contains("composite.view()"), "and so does every glass region");
+}
+
+/// 🫧 LAW: the content a glass region carries on its face is encoded AFTER the glass pass, never
+/// into the scene the glass pass samples.
+///
+/// 🩸️ The scalar ladder encoded every layer into the scene and then composited the glass regions
+/// over it, so the window cap's own `Puzzle 3D` title and its Focus/Close controls were painted and
+/// then blurred away by the very region that labels them — the batch renderer has always split the
+/// two with `LayerBatchFilter` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+#[test]
+fn glass_foreground_scalars_are_encoded_after_the_glass_pass_and_never_into_the_scene() {
+    assert!(GPU_SOURCE.contains("fn prepared_draw_scalar_is_glass_foreground"), "the ladder classifies a scalar by its layer's glass ownership");
+    assert!(GPU_SOURCE.contains("layer.foreground_of.is_some()"), "using the draw list's own glass-content marker");
+    let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
+    let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the scene command phase");
+    let commands = &commands[..commands.find("PreparedGpuPresentPhase::BlurScene =>").unwrap_or(commands.len())];
+    assert!(commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor))"), "the scene phase skips glass-foreground scalars");
+    assert!(commands.contains("PreparedDrawTarget::Scene"), "and everything else goes to the scene");
+    let foreground = ladder.split("PreparedGpuPresentPhase::ForegroundCommands =>").nth(1).expect("the glass-foreground phase");
+    let foreground = &foreground[..foreground.find("PreparedGpuPresentPhase::Present =>").unwrap_or(foreground.len())];
+    assert!(foreground.contains("if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor))"), "and only they are re-encoded later");
+    assert!(foreground.contains("PreparedDrawTarget::Composite"), "onto the composite the glass pass already wrote");
+    assert!(GPU_SOURCE.contains("self.foreground_command"), "and its own index is part of the watchdog signature");
 }

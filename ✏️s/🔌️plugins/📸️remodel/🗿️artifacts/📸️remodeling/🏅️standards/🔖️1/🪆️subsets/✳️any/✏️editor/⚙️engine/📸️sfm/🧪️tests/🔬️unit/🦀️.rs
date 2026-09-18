@@ -380,7 +380,7 @@ fn maximum_registration_and_malformed_pnp_steps_stay_below_hard_ceiling_in_each_
 fn maximum_track_triangulation_and_degenerate_geometry_steps_stay_below_hard_ceiling_in_each_build_profile() {
     for degenerate in [false, true] {
         let mut sfm = bounded_triangulation_fixture(degenerate);
-        let mut preparation = BundlePreparation { point_track_ids: Vec::new(), cursor: 0, phase: BundlePhase::Retriangulate };
+        let mut preparation = BundlePreparation { point_track_ids: Vec::new(), cursor: 0, phase: BundlePhase::Retriangulate, tolerance: 3.0 };
         let started = std::time::Instant::now();
         assert!(!sfm.advance_bundle(&mut preparation, 1));
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "8-observation triangulation worker step exceeded 8 ms");
@@ -976,7 +976,7 @@ fn bundle_adjustment_converges_near_noise_floor() {
             observations.insert((ci, bi), px);
         }
     }
-    let problem = SfmBundleProblem { intrinsics: scene.cameras[0].0, num_cameras: scene.cameras.len(), num_points: point_ids.len(), terms, observations };
+    let problem = SfmBundleProblem { intrinsics: scene.cameras[0].0, num_cameras: scene.cameras.len(), num_points: point_ids.len(), terms, observations, fixed_cameras: Vec::new() };
 
     let a0: Vec<VecD> = scene
         .cameras

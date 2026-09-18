@@ -146,7 +146,7 @@ export function inputRefusalNotifiesV1(outcome: Extract<InputOutcomeV1, { kind: 
 //#endregion 🚦️Outcome
 
 //#region 📒️Ledger
-export type InputLedgerEntryV1 = Readonly<{ provenance: InputProvenanceV1; action: string }>;
+export type InputLedgerEntryV1 = Readonly<{ provenance: InputProvenanceV1; controllerId: string; action: string }>;
 
 export type InputLedgerCensusV1 = Readonly<{
   issued: number;
@@ -155,6 +155,12 @@ export type InputLedgerCensusV1 = Readonly<{
   refused: Readonly<Record<InputRefusalReasonV1, number>>;
   pending: number;
 }>;
+
+/** 🎬️ One remembered dispatch, newest last — the DOM renderer's twin of the wgpu target's own chrome
+ * ledger (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`, region `🎯️ChromeLedger`), so a behavioural-parity probe
+ * reads ONE shape from both renderers instead of counting console lines on one side and actions on the
+ * other (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W5b). Bounded by `historySlots`. */
+export type InputLedgerRecordV1 = Readonly<{ inputSeq: number; controllerId: string; action: string; origin: InputOriginV1; windowId: string | null; causedBy: number | null; outcome: InputOutcomeV1 | null }>;
 
 export type InputLedgerV1 = {
   /** 📥️ Mints the next entry. A descriptor that already carries provenance (a re-issued or guest-caused
@@ -170,6 +176,9 @@ export type InputLedgerV1 = {
   readonly outcome: (inputSeq: number) => InputOutcomeV1 | null;
   readonly entry: (inputSeq: number) => InputLedgerEntryV1 | null;
   readonly census: () => InputLedgerCensusV1;
+  /** 🎬️ The last `limit` entries in issue order, settled and open alike — an open entry answers a `null`
+   * outcome rather than being hidden, so an input that never terminated is visible as itself. */
+  readonly recent: (limit?: number) => readonly InputLedgerRecordV1[];
   readonly pending: () => number;
 };
 
@@ -204,6 +213,8 @@ export function createInputLedgerV1(options?: { readonly waiterSlots?: number; r
   let waiterCount = 0;
   const counts = { issued: 0, applied: 0, superseded: 0, refused: freshRefusalCounts() };
 
+  const record = (entry: InputLedgerEntryV1, outcome: InputOutcomeV1 | null): InputLedgerRecordV1 => ({ inputSeq: entry.provenance.inputSeq, controllerId: entry.controllerId, action: entry.action, origin: entry.provenance.origin, windowId: entry.provenance.windowId, causedBy: entry.provenance.causedBy, outcome });
+
   const forget = (): void => {
     while (closed.size > historySlots) {
       const oldest = closed.keys().next().value;
@@ -222,7 +233,7 @@ export function createInputLedgerV1(options?: { readonly waiterSlots?: number; r
         causedBy: given?.causedBy ?? defaults?.causedBy ?? null,
         origin: given?.origin ?? defaults?.origin ?? "user",
       };
-      const entry: InputLedgerEntryV1 = { provenance, action: action.action };
+      const entry: InputLedgerEntryV1 = { provenance, controllerId: action.controllerId, action: action.action };
       open.set(nextSeq, entry);
       counts.issued += 1;
       return entry;
@@ -255,6 +266,10 @@ export function createInputLedgerV1(options?: { readonly waiterSlots?: number; r
         waiters.set(inputSeq, list);
         waiterCount += 1;
       });
+    },
+    recent(limit) {
+      const rows = [...[...closed.values()].map((done) => record(done.entry, done.outcome)), ...[...open.values()].map((entry) => record(entry, null))].sort((a, b) => a.inputSeq - b.inputSeq);
+      return rows.slice(Math.max(0, rows.length - (limit ?? historySlots)));
     },
     outcome: (inputSeq) => closed.get(inputSeq)?.outcome ?? null,
     entry: (inputSeq) => open.get(inputSeq) ?? closed.get(inputSeq)?.entry ?? null,

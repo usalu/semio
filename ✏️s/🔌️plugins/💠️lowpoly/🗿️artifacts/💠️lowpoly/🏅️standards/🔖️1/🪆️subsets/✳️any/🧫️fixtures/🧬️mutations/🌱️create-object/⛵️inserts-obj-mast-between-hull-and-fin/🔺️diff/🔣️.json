@@ -1,39 +1,40 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [
       {
         "id": "obj-mast",
+        "mesh": null,
+        "meshContent": "",
         "name": "Mast",
+        "paintLayers": [],
+        "smoothShading": false,
         "transform": {
           "position": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
           "scale": [
-            1,
-            1,
-            1
+            1.0,
+            1.0,
+            1.0
           ]
-        },
-        "smoothShading": false,
-        "mesh": null,
-        "paintLayers": []
+        }
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": [
       "obj-hull",
       "obj-mast",
       "obj-fin"
     ]
-  }
+  },
+  "schema": null
 }

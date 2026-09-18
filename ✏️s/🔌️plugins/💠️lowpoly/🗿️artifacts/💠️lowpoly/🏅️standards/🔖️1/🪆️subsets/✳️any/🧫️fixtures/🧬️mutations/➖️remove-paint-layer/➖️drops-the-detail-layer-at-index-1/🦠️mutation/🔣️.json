@@ -1,6 +1,6 @@
 {
   "RemovePaintLayer": {
-    "objectId": "obj-hull",
-    "index": 1
+    "index": 1,
+    "objectId": "obj-hull"
   }
 }

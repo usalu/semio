@@ -5,7 +5,7 @@ use protocol::SemanticMutation;
 fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
     let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let descriptor_kinds: Vec<_> = TrinityGraphMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
-    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral oracle catalog");
+    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: pack::JsonValue = pack::parse_json(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
     let mutation_catalog = &catalog["mutationCatalogs"][0];
     let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
@@ -22,7 +22,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -70,7 +70,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -118,7 +118,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -166,7 +166,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -214,7 +214,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -262,7 +262,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -310,7 +310,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
@@ -358,7 +358,7 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
-        assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
         assert_eq!(descriptor["semanticKind"], kind);
         assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
         assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");

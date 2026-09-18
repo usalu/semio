@@ -72,6 +72,18 @@ pub(crate) mod context {
             result.events.extend(app.take_typed_operation_event());
             if let Some(completion) = semio_framework::io::resolve_ready(app.take_typed_operation_completion())? {
                 result.ui_scope = completion.ui_scope;
+                if let Some(patch) = completion.history_patch {
+                    result.history_patch = Some(match result.history_patch.take() {
+                        Some(mut previous) => {
+                            previous.upserts.extend(patch.upserts);
+                            previous.cursor = patch.cursor;
+                            previous.can_undo = patch.can_undo;
+                            previous.can_redo = patch.can_redo;
+                            previous
+                        }
+                        None => patch,
+                    });
+                }
             }
             if let Some(scope) = app.take_typed_operation_ui_scope() {
                 result.ui_scope = scope;
@@ -125,6 +137,18 @@ pub(crate) mod context {
         settle(app, result)
     }
     
+    /// 🧾 How many DOCUMENT edits one dispatch actually committed. `InvocationResult.mutations` is
+    /// the INLINE carrier and the typed/retained ladder never uses it: a migrated verb commits its edits
+    /// inside the operation and reports them as command-log upserts, which `settle` adopts above. Only an
+    /// `"apply"` row is a document edit: a CONFIG apply is logged as `action_id: "configApply"` under the
+    /// same `ActionKind::Mutation` (`🔌️plugin/🦀️.rs:23976` vs `:23993`), so counting bare "mutation"
+    /// rows would make every config-only verb's "must not mutate the document" law red for the wrong
+    /// reason, and every `View`/`Shell` verb logs a command row of its own too.
+    /// Every law that means "this verb edited the document" counts these, never `mutations`.
+    pub fn committed_edits(result: &InvocationResult) -> usize {
+        result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.kind == "mutation" && entry.action_id == "apply").count())
+    }
+
     /// 🧵️ Drives the same host-owned `DispatchAction` continuation used in production until the example is complete.
     /// 🛍️ One dispatch is the whole load: `setActiveExample` drives `Puzzle2dActiveExampleWork` to its
     /// terminal emit (retained job and batch path alike), so no `DispatchAction` continuation ladder
@@ -132,7 +156,7 @@ pub(crate) mod context {
     pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
         let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).expect("load example");
         assert!(result.requested_effects.is_empty(), "the example load must not request a continuation effect");
-        result.mutations.len()
+        committed_edits(&result)
     }
     
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -286,7 +310,7 @@ fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
 async fn add_node_action_emits_upsert_op_and_appends_node() {
     let mut app = app();
     let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
-    assert_eq!(result.mutations.len(), 1, "addNode must emit exactly one granular operation");
+    assert_eq!(committed_edits(&result), 1, "addNode must commit exactly one document edit");
     assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
     close_app(&mut app);
 }
@@ -299,7 +323,7 @@ async fn set_active_example_loads_concrete_forest_via_operations() {
     let mut app = app();
     let result = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
     assert!(result.requested_effects.is_empty(), "the example load must not request a continuation effect");
-    assert!(!result.mutations.is_empty(), "the example load must commit granular operations");
+    assert!(committed_edits(&result) > 0, "the example load must commit granular operations");
     assert!(!fixture_nodes(&fixture_of(&app)).is_empty());
     close_app(&mut app);
 }
@@ -351,7 +375,7 @@ async fn transform_gesture_ticks_coalesce_into_one_undo_step() {
     let start = node_x(&app);
     for dx in [1.0, 2.0, 3.0] {
         let result = dispatch(&mut app, "translateSelection", Some(&json!({ "dx": dx, "dy": 0.0 })), None).expect("drag tick");
-        assert_eq!(result.mutations.len(), 1, "every tick is one granular patch");
+        assert_eq!(committed_edits(&result), 1, "every tick is one granular patch");
     }
     assert!((node_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
     dispatch(&mut app, "undo", None, None).expect("undo");
@@ -429,12 +453,12 @@ async fn set_camera_is_session_only_and_never_undoable() {
     let mut app = app();
     for x in [1.0, 2.0, 3.0] {
         let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None).expect("camera");
-        assert!(result.mutations.is_empty(), "setCamera must never produce a document operation");
+        assert_eq!(committed_edits(&result), 0, "setCamera must never produce a document operation");
     }
     let rendered = render_body(&mut app, overview::BODY_KEY);
     assert_eq!(rendered_camera(&rendered).0, 3.0, "the camera must update immediately in the rendered scene");
     let undo = dispatch(&mut app, "undo", None, None).expect("undo");
-    assert!(undo.mutations.is_empty(), "there is no document edit to undo");
+    assert_eq!(committed_edits(&undo), 0, "there is no document edit to undo");
     let rendered_after_undo = render_body(&mut app, overview::BODY_KEY);
     assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
     close_app(&mut app);
@@ -452,7 +476,7 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     let app_config_before = app.config_pack().await.expect("app config before window publications");
     let result_a = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": 18.0, "y": -4.0, "zoom": 2.0 } })), Some(window_a)).expect("setCamera a");
     let result_b = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": -9.0, "y": 6.0, "zoom": 0.5 } })), Some(window_b)).expect("setCamera b");
-    assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
+    assert_eq!((committed_edits(&result_a), committed_edits(&result_b)), (0, 0));
     assert_eq!(fixture_of(&app), document_before);
     let app_config_after = app.config_pack().await.expect("app config after window publications");
     assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
@@ -544,7 +568,7 @@ async fn apply_board_events_select_persists_across_the_next_action() {
 async fn apply_board_events_camera_event_commits() {
     let mut app = app();
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).expect("camera event");
-    assert!(result.mutations.is_empty(), "a camera board event must never produce a document operation");
+    assert_eq!(committed_edits(&result), 0, "a camera board event must never produce a document operation");
     let (x, y, zoom) = rendered_camera(&render_body(&mut app, overview::BODY_KEY));
     assert_eq!(x, 5.0);
     assert_eq!(y, 6.0);
@@ -560,7 +584,7 @@ async fn select_action_emits_no_operations() {
     let mut app = concrete_forest_app();
     let node_id = first_node_id(&app);
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
-    assert!(result.mutations.is_empty(), "selection must not produce document operations");
+    assert_eq!(committed_edits(&result), 0, "selection must not produce document operations");
     close_app(&mut app);
 }
 //#endregion 🔖️BoardEvents
@@ -649,10 +673,10 @@ fn app_definition_has_three_lod_pane_window_kinds() {
 fn utility_registry_declares_utilities() {
     let definition = create_puzzle2d_app();
     let ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-    assert_eq!(ids, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID]);
+    assert_eq!(ids, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     let overview_window = definition.window_kinds.iter().find(|window| window.id == overview::WINDOW_KIND_ID).expect("overview pane");
     let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
-    assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID]);
+    assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     assert!(overview_window.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
     // 🧰️ D-1: select/brush are this window's whole exclusive utility set, NOT a sub-collection, so
     // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
@@ -806,7 +830,7 @@ async fn view_actions_emit_no_ops_through_the_registry() {
     for (action, args) in view_dispatches {
         let args_ref = (!args.is_null()).then_some(&args);
         let result = dispatch(&mut app, action, args_ref, None).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error:?}"));
-        assert!(result.mutations.is_empty(), "view action '{action}' must not emit document operations");
+        assert_eq!(committed_edits(&result), 0, "view action '{action}' must not emit document operations");
     }
     close_app(&mut app);
 }
@@ -1071,7 +1095,7 @@ async fn open_hover_accept_places_one_node_on_concrete_forest_and_reselects_it()
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
     let before_nodes = fixture_nodes(&before).len();
     let opened = dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 10.0, "y": 20.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
-    assert!(opened.mutations.is_empty(), "opening the picker must not touch the document");
+    assert_eq!(committed_edits(&opened), 0, "opening the picker must not touch the document");
     dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("preview a candidate");
     let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept");
     let after = fixture_of(&app);
@@ -1081,7 +1105,7 @@ async fn open_hover_accept_places_one_node_on_concrete_forest_and_reselects_it()
     close_app(&mut app);
     assert_eq!(fixture_nodes(&after).len(), before_nodes + 1, "accept places exactly one node");
     assert_eq!(placed.len(), 1, "exactly one node id is new");
-    assert!(!accepted.mutations.is_empty(), "the placement must commit as document operations");
+    assert!(committed_edits(&accepted) > 0, "the placement must commit as document operations");
     assert!(fastened, "the placed node must be fastened to the handle the popup opened on");
     assert!(board.contains(&placed[0]), "the placed node must reach the painted board: {}", &board[..board.len().min(400)]);
 }
@@ -1098,7 +1122,7 @@ async fn nakagin_refuses_the_suggestions_popup_politely() {
     let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept must not fault");
     let after = fixture_of(&app);
     close_app(&mut app);
-    assert!(accepted.mutations.is_empty(), "there is nothing to place, so nothing commits");
+    assert_eq!(committed_edits(&accepted), 0, "there is nothing to place, so nothing commits");
     assert_eq!(fixture_nodes(&after).len(), fixture_nodes(&before).len(), "a refused placement leaves the document alone");
 }
 
@@ -1114,7 +1138,7 @@ async fn closing_the_suggestions_popup_discards_the_preview() {
     let closed = dispatch(&mut app, "closeHandleSuggestions", None, Some(overview::WINDOW_KIND_ID)).expect("close");
     let after = fixture_of(&app);
     close_app(&mut app);
-    assert!(closed.mutations.is_empty(), "closing the picker never commits");
+    assert_eq!(committed_edits(&closed), 0, "closing the picker never commits");
     assert_eq!(fixture_nodes(&after).len(), fixture_nodes(&before).len(), "the provisional preview was never a document node");
 }
 
@@ -1129,7 +1153,7 @@ async fn cycling_candidates_forward_and_back_never_commits() {
     dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
     for action in ["cycleBrushCandidate", "cycleBrushCandidateBack"] {
         let result = dispatch(&mut app, action, None, Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
-        assert!(result.mutations.is_empty(), "{action} is a preview step, never a commit");
+        assert_eq!(committed_edits(&result), 0, "{action} is a preview step, never a commit");
     }
     let after = fixture_of(&app);
     close_app(&mut app);
@@ -1149,15 +1173,18 @@ fn labelled_fixture(rows: &[(&str, &str, Option<&str>)]) -> Value {
     json!({ "schema": PUZZLE2D_FIXTURE_SCHEMA, "nodes": nodes, "edges": [], "meta": { "kindCatalogs": { "nodes": [{ "id": "capsule", "name": "Capsule" }] } } })
 }
 
-/// 🏷️ LAW: the display label follows 3d's precedence — authored `text` first, then the kind's
-/// catalogue display name, then the raw id.
+/// 🏷️ LAW: the display label follows 3d's precedence exactly (`puzzle3d_object_display_label`) —
+/// authored `text` first, then the kind's catalogue display name, then the KIND id when the catalogue
+/// names no row for it, and only a node carrying no kind at all falls back to its own raw id.
 #[test]
 fn a_node_display_label_prefers_the_authored_label_then_the_catalogue_name_then_the_id() {
     let fixture = labelled_fixture(&[("node-a", "capsule", Some("Roof Pod")), ("node-b", "capsule", None), ("node-c", "unknown-kind", None)]);
     let nodes = fixture_nodes(&fixture);
     assert_eq!(puzzle2d_node_display_label(&nodes[0], &fixture), "Roof Pod", "an authored label wins");
     assert_eq!(puzzle2d_node_display_label(&nodes[1], &fixture), "Capsule", "then the kind's catalogue display name");
-    assert_eq!(puzzle2d_node_display_label(&nodes[2], &fixture), "node-c", "then the raw id");
+    assert_eq!(puzzle2d_node_display_label(&nodes[2], &fixture), "unknown-kind", "then the kind id the catalogue names no row for");
+    let kindless = json!({ "id": "node-d", "x": 0.0, "y": 0.0 });
+    assert_eq!(puzzle2d_node_display_label(&kindless, &fixture), "node-d", "and only a kindless node reads its raw id");
 }
 
 /// 🔢️ LAW: duplicate kinds auto-number — the first instance takes the catalogue name, further ones
@@ -1230,7 +1257,7 @@ async fn set_grid_visible_toggles_the_window_flag() {
     let mut app = app_with_registry();
     for expected in [false, true] {
         let result = dispatch(&mut app, "setGridVisible", None, Some(overview::WINDOW_KIND_ID)).expect("setGridVisible must not fault");
-        assert!(result.mutations.is_empty(), "a window-config verb never mutates the document");
+        assert_eq!(committed_edits(&result), 0, "a window-config verb never mutates the document");
         let measures = render_body(&mut app, overview::BODY_KEY);
         let _ = (&measures, expected);
     }
@@ -1246,7 +1273,7 @@ async fn set_selectable_kind_is_a_view_verb_that_never_mutates_the_document() {
     let before = fixture_of(&app);
     for kind in [PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_EDGE] {
         let result = dispatch(&mut app, "setSelectableKind", Some(&json!({ "kind": kind })), Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("setSelectableKind {kind} must not fault: {error:?}"));
-        assert!(result.mutations.is_empty(), "setSelectableKind {kind} never mutates the document");
+        assert_eq!(committed_edits(&result), 0, "setSelectableKind {kind} never mutates the document");
     }
     let after = fixture_of(&app);
     close_app(&mut app);
@@ -1263,7 +1290,7 @@ async fn placement_tuning_verbs_are_config_only_and_clamped() {
     for action in ["setBrushPlacementContactTolerance", "setBrushPlacementOverlapBudget"] {
         for value in [4.0, -1.0, f64::from(u16::MAX)] {
             let result = dispatch(&mut app, action, Some(&json!({ "value": value })), Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
-            assert!(result.mutations.is_empty(), "{action} never mutates the document");
+            assert_eq!(committed_edits(&result), 0, "{action} never mutates the document");
         }
     }
     let after = fixture_of(&app);
@@ -1279,7 +1306,7 @@ async fn engagement_repeat_last_never_mutates_the_document() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let result = dispatch(&mut app, "engagementRepeatLast", None, Some(overview::WINDOW_KIND_ID)).expect("engagementRepeatLast must not fault");
-    assert!(result.mutations.is_empty(), "repeat-last is a tool reconfiguration, never a document edit");
+    assert_eq!(committed_edits(&result), 0, "repeat-last is a tool reconfiguration, never a document edit");
     let after = fixture_of(&app);
     close_app(&mut app);
     assert_eq!(fixture_nodes(&after).len(), fixture_nodes(&before).len());
@@ -1293,7 +1320,7 @@ async fn open_add_node_dialog_is_shell_only() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let result = dispatch(&mut app, "openAddNodeDialog", None, Some(overview::WINDOW_KIND_ID)).expect("openAddNodeDialog must not fault");
-    assert!(result.mutations.is_empty(), "opening a dialog never mutates the document");
+    assert_eq!(committed_edits(&result), 0, "opening a dialog never mutates the document");
     let after = fixture_of(&app);
     close_app(&mut app);
     assert_eq!(fixture_nodes(&after).len(), fixture_nodes(&before).len());
@@ -1348,13 +1375,13 @@ fn rendered_transform_flags(scene_json: &str) -> (bool, bool) {
 async fn set_transform_gumball_flag_composes_the_handles_without_touching_the_document() {
     let mut app = app();
     let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(overview::WINDOW_KIND_ID)).expect("rotate off");
-    assert!(result.mutations.is_empty(), "a gumball flag is window config, never a document operation");
+    assert_eq!(committed_edits(&result), 0, "a gumball flag is window config, never a document operation");
     assert_eq!(rendered_transform_flags(&render_body(&mut app, overview::BODY_KEY)), (true, false), "the board scene must carry the composed flags");
     let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": true })), Some(overview::WINDOW_KIND_ID)).expect("rotate on");
-    assert!(result.mutations.is_empty());
+    assert_eq!(committed_edits(&result), 0);
     assert_eq!(rendered_transform_flags(&render_body(&mut app, overview::BODY_KEY)), (true, true), "and turn it back on");
     let unknown = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "scale", "pressed": true })), Some(overview::WINDOW_KIND_ID)).expect("unknown flag");
-    assert!(unknown.mutations.is_empty(), "scale is deliberately absent — an unknown flag is a no-op, not a new handle");
+    assert_eq!(committed_edits(&unknown), 0, "scale is deliberately absent — an unknown flag is a no-op, not a new handle");
     close_app(&mut app);
 }
 
@@ -1370,7 +1397,7 @@ async fn a_node_rotate_board_event_commits_one_rotate_selection_edit() {
     let (x0, y0) = (node_before.get("x").and_then(Value::as_f64).expect("x"), node_before.get("y").and_then(Value::as_f64).expect("y"));
     let rotate = json!([{ "name": "nodeRotate", "payload": { "ids": [node_id.clone()], "radians": std::f64::consts::PI, "pivot": { "x": 0.0, "y": 0.0 } } }]).to_string();
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": rotate })), Some(overview::WINDOW_KIND_ID)).expect("rotate event");
-    assert!(!result.mutations.is_empty(), "a rotate commit is a document edit");
+    assert!(committed_edits(&result) > 0, "a rotate commit is a document edit");
     let after = fixture_of(&app);
     let node_after = fixture_nodes(&after).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node after");
     let (x1, y1) = (node_after.get("x").and_then(Value::as_f64).expect("x"), node_after.get("y").and_then(Value::as_f64).expect("y"));
@@ -1378,9 +1405,9 @@ async fn a_node_rotate_board_event_commits_one_rotate_selection_edit() {
     // law that matters here is that the row reaches `puzzle2d_transform_selection` at all.
     assert!((x1 - x0).abs() < 1e-6 && (y1 - y0).abs() < 1e-6, "a half turn about the node's own centroid is a fixed point: ({x0},{y0}) -> ({x1},{y1})");
     let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "nodeRotate", "payload": { "ids": [node_id.clone()], "radians": 0.0 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("zero rotate");
-    assert!(noop.mutations.is_empty(), "a zero-angle rotate commits nothing");
+    assert_eq!(committed_edits(&noop), 0, "a zero-angle rotate commits nothing");
     let idless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "nodeRotate", "payload": { "ids": [], "radians": 1.0 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("id-less rotate");
-    assert!(idless.mutations.is_empty(), "an id-less rotate commits nothing");
+    assert_eq!(committed_edits(&idless), 0, "an id-less rotate commits nothing");
     close_app(&mut app);
 }
 
@@ -1424,9 +1451,6 @@ fn law_target_regions(fixture: &Value) -> Vec<Value> {
 async fn board_region_events_commit_one_edit_each_through_the_target_region_verbs() {
     let mut app = concrete_forest_app();
     let created = json!([{ "name": "regionCreate", "payload": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }]).to_string();
-    // 🔎️ The fold is asserted on the document, not on `result.mutations`: the harness's `dispatch`
-    // reports zero mutation rows for `addTargetRegion` itself too, so a mutation-row assertion here
-    // would pin a gap in the region differ's reach rather than this arm's behaviour (wave 2H §4).
     dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": created })), Some(overview::WINDOW_KIND_ID)).expect("region create");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions.len(), 1, "exactly one row is minted: {regions:?}");

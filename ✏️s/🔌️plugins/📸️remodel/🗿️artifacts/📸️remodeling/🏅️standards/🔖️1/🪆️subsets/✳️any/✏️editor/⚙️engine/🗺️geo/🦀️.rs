@@ -902,7 +902,7 @@ pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usiz
     if terms.is_empty() {
         return Vec::new();
     }
-    let problem = SfmBundleProblem { intrinsics: recon.intrinsics, num_cameras: recon.cameras.len(), num_points: recon.points.len(), terms, observations: obs_map };
+    let problem = SfmBundleProblem { intrinsics: recon.intrinsics, num_cameras: recon.cameras.len(), num_points: recon.points.len(), terms, observations: obs_map, fixed_cameras: Vec::new() };
     let a0: Vec<VecD> = recon.cameras.iter().map(|&(_, pose)| VecD::from_vec(pose.0.log().to_vec())).collect();
     let b0: Vec<VecD> = recon.points.iter().map(|&p| VecD::from_vec(p.to_vec())).collect();
     let cfg = LmConfig { max_iters: 1, ..LmConfig::default() };

@@ -29,11 +29,32 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as store_sync;
-#[cfg(not(target_arch = "wasm32"))]
+// 🥽️ Target-neutral: the catalog is `include_str!`-embedded, and `scenes::render_icon_render` needs
+// `mesh_asset_transport_url` on the browser build too — the same public-id → transport-path rewrite
+// React's `IconRenderHost` applies before handing a `/mesh/…` id to its loader.
 #[path = "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🦀️.rs"]
-mod mesh_assets;
+pub mod mesh_assets;
 #[path = "../../../🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod dock;
+
+//#region 🤖️AgentBridgeElements
+// 🌉️ WGPU-RENDERER-REACT-PARITY packet W1j — the four `os.agent.*` elements React's `🏛️ShellHost`
+// mounts (`useAgentBridge` + `AgentChatPanel` + `AgentApprovals`) had no wgpu twin at all, so an
+// approval request delivered to a wgpu-rendered shell could never reach the user. Declared in
+// dependency order for readability only; `agent_bridge` owns the frame codec and the consumer
+// state, the other three are its renderers.
+#[path = "../../../🧱️elements/🔗️AgentBridge/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod agent_bridge;
+
+#[path = "../../../🧱️elements/🚦️AgentPresence/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod agent_presence;
+
+#[path = "../../../🧱️elements/🤖️AgentApprovals/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod agent_approvals;
+
+#[path = "../../../🧱️elements/💬️AgentChatPanel/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod agent_chat_panel;
+//#endregion 🤖️AgentBridgeElements
 
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod engine_canvas;
@@ -63,17 +84,24 @@ pub mod icon_atlas;
 
 //#region 🔖️OsHostDecomposition
 // 🏠️ ticket 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (packet os-host): the seam that ends
-// this crate owning the actor kernel and ends its continuous redraw. `deadlines`/`kernel_seam` are
-// leaves (no dependency on `os_host`/`winit_app`); `os_host` composes `AppRuntime` with them;
-// `winit_app` is the new `ApplicationHandler` — see that file's own module docstring for why it
-// hand-rolls the event loop instead of using `ui_host::window::NativeHost<D>` directly. Mounted here,
-// away from the peer program's `parallel_runtime` mount just below, per this ticket's own OWNS list.
+// this crate owning the actor kernel and ends its continuous redraw. `deadlines` is a leaf (no
+// dependency on `os_host`/`winit_app`); `os_host` composes `AppRuntime` with it; `winit_app` is the
+// new `ApplicationHandler` — see that file's own module docstring for why it hand-rolls the event
+// loop instead of using `ui_host::window::NativeHost<D>` directly. Mounted here, away from the peer
+// program's `parallel_runtime` mount just below, per this ticket's own OWNS list.
+//
+// 🪢️ There used to be a second, `#[cfg(test)]`-only `kernel_seam` module here: a bounded
+// intent/outcome mailbox whose own docstring admitted "Test fixture … Production rendering dispatches
+// through RuntimeMailbox; this fixture has no production router." It had no production consumer at
+// all (its `KernelSeam`/`AppKernelSeam`/`HostWaker` were named only by its own test) and it shadowed
+// the name of the REAL production exchange, `KernelOutcome` in `🔖️KernelClient` below. Ticket
+// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W2k retired it: `📮️RuntimeMailbox` is the one production
+// router, and it is already the exact counterpart of React's own dispatch seam — `onActionStable`
+// taking a descriptor built by `uiIntentToActionDescriptor` (`🛠️ShellHelpers/🟦️.tsx:2051`). Nothing
+// about wgpu's runtime semantics needed the fixture; what DID differ was the controller identity that
+// descriptor carried, and that is fixed at the source in `ui_wgpu`'s `UiIntentCommand::descriptor`.
 #[path = "../⏰️deadlines/🦀️.rs"]
 mod deadlines;
-
-#[cfg(test)]
-#[path = "../🪢️kernel-seam/🦀️.rs"]
-mod kernel_seam;
 
 #[path = "../🏠️os-host/🦀️.rs"]
 mod os_host;
@@ -95,6 +123,11 @@ mod surface_lane;
 
 #[path = "../🎮️input-wire/🦀️.rs"]
 mod input_wire;
+
+// 📇️ The ONE directory transport seam the shell's identity/command/Space-Administration lanes are
+// parameterized over — native `ureq` here, the page `fetch` door there. See its module doc.
+#[path = "../📇️directory-door/🦀️.rs"]
+pub mod directory_door;
 
 #[cfg(target_arch = "wasm32")]
 #[path = "../🌐️browser-worker/🦀️.rs"]
@@ -120,8 +153,9 @@ use infinite_world::world::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 use infinite_world::world::{world3d_asset_cancellation_requested, WORLD_ASSET_RESPONSE_BYTE_CAPACITY};
+use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use infinite_world::world::{apply_reference_image_bytes, collect_world3d_asset_bytes};
+use infinite_world::world::apply_reference_image_bytes;
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use program_bridge::load_wasm_plugins;
@@ -176,6 +210,14 @@ fn reserve_renderer_asset_response(owner: &mut WorldAssetFetchOwner, byte_credit
     renderer_asset_io().lock().is_ok_and(|mut authority| authority.reserve_response(owner, byte_credits).is_ok())
 }
 
+/// 📡️ How one response seal ended. See [`RuntimeMailbox::seal_renderer_asset_response`] for why
+/// `Busy` is not a refusal.
+pub(crate) enum RendererAssetSealStep {
+    Granted,
+    Busy,
+    Refused(&'static str),
+}
+
 fn seal_renderer_asset_response(owner: &mut WorldAssetFetchOwner) -> bool {
     renderer_asset_io().lock().is_ok_and(|mut authority| authority.seal_response(owner).is_ok())
 }
@@ -228,7 +270,7 @@ impl RendererAssetFetchOwner {
         }
     }
 
-    fn owner(&self) -> &WorldAssetFetchOwner {
+    pub(crate) fn owner(&self) -> &WorldAssetFetchOwner {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner,
         }
@@ -273,7 +315,20 @@ impl RendererAssetFetchOwner {
 
 const RENDERER_ASSET_PROBE_BYTES: usize = 64;
 const RENDERER_ASSET_PARSE_BLOCK_BYTES: usize = 256;
-const RENDERER_ASSET_PIXEL_BYTES: usize = 16 * 1024 * 1024;
+
+/// 🖼️ The straight-RGBA ceiling ONE decoded image asset may claim — 16 megapixels, i.e. the 4096²
+/// surface every graphics backend in `🖌️render/🔌️backend` guarantees (`max_texture_dimension` 8192 on
+/// the conservative default, 16384 on Metal/D3D12). It is a pre-decode guard read out of the PNG
+/// `IHDR` and the JPEG frame header, so a compressed bomb is refused before any pixel buffer is
+/// reserved.
+///
+/// 🩸️ It used to be 16 MiB = 4 megapixels, which refused the reference underlay the puzzle3d
+/// playground itself ships (`/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`,
+/// 2275×2560 = 23 296 000 straight-RGBA bytes). React's `WorldReferenceLayer` hands that same file to
+/// the browser decoder and paints it, so on wgpu the scene lost its reference plane — and, because
+/// the refusal was escalated to a frame fault, the whole surface was quarantined ~3 s into every boot
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
+const RENDERER_ASSET_PIXEL_BYTES: usize = 64 * 1024 * 1024;
 
 struct RendererAssetPageIndex {
     starts: Box<[usize; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]>,
@@ -1874,7 +1929,7 @@ impl GlbInstancePlanCursor {
                     }
                     index
                 };
-                self.push_node(root, glb_identity())?;
+                self.push_node(root, glb_world_frame())?;
                 self.mode = GlbPlanMode::Nodes { scene, next_root: index + 1 };
                 Ok(false)
             }
@@ -1921,7 +1976,7 @@ impl GlbInstancePlanCursor {
                     self.mode = GlbPlanMode::Terminal;
                     return Ok(false);
                 }
-                self.admit_instance(schema, primitive, glb_identity())?;
+                self.admit_instance(schema, primitive, glb_world_frame())?;
                 self.mode = GlbPlanMode::Fallback { primitive: primitive + 1 };
                 Ok(false)
             }
@@ -1982,8 +2037,17 @@ impl GlbInstancePlanCursor {
     }
 }
 
-fn glb_identity() -> GlbMatrix {
-    [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+/// 🧊️🌍️ The frame every GLB scene root is mounted under: a +90° rotation about X, which carries
+/// glTF's Y-up convention (https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units)
+/// into the world's Z-up one. Column-major, so `(x, y, z)` becomes `(x, -z, y)`.
+///
+/// This is `GLB_MESH_FRAME_ROTATION_X` (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx`), which React applies as the
+/// `<group rotation={[π/2, 0, 0]}>` wrapping every `GlbInstanceMesh` — and, crucially, also inside
+/// `extractGlbCollisionMesh`, so the collision bodies an app registers for these meshes are already
+/// in this frame. Baking it into the decoded mesh (rather than into each instance model) keeps the
+/// wire's INLINE geometry untouched, exactly the split React makes: only a GLB gets the frame.
+fn glb_world_frame() -> GlbMatrix {
+    [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, -1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
 }
 
 fn glb_matrix_from_array(values: [f32; 16]) -> GlbMatrix {
@@ -2529,11 +2593,20 @@ struct RendererAssetProbe {
     glb_schema: Option<GlbSchemaCursor>,
     glb_materialize: Option<GlbMaterializeCursor>,
     phase: RendererAssetProbePhase,
+    rejection: Option<(&'static str, WorldAssetRequestKind, String)>,
 }
 
+/// 🗑️ What a probe step answers. `Reject` and `Fault` both close the response; they differ in WHOSE
+/// invariant broke. `Reject` is a verdict about the RESPONSE BYTES — a decoder refused them (wrong
+/// format for the kind, truncated structure, dimensions over
+/// [`RENDERER_ASSET_PIXEL_BYTES`]) — so exactly one asset is missing and the frame carries on, the way
+/// React's loaders leave one texture unpainted. `Fault` is a verdict about the RENDERER — a page
+/// cursor lost ownership, a sealed byte witness disagreed, a mesh publication generation was stale —
+/// and those quarantine the surface, because nothing downstream can be trusted after them.
 enum RendererAssetProbeStep {
     Pending,
     Ready,
+    Reject(&'static str),
     Fault(&'static str),
 }
 
@@ -2550,6 +2623,7 @@ impl RendererAssetProbe {
             glb_schema: None,
             glb_materialize: None,
             phase: RendererAssetProbePhase::Reading,
+            rejection: None,
         }
     }
 
@@ -2593,8 +2667,8 @@ impl RendererAssetProbe {
                 let block = match self.page_cursor.read_block(owner) {
                     Ok(Some(block)) => block,
                     Ok(None) => {
-                        if self.format.as_ref().expect("parsing asset owns format cursor").finish().is_err() {
-                            return self.fault("asset retained structure decoder rejected malformed input");
+                        if let Err(detail) = self.format.as_ref().expect("parsing asset owns format cursor").finish() {
+                            return self.reject(detail);
                         }
                         if self.owner_mut().rewind_decode_pages().is_err() {
                             return self.fault("asset response could not rewind after retained structure decode");
@@ -2610,8 +2684,8 @@ impl RendererAssetProbe {
                     }
                     Err(detail) => return self.fault(detail),
                 };
-                if self.format.as_mut().expect("parsing asset owns format cursor").feed(&block.0[..usize::from(block.1)]).is_err() {
-                    return self.fault("asset retained structure decoder rejected malformed input");
+                if let Err(detail) = self.format.as_mut().expect("parsing asset owns format cursor").feed(&block.0[..usize::from(block.1)]) {
+                    return self.reject(detail);
                 }
                 RendererAssetProbeStep::Pending
             }
@@ -2628,7 +2702,7 @@ impl RendererAssetProbe {
                         self.phase = RendererAssetProbePhase::Materializing;
                         RendererAssetProbeStep::Pending
                     }
-                    Err(detail) => self.fault(detail),
+                    Err(detail) => self.reject(detail),
                 }
             }
             RendererAssetProbePhase::Materializing => {
@@ -2667,14 +2741,14 @@ impl RendererAssetProbe {
             WorldAssetRequestKind::MapTile { vector: true, .. } | WorldAssetRequestKind::Terrain { .. } => self.observed_bytes != 0,
         };
         if !valid {
-            return self.fault("asset response format probe rejected malformed input");
+            return self.reject("asset response format probe rejected malformed input");
         }
         if self.owner_mut().rewind_decode_pages().is_err() {
             return self.fault("asset response could not rewind for its retained decoder");
         }
         self.format = match RendererAssetFormatCursor::new(self.owner().kind(), prefix, self.observed_bytes) {
             Ok(cursor) => Some(cursor),
-            Err(detail) => return self.fault(detail),
+            Err(detail) => return self.reject(detail),
         };
         self.page_cursor = RendererAssetPageCursor::new();
         self.phase = RendererAssetProbePhase::Parsing;
@@ -2685,6 +2759,20 @@ impl RendererAssetProbe {
         self.owner_mut().begin_close();
         self.phase = RendererAssetProbePhase::Closing;
         RendererAssetProbeStep::Fault(detail)
+    }
+
+    /// 🗑️ Refuses THIS response and keeps the frame: the kind and url are captured before
+    /// `begin_close` clears them, so the lane that requested the asset can record its own miss
+    /// (React's `tileMiss`/loader-error shape) instead of re-fetching the same refused bytes forever.
+    fn reject(&mut self, detail: &'static str) -> RendererAssetProbeStep {
+        self.rejection = Some((detail, self.owner().kind(), self.owner().url().to_string()));
+        self.owner_mut().begin_close();
+        self.phase = RendererAssetProbePhase::Closing;
+        RendererAssetProbeStep::Reject(detail)
+    }
+
+    fn take_rejection(&mut self) -> Option<(&'static str, WorldAssetRequestKind, String)> {
+        self.rejection.take()
     }
 
     fn take_ready_mesh_lease(&mut self) -> Option<Mesh3dLease> {
@@ -5813,7 +5901,7 @@ pub(crate) mod kernel_runtime {
                 controller: request.controller,
                 tool: request.tool,
                 window: self.window,
-                document: self.document,
+                artifact: self.artifact,
                 request_schema: request.schema,
                 request_version: request.version,
                 request_digest: request.digest,
@@ -6907,7 +6995,7 @@ pub(crate) mod kernel_runtime {
             let bytes = bytes_owner.single_page().ok_or_else(|| "kernel: populated Wasm exceeds the mounted single-page retained compiler authority".to_string())?;
             let hash = PackageHash(*semio_framework_hash::hash(bytes).as_bytes());
             let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
-            let document_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
+            let artifact_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
             // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
@@ -6932,7 +7020,7 @@ pub(crate) mod kernel_runtime {
                     &TURN_BUDGET,
                 )
                 .await?;
-            self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), document: document_digest });
+            self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), artifact: artifact_digest });
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -7038,7 +7126,7 @@ pub(crate) mod kernel_runtime {
                 match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await {
                     Ok(extension_actor) => {
                         self.replay_routes[replay_route_index] =
-                            Some(MountedReplayRouteSeed { actor: extension_actor, plugin: JobReplayRequest::from_spawn(&extension.extension_id, &[]).tool, package: extension_hash.0, window: parent_route.window, document: parent_route.document });
+                            Some(MountedReplayRouteSeed { actor: extension_actor, plugin: JobReplayRequest::from_spawn(&extension.extension_id, &[]).tool, package: extension_hash.0, window: parent_route.window, artifact: parent_route.artifact });
                         let scoped_grants = intersect_capabilities(&parent_grants, &extension.capability_requests).await;
                         if let Err(error) = self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants).await {
                             crate::log_debug(&format!("kernel: set_capabilities({extension_actor:?}) failed: {error}"));
@@ -8983,6 +9071,12 @@ where
 
 /// 🩺️ Temporary transition-only tracing so a per-frame predicate can be observed without 60 lines a
 /// second. Remove with the `[DEBUG]` lines it serves.
+pub(crate) fn log_debug_diagnostic_once_per_transition(site: &'static str, state: bool, message: &str) {
+    if semio_framework_trace::runtime_diagnostics_enabled() {
+        log_debug_once_per_transition(site, state, message);
+    }
+}
+
 fn log_debug_once_per_transition(site: &'static str, state: bool, message: &str) {
     use std::sync::Mutex;
     static LAST: Mutex<Option<Vec<(&'static str, bool)>>> = Mutex::new(None);
@@ -8997,6 +9091,18 @@ fn log_debug_once_per_transition(site: &'static str, state: bool, message: &str)
     log_debug(message);
 }
 
+/// 🩺️ A PER-FRAME `[DEBUG]` dump. Printed only while runtime diagnostics are armed
+/// (`SEMIO_RUNTIME_DIAGNOSTICS` — the process environment natively, the url stamp the UI isolate puts
+/// on the frame Worker in a browser, `localStorage` in React's own shell), because sixty of these a
+/// second per surface is not a trace, it is a mask: the boot fault this gate was added with
+/// (`asset retained structure decoder rejected malformed input`) sat under ~2 000 lines of frame
+/// census in the console. One-shot and transition-only sites keep using [`log_debug`] directly.
+pub(crate) fn log_debug_diagnostic(message: &str) {
+    if semio_framework_trace::runtime_diagnostics_enabled() {
+        log_debug(message);
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 fn log_debug(message: &str) {
     web_sys::console::log_1(&JsValue::from_str(message));
@@ -9007,16 +9113,141 @@ fn log_debug(message: &str) {
     eprintln!("{message}");
 }
 
+//#region 🌓️HostAppearance
+/// 🌓️ The persisted `os.config.ui-preferences` appearance as the HOST read it — React's
+/// `resolveUiPreferences(preferences, { appearance: "system", … }).appearance`, where
+/// [`HostAppearancePreference::Unset`] is React's `preferences.appearance == null` (the store holds
+/// no `setAppearance` event) and therefore falls through to the shell's own default.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum HostAppearancePreference {
+    #[default]
+    Unset,
+    System,
+    Light,
+    Dark,
+}
+
+impl HostAppearancePreference {
+    /// 🌓️ The wire spelling — `""` for unset, so a host that read nothing says nothing.
+    pub fn from_id(id: &str) -> Self {
+        match id {
+            "system" => Self::System,
+            "light" => Self::Light,
+            "dark" => Self::Dark,
+            _ => Self::Unset,
+        }
+    }
+
+    pub fn as_id(self) -> &'static str {
+        match self {
+            Self::Unset => "",
+            Self::System => "system",
+            Self::Light => "light",
+            Self::Dark => "dark",
+        }
+    }
+}
+
+/// 🌓️ The two appearance inputs this renderer cannot read for itself, published by whoever owns a
+/// window: the persisted preference above and the host's live `prefers-color-scheme`.
+///
+/// 🩸️ What this replaces: a `web_sys::window().match_media("(prefers-color-scheme: dark)")` read
+/// with an `unwrap_or(true)` fallback. The browser renderer runs inside the frame Worker
+/// (`🎞️frame-worker/🟦️.ts`), whose realm owns NO `window` — so that read always missed and every
+/// browser boot resolved DARK whatever the machine preferred, while React's own
+/// `resolveElementsSurfaceChromeDark` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:1691`) resolved LIGHT on the
+/// same host. `system_dark` therefore defaults to `false`, byte-for-byte that function's
+/// `typeof window === "undefined"` arm, and is fed live by the page thread
+/// (`🚀️browser-boot/🟦️.ts`), by the embeddable door (`🎬️renderer-boot/🟦️.ts`) and natively by
+/// winit's own `Window::theme()`/`WindowEvent::ThemeChanged` (`🪟️winit-app/🦀️.rs`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct HostAppearance {
+    pub preference: HostAppearancePreference,
+    pub system_dark: bool,
+}
+
+thread_local! {
+    static HOST_APPEARANCE: std::cell::Cell<HostAppearance> = const { std::cell::Cell::new(HostAppearance { preference: HostAppearancePreference::Unset, system_dark: false }) };
+}
+
+/// 🌓️ Publishes the host's appearance inputs. Every door calls it before the mount that opens the
+/// session and again whenever either input changes; the next frame's `ThemeResolve` phase re-reads
+/// it, so nothing has to be invalidated by hand.
+pub fn set_host_appearance(appearance: HostAppearance) {
+    HOST_APPEARANCE.with(|cell| cell.set(appearance));
+}
+
+/// 🌓️ Both published inputs, for a caller that changes one and must keep the other.
+pub fn host_appearance() -> HostAppearance {
+    HOST_APPEARANCE.with(|cell| cell.get())
+}
+
+/// 🌓️ The persisted preference the host read, or `None` when its store held none — the shell folds
+/// this in exactly where React folds `preferences.appearance`.
+pub fn host_appearance_preference() -> Option<&'static str> {
+    match HOST_APPEARANCE.with(|cell| cell.get().preference) {
+        HostAppearancePreference::Unset => None,
+        other => Some(other.as_id()),
+    }
+}
+
+/// 🌓️ wasm appearance hook — the browser twin of winit's `Window::theme()`. The frame Worker has no
+/// `window`, so the page thread resolves both inputs and hands them here.
 #[cfg(target_arch = "wasm32")]
-fn prefers_dark_scheme() -> bool {
-    web_sys::window().and_then(|window| window.match_media("(prefers-color-scheme: dark)").ok().flatten()).map(|query| query.matches()).unwrap_or(true)
+#[wasm_bindgen(js_name = semioWgpuSetHostAppearance)]
+pub fn semio_wgpu_set_host_appearance(preference: String, system_dark: bool) {
+    set_host_appearance(HostAppearance { preference: HostAppearancePreference::from_id(&preference), system_dark });
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn prefers_dark_scheme() -> bool {
-    true
+    HOST_APPEARANCE.with(|cell| cell.get().system_dark)
+}
+//#endregion 🌓️HostAppearance
+
+//#region ⌨️HostPlatform
+/// ⌨️ Byte-for-byte React's `keybindingPlatformUsesMetaV1`
+/// (`🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts`): the ONE rule deciding what `mod` means
+/// on this machine. `userAgentData.platform` answers `"macOS"` exactly; the legacy `navigator.platform`
+/// strings (`"MacIntel"`, `"iPhone"`, …) are matched case-insensitively, which is what React's
+/// `/mac|iphone|ipad|ipod/i` does.
+pub fn keybinding_platform_uses_meta(platform: &str) -> bool {
+    let platform = platform.to_ascii_lowercase();
+    ["mac", "iphone", "ipad", "ipod"].into_iter().any(|needle| platform.contains(needle))
 }
 
+thread_local! {
+    static HOST_PLATFORM_USES_META: std::cell::Cell<bool> = const { std::cell::Cell::new(cfg!(target_os = "macos")) };
+}
+
+/// ⌨️ Publishes the host's platform reading. Natively nothing calls this: the initializer already IS
+/// the OS answer (`cfg!(target_os = "macos")`), the same compile-time fact winit runs on. In the
+/// browser the frame Worker realm owns no `navigator.platform` worth trusting — a dedicated Worker
+/// reports the page's own user agent, but `userAgentData.platform` is page-thread-only — so the page
+/// resolves it and hands it across with the boot message.
+pub fn set_host_platform_uses_meta(uses_meta: bool) {
+    HOST_PLATFORM_USES_META.with(|cell| cell.set(uses_meta));
+}
+
+/// ⌨️ Whether `mod` is Command on this host — read by every chord formatter in the shell.
+pub fn host_platform_uses_meta() -> bool {
+    HOST_PLATFORM_USES_META.with(std::cell::Cell::get)
+}
+
+/// ⌨️ wasm platform hook — the browser twin of `cfg!(target_os = "macos")`.
+///
+/// 🩸️ What this replaces: `format_keybinding_shortcut` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) read
+/// `cfg!(target_os = "macos")`, which is FALSE on `wasm32-unknown-unknown` whatever machine the page
+/// runs on. A macOS browser therefore painted `Ctrl+Alt+E` on the navbar role chip where React,
+/// reading the live navigator, painted `⌘️⌥️E` — and the chord that actually fires is Command.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHostPlatform)]
+pub fn semio_wgpu_set_host_platform(platform: String) {
+    set_host_platform_uses_meta(keybinding_platform_uses_meta(&platform));
+}
+//#endregion ⌨️HostPlatform
+
+/// 🌓️ Byte-for-byte React's `resolveElementsSurfaceChromeDark` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:1691`):
+/// `"dark"` is dark, `"light"` is light, everything else (including `"system"`) asks the host.
 fn resolve_theme(appearance_id: &str) -> Theme {
     match appearance_id {
         "light" => Theme::light(),
@@ -9067,6 +9298,12 @@ mod settle_pump_tests;
 #[path = "../../../🧪️tests/🖱️wheel-application-point/🦀️.rs"]
 mod wheel_application_point_tests;
 //#endregion 🔖️WheelApplicationPointTests
+
+//#region 🧭️BootAxisParityTests
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧭️boot-axis-parity/🦀️.rs"]
+mod boot_axis_parity_tests;
+//#endregion 🧭️BootAxisParityTests
 
 //#region 📮️RuntimeMailbox
 
@@ -9626,6 +9863,16 @@ impl RuntimeApply {
             runtime.return_interaction(interaction);
             return true;
         };
+        debug_frame_deferred(&format!(
+            "start {}",
+            match &work {
+                FrameDeferredWork::ShellMaintenance => "shell-maintenance".to_string(),
+                FrameDeferredWork::PumpSync => "pump-sync".to_string(),
+                FrameDeferredWork::Action(action) => format!("action {action:?}"),
+                FrameDeferredWork::FlushTutorial => "flush-tutorial".to_string(),
+                FrameDeferredWork::Settle => "settle".to_string(),
+            }
+        ));
         if matches!(work, FrameDeferredWork::ShellMaintenance) {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -9655,11 +9902,19 @@ impl RuntimeApply {
                 FrameDeferredWork::PumpSync => {
                     #[cfg(not(target_arch = "wasm32"))]
                     interaction.shell.pump_sync_events().await;
+                    // 📇️ The browser has no native document-sync backbone, but it DOES have the
+                    // directory lane (identity → Space Administration → command FIFO) since ticket
+                    // 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e — same cadence, same code.
+                    #[cfg(target_arch = "wasm32")]
+                    interaction.shell.pump_directory_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if let Err(error) = interaction.shell.dispatch_action(action).await {
                         log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
-                        interaction.shell.error = Some(error);
+                        // 🧯️ WGPU-RENDERER-REACT-PARITY packet W1j: a failed gesture is React's
+                        // transient-notice case (viewer-read-only / mutation-rejected / render
+                        // error), not the persistent bottom-left error line this used to set.
+                        interaction.shell.note_dispatch_fault(&error);
                     }
                 }
                 FrameDeferredWork::FlushTutorial => interaction.shell.tutorial_flush_pending_document_ops().await,
@@ -9686,6 +9941,7 @@ impl RuntimeApply {
                 return Self::start_dispatch(cursor, runtime, handle);
             }
             Self::ResumeFrameDeferred { interaction, cursor } => {
+                debug_frame_deferred(&format!("resume returned={}", interaction.is_some()));
                 if let Some(returned) = interaction.take() {
                     runtime.return_interaction(returned);
                 }
@@ -9716,6 +9972,38 @@ impl RuntimeApply {
             },
         }
         true
+    }
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary frame-deferred probe")]
+fn debug_frame_deferred(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if seen > 60 {
+        return;
+    }
+    log_debug(&format!("[DEBUG] w5c deferred seen={seen} {tag}"));
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary asset-pump probe")]
+fn debug_asset_branch(tag: &'static str) -> bool {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if seen < 12 || seen % 500 == 0 {
+        log_debug(&format!("[DEBUG] w5c asset-branch seen={seen} {tag}"));
+    }
+    true
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary transaction-stage probe")]
+fn debug_stage(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if seen < 8 || seen % 4_000 == 0 {
+        log_debug(&format!("[DEBUG] w5c stage seen={seen} {tag}"));
     }
 }
 
@@ -10230,14 +10518,26 @@ impl RuntimeMailbox {
         Some(RendererAssetFetchOwner::World { surface, owner })
     }
 
-    pub(crate) fn reserve_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner, byte_credits: usize) -> bool {
+    /// 📡️ Admits the response byte credits one fetch declared. Same three-way answer as
+    /// [`Self::seal_renderer_asset_response`], and for the same reason: this runs the instant a
+    /// `fetch()` resolves, which is just as likely to land inside a live apply as the seal is.
+    pub(crate) fn reserve_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner, byte_credits: usize) -> RendererAssetSealStep {
         match fetch {
-            RendererAssetFetchOwner::Shared(owner) => reserve_renderer_asset_response(owner, byte_credits),
+            RendererAssetFetchOwner::Shared(owner) => {
+                if reserve_renderer_asset_response(owner, byte_credits) {
+                    RendererAssetSealStep::Granted
+                } else {
+                    RendererAssetSealStep::Refused("shared asset authority refused the response credits")
+                }
+            }
             RendererAssetFetchOwner::World { surface, owner } => {
-                let Ok(mut runtime) = self.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_mut() else { return false };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
-                reserve_world3d_asset_response(state, owner, byte_credits).is_ok()
+                let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
+                let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return RendererAssetSealStep::Busy };
+                match reserve_world3d_asset_response(state, owner, byte_credits) {
+                    Ok(()) => RendererAssetSealStep::Granted,
+                    Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the response credits"),
+                }
             }
         }
     }
@@ -10259,16 +10559,54 @@ impl RuntimeMailbox {
         Some(RendererAssetFetchOwner::World { surface, owner })
     }
 
-    fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
+    fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner, rejection: Option<(&'static str, WorldAssetRequestKind, String)>) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
             RendererAssetFetchOwner::World { surface, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
                 let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
                 let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
+                if let Some((_, kind, url)) = rejection {
+                    match kind {
+                        WorldAssetRequestKind::Terrain { z, x, y } => {
+                            apply_world3d_terrain_tile_bytes(state, z, x, y, &[]);
+                        }
+                        _ => mark_world3d_asset_miss(state, &url),
+                    }
+                }
                 finish_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, owner })
             }
         }
+    }
+
+    /// 🗑️ Answers a decoder's refusal of ONE response. The shared kinds record their own miss right
+    /// here — `apply_*` with empty bytes is exactly the miss those lanes already speak — while a
+    /// World-owned kind carries its rejection to [`Self::finish_renderer_asset_owner`], which is the
+    /// one place holding that surface's state. Printed unconditionally (not behind
+    /// `runtime_diagnostics_enabled`): an asset that never paints is a defect report, not a trace.
+    fn record_rejected_asset(rejection: &(&'static str, WorldAssetRequestKind, String)) {
+        let (detail, kind, url) = rejection;
+        log_debug(&format!("asset refused: {detail} — url={url}"));
+        match *kind {
+            WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), url, &[]),
+            kind @ WorldAssetRequestKind::MapTile { .. } => engine_canvas::apply_map_tile_bytes(kind, &[]),
+            WorldAssetRequestKind::Glb | WorldAssetRequestKind::ReferenceImage | WorldAssetRequestKind::Terrain { .. } => {}
+        }
+    }
+
+    /// 📥️ Drains the sealed response pages of a `Ready` probe whose kind applies WITHOUT a
+    /// `World3dState` — `UiImage` and `MapTile`, the two kinds `RendererAssetFetchOwner::Shared`
+    /// carries. `None` means "not one of those kinds"; a collect failure answers an empty payload so
+    /// the caller still closes the probe (`apply_*` treats empty bytes as the miss they are) rather
+    /// than leaving the lane parked on an undrainable response.
+    fn take_shared_asset_bytes(probe: &mut RendererAssetProbe) -> Option<Vec<u8>> {
+        if !matches!(probe.owner().kind(), WorldAssetRequestKind::UiImage { .. } | WorldAssetRequestKind::MapTile { .. }) {
+            return None;
+        }
+        let owner = match probe.owner_mut() {
+            RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
+        };
+        Some(collect_world3d_asset_bytes(owner).unwrap_or_default())
     }
 
     fn pump_renderer_asset_decode_step(&self) -> bool {
@@ -10276,14 +10614,50 @@ impl RuntimeMailbox {
         if probe_slot.is_none() {
             let Some(owner) = self.take_completed_renderer_asset_step() else { return false };
             *probe_slot = Some(RendererAssetProbe::new(owner));
-            return true;
+            return debug_asset_branch("new-probe");
         }
         let probe = probe_slot.as_mut().expect("asset probe initialized above");
         if matches!(probe.phase, RendererAssetProbePhase::Ready) {
+            log_debug_diagnostic(&format!("[DEBUG] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
+            // 🖼️🗺️ The two SHARED-lane kinds land nowhere near a `World3dState`: a `UiImage` goes into
+            // the Interpreter's raster table keyed by the image node's own id, a `MapTile` into the
+            // engine surface's `MapHost` keyed by the surface id the request carries. They are
+            // resolved BEFORE the surface lookup below — that lookup used to `return false` for
+            // every `Shared` owner, which parked the whole shared lane forever: the probe stayed
+            // `Ready`, nothing closed it, and no later request was ever admitted. `Component::Image`
+            // URLs and every map tile were dead on both browser and native because of that one line.
+            if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
+                match probe.owner().kind() {
+                    WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
+                    kind @ WorldAssetRequestKind::MapTile { .. } => engine_canvas::apply_map_tile_bytes(kind, &bytes),
+                    _ => {}
+                }
+                probe.begin_close();
+                return debug_asset_branch("shared");
+            }
             let surface = match probe.owner() {
                 RendererAssetFetchOwner::World { surface, .. } => *surface,
                 RendererAssetFetchOwner::Shared(_) => return false,
             };
+            // 🏔️ DEM tiles land in the terrain session, not the mesh table: the banded tile meshes
+            // are built by the next `sync_terrain_state` pass over the now-decodable tile.
+            if let WorldAssetRequestKind::Terrain { z, x, y } = probe.owner().kind() {
+                let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
+                    RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
+                }) {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        probe.begin_close();
+                        return debug_asset_branch("terrain-bytes-error");
+                    }
+                };
+                let Ok(mut runtime) = self.try_lock() else { return false };
+                let Some(interaction) = runtime.interaction.as_mut() else { return false };
+                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
+                apply_world3d_terrain_tile_bytes(state, z, x, y, &bytes);
+                probe.begin_close();
+                return debug_asset_branch("terrain");
+            }
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
                 let url = probe.owner().url().to_string();
@@ -10293,15 +10667,17 @@ impl RuntimeMailbox {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return true;
+                        return debug_asset_branch("reference-bytes-error");
                     }
                 };
                 let Ok(mut runtime) = self.try_lock() else { return false };
                 let Some(interaction) = runtime.interaction.as_mut() else { return false };
                 let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
+                log_debug_diagnostic(&format!("[DEBUG] reference image decode begin url={url} bytes={}", bytes.len()));
                 apply_reference_image_bytes(state, &url, &bytes);
+                log_debug_diagnostic(&format!("[DEBUG] reference image decode done url={url}"));
                 probe.begin_close();
-                return true;
+                return debug_asset_branch("reference");
             }
             let Some(lease) = probe.take_ready_mesh_lease() else { return false };
             let Ok(mut runtime) = self.try_lock() else {
@@ -10318,8 +10694,9 @@ impl RuntimeMailbox {
             };
             match publish_world3d_asset_mesh_lease(state, probe.owner().url(), lease) {
                 Ok(()) => {
+                    log_debug_diagnostic(&format!("[DEBUG] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
-                    return true;
+                    return debug_asset_branch("mesh-published");
                 }
                 Err(rejected) => {
                     let stale = rejected.fault == WorldDynamicFault::StaleToken;
@@ -10329,7 +10706,7 @@ impl RuntimeMailbox {
                         drop(runtime);
                         drop(probe_slot);
                         self.record_frame_fault("asset mesh publication generation/revision witness was stale");
-                        return true;
+                        return debug_asset_branch("mesh-stale");
                     }
                     return false;
                 }
@@ -10337,21 +10714,30 @@ impl RuntimeMailbox {
         }
         if matches!(probe.phase, RendererAssetProbePhase::Closing) {
             if !probe.close_step() {
-                return true;
+                return debug_asset_branch("closing");
             }
             let owner = probe.take_terminal_owner().expect("completed close owns terminal response");
+            let rejection = probe.take_rejection();
             *probe_slot = None;
             drop(probe_slot);
-            if let Err(owner) = self.finish_renderer_asset_owner(owner) {
+            if let Err(owner) = self.finish_renderer_asset_owner(owner, rejection.clone()) {
                 let mut probe_slot = self.0.asset_probe.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                 *probe_slot = Some(RendererAssetProbe::new(owner));
-                probe_slot.as_mut().expect("restored asset probe").begin_close();
+                let restored = probe_slot.as_mut().expect("restored asset probe");
+                restored.rejection = rejection;
+                restored.begin_close();
             }
-            return true;
+            return debug_asset_branch("closed");
         }
         match probe.step() {
-            RendererAssetProbeStep::Pending => true,
-            RendererAssetProbeStep::Ready => true,
+            RendererAssetProbeStep::Pending => debug_asset_branch("step-pending"),
+            RendererAssetProbeStep::Ready => debug_asset_branch("step-ready"),
+            RendererAssetProbeStep::Reject(_) => {
+                let rejection = probe.rejection.clone().expect("rejected probe owns its refusal witness");
+                drop(probe_slot);
+                Self::record_rejected_asset(&rejection);
+                true
+            }
             RendererAssetProbeStep::Fault(detail) => {
                 drop(probe_slot);
                 self.record_frame_fault(detail);
@@ -10367,14 +10753,17 @@ impl RuntimeMailbox {
             return false;
         }
         let owner = probe.take_terminal_owner().expect("asset probe terminal close witness");
+        let rejection = probe.take_rejection();
         *probe_slot = None;
         drop(probe_slot);
-        match self.finish_renderer_asset_owner(owner) {
+        match self.finish_renderer_asset_owner(owner, rejection.clone()) {
             Ok(()) => false,
             Err(owner) => {
                 let mut probe_slot = self.0.asset_probe.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                 *probe_slot = Some(RendererAssetProbe::new(owner));
-                probe_slot.as_mut().expect("restored asset probe").begin_close();
+                let restored = probe_slot.as_mut().expect("restored asset probe");
+                restored.rejection = rejection;
+                restored.begin_close();
                 false
             }
         }
@@ -10392,14 +10781,36 @@ impl RuntimeMailbox {
         }
     }
 
-    pub(crate) fn seal_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner) -> bool {
+    /// 📡️ Seals one fetched response against the authority that admitted it.
+    ///
+    /// ⚖️ Three of the four ways this can decline are BACK-PRESSURE, not refusals: the runtime lock is
+    /// taken, the interaction state is checked out by a live apply, or the surface has not been
+    /// re-attached yet. They all used to collapse into one `false`, which the worker raised as
+    /// `"asset response could not release its unused byte credits"` — a hard `asset-stream-fault`
+    /// that quarantined the whole shell for a lock that was free a millisecond later. Measured on
+    /// the puzzle3d playground: the second World3d surface's copy of the concrete-forest GLB sealed
+    /// 40 ms into its fetch, straight into an apply that owned `AppInteractionState`, and the black
+    /// canvas that followed was read as a mesh-lane bug (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    /// `📓️w3d-world3d-glb-url-lane.md`). Only [`RendererAssetSealStep::Refused`] is a verdict about
+    /// the RESPONSE; `Busy` asks the caller to come back, which is what the terrain, mesh and
+    /// reference-image reservation loops already do one layer up.
+    pub(crate) fn seal_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
         match fetch {
-            RendererAssetFetchOwner::Shared(owner) => seal_renderer_asset_response(owner),
+            RendererAssetFetchOwner::Shared(owner) => {
+                if seal_renderer_asset_response(owner) {
+                    RendererAssetSealStep::Granted
+                } else {
+                    RendererAssetSealStep::Refused("shared asset authority refused the seal witness")
+                }
+            }
             RendererAssetFetchOwner::World { surface, owner } => {
-                let Ok(mut runtime) = self.0.runtime.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_mut() else { return false };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
-                seal_world3d_asset_response(state, owner).is_ok()
+                let Ok(mut runtime) = self.0.runtime.try_lock() else { return RendererAssetSealStep::Busy };
+                let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return RendererAssetSealStep::Busy };
+                match seal_world3d_asset_response(state, owner) {
+                    Ok(()) => RendererAssetSealStep::Granted,
+                    Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the seal witness"),
+                }
             }
         }
     }
@@ -10460,7 +10871,7 @@ impl RuntimeMailbox {
             self.0.native_asset_fetching.store(false, Ordering::Release);
             return false;
         };
-        if !self.reserve_renderer_asset_response(&mut fetch, WORLD_ASSET_RESPONSE_BYTE_CAPACITY) {
+        if !matches!(self.reserve_renderer_asset_response(&mut fetch, WORLD_ASSET_RESPONSE_BYTE_CAPACITY), RendererAssetSealStep::Granted) {
             fetch.begin_close();
             match self.return_renderer_asset_owner(fetch) {
                 Ok(()) => {}
@@ -10532,6 +10943,34 @@ impl RuntimeMailbox {
         self.try_lock()
             .ok()
             .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_cursor_work_pending)))
+            .unwrap_or(false)
+    }
+
+    /// 📡️ Whether the asset lane still owes decode turns — a probe mid-flight, or a fetched response
+    /// nothing has picked up yet, on the shared authority or on any World3d surface.
+    ///
+    /// ⚖️ `pump_renderer_asset_decode_step` runs INSIDE the frame transaction, so on an event-driven
+    /// shell it advances only while frames happen — and a fetch completes long after the document
+    /// that named it has settled. Measured on the puzzle3d playground: the wire's
+    /// `/mesh/🧊️hexagonal-cut-concrete-forest-left.glb` is requested at t=11 757 ms and answered
+    /// `200`, 86 112 bytes at t=11 761 ms — 26 ms AFTER the boot's last frame — and then sat sealed
+    /// and undecoded for the remaining 33 s of the probe, mesh table empty, `draws=0`
+    /// (🗑️generated/w3d-fetch-1). The seal's `wake` buys exactly one frame; a real mesh needs tens of
+    /// thousands of bounded decode steps. Same shape as [`Self::has_pending_world3d_work`]: the
+    /// browser tick turns this into `request_frame`, so the work the frame transaction drives keeps
+    /// its own frames coming (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    /// `📓️w3d-world3d-glb-url-lane.md`).
+    #[cfg(target_arch = "wasm32")]
+    fn has_pending_asset_decode(&self) -> bool {
+        if self.0.asset_probe.try_lock().is_ok_and(|probe| probe.is_some()) {
+            return true;
+        }
+        if renderer_asset_io().lock().is_ok_and(|authority| authority.has_completed_step()) {
+            return true;
+        }
+        self.try_lock()
+            .ok()
+            .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_asset_decode_pending)))
             .unwrap_or(false)
     }
 
@@ -10857,6 +11296,12 @@ struct AppTextStream {
 struct AppRuntime {
     atlas: FontAtlas,
     icons: IconAtlas,
+    /// 🔁️ In-flight bounded icon re-rasterisation after a post-boot density change — see
+    /// `icon_atlas::IconAtlasRebuild`. `None` while the atlas already matches the surface density.
+    icon_rebuild: Option<crate::icon_atlas::IconAtlasRebuild>,
+    /// 📐️ The surface scale factor `icons` was rasterised at, so an ordinary window drag (same
+    /// density) never starts a rebuild.
+    icon_raster_scale: f32,
     interaction: Option<AppInteractionState>,
     checkout: runtime_mailbox_core::InteractionCheckoutLedger,
     draw: DrawList,
@@ -11015,6 +11460,51 @@ impl std::ops::DerefMut for AppRuntime {
 impl AppRuntime {
     fn interaction_available(&self) -> bool {
         self.interaction.is_some()
+    }
+
+    /// 📐️ The one resize the runtime owns: the content root moves in LOGICAL pixels and the glyph
+    /// atlas — the only layout-facing owner that legitimately cares about device density — is
+    /// re-pointed at the new scale factor. `set_raster_scale` is a no-op when the scale is
+    /// unchanged, so an ordinary window drag never drops a single cached glyph; a display change
+    /// does, and the atlas re-rasterises crisp at the new density on the next frame.
+    /// Shadows the `Deref` route into [`AppInteractionState::resize`] deliberately.
+    fn resize(&mut self, logical_width: f32, logical_height: f32, scale_factor: f32) {
+        self.atlas.set_raster_scale(scale_factor);
+        self.begin_icon_raster(scale_factor);
+        if let Some(interaction) = self.interaction.as_mut() {
+            interaction.resize(logical_width, logical_height, scale_factor);
+        }
+    }
+
+    /// 🔁️ Arms a bounded icon re-rasterisation when `scale_factor` lands on a different atlas CELL
+    /// size than the icons were rasterised at. Cell size, not raw scale: the atlas quantises the
+    /// factor (`icon_cell_size` rounds and clamps to 3×), so a fractional resize that quantises the
+    /// same way must not throw away 250 good rasterisations. The glyph atlas already re-rasterises
+    /// lazily on the same event; this closes the icon half (ticket 26/09/17 packet W2k, W1g gap 1).
+    fn begin_icon_raster(&mut self, scale_factor: f32) {
+        if !scale_factor.is_finite() || scale_factor <= 0.0 {
+            return;
+        }
+        let pending = crate::icon_atlas::IconAtlasRebuild::new(scale_factor);
+        if pending.cell_size() == crate::icon_atlas::IconAtlasRebuild::new(self.icon_raster_scale).cell_size() {
+            return;
+        }
+        self.icon_rebuild = Some(pending);
+    }
+
+    /// 🔁️ Spends one bounded slice on the in-flight icon rebuild. Answers the finished atlas exactly
+    /// once, on the step that completes it, so the caller installs and re-uploads it.
+    fn drive_icon_raster_step(&mut self) -> Option<IconAtlas> {
+        let rebuild = self.icon_rebuild.as_mut()?;
+        match rebuild.step(crate::icon_atlas::ICON_RASTER_STEP_BUDGET) {
+            crate::icon_atlas::IconAtlasRebuildStep::Rasterized(_) => None,
+            crate::icon_atlas::IconAtlasRebuildStep::Complete(atlas) => {
+                let scale = rebuild.scale_factor();
+                self.icon_rebuild = None;
+                self.icon_raster_scale = scale;
+                Some(atlas)
+            }
+        }
     }
 
     /// 🎟️ The ONE way the interaction state leaves the runtime, so every checkout is named and aged.
@@ -11366,6 +11856,9 @@ struct FrameFinishCursor {
 enum FrameFinishPhase {
     Inputs,
     Deferred,
+    /// 🔁️ Drives `AppRuntime::drive_icon_raster_step` after a density change — one bounded slice per
+    /// frame, then one whole-atlas upload on the step that finishes it.
+    IconRaster,
     GlyphUpload,
     Cursor,
     Draw,
@@ -11553,18 +12046,32 @@ impl FrameTransaction {
         }
     }
 
+#[allow(dead_code, reason = "[DEBUG] temporary supersede probe")]
+fn debug_supersede(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if !(seen < 10 || seen % 50 == 0) || seen > 3_000 {
+        return;
+    }
+    log_debug(&format!("[DEBUG] w5c supersede seen={seen} {tag}"));
+}
+
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         context.set_stage(self.stage_label());
         if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
+            Self::debug_supersede(&format!("context operation={} generation={} cancelled={} deadline={}", context.operation() != self.operation, context.generation() != self.generation, context.is_cancelled(), context.deadline_exceeded()));
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         }
         let Some(current_witness) = runtime.presentation_witness_for(self.generation.0) else {
+            Self::debug_supersede("no-witness");
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         };
         if let Some(base_witness) = self.base_witness {
             if base_witness != current_witness {
+                Self::debug_supersede("witness-moved");
                 self.phase = AppFrameTransactionPhase::Terminal;
                 return AppFrameTransactionStep::Superseded;
             }
@@ -11581,6 +12088,19 @@ impl FrameTransaction {
         }
         if runtime.pump_renderer_asset_decode_step() {
             context.consume_fuel(1);
+            // 🐌️ ONE asset unit per frame is not a budget, it is a stall: this transaction's fuel is
+            // 1, so a single `Pending` used to buy exactly one 256-byte structure block, one response
+            // page, or one GLB vertex — measured at ~55 units/s on the puzzle3d playground, where the
+            // reference underlay alone is 1 889 blocks and each mesh ~7 000 vertices. Nothing in the
+            // scene would have appeared for minutes. The wall slice this step was granted is the real
+            // bound (`INTERACTIVE_LANE_WALL_US`), so the lane spends it and yields on the deadline
+            // instead of on a fuel unit; each unit is a bounded byte-wise scan, so the deadline check
+            // dominates the work it guards.
+            let mut units = 1u32;
+            while !context.deadline_exceeded() && runtime.pump_renderer_asset_decode_step() {
+                units = units.saturating_add(1);
+            }
+            Self::debug_supersede(&format!("asset-decode-pump units={units} deadline={}", context.deadline_exceeded()));
             return AppFrameTransactionStep::Pending;
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -11588,7 +12108,10 @@ impl FrameTransaction {
             context.consume_fuel(1);
             return AppFrameTransactionStep::Pending;
         }
-        let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
+        let Ok(mut app) = runtime.try_lock() else {
+            Self::debug_supersede("runtime lock refused");
+            return AppFrameTransactionStep::Pending;
+        };
         // 🎟️ No interaction state, no frame — and NO PARKING.
         //
         // 🩸️ Parking here (`Pending`) kept the build alive across the whole checkout, and a live build
@@ -11601,9 +12124,11 @@ impl FrameTransaction {
         // every advance, the returning completion is applied at the next opportunity, and the build that
         // needs the state is admitted fresh against it.
         if !app.interaction_available() {
+            Self::debug_supersede(&format!("interaction-unavailable site={:?} opportunities={}", app.checkout.site(), app.checkout.opportunities()));
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         }
+        debug_stage(self.stage_label());
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
                 scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
@@ -12112,6 +12637,16 @@ impl FrameTransaction {
                 AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::RasterUploads => {
+                // 🖼️ One bitmap per step off `ui_wgpu`'s own image ledger — the drain
+                // `take_ui_image_upload`'s docstring names ("the host's per-frame drain") and never had.
+                // It answers `None` whenever a `SceneHost` is registered (the renderer's normal case:
+                // `render_ui_image_step` owns `UiNode::Image` then), so this is free here and is what
+                // makes the no-scene-host paint path in `ui_wgpu` actually show a decoded `data:` image
+                // instead of the `alt` placeholder.
+                if let Some(upload) = ui_wgpu::wgpu::take_ui_image_upload() {
+                    scenes::queue_decoded_raster_upload("ui-image", upload.key, upload.width, upload.height, upload.pixels);
+                    return AppFrameTransactionStep::Pending;
+                }
                 let cursor = self.raster_uploads.get_or_insert_with(Default::default);
                 match cursor.step() {
                     scenes::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
@@ -12543,12 +13078,12 @@ struct AppPresentStallWatch {
 
 /// 🐕️ Every index a healthy presentation step moves: the ladder phase, the engine packet, the upload
 /// page, and — because `AppPresentPhase::Render` holds ONE `gpu_cursor` for a whole composite pass —
-/// that cursor's own `(phase, command, glass command, blur mip)`. Without the inner four the outer
+/// that cursor's own `(phase, command, glass command, glass-foreground command, blur mip)`. Without the inner five the outer
 /// shape is frozen for as many steps as the scene has commands, and a watchdog reading the outer
 /// shape alone aborts a healthy present: measured on 6118 as
 /// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
 /// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>);
+type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>);
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
 /// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
@@ -13387,8 +13922,10 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
             break;
         }
     }
-    if !mailbox.seal_renderer_asset_response(fetch) {
-        return Err("native renderer asset could not seal its exact byte claim".into());
+    match mailbox.seal_renderer_asset_response(fetch) {
+        RendererAssetSealStep::Granted => {}
+        RendererAssetSealStep::Busy => return Err("native renderer asset could not seal its exact byte claim: the renderer was busy".into()),
+        RendererAssetSealStep::Refused(detail) => return Err(format!("native renderer asset could not seal its exact byte claim: {detail}")),
     }
     Ok(())
 }
@@ -13443,8 +13980,10 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
         // returns for every populated page.
         return Err("native renderer HTTP asset page requires a zero-copy retained-page handoff that is not mounted".into());
     }
-    if !mailbox.seal_renderer_asset_response(fetch) {
-        return Err("native renderer HTTP asset could not seal its exact byte claim".into());
+    match mailbox.seal_renderer_asset_response(fetch) {
+        RendererAssetSealStep::Granted => {}
+        RendererAssetSealStep::Busy => return Err("native renderer HTTP asset could not seal its exact byte claim: the renderer was busy".into()),
+        RendererAssetSealStep::Refused(detail) => return Err(format!("native renderer HTTP asset could not seal its exact byte claim: {detail}")),
     }
     Ok(())
 }
@@ -13823,6 +14362,30 @@ impl AppRuntime {
                         self.last_sync_pump_ms = app_now_ms();
                     }
                 }
+                cursor.phase = FrameFinishPhase::IconRaster;
+            }
+            FrameFinishPhase::IconRaster => {
+                if self.icon_rebuild.is_none() {
+                    cursor.phase = FrameFinishPhase::GlyphUpload;
+                    return FrameFinishBoundaryStep::Pending;
+                }
+                let Some(atlas) = self.drive_icon_raster_step() else { return FrameFinishBoundaryStep::Pending };
+                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon transfer lost resource input") };
+                let Ok(mut pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len()) else {
+                    return FrameFinishBoundaryStep::Fault("frame icon atlas page admission failed");
+                };
+                loop {
+                    match pages.push_page(&atlas.pixels, pages.next_row()) {
+                        Ok(true) => break,
+                        Ok(false) => {}
+                        Err(_) => return FrameFinishBoundaryStep::Fault("frame icon atlas page construction faulted"),
+                    }
+                }
+                if let Err(rejected) = input.try_push_upload(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
+                    partial.upload_rejected = Some(rejected);
+                    return FrameFinishBoundaryStep::Fault("frame icon upload fixed admission was refused");
+                }
+                self.icons = atlas;
                 cursor.phase = FrameFinishPhase::GlyphUpload;
             }
             FrameFinishPhase::GlyphUpload => {
@@ -13999,9 +14562,34 @@ impl AppInteractionState {
         }
     }
 
-    fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
-        self.shell.screen_w = (css_width * dpr).max(1.0);
-        self.shell.screen_h = (css_height * dpr).max(1.0);
+    /// 📐️ The content root is LOGICAL (CSS) pixels, exactly like every chrome constant
+    /// (`chrome_px`, navbar/tab/footer heights, resize-handle hit widths) and like the React host's
+    /// DOM. `dpr` never reaches layout — it only sizes the GPU surface, the projection divisor and
+    /// the glyph atlas raster. See ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
+    fn resize(&mut self, css_width: f32, css_height: f32, _dpr: f32) {
+        self.shell.screen_w = css_width.max(1.0);
+        self.shell.screen_h = css_height.max(1.0);
+    }
+
+    /// ⌨️ Offers one key to every board pane the pointer is inside, newest-first, and answers `true`
+    /// as soon as one consumes it. Scoped to the pointer like React's `hoverActiveRef` gate, so a
+    /// board in another pane never eats a chord meant for the focused window.
+    fn board2d_key(&mut self, action: &KeyAction, modifiers: &PointerModifiers) -> bool {
+        if !matches!(action, KeyAction::Escape | KeyAction::Tab) {
+            return false;
+        }
+        let surfaces: Vec<(String, String)> = self.shell.board2d_states.keys().filter_map(|surface_id| self.shell.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone()))).collect();
+        for (surface_id, controller_id) in surfaces {
+            match engine_canvas::puzzle_board_key_into(&surface_id, &controller_id, action, modifiers, &mut self.input) {
+                Ok(true) => return true,
+                Ok(false) => {}
+                Err(fault) => {
+                    self.input.record_action_fault(fault);
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
@@ -14016,6 +14604,20 @@ impl AppInteractionState {
             return;
         }
         if engine_canvas::node_graph_apply_note_edit_key(action.clone(), &modifiers) {
+            return;
+        }
+        // ✍️ A focused text editor owns the keyboard before the shell's chord table does — the same
+        // precedence React gets from DOM focus on its `<textarea>`. Without this the editor's
+        // `text_editor_apply_key_into` had no production caller at all and typing into a TextEditor
+        // surface only ever fired global accelerators.
+        if interpreter::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
+            return;
+        }
+        // ⌨️ A board pane under the pointer owns `Escape` (cancel area-select) and `Tab`/`shift+Tab`
+        // (walk the brush slot's candidates) before the shell's chord table does — React gets the same
+        // precedence from a CAPTURE-phase listener that calls `preventDefault` (`🖥️Board2dHost/🟦️.tsx`
+        // :1292-1313, :1338-1339). Both chords had NO wgpu path at all before this.
+        if self.board2d_key(&action, &modifiers) {
             return;
         }
         // 🔌️ w2-input-wiring: spawns the ASYNC `handle_keyboard_async` (mirrors this fn's own
@@ -14347,8 +14949,9 @@ async fn boot_runtime(
         Ok(bytes) if bytes.len() > 256 => bytes,
         _ => ANTA_LATIN.to_vec(),
     };
-    let atlas = FontAtlas::from_bytes(&font_bytes).map_err(|err| format!("atlas failed: {err}"))?;
-    let icons = icon_atlas::build_icon_atlas();
+    let mut atlas = FontAtlas::from_bytes(&font_bytes).map_err(|err| format!("atlas failed: {err}"))?;
+    atlas.set_raster_scale(dpr);
+    let icons = icon_atlas::build_icon_atlas_scaled(dpr);
     let mut gpu = GpuContext::from_window(window.clone()).await.map_err(|err| format!("gpu init failed: {err}"))?;
     gpu.resize(css_width, css_height, dpr);
     gpu.upload_font_atlas(&atlas);
@@ -14363,13 +14966,15 @@ async fn boot_runtime(
     let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root).await?, &plugin_filter);
 
     let mut shell = ShellState::new(entries, plugin_filter.clone());
-    shell.screen_w = css_width * dpr;
-    shell.screen_h = css_height * dpr;
+    shell.screen_w = css_width;
+    shell.screen_h = css_height;
     shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
     let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,
         icons,
+        icon_rebuild: None,
+        icon_raster_scale: dpr,
         interaction: Some(AppInteractionState {
             shell,
             input: InputState::default(),
@@ -14829,101 +15434,206 @@ thread_local! {
     static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }
 
-//#region 🔖️RoleBoot
-// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: boot role from
-// `SEMIO_APP_ROLE` (native, read directly)/`VITE_SEMIO_APP_ROLE` (wasm — wasm has no env var
-// access, so `🟦️.ts` reads `import.meta.env.VITE_SEMIO_APP_ROLE` and calls
-// `semioWgpuSetAppRole` before/at mount), default `editor` (`ChromeRole::from_boot_env`'s own
-// fallback). Deliberately additive, same idiom as `ICON_ATLAS_RUNTIME` immediately above: a
-// `thread_local` a caller opts into reading (`boot_app_role`) rather than a parameter threaded
-// through every existing mount/native entry point — this crate currently fails to build clean for
-// reasons entirely outside this lease (a concurrent, unrelated plugin-crate refactor breaks a
-// transitive dependency; confirmed via `git status` showing 70+ uncommitted stdio-plugin files —
-// see `📓️w1-d-report.md`), so a signature change on `run_native`/`semio_wgpu_mount` could not be
-// verified to compile and was avoided.
-thread_local! {
-    static BOOT_APP_ROLE: RefCell<ui_wgpu::wgpu::component::role_chrome::ChromeRole> = RefCell::new(resolve_native_boot_role());
+//#region 🧭️BootDescriptor
+// 🧭️ ONE boot-axis vocabulary for all three wgpu entry points — the trunk page
+// (`🚀️browser-boot/🟦️.ts`), the embeddable library door (`🎬️renderer-boot/🟦️.ts`) and the native CLI
+// (`⌨️native-entrypoint/🦀️.rs`) — and the Rust twin of `🧭️boot-descriptor/🟦️.ts`. React has a single
+// door (`FrameworkOsBootOptions`); wgpu had three, each carrying a different subset of the same axes,
+// so `--plugin cad --example concrete-forest` could not open natively what
+// `?plugin=cad&example=concrete-forest` opened in the browser. The standing law that keeps the four
+// field sets equal is `🧪️tests/🧭️boot-axis-parity/🦀️.rs`.
+//
+// Still a `thread_local` a caller opts into reading rather than a parameter threaded through every
+// mount signature: the shell reads it while it opens the session (`ShellState::boot`), which is why
+// every door applies it BEFORE mounting.
+
+/// 📏️ Bound on ONE descriptor field, the twin of `🧭️boot-descriptor/🟦️.ts`'s
+/// `WGPU_BOOT_FIELD_CAPACITY` — the browser door refuses an oversized url before it ever reaches
+/// here, and this is the same refusal for the native and library doors.
+pub const WGPU_BOOT_FIELD_CAPACITY: usize = 2048;
+
+/// 🔒️ Boot-time preference LOCKS — React's `FrameworkOsLocks`. `""` means unset, never "locked to the
+/// empty string"; a locked preference loses its in-app switcher.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WgpuBootLocks {
+    pub example_id: String,
+    pub locale: String,
+    pub terminology: String,
+    pub theme_id: String,
+    pub appearance: String,
 }
 
+/// 🎛️ Boot-time preference DEFAULTS — React's `FrameworkOsDefaults`: seeds that KEEP their switcher.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WgpuBootDefaults {
+    pub example_id: String,
+}
+
+/// 🌐️ The hub trio (`?hub=&user=&dataDir=`, `--hub/--user/--data-dir`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WgpuBootHub {
+    pub hub_url: String,
+    pub user: String,
+    pub data_dir: String,
+}
+
+/// 🧭️ Every boot axis, resolved. Absent axes are `""`/`Default` rather than `Option`, so the three
+/// doors cannot disagree about what "unset" serializes to.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WgpuBootDescriptor {
+    pub plugin_variant: String,
+    pub app_id: String,
+    pub app_role: String,
+    pub app_mode: String,
+    pub app_example: String,
+    pub brand_id: String,
+    pub broker_proof: String,
+    pub locks: WgpuBootLocks,
+    pub defaults: WgpuBootDefaults,
+    pub hub: Option<WgpuBootHub>,
+}
+
+impl WgpuBootDescriptor {
+    /// 📏️ Refuses an oversized field by NAME, so the fault says which axis overflowed — the Rust half
+    /// of `boundedBootField`. Applied before any axis is stored, never after.
+    pub fn validated(self) -> Result<Self, String> {
+        let hub = self.hub.as_ref();
+        let fields: [(&str, &str); 13] = [
+            ("plugin", self.plugin_variant.as_str()),
+            ("app", self.app_id.as_str()),
+            ("role", self.app_role.as_str()),
+            ("mode", self.app_mode.as_str()),
+            ("example", self.app_example.as_str()),
+            ("brand", self.brand_id.as_str()),
+            ("brokerProof", self.broker_proof.as_str()),
+            ("locks.exampleId", self.locks.example_id.as_str()),
+            ("locks.locale", self.locks.locale.as_str()),
+            ("locks.terminology", self.locks.terminology.as_str()),
+            ("locks.themeId", self.locks.theme_id.as_str()),
+            ("locks.appearance", self.locks.appearance.as_str()),
+            ("defaults.exampleId", self.defaults.example_id.as_str()),
+        ];
+        let hub_fields: [(&str, &str); 3] = [("hub", hub.map_or("", |hub| hub.hub_url.as_str())), ("user", hub.map_or("", |hub| hub.user.as_str())), ("dataDir", hub.map_or("", |hub| hub.data_dir.as_str()))];
+        for (field, value) in fields.into_iter().chain(hub_fields) {
+            if value.chars().count() > WGPU_BOOT_FIELD_CAPACITY {
+                return Err(format!("boot-descriptor-overflow: {field} exceeds {WGPU_BOOT_FIELD_CAPACITY} code units"));
+            }
+        }
+        Ok(self)
+    }
+}
+
+thread_local! {
+    static BOOT_DESCRIPTOR: RefCell<WgpuBootDescriptor> = RefCell::new(resolve_environment_boot_descriptor());
+}
+
+/// 🖥️ The native per-server seeds, read straight off the process env under the SAME names React's
+/// serve projects into `VITE_SEMIO_*` (`🧑‍💻dev/🟦️.ts`). The CLI's own per-navigation flags overwrite
+/// these in `apply_boot_descriptor`; a browser build has no process env and starts empty.
 #[cfg(not(target_arch = "wasm32"))]
-fn resolve_native_boot_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
-    ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(std::env::var("SEMIO_APP_ROLE").ok().as_deref())
+fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
+    let read = |name: &str| std::env::var(name).ok().filter(|value| !value.is_empty()).unwrap_or_default();
+    WgpuBootDescriptor {
+        app_id: read("SEMIO_APP_ID"),
+        app_role: read("SEMIO_APP_ROLE"),
+        brand_id: read("SEMIO_BRAND"),
+        app_example: read("SEMIO_DEFAULT_EXAMPLE"),
+        defaults: WgpuBootDefaults { example_id: read("SEMIO_DEFAULT_EXAMPLE") },
+        locks: WgpuBootLocks { example_id: read("SEMIO_LOCKED_EXAMPLE"), locale: read("SEMIO_LOCKED_LOCALE"), terminology: read("SEMIO_LOCKED_TERMINOLOGY"), theme_id: read("SEMIO_LOCKED_THEME"), appearance: read("SEMIO_LOCKED_APPEARANCE") },
+        ..WgpuBootDescriptor::default()
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
-fn resolve_native_boot_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
-    ui_wgpu::wgpu::component::role_chrome::ChromeRole::Editor
+fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
+    WgpuBootDescriptor::default()
 }
 
-/// 🌐️ wasm boot hook — `🟦️.ts` calls this once, before/at mount time, with
-/// `import.meta.env.VITE_SEMIO_APP_ROLE ?? "editor"`.
+/// 🧭️ Installs the resolved axes, replacing the environment seeds this thread started from. Every
+/// door calls it once, before the mount that opens the session.
+pub fn apply_boot_descriptor(descriptor: WgpuBootDescriptor) -> Result<(), String> {
+    let descriptor = descriptor.validated()?;
+    BOOT_DESCRIPTOR.with(|cell| *cell.borrow_mut() = descriptor);
+    Ok(())
+}
+
+/// 🌐️ wasm boot hook — the frame Worker (`🎞️frame-worker/🟦️.ts`) and the page-mounted library door
+/// (`🎬️renderer-boot/🟦️.ts`) each call this once with the JSON `🧭️boot-descriptor/🟦️.ts` resolved.
+/// 🩺️ wasm diagnostics hook — the browser twin of the `SEMIO_RUNTIME_DIAGNOSTICS` environment
+/// variable a native process reads and of the `localStorage` key React's `ShellHost` reads. A Worker
+/// realm owns neither, so the UI isolate resolves the preference, stamps it on the frame Worker's url
+/// (`🎭️actor/🩺️diagnostics/🟦️.ts`'s `stampShardWorkerDiagnostics`) and the Worker hands it here —
+/// before the first frame, because every per-frame `[DEBUG]` dump in this crate is gated on it.
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = semioWgpuSetAppRole)]
-pub fn semio_wgpu_set_app_role(role: String) {
-    BOOT_APP_ROLE.with(|cell| *cell.borrow_mut() = ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(Some(role.as_str())));
+#[wasm_bindgen(js_name = semioWgpuSetRuntimeDiagnostics)]
+pub fn semio_wgpu_set_runtime_diagnostics(enabled: bool) {
+    semio_framework_trace::set_runtime_diagnostics(enabled);
 }
 
-//#region 🎭️ModeBoot
-// 🎭️ The boot-time MODE, the second axis `?mode=` carries beside `?role=`. Same idiom as the role
-// above for the same reason: a `thread_local` a caller opts into reading, set once from the boot
-// descriptor before the shell opens its session. Without it the wgpu playground could only ever open
-// an app's `default_mode_id` — `generation3d`'s three-pane `generate` layout had no reachable entry
-// on this target at all, since the wgpu navbar has no mode group yet
-// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-thread_local! {
-    static BOOT_APP_MODE: RefCell<Option<String>> = const { RefCell::new(None) };
-}
-
-/// 🌐️ wasm boot hook — `🟦️.ts` calls this once, before/at mount time, with `?mode=`'s value when the
-/// url carries one. An empty string clears it, so a url without `mode` keeps the app's own default.
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = semioWgpuSetBootMode)]
-pub fn semio_wgpu_set_boot_mode(mode: String) {
-    BOOT_APP_MODE.with(|cell| *cell.borrow_mut() = (!mode.is_empty()).then_some(mode));
+#[wasm_bindgen(js_name = semioWgpuSetBootDescriptor)]
+pub fn semio_wgpu_set_boot_descriptor(descriptor_json: String) -> Result<(), JsValue> {
+    let descriptor: WgpuBootDescriptor = serde_json::from_str(&descriptor_json).map_err(|error| JsValue::from_str(&format!("boot-descriptor parse: {error}")))?;
+    apply_boot_descriptor(descriptor).map_err(|error| JsValue::from_str(&error))
 }
 
-/// 🎭️ The boot-requested mode id, or `None` when the url named none. A mode the open app does not
-/// declare is ignored by the reader (`ShellState::boot`), never a boot failure.
+/// 🧭️ The whole resolved descriptor, for a reader that needs more than one axis.
+pub fn boot_descriptor() -> WgpuBootDescriptor {
+    BOOT_DESCRIPTOR.with(|cell| cell.borrow().clone())
+}
+
+fn boot_axis(read: impl Fn(&WgpuBootDescriptor) -> &str) -> Option<String> {
+    BOOT_DESCRIPTOR.with(|cell| {
+        let descriptor = cell.borrow();
+        let value = read(&descriptor);
+        (!value.is_empty()).then(|| value.to_string())
+    })
+}
+
+/// 📌️ The boot-pinned app id, or `None`. React's `appId`: an empty value is NOT a pin, it falls
+/// through to the variant's own default app (`🧑‍💻dev/🟦️.ts`'s own note on `VITE_SEMIO_APP_ID`).
+pub fn boot_app_id() -> Option<String> {
+    boot_axis(|descriptor| &descriptor.app_id)
+}
+
+/// 🎭️ The boot-requested mode id, or `None` when nothing named one. A mode the open app does not
+/// declare is ignored by the reader (`ShellState::apply_boot_mode`), never a boot failure.
 pub fn boot_app_mode() -> Option<String> {
-    BOOT_APP_MODE.with(|cell| cell.borrow().clone())
-}
-//#endregion 🎭️ModeBoot
-
-//#region 📚️ExampleBoot
-// 📚️ The boot-time EXAMPLE, the third axis `?example=` carries beside `?role=` and `?mode=`. Same
-// idiom as the two above for the same reason: a `thread_local` a caller opts into reading, set once
-// from the boot descriptor before the shell opens its session. Without it a wgpu url could only ever
-// open the FIRST example of the open dialect (`sync_session_chrome`'s `examples.first()`), so no
-// example but one had a reachable entry on this target that did not go through a pointer gesture
-// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The React half of the axis is
-// `🧑‍💻dev/🔗️boot-query/🟦️.ts` `resolveBootQueryExampleId`, so one url opens the same document on
-// both ports.
-thread_local! {
-    static BOOT_APP_EXAMPLE: RefCell<Option<String>> = const { RefCell::new(None) };
+    boot_axis(|descriptor| &descriptor.app_mode)
 }
 
-/// 🌐️ wasm boot hook — `🟦️.ts` calls this once, before/at mount time, with `?example=`'s value when
-/// the url carries one. An empty string clears it, so a url without `example` keeps the dialect's own
-/// first example.
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = semioWgpuSetBootExample)]
-pub fn semio_wgpu_set_boot_example(example_id: String) {
-    BOOT_APP_EXAMPLE.with(|cell| *cell.borrow_mut() = (!example_id.is_empty()).then_some(example_id));
-}
-
-/// 📚️ The boot-requested example id, or `None` when the url named none. An id the open DIALECT does
-/// not author is ignored by the reader (`ShellState::apply_boot_example`), never a boot failure.
+/// 📚️ The boot-requested example id, or `None`. It already collapses `?example=`/`--example` over the
+/// `SEMIO_DEFAULT_EXAMPLE` seed the way React collapses the query over `VITE_SEMIO_DEFAULT_EXAMPLE`
+/// into ONE `defaults.exampleId`. An id the open DIALECT does not author is ignored by the reader
+/// (`ShellState::apply_boot_example`), never a boot failure.
 pub fn boot_app_example() -> Option<String> {
-    BOOT_APP_EXAMPLE.with(|cell| cell.borrow().clone())
+    boot_axis(|descriptor| &descriptor.app_example)
 }
-//#endregion 📚️ExampleBoot
 
-/// 👁️✏️ The boot-resolved role, contract freeze §5 — `SemioApp`'s session/window-open path is meant
-/// to read this to call `Shell::set_window_role`/`set_locale`; wiring that specific call site is
-/// this lease's documented gap (see `📓️w1-d-report.md` — this crate's own build break blocks
-/// verifying any change deep inside `SemioApp`, so this stops at the boundary of what compiles
-/// standalone).
-pub fn boot_app_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
-    BOOT_APP_ROLE.with(|cell| *cell.borrow())
+/// 🏷️ The boot brand id, or `None` — React's `brand`, resolved there by `resolveShellBrandById`.
+pub fn boot_brand_id() -> Option<String> {
+    boot_axis(|descriptor| &descriptor.brand_id)
 }
-//#endregion 🔖️RoleBoot
+
+/// #️⃣ The one-shot `#semio-broker=` proof the page carried, or `None`. React reads the same hash at
+/// `🏛️ShellHost/🟦️.tsx:209` and hands it to its browser broker client.
+pub fn boot_broker_proof() -> Option<String> {
+    boot_axis(|descriptor| &descriptor.broker_proof)
+}
+
+/// 🔒️ The boot preference locks — read by the shell's `env_lock`, so a browser build locks exactly as
+/// a native `SEMIO_LOCKED_*` deployment does instead of being unlockable for want of a process env.
+pub fn boot_locks() -> WgpuBootLocks {
+    BOOT_DESCRIPTOR.with(|cell| cell.borrow().locks.clone())
+}
+
+/// 👁️✏️ The boot-resolved role, contract freeze §5 — `"viewer"`/`"editor"`, anything else is
+/// `ChromeRole::from_boot_env`'s own `editor` fallback.
+pub fn boot_app_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
+    BOOT_DESCRIPTOR.with(|cell| ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(Some(cell.borrow().app_role.as_str())))
+}
+//#endregion 🧭️BootDescriptor

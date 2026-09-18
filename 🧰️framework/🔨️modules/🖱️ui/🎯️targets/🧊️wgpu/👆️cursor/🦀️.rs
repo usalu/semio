@@ -128,6 +128,13 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
     let Some(node) = tree.node(target) else {
         return SemioCursor::Default;
     };
+    // 🚫️ React puts `disabled:cursor-not-allowed` on every interactive element, and the browser
+    // applies it before any drag/text affordance the same element would otherwise offer — so this
+    // check precedes them all. `UiPresence::state == Disabled` is the wire field React reads as
+    // `presence?.state === "disabled"` (`🗣️Interpreter/🟦️.tsx:1050`).
+    if node.spec.0.presence().state == crate::wgpu::component::ui::UiState::Disabled {
+        return SemioCursor::NotAllowed;
+    }
     if node.flags.contains(NodeFlags::DRAG_SOURCE) {
         return SemioCursor::Grab;
     }

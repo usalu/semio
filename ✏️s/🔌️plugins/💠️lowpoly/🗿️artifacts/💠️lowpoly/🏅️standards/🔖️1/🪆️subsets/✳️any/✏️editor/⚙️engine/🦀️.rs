@@ -71,6 +71,11 @@ pub struct LowpolyDocument {
     active_object_id: String,
     selection: LowpolySelection,
     meshes: Vec<HalfedgeMesh>,
+    /// ✏️ Which `meshes` slots an edit reached through `active_mesh_mut` since the last
+    /// `reload_meshes`/`sync_meshes_to_snapshot` — the only ones `sync_meshes_to_snapshot` re-encodes.
+    /// Re-encoding every object's JSON on every edit cost `addPrimitive` 11.6 ms on the concrete-forest
+    /// document in a debug build (the 8 ms interactive-step law), for objects the edit never touched.
+    dirty: Vec<bool>,
     next_object_serial: u32,
     /// 🕸️ Live half-edge-mesh JSON per object id — seeded from the caller's session cache
     /// (`LowpolyScratch::mesh_workspace_map()`), updated in place by `sync_meshes_to_snapshot`/
@@ -91,7 +96,7 @@ impl LowpolyDocument {
 
     pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
         let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
-        let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), next_object_serial, mesh_workspace };
+        let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), dirty: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
         doc.ensure_all_paint_buffers();
         Ok(doc)
@@ -152,6 +157,7 @@ impl LowpolyDocument {
     /// keeps undo/redo, reload and import live; the session cache only serves legacy handle-only objects.
     pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
+        self.dirty.clear();
         for object in &self.snapshot.objects {
             let matches = |json: &str| object.mesh.as_ref().is_none_or(|handle| crate::mesh_child_handle(&object.id, json) == *handle);
             let json = if !object.mesh_content.is_empty() && matches(&object.mesh_content) {
@@ -165,6 +171,7 @@ impl LowpolyDocument {
             let mesh = HalfedgeMesh::from_json(&json)?;
             self.mesh_workspace.insert(object.id.clone(), json);
             self.meshes.push(mesh);
+            self.dirty.push(false);
         }
         Ok(())
     }
@@ -173,12 +180,18 @@ impl LowpolyDocument {
     /// (re-)derives the persisted `mesh` CHILD handle from that content via `mesh_child_handle` —
     /// identical geometry always resolves to the identical handle, so an unchanged mesh produces no
     /// spurious diff on the handle even though this runs on every sync.
+    /// ✏️ Only the objects an edit reached (`dirty`) are re-encoded; an untouched object's cached JSON,
+    /// handle and persisted content are already exactly what `reload_meshes` resolved them to.
     pub fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
-        for (object, mesh) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()) {
+        for ((object, mesh), dirty) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()).zip(self.dirty.iter_mut()) {
+            if !*dirty {
+                continue;
+            }
             let json = mesh.to_json()?;
             object.mesh = Some(crate::mesh_child_handle(&object.id, &json));
             object.mesh_content.clone_from(&json);
             self.mesh_workspace.insert(object.id.clone(), json);
+            *dirty = false;
         }
         Ok(())
     }
@@ -189,6 +202,9 @@ impl LowpolyDocument {
 
     pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, LowpolyCoreError> {
         let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
+        if let Some(dirty) = self.dirty.get_mut(idx) {
+            *dirty = true;
+        }
         self.meshes.get_mut(idx).ok_or(LowpolyCoreError::MeshMissing)
     }
 
@@ -314,6 +330,7 @@ impl LowpolyDocument {
         self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: mesh_workspace.clone() });
         self.mesh_workspace.insert(id.clone(), mesh_workspace);
         self.meshes.push(mesh);
+        self.dirty.push(false);
         self.active_object_id = id.clone();
         Ok(id)
     }

@@ -48,7 +48,7 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx);
     }
     input
@@ -197,3 +197,41 @@ fn step_card_draws_a_full_four_sided_border_not_just_top_and_bottom() {
     assert_eq!(border_vertex_count, 24, "4 lines (top/right/bottom/left) * 6 vertices should emit 24, got {border_vertex_count}");
 }
 //#endregion BlockListPaintTests
+
+//#region BlockListPointerTests
+/// 🧩️ LAW: the pointer path and the paint share ONE layout (`block_list_plan`), so every control the
+/// paint registered at a rect resolves to the SAME action when pressed at that rect's centre. This is
+/// what keeps a re-derived hit test from drifting away from what is on screen.
+#[test]
+fn every_painted_control_resolves_to_the_same_action_when_pressed_at_its_centre() {
+    let steps = json!([step_json("a", &[("b1", "Block One", "text"), ("b2", "Block Two", "number")]), step_json("b", &[])]).to_string();
+    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
+    let scene = BlockListScene { steps_json: steps, palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
+    let node = block_list_scene("block-list-press", scene);
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let input = render(&node);
+    let mut checked = 0;
+    for target in input.staged_hits() {
+        let Some(control_id) = target.control_id.as_deref() else { continue };
+        if control_id.ends_with(".blockList") {
+            continue;
+        }
+        let (x, y) = (target.rect.x + target.rect.w * 0.5, target.rect.y + target.rect.h * 0.5);
+        let hit = block_list_hit(&node, bounds, x, y, &theme).unwrap_or_else(|| panic!("no pointer hit at the centre of {control_id}"));
+        assert_eq!(hit.control_id, control_id, "the pointer resolved a different control than the paint drew there");
+        assert_eq!(hit.action.as_ref().map(|action| action.action.clone()), target.event.as_ref().map(|action| action.action.clone()), "{control_id} dispatches a different verb through the pointer path");
+        checked += 1;
+    }
+    assert!(checked >= 10, "expected the plan to register step/block/palette controls, only saw {checked}");
+}
+
+/// 🧩️ A press on empty space inside the step body resolves nothing — React's block list has no
+/// whole-surface click verb.
+#[test]
+fn empty_block_list_body_dispatches_nothing() {
+    let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
+    let node = block_list_scene("block-list-press-empty", scene);
+    assert!(block_list_hit(&node, Rect::new(0.0, 0.0, 600.0, 400.0), 100.0, 200.0, &Theme::default()).is_none());
+}
+//#endregion BlockListPointerTests

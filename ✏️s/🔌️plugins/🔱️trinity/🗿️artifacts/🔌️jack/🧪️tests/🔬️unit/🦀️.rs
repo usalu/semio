@@ -119,7 +119,7 @@ async fn remove_node_cascades_edges() {
 #[semio_framework_async_macros::async_test]
 async fn graph_op_create_node_and_undo() {
     let fixture = mini_fixture();
-    let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })])
         .await
         .expect("create");
@@ -136,7 +136,7 @@ async fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
         nodes.push(Node { id: format!("pad-{}", nodes.len()), kind: "Piece".into(), name: format!("pad-{}", nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
     }
     let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
-    let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(
         &mut store,
         vec![

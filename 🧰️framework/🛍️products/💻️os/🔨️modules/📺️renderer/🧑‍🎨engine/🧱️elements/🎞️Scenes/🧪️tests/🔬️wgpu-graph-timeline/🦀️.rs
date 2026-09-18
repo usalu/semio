@@ -100,7 +100,7 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
         menu: None,
     };
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_graph_timeline(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
     }
     // 🖊️ Note: the per-row bottom hairline (a separate, legitimate divider) still uses the fully
@@ -111,3 +111,46 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
     assert!(vertex_colors.contains(&[guide_stroke.r, guide_stroke.g, guide_stroke.b, guide_stroke.a]), "the parent-connector line must use the translucent guide stroke, got {vertex_colors:?}");
 }
 //#endregion GraphTimelinePaintTests
+
+//#region GraphTimelinePointerTests
+/// 🕰️ `🌳️GraphTimelineHost/🟦️.tsx` sends `checkoutCheckpoint` with `{ checkpointId }` only — no
+/// `surfaceId` — and the row band a press resolves to is the paint's own `control_height * 1.33` pitch.
+#[test]
+fn row_press_dispatches_checkout_checkpoint_for_the_row_under_the_pointer() {
+    let scene = UiComponentSceneNode {
+        surface_id: "timeline-press-test".into(),
+        controller_id: "controller".into(),
+        component_kind: SurfaceKind::GraphTimeline,
+        pane_id: None,
+        binding_id: None,
+        presence: UiPresence::default(),
+        canvas_2d: None,
+        world_3d: None,
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        paint_2d: None,
+        virtual_file_system: None,
+        tiled_map: None,
+        board2d: None,
+        icon_render: None,
+        ink_canvas: None,
+        graph_timeline: Some(ui_wgpu::wgpu::GraphTimelineScene {
+            columns_json: json!([{ "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" }, { "checkpointId": "a", "lane": 0 }]).to_string(),
+        }),
+        diff_view: None,
+        event_feed: None,
+        block_list: None,
+        menu: None,
+    };
+    let theme = Theme::default();
+    let row_h = theme.control_height * 1.33;
+    let hit = graph_timeline_hit(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), row_h * 1.5, &theme).expect("second row hit");
+    assert_eq!(hit.control_id, "timeline-press-test.history.a");
+    let action = hit.action.expect("checkoutCheckpoint action");
+    assert_eq!(action.action, "checkoutCheckpoint");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("checkpointId").and_then(semio_framework::DslValue::as_str), Some("a"));
+    assert!(args.get("surfaceId").is_none(), "React sends checkoutCheckpoint without a surfaceId");
+}
+//#endregion GraphTimelinePointerTests

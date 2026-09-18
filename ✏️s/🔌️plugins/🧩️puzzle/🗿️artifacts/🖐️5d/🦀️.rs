@@ -1270,6 +1270,16 @@ mod tests;
                         #[cfg(feature = "component-app-assembly")]
                         pub use component::*;
 
+                        /// 📐️ The 5D flatten solver — the Rust twin of the React target's own
+                        /// `🔖️Flatten` region. Ungated: the wgpu renderer needs it without the
+                        /// app-assembly feature (ticket 26/09/17 packet W2k).
+                        #[path = "."]
+                        pub mod geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📐️geometry/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]

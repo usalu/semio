@@ -50,7 +50,7 @@ pub(crate) fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, 
         if ready_t > value_t {
             let ready_x = bounds.x + bounds.w * value_t;
             let ready_w = bounds.w * (ready_t - value_t);
-            ctx.draw.push_rounded([ready_x, track_y - 2.0, ready_w, 4.0], dim(Rgba::new(0.03433981, 0.63759687, 0.52099557, 1.0)), 2.0);
+            ctx.draw.push_rounded([ready_x, track_y - 2.0, ready_w, 4.0], dim(Rgba::from_token(&ui_styling::colors::SECONDARY)), 2.0);
         }
     }
     let knob_x = bounds.x + bounds.w * value_t;

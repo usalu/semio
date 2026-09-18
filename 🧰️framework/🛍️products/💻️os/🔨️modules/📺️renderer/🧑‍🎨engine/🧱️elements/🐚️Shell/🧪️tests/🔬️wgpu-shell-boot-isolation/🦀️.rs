@@ -93,7 +93,7 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
             .collect();
         let programs: Vec<(&str, &PluginManifest)> = manifests.iter().map(|(plugin_id, manifest)| (plugin_id.as_str(), manifest)).collect();
         let requested_role = case["role"].as_str().map_or(semio_framework::manifest::AppRole::Editor, |role| if role == "viewer" { semio_framework::manifest::AppRole::Viewer } else { semio_framework::manifest::AppRole::Editor });
-        let selected = select_boot_program(&programs, variant, requested_role);
+        let selected = select_boot_program(&programs, variant, requested_role, case["appId"].as_str());
         match case["expected"].as_object() {
             None => assert!(selected.is_none(), "case {} must not open a foreign plugin's app", case["id"]),
             Some(expected) => {

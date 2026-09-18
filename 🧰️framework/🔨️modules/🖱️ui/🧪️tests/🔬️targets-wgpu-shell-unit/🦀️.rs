@@ -1,6 +1,5 @@
 
 use super::*;
-use crate::wgpu::flex::LayoutEngine;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
 
@@ -10,10 +9,7 @@ fn single_window_layout(window_kind_id: &str) -> WindowLayout {
 
 fn run_layout(shell: &mut Shell) {
     let root = shell.tree().root.expect("set_window_layout must produce a root");
-    let mut engine = LayoutEngine::new();
-    let mut atlas = FontAtlas::builtin();
-    let theme = Theme::default();
-    engine.compute(shell.tree_mut(), root, &mut atlas, &theme, 400.0, 400.0);
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(shell.tree_mut(), root, Theme::default(), 400.0, 400.0), "layout pass");
 }
 
 fn count_nodes(tree: &UiTree, id: NodeId) -> usize {

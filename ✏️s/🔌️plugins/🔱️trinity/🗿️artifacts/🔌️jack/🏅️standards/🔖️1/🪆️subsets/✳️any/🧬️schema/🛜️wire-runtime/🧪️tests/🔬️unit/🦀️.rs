@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::text::new_trinity_graph_store;
 use crate::TRINITY_GRAPH_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
@@ -12,14 +13,19 @@ async fn rename_op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     let envelope = create_document_envelope_for_test();
-    let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    let mut doc_store = new_trinity_graph_store(envelope).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).await.expect("apply rename");
     ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
 }
 
+/// 🧫️ The empty Nakagin-manifest document plus the one `node-1` Piece the round-trip laws rename —
+/// an empty scene would reject `rename-node` as `mutation.target-missing` before any wire is cut.
 fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document(), None)
+    let empty = crate::standards::v1::subsets::any::schema::empty_jack_document();
+    let node = crate::Node { id: "node-1".into(), kind: "Piece".into(), name: "node-1".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: crate::PropertyBag::new(), ports: Vec::new() };
+    let snapshot = JackSnapshot::with_content(empty.schema.clone(), empty.name.clone(), empty.manifest_id.clone(), empty.manifest.clone(), empty.camera.clone(), crate::JackWorkingScene { nodes: vec![node], edges: Vec::new() }, empty.root_node_id.clone());
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", snapshot, None)
 }
 use store::create_document_envelope;
 
@@ -88,7 +94,14 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
     drop(cancelled);
 
     let mut stale = empty_jack_initializer(operation, generation);
-    assert!(matches!(drive_jack_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), semio_framework_job::StepOutcome::Fault(_)));
+    let mut outcome = drive_jack_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1));
+    assert!(matches!(outcome, semio_framework_job::StepOutcome::Fault(_)));
+    // 🔚 The fault's retained detail payload must be closed page by page — `RetainedJobPayload`'s
+    // Drop refuses to release page backing on its own, and a grant under one job payload page
+    // (16 KiB, not the 4 KiB envelope page) releases nothing.
+    while !outcome.terminal_is_empty() {
+        assert!(matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Pending { released_items: 1, .. } | semio_framework_job::JobPayloadCloseStep::Complete), "fault payload close must progress");
+    }
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
 }
@@ -255,10 +268,9 @@ async fn parse_op_rejects_unknown_keyword() {
 
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphStore;
     use protocol::{ArtifactId, Edit, SchemaId};
 
-    let mut store = TrinityGraphStore::new(create_document_envelope_for_test()).await.expect("valid artifact store");
+    let mut store = new_trinity_graph_store(create_document_envelope_for_test()).await.expect("valid artifact store");
     crate::standards::v1::subsets::any::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).await.unwrap_or(());
     if let Some(edit) = store.envelope().vcs.edits.last() {
         let edit: &Edit<TrinityGraphMutation> = edit;

@@ -1172,6 +1172,13 @@
             "verdict": "testing",
             "en": "Provisional tail retracted to {0} placements",
             "de": "Vorläufiges Ende auf {0} Platzierungen zurückgenommen"
+          },
+          {
+            "code": 11,
+            "id": "outside-target-region",
+            "verdict": "warning",
+            "en": "Outside every visible target region",
+            "de": "Außerhalb jedes sichtbaren Zielbereichs"
           }
         ],
         "checkpoint": {

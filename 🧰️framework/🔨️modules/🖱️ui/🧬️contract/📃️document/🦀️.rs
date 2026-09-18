@@ -449,6 +449,28 @@ mod resident_refresh_tests;
 pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;
 
+/// 📐️ What a resident document holding `nodes` records COSTS the aggregate: the header, the terminal page
+/// and one record each at the size the contract gives a record, plus the fixed opening metadata. This is
+/// the one pricing arithmetic of the whole document contract — [`UiDocumentLease::try_publish`], the cold
+/// [`UiDocumentBuilder`] and [`UiDocumentAssembly::open_into`] all price through it, and a body that grows
+/// climbs through it rather than reserving a ceiling it will never reach.
+///
+/// 🐛️ ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6: the cold builder reserved
+/// [`UI_RESIDENT_SURFACE_ITEMS`]/[`UI_RESIDENT_SURFACE_BYTES`] — the per-surface CEILING — so the ITEM
+/// ledger alone capped concurrent documents at `floor(UI_RESIDENT_AGGREGATE_ITEMS / UI_RESIDENT_SURFACE_ITEMS)`
+/// = 31 of the [`UI_RESIDENT_SLOTS`] = 64 slots the slot ledger offers. Every hostile fixture that walks all
+/// sixty-four slots refused at the thirty-second, leaked its reservations on the panic and starved every
+/// later test in the same binary. [`UI_RESIDENT_SURFACE_BYTES`]'s own docstring already names the ceiling
+/// "a maximum a surface may reach, never a price"; this is that rule applied at the reservation itself.
+pub const fn ui_document_resident_limits(nodes: usize) -> UiResidentLimits {
+    let items = nodes.saturating_add(2);
+    let bytes = items.saturating_mul(size_of::<UiNodeRecord>()).saturating_add(UiDocumentAssembly::required_open_bytes());
+    UiResidentLimits {
+        items: if items > UI_RESIDENT_SURFACE_ITEMS { UI_RESIDENT_SURFACE_ITEMS } else { items },
+        bytes: if bytes > UI_RESIDENT_SURFACE_BYTES { UI_RESIDENT_SURFACE_BYTES } else { bytes },
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct UiDocumentHandle {
     slot: usize,
@@ -549,6 +571,19 @@ impl Default for UiDocumentSlot {
 }
 
 impl UiDocumentSlot {
+    /// ⚖️ Climbs this root's credit to what `census` records cost, and answers whether the aggregate took
+    /// it. Monotone by construction: credit already held is never handed back mid-build, so a concurrent
+    /// holder can never win the difference between two of this document's own pages. A root whose output
+    /// obligation has already been split off keeps the price it was sealed at.
+    fn climb_resident(&mut self, census: usize) -> bool {
+        let limits = ui_document_resident_limits(census);
+        let Some(resident) = self.resident.as_mut() else { return true };
+        if limits.items <= resident.limits().items && limits.bytes <= resident.limits().bytes {
+            return true;
+        }
+        !matches!(resident.try_reprice(limits), Err(UiResidentFault::Capacity))
+    }
+
     const fn empty() -> Self {
         Self {
             resident: None,
@@ -610,7 +645,7 @@ impl UiDocumentArena {
             return Err((UiDocumentBuildError::InvalidGeneration, surface));
         }
         let mut resident = None;
-        if !matches!(UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut resident, UiResidentPermit::required_reservation_bytes()), Ok(true)) {
+        if !matches!(UiResidentPermit::try_reserve(ui_document_resident_limits(0), &mut resident, UiResidentPermit::required_reservation_bytes()), Ok(true)) {
             return Err((UiDocumentBuildError::ArenaFull, surface));
         }
         let key = resident.as_ref().unwrap().root_key().unwrap();
@@ -632,6 +667,10 @@ impl UiDocumentArena {
         }
         if slot.nodes.get(&record.id).is_some() {
             return Err((UiDocumentBuildError::DuplicateNode, record));
+        }
+        let census = slot.nodes.len().saturating_add(1);
+        if !slot.climb_resident(census) {
+            return Err((UiDocumentBuildError::ArenaFull, record));
         }
         slot.nodes.try_insert(record).map(|_| ()).map_err(|record| (UiDocumentBuildError::NodeCapacity, record))
     }
@@ -881,8 +920,7 @@ impl UiDocumentLease {
         if nodes.is_empty() {
             return Err(UiDocumentPublishError::Empty);
         }
-        let items = nodes.len().saturating_add(2).min(UI_RESIDENT_SURFACE_ITEMS);
-        let bytes = nodes.len().saturating_add(2).saturating_mul(size_of::<UiNodeRecord>()).saturating_add(UiDocumentAssembly::required_open_bytes()).min(UI_RESIDENT_SURFACE_BYTES);
+        let UiResidentLimits { items, bytes } = ui_document_resident_limits(nodes.len());
         let mut permit = None;
         for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
             match UiResidentPermit::try_reserve(UiResidentLimits { items, bytes }, &mut permit, UI_DOCUMENT_PUBLISH_STEP_BYTES) {

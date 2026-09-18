@@ -213,7 +213,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.0.columns, expected.0.columns);
         assert_eq!(actual.0.rows, expected.0.rows);
         assert_eq!(actual.1, expected.1);
-        let graph_value = |snapshot: &Option<JackSnapshot>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
+        let graph_value = |snapshot: &Option<Box<JackSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
         assert_eq!(graph_value(&actual.0.graph_fixture), graph_value(&expected.0.graph_fixture));
         let packed = pack::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");

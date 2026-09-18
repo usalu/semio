@@ -172,7 +172,8 @@ pub mod paint_fill {
     }
 
     pub fn handle(payload: &PaintFill, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
+        // 🪣️ Without a canvas point (the Actions pane row) the fill floods the region under the layer's centre.
+        let (uu, vv) = paint_uv(payload.u, payload.v, payload.x, payload.y).unwrap_or((0.5, 0.5));
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         Ok(ctx.fill_at(doc.snapshot, cfg.snapshot, object_id, uu, vv))
     }
@@ -195,7 +196,8 @@ pub mod fill_bucket {
     }
 
     pub fn handle(payload: &FillBucket, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
+        // 🪣️ Without a canvas point (the Actions pane row) the fill floods the region under the layer's centre.
+        let (uu, vv) = paint_uv(payload.u, payload.v, payload.x, payload.y).unwrap_or((0.5, 0.5));
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         Ok(ctx.fill_at(doc.snapshot, cfg.snapshot, object_id, uu, vv))
     }

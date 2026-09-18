@@ -19,10 +19,10 @@ pub mod unwrap_active {
     pub struct UnwrapActive {}
 
     pub fn handle(_payload: &UnwrapActive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
+        mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.unwrap_uv().map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
-        }))
+        }).map_err(Fault::from)
     }
 }
 //#endregion 🔖️UnwrapActive
@@ -45,11 +45,11 @@ pub mod mark_uv_seam {
         // 🕹️ Falls back to the mesh domain's CURRENT selection (`LowpolyScratch::current_selection`,
         // resolved from `InteractionView` by `LowpolyPlayApp::handle`) rather than a deleted config field.
         let edge_ids = payload.edge_ids.clone().unwrap_or_else(|| ctx.current_selection().ids.clone());
-        Ok(mesh_edit(projection, config, ctx, move |doc| {
+        mesh_edit(projection, config, ctx, move |doc| {
             let edges: Vec<EdgeId> = edge_ids.into_iter().map(EdgeId).collect();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.mark_uv_seam(&edges, seam);
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
-        }))
+        }).map_err(Fault::from)
     }
 }
 //#endregion 🔖️MarkUvSeam

@@ -40,7 +40,7 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     input
@@ -119,3 +119,101 @@ fn row_click_dispatches_select_row_with_full_row_payload() {
     assert_eq!(action.action, "selectRow");
     assert_eq!(action.args.as_ref().and_then(|args| args.get("row")).and_then(|row| row.get("id")).and_then(semio_framework::DslValue::as_str), Some("r1"));
 }
+
+//#region TablePointerTests
+/// 🧪️ Resolves a pointer point through the production input path (`table_hit`), the route a real
+/// press takes now that a `ComponentScene` leaf's single retained hit target shadows every row the
+/// paint stages.
+fn press(node: &UiComponentSceneNode, x: f32, y: f32) -> Option<SceneListHit> {
+    table_hit(node, Rect::new(0.0, 0.0, 400.0, 300.0), x, y, &Theme::default())
+}
+
+fn row_center_y(index: usize) -> f32 {
+    let theme = Theme::default();
+    theme.control_height * 1.33 + theme.control_height * (index as f32 + 0.5)
+}
+
+#[test]
+fn row_press_dispatches_select_row_with_the_full_row_payload() {
+    let rows = json!([{ "id": "r1", "name": { "kind": "text", "value": "Alpha" } }]).to_string();
+    let node = table_scene("table-press-row", TableScene::base(columns_json(&[("name", "Name", false)]), rows));
+    let hit = press(&node, 40.0, row_center_y(0)).expect("row hit");
+    let action = hit.action.expect("selectRow action");
+    assert_eq!(action.action, "selectRow");
+    assert_eq!(action.args.as_ref().and_then(|args| args.get("row")).and_then(|row| row.get("id")).and_then(semio_framework::DslValue::as_str), Some("r1"));
+}
+
+/// 🎯️ `TableHost`'s `onRowClick` picks into the framework interaction domain when the scene declares
+/// one, with `targets` a JSON STRING of `[{granularity, id}]` — never the plugin-private `selectRow`.
+#[test]
+fn row_press_dispatches_interaction_select_when_the_scene_declares_a_domain() {
+    let rows = json!([{ "id": "r1", "name": "Alpha" }]).to_string();
+    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
+    table.domain_id = Some("catalogue".into());
+    table.domain_granularity_id = Some("part".into());
+    let node = table_scene("table-press-domain", table);
+    let hit = press(&node, 40.0, row_center_y(0)).expect("row hit");
+    let action = hit.action.expect("interactionSelect action");
+    assert_eq!(action.action, "interactionSelect");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("domainId").and_then(semio_framework::DslValue::as_str), Some("catalogue"));
+    assert_eq!(args.get("merge").and_then(semio_framework::DslValue::as_str), Some("replace"));
+    assert_eq!(args.get("method").and_then(semio_framework::DslValue::as_str), Some("pick"));
+    assert_eq!(args.get("targets").and_then(semio_framework::DslValue::as_str), Some(r#"[{"granularity":"part","id":"r1"}]"#));
+}
+
+#[test]
+fn header_press_dispatches_sort_table_with_the_next_direction() {
+    let mut table = TableScene::base(columns_json(&[("name", "Name", true)]), "[]".to_string());
+    table.sort_json = Some(json!({ "columnId": "name", "direction": "asc" }).to_string());
+    let node = table_scene("table-press-header", table);
+    let hit = press(&node, 40.0, 4.0).expect("header hit");
+    let action = hit.action.expect("sortTable action");
+    assert_eq!(action.action, "sortTable");
+    assert_eq!(action.args.as_ref().and_then(|args| args.get("direction")).and_then(semio_framework::DslValue::as_str), Some("desc"));
+}
+
+/// ➖️➕️ A stepper cell's own segments dispatch the cell action with `{ delta: ±step }` merged into
+/// its existing args, and its read-only centre swallows the press exactly as React's
+/// `event.stopPropagation()` does — the row's `selectRow` must not fire underneath it.
+#[test]
+fn stepper_cell_segments_dispatch_the_merged_delta_and_the_centre_swallows_the_row_click() {
+    let cell = json!({ "kind": "stepper", "value": 3.0, "min": 0.0, "max": 10.0, "step": 2.0, "action": { "controllerId": "controller", "action": "setCount", "args": { "objectId": "o1" } } });
+    let rows = json!([{ "id": "r1", "count": cell }]).to_string();
+    let node = table_scene("table-press-stepper", TableScene::base(columns_json(&[("count", "Count", false)]), rows));
+    let y = row_center_y(0);
+    let minus = press(&node, 20.0, y).expect("minus hit").action.expect("stepper decrement");
+    assert_eq!(minus.action, "setCount");
+    assert_eq!(minus.args.as_ref().and_then(|args| args.get("delta")).and_then(semio_framework::DslValue::as_f64), Some(-2.0));
+    assert_eq!(minus.args.as_ref().and_then(|args| args.get("objectId")).and_then(semio_framework::DslValue::as_str), Some("o1"));
+    let plus = press(&node, 380.0, y).expect("plus hit").action.expect("stepper increment");
+    assert_eq!(plus.args.as_ref().and_then(|args| args.get("delta")).and_then(semio_framework::DslValue::as_f64), Some(2.0));
+    assert!(press(&node, 200.0, y).expect("centre hit").action.is_none(), "a stepper's read-only centre must swallow the row click");
+}
+
+/// 🔘️ `renderTableCell` draws only `placement: "row"` buttons in the row; a `"menu"` button belongs
+/// to the row's context menu and must not take a press meant for the row.
+#[test]
+fn row_buttons_dispatch_their_own_action_and_menu_placement_buttons_are_not_row_targets() {
+    let cell = json!({ "kind": "buttons", "buttons": [
+        { "iconId": "trash-2", "action": { "controllerId": "controller", "action": "removeRow", "args": { "id": "r1" } } },
+        { "iconId": "pencil", "placement": "menu", "action": { "controllerId": "controller", "action": "renameRow", "args": { "id": "r1" } } }
+    ] });
+    let rows = json!([{ "id": "r1", "actions": cell }]).to_string();
+    let node = table_scene("table-press-buttons", TableScene::base(columns_json(&[("actions", "Actions", false)]), rows));
+    let y = row_center_y(0);
+    let action = press(&node, 40.0, y).expect("button hit").action.expect("row button action");
+    assert_eq!(action.action, "removeRow");
+    let far = press(&node, 380.0, y).expect("hit").action.expect("action");
+    assert_eq!(far.action, "removeRow", "the single row-placement button spans the whole cell; the menu button must not claim a segment");
+}
+
+/// 🪪️ `TableHost`'s `rowIds` falls back to the row's ordinal when it carries neither `id` nor
+/// `pluginId` — without it every such row collapsed onto the empty id.
+#[test]
+fn row_without_an_id_is_keyed_by_its_ordinal() {
+    let rows = json!([{ "name": "Alpha" }, { "name": "Beta" }]).to_string();
+    let node = table_scene("table-press-ordinal", TableScene::base(columns_json(&[("name", "Name", false)]), rows));
+    assert_eq!(press(&node, 40.0, row_center_y(1)).expect("row hit").control_id, "table-press-ordinal.row.1");
+}
+//#endregion TablePointerTests

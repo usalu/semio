@@ -596,8 +596,17 @@ fn emit_socket_grant_probe(path: &str, grant: &str) {
 #[cfg(target_arch = "wasm32")]
 fn emit_socket_grant_probe(_path: &str, _grant: &str) {}
 
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
 fn wall_now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
+}
+
+/// ⏱️ Browser: `std`'s `SystemTime::now()` PANICS on `wasm32-unknown-unknown` (no implementation,
+/// not an error), so every expiry comparison on this target reads `Date.now()` instead.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn wall_now_ms() -> i64 {
+    let millis = js_sys::Date::now();
+    if millis.is_finite() && millis > 0.0 { millis as i64 } else { 0 }
 }
 
 fn directory_socket_hello_v1() -> Vec<u8> {

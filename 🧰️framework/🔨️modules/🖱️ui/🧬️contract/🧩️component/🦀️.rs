@@ -482,9 +482,16 @@ pub const TREE_WINDOW_BODY_NODE_BUDGET: usize = crate::UI_DOCUMENT_NODES - 1 - T
 /// Two containers can still collide only as true siblings under one parent — which the UI document
 /// itself already refuses (`DuplicateSiblingKey`).
 ///
-/// 🔑️ U+001F (INFORMATION SEPARATOR ONE) is the separator because it cannot occur in a `UiText` node
-/// key an author writes, so a path never aliases a key that happens to contain the separator.
-pub const TREE_WINDOW_PATH_SEPARATOR: &str = "\u{1f}";
+/// 🔑️ The separator is U+241F SYMBOL FOR UNIT SEPARATOR — the PRINTABLE glyph, not the C0 control
+/// U+001F it depicts. A path crosses the process boundary inside `ViewModel::tree_windows`, and the
+/// view-context admission both sides run
+/// (`admitCrossingViewContext`/`parseResolvedPluginViewState`, `🛂️manifest/🟦️.ts`) refuses ANY
+/// identifier carrying a C0 or DEL code point or exceeding 256 code points — a control separator made
+/// every refresh, action and pick carrying a nested path throw `view context: invalid identifier` the
+/// moment one nested container existed. A path is therefore a view-context identifier like any other:
+/// printable, and at most 256 code points. A container whose own key already contains this glyph is
+/// refused at assembly (`ui.tree-window.separator-in-key`) so a path can never be ambiguous.
+pub const TREE_WINDOW_PATH_SEPARATOR: &str = "␟";
 
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

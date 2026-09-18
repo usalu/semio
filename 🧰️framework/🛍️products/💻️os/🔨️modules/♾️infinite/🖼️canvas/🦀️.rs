@@ -2249,6 +2249,18 @@ pub mod raster {
             self.entries.get(key).cloned()
         }
 
+        /// 🧹️ Releases ONE cached decode per call — the bounded drain a host retirement walks so a
+        /// surface with a thousand uploaded layers never frees them all inside one frame turn.
+        pub fn close_step(&mut self) -> bool {
+            let Some(key) = self.entries.keys().next().cloned() else { return true };
+            self.entries.remove(&key);
+            false
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.entries.is_empty()
+        }
+
         pub fn insert(&mut self, key: String, image: RasterImage) -> Arc<RasterImage> {
             let arc = Arc::new(image);
             self.entries.insert(key, arc.clone());

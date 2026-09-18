@@ -234,6 +234,22 @@ impl FrameSource {
 pub struct EngineParams {
     pub ingest: IngestParams,
     pub assumed_focal_ratio: f64,
+    /// 🌀️ Lens distortion of the (single) calibrated camera, applied by every unprojection. A
+    /// calibrated capture that is reconstructed as if undistorted carries a systematic pixel error
+    /// at the image borders that the bundle adjustment cannot explain and that accumulates into
+    /// drift around a closed orbit.
+    pub distortion: remodeling_camera::Distortion,
+    /// 🧭️ Which bounded detector scores keypoints. The interactive engine runs an AKAZE request as
+    /// ORB: the nonlinear scale space's diffusion passes cannot be sliced into the worker's
+    /// per-step budget, and ORB's oriented FAST + Harris + rBRIEF is the same binary-descriptor
+    /// family [`step_matching_features`](ReconstructionEngine) already matches — a documented
+    /// simplification.
+    pub detector: remodeling_feature::BoundedDetector,
+    /// 🧭️ Upright (unsteered) descriptors instead of intensity-centroid steering; see
+    /// [`remodeling_feature::BoundedDetectionPreparation`]'s `upright`. Off by default: on the orbit
+    /// fixture steering pairs 83 of 91 accepted matches correctly at a 10° step against 56 of 67
+    /// upright.
+    pub upright_descriptors: bool,
     pub target_feature_count: usize,
     pub match_ratio: f32,
     pub match_mutual: bool,
@@ -257,6 +273,9 @@ impl Default for EngineParams {
         Self {
             ingest: IngestParams::default(),
             assumed_focal_ratio: 1.0,
+            distortion: remodeling_camera::Distortion::None,
+            detector: remodeling_feature::BoundedDetector::Orb,
+            upright_descriptors: false,
             target_feature_count: 500,
             match_ratio: 0.8,
             match_mutual: true,
@@ -280,9 +299,9 @@ impl Default for EngineParams {
 /// 📷️ Default pinhole intrinsics assumed for uncalibrated input: `fx = fy = focal_ratio *
 /// max(width, height)`, principal point at the image center, no distortion — a documented
 /// simplification standing in for the calibration stage the base plan scopes separately.
-fn default_intrinsics(width: u32, height: u32, focal_ratio: f64) -> remodeling_camera::Intrinsics {
+fn default_intrinsics(width: u32, height: u32, focal_ratio: f64, distortion: remodeling_camera::Distortion) -> remodeling_camera::Intrinsics {
     let f = focal_ratio * f64::from(width.max(height));
-    remodeling_camera::Intrinsics { fx: f, fy: f, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: remodeling_camera::Distortion::None }
+    remodeling_camera::Intrinsics { fx: f, fy: f, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion }
 }
 // #endregion 🔖️Params
 
@@ -325,6 +344,9 @@ pub enum EngineObservation {
     MatchRatioRejected { frame_a: usize, frame_b: usize, query: u32, best: u32, second: u32 },
     MatchCrossCheckRejected { frame_a: usize, frame_b: usize, query: u32, candidate: u32 },
     PairMatched { frame_a: usize, frame_b: usize, matches: usize },
+    /// 🧭️ Matches of a pair the geometric verification dropped as inconsistent with its best
+    /// essential matrix.
+    PairGeometryRejected { frame_a: usize, frame_b: usize, dropped: usize },
     TracksBuilt { tracks: usize },
     CameraRegistered { frame: usize, pose: remodeling_camera::CameraPose },
     CameraRejected { frame: usize },
@@ -382,6 +404,36 @@ fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
     idxs
 }
 
+/// 📏️ The depth interval one reference view's PatchMatch hypothesises over, read off the sparse
+/// reconstruction: the depths of the triangulated points in front of that camera, trimmed to their
+/// 5th–95th percentiles and widened by a fixed factor, then clamped into the configured
+/// `[depth_min, depth_max]`. The configured interval alone is a hazard, not a prior — an
+/// uncalibrated run's `0.1–100` covers three orders of magnitude while the scene sits at a scale the
+/// two-view seed fixed arbitrarily (unit baseline), so uniformly seeded hypotheses almost never land
+/// near the surface and the few iterations a bounded run affords cannot recover them; every depth
+/// map then scatters over the whole frustum, the fused cloud spans the frustum and the meshing
+/// lattice, clamped to 32 cells, covers the scene at a resolution where nothing survives cleaning.
+/// The sparse cloud is the one scene-scaled measurement the pipeline owns, so it narrows the search
+/// to where structure was actually observed (fewer than two points in front of the camera leave the
+/// configured interval untouched).
+fn sparse_depth_range(points: &[[f64; 3]], pose: &remodeling_camera::CameraPose, configured: &remodeling_dense::PatchMatchConfig) -> (f32, f32) {
+    const NEAR_FACTOR: f64 = 0.7;
+    const FAR_FACTOR: f64 = 1.4;
+    let mut depths: Vec<f64> = points.iter().map(|&point| pose.0.act(point)[2]).filter(|depth| depth.is_finite() && *depth > 0.0).collect();
+    if depths.len() < 2 {
+        return (configured.depth_min, configured.depth_max);
+    }
+    depths.sort_by(f64::total_cmp);
+    let trim = depths.len() / 20;
+    let near = depths[trim] * NEAR_FACTOR;
+    let far = depths[depths.len() - 1 - trim] * FAR_FACTOR;
+    let lower = f64::from(configured.depth_min).min(f64::from(configured.depth_max));
+    let upper = f64::from(configured.depth_max).max(f64::from(configured.depth_min));
+    let near = near.clamp(lower, upper) as f32;
+    let far = far.clamp(lower, upper) as f32;
+    if far > near { (near, far) } else { (configured.depth_min, configured.depth_max) }
+}
+
 fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
     const MAX_CELLS_PER_AXIS: i32 = 32;
     if !lo.iter().all(|value| value.is_finite()) || !hi.iter().all(|value| value.is_finite()) || voxel_size <= 0.0 {
@@ -433,6 +485,9 @@ pub struct ReconstructionEngine {
     seed_pair_preparation: Option<remodeling_sfm::SeedPairPreparation>,
     registration_preparation: Option<remodeling_sfm::RegistrationPreparation>,
     bundle_preparation: Option<remodeling_sfm::BundlePreparation>,
+    /// 🎯️ A bundle adjustment in flight, one damped Gauss-Newton iteration per step: the local one
+    /// after each registration and the global one at the start of the bundle stage.
+    bundle_iterations: Option<BundleIterations>,
     finalization_preparation: Option<FinalizationPreparation>,
     pose_cursor: usize,
     ba_substep: usize,
@@ -460,6 +515,45 @@ pub struct ReconstructionEngine {
     recorded: Option<Vec<EngineObservation>>,
 }
 
+/// 🗻️ Pyramid levels the bounded ORB detection spreads its keypoints over.
+const FEATURE_PYRAMID_LEVELS: usize = 3;
+/// 🔁️ Upper bound on loop-closure candidate pairs a frame is matched against beyond its window.
+const LOOP_CLOSURE_PARTNERS_PER_FRAME: usize = 24;
+
+/// 🎯️ One phase of the bundle stage.
+#[derive(Clone, Copy, Debug)]
+enum BundleStagePhase {
+    /// 🧹️ Prune points whose worst reprojection exceeds `tolerance` × the RANSAC threshold (or
+    /// that fewer than two registered cameras see), then retriangulate.
+    Cleanup { tolerance: f64 },
+    /// 🌐️ Global adjustment; `Some(factor)` runs a Huber kernel at `factor` × the RANSAC threshold,
+    /// `None` the document's configured loss.
+    Adjust { huber_factor: Option<f64> },
+}
+
+/// 🎯️ The bundle stage's phases in order (see `step_bundle_adjusting`).
+const BUNDLE_STAGE_PLAN: [BundleStagePhase; 5] = [
+    BundleStagePhase::Cleanup { tolerance: f64::INFINITY },
+    BundleStagePhase::Adjust { huber_factor: Some(16.0) },
+    BundleStagePhase::Cleanup { tolerance: 12.0 },
+    BundleStagePhase::Adjust { huber_factor: None },
+    BundleStagePhase::Cleanup { tolerance: 3.0 },
+];
+
+/// 🎯️ Cameras the local bundle adjustment after each registration refines (the newest ones, in
+/// registration order) and the iterations it spends. Without it the poses drift by about a degree
+/// per registered view on the orbit fixture — 20° by the twenty-second camera and a scale that
+/// doubled — because every registration inherits the errors of the points it was solved against.
+const LOCAL_BUNDLE_WINDOW: usize = 5;
+const LOCAL_BUNDLE_ITERATIONS: usize = 5;
+
+/// 🎯️ A bundle adjustment spread over steps.
+struct BundleIterations {
+    frames: Vec<usize>,
+    lambda: f64,
+    remaining: usize,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FeaturePhase {
     Luma,
@@ -472,6 +566,10 @@ struct FeaturePreparation {
     phase: FeaturePhase,
     cursor: usize,
     gray: Vec<f32>,
+    /// 🧭️ The resumable detector, alive through [`FeaturePhase::Detect`].
+    detection: Option<remodeling_feature::BoundedDetectionPreparation>,
+    /// 🗻️ The detector's pyramid, kept through [`FeaturePhase::Describe`] for the descriptors.
+    pyramid: Option<remodeling_image::Pyramid>,
     keypoints: Vec<remodeling_feature::Keypoint>,
     descriptors: Vec<remodeling_feature::Descriptor256>,
 }
@@ -489,7 +587,31 @@ struct PairMatchPreparation {
     reverse_best_index: u32,
     pending: Option<(u32, u32)>,
     matches: Vec<remodeling_feature::Match>,
+    /// 🧭️ Geometric verification of the matched pair, once the descriptor matching is complete:
+    /// hypothesis batches spent so far and the best essential-matrix estimate they produced.
+    verification: Option<PairVerification>,
 }
+
+/// 🧭️ Running state of one pair's geometric verification.
+struct PairVerification {
+    correspondences: Vec<([f64; 2], [f64; 2])>,
+    attempts: usize,
+    best: Option<remodeling_sfm::TwoViewResult>,
+}
+
+/// 🧭️ Hypotheses one verification call draws (each a five-point solve scored over the pair).
+const PAIR_VERIFICATION_HYPOTHESES_PER_STEP: usize = 16;
+/// 🧭️ Calls one pair's verification spends before it commits to the best model found.
+const PAIR_VERIFICATION_STEPS: usize = 4;
+/// 🧭️ Sampson tolerance of the verification in normalized image coordinates (~1.4 px at the
+/// fixture's focal length).
+const PAIR_VERIFICATION_THRESHOLD: f64 = 0.005;
+/// 🧭️ Fewest inliers a pair keeps, and the share of its matches they must make up; below either
+/// the pair's matches are all dropped as noise. A five-point model fits five of any eight random
+/// matches and picks up a few more by chance, so eight of eight is what a 60° pair of unrelated
+/// views answers; a pair that shares a view answers dozens at well over half.
+const PAIR_VERIFICATION_MIN_INLIERS: usize = 12;
+const PAIR_VERIFICATION_MIN_INLIER_SHARE: f64 = 0.5;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DenseStereoPhase {
@@ -507,6 +629,9 @@ struct DenseStereoPreparation {
     source_grays: Vec<(remodeling_image::ImageGray, remodeling_camera::CameraPose, remodeling_camera::Intrinsics)>,
     source: usize,
     pixel: usize,
+    /// 🌫️ The run's PatchMatch configuration with this view's own depth range (see
+    /// [`sparse_depth_range`]).
+    dense: remodeling_dense::PatchMatchConfig,
     patch_match: Option<remodeling_dense::PatchMatchPreparation>,
 }
 
@@ -580,6 +705,11 @@ struct TrackPreparation {
     observations: Vec<(usize, u32)>,
     parent: Vec<usize>,
     rank: Vec<u8>,
+    /// 🎞️ Per root: bitmask of the frames its set already observes (the engine admits at most 64
+    /// frames). A union whose two sets share a frame is refused — that match would put two
+    /// keypoints of one frame in one track, which is a wrong match by definition — so a wrong
+    /// match can no longer fuse two good tracks into a conflicting group that is then thrown away.
+    frames: Vec<u64>,
     grouping_cursor: usize,
     groups: std::collections::BTreeMap<usize, TrackGroup>,
     tracks: Vec<Vec<(usize, u32)>>,
@@ -595,6 +725,7 @@ impl TrackPreparation {
             observations: Vec::new(),
             parent: Vec::new(),
             rank: Vec::new(),
+            frames: Vec::new(),
             grouping_cursor: 0,
             groups: std::collections::BTreeMap::new(),
             tracks: Vec::new(),
@@ -610,6 +741,7 @@ impl TrackPreparation {
         self.observations.push(observation);
         self.parent.push(node);
         self.rank.push(0);
+        self.frames.push(1u64 << (observation.0 as u32).min(63));
         node
     }
 
@@ -625,13 +757,14 @@ impl TrackPreparation {
     fn union(&mut self, left: usize, right: usize) {
         let mut left = self.root(left);
         let mut right = self.root(right);
-        if left == right {
+        if left == right || self.frames[left] & self.frames[right] != 0 {
             return;
         }
         if self.rank[left] < self.rank[right] {
             std::mem::swap(&mut left, &mut right);
         }
         self.parent[right] = left;
+        self.frames[left] |= self.frames[right];
         if self.rank[left] == self.rank[right] {
             self.rank[left] = self.rank[left].saturating_add(1);
         }
@@ -682,7 +815,7 @@ impl ReconstructionEngine {
             match_pairs: Vec::new(),
             match_pair_i: 0,
             match_pair_j: 1,
-            match_anchor_frame: 2,
+            match_anchor_frame: 0,
             match_pairs_ready: false,
             pair_cursor: 0,
             pair_match_preparation: None,
@@ -693,6 +826,7 @@ impl ReconstructionEngine {
             seed_pair_preparation: None,
             registration_preparation: None,
             bundle_preparation: None,
+            bundle_iterations: None,
             finalization_preparation: None,
             pose_cursor: 0,
             ba_substep: 0,
@@ -812,6 +946,9 @@ impl ReconstructionEngine {
     }
 
     /// 🎯️ One fuel-bounded luma/detect/describe slice; returns whether more frames remain.
+    /// 🧭️ One frame's features in fuel-bounded slices: luma conversion by pixel runs, the resumable
+    /// ORB/Harris detection ([`remodeling_feature::BoundedDetectionPreparation`]) by row bands, then
+    /// rBRIEF description a few keypoints at a time; returns whether frames remain.
     fn step_extracting_features(&mut self) -> bool {
         const PIXELS_PER_STEP: usize = 4_096;
         const DESCRIPTORS_PER_STEP: usize = 16;
@@ -821,8 +958,16 @@ impl ReconstructionEngine {
         let target_feature_count = self.params.target_feature_count.min(512);
         if self.feature_preparation.is_none() {
             let pixels = self.frames[self.cursor].image.width as usize * self.frames[self.cursor].image.height as usize;
-            self.feature_preparation =
-                Some(FeaturePreparation { frame: self.cursor, phase: FeaturePhase::Luma, cursor: 0, gray: Vec::with_capacity(pixels), keypoints: Vec::with_capacity(target_feature_count), descriptors: Vec::with_capacity(target_feature_count) });
+            self.feature_preparation = Some(FeaturePreparation {
+                frame: self.cursor,
+                phase: FeaturePhase::Luma,
+                cursor: 0,
+                gray: Vec::with_capacity(pixels),
+                detection: None,
+                pyramid: None,
+                keypoints: Vec::with_capacity(target_feature_count),
+                descriptors: Vec::with_capacity(target_feature_count),
+            });
         }
         let preparation = self.feature_preparation.as_mut().expect("feature preparation");
         let image = &self.frames[preparation.frame].image;
@@ -836,57 +981,28 @@ impl ReconstructionEngine {
                 }
                 preparation.cursor = end;
                 if end == pixels {
+                    let base = remodeling_image::ImageGray { width: image.width, height: image.height, data: std::mem::take(&mut preparation.gray) };
+                    preparation.detection = Some(remodeling_feature::BoundedDetectionPreparation::new(base, FEATURE_PYRAMID_LEVELS, target_feature_count, self.params.detector, self.params.upright_descriptors));
                     preparation.phase = FeaturePhase::Detect;
                     preparation.cursor = 0;
                 }
             }
             FeaturePhase::Detect => {
-                let width = image.width as usize;
-                let pixels = preparation.gray.len();
-                let end = preparation.cursor.saturating_add(PIXELS_PER_STEP).min(pixels);
-                if width > 2 && image.height > 2 {
-                    for index in preparation.cursor..end {
-                        if preparation.keypoints.len() >= target_feature_count {
-                            break;
-                        }
-                        let x = index % width;
-                        let y = index / width;
-                        if x == 0 || y == 0 || x + 1 >= width || y + 1 >= image.height as usize {
-                            continue;
-                        }
-                        let gx = preparation.gray[index + 1] - preparation.gray[index - 1];
-                        let gy = preparation.gray[index + width] - preparation.gray[index - width];
-                        let response = gx * gx + gy * gy;
-                        if response > 0.001 && (x + y).is_multiple_of(3) {
-                            preparation.keypoints.push(remodeling_feature::Keypoint { x: x as f32, y: y as f32, octave: 0, angle: gy.atan2(gx), response });
-                        }
-                    }
-                }
-                preparation.cursor = end;
-                if end == pixels || preparation.keypoints.len() >= target_feature_count {
+                // ⏱️ One band is about PIXELS_PER_STEP pixels of the base level plus the filters' halo.
+                let rows = (PIXELS_PER_STEP / (image.width as usize).max(1)).max(1);
+                let detection = preparation.detection.as_mut().expect("bounded detection");
+                if detection.advance(rows) {
+                    let (pyramid, keypoints) = preparation.detection.take().expect("completed detection").finish();
+                    preparation.pyramid = Some(pyramid);
+                    preparation.keypoints = keypoints;
                     preparation.phase = FeaturePhase::Describe;
                     preparation.cursor = 0;
                 }
             }
             FeaturePhase::Describe => {
                 let end = preparation.cursor.saturating_add(DESCRIPTORS_PER_STEP).min(preparation.keypoints.len());
-                let width = image.width as usize;
-                let height = image.height as usize;
-                for keypoint in &preparation.keypoints[preparation.cursor..end] {
-                    let mut words = [0u64; 4];
-                    let cx = keypoint.x as i32;
-                    let cy = keypoint.y as i32;
-                    for bit in 0..256usize {
-                        let ax = (cx + ((bit * 37) % 31) as i32 - 15).clamp(0, width.saturating_sub(1) as i32) as usize;
-                        let ay = (cy + ((bit * 17) % 31) as i32 - 15).clamp(0, height.saturating_sub(1) as i32) as usize;
-                        let bx = (cx + ((bit * 13 + 7) % 31) as i32 - 15).clamp(0, width.saturating_sub(1) as i32) as usize;
-                        let by = (cy + ((bit * 29 + 3) % 31) as i32 - 15).clamp(0, height.saturating_sub(1) as i32) as usize;
-                        if preparation.gray[ay * width + ax] < preparation.gray[by * width + bx] {
-                            words[bit / 64] |= 1u64 << (bit % 64);
-                        }
-                    }
-                    preparation.descriptors.push(remodeling_feature::Descriptor256(words));
-                }
+                let pyramid = preparation.pyramid.as_ref().expect("detector pyramid");
+                preparation.descriptors.extend(remodeling_feature::describe_orb(pyramid, &preparation.keypoints[preparation.cursor..end]));
                 preparation.cursor = end;
                 if end == preparation.keypoints.len() {
                     let complete = self.feature_preparation.take().expect("completed feature preparation");
@@ -924,15 +1040,24 @@ impl ReconstructionEngine {
                 self.match_pair_j = self.match_pair_i.saturating_add(1);
             }
         }
+        // 🔁️ Loop-closure candidates beyond the window: every frame against every `stride`-th later
+        // frame, at most ~24 per frame. A candidate that does not share a view (40°–180° apart on
+        // the orbit fixture) is dropped whole by the pair's geometric verification, so the cost of a
+        // miss is one bounded match + solve; a hit — the orbit's last views against its first — is
+        // the constraint that lets the bundle adjustment close a loop instead of accumulating a
+        // sequential chain's drift (6° over the fixture's 36 views without it). The old `(0, f)` /
+        // `(1, f)` anchors are gone: with real descriptors those pairs were noise, and every wrong
+        // match unioned two good tracks into one no triangulation could validate.
+        let stride = (n.saturating_sub(window)).div_ceil(LOOP_CLOSURE_PARTNERS_PER_FRAME).max(2);
         while self.match_pair_i >= n && self.match_anchor_frame < n && work < pair_budget {
             let frame = self.match_anchor_frame;
-            if frame > window {
-                self.match_pairs.push((0, frame));
-                work += 1;
-            }
-            if work < pair_budget && frame > 1 + window {
-                self.match_pairs.push((1, frame));
-                work += 1;
+            let mut partner = frame + window + 1;
+            while partner < n {
+                if (partner - frame) % stride == 0 {
+                    self.match_pairs.push((frame, partner));
+                    work += 1;
+                }
+                partner += 1;
             }
             self.match_anchor_frame += 1;
         }
@@ -960,9 +1085,13 @@ impl ReconstructionEngine {
                 reverse_best_index: u32::MAX,
                 pending: None,
                 matches: Vec::new(),
+                verification: None,
             });
         }
         let preparation = self.pair_match_preparation.as_mut().expect("pair match preparation");
+        if preparation.query == self.descriptors_per_frame[preparation.frame_a].len() {
+            return self.step_verifying_pair();
+        }
         let desc_a = &self.descriptors_per_frame[preparation.frame_a];
         let desc_b = &self.descriptors_per_frame[preparation.frame_b];
         if desc_b.is_empty() {
@@ -1040,11 +1169,71 @@ impl ReconstructionEngine {
             }
         }
         if preparation.query == desc_a.len() {
-            let complete = self.pair_match_preparation.take().expect("completed pair match");
-            self.record(EngineObservation::PairMatched { frame_a: complete.frame_a, frame_b: complete.frame_b, matches: complete.matches.len() });
-            self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
-            self.pair_cursor += 1;
+            return self.step_verifying_pair();
         }
+        self.pair_cursor < self.match_pairs.len()
+    }
+
+    /// 🧭️ Geometric verification of the pair whose descriptor matching just completed: a bounded
+    /// five-point RANSAC over the matched keypoints, one hypothesis batch per call, and only the
+    /// best model's inliers survive into the pair table. Descriptor matching alone leaves a fifth
+    /// to a quarter of a 10° pair's matches wrong (and nearly all of a 40° pair's); every wrong
+    /// match that reaches the track builder either fuses two good tracks or plants a wrong
+    /// observation in one, and a registration drawing on such tracks found 3 consistent
+    /// correspondences out of 20. A pair without keypoints (a descriptor-only test harness) or with
+    /// fewer than [`PAIR_VERIFICATION_MIN_INLIERS`] matches skips the solve and keeps its matches.
+    fn step_verifying_pair(&mut self) -> bool {
+        let preparation = self.pair_match_preparation.as_mut().expect("pair match preparation");
+        let verifiable = preparation.matches.len() >= PAIR_VERIFICATION_MIN_INLIERS && self.keypoints_per_frame.len() > preparation.frame_a.max(preparation.frame_b) && !self.frames.is_empty();
+        if verifiable {
+            let intrinsics = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
+            let (frame_a, frame_b) = (preparation.frame_a, preparation.frame_b);
+            let verification = preparation.verification.get_or_insert_with(|| PairVerification {
+                correspondences: preparation
+                    .matches
+                    .iter()
+                    .map(|matched| {
+                        let a = self.keypoints_per_frame[frame_a][matched.a as usize];
+                        let b = self.keypoints_per_frame[frame_b][matched.b as usize];
+                        ([f64::from(a.x), f64::from(a.y)], [f64::from(b.x), f64::from(b.y)])
+                    })
+                    .collect(),
+                attempts: 0,
+                best: None,
+            });
+            let seed = ((frame_a as u64) << 32 | frame_b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ verification.attempts as u64;
+            if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_with_limit(&verification.correspondences, &intrinsics, &intrinsics, PAIR_VERIFICATION_THRESHOLD, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP) {
+                if verification.best.as_ref().is_none_or(|best| candidate.inliers.len() > best.inliers.len()) {
+                    verification.best = Some(candidate);
+                }
+            }
+            verification.attempts += 1;
+            if verification.attempts < PAIR_VERIFICATION_STEPS {
+                return true;
+            }
+            let survivors: Vec<usize> = verification.best.as_ref().map(|best| best.inliers.clone()).unwrap_or_default();
+            let mut kept = std::collections::BTreeSet::new();
+            kept.extend(survivors);
+            let before = preparation.matches.len();
+            if kept.len() >= PAIR_VERIFICATION_MIN_INLIERS && kept.len() as f64 >= PAIR_VERIFICATION_MIN_INLIER_SHARE * before as f64 {
+                let mut index = 0usize;
+                preparation.matches.retain(|_| {
+                    let keep = kept.contains(&index);
+                    index += 1;
+                    keep
+                });
+            } else {
+                preparation.matches.clear();
+            }
+            let dropped = before - preparation.matches.len();
+            if dropped > 0 {
+                self.record(EngineObservation::PairGeometryRejected { frame_a, frame_b, dropped });
+            }
+        }
+        let complete = self.pair_match_preparation.take().expect("completed pair match");
+        self.record(EngineObservation::PairMatched { frame_a: complete.frame_a, frame_b: complete.frame_b, matches: complete.matches.len() });
+        self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
+        self.pair_cursor += 1;
         self.pair_cursor < self.match_pairs.len()
     }
 
@@ -1116,7 +1305,7 @@ impl ReconstructionEngine {
     /// step, not fatal) except for the initial pair, whose failure genuinely aborts the reconstruction.
     fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
-            let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio);
+            let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
             let tracks = self.tracks.clone().expect("tracks built before EstimatingPoses");
             let keypoints = self.keypoints_per_frame.clone();
             let mut sfm = remodeling_sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
@@ -1152,16 +1341,34 @@ impl ReconstructionEngine {
         if self.registration_preparation.is_none() {
             self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.pose_cursor));
         }
+        if let Some(bundle) = self.bundle_iterations.as_mut() {
+            let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(2)], bundle.lambda, sfm.robust_loss());
+            bundle.lambda = lambda;
+            bundle.remaining = bundle.remaining.saturating_sub(1);
+            if converged || bundle.remaining == 0 {
+                self.bundle_iterations = None;
+                let frame = self.pose_cursor;
+                if let Some(pose) = sfm.camera_pose(frame) {
+                    self.record(EngineObservation::CameraRegistered { frame, pose });
+                }
+                self.registration_preparation = None;
+                self.pose_cursor += 1;
+            }
+            return Ok(self.pose_cursor < n || self.registration_preparation.is_some());
+        }
         let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
         let frame = self.pose_cursor;
         let registered = sfm.camera_pose(frame);
         match result {
             Ok(true) => {
-                if let Some(pose) = registered {
-                    self.record(EngineObservation::CameraRegistered { frame, pose });
+                if registered.is_some() {
+                    // 🎯️ Refine the newest cameras and their points before the next registration
+                    // draws on them; the registration is announced once the refinement settles.
+                    self.bundle_iterations = Some(BundleIterations { frames: sfm.local_bundle_frames(LOCAL_BUNDLE_WINDOW), lambda: 1e-3, remaining: LOCAL_BUNDLE_ITERATIONS });
+                } else {
+                    self.registration_preparation = None;
+                    self.pose_cursor += 1;
                 }
-                self.registration_preparation = None;
-                self.pose_cursor += 1;
             }
             Err(_) => {
                 self.record(EngineObservation::CameraRejected { frame });
@@ -1173,21 +1380,43 @@ impl ReconstructionEngine {
         Ok(self.pose_cursor < n || self.registration_preparation.is_some())
     }
 
-    /// 🎯️ Advances exactly one bounded bundle cleanup or retriangulation unit.
+    /// 🎯️ One bounded unit of the bundle stage, which walks [`BUNDLE_STAGE_PLAN`]: a cleanup pass
+    /// (prune + retriangulate) or a global adjustment one iteration per step over every camera and
+    /// point, up to the document's iteration budget per adjustment.
+    ///
+    /// 🔁️ Why two adjustments: the first runs with a wide Huber kernel on the unpruned points so the
+    /// loop-closure observations — which a drifted chain reprojects tens of pixels off, and which are
+    /// the only evidence that can pull the loop shut — act with their full residual (a pixel-scale
+    /// kernel caps them to a constant the thousands of chain observations outweigh, and the loop
+    /// stays open at ~6°); the cleanup between the passes prunes the gross outliers that pass
+    /// tolerated, and the second adjustment converges on the configured kernel.
     fn step_bundle_adjusting(&mut self) -> bool {
-        if self.ba_substep != 0 {
-            return false;
-        }
+        let Some(plan) = BUNDLE_STAGE_PLAN.get(self.ba_substep) else { return false };
         let Some(sfm) = self.sfm.as_mut() else { return false };
-        if self.bundle_preparation.is_none() {
-            self.bundle_preparation = Some(sfm.begin_bundle());
+        match *plan {
+            BundleStagePhase::Cleanup { tolerance } => {
+                let preparation = self.bundle_preparation.get_or_insert_with(|| sfm.begin_bundle_with_tolerance(tolerance));
+                if sfm.advance_bundle(preparation, 1) {
+                    self.bundle_preparation = None;
+                    self.ba_substep += 1;
+                }
+            }
+            BundleStagePhase::Adjust { huber_factor } => {
+                let bundle = self.bundle_iterations.get_or_insert_with(|| BundleIterations { frames: sfm.registered_frames(), lambda: 1e-3, remaining: self.params.sfm.ba_max_iterations.max(1) });
+                let loss = match huber_factor {
+                    Some(factor) => remodeling_sfm::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
+                    None => sfm.robust_loss(),
+                };
+                let (lambda, converged) = sfm.bundle_adjustment_iteration(&bundle.frames, &bundle.frames[..bundle.frames.len().min(2)], bundle.lambda, loss);
+                bundle.lambda = lambda;
+                bundle.remaining = bundle.remaining.saturating_sub(1);
+                if converged || bundle.remaining == 0 {
+                    self.bundle_iterations = None;
+                    self.ba_substep += 1;
+                }
+            }
         }
-        if sfm.advance_bundle(self.bundle_preparation.as_mut().expect("bundle preparation"), 1) {
-            self.bundle_preparation = None;
-            self.ba_substep = 1;
-            return false;
-        }
-        true
+        self.ba_substep < BUNDLE_STAGE_PLAN.len()
     }
 
     /// 📦️ Moves the final sparse snapshot, observation table, and dense-camera index through bounded
@@ -1295,6 +1524,8 @@ impl ReconstructionEngine {
             let intrinsics = reconstruction.intrinsics;
             let source_frames = neighbor_camera_indices(ci, reconstruction.cameras.len(), self.params.dense_source_views.min(8)).into_iter().map(|neighbor| reconstruction.cameras[neighbor]).collect();
             let reference = &self.frames[reference_frame].image;
+            let (depth_min, depth_max) = sparse_depth_range(&reconstruction.points, &pose, &self.params.dense);
+            let dense = remodeling_dense::PatchMatchConfig { depth_min, depth_max, ..self.params.dense };
             self.dense_preparation = Some(DenseStereoPreparation {
                 phase: DenseStereoPhase::ReferenceLuma,
                 reference_frame,
@@ -1304,6 +1535,7 @@ impl ReconstructionEngine {
                 source_grays: Vec::new(),
                 source: 0,
                 pixel: 0,
+                dense,
                 patch_match: None,
             });
         }
@@ -1333,7 +1565,7 @@ impl ReconstructionEngine {
             }
             DenseStereoPhase::PatchMatch => {
                 let patch_match = preparation.patch_match.get_or_insert_with(|| remodeling_dense::PatchMatchPreparation::new(preparation.reference_gray.width, preparation.reference_gray.height));
-                if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &self.params.dense, patch_pixels_per_step) {
+                if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &preparation.dense, patch_pixels_per_step) {
                     let complete = self.dense_preparation.take().expect("completed dense preparation");
                     let map = complete.patch_match.expect("completed patch match").finish().expect("finished depth map");
                     self.record(EngineObservation::DepthMapEstimated { view: slot, samples: map.depth.iter().filter(|depth| depth.is_finite() && **depth > 0.0).count() });
@@ -1346,63 +1578,12 @@ impl ReconstructionEngine {
         self.stage_cursor < n_dense
     }
 
-    /// 🧊️ One camera's depth map integrated into the TSDF (or, once every camera is integrated, the
-    /// final `fuse_depth_maps` aggregate for the QC/geo point cloud); returns whether more work remains
-    /// in this stage.
-    fn step_fusing_volume(&mut self) -> bool {
-        const TSDF_SAMPLES_PER_STEP: usize = 256;
-        const FUSION_COMPARISONS_PER_STEP: usize = 256;
-        let n_dense = self.dense_camera_indices.len();
-        // 🧊️ Always ensures a (possibly still-empty) TSDF exists once this stage starts, even when
-        // `n_dense == 0` (a degenerate but legitimate outcome — every registered camera got pruned by
-        // bundle adjustment): without this, `begin_meshing` used to find `self.tsdf` still `None` and
-        // silently skip building a `MeshPipeline`, later surfacing as the confusing, wiring-looking
-        // `"mesh pipeline not initialized"` failure instead of an honest empty-reconstruction outcome.
-        if self.tsdf.is_none() {
-            self.tsdf = Some(remodeling_dense::TsdfVolume::new(self.params.tsdf_voxel_size, self.params.tsdf_truncation));
-        }
-        if self.stage_cursor < n_dense {
-            let slot = self.stage_cursor;
-            let ci = self.dense_camera_indices[slot];
-            let (pose, intrinsics) = {
-                let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
-                let (_, pose) = recon.cameras[ci];
-                (pose, recon.intrinsics)
-            };
-            let preparation = self.tsdf_preparation.get_or_insert_with(remodeling_dense::TsdfIntegrationPreparation::new);
-            if preparation.advance(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
-                self.tsdf_preparation = None;
-                self.stage_cursor += 1;
-            }
-            return true;
-        }
-        if !self.fusion_finalized {
-            let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
-            if self.fusion_views.len() < self.dense_camera_indices.len() {
-                let camera = self.dense_camera_indices[self.fusion_views.len()];
-                self.fusion_views.push((recon.cameras[camera].1, recon.intrinsics));
-                return true;
-            }
-            let preparation = self.fusion_preparation.get_or_insert_with(|| remodeling_dense::FusionPreparation::new(self.fusion_capacity));
-            if preparation.advance(&self.fusion_views, &self.depth_maps, &remodeling_dense::FusionConfig::default(), FUSION_COMPARISONS_PER_STEP) {
-                self.dense_cloud = self.fusion_preparation.take().and_then(remodeling_dense::FusionPreparation::finish);
-                self.fusion_finalized = true;
-                let points = self.dense_positions().len();
-                self.record(EngineObservation::DenseCloudFused { points });
-                return false;
-            }
-            return true;
-        }
-        false
-    }
-
-    /// 🏗️ Advances bounds, texture-view copying and pipeline creation with finite point/byte fuel.
-    fn step_begin_meshing(&mut self) -> bool {
+    /// 🧮️ One fuel-bounded slice of the sparse+dense extrema walk that fixes the meshing lattice (and
+    /// with it the TSDF integration box); `true` once both clouds are walked. The cursors live in
+    /// [`MeshingPreparation`], so the fusion stage and [`Self::step_begin_meshing`] share one walk
+    /// rather than each performing their own.
+    fn step_meshing_bounds(&mut self) -> bool {
         const POINTS_PER_STEP: usize = 2_048;
-        const IMAGE_BYTES_PER_STEP: usize = 4_096;
-        if self.tsdf.is_none() {
-            return true;
-        }
         let preparation = self.meshing_preparation.get_or_insert_with(MeshingPreparation::new);
         if let Some(reconstruction) = &self.reconstruction {
             if preparation.sparse_cursor < reconstruction.points.len() {
@@ -1424,6 +1605,96 @@ impl ReconstructionEngine {
                 return false;
             }
         }
+        true
+    }
+
+    /// 🧊️ The fusion stage, in the one order that keeps the volume small: first the cross-view
+    /// `fuse_depth_maps` aggregate for the QC/geo cloud (it reads every depth map and never touches the
+    /// volume), then the extrema walk that fixes the meshing lattice, and only then the per-camera TSDF
+    /// integration — restricted to that lattice, releasing each depth map as it is consumed. Returns
+    /// whether more work remains in this stage.
+    ///
+    /// 🧠️ Why the integration is bounded rather than global: PatchMatch hypothesises depths anywhere in
+    /// `[dense.depth_min, dense.depth_max]` (a 0.1–100 m range for uncalibrated input), so an
+    /// unconstrained integration scatters one 4 KiB `8³` block per touched neighbourhood across a
+    /// hundred-metre frustum — measured at ~300 MiB and still climbing on a ten-view 320x240 run, which
+    /// is what used to abort the guest's allocator mid-stage. `remodeling_mesh`'s surface extraction only
+    /// ever samples the `compute_voxel_bounds_from_extrema` lattice (itself clamped to 32 cells per axis)
+    /// plus one voxel past each face, so every voxel it can read is still integrated bit-identically
+    /// while nothing is allocated beyond the margin.
+    fn step_fusing_volume(&mut self) -> bool {
+        const TSDF_SAMPLES_PER_STEP: usize = 256;
+        const FUSION_COMPARISONS_PER_STEP: usize = 256;
+        /// 🧱️ Voxels of slack around the meshing lattice: the surface net reads one voxel past each
+        /// face through its cube corners, two keeps that provably inside the integrated region.
+        const TSDF_INTEGRATION_MARGIN_VOXELS: i32 = 2;
+        let n_dense = self.dense_camera_indices.len();
+        if !self.fusion_finalized {
+            let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
+            if self.fusion_views.len() < n_dense {
+                let camera = self.dense_camera_indices[self.fusion_views.len()];
+                self.fusion_views.push((recon.cameras[camera].1, recon.intrinsics));
+                return true;
+            }
+            let preparation = self.fusion_preparation.get_or_insert_with(|| remodeling_dense::FusionPreparation::new(self.fusion_capacity));
+            if preparation.advance(&self.fusion_views, &self.depth_maps, &remodeling_dense::FusionConfig::default(), FUSION_COMPARISONS_PER_STEP) {
+                self.dense_cloud = self.fusion_preparation.take().and_then(remodeling_dense::FusionPreparation::finish);
+                self.fusion_finalized = true;
+                let points = self.dense_positions().len();
+                self.record(EngineObservation::DenseCloudFused { points });
+            }
+            return true;
+        }
+        if !self.step_meshing_bounds() {
+            return true;
+        }
+        // 🧊️ Always ensures a (possibly still-empty) TSDF exists once this stage starts, even when
+        // `n_dense == 0` (a degenerate but legitimate outcome — every registered camera got pruned by
+        // bundle adjustment): without this, `begin_meshing` used to find `self.tsdf` still `None` and
+        // silently skip building a `MeshPipeline`, later surfacing as the confusing, wiring-looking
+        // `"mesh pipeline not initialized"` failure instead of an honest empty-reconstruction outcome.
+        if self.tsdf.is_none() {
+            let preparation = self.meshing_preparation.as_ref().expect("walked meshing preparation");
+            let (lattice_min, lattice_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.params.tsdf_voxel_size);
+            self.tsdf = Some(
+                remodeling_dense::TsdfVolume::new(self.params.tsdf_voxel_size, self.params.tsdf_truncation)
+                    .with_voxel_bounds(lattice_min.map(|coordinate| coordinate.saturating_sub(TSDF_INTEGRATION_MARGIN_VOXELS)), lattice_max.map(|coordinate| coordinate.saturating_add(TSDF_INTEGRATION_MARGIN_VOXELS))),
+            );
+        }
+        if self.stage_cursor < n_dense {
+            let slot = self.stage_cursor;
+            let ci = self.dense_camera_indices[slot];
+            let (pose, intrinsics) = {
+                let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
+                let (_, pose) = recon.cameras[ci];
+                (pose, recon.intrinsics)
+            };
+            let preparation = self.tsdf_preparation.get_or_insert_with(remodeling_dense::TsdfIntegrationPreparation::new);
+            if preparation.advance(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
+                self.tsdf_preparation = None;
+                // 🧹️ This map's three per-pixel buffers (~1.5 MiB for a 320x240 view, ~5 MiB at the
+                // admitted 512x512 envelope) are dead the moment it is integrated: fusion already read
+                // every map above and nothing downstream reads them again. The slot itself stays so the
+                // stage's cursors and counts keep their meaning.
+                self.depth_maps[slot] = remodeling_dense::DepthMap::new(0, 0);
+                self.stage_cursor += 1;
+            }
+            return true;
+        }
+        false
+    }
+
+    /// 🏗️ Advances the shared extrema walk, texture-view copying and pipeline creation with finite
+    /// point/byte fuel.
+    fn step_begin_meshing(&mut self) -> bool {
+        const IMAGE_BYTES_PER_STEP: usize = 4_096;
+        if self.tsdf.is_none() {
+            return true;
+        }
+        if !self.step_meshing_bounds() {
+            return false;
+        }
+        let preparation = self.meshing_preparation.as_mut().expect("walked meshing preparation");
         if self.params.texture_enabled {
             if let Some(reconstruction) = &self.reconstruction {
                 if preparation.view_cursor < self.dense_camera_indices.len() {
@@ -1452,6 +1723,17 @@ impl ReconstructionEngine {
         let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.params.tsdf_voxel_size);
         let volume = self.tsdf.take().expect("meshing volume");
         self.mesh_pipeline = Some(remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_views(preparation.views));
+        // 🧹️ Input pixels are dead here: the texture views above hold their own copies and the mesh
+        // stages read only the volume and those views. Ten 320x240 frames are 3 MiB, the admitted
+        // envelope (64 frames of 512x512) is 64 MiB — all of it retained through meshing otherwise.
+        // Width/height go with the buffer so `data.len() == width * height * 4` still holds.
+        for frame in &mut self.frames {
+            frame.image = remodeling_image::ImageRgba8 { width: 0, height: 0, data: Vec::new() };
+        }
+        // 🧹️ Descriptors only ever feed pair matching, and the keypoints the terminal observation table
+        // needs were already copied into the finalized `observations`; both are dead by the mesh handoff.
+        self.descriptors_per_frame = Vec::new();
+        self.keypoints_per_frame = Vec::new();
         true
     }
 
@@ -1835,4 +2117,8 @@ impl ReconstructionEngine {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retention/🦀️.rs"]
+mod retention;
 // #endregion 🔖️Tests

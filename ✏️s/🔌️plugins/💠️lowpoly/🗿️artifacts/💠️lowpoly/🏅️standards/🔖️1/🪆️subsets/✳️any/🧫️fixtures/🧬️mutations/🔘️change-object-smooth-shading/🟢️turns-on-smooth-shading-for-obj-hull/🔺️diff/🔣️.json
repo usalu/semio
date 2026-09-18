@@ -1,21 +1,22 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "obj-hull",
+        "paintLayers": null,
         "patch": {
+          "mesh": null,
+          "meshContent": null,
           "name": null,
           "smoothShading": true,
-          "transform": null,
-          "mesh": null
-        },
-        "paintLayers": null
+          "transform": null
+        }
       }
     ],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null
 }

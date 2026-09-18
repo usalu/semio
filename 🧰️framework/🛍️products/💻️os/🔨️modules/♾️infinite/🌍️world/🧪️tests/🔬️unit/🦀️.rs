@@ -19,6 +19,12 @@ pub(super) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, i
 }
 
 pub(super) fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
+    publish_oracle_mesh_at_revision(data, 0)
+}
+
+/// 🧊️ An oracle mesh stamped with a chosen interaction revision — what
+/// `publish_world3d_asset_mesh_lease` witnesses before it stores a decoded GLB under its url's id.
+pub(super) fn publish_oracle_mesh_at_revision(data: LegacyMeshOracleData, revision: u64) -> Mesh3dLease {
     assert!(data.positions.len().is_multiple_of(3));
     assert_eq!(data.normals.len(), data.positions.len());
     assert!(data.edge_positions.len().is_multiple_of(6));
@@ -36,7 +42,7 @@ pub(super) fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
         colors: (data.colors.len() / 4) as u32,
     };
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let token = mesh3d_begin(generation, 0, schema).expect("oracle mesh claim");
+    let token = mesh3d_begin(generation, revision, schema).expect("oracle mesh claim");
     while !mesh3d_allocate_step(token).expect("oracle mesh page allocation") {}
     for value in data.positions.as_chunks::<3>().0 {
         mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
@@ -257,7 +263,7 @@ fn placeholder_writer_matches_legacy_geometry_and_closes_interrupted_authority()
 }
 
 #[test]
-fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
+fn terrain_writer_matches_the_vertex_coloured_tile_oracle_and_closes_interrupted_authority() {
     fn payload() -> TerrainTileMeshPayload {
         TerrainTileMeshPayload {
             positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0, 2.0, 1.0, 0.0],
@@ -268,6 +274,7 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
     }
 
     let mut cursor = WorldTerrainMeshCursor::new("surface", (3, 4, 5), payload(), 50, 9, 9).expect("terrain cursor");
+    let mut published = 0;
     let mut turns = 0;
     loop {
         turns += 1;
@@ -275,14 +282,17 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
         match cursor.step(9, 9) {
             WorldTerrainMeshStep::Pending => {}
             WorldTerrainMeshStep::Ready(key, lease) => {
-                let band = key.rsplit(':').next().and_then(|value| value.parse::<usize>().ok()).expect("band key");
-                let legacy = build_terrain_band_mesh(&payload(), band, TERRAIN_COLOR_BANDS).expect("published band has legacy geometry");
+                published += 1;
+                assert_eq!(key, "terrain:surface:3:4:5", "one vertex-coloured mesh per TILE, never one per colour band");
+                let legacy = build_terrain_tile_mesh_oracle(&payload()).expect("published tile has oracle geometry");
                 let schema = lease.schema().expect("terrain lease schema");
                 assert_eq!(schema.vertices as usize * 3, legacy.positions.len());
                 assert_eq!(schema.indices as usize, legacy.indices.len());
+                assert_eq!(schema.colors, schema.vertices, "every terrain vertex carries its own hypsometric colour");
                 for item in 0..schema.vertices {
                     assert_eq!(lease.vec3(Mesh3dField::Positions, item).unwrap(), legacy.positions[item as usize * 3..item as usize * 3 + 3]);
                     assert_eq!(lease.vec3(Mesh3dField::Normals, item).unwrap(), legacy.normals[item as usize * 3..item as usize * 3 + 3]);
+                    assert_eq!(lease.vec4(Mesh3dField::Colors, item).unwrap(), legacy.colors[item as usize * 4..item as usize * 4 + 4]);
                 }
                 for item in 0..schema.indices {
                     assert_eq!(lease.u32(Mesh3dField::Indices, item).unwrap(), legacy.indices[item as usize]);
@@ -292,6 +302,7 @@ fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
             }
             WorldTerrainMeshStep::Complete(tile) => {
                 assert_eq!(tile, (3, 4, 5));
+                assert_eq!(published, 1, "a tile publishes exactly one mesh");
                 break;
             }
             WorldTerrainMeshStep::Fault => panic!("valid terrain cursor faulted"),
@@ -1520,8 +1531,10 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
 
 #[test]
 fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
-    assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
-    assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 32.0));
+    // 🧭️ React's own `resolveSceneGizmoViewportPlacement` oracle — the block margin clears the folded
+    // projection pane so the cube sits ABOVE the pane's bottom chip row, never on it.
+    assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 58.0));
+    assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 53.0));
     assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
 }
 
@@ -1615,6 +1628,89 @@ fn sync_parses_scene_reference_lanes() {
     assert_eq!(state.references[0].url.as_deref(), Some("/infinite-assets/plan.jpg"));
     assert_eq!(state.references[0].width_world, Some(50.0));
     assert!(!state.references[0].hidden.unwrap_or(true));
+}
+
+/// 🤝️ One world surface fed the `engagementPreview` lane a construction statechart publishes —
+/// the four kinds React's `EngagementPreviewLayer` draws, in the spelling `cad`'s
+/// `interaction::preview_display_items` emits.
+const ENGAGEMENT_PREVIEW_JSON: &str = r#"[
+    {"kind":"point","role":"corner","position":[1.0,2.0,0.0]},
+    {"kind":"segment","role":"edge","from":[0.0,0.0,0.0],"to":[1.0,0.0,0.0]},
+    {"kind":"box-preview","cornerA":[0.0,0.0,0.0],"cornerB":[2.0,3.0,0.0],"height":4.0},
+    {"kind":"linear-handle","axis":[0.0,0.0,2.0],"origin":[1.0,1.0,0.0]}
+]"#;
+
+fn scene_with_engagement_preview(preview_json: Option<&str>) -> UiComponentSceneNode {
+    let mut scene = scene_with_selection("{}");
+    if let Some(world) = scene.world_3d.as_mut() {
+        world.engagement_preview_json = preview_json.map(str::to_string);
+    }
+    scene
+}
+
+#[test]
+fn sync_parses_the_engagement_preview_lane() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(ENGAGEMENT_PREVIEW_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert_eq!(state.engagement_preview.len(), 4);
+    assert_eq!(state.engagement_preview[0].kind.as_deref(), Some("point"));
+    assert_eq!(state.engagement_preview[0].position, Some([1.0, 2.0, 0.0]));
+    assert_eq!(state.engagement_preview[1].from, Some([0.0, 0.0, 0.0]));
+    assert_eq!(state.engagement_preview[2].corner_b, Some([2.0, 3.0, 0.0]));
+    assert_eq!(state.engagement_preview[2].height, Some(4.0));
+    assert_eq!(state.engagement_preview[3].axis, Some([0.0, 0.0, 2.0]));
+}
+
+#[test]
+fn an_absent_or_broken_engagement_preview_lane_leaves_the_state_empty() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_engagement_preview(None), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert!(state.engagement_preview.is_empty());
+    sync_world3d_state(&mut state, &scene_with_engagement_preview(Some("not json")), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert!(state.engagement_preview.is_empty());
+}
+
+/// 🖍️ 3 axis crosses (2 vertices each) + 1 segment + 12 box edges + 1 handle = 6 + 2 + 24 + 2 = 34
+/// line vertices, and the box wireframe extrudes UP from `cornerA.z` by `height`.
+#[test]
+fn the_engagement_preview_lane_paints_world_lines() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(ENGAGEMENT_PREVIEW_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    let mut lines = Vec::new();
+    append_engagement_preview_lines(&state, &mut lines, [1.0, 0.0, 0.0, 1.0]);
+    assert_eq!(lines.len(), 34);
+    let zs: Vec<f32> = lines.iter().map(|vertex| vertex.position[2]).collect();
+    assert!(zs.iter().any(|z| (*z - 4.0).abs() < 1e-6), "the box top sits at cornerA.z + height");
+    assert!(lines.iter().all(|vertex| vertex.color == [1.0, 0.0, 0.0, 1.0]));
+}
+
+/// 🩹️ React floors width/depth/height at `0.05`, so a degenerate footprint still shows a sliver.
+#[test]
+fn a_degenerate_box_preview_keeps_the_react_minimum_extent() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(r#"[{"kind":"box-preview","cornerA":[0.0,0.0,0.0],"cornerB":[0.0,0.0,0.0]}]"#)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    let mut lines = Vec::new();
+    append_engagement_preview_lines(&state, &mut lines, [0.0, 0.0, 0.0, 1.0]);
+    assert_eq!(lines.len(), 24);
+    let max_x = lines.iter().map(|vertex| vertex.position[0]).fold(f32::MIN, f32::max);
+    let min_x = lines.iter().map(|vertex| vertex.position[0]).fold(f32::MAX, f32::min);
+    assert!((max_x - min_x - 0.05).abs() < 1e-6, "width floors at 0.05, got {}", max_x - min_x);
+    let max_z = lines.iter().map(|vertex| vertex.position[2]).fold(f32::MIN, f32::max);
+    assert!((max_z - 0.05).abs() < 1e-6, "height floors at 0.05, got {max_z}");
+}
+
+#[test]
+fn an_engagement_preview_item_missing_its_geometry_is_skipped_not_faulted() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(
+        &mut state,
+        &scene_with_engagement_preview(Some(r#"[{"kind":"point"},{"kind":"segment","from":[0,0,0]},{"kind":"box-preview","cornerA":[0,0,0]},{"kind":"linear-handle","origin":[0,0,0]},{"kind":"unknown-kind","position":[1,1,1]}]"#)),
+        Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 },
+    );
+    assert_eq!(state.engagement_preview.len(), 5);
+    let mut lines = Vec::new();
+    append_engagement_preview_lines(&state, &mut lines, [0.0, 0.0, 0.0, 1.0]);
+    assert!(lines.is_empty());
 }
 
 #[test]
@@ -2021,6 +2117,48 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
     ui_wgpu::wgpu::world3d_snapshot_begin_close(lease).unwrap();
     assert!(!ui_wgpu::wgpu::world3d_snapshot_close_step(lease).unwrap());
     assert!(ui_wgpu::wgpu::world3d_snapshot_close_step(lease).unwrap());
+}
+
+/// 🗑️ A url the renderer's decoder refused is offered ONCE. Both request loops re-derive their
+/// missing urls from the scene every frame (`missing_mesh_urls`, `reference_image_urls`), so without
+/// this ledger one refused response is re-fetched for the lifetime of the surface — the shape
+/// `terrain_tile_misses` already gives DEM tiles and React gives a failed texture url.
+#[test]
+fn a_refused_asset_url_is_never_offered_again_by_its_surface() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    state.mesh_source_urls.insert("mesh".into(), "/mesh/🧊️refused.glb".into());
+    state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version: 1, instances: Vec::new() }).expect("one scene draw");
+    state.references.push(WorldReferenceRecord { url: Some("/plan.jpg".into()), origin: Some([0.0; 3]), width_world: Some(1.0), hidden: Some(false) });
+    let offered = |state: &World3dState| -> (Vec<String>, Vec<String>) {
+        let meshes = state
+            .draws
+            .iter()
+            .filter(|draw| !state.meshes.contains_key(&draw.mesh_key))
+            .filter_map(|draw| state.mesh_source_urls.get(&draw.mesh_key).cloned())
+            .filter(|url| !state.asset_url_misses.contains(url))
+            .collect();
+        let references = state
+            .references
+            .iter()
+            .filter_map(|reference| reference.url.clone())
+            .filter(|url| !state.reference_pixels.contains_key(url))
+            .filter(|url| !state.asset_url_misses.contains(url))
+            .collect();
+        (meshes, references)
+    };
+    assert_eq!(offered(&state), (vec!["/mesh/🧊️refused.glb".to_string()], vec!["/plan.jpg".to_string()]), "both loops offer an un-refused url");
+    assert!(!world3d_asset_url_missed(&state, "/mesh/🧊️refused.glb"));
+    state.pending_glb_urls.insert("/mesh/🧊️refused.glb".into());
+    state.pending_image_urls.insert("/plan.jpg".into());
+
+    mark_world3d_asset_miss(&mut state, "/mesh/🧊️refused.glb");
+    mark_world3d_asset_miss(&mut state, "/plan.jpg");
+    assert!(world3d_asset_url_missed(&state, "/mesh/🧊️refused.glb"));
+    assert!(world3d_asset_url_missed(&state, "/plan.jpg"));
+    assert!(!world3d_asset_url_missed(&state, "/mesh/🧊️other.glb"));
+    assert!(!state.pending_glb_urls.contains("/mesh/🧊️refused.glb"));
+    assert!(!state.pending_image_urls.contains("/plan.jpg"));
+    assert_eq!(offered(&state), (Vec::new(), Vec::new()), "neither loop offers a refused url again");
 }
 
 #[test]
@@ -2433,6 +2571,48 @@ fn asset_completed_cursor_advances_one_fixed_slot_per_grant_and_hands_back_exact
     assert!(lane.terminal_is_empty());
 }
 
+/// 🖼️ A reference underlay is published inside the raster lane's own per-item credits. The puzzle3d
+/// playground's plan is a 2275×2560 scan — 23 296 000 straight-RGBA bytes against a 16 MiB raster
+/// item ceiling — and an over-budget source is REFUSED at admission, which the frame reports as a
+/// build fault that quarantines the surface rather than as one missing texture.
+#[test]
+fn a_reference_underlay_is_scaled_into_the_raster_lanes_own_credits() {
+    let budget = ui_wgpu::wgpu::PREPARED_RASTER_ITEM_BYTES / 2;
+    let plan = image::DynamicImage::new_rgba8(1536, 1728);
+    let bounded = bounded_reference_image(plan);
+    let pixels = bounded.width() as usize * bounded.height() as usize;
+    assert!(pixels * 4 <= budget, "an over-budget plan is scaled to fit: {}x{}", bounded.width(), bounded.height());
+    assert!((f64::from(bounded.width()) / f64::from(bounded.height()) - 1536.0 / 1728.0).abs() < 0.01, "the aspect ratio survives the scale");
+    let small = image::DynamicImage::new_rgba8(64, 48);
+    let bounded = bounded_reference_image(small);
+    assert_eq!((bounded.width(), bounded.height()), (64, 48), "an image inside the budget is published untouched");
+}
+
+/// 📥️ `collect_world3d_asset_bytes` answers EVERY sealed page exactly once. It used to re-read page
+/// zero forever (`while let Some(page) = owner.decode_page()?` with no advance), which on a
+/// multi-page response grew the payload until `RawVec` panicked with `capacity overflow` and took the
+/// frame Worker down with it — the second half of the puzzle3d wgpu boot fault.
+#[test]
+fn collecting_a_multi_page_asset_response_answers_each_page_once() {
+    let mut lane = WorldAssetIoAuthority::default();
+    lane.reserve_request(3, 4, WorldAssetRequestKind::ReferenceImage, "plan.jpg").unwrap();
+    let mut fetch = lane.take_next().unwrap();
+    lane.reserve_response(&mut fetch, 7).unwrap();
+    for page in [vec![1u8; 4], vec![2u8; 2], vec![3u8; 1]] {
+        fetch.push_page(WorldAssetResponsePage::try_from_owned(page).unwrap()).unwrap();
+    }
+    lane.seal_response(&mut fetch).unwrap();
+    lane.return_owner(fetch).unwrap();
+    let mut decode = (0..WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| lane.take_next_completed_step()).expect("completed response");
+    assert_eq!(collect_world3d_asset_bytes(&mut decode).unwrap(), vec![1, 1, 1, 1, 2, 2, 3]);
+    assert_eq!(collect_world3d_asset_bytes(&mut decode).unwrap(), vec![1, 1, 1, 1, 2, 2, 3], "a second collect reads the same sealed pages, never the cursor's leftovers");
+    assert_eq!(decode.decode_page().unwrap().map(|page| page.bytes().to_vec()), Some(vec![1, 1, 1, 1]), "the cursor is left rewound for the next decoder");
+    decode.begin_close();
+    while !decode.close_step() {}
+    lane.finish(decode).unwrap();
+    assert!(lane.terminal_is_empty());
+}
+
 fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::Value) {
     let mesh = vector["mesh"].as_str().unwrap();
     let instances = vector["instances"].as_array().unwrap();
@@ -2474,6 +2654,141 @@ fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
     assert!(begin_world3d_dynamic_retirement(&mut state));
     while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {}
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+}
+
+/// 🥅️ The puzzle3d mesh wire: two built-in KINDS, then one GLB named by URL. The bridge must keep
+/// all three and every instance placed on them.
+fn url_mesh_wire_scene() -> UiComponentSceneNode {
+    let mut scene = scene_with_selection_and_domain("{}", None);
+    let world = scene.world_3d.as_mut().expect("world scene");
+    world.meshes_json = r#"[{"id":"box","kind":"box"},{"id":"vortex-marker","kind":"vortex-marker"},{"id":"mesh:🧊️left","url":"/mesh/🧊️left.glb"}]"#.into();
+    world.instances_json =
+        r#"[{"id":"obj-box","meshId":"box","position":[0,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]},{"id":"obj-left","meshId":"mesh:🧊️left","position":[2,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]}]"#.into();
+    scene
+}
+
+const URL_MESH_ID: &str = "mesh:🧊️left";
+const URL_MESH_URL: &str = "/mesh/🧊️left.glb";
+
+/// 🧹️ Retires everything a bridged surface holds — snapshot leases live in ONE process-wide
+/// fixed pool, so a test that publishes one and walks away starves every later test with
+/// `World3dSnapshotFault::Unavailable`.
+fn retire_bridged_surface(state: &mut World3dState) {
+    assert!(begin_world3d_dynamic_retirement(state));
+    for _ in 0..4_096 {
+        if with_world_step_context(1, |context| step_world3d_dynamic_retirement(state, context)) {
+            break;
+        }
+    }
+    assert!(world3d_dynamic_retirement_terminal_is_empty(state), "the surface must reach terminal empty");
+}
+
+/// 🥽️🌉️ A mesh the wire declares by URL keeps its draw and its instances, and is left PENDING
+/// rather than stood in for.
+///
+/// 🩸️ `World3dSceneBridgePhase::Parse` used to `retain` only meshes that already carried triangles,
+/// then drop every instance whose mesh was gone — so puzzle3d's `{"id":"mesh:…","url":"/mesh/….glb"}`
+/// entries AND its `{"id":"box","kind":"box"}` entries vanished with every object placed on them
+/// (`state-draws=0 state-instances=0`, `dumpMeshStats` all `indices:0`). Ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md` §6.
+#[test]
+fn the_scene_bridge_keeps_url_and_kind_declared_meshes_with_their_instances() {
+    let scene = url_mesh_wire_scene();
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+
+    assert_eq!(state.snapshot_fault, None);
+    let drawn: Vec<(String, Vec<String>)> = state.draws.iter().map(|draw| (draw.mesh_key.clone(), draw.instances.iter().map(|instance| instance.id.clone()).collect())).collect();
+    assert_eq!(
+        drawn,
+        vec![("box".to_string(), vec!["obj-box".to_string()]), (URL_MESH_ID.to_string(), vec!["obj-left".to_string()])],
+        "both the kind mesh and the url mesh keep their draw and their instances"
+    );
+
+    assert!(state.meshes.contains_key("box"), "a built-in kind resolves through the placeholder ladder both renderers own");
+    assert!(!state.meshes.contains_key(URL_MESH_ID), "a url mesh is owed by the asset pipeline and must NOT be stood in for: a placeholder suppresses its own fetch forever");
+    assert_eq!(state.mesh_source_urls.get(URL_MESH_ID).map(String::as_str), Some(URL_MESH_URL), "the bridge binds the mesh id to the url the fetch loop reads");
+    retire_bridged_surface(&mut state);
+}
+
+/// 🥽️📡️ The url lane end to end inside the surface: the draw offers its url exactly once, the
+/// decoded mesh lands under the wire's own id, and the instance draws from then on.
+#[test]
+fn a_url_declared_mesh_reserves_one_glb_fetch_and_draws_once_its_mesh_lands() {
+    let scene = url_mesh_wire_scene();
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+
+    offer_missing_mesh_fetches(&mut state);
+    offer_missing_mesh_fetches(&mut state);
+    assert!(state.pending_glb_urls.contains(URL_MESH_URL), "the live predicate that keeps a per-frame offer idempotent");
+    let mut owner = take_next_world3d_asset(&mut state).expect("exactly one admitted GLB request");
+    assert_eq!(owner.url(), URL_MESH_URL);
+    assert_eq!(owner.kind(), WorldAssetRequestKind::Glb);
+    assert!(take_next_world3d_asset(&mut state).is_none(), "a re-offered url never doubles its request");
+
+    let mesh = publish_oracle_mesh_at_revision(
+        mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]),
+        state.interaction_revision,
+    );
+    publish_world3d_asset_mesh_lease(&mut state, URL_MESH_URL, mesh).expect("the decoded GLB publishes under the wire's mesh id");
+    let resident = *state.meshes.get(URL_MESH_ID).expect("the fetched GLB is resident under the id the wire named");
+    let schema = resident.schema().expect("resident mesh schema");
+    assert_eq!((schema.vertices, schema.indices), (3, 3), "the resident mesh carries real positions and indices");
+    assert!(!state.pending_glb_urls.contains(URL_MESH_URL), "a landed mesh stops being pending");
+
+    offer_missing_mesh_fetches(&mut state);
+    assert!(take_next_world3d_asset(&mut state).is_none(), "a resident mesh is never re-fetched");
+    let draw = state.draws.iter().find(|draw| draw.mesh_key == URL_MESH_ID).expect("the url mesh keeps its draw");
+    assert_eq!(draw.instances.len(), 1, "the instance draws now that its mesh is resident");
+
+    owner.begin_close();
+    return_world3d_asset(&mut state, owner).unwrap();
+    while retire_cancelled_world3d_asset_step(&mut state) {}
+    retire_bridged_surface(&mut state);
+}
+
+/// 🗑️ A refused GLB is a miss, not an endless retry.
+#[test]
+fn a_refused_mesh_url_is_never_offered_again_by_its_surface() {
+    let scene = url_mesh_wire_scene();
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+
+    offer_missing_mesh_fetches(&mut state);
+    let mut owner = take_next_world3d_asset(&mut state).expect("admitted GLB request");
+    owner.begin_close();
+    return_world3d_asset(&mut state, owner).unwrap();
+    while retire_cancelled_world3d_asset_step(&mut state) {}
+
+    mark_world3d_asset_miss(&mut state, URL_MESH_URL);
+    assert!(!state.pending_glb_urls.contains(URL_MESH_URL), "a refusal clears the pending mark it replaces");
+    offer_missing_mesh_fetches(&mut state);
+    assert!(take_next_world3d_asset(&mut state).is_none(), "a refused url is never offered again");
+    retire_bridged_surface(&mut state);
+}
+
+/// 👻️ A ghost over a mesh the surface is still fetching draws through the shared `box` primitive, not
+/// under that mesh's own id — minting a stand-in there would make the id resident and silence
+/// `offer_missing_mesh_fetches` for the mesh the ghost is standing in for. Once the GLB lands the
+/// ghost switches to the real mesh, exactly like React's `BrushPreviewGhost`.
+#[test]
+fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching() {
+    let scene = url_mesh_wire_scene();
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+
+    assert_eq!(ghost_mesh_id(&state, Some(URL_MESH_URL)), "box", "a pending url ghosts as the shared primitive");
+    assert_eq!(ghost_mesh_id(&state, None), "box");
+    assert_eq!(ghost_mesh_id(&state, Some("/mesh/🧊️unrelated.glb")), "mesh:🧊️unrelated", "a url the scene never named keeps its own lazy ghost key");
+
+    let mesh = publish_oracle_mesh_at_revision(
+        mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]),
+        state.interaction_revision,
+    );
+    publish_world3d_asset_mesh_lease(&mut state, URL_MESH_URL, mesh).expect("the decoded GLB publishes");
+    assert_eq!(ghost_mesh_id(&state, Some(URL_MESH_URL)), URL_MESH_ID, "once the mesh lands the ghost draws the real thing");
+    retire_bridged_surface(&mut state);
 }
 
 //#endregion GlbAssetTests
@@ -2552,7 +2867,7 @@ fn hypsometric_color_matches_reference_stops() {
 }
 
 #[test]
-fn build_terrain_band_mesh_buckets_by_average_elevation() {
+fn build_terrain_tile_mesh_oracle_colours_every_vertex_along_the_continuous_ramp() {
     // Two triangles, 6 verts (no sharing, to keep each triangle's average elevation exact):
     // triangle 0 is flat at elevation ratio 0.0, triangle 1 is flat at elevation ratio 1.0.
     let mesh = TerrainTileMeshPayload {
@@ -2561,12 +2876,12 @@ fn build_terrain_band_mesh_buckets_by_average_elevation() {
         indices: vec![0, 1, 2, 3, 4, 5],
         uvs: vec![0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0],
     };
-    let low_band = build_terrain_band_mesh(&mesh, 0, TERRAIN_COLOR_BANDS);
-    assert!(low_band.is_some(), "triangle 0 (all-zero elevation) should fall in band 0");
-    let high_band = build_terrain_band_mesh(&mesh, TERRAIN_COLOR_BANDS - 1, TERRAIN_COLOR_BANDS);
-    assert!(high_band.is_some(), "triangle 1 (all-one elevation) should fall in the top band");
-    let empty_band = build_terrain_band_mesh(&mesh, 5, TERRAIN_COLOR_BANDS);
-    assert!(empty_band.is_none(), "no triangle should land in a middle band for this fixture");
+    let tile = build_terrain_tile_mesh_oracle(&mesh).expect("a tile with triangles builds");
+    assert_eq!(tile.positions.len(), 18, "the tile is de-indexed into one triangle soup, not split per band");
+    assert_eq!(tile.colors.len(), 24, "one RGBA per vertex");
+    assert_eq!(&tile.colors[..4], &hypsometric_color(0.0), "the ground-level vertex takes the ramp's low stop");
+    assert_eq!(&tile.colors[12..16], &hypsometric_color(1.0), "the peak vertex takes the ramp's white stop");
+    assert_ne!(&tile.colors[..4], &tile.colors[12..16], "the ramp is continuous, not one flat colour per tile");
 }
 
 #[test]
@@ -2580,12 +2895,22 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     apply_terrain_style_if_changed_state(&mut state);
     let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 };
-    let (band_draws, evicted) = sync_terrain_state(&mut state, &camera);
-    assert!(band_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
+    let (tile_draws, evicted) = sync_terrain_state(&mut state, &camera);
+    assert!(tile_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
     assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
     assert!(!state.pending_terrain_tile_urls.is_empty(), "an uncached visible tile should be queued for byte-fetch");
 
-    let (_, &(z, x, y)) = state.pending_terrain_tile_urls.iter().next().expect("a pending tile");
+    // 📡️ The queue is not a to-do list nobody reads: an uncached visible tile is ADMITTED into the
+    // bounded world-asset pipeline, so the renderer host's generic fetch pump drains it exactly as it
+    // drains GLB meshes and reference images. Before this wiring the queue had no consumer outside a
+    // unit test and terrain never loaded in production at all.
+    let owner = take_next_world3d_asset(&mut state).expect("a visible uncached DEM tile is admitted as a fetch request");
+    let (z, x, y) = match owner.kind() {
+        WorldAssetRequestKind::Terrain { z, x, y } => (z, x, y),
+        other => panic!("a DEM tile is admitted as a Terrain request, got {other:?}"),
+    };
+    assert_eq!(owner.url(), terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y));
+    return_world3d_asset(&mut state, owner).expect("the admitted owner returns to its claim");
     let value = (100.0_f64 + 32768.0).round() as i64;
     let r = ((value >> 8) & 0xff) as u8;
     let g = (value - ((r as i64) << 8)).clamp(0, 255) as u8;
@@ -2595,10 +2920,23 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     }
     let mut bytes = Vec::new();
     image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
-    assert!(state.terrain_session.upload_elevation_tile(z, x, y, &bytes));
+    assert!(apply_world3d_terrain_tile_bytes(&mut state, z, x, y, &bytes), "fetched DEM bytes reach the terrain session");
+    assert!(!state.pending_terrain_tile_urls.contains_key(&terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y)), "an applied tile leaves the pending set");
 
-    let (band_draws_after_upload, _) = sync_terrain_state(&mut state, &camera);
-    assert!(!band_draws_after_upload.is_empty(), "an uploaded tile should produce at least one banded draw");
+    // 🕸️ The tile mesh is built by a BOUNDED cursor — ONE scalar write per turn — so the draw appears
+    // many turns after the bytes land, not on the very next frame. The turns are driven directly
+    // (`step_world_terrain_mesh`) rather than through whole `sync_terrain_state` frames, which would
+    // re-serialize every visible tile's mesh JSON per step.
+    sync_terrain_state(&mut state, &camera);
+    assert!(state.terrain_build.is_some(), "an uploaded tile opens its mesh-build cursor");
+    let mut turns = 0;
+    while state.terrain_build.is_some() {
+        step_world_terrain_mesh(&mut state);
+        turns += 1;
+        assert!(turns < 1_000_000, "an uploaded tile converges to its vertex-coloured mesh");
+    }
+    let (tile_draws_after_upload, _) = sync_terrain_state(&mut state, &camera);
+    assert_eq!(tile_draws_after_upload.len(), 1, "one draw per tile — the ramp rides the mesh's own vertex colours, not ten flat bands");
 }
 
 #[test]
@@ -2606,7 +2944,7 @@ fn apply_terrain_style_if_changed_state_purges_stale_meshes_on_origin_change() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 0.0, project_origin_lat: 0.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     assert!(apply_terrain_style_if_changed_state(&mut state).is_empty(), "first application has nothing to purge");
-    let mesh_key = terrain_band_mesh_key(&state.surface_id, 10, 1, 2, 0);
+    let mesh_key = terrain_tile_mesh_key(&state.surface_id, 10, 1, 2);
     store_mesh(&mut state, mesh_key, publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])));
     state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 5.0, project_origin_lat: 5.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     let purged = apply_terrain_style_if_changed_state(&mut state);
@@ -3163,3 +3501,4 @@ fn the_gumball_plane_is_pinned_against_pool_eviction() {
     assert!(pinned.contains("GUMBALL_PLANE_MESH"), "the gumball plane must be pinned: {pinned}");
     assert_eq!(GUMBALL_PLANE_MESH, "gumball-plane");
 }
+

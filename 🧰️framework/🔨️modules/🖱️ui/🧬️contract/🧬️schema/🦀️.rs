@@ -724,13 +724,9 @@ export type SurfaceId = string;"####,
         name: "SurfaceKind",
         version: 1,
         typescript: r####"/**
- * 🖼️ The 15 embeddable product surface kinds. Ported from the wgpu target's `SurfaceKind`, with its
- * one real wire inconsistency FIXED rather than preserved: `VirtualFileSystem` was
- * `"virtualFileSystem"` (camelCase) where every sibling is kebab-case. This program has no back-compat
- * obligation (greenfield, no users, no legacy support — root `CLAUDE.md`), so the rename is made here
- * deliberately rather than carried forward as debt for "a later packet to make on purpose".
- *
- * **Rename: `"virtualFileSystem"` → `"virtual-file-system"`.**
+ * 🖼️ The 15 embeddable product surface kinds, every tag kebab-case. `VirtualFileSystem` used to be
+ * the one camelCase holdout (`"virtualFileSystem"`); the rename reached the contract, the wgpu
+ * target's own `SurfaceKind` and this projection, so there is exactly ONE spelling repo-wide.
  */
 export type SurfaceKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "virtual-file-system" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";"####,
     },

@@ -23,7 +23,18 @@ fn regenerated(scenario: &std::path::Path) -> Vec<(std::path::PathBuf, String)> 
     let before: Puzzle5dSnapshot = dsl::json::from_json_str(&read("📸️snapshot/⬅️before/🔣️.json")).expect("before snapshot decodes");
     let mutation: Puzzle5dMutation = dsl::json::from_json_str(&read("🦠️mutation/🔣️.json")).expect("mutation decodes");
     let status = serde_json::from_str::<serde_json::Value>(&read("🎯️outcome/🔣️.json")).expect("outcome decodes")["status"].as_str().map(str::to_string);
-    assert_eq!(status.as_deref(), Some("applied"), "{}: every puzzle5d mutation scenario is an applied one", scenario.display());
+    if status.as_deref() == Some("rejected") {
+        let mut after = before.clone();
+        let _ = apply_puzzle5d_mutation(&mut after, &mutation);
+        assert_eq!(after, before, "{}: a REJECTED scenario leaves its own before-snapshot untouched", scenario.display());
+        assert!(scenario.join("🔺️diff/🚫️.absent").is_file(), "{}: a REJECTED scenario states the absent-diff sentinel instead of a diff", scenario.display());
+        return vec![
+            (scenario.join("📸️snapshot/⬅️before/🔣️.json"), canonical(&before)),
+            (scenario.join("📸️snapshot/➡️after/🔣️.json"), canonical(&before)),
+            (scenario.join("🦠️mutation/🔣️.json"), canonical(&mutation)),
+        ];
+    }
+    assert_eq!(status.as_deref(), Some("applied"), "{}: a puzzle5d mutation scenario is applied or rejected", scenario.display());
     assert_eq!(serde_json::to_value(&mutation).expect("mutation encodes"), serde_json::from_str::<serde_json::Value>(&canonical(&mutation)).expect("canonical mutation reparses"), "{}: the owned and the oracle mutation encodings disagree", scenario.display());
     let mut after = before.clone();
     apply_puzzle5d_mutation(&mut after, &mutation).expect("mutation applies to its committed before-snapshot");

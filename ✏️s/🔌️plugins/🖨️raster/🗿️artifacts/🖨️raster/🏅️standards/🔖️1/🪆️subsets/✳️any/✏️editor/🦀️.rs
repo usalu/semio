@@ -109,6 +109,7 @@ pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_ut
         brush_opacity: runtime.brush_opacity,
         view_mode: view_mode.into(),
         composite_viewport_json: runtime.composite_viewport.as_ref().map(dsl::os_pack::json::to_json_string),
+        lanes: Vec::new(),
     }
 }
 

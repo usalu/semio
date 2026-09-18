@@ -309,7 +309,7 @@ mod ui_node_wire_format_tests {
     }
 
     const GOLDEN_SURFACE_KIND_JSON: &str =
-        "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";
+        "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtual-file-system\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";
 
     #[semio_framework_async_macros::async_test]
     async fn surface_kind_serializes_to_golden_json() {
@@ -335,7 +335,38 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, kinds);
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+    /// ⚖️ Law: the contract's `SurfaceKind` and this target's `SurfaceKind` are TWO enums naming the
+    /// same fifteen kinds, and every pair must spell its wire tag identically — the whole point of
+    /// retiring `"virtualFileSystem"`. `🔀️reconcile`'s `surface_kind` maps variant-to-variant, so a
+    /// tag that drifts on one side silently re-splits the wire in two without failing to compile.
+    #[semio_framework_async_macros::async_test]
+    async fn surface_kind_wire_tags_agree_between_contract_and_wgpu_target() {
+        let pairs: [(ui_contract::SurfaceKind, SurfaceKind); 15] = [
+            (ui_contract::SurfaceKind::Canvas2d, SurfaceKind::Canvas2d),
+            (ui_contract::SurfaceKind::World3d, SurfaceKind::World3d),
+            (ui_contract::SurfaceKind::NodeGraph, SurfaceKind::NodeGraph),
+            (ui_contract::SurfaceKind::TextEditor, SurfaceKind::TextEditor),
+            (ui_contract::SurfaceKind::Table, SurfaceKind::Table),
+            (ui_contract::SurfaceKind::Paint2d, SurfaceKind::Paint2d),
+            (ui_contract::SurfaceKind::VirtualFileSystem, SurfaceKind::VirtualFileSystem),
+            (ui_contract::SurfaceKind::TiledMap, SurfaceKind::TiledMap),
+            (ui_contract::SurfaceKind::Board2d, SurfaceKind::Board2d),
+            (ui_contract::SurfaceKind::IconRender, SurfaceKind::IconRender),
+            (ui_contract::SurfaceKind::InkCanvas, SurfaceKind::InkCanvas),
+            (ui_contract::SurfaceKind::GraphTimeline, SurfaceKind::GraphTimeline),
+            (ui_contract::SurfaceKind::BlockList, SurfaceKind::BlockList),
+            (ui_contract::SurfaceKind::DiffView, SurfaceKind::DiffView),
+            (ui_contract::SurfaceKind::EventFeed, SurfaceKind::EventFeed),
+        ];
+        for (contract, target) in pairs {
+            let contract_tag = serde_json::to_string(&contract).expect("contract surface kind serializes");
+            let target_tag = serde_json::to_string(&target).expect("target surface kind serializes");
+            assert_eq!(contract_tag, target_tag, "wire tag drift between contract and wgpu target for {contract:?}");
+            assert_eq!(contract_tag, format!("\"{}\"", target.as_str()), "`as_str` disagrees with the serde tag for {target:?}");
+        }
+    }
+
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridVisible\":true,\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"selectableNodes\":true,\"selectableEdges\":true,\"selectableHandles\":true,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
     #[semio_framework_async_macros::async_test]
     async fn scene_records_serialize_to_golden_json() {
@@ -353,6 +384,7 @@ mod ui_node_wire_format_tests {
                 brush_opacity: 1.0,
                 view_mode: "composite".into(),
                 composite_viewport_json: None,
+                lanes: Vec::new(),
             },
             IconRenderScene { request_json: "{}".into(), footer: None, frame_json: None },
             VirtualFileSystemScene { schema_json: "{}".into(), rows_json: "[]".into(), selected_row_ids_json: None, hovered_row_id: None, empty_message: Some("Empty".into()), drag_drop_enabled: Some(true) },

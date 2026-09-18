@@ -4,85 +4,14 @@
 //! selection, the persisted mesh content and undo are exercised together rather than per unit.
 
 use super::*;
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry};
-use semio_framework_plugin::{App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+use crate::editor::lowpoly::unit_tests::context::{act, app_with_registry, LowpolyApp};
 
-const INSTANCE: u32 = 1;
+type Mounted = LowpolyApp;
 
-struct Mounted(VcsArtifactApp<EditorApp<LowpolyPlayApp>>);
-
-impl Drop for Mounted {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            close_registered_fixture_app(&mut self.0);
-        }
-    }
-}
-
-fn manifest() -> App {
-    App { definition: create_lowpoly_app(), examples: Vec::new() }
-}
-
+/// 🔌️ The shared unit-test harness IS the mounted harness: registry-backed, instance-bound, settling
+/// through the same loop, closing its stores on drop.
 fn mounted() -> Mounted {
-    let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<LowpolyPlayApp>>(manifest));
-    semio_framework_plugin::resolve_ready(app.bind_instance_id(INSTANCE));
-    Mounted(app)
-}
-
-fn action_meta() -> semio_framework_plugin::ActionMeta {
-    let id = edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN;
-    let mut action = meta("local");
-    action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: id.into() }], ..Default::default() });
-    action
-}
-
-async fn act(app: &mut Mounted, action: &str, args: serde_json::Value) {
-    let args = protocol::DslValue::from(&args);
-    let result = app.0.handle_action(action, Some(&args), &action_meta()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
-    // 🕹️ Framework-reserved verbs return an admission receipt; their tool job only lands through this settle.
-    if matches!(action, "interactionSelect" | "undo" | "redo") {
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, result).await.unwrap_or_else(|fault| panic!("{action} did not settle its reserved job: {fault:?}"));
-        settle(&mut app.0, action).await;
-        return;
-    }
-    eprintln!("[DEBUG] act {action} effects={} pending={}", result.requested_effects.len(), app.0.has_pending_typed_operations());
-    let lanes = settle(&mut app.0, action).await;
-    eprintln!("[DEBUG] settled {action} lanes={lanes}");
-}
-
-/// 🔁️ The fixture's own settle loop, at a REAL host grant. `settle_registered_typed_operation` pages
-/// maintenance at exactly one 4 KiB page; a lowpoly document carrying mesh content is larger than that,
-/// so its close cursor never receives a grant it can act on and the operation never retires (measured
-/// 2026-09-17: a 2 299-byte snapshot settles, a 4 240-byte one hangs).
-const SETTLE_GRANT_BYTES: usize = 1 << 20;
-
-async fn settle(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> usize {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
-    let mut lanes = 0;
-    while app.has_pending_typed_operations() {
-        assert!(std::time::Instant::now() < deadline, "{action} did not settle");
-        let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
-        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
-        while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
-            let lane = page.lane;
-            let fault = (lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| String::from_utf8_lossy(page.bytes()).to_string());
-            assert!(app.acknowledge_typed_operation_result(page.token).unwrap_or(false), "{action} rejected its result ACK");
-            assert!(fault.is_none(), "{action} publication fault: {}", fault.unwrap_or_default());
-            lanes += 1;
-        }
-        while app.take_typed_operation_effect().is_some() {}
-        while app.take_typed_operation_event().is_some() {}
-        while app.take_typed_operation_ui_scope().is_some() {}
-        while app.take_typed_operation_completion().await.unwrap_or(None).is_some() {}
-        while let Some(reply) = app.take_local_interaction_query_reply() {
-            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
-                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
-                assert!(app.acknowledge_local_interaction_query(&token), "{action} rejected its local-interaction ACK");
-            }
-        }
-        std::thread::yield_now();
-    }
-    lanes
+    semio_framework_plugin::resolve_ready(app_with_registry())
 }
 
 fn select(targets: &[(&str, &str)]) -> serde_json::Value {
@@ -99,24 +28,30 @@ fn face_count(object: &LowpolyObject) -> usize {
 }
 
 /// ✂️ Face pick → extrude → undo → extrude again: geometry lives in the document, so undo restores the
-/// cube and the next edit still runs (it used to fail closed as `StaleMeshWorkspace`, a silent no-op).
+/// boot mesh and the next edit still runs (it used to fail closed as `StaleMeshWorkspace`, a silent no-op).
+/// The second extrude repeats the FIRST one exactly (same face, same distance) — the react playground
+/// does that with the default distance, and `mesh_edit` used to diff the result against the scratch
+/// transient's undone mesh, see no change and land nothing (2026-09-17).
 #[semio_framework_async_macros::async_test]
 async fn face_pick_extrude_undo_and_extrude_again() {
     let mut app = mounted();
     let before = object(&app, "obj-1");
-    assert!(!before.mesh_content.is_empty(), "the boot box persists its mesh content");
-    assert_eq!(face_count(&before), 6);
+    assert!(!before.mesh_content.is_empty(), "the boot mesh persists its mesh content");
+    let boot_faces = face_count(&before);
+    assert!(boot_faces > 6, "concrete forest boot mesh: {boot_faces}");
     act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
     act(&mut app, "extrude", serde_json::json!({ "extrudeDistance": 0.5 })).await;
     let extruded = object(&app, "obj-1");
-    assert!(face_count(&extruded) > 6, "extrude adds side faces: {}", face_count(&extruded));
+    assert!(face_count(&extruded) > boot_faces, "extrude adds side faces: {}", face_count(&extruded));
     assert_ne!(extruded.mesh, before.mesh, "the mesh handle follows the content");
     act(&mut app, "undo", serde_json::json!({})).await;
     let undone = object(&app, "obj-1");
     assert_eq!(undone.mesh, before.mesh, "undo restores the prior handle");
-    assert_eq!(face_count(&undone), 6, "undo restores the prior geometry");
-    act(&mut app, "extrude", serde_json::json!({ "extrudeDistance": 0.25 })).await;
-    assert!(face_count(&object(&app, "obj-1")) > 6, "a mesh edit after undo still applies");
+    assert_eq!(face_count(&undone), boot_faces, "undo restores the prior geometry");
+    act(&mut app, "extrude", serde_json::json!({ "extrudeDistance": 0.5 })).await;
+    let again = object(&app, "obj-1");
+    assert!(face_count(&again) > boot_faces, "a mesh edit after undo still applies");
+    assert_eq!(again.mesh, extruded.mesh, "the repeated extrude lands the identical geometry again");
 }
 
 /// ➕️ A catalogue `addPrimitive`, an object pick on it and a gumball translate in the World3d host's own

@@ -9,8 +9,11 @@
 //!
 //! The serde spelling IS the contract: `#[serde(tag = "kind", rename_all = "kebab-case",
 //! rename_all_fields = "camelCase")]` is what makes `{"kind":"pointer-down","pointerId":1,…}` — the
-//! exact bytes `browserFrameEventFromDom` produces — decode here. Coordinates arrive already in
-//! physical pixels; this side never scales.
+//! exact bytes `browserFrameEventFromDom` produces — decode here. Pointer and wheel coordinates
+//! arrive in LOGICAL (CSS) pixels and this side never scales them: the renderer's layout, chrome
+//! constants and hit registry all speak logical pixels, exactly like the React host's DOM. The one
+//! event carrying PHYSICAL pixels is `Resize`, whose width/height size the GPU surface and whose
+//! `dpr` is what the renderer divides by. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
 
 use serde::Deserialize;
 use ui_render::{DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerId, PointerInfo, PointerKind};
@@ -169,6 +172,9 @@ pub(crate) fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEve
     })
 }
 
+// 🧹️ The engine-level case below carries the real laws (ticket 26/09/17 W1g). The empty
+// `🎯️targets/🧊️wgpu/🧪️tests/` placeholder this mount once pointed at — plus the three never-wired
+// stub directories beside it — are deleted; every case here lives under `🧑‍🎨engine/🧪️tests/`.
 #[cfg(test)]
 #[path = "../../../🧪️tests/🎮️wgpu-browser-input-wire/🦀️.rs"]
 mod browser_input_wire_tests;

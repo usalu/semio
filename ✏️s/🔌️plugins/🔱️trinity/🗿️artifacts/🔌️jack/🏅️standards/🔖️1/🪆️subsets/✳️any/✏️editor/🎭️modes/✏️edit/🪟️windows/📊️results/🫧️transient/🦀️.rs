@@ -64,7 +64,7 @@ impl JackResultsWindowTransientRetirement {
             let crate::ast::QueryResult { kind: _, columns, rows, graph_fixture } = result;
             children.push(store::retirement::owned_retirement((columns, rows)));
             if let Some(snapshot) = graph_fixture {
-                children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::schema::wire_runtime::JackSnapshotRetirementFactory, snapshot));
+                children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::schema::wire_runtime::JackSnapshotRetirementFactory, *snapshot));
             }
         }
         Self { children: std::mem::ManuallyDrop::new(children) }
@@ -115,12 +115,56 @@ impl store::ArtifactOwnedValueRetirementFactory<JackResultsWindowTransientMutati
     }
 }
 
+/// 📏️ Heap bytes one property value retains (inline enum size plus every owned string/key), the
+/// same walk for a table cell and for a fixture node's property bag.
+fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
+    let inline = std::mem::size_of::<crate::PropertyValue>();
+    match value {
+        crate::PropertyValue::Null | crate::PropertyValue::Bool(_) | crate::PropertyValue::Number(_) => inline,
+        crate::PropertyValue::String(text) => inline.saturating_add(text.len()),
+        crate::PropertyValue::Array(items) => items.iter().fold(inline, |bytes, item| bytes.saturating_add(property_value_retained_bytes(item))),
+        crate::PropertyValue::Object(entries) => entries.iter().fold(inline, |bytes, (key, item)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(item))),
+    }
+}
+
+/// 📏️ Bytes a published query result actually retains — counted, never the executor's 1 MiB
+/// admission ceiling: adding that ceiling to the transient's own header overran the one-item
+/// envelope (`ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`, the same 1 MiB) for EVERY result, so no query
+/// output could ever be published. The executor already refuses results past its ceiling, so this
+/// count is bounded by it.
+fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> usize {
+    let mut bytes = std::mem::size_of::<crate::ast::QueryResult>();
+    for column in &result.columns {
+        bytes = bytes.saturating_add(std::mem::size_of::<String>()).saturating_add(column.len());
+    }
+    for row in &result.rows {
+        bytes = bytes.saturating_add(std::mem::size_of::<Vec<crate::PropertyValue>>());
+        for cell in row {
+            bytes = bytes.saturating_add(property_value_retained_bytes(cell));
+        }
+    }
+    if let Some(fixture) = result.graph_fixture.as_deref() {
+        let scene = crate::jack_working_scene(fixture);
+        bytes = bytes.saturating_add(std::mem::size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
+        for node in &scene.nodes {
+            bytes = bytes.saturating_add(std::mem::size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
+            bytes = node.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
+            bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(std::mem::size_of::<crate::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
+        }
+        for edge in &scene.edges {
+            bytes = bytes.saturating_add(std::mem::size_of::<crate::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
+            bytes = edge.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
+        }
+    }
+    bytes
+}
+
 fn results_window_transient_footprint(mutation: &JackResultsWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let JackResultsWindowTransientMutation::ReplaceQueryResult(value) = mutation;
     let retained_bytes = std::mem::size_of::<JackResultsWindowTransient>()
         .checked_add(value.execution_id.as_ref().map_or(0, String::len))
         .and_then(|bytes| bytes.checked_add(value.error.as_ref().map_or(0, String::len)))
-        .and_then(|bytes| bytes.checked_add(value.result.as_ref().map_or(0, |_| crate::executor::QUERY_OUTPUT_MAXIMUM_BYTES)))
+        .and_then(|bytes| bytes.checked_add(value.result.as_ref().map_or(0, query_result_retained_bytes)))
         .ok_or_else(|| "Jack results-window footprint overflowed".to_string())?;
     let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Jack results-window transient exceeds its retained publication envelope".into())

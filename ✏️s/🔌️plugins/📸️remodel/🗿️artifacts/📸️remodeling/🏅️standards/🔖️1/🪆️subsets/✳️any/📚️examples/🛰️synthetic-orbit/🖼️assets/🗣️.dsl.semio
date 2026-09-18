@@ -5,20 +5,20 @@ durable-artifacts={
 }
 calibration {
   cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {
-    synthetic-cam "Synthetic Orbit Camera" brownConrady 272 272 160 120 0 -0.019999999552965164,0.004999999888241291,0,0,0 0.5 true
+    synthetic-cam "Synthetic Orbit Camera" brownConrady 272 272 160 120 0 -0.019999999552965164,0.004999999888241291,0,0,0 0.4000000059604645 true
   }
   rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {
   }
 }
 params {
   ingest {
-    frame-sample-stride=1 max-frames=32 downscale-long-edge-px=320 min-sharpness=0
+    frame-sample-stride=1 max-frames=64 downscale-long-edge-px=320 min-sharpness=0
   }
   feature {
     detector=akaze target-count=600 octaves=4 edge-threshold=10
   }
   matching {
-    matcher=brute-force ratio-test=0.8500000238418579 cross-check=true sequential-window=6 max-pairs-per-frame=16 loop-closure=true
+    matcher=brute-force ratio-test=0.8500000238418579 cross-check=true sequential-window=3 max-pairs-per-frame=16 loop-closure=true
   }
   sfm {
     ransac-iterations=1000 ransac-threshold-px=2 min-track-length=2 ba-max-iterations=25 robust-loss=huber huber-delta-px=1.5
@@ -47,7 +47,7 @@ results {
   }
 }
 streams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {
-  synthetic-orbit "Synthetic Orbit" image-sequence synthetic-cam 0 2 [ {index=0 timestamp-ms=0 asset-id=synthetic-orbit-frame-0} {index=1 timestamp-ms=500 asset-id=synthetic-orbit-frame-1} {index=2 timestamp-ms=1000 asset-id=synthetic-orbit-frame-2} {index=3 timestamp-ms=1500 asset-id=synthetic-orbit-frame-3} {index=4 timestamp-ms=2000 asset-id=synthetic-orbit-frame-4} {index=5 timestamp-ms=2500 asset-id=synthetic-orbit-frame-5} {index=6 timestamp-ms=3000 asset-id=synthetic-orbit-frame-6} {index=7 timestamp-ms=3500 asset-id=synthetic-orbit-frame-7} {index=8 timestamp-ms=4000 asset-id=synthetic-orbit-frame-8} {index=9 timestamp-ms=4500 asset-id=synthetic-orbit-frame-9} ] _
+  synthetic-orbit "Synthetic Orbit" image-sequence synthetic-cam 0 2 [ {index=0 timestamp-ms=0 asset-id=synthetic-orbit-frame-0} {index=1 timestamp-ms=500 asset-id=synthetic-orbit-frame-1} {index=2 timestamp-ms=1000 asset-id=synthetic-orbit-frame-2} {index=3 timestamp-ms=1500 asset-id=synthetic-orbit-frame-3} {index=4 timestamp-ms=2000 asset-id=synthetic-orbit-frame-4} {index=5 timestamp-ms=2500 asset-id=synthetic-orbit-frame-5} {index=6 timestamp-ms=3000 asset-id=synthetic-orbit-frame-6} {index=7 timestamp-ms=3500 asset-id=synthetic-orbit-frame-7} {index=8 timestamp-ms=4000 asset-id=synthetic-orbit-frame-8} {index=9 timestamp-ms=4500 asset-id=synthetic-orbit-frame-9} {index=10 timestamp-ms=5000 asset-id=synthetic-orbit-frame-10} {index=11 timestamp-ms=5500 asset-id=synthetic-orbit-frame-11} {index=12 timestamp-ms=6000 asset-id=synthetic-orbit-frame-12} {index=13 timestamp-ms=6500 asset-id=synthetic-orbit-frame-13} {index=14 timestamp-ms=7000 asset-id=synthetic-orbit-frame-14} {index=15 timestamp-ms=7500 asset-id=synthetic-orbit-frame-15} {index=16 timestamp-ms=8000 asset-id=synthetic-orbit-frame-16} {index=17 timestamp-ms=8500 asset-id=synthetic-orbit-frame-17} {index=18 timestamp-ms=9000 asset-id=synthetic-orbit-frame-18} {index=19 timestamp-ms=9500 asset-id=synthetic-orbit-frame-19} {index=20 timestamp-ms=10000 asset-id=synthetic-orbit-frame-20} {index=21 timestamp-ms=10500 asset-id=synthetic-orbit-frame-21} {index=22 timestamp-ms=11000 asset-id=synthetic-orbit-frame-22} {index=23 timestamp-ms=11500 asset-id=synthetic-orbit-frame-23} {index=24 timestamp-ms=12000 asset-id=synthetic-orbit-frame-24} {index=25 timestamp-ms=12500 asset-id=synthetic-orbit-frame-25} {index=26 timestamp-ms=13000 asset-id=synthetic-orbit-frame-26} {index=27 timestamp-ms=13500 asset-id=synthetic-orbit-frame-27} {index=28 timestamp-ms=14000 asset-id=synthetic-orbit-frame-28} {index=29 timestamp-ms=14500 asset-id=synthetic-orbit-frame-29} {index=30 timestamp-ms=15000 asset-id=synthetic-orbit-frame-30} {index=31 timestamp-ms=15500 asset-id=synthetic-orbit-frame-31} {index=32 timestamp-ms=16000 asset-id=synthetic-orbit-frame-32} {index=33 timestamp-ms=16500 asset-id=synthetic-orbit-frame-33} {index=34 timestamp-ms=17000 asset-id=synthetic-orbit-frame-34} {index=35 timestamp-ms=17500 asset-id=synthetic-orbit-frame-35} ] _
 }
 gcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {
 }

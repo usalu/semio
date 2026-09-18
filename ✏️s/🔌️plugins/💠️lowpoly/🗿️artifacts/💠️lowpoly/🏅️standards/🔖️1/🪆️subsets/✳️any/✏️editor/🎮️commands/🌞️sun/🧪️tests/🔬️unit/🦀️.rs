@@ -1,4 +1,4 @@
-use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
+use crate::editor::lowpoly::unit_tests::context::{action_meta, app, dispatch};
 use crate::editor::lowpoly::LowpolyCommand;
 use semio_framework_plugin::PluginApp;
 
@@ -8,6 +8,7 @@ async fn toggle_sun_flips_enabled() {
     dispatch(&mut a, LowpolyCommand::ToggleSun(super::toggle_sun::ToggleSun {})).await;
     // 🎯️ Config isn't directly readable off `VcsArtifactApp`; assert through window measures instead
     // (mirrors the pre-migration test's approach of reading effects, not internal state).
-    let measures = a.window_measures(&semio_framework_plugin::ViewModel::default()).await;
-    assert!(!measures.is_empty());
+    let view_state = action_meta().view_state.expect("the Model window's view state");
+    let measures = a.window_measures(&view_state).await;
+    assert!(!measures.is_empty(), "the Model window publishes its measures: {measures:?}");
 }

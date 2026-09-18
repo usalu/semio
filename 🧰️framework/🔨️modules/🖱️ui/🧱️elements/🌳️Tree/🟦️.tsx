@@ -951,8 +951,16 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
 }
 
 /**
- * 🪟️ Joins one windowed container's `windowKey` onto its enclosing windowed containers' — U+001F, the ASCII
- * UNIT SEPARATOR, which is what a control character is FOR and which no authored node key contains.
+ * 🪟️ Joins one windowed container's `windowKey` onto its enclosing windowed containers' — U+241F SYMBOL FOR
+ * UNIT SEPARATOR: the PRINTABLE glyph, not the C0 control character it depicts.
+ *
+ * 🧯️ The control character itself (U+001F) is what a separator is semantically for, and it does not work
+ * here: every window path crosses the wasm boundary inside `PluginViewState.treeWindows`, and
+ * `parseResolvedPluginViewState` (`🛂️manifest/🟦️.ts:977`) refuses any identifier matching
+ * `[\u0000-\u001f\u007f]`. A single nested path therefore took the WHOLE view context down — every
+ * `refreshUi` failed with `view context: invalid identifier` and every unrelated `interactionSelect` was
+ * refused with `dispatch-failed`, measured on the fem3d House lane. U+241F is one code point, printable,
+ * greppable, absent from every authored node key, and passes that law.
  *
  * 🧯️ A window is addressed by its PATH, never by its node key alone, because the node key is also the pick
  * target id the tree-level `interactionSelect` dispatches (`targets: [{granularity, id: record.key}]`) and so
@@ -965,7 +973,7 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
  * escape ``, for the parity law to read.
  * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️f2-sdk-body-node-ledger.md §10
  **/
-export const TREE_WINDOW_PATH_SEPARATOR = "";
+export const TREE_WINDOW_PATH_SEPARATOR = "␟";
 
 /** @emoji 🪟️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
 export function treeWindowPathOf(parentWindowPath: string | undefined, windowKey: string | undefined): string | undefined {

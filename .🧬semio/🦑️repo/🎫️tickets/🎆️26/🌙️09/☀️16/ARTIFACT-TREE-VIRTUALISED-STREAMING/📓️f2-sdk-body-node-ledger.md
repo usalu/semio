@@ -349,3 +349,106 @@ CARGO_PROFILE_WASM_DEV_DEBUG=false`, no `CARGO_TARGET_DIR`. Logs under `🗑️g
 The fem3d artifact panel is now fully green, including both House laws, the nested-by-path `wind` /
 `hc0…hc3` requests, and `demo_document_lists_every_section_with_its_own_count` materialising the whole
 concrete-forest body (97 of 103 records) again.
+
+## C5. fem3d inspection — the two WINDOWED laws repaired too
+
+The inspector's windowed containers (R2 §1.2: the multi-selection list, a load case's loads, a
+combination's terms) had two laws still naming the old demo's entities. Repaired in
+`…/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`: `a_selected_load_case_lists_its_loads_as_picks_3d`
+(`"l2"`/`"l3"` → `"q_l_spine"`/`"q_l_b0"`, the live case's own loads) and
+`a_multi_selection_headers_the_count_and_inspects_the_first_3d`
+(`["n00_g","n20_g","e1"]` → `["lc1b","lc2b","l_col1"]`). Both green.
+
+| Command | Result | Log |
+| --- | --- | --- |
+| `cargo test … fem-3d --features component-app-assembly panels::` | **26 passed; 9 failed** (was 15 passed / 11 failed) | `fem3d-panels-final.txt` |
+| `cargo test … fem-3d --features component-app-assembly` (whole crate) | **1095 passed; 34 failed** (was 1087 / 42) | `fem3d-full.txt` |
+
+**The 9 remaining panel failures are deliberately left**, and none is window-related: they are the
+inspector's bounded FIELD FORMS (`a_selected_node_renders_bound_ordinate_inputs_3d`,
+`a_selected_frame_offers_its_reference_selects_and_roll_3d`,
+`a_selected_support_renders_one_toggle_per_dof_3d`,
+`a_selected_material_mixes_inputs_and_a_bounded_slider_3d`,
+`a_selected_solid_edits_its_extrusion_and_shows_its_polygon_read_only_3d`,
+`a_selected_load_names_its_owning_case_3d`, `a_node_section_carries_a_number_input_bound_to_patch_node_3d`,
+`the_actions_group_binds_focus_and_delete_as_tree_items_3d`,
+`german_resolves_every_field_label_the_inspector_binds_3d`). They select entity KINDS the concrete-forest
+document no longer contains at all — it has **zero solids**, no `steel`, no `hea200` — so they cannot be
+repaired by substituting ids; they need new fixtures, which is the fem owner's sweep, not a window repair.
+The other 25 failures are outside `panels::` entirely (`commands::patch_*`, `interaction::gumball::*`,
+`scene::*`, `viewer::*`), same cause.
+
+## C6. What F1 must re-check after this packet
+
+1. **`TREE_WINDOW_BODY_NODE_BUDGET` is now 103, not 111** (headroom 16 → 24, §C1). The TS literal in
+   `🌳️Tree/🟦️.tsx` was updated in the same edit per `📓️f1-host-scroll-streaming.md` §10.1, and the Rust
+   parity law `the_host_tree_element_declares_the_same_body_node_budget` is green against it — but
+   `capTreeWindowRequests`' own component tests in `🌳️Tree/🧪️tests/🧩️component/🟦️.tsx` assert
+   `nodeCost(capped) === TREE_WINDOW_BODY_NODE_BUDGET`, so re-run them.
+2. **`TREE_WINDOW_PATH_SEPARATOR` parity** is now pinned by the same Rust law: it accepts either the raw
+   U+001F character or the `""` escape on the `export const … = "…";` line. F1's current spelling
+   (the raw character) passes.
+3. The guest joins a path as `outer SEP … SEP own-key`, with NO leading separator for a top-level section —
+   `treeWindowPath(parentWindowPath, windowKey)` in `🌳️Tree/🟦️.tsx:973` already matches this exactly.
+
+## C7. Still open after this packet
+
+- The 9 fem3d inspector field-form laws and the 25 non-panel fem3d laws (§C5) — the fem owner's fixture
+  sweep after the concrete-forest demo swap.
+- `items: 4098 > max_items: 4097` on the fem3d World3d scene surfaces (§9) — proven unrelated to this
+  ticket's budgets, owner unassigned.
+- App-side TRUE-sibling key duplicates the path rule cannot remove (§10 remains accurate for these two
+  only): stdio `🧾️json` 🧱️base with duplicate object member names that BOTH have children, and writer's
+  same-span AST ids. Every other app in §10 — cad's four pane sections, fem's case-vs-combination ids,
+  process, procedural, flow's catalogue — is collision-free by construction now that identity is the path.
+- No browser re-run; this packet started no servers.
+
+## C8. Separator corrected to a PRINTABLE glyph — the view-context identifier law
+
+A browser probe on fem3d caught the U+001F separator being rejected at the process boundary: the
+view-context admission (`parseResolvedPluginViewState` / `admitCrossingViewContext`,
+`🧰️framework/🔨️modules/🛂️manifest/🟦️.ts:977`) refuses any identifier carrying a C0 or DEL code point or
+longer than 256 code points, so every refresh, action and pick carrying a nested path threw
+`view context: invalid identifier` — killing streaming, lazy expand and picks as soon as one nested
+container existed. Corrected:
+
+| Change | Where |
+| --- | --- |
+| `TREE_WINDOW_PATH_SEPARATOR` is now **U+241F SYMBOL FOR UNIT SEPARATOR (`␟`)** — the printable glyph, not the C0 control it depicts | `🧬️contract/🧩️component/🦀️.rs`, with the fault and the law that forced it on the docstring |
+| A container key that already CONTAINS the separator is refused, `ui.tree-window.separator-in-key` | `TreeWindows::admit_key`, called first by `tree_window_section`, `tree_window_section_or_placeholder` and `tree_window_item` |
+| A path is documented as a view-context identifier (printable, ≤ 256 code points) | `TreeWindowRequest.node_key` in `🛂️manifest/🦀️.rs`, and `TreeWindows::path_of` |
+| The parity law now accepts ONLY `TREE_WINDOW_PATH_SEPARATOR = "␟";` | `the_host_tree_element_declares_the_same_body_node_budget` |
+
+**Rust side checked (item 3):** the identifier law lives only in the TS admission — `🛂️manifest/🦀️.rs`
+carries no `invalid identifier` / control-character check of its own, and `ViewModel`/`TreeWindowRequest`
+are admitted there by shape and capacity (`tree window capacity exceeded`, 128 entries) rather than by
+character class. So the TS law is the one gate a path must pass, and `␟` passes it.
+
+**Length (item 4):** a path over 256 code points is one the host never files a request for, so the guest
+must treat that container as UNREQUESTED — author default plus the shared first-paint budget. That is
+already exactly what an absent seat means in `slice`, and it is now pinned by
+`a_path_the_host_cannot_send_renders_as_an_unrequested_container` (a 300-character key still stamps its
+full extent and takes its first-paint share).
+
+**⚠️ stdio json/xml build keys that WILL exceed it — handed to A8c, not edited here.**
+`…/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/👁️viewer/…/🪟️main/🦀️.rs:48`
+already sets each node's id to `path.join("/")` — the WHOLE path, not the sibling segment — and the same
+line exists in the 🧱️base editor and both 🛜️i-json copies, with XML's positional ids the same shape. The
+window path then joins those keys again, so the addressable identifier grows QUADRATICALLY with depth:
+with ten-character member names a depth-7 document is already past 256 code points, and every container
+below that silently stops streaming (it still renders, at its first-paint slice).
+
+The fix is one line per file and makes the path *cheaper*, not more expensive: give each node the
+**sibling** key it already computes (`format!("k={}", member.key)` / `format!("i={index}")`) instead of
+`path.join("/")`, and let `TREE_WINDOW_PATH_SEPARATOR` reconstruct the full path — which is what the path
+mechanism is for. These are `TreeWindowKit` view trees with no interaction domain, so the keys are not
+pick target ids and nothing else reads them. **Not applied here: A8c is live in that crate (the file was
+written at 15:47 while this packet ran).** Re-read before editing.
+
+| Command | Result | Log |
+| --- | --- | --- |
+| `cargo test -p semio-framework-plugin --lib panel_kit_tests` | ✅ **31 passed; 0 failed** (773 filtered out) — the two new laws included | `panel-kit-sep.txt` |
+| `cargo check -p semio-framework-plugin --target wasm32-wasip2` | ✅ rc 0, **0 errors**, `Finished dev profile in 38.66s` | `wasm-check.txt` |
+
+⚠️ **Guests must be restaged** before any further browser run: the separator is part of the wire identity,
+so a guest built before this change answers a different string than the host now sends.

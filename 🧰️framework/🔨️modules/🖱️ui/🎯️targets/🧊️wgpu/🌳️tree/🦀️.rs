@@ -191,6 +191,12 @@ impl NodeFlags {
     /// `events::nearest_scrollable_ancestor` walks the bubble chain from a wheel event's hit target
     /// looking for this flag.
     pub const SCROLLABLE: NodeFlags = NodeFlags(1 << 12);
+    /// ⌨️ CSS `:focus-visible` in one bit: this node holds focus AND the gesture that gave it focus
+    /// was a KEY, not a pointer. React gets the distinction free from the browser's own heuristic;
+    /// `EventRouter` reproduces it by stamping this alongside [`NodeFlags::FOCUSED`] only while its
+    /// `focus_visible` latch is set (set on `KeyDown`, cleared on `PointerDown`), so a clicked
+    /// control takes focus without painting the accent ring React would only show for the keyboard.
+    pub const FOCUS_VISIBLE: NodeFlags = NodeFlags(1 << 13);
 
     pub const fn empty() -> Self {
         NodeFlags(0)
@@ -249,6 +255,12 @@ pub struct WidgetState {
     /// `open_overlay`/`close_overlay`, see `EventRouter::toggle_select_popup`/`finish_close`), read
     /// by `paint::paint_select` to decide whether to paint the popup at all.
     pub open: bool,
+    /// ⌨️ Which option row of an OPEN `Select` the keyboard currently highlights — React's
+    /// `aria-activedescendant`/`data-highlighted` row (`🧱️elements/🔽️Select/🟦️.tsx`'s `activeId`).
+    /// Distinct from `NodeFlags::HOVERED` (a pointer fact) and from the Select's own committed
+    /// `value`: arrowing through a popup moves this and nothing else, and only `Enter` commits.
+    /// Written by `events::EventRouter::route_select_key`, read by `paint`'s popup rows.
+    pub highlighted: Option<usize>,
 }
 
 /// 📐️ Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
@@ -303,11 +315,23 @@ pub struct Node {
     pub next_sibling: Option<NodeId>,
     pub key: NodeKey,
     pub spec: WidgetSpec,
+    /// 📐️ The AUTHORED layout for this node — `Some` exactly when a `UiNodeRecord` published one
+    /// (`record.layout`, the same value React's `layoutSpecStyle` reads), `None` for the legacy
+    /// declarative `UiNode` chrome path that carries no layout vocabulary of its own. `flex` picks
+    /// its dialect from this presence; see that region's header for why the two differ.
+    pub layout_spec: Option<ui_contract::LayoutSpec>,
     pub state: WidgetState,
     pub layout: LayoutBucket,
     mounted_layout: [MountedLayoutRecord; 2],
     pub paint: PaintBucket,
     pub flags: NodeFlags,
+    /// 🎬️ What this node dispatches THROUGH: its published address plus one versioned `ActionId` per
+    /// bound `Trigger`, stamped by the document reconcile's mount step and re-stamped on every
+    /// revision. `None` for a node no document published (the chrome's immediate-mode widgets, the
+    /// testkit's declarative `apply_tree` path) — such a node has no surface/revision to be stale
+    /// against and keeps firing the bare `ActionDescriptor` its spec carries, exactly as React keeps
+    /// `onAction` for its own unowned scene hosts.
+    pub intent: Option<crate::wgpu::UiIntentBindings>,
 }
 
 impl Node {
@@ -320,11 +344,13 @@ impl Node {
             next_sibling: None,
             key,
             spec,
+            layout_spec: None,
             state: WidgetState::default(),
             layout: LayoutBucket::default(),
             mounted_layout: [MountedLayoutRecord::default(); 2],
             paint: PaintBucket,
             flags: NodeFlags::empty(),
+            intent: None,
         }
     }
 }
@@ -346,6 +372,14 @@ pub struct UiTree {
     document_nodes: Vec<(UiNodeId, NodeId)>,
     mounted_layout_active: usize,
     mounted_layout_generation: u64,
+    /// 🪟️ Where each OPEN floating overlay's content root sits this frame: the absolute
+    /// (window-local) top-left `events::resolve_overlay_placement_side` settled on for it, written
+    /// once per frame by `engine::Ui`'s paint entry and read by EVERY geometry walk — the retained
+    /// paint/scene/hit walk AND `events::hit_test`/`absolute_rect`. It lives on the TREE rather than
+    /// on the `EventRouter` precisely so the free-standing geometry functions can honour it without a
+    /// new parameter: an overlay that paints at its placement but hit-tests at its in-flow position
+    /// is the one failure mode a floating surface must not have.
+    overlay_origins: Vec<(NodeId, f32, f32)>,
 }
 
 impl UiTree {
@@ -376,6 +410,45 @@ impl UiTree {
         let Some(node) = self.arena.get_mut(id) else { return false };
         node.mounted_layout[inactive] = MountedLayoutRecord { generation, layout };
         true
+    }
+
+    /// 🪟️ Republishes this frame's open-overlay placements (see [`UiTree::overlay_origins`]).
+    pub(crate) fn set_overlay_origins(&mut self, origins: Vec<(NodeId, f32, f32)>) {
+        self.overlay_origins = origins;
+    }
+
+    /// 🪟️ The WALK origin an open overlay root replaces its in-flow parent offset with, so that
+    /// adding the node's own accepted layout lands it exactly on its resolved placement. `None` for
+    /// every node that is not an open overlay root, which is the in-flow rule unchanged.
+    pub(crate) fn overlay_walk_origin(&self, id: NodeId) -> Option<(f32, f32)> {
+        let (_, x, y) = self.overlay_origins.iter().copied().find(|(node, _, _)| *node == id)?;
+        let layout = self.accepted_layout(id)?;
+        Some((x - layout.x, y - layout.y))
+    }
+
+    /** @emoji 📐️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
+     * origin, with the accumulation stopping at an OPEN overlay (itself or an ancestor) because
+     * everything under a floating surface is positioned against that surface's placement rather than
+     * against the document it was authored in. The single geometry answer shared by
+     * `events::absolute_rect`, `engine::Ui::scene_at` and the retained paint/hit walk. */
+    pub(crate) fn absolute_rect(&self, id: NodeId) -> Option<crate::wgpu::geometry::Rect> {
+        let layout = self.accepted_layout(id)?;
+        if let Some((origin_x, origin_y)) = self.overlay_walk_origin(id) {
+            return Some(crate::wgpu::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height));
+        }
+        let mut x = layout.x;
+        let mut y = layout.y;
+        let mut cursor = self.node(id)?.parent;
+        while let Some(parent_id) = cursor {
+            let parent_layout = self.accepted_layout(parent_id)?;
+            if let Some((origin_x, origin_y)) = self.overlay_walk_origin(parent_id) {
+                return Some(crate::wgpu::geometry::Rect::new(origin_x + parent_layout.x + x, origin_y + parent_layout.y + y, layout.width, layout.height));
+            }
+            x += parent_layout.x;
+            y += parent_layout.y;
+            cursor = self.node(parent_id)?.parent;
+        }
+        Some(crate::wgpu::geometry::Rect::new(x, y, layout.width, layout.height))
     }
 
     pub(crate) fn commit_inactive_layout(&mut self, generation: u64) {

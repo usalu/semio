@@ -93,10 +93,9 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
     let DockNode::Stack { windows, .. } = &dock.root else { panic!("fixture root must be a stack") };
     let labels = HashMap::from([("canvas".to_string(), "Canvas".to_string())]);
     let mut atlas = FontAtlas::builtin();
-    let chrome = layout_stack_cap(windows, &labels, &HashMap::new(), &mut atlas, &Theme::default(), Rect::new(0.0, 0.0, 640.0, 480.0));
+    let chrome = layout_stack_cap(windows, &labels, &HashMap::new(), &mut atlas, &Theme::default(), Rect::new(0.0, 0.0, 640.0, 480.0), 0);
     assert_eq!(chrome.groups[0].tabs.iter().map(|tab| tab.label.as_str()).collect::<Vec<_>>(), vec!["Canvas", "Canvas"]);
     let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "canvas-copy".into(), window_kind_id: "canvas".into(), source_path: Vec::new(), tab_index: 1, ghost_label: "Canvas copy".into() };
-    assert!(dock.remove_window("canvas-copy"));
     assert!(dock.apply_drop(&payload, &DockDropZone::RootSplit { side: DockSide::Right }));
     assert_eq!(dock.window_kind_id("canvas-copy"), Some("canvas"));
     let persisted = serde_json::to_value(dock.to_window_layout()).expect("persisted layout");
@@ -202,7 +201,7 @@ fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
     let mut draw = DrawList::default();
     let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
     let icon_ids = HashMap::new();
-    let layout = layout_stack_cap(&tabs(&["a", "b"]), &labels, &icon_ids, &mut atlas, &theme, bounds);
+    let layout = layout_stack_cap(&tabs(&["a", "b"]), &labels, &icon_ids, &mut atlas, &theme, bounds, 0);
     let gap_point = (bounds.x + bounds.w * 0.5, bounds.y + theme.control_height * 0.5);
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
     dock.paint_chrome(&mut ctx, bounds, false);
@@ -220,7 +219,6 @@ fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
 fn apply_drop_tab_moves_window_to_target_corner() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]);
-    assert!(dock.remove_window("a"));
     let payload = tab_payload("a", vec![0], 0);
     let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::BottomRight, index: 0 };
     assert!(dock.apply_drop(&payload, &zone));
@@ -244,7 +242,10 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
     dock.paint_chrome(&mut ctx, bounds, true);
     let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
-    assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(3));
+    // 🪟️ ONE merged top span, not one per tab: React's tab bar is `flex items-stretch justify-start`
+    // with no gap utility (`🎨️Canvas/🟦️.tsx:1108`), so adjacent chips form a single silhouette edge
+    // and the content clip is body + that one span.
+    assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(2));
     assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
 }
 
@@ -263,6 +264,9 @@ fn resize_hits_win_over_later_scroll_region() {
     input.register_hit(HitTarget { rect: canvas, event: None, control_id: Some("content.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
     dock.register_resize_hits(&mut ctx, canvas);
+    // 🏁️ `register_hit` only STAGES; `hit_at` resolves the PUBLISHED registry, so the frame build has
+    // to be promoted before the pointer authority can see either target.
+    input.publish_hits();
     let hit = input.hit_at(200.0, 150.0).expect("split hit");
     assert_eq!(hit.kind, HitKind::DockSplit);
     assert_eq!(hit.drag_axis, Some(DragAxis::Horizontal));
@@ -283,23 +287,24 @@ fn stack_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> Do
     DockDragPayload { kind: DockDragKind::Stack, window_id: window_id.into(), window_kind_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
 }
 
-/// 🎯️ Regression pin for the double-removal bug: `apply_drop` used to call `remove_window` again
-/// on a window the caller (`ShellState::handle_pointer_move`) had *already* removed at drag
-/// promotion, so `remove_window` always failed and every cross-stack tab drop silently no-opped.
+/// 🎯️ A cross-stack tab drop lands where the DERIVED tree said it would: the drag leaves the
+/// committed tree alone and paints `render_view`'s docked-out derivation, so the `stack_path` the
+/// pointer resolved there is the very path `apply_drop`'s own re-derivation addresses.
+///
+/// 🩸️ The lane used to remove the window from the committed tree at drag promotion and then insert
+/// into the mutated tree; a drop that refused left the user's layout mutilated, and `apply_drop`'s
+/// own (second) removal always failed, which silently no-opped every cross-stack drop.
 #[test]
 fn apply_drop_tab_moves_window_across_stacks() {
     let mut dock = DockState::default();
-    // 🪟️ Three stacks so removing `a` (the sole occupant of stack `[0]`) prunes that slot without
+    // 🪟️ Three stacks so lifting `a` (the sole occupant of stack `[0]`) prunes that slot without
     // also emptying the drop target — `b` shifts from `[1]` down to `[0]`, and `c` (the actual
     // cross-stack drop target) shifts from `[2]` to `[1]`.
     dock.root = DockNode::Row(vec![(stack_with("a"), 0.34), (stack_with("b"), 0.33), (stack_with("c"), 0.33)]);
-    // 🎬️ Mirrors `ShellState::handle_pointer_move`'s eager removal at drag-promotion time. In the
-    // real runtime `compute_dock_drop_zone` re-derives `stack_path` from the *current* (already
-    // shifted) tree on every subsequent pointer move, so `zone` below targets `c`'s post-removal
-    // path `[1]`, exactly as a live drag would have resolved it — not `c`'s stale pre-removal `[2]`.
-    assert!(dock.remove_window("a"));
-    assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("c")), "c shifted to [1] once a's slot was pruned");
     let payload = tab_payload("a", vec![0], 0);
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(node_at(&floating.root, &vec![1]), Some(&stack_with("c")), "c shifted to [1] in the DERIVED tree the drag paints");
+    assert_eq!(node_at(&dock.root, &vec![0]), Some(&stack_with("a")), "the committed tree still holds a — a drag is not an edit");
     let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::TopLeft, index: 0 };
     assert!(dock.apply_drop(&payload, &zone), "cross-stack tab drop must actually land");
     assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_tabs(&["a", "c"], "a")));
@@ -307,28 +312,46 @@ fn apply_drop_tab_moves_window_across_stacks() {
     assert_eq!(dock.active_window_id.as_deref(), Some("a"));
 }
 
+/// 🎯️ An abandoned drag costs nothing: the committed tree is byte-identical before and after, which
+/// is what retires the `WindowLayout` snapshot the old eager-removal lane had to keep.
+#[test]
+fn an_abandoned_tab_drag_leaves_the_committed_tree_untouched() {
+    let mut dock = DockState::default();
+    dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
+    let before = dock.root.clone();
+    let payload = tab_payload("a", vec![0], 0);
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(floating.root, stack_with("b"), "the derivation hoists b out of the one-child axis");
+    assert_eq!(dock.root, before);
+    assert!(!dock.apply_drop(&payload, &DockDropZone::Tab { stack_path: vec![7], corner: WindowStackCorner::TopLeft, index: 0 }), "a zone that resolves to nothing refuses");
+    assert_eq!(dock.root, before, "a refused drop is not an edit either");
+}
+
 #[test]
 fn apply_drop_tab_reinserts_into_originating_stack_at_new_index() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "a"), 1.0)]);
-    assert!(dock.remove_window("a"));
     let payload = tab_payload("a", vec![0], 0);
-    let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 };
+    // 🪟️ Lifting `a` leaves a one-child axis, which React's `collapseLayout` HOISTS — so the derived
+    // tree the pointer hit-tests is the bare stack at the ROOT path, and that is the path the drop
+    // carries. (The old drag lane collapsed on a prune-only rule and left the axis standing at `[0]`.)
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(floating.root, stack_tabs(&["b", "c"], "b"));
+    let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 2 };
     assert!(dock.apply_drop(&payload, &zone));
-    assert_eq!(node_at(&dock.root, &vec![0]), Some(&stack_tabs(&["b", "c", "a"], "a")));
+    assert_eq!(dock.root, stack_tabs(&["b", "c", "a"], "a"));
 }
 
 #[test]
 fn apply_drop_tab_split_targets_the_post_removal_stack() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
-    assert!(dock.remove_window("a"));
-    // 🪟️ Removing the sole occupant of stack `a` prunes it — `b` now sits at path `[0]`.
     let payload = tab_payload("a", vec![0], 0);
-    let zone = DockDropZone::Split { stack_path: vec![0], side: DockSide::Right };
+    // 🪟️ Lifting the sole occupant of stack `a` prunes its slot and hoists `b` to the ROOT of the
+    // derived tree — so that is where the split lands, and the axis is rebuilt from scratch.
+    let zone = DockDropZone::Split { stack_path: vec![], side: DockSide::Right };
     assert!(dock.apply_drop(&payload, &zone));
-    assert!(find_stack_path(&dock.root, "a", &mut vec![]).is_some());
-    assert!(find_stack_path(&dock.root, "b", &mut vec![]).is_some());
+    assert_eq!(dock.root, DockNode::Row(vec![(stack_with("b"), 0.5), (stack_with("a"), 0.5)]));
     assert_eq!(dock.active_window_id.as_deref(), Some("a"));
 }
 
@@ -336,7 +359,6 @@ fn apply_drop_tab_split_targets_the_post_removal_stack() {
 fn apply_drop_tab_root_split_builds_axis_pair() {
     let mut dock = DockState::default();
     dock.root = stack_tabs(&["a", "b"], "a");
-    assert!(dock.remove_window("a"));
     let payload = tab_payload("a", vec![], 0);
     let zone = DockDropZone::RootSplit { side: DockSide::Left };
     assert!(dock.apply_drop(&payload, &zone));
@@ -347,48 +369,40 @@ fn apply_drop_tab_root_split_builds_axis_pair() {
 fn apply_drop_stack_moves_whole_group_preserving_order_and_target_key() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "b"), 0.5), (stack_with("d"), 0.5)]);
-    // 🎬️ A stack drag pre-removes only its active window, same as a tab drag.
-    assert!(dock.remove_window("b"));
     let payload = stack_payload("b", vec![0], 1);
-    let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::TopLeft, index: 0 };
+    // 🪟️ A whole-stack drag lifts the stack NODE, tab order and all — `extractStackFromLayout`, not
+    // a window-by-window removal that had to be stitched back together around `tab_index`.
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(floating.root, stack_with("d"), "the one remaining sibling hoists to the root");
+    let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 0 };
     assert!(dock.apply_drop(&payload, &zone), "whole-stack tab-join must land");
-    // 🔑️ `a`/`c` (the siblings left behind by the eager single-window removal) travel with `b`,
-    // reconstructed in their original order around it, and land next to `d` by key — not by the
-    // pre-extraction `stack_path`, which the extraction itself would have shifted.
-    let target = find_stack_path(&dock.root, "d", &mut vec![]).expect("d still resolvable by key");
-    assert_eq!(node_at(&dock.root, &target), Some(&stack_tabs(&["a", "b", "c", "d"], "b")));
-    assert!(find_stack_path(&dock.root, "a", &mut vec![]).is_some());
+    assert_eq!(dock.root, stack_tabs(&["a", "b", "c", "d"], "b"), "the group keeps its order and joins d's corner");
     assert_eq!(dock.active_window_id.as_deref(), Some("b"));
 }
 
+/// 🎯️ A whole-stack split needs no key re-anchoring at all under the committed-tree model: the zone
+/// the pointer resolved against the docked-out tree IS a path into the tree `apply_drop` re-derives.
+///
+/// 🩸️ The old lane removed the drag's active window at promotion and extracted the REST of the source
+/// stack inside `apply_drop`, so ancestors collapsed *between* hit-testing and committing; it had to
+/// remember the target stack's active window and look its path up again afterwards.
 #[test]
-fn apply_drop_stack_split_reanchors_target_after_extraction_shifts_paths() {
+fn apply_drop_stack_split_lands_on_the_derived_path_without_reanchoring() {
     let mut dock = DockState::default();
-    // 🔑️ Source stack `[a, x]` keeps two windows, so the eager active-window removal at promotion
-    // (`remove_window("a")`) does *not* collapse it — `b` stays at `[1]` right up until
-    // `extract_stack_group` later pulls `x` out too, which *does* empty-and-prune slot `[0]`,
-    // shifting `b` from `[1]` down to `[0]`. The `stack_path: [1]` captured in `zone` (from
-    // hit-testing *before* this drag even started) is therefore stale by the time the drop lands.
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_with("b"), 0.5)]);
-    assert!(dock.remove_window("a"));
-    assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("b")), "b starts at [1], pre-shift");
     let payload = stack_payload("a", vec![0], 0);
-    let zone = DockDropZone::Split { stack_path: vec![1], side: DockSide::Bottom };
-    assert!(dock.apply_drop(&payload, &zone), "split must land even though [1] goes stale mid-drop");
-    // `b` shifted to `[0]` once `x` was extracted and slot `[0]` collapsed — proof the naive stale
-    // path would have missed (or misdirected onto) the wrong node.
-    assert_eq!(node_at(&dock.root, &vec![1]), None, "the pre-extraction path is no longer valid at all");
-    let b_path = find_stack_path(&dock.root, "b", &mut vec![]).expect("b still resolvable by key");
-    assert_eq!(node_at(&dock.root, &b_path), Some(&stack_with("b")), "b itself must be untouched by the split");
-    let a_path = find_stack_path(&dock.root, "a", &mut vec![]).expect("a resolvable by key");
-    assert_eq!(node_at(&dock.root, &a_path), Some(&stack_tabs(&["a", "x"], "a")), "a's whole group (a + the sibling x it dragged along) landed together");
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(floating.root, stack_with("b"), "lifting the whole stack hoists b to the root");
+    let zone = DockDropZone::Split { stack_path: vec![], side: DockSide::Bottom };
+    assert!(dock.apply_drop(&payload, &zone), "the derived root path is exactly where the drop lands");
+    assert_eq!(dock.root, DockNode::Column(vec![(stack_with("b"), 0.5), (stack_tabs(&["a", "x"], "a"), 0.5)]), "a travelled with its sibling x, as one stack node");
+    assert_eq!(dock.active_window_id.as_deref(), Some("a"));
 }
 
 #[test]
 fn apply_drop_stack_same_source_is_noop() {
     let mut dock = DockState::default();
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b"], "a"), 0.5), (stack_with("c"), 0.5)]);
-    assert!(dock.remove_window("a"));
     let before = dock.root.clone();
     let payload = stack_payload("a", vec![0], 0);
     let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 0 };
@@ -600,7 +614,7 @@ fn split_drop_preview_covers_half_panel() {
 #[test]
 fn map_marquee_mode_matches_ui_react() {
     use crate::engine_canvas::map_marquee_mode;
-    assert_eq!(map_marquee_mode(false, false), "default");
+    assert_eq!(map_marquee_mode(false, false), "replace");
     assert_eq!(map_marquee_mode(true, false), "additive");
     assert_eq!(map_marquee_mode(false, true), "subtractive");
     assert_eq!(map_marquee_mode(true, true), "invertive");
@@ -776,3 +790,376 @@ fn utility_options_partition_gates_tagged_group_by_active_utility() {
     assert_eq!(general_none.len(), 1);
 }
 //#endregion WindowActionsAndUtilitiesTests
+
+//#region WindowSystemReactParityTests
+// 🪟️ Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1i — every assertion below names the React
+// line it pins. Reference: `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx` (`ModeDockTabBar`
+// 974-1102, `showMaximize` 1158/1800, `removeWindowFromLayout` 307-318, `collapseLayout` 225-236,
+// `applyAxisResizeDelta` 593-611) and `🔨️modules/🎛️chrome-control-presentation/🟦️.ts:35`.
+
+fn dock_with(root: DockNode, active: &str) -> DockState {
+    let mut dock = DockState::default();
+    dock.root = root;
+    dock.sync_active_window(active);
+    dock
+}
+
+fn painted_tab_control_ids(dock: &DockState, labels: &HashMap<String, String>) -> Vec<String> {
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let icon_ids = HashMap::new();
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: labels, window_icon_ids: &icon_ids };
+    dock.paint_chrome(&mut ctx, Rect::new(0.0, 0.0, 600.0, 400.0), false);
+    input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).filter(|id| id.starts_with("dock.tab.")).collect()
+}
+
+/// 📑️ React renders Focus/Unfocus only when `!mobile && canMaximize`, then Close unconditionally —
+/// `🎨️Canvas/🟦️.tsx:1072-1100`. There is no third ("new window") action anywhere in that tab bar.
+#[test]
+fn dock_tab_actions_match_react_mode_dock_tab_bar() {
+    assert_eq!(dock_tab_actions(true, false), vec![("focus", "maximize-2"), ("close", "x"), ("drag", "grip-vertical")]);
+    assert_eq!(dock_tab_actions(true, true), vec![("focus", "minimize-2"), ("close", "x"), ("drag", "grip-vertical")], "a maximized stack shows Unfocus");
+    assert_eq!(dock_tab_actions(false, false), vec![("close", "x"), ("drag", "grip-vertical")], "single window or mobile keeps Close plus the grip");
+    assert!(!dock_tab_actions(true, false).iter().any(|(action, _)| *action == "new"), "the dead new-window chip is gone");
+}
+
+/// 📑️ `canMaximize = modeCollectWindowIds(layout).length > 1` (`🎨️Canvas/🟦️.tsx:1800`) and
+/// `showMaximize = !mobile && canMaximize` (`:1158`).
+#[test]
+fn show_maximize_follows_window_count_and_mobile() {
+    let single = dock_with(stack_tabs(&["a"], "a"), "a");
+    assert!(!single.can_maximize());
+    assert!(!single.show_maximize());
+    let mut many = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    assert!(many.can_maximize());
+    assert!(many.show_maximize());
+    many.mobile = true;
+    assert!(many.can_maximize(), "the canvas still holds two windows");
+    assert!(!many.show_maximize(), "mobile hides Focus/Unfocus — a mobile window always fills the canvas");
+}
+
+/// 📑️ Exactly the React action set reaches the input layer: `.close` always, `.focus` only when the
+/// canvas can maximize, and never a `.new` control id (no shell dispatch arm ever answered one).
+#[test]
+fn dock_tab_hits_register_only_reacts_two_actions() {
+    let labels = HashMap::from([("a".to_string(), "A".to_string()), ("b".to_string(), "B".to_string())]);
+    let two = dock_with(stack_tabs(&["a", "b"], "a"), "a");
+    let ids = painted_tab_control_ids(&two, &labels);
+    assert!(ids.iter().any(|id| id == "dock.tab..a.close"));
+    assert!(ids.iter().any(|id| id == "dock.tab..a.focus"));
+    assert!(ids.iter().any(|id| id == "dock.tab..a.drag"), "React's DragHandle is the ONLY drag origin, so it must be a target");
+    assert!(!ids.iter().any(|id| id.ends_with(".new")), "no dead new-window control id is ever registered");
+    let one = dock_with(stack_tabs(&["a"], "a"), "a");
+    let ids = painted_tab_control_ids(&one, &labels);
+    assert!(ids.iter().any(|id| id == "dock.tab..a.close"), "close stays reachable for a lone window");
+    assert!(ids.iter().any(|id| id == "dock.tab..a.drag"), "so does the grip");
+    assert!(!ids.iter().any(|id| id.ends_with(".focus")), "React hides Focus when the canvas holds one window");
+}
+
+/// 📑️ `modeDockTabClassName` caps a tab at `max-w-[12rem]` and truncates its label
+/// (`🎛️chrome-control-presentation/🟦️.ts:35`) — a long title must never widen the tab bar.
+#[test]
+fn dock_tab_label_truncates_at_reacts_twelve_rem_cap() {
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let long = "Generation Preview Viewport With A Very Long Window Title";
+    let (display, width) = dock_tab_chip(&mut atlas, &theme, long, 2);
+    assert!((width - MODE_DOCK_TAB_MAX_WIDTH_PX).abs() < 0.001, "a long tab is pinned to 12rem, got {width}");
+    assert!(display.ends_with('…'), "truncation appends an ellipsis, got {display:?}");
+    assert!(display.len() < long.len());
+    let short = "Main";
+    let (display_short, width_short) = dock_tab_chip(&mut atlas, &theme, short, 2);
+    assert_eq!(display_short, short, "a short label is never truncated");
+    assert!(width_short < MODE_DOCK_TAB_MAX_WIDTH_PX);
+    assert_eq!(truncate_label_to_width(&mut atlas, short, theme.font_size_small, 10_000.0), short);
+}
+
+/// 🪟️ Closing the LAST tab of a stack collapses the split it lived in — React's
+/// `collapseLayout(removeWindowFromLayout(prev, id))` (`🎨️Canvas/🟦️.tsx:1475-1485`). This used to be
+/// a silent no-operation (`if windows.len() <= 1 { return false }`).
+#[test]
+fn closing_the_last_tab_of_a_stack_collapses_the_layout() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    assert!(dock.close_window_in_stack(&vec![0], "a"), "React always allows close");
+    assert_eq!(dock.root, stack_with("b"), "the single surviving child is hoisted into the root");
+    assert_eq!(dock.active_window_id.as_deref(), Some("b"));
+    assert_eq!(dock.active_stack, Some(vec![]));
+}
+
+/// 🪟️ React re-focuses `children[0]` of the stack, and the canvas re-focuses `remaining[0]`
+/// (`🎨️Canvas/🟦️.tsx:313, 1481`) — not the tab to the left of the one that closed.
+#[test]
+fn closing_the_active_tab_focuses_the_first_remaining_window() {
+    let mut dock = dock_with(stack_tabs(&["a", "b", "c"], "b"), "b");
+    assert!(dock.close_window_in_stack(&vec![], "b"));
+    assert_eq!(dock.root, stack_tabs(&["a", "c"], "a"));
+    assert_eq!(dock.active_window_id.as_deref(), Some("a"));
+}
+
+/// 🪟️ Closing the only window leaves React's empty root stack and no active window.
+#[test]
+fn closing_the_only_window_empties_the_dock() {
+    let mut dock = dock_with(stack_tabs(&["a"], "a"), "a");
+    assert!(dock.close_window_in_stack(&vec![], "a"));
+    assert_eq!(dock.root, DockNode::Stack { windows: vec![], active: String::new() });
+    assert_eq!(dock.active_window_id, None);
+    assert_eq!(dock.active_stack, None);
+    assert!(!dock.close_window("a"), "a window that is not in the layout cannot be closed");
+}
+
+/// 🪟️ `collapseLayout` hoists a single-child axis and keeps `only.size ?? node.size`
+/// (`🎨️Canvas/🟦️.tsx:225-236`) — the hoisted child carries the ratio it held among its own siblings.
+#[test]
+fn collapse_hoists_a_single_child_axis_keeping_the_childs_ratio() {
+    let inner = DockNode::Row(vec![(stack_with("a"), 0.25), (stack_with("b"), 0.75)]);
+    let mut dock = dock_with(DockNode::Column(vec![(inner, 0.4), (stack_with("c"), 0.6)]), "c");
+    assert!(dock.close_window_in_stack(&vec![0, 0], "a"));
+    assert_eq!(dock.root, DockNode::Column(vec![(stack_with("b"), 0.75), (stack_with("c"), 0.6)]), "the emptied row is hoisted away and b keeps its own 0.75");
+    assert_eq!(dock.active_window_id.as_deref(), Some("c"), "closing a non-active window leaves focus alone");
+}
+
+/// 🔲️ React drops a stale maximized path the moment the canvas falls back to one window
+/// (`🎨️Canvas/🟦️.tsx:1802-1805`), and never offers maximize for a lone window at all.
+#[test]
+fn maximize_is_inert_and_self_clearing_for_a_single_window_canvas() {
+    let mut single = dock_with(stack_tabs(&["a"], "a"), "a");
+    single.toggle_maximize(&vec![]);
+    assert_eq!(single.maximized_stack, None, "a lone window already fills the canvas");
+    let mut two = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    two.toggle_maximize(&vec![1]);
+    assert_eq!(two.maximized_stack, Some(vec![1]));
+    assert!(two.close_window_in_stack(&vec![0], "a"));
+    assert_eq!(two.maximized_stack, None, "the canvas is down to one window, so the maximized path is dropped");
+}
+
+/// ↔️ `applyAxisResizeDelta` conserves the dragged PAIR's total and floors each side at `minPct = 8`
+/// (`🎨️Canvas/🟦️.tsx:593-611`).
+#[test]
+fn split_resize_conserves_the_pair_total_and_floors_at_eight_percent() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_with("a"), 0.25), (stack_with("b"), 0.25), (stack_with("c"), 0.5)]), "a");
+    dock.begin_split_drag(&vec![]);
+    dock.apply_split_drag(&vec![], 0, 100.0, 1000.0);
+    let DockNode::Row(children) = &dock.root else { panic!("row") };
+    assert!((children[0].1 - 0.35).abs() < 1e-5);
+    assert!((children[1].1 - 0.15).abs() < 1e-5);
+    assert!((children[2].1 - 0.5).abs() < 1e-5, "the untouched sibling keeps its share");
+    dock.begin_split_drag(&vec![]);
+    dock.apply_split_drag(&vec![], 0, 10_000.0, 1000.0);
+    let DockNode::Row(children) = &dock.root else { panic!("row") };
+    assert!((children[0].1 + children[1].1 - 0.5).abs() < 1e-5, "the pair total survives the clamp");
+    assert!((children[1].1 - SPLIT_MIN_FRACTION).abs() < 1e-5, "the squeezed side floors at React's 8 %");
+    assert!((children[2].1 - 0.5).abs() < 1e-5, "and the clamp never restretches the rest of the axis");
+}
+
+/// ↔️ Resize gutters: React's `Resizable` separator is a thin visual line with a fat grab zone; wgpu
+/// pins the visual at 6 px and the hit at 20 px, centred on the seam, plus 10 px join-corner squares
+/// mirroring `modeJoinCornerSpecsForSeparator` (`🎨️Canvas/🟦️.tsx:515-580`).
+#[test]
+fn split_resize_gutter_hit_is_twenty_pixels_centred_on_the_seam() {
+    let dock = dock_with(even_layout(&["a".into(), "b".into()]), "a");
+    let canvas = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let labels = HashMap::new();
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
+    dock.register_resize_hits(&mut ctx, canvas);
+    // 🎯️ `hit_at` resolves the last COMPLETE frame's registry; a walk that has only just staged its
+    // targets reads them back through `staged_hits` (`🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs:331-340`).
+    let hit = input.staged_hits().iter().find(|target| target.kind == HitKind::DockSplit).expect("split hit on the seam");
+    assert_eq!(hit.control_id.as_deref(), Some("dock.split..0"));
+    assert!((hit.rect.w - 20.0).abs() < 0.001, "20 px grab zone");
+    assert!((hit.rect.x + hit.rect.w * 0.5 - 200.0).abs() < 0.001, "centred on the seam");
+    assert!(hit.rect.contains(200.0, 150.0), "the seam itself is inside the grab zone");
+    assert!(!hit.rect.contains(188.0, 150.0), "12 px off the seam is outside it");
+}
+
+/// 🎯️ A drag-to-split always previews and commits an exact 50 % split, on both the stack and the
+/// root path — React's `splitWithWindow`/`splitRootWithWindow` build a two-child axis with no ratio
+/// of their own (`🎨️Canvas/🟦️.tsx:403-421`), and the preview covers exactly half the body (`:778-796`).
+#[test]
+fn drag_to_split_commits_an_even_two_child_axis() {
+    let mut dock = dock_with(stack_tabs(&["a", "b"], "a"), "a");
+    assert!(dock.apply_drop(&tab_payload("a", vec![], 0), &DockDropZone::Split { stack_path: vec![], side: DockSide::Bottom }));
+    assert_eq!(dock.root, DockNode::Column(vec![(stack_with("b"), 0.5), (stack_with("a"), 0.5)]));
+    let mut dock = dock_with(stack_tabs(&["a", "b"], "a"), "a");
+    assert!(dock.apply_drop(&tab_payload("a", vec![], 0), &DockDropZone::RootSplit { side: DockSide::Left }));
+    assert_eq!(dock.root, DockNode::Row(vec![(stack_with("a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]));
+}
+
+/// 🎯️ A drag-to-merge lands the tab in the target stack's own corner group and focuses it — the
+/// corner-local index maps onto the flat child list exactly like `flatIndexForCornerInsert`
+/// (`🎨️Canvas/🟦️.tsx:335-347`).
+#[test]
+fn drag_to_merge_joins_the_target_corner_group_and_focuses_the_tab() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    assert!(dock.apply_drop(&tab_payload("a", vec![0], 0), &DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::TopLeft, index: 0 }));
+    let tabs = dock.stack_tabs_at_path(&vec![1]).expect("target stack");
+    assert_eq!(dock_tab_ids(&tabs), vec!["a".to_string(), "b".to_string()]);
+    assert_eq!(dock.active_window_id.as_deref(), Some("a"));
+    assert_eq!(dock.active_stack, Some(vec![1]));
+}
+
+/// 🪟️ Tab-bar geometry stays in step with what `render_stack` paints: the per-corner drop widths a
+/// drag hit-tests against are the SAME capped chip widths, so a drop index can never point between
+/// two painted tabs.
+#[test]
+fn corner_tab_bar_widths_match_the_painted_chip_widths() {
+    let dock = dock_with(stack_tabs(&["a", "b"], "a"), "a");
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let labels = HashMap::from([("a".to_string(), "A Window Whose Title Is Far Too Long To Fit Twelve Rem Of Tab".to_string()), ("b".to_string(), "B".to_string())]);
+    let bars = dock.stack_corner_tab_bar_rects(Rect::new(0.0, 0.0, 600.0, 400.0), &theme, &mut atlas, &labels);
+    let (_, _, _, widths) = bars.iter().find(|(_, corner, _, _)| *corner == WindowStackCorner::TopLeft).expect("top-left bar");
+    let expected: Vec<f32> = ["a", "b"].iter().map(|id| dock_tab_chip(&mut atlas, &theme, labels.get(*id).unwrap(), dock.tab_action_count()).1).collect();
+    assert_eq!(widths.len(), 2);
+    for (got, want) in widths.iter().zip(expected.iter()) {
+        assert!((got - want).abs() < 0.001, "{got} vs {want}");
+    }
+    assert!((widths[0] - MODE_DOCK_TAB_MAX_WIDTH_PX).abs() < 0.001, "the long title is capped, not grown");
+}
+
+// 🪟️ Packet W2d — the window-system remainder (`📓️w1i-window-dock-semantics.md` §4 G1-G8):
+// `mobileFlatStack` (`🎨️Canvas/🟦️.tsx:1884-1901`), the committed-tree drag lane (`modeDockOutLayout`
+// `:841-847`, `applyModeDrop` `:816-838`), click-to-deactivate (`:1455-1472`), the drag grip
+// (`:1101`) and the silhouette focus border (`⚛️react/🟦️.tsx:7494-7509`).
+
+/// 📱️ Below the breakpoint React renders ONE flat tab stack for the whole mode, through the same
+/// `ModeDockStack` chrome as desktop — no split tree, no maximize, every window a tab
+/// (`🎨️Canvas/🟦️.tsx:1884-1901`).
+#[test]
+fn mobile_collapses_every_window_into_one_flat_tab_stack() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (DockNode::Column(vec![(stack_with("b"), 0.5), (stack_with("c"), 0.5)]), 0.5)]), "b");
+    dock.toggle_maximize(&vec![0]);
+    let desktop = dock.render_view(None);
+    assert_eq!(desktop.root, dock.root, "above the breakpoint the render tree IS the committed tree");
+    dock.mobile = true;
+    let view = dock.render_view(None);
+    assert_eq!(view.root, stack_tabs(&["a", "x", "b", "c"], "b"), "layout order, active window kept, one stack");
+    assert_eq!(view.maximized_stack, None, "a mobile window already fills the canvas");
+    assert_eq!(view.active_stack, Some(Vec::new()), "the flat stack IS the root");
+    assert_eq!(dock.root, DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (DockNode::Column(vec![(stack_with("b"), 0.5), (stack_with("c"), 0.5)]), 0.5)]), "the committed tree is never flattened");
+    let bodies = view.stack_body_rects(Rect::new(0.0, 0.0, 600.0, 900.0), &Theme::default(), &HashMap::new(), &mut FontAtlas::builtin());
+    assert_eq!(bodies.len(), 1, "one pane, not four");
+}
+
+/// 📱️ A flat-stack tab is painted at the ROOT path, so focus has to travel by window ID — React's
+/// `activateWindow(windowId)` (`🎨️Canvas/🟦️.tsx:1446-1452`), never by the path the chip sits at.
+#[test]
+fn activate_window_focuses_by_id_across_the_committed_tree() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_tabs(&["b", "c"], "b"), 0.5)]), "a");
+    assert!(dock.activate_window("c"));
+    assert_eq!(dock.active_window_id.as_deref(), Some("c"));
+    assert_eq!(dock.active_stack, Some(vec![1]), "the id resolved to its own stack, not to the root the chip was painted at");
+    assert_eq!(dock.stack_tabs_at_path(&vec![1]).map(|tabs| dock_tab_ids(&tabs)), Some(vec!["b".to_string(), "c".to_string()]));
+    assert!(!dock.activate_window("nothing-here"));
+}
+
+/// 🌫️ Pressing the canvas background or a gutter clears the active window and keeps the layout —
+/// React's `deactivateActiveWindow` (`🎨️Canvas/🟦️.tsx:1455-1472`).
+#[test]
+fn deactivate_clears_focus_without_touching_the_layout() {
+    let mut dock = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    let before = dock.root.clone();
+    assert!(dock.deactivate_active_window());
+    assert_eq!(dock.active_window_id, None);
+    assert_eq!(dock.active_stack, None);
+    assert_eq!(dock.root, before);
+    assert!(!dock.deactivate_active_window(), "an already-unfocused mode has nothing to clear");
+}
+
+/// 🪟️ The drag lane now collapses on React's `collapseLayout`: an emptied slot is pruned AND a
+/// single-child axis is hoisted, keeping the child's own ratio (`🎨️Canvas/🟦️.tsx:225-236`).
+///
+/// 🩸️ It used to run a prune-only rule, so the drag lane and the close lane disagreed about the tree
+/// a removal leaves behind — the docked-out preview kept a one-child axis React had already hoisted,
+/// and every drop-zone path inside it was one segment deeper than React's.
+#[test]
+fn the_drag_lane_hoists_a_single_child_axis_like_the_close_lane() {
+    let mut dock = dock_with(DockNode::Row(vec![(DockNode::Column(vec![(stack_with("a"), 0.25), (stack_with("b"), 0.75)]), 0.4), (stack_with("c"), 0.6)]), "a");
+    let payload = tab_payload("a", vec![0, 0], 0);
+    let floating = dock.render_view(Some(&payload));
+    assert_eq!(floating.root, DockNode::Row(vec![(stack_with("b"), 0.75), (stack_with("c"), 0.6)]), "b hoists into the column's slot with ITS OWN 0.75 ratio");
+    let mut closed = dock.clone();
+    assert!(closed.close_window("a"));
+    assert_eq!(closed.root, floating.root, "one collapse rule for the drag lane and the close lane");
+}
+
+/// 🪟️ The active stack's outline is painted, not commented out: a hairline along the whole
+/// silhouette in `--active-base` when the stack holds the active window, `--border-normal-color`
+/// otherwise (`⚛️react/🟦️.tsx:7494-7509`).
+#[test]
+fn the_active_stack_paints_a_silhouette_focus_border() {
+    let theme = Theme::default();
+    let strokes = |dock: &DockState| {
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let labels = HashMap::from([("a".to_string(), "A".to_string()), ("b".to_string(), "B".to_string())]);
+        let icon_ids = HashMap::new();
+        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+        dock.paint_chrome(&mut ctx, Rect::new(0.0, 0.0, 600.0, 400.0), false);
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.rect[2] <= theme.stroke_hairline || instance.rect[3] <= theme.stroke_hairline).count()
+    };
+    let focused = dock_with(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), "a");
+    assert!(strokes(&focused) > 0, "both stacks are outlined — the active one just wears a different colour");
+    let mut unfocused = focused.clone();
+    assert!(unfocused.deactivate_active_window());
+    assert_eq!(strokes(&unfocused), strokes(&focused), "the outline is the window frame, not a focus-only decoration");
+}
+
+/// 🪶️ Closing a window is ONE lane: the layout collapses by React's rule, focus moves to the first
+/// remaining window, the layout is persisted, and whatever the window hosted is torn down —
+/// `closeWindow` + `onWindowClose` (`🎨️Canvas/🟦️.tsx:1475-1485`, `🏛️ShellHost/🟦️.tsx:10533-10555`).
+#[test]
+fn closing_a_window_collapses_persists_and_refocuses_in_one_lane() {
+    let mut shell = shell();
+    shell.dock.root = DockNode::Row(vec![(stack_with("plug-1"), 0.5), (stack_tabs(&["main", "side"], "main"), 0.5)]);
+    shell.dock.sync_active_window("plug-1");
+    shell.active_window_id = Some("plug-1".into());
+    assert!(shell.close_dock_window("plug-1"), "close is never a no-operation");
+    assert_eq!(shell.dock.root, stack_tabs(&["main", "side"], "main"), "the emptied slot is pruned and its sibling hoisted");
+    assert_eq!(shell.active_window_id.as_deref(), Some("main"), "React refocuses children[0]");
+    assert!(shell.layout_override.is_some(), "every close persists the collapsed layout");
+    assert!(!shell.close_dock_window("plug-1"), "a window that is already gone refuses");
+}
+
+/// 🪶️ The spawned-app teardown React's `onWindowClose` performs: the closed window's entry leaves the
+/// panel and `activeSpawnedId` re-points at whatever is left, so the plugin instance behind it can be
+/// destroyed instead of running forever behind a window that no longer exists.
+#[test]
+fn closing_a_spawned_window_takes_its_panel_entry_and_repoints_the_active_one() {
+    let entry = |id: &str, instance: u32| crate::shell::SpawnedAppEntry { id: id.into(), plugin_id: "plug".into(), instance_id: instance, app_id: "app".into(), label: "Plug".into(), breadcrumb: vec!["plug".into()] };
+    let mut panel = crate::shell::SpacePanelState { active_panel_tab: "workbench".into(), spawned_apps: vec![entry("plug-1", 7), entry("plug-2", 8)], active_spawned_id: Some("plug-1".into()) };
+    let closed = ShellState::take_spawned_entry(&mut panel, "plug-1").expect("the closed window owned a spawned app");
+    assert_eq!(closed.instance_id, 7, "the instance id the guest must be told to destroy");
+    assert_eq!(panel.spawned_apps.iter().map(|entry| entry.id.as_str()).collect::<Vec<_>>(), vec!["plug-2"]);
+    assert_eq!(panel.active_spawned_id.as_deref(), Some("plug-2"));
+    assert!(ShellState::take_spawned_entry(&mut panel, "main").is_none(), "a plain window hosts nothing to tear down");
+    let last = ShellState::take_spawned_entry(&mut panel, "plug-2").expect("last spawned entry");
+    assert_eq!(last.instance_id, 8);
+    assert_eq!(panel.active_spawned_id, None);
+}
+//#endregion WindowSystemReactParityTests
+
+/// 📥️ Tab insert midpoints are measured on the painted (gapless) chip run — React hit-tests real tab
+/// rects (`computeModeDropZone`, `🎨️Canvas/🟦️.tsx:797`), so a phantom gap must not shift the index.
+#[test]
+fn tab_insert_index_follows_the_painted_gapless_chip_run() {
+    let bar = Rect::new(0.0, 0.0, 200.0, 24.0);
+    let widths = vec![80.0, 80.0];
+    assert_eq!(compute_tab_insert_index(10.0, bar, &widths, 0.0), 0);
+    assert_eq!(compute_tab_insert_index(45.0, bar, &widths, 0.0), 1);
+    assert_eq!(compute_tab_insert_index(125.0, bar, &widths, 0.0), 2, "past the last tab's midpoint the drop appends");
+    let tab_bars = vec![(vec![0], WindowStackCorner::TopLeft, bar, widths)];
+    let bodies = vec![(vec![0], Rect::new(0.0, 24.0, 200.0, 200.0), "a".to_string())];
+    assert_eq!(
+        compute_dock_drop_zone(125.0, 10.0, &tab_bars, &bodies, Rect::new(0.0, 0.0, 200.0, 224.0)),
+        Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 })
+    );
+}

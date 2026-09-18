@@ -11,9 +11,11 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow::{dag::dag_screen_to_world, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
+use framework_surface_node_graph::paint::RasterHost;
+use framework_surface_tiled_map::tiled_map::tiles as map_tiles;
 use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetRequestKind};
+use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
@@ -64,6 +66,10 @@ struct EngineSurface {
     board_pointer_inside: bool,
     board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
     board_pointer_controller_id: Option<String>,
+    /// 🐁️ The hover target last published on this board's `interactionHover` lane — outer `None` is
+    /// "never published", `Some(None)` the explicit clear. React's `createCoalescingActionDispatcher`
+    /// keeps the same witness, so an unchanged hover costs no guest round trip.
+    board_hover_published: Option<Option<String>>,
     /// ⏯️ The board's resident tool run trace (`Board2dScene.tool_run_trace`), its placement footprints by kind index and
     /// the theme verdict palette it paints with. Every column is plain data, so retirement drops it in O(batches).
     board_trace: tool_run_trace::ToolRunTraceLayer,
@@ -71,6 +77,9 @@ struct EngineSurface {
     board_trace_palette: Option<tool_run_trace::ToolRunTracePalette>,
     editor: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
+    editor_sync_cache: EditorSyncCache,
+    raster_host: Option<RasterHost>,
+    raster_sync_cache: RasterSyncCache,
     width: u32,
     height: u32,
     metrics_generation: u64,
@@ -315,6 +324,9 @@ enum EngineSurfaceClosePhase {
     MapSync,
     Editor,
     EditorPack,
+    EditorSync,
+    Raster,
+    RasterSync,
     Board,
     BoardSync,
     Scalars,
@@ -356,10 +368,14 @@ struct EngineSurfaceRetirement {
     board_pointer_controller_id: Option<String>,
     editor_source: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
+    editor_sync_cache: EditorSyncCache,
+    raster_source: Option<RasterHost>,
+    raster_sync_cache: RasterSyncCache,
     last_note_click: Option<(String, f64)>,
     node_graph: Option<NodeGraphEngineRetirement>,
     map: Option<framework_surface_tiled_map::tiled_map::MapHostRetirement>,
     editor: Option<framework_editor::EditorHostRetirement>,
+    raster: Option<framework_surface_node_graph::paint::RasterHostRetirement>,
     board: Option<infinite_canvas::BoardHostRetirement>,
     phase: EngineSurfaceClosePhase,
     faulted: bool,
@@ -379,11 +395,15 @@ impl EngineSurfaceRetirement {
             board_pointer_inside: _,
             board_pointer_claim,
             board_pointer_controller_id,
+            board_hover_published: _,
             board_trace: _,
             board_trace_shapes: _,
             board_trace_palette: _,
             editor: editor_source,
             editor_scene_pack,
+            editor_sync_cache,
+            raster_host: raster_source,
+            raster_sync_cache,
             width: _,
             height: _,
             metrics_generation: _,
@@ -407,10 +427,14 @@ impl EngineSurfaceRetirement {
             board_pointer_controller_id,
             editor_source,
             editor_scene_pack,
+            editor_sync_cache,
+            raster_source,
+            raster_sync_cache,
             last_note_click,
             node_graph: None,
             map: None,
             editor: None,
+            raster: None,
             board: None,
             phase: EngineSurfaceClosePhase::Claim,
             faulted: false,
@@ -470,6 +494,27 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.layer_stroke_scale_json)
             || Self::close_string(&mut cache.selection_json)
             || Self::close_string(&mut cache.hover_json)
+            || Self::close_string(&mut cache.theme_json)
+            || Self::close_string(&mut cache.size_key)
+        {
+            return false;
+        }
+        true
+    }
+
+    fn close_editor_sync(cache: &mut EditorSyncCache) -> bool {
+        !(Self::close_string(&mut cache.scene_json) || Self::close_string(&mut cache.theme_json) || Self::close_string(&mut cache.size_key))
+    }
+
+    fn close_raster_sync(cache: &mut RasterSyncCache) -> bool {
+        if Self::close_string(&mut cache.document_sync_json)
+            || Self::close_string(&mut cache.assets_json)
+            || Self::close_string(&mut cache.camera_json)
+            || Self::close_string(&mut cache.selection_json)
+            || Self::close_string(&mut cache.hovered_id)
+            || Self::close_string(&mut cache.active_utility)
+            || Self::close_string(&mut cache.view_mode)
+            || cache.brush.take().is_some()
             || Self::close_string(&mut cache.theme_json)
             || Self::close_string(&mut cache.size_key)
         {
@@ -594,6 +639,32 @@ impl EngineSurfaceRetirement {
             }
             EngineSurfaceClosePhase::EditorPack => {
                 if !Self::close_bytes(&mut self.editor_scene_pack) {
+                    self.phase = EngineSurfaceClosePhase::EditorSync;
+                }
+            }
+            EngineSurfaceClosePhase::EditorSync => {
+                if Self::close_editor_sync(&mut self.editor_sync_cache) {
+                    self.phase = EngineSurfaceClosePhase::Raster;
+                }
+            }
+            EngineSurfaceClosePhase::Raster => {
+                if self.raster.is_none() {
+                    if let Some(owner) = self.raster_source.take() {
+                        self.raster = Some(framework_surface_node_graph::paint::RasterHostRetirement::new(owner));
+                    } else {
+                        self.phase = EngineSurfaceClosePhase::RasterSync;
+                    }
+                } else if self.raster.as_mut().is_some_and(framework_surface_node_graph::paint::RasterHostRetirement::close_step) {
+                    if !self.raster.as_ref().is_some_and(framework_surface_node_graph::paint::RasterHostRetirement::terminal_is_empty) {
+                        self.faulted = true;
+                        return false;
+                    }
+                    self.raster = None;
+                    self.phase = EngineSurfaceClosePhase::RasterSync;
+                }
+            }
+            EngineSurfaceClosePhase::RasterSync => {
+                if Self::close_raster_sync(&mut self.raster_sync_cache) {
                     self.phase = EngineSurfaceClosePhase::Board;
                 }
             }
@@ -633,6 +704,10 @@ impl EngineSurfaceRetirement {
                     || self.editor_source.is_some()
                     || self.board_source.is_some()
                     || self.editor_scene_pack.is_some()
+                    || !editor_sync_terminal(&self.editor_sync_cache)
+                    || self.raster_source.is_some()
+                    || self.raster.is_some()
+                    || !raster_sync_terminal(&self.raster_sync_cache)
                     || self.board_pointer_claim.is_some()
                     || self.board_pointer_controller_id.is_some()
                     || self.board_retiring_events.is_some()
@@ -671,6 +746,10 @@ impl EngineSurfaceRetirement {
             && self.board_pointer_controller_id.is_none()
             && self.editor_source.is_none()
             && self.editor_scene_pack.is_none()
+            && editor_sync_terminal(&self.editor_sync_cache)
+            && self.raster_source.is_none()
+            && self.raster.is_none()
+            && raster_sync_terminal(&self.raster_sync_cache)
             && self.last_note_click.is_none()
             && self.node_graph.is_none()
             && self.map.is_none()
@@ -1560,10 +1639,28 @@ struct MapSyncCache {
     hover_json: Option<String>,
     theme_json: Option<String>,
     size_key: Option<String>,
+    /// 📡️ Tiles admitted into the bounded renderer-asset pipeline and not yet applied, keyed
+    /// `(vector, z, x, y)` — the port of `MapRenderer`'s in-flight `Promise` set, and what keeps a
+    /// per-frame re-offer from reserving the same URL twice.
+    tile_pending: HashSet<(bool, u32, u32, u32)>,
+    /// 🕳️ Tiles the server or the decoder refused — React's `tileMiss`/`vectorTileMiss`, cleared per
+    /// lane whenever that lane's visible range revision changes.
+    tile_misses: HashSet<(bool, u32, u32, u32)>,
+    raster_tiles_revision: Option<u64>,
+    vector_tiles_revision: Option<u64>,
 }
 
 #[derive(Default)]
 struct BoardSyncCache {
+    /// 🎯️ `Board2dScene.domain_id` — the framework interaction domain this board's hovers belong to.
+    /// An app that declares none publishes NO `interactionHover`, exactly like React's
+    /// `if (!interactionDomainId) return undefined` (`🖥️Board2dHost/🟦️.tsx:777`). Carried here
+    /// because the pointer seams are addressed by surface id, not by scene.
+    domain_id: Option<String>,
+    /// 🎯️ Every entity id the fixture carries, classified into the granularity a hover reports it
+    /// under — the port of React's `board2dGranularityById` (`🖥️Board2dHost/🟦️.tsx:190`). Rebuilt
+    /// only when the fixture changes.
+    granularity_by_id: HashMap<String, String>,
     fixture_json: Option<String>,
     glyph_catalogs_json: Option<String>,
     placement_compatibility_json: Option<String>,
@@ -1583,6 +1680,52 @@ struct BoardSyncCache {
     area_brush_size: Option<String>,
     size_key: Option<String>,
     tool_run_trace_window_id: Option<String>,
+}
+
+/** 🖌️ The last `Paint2dScene` fields pushed into this surface's [`RasterHost`] — the wgpu twin of
+ * `Paint2dCanvasSurface`'s `documentSyncRef`/`assetsRef` guards plus the plain per-field equality its
+ * `syncAll` effect re-runs on. Every entry is an owned `String`, so retirement drains it byte-wise.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `syncAll` */
+#[derive(Default)]
+struct RasterSyncCache {
+    document_sync_json: Option<String>,
+    assets_json: Option<String>,
+    camera_json: Option<String>,
+    selection_json: Option<String>,
+    hovered_id: Option<String>,
+    active_utility: Option<String>,
+    view_mode: Option<String>,
+    brush: Option<(f64, f64)>,
+    theme_json: Option<String>,
+    size_key: Option<String>,
+}
+
+/** ✍️ The last `TextEditorScene` document pushed into this surface's [`EditorHost`], plus the
+ * viewport/theme keys the host is sized and coloured by — the wgpu twin of `TextEditorHost`'s
+ * `sceneRef`. */
+#[derive(Default)]
+struct EditorSyncCache {
+    scene_json: Option<String>,
+    theme_json: Option<String>,
+    size_key: Option<String>,
+}
+
+fn raster_sync_terminal(cache: &RasterSyncCache) -> bool {
+    cache.document_sync_json.is_none()
+        && cache.assets_json.is_none()
+        && cache.camera_json.is_none()
+        && cache.selection_json.is_none()
+        && cache.hovered_id.is_none()
+        && cache.active_utility.is_none()
+        && cache.view_mode.is_none()
+        && cache.brush.is_none()
+        && cache.theme_json.is_none()
+        && cache.size_key.is_none()
+}
+
+fn editor_sync_terminal(cache: &EditorSyncCache) -> bool {
+    cache.scene_json.is_none() && cache.theme_json.is_none() && cache.size_key.is_none()
 }
 
 fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
@@ -1744,11 +1887,15 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         board_pointer_inside: false,
         board_pointer_claim: None,
         board_pointer_controller_id: None,
+        board_hover_published: None,
         board_trace: tool_run_trace::ToolRunTraceLayer::default(),
         board_trace_shapes: Vec::new(),
         board_trace_palette: None,
         editor: None,
         editor_scene_pack: None,
+        editor_sync_cache: EditorSyncCache::default(),
+        raster_host: None,
+        raster_sync_cache: RasterSyncCache::default(),
         width: pw.max(1),
         height: ph.max(1),
         metrics_generation: 1,
@@ -2348,6 +2495,8 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
         if sync_map_engine(host, &mut entry.map_sync_cache, map, theme, width, height) || created {
             entry.scene_revision = entry.scene_revision.wrapping_add(1);
         }
+        let (host, cache) = (entry.map_host.as_ref()?, &mut entry.map_sync_cache);
+        reserve_map_tile_fetches(&scene.surface_id, host, cache, map);
         Some(created)
     });
     let Some(created) = created else {
@@ -2373,7 +2522,12 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
     let fixture_applied = cache.fixture_json.as_deref() != Some(board.fixture_json.as_str());
     if fixture_applied {
         host.parse_fixture_json(&board.fixture_json);
+        cache.granularity_by_id = board2d_granularity_by_id(&board.fixture_json);
         cache.fixture_json = Some(board.fixture_json.clone());
+        changed = true;
+    }
+    if cache.domain_id != board.domain_id {
+        cache.domain_id = board.domain_id.clone();
         changed = true;
     }
     if cache.glyph_catalogs_json.as_deref() != Some(board.glyph_catalogs_json.as_str()) {
@@ -2604,6 +2758,187 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
     true
 }
 
+/** 🎨️ The canvas-theme document both `RasterHost::set_canvas_theme_from_json` and
+ * `EditorHost::set_canvas_theme_from_json` read — the wgpu twin of `syncSessionCanvasTheme`
+ * (`@semio-tech/ui-styling`), which reads the same CSS custom properties React's hosts do.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `syncSessionCanvasTheme(session)` */
+fn engine_canvas_theme_json(theme: &Theme) -> String {
+    let rgba8 = |color: Rgba| json!([(color.r * 255.0).round() as u16, (color.g * 255.0).round() as u16, (color.b * 255.0).round() as u16, (color.a * 255.0).round() as u16]);
+    json!({
+        "rasterClear": rgba8(theme.canvas_clear),
+        "gridMinorStroke": rgba8(theme.separator),
+        "labelFill": rgba8(theme.text),
+        "labelFillHovered": rgba8(theme.text_element),
+        "labelHalo": rgba8(theme.panel),
+        "nodeFillHovered": rgba8(theme.text_element),
+        "nodeFillSelected": rgba8(theme.accent),
+    })
+    .to_string()
+}
+
+/** 🖌️ Feeds one `Paint2dScene` into a live [`RasterHost`], field by field, applying only what
+ * changed — the wgpu twin of `Paint2dCanvasSurface`'s `syncAll` effect: document, then assets, then
+ * utility/brush, then interaction, then the camera (fitted for the navigator view mode, taken from
+ * the scene otherwise).
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `syncAll` */
+fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint: &ui_wgpu::wgpu::Paint2dScene, theme: &Theme, width: u32, height: u32) -> bool {
+    let mut changed = false;
+    let size_key = format!("{width}x{height}");
+    if cache.size_key.as_deref() != Some(size_key.as_str()) {
+        host.set_size(width, height, 1.0);
+        cache.size_key = Some(size_key);
+        changed = true;
+    }
+    let theme_json = engine_canvas_theme_json(theme);
+    if cache.theme_json.as_deref() != Some(theme_json.as_str()) {
+        let _ = host.set_canvas_theme_from_json(&theme_json);
+        cache.theme_json = Some(theme_json);
+        changed = true;
+    }
+    if cache.document_sync_json.as_deref() != Some(paint.document_sync_json.as_str()) {
+        let _ = host.sync_document_json(&paint.document_sync_json);
+        cache.document_sync_json = Some(paint.document_sync_json.clone());
+        changed = true;
+    }
+    if cache.assets_json.as_deref() != Some(paint.assets_json.as_str()) {
+        for (key, bytes) in paint2d_asset_bytes(&paint.assets_json) {
+            let _ = host.upload_raster_image_key(&key, &bytes);
+        }
+        cache.assets_json = Some(paint.assets_json.clone());
+        changed = true;
+    }
+    if cache.active_utility.as_deref() != Some(paint.active_utility.as_str()) {
+        host.set_active_utility(&paint.active_utility);
+        cache.active_utility = Some(paint.active_utility.clone());
+        changed = true;
+    }
+    if cache.brush != Some((paint.brush_size, paint.brush_opacity)) {
+        host.set_brush_size(paint.brush_size as f32);
+        host.set_brush_opacity(paint.brush_opacity as f32);
+        cache.brush = Some((paint.brush_size, paint.brush_opacity));
+        changed = true;
+    }
+    if cache.selection_json.as_deref() != Some(paint.selection_json.as_str()) || cache.hovered_id.as_deref() != paint.hovered_id.as_deref() {
+        let selected: Vec<String> = serde_json::from_str(&paint.selection_json).unwrap_or_default();
+        host.sync_interaction(&selected, paint.hovered_id.as_deref());
+        cache.selection_json = Some(paint.selection_json.clone());
+        cache.hovered_id = paint.hovered_id.clone();
+        changed = true;
+    }
+    let navigator = paint.view_mode == "navigator";
+    if cache.view_mode.as_deref() != Some(paint.view_mode.as_str()) {
+        cache.view_mode = Some(paint.view_mode.clone());
+        changed = true;
+    }
+    let camera_json = if navigator { host.navigator_fit_camera_json(f64::from(width), f64::from(height)) } else { paint.camera_json.clone() };
+    if cache.camera_json.as_deref() != Some(camera_json.as_str()) {
+        if let Some((x, y, zoom)) = engine_camera_from_json(&camera_json) {
+            host.set_camera(x, y, zoom);
+        }
+        cache.camera_json = Some(camera_json);
+        changed = true;
+    }
+    changed
+}
+
+/** 🖼️ `Paint2dScene.assets_json`'s `{ key: { mime, data } }` rows decoded to raw bytes — the wgpu
+ * twin of `base64ToBytes(asset.data)` in `syncAll`'s asset loop. */
+fn paint2d_asset_bytes(assets_json: &str) -> Vec<(String, Vec<u8>)> {
+    let Ok(Value::Object(rows)) = serde_json::from_str::<Value>(assets_json) else {
+        return Vec::new();
+    };
+    rows.into_iter()
+        .filter_map(|(key, row)| {
+            let data = row.get("data").and_then(Value::as_str)?;
+            let payload = data.rsplit_once("base64,").map_or(data, |(_, tail)| tail);
+            semio_framework_io_base64::base64_standard_decode(payload).ok().map(|bytes| (key, bytes))
+        })
+        .collect()
+}
+
+/// 🖌️ Attaches — and re-feeds — the `RasterHost` behind one `SurfaceKind::Paint2d` scene.
+pub fn sync_paint2d_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+    let Some(paint) = scene.paint_2d.as_ref() else {
+        return false;
+    };
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    if ensure_engine_surface(&scene.surface_id, width, height).is_none() {
+        return false;
+    }
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(entry) = registry.get_mut(&scene.surface_id) else {
+            return false;
+        };
+        let created = entry.raster_host.is_none();
+        if created {
+            entry.raster_host = Some(RasterHost::new());
+        }
+        let Some(host) = entry.raster_host.as_mut() else {
+            return false;
+        };
+        if sync_raster_engine(host, &mut entry.raster_sync_cache, paint, theme, width, height) || created {
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        true
+    })
+}
+
+/** ✍️ Attaches — and re-feeds — the `EditorHost` behind one `SurfaceKind::TextEditor` scene. The
+ * host is the SAME one `text_editor_pointer_button_into`/`text_editor_apply_key_into` mutate, so a
+ * keystroke and the glyphs it produces are one object, not a render copy of a model. */
+pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> bool {
+    let Some(editor) = scene.text_editor.as_ref() else {
+        return false;
+    };
+    let width = bounds.w.max(1.0) as u32;
+    let height = bounds.h.max(1.0) as u32;
+    if ensure_engine_surface(&scene.surface_id, width, height).is_none() {
+        return false;
+    }
+    let Ok(scene_json) = serde_json::to_string(editor) else {
+        return false;
+    };
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(entry) = registry.get_mut(&scene.surface_id) else {
+            return false;
+        };
+        let created = entry.editor.is_none();
+        if created {
+            entry.editor = Some(EditorHost::new());
+        }
+        let Some(host) = entry.editor.as_mut() else {
+            return false;
+        };
+        let mut changed = created;
+        let size_key = format!("{width}x{height}");
+        if entry.editor_sync_cache.size_key.as_deref() != Some(size_key.as_str()) {
+            host.set_size(width, height, 1.0);
+            entry.editor_sync_cache.size_key = Some(size_key);
+            changed = true;
+        }
+        let theme_json = engine_canvas_theme_json(theme);
+        if entry.editor_sync_cache.theme_json.as_deref() != Some(theme_json.as_str()) {
+            let _ = host.set_canvas_theme_from_json(&theme_json);
+            entry.editor_sync_cache.theme_json = Some(theme_json);
+            changed = true;
+        }
+        if entry.editor_sync_cache.scene_json.as_deref() != Some(scene_json.as_str()) {
+            let _ = host.sync_from_scene_json(&scene_json);
+            entry.editor_sync_cache.scene_json = Some(scene_json);
+            changed = true;
+        }
+        if changed {
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        true
+    })
+}
+
 /// 🧩️ THE production attach entry: one call, every `SurfaceKind` whose engine host the wgpu shell
 /// composites through a vello texture. Called from the retained scene paint
 /// (`scenes::render_component_scene_step`), so a window's first painted frame after `SurfaceVisible`
@@ -2617,6 +2952,8 @@ pub fn sync_engine_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: 
         SurfaceKind::NodeGraph => sync_node_graph_scene(scene, window_id, bounds, theme.panel),
         SurfaceKind::TiledMap => sync_tiled_map_scene(scene, window_id, bounds, theme),
         SurfaceKind::Board2d => sync_board2d_scene(scene, window_id, bounds, theme),
+        SurfaceKind::Paint2d => sync_paint2d_scene(scene, bounds, theme),
+        SurfaceKind::TextEditor => sync_text_editor_scene(scene, bounds, theme),
         _ => false,
     }
 }
@@ -2654,6 +2991,8 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
                 append_board_tool_run_trace(&mut painted, host, entry);
                 painted
             }
+            SurfaceKind::Paint2d => entry.raster_host.as_mut()?.build_vector_scene(),
+            SurfaceKind::TextEditor => entry.editor.as_ref()?.build_scene(),
             _ => return None,
         };
         Some(StagedEngineScene {
@@ -3882,6 +4221,83 @@ pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
 
 
 
+/// 🗺️🔗️ `"{z}/{x}/{y}"` substituted into a tile URL template — React's own
+/// `urlTemplate.replace("{z}", …)` chain in `MapRenderer.uploadTileRow`.
+fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
+    template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
+}
+
+/// 🗺️📡️ Admits ONE visible-but-unheld tile into the bounded renderer-asset pipeline as
+/// `WorldAssetRequestKind::MapTile`. The renderer host drains the shared lane
+/// (`take_renderer_asset_step`) and hands the bytes back through [`apply_map_tile_bytes`], which is
+/// where `MapHost::upload_tile`/`upload_vector_tile` is finally called — the twin of React's
+/// `fetch(url)` + `session.uploadTile(...)` pair.
+///
+/// Back-pressure is not a fault: a full request table leaves the tile un-pended so the next frame
+/// re-offers it. Only a structural refusal records a miss.
+///
+/// @see `🧱️elements/🧭️TiledMapHost/🟦️.tsx` — `MapRenderer.uploadTileRow`
+fn reserve_map_tile_fetch(surface: WorldAssetMetadataId, cache: &mut MapSyncCache, held: bool, template: &str, vector: bool, (z, x, y): (u32, u32, u32)) {
+    let slot = (vector, z, x, y);
+    if held || template.is_empty() || cache.tile_pending.contains(&slot) || cache.tile_misses.contains(&slot) {
+        return;
+    }
+    let Ok(key) = WorldAssetMetadataId::try_from_str(&map_tiles::tile_key(z, x, y)) else {
+        cache.tile_misses.insert(slot);
+        return;
+    };
+    let url = map_tile_url(template, z, x, y);
+    match crate::reserve_renderer_asset_request(WorldAssetRequestKind::MapTile { surface, key, vector, z, x, y }, &url) {
+        Ok(_) => {
+            cache.tile_pending.insert(slot);
+        }
+        Err(WorldAssetFault::ItemCapacity | WorldAssetFault::ByteCapacity | WorldAssetFault::Closing | WorldAssetFault::Stale) => {}
+        Err(fault) => {
+            cache.tile_misses.insert(slot);
+            MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
+        }
+    }
+}
+
+/// 🗺️📡️ Offers every tile of the live raster and vector visible ranges, obeying the host's own
+/// render mode (`image`/`vector`/`combined`) exactly as React's `needsRasterTiles`/
+/// `needsVectorTiles` gates do, and clearing a lane's miss set when that lane's visible-range
+/// revision changes (React's `refreshRasterTiles`/`refreshVectorTiles` do the same).
+fn reserve_map_tile_fetches(surface_id: &str, host: &MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::wgpu::TiledMapScene) {
+    let Ok(surface) = WorldAssetMetadataId::try_from_str(surface_id) else { return };
+    let mode = host.render_mode_str();
+    if matches!(mode, "image" | "combined") {
+        let revision = host.visible_tiles_revision();
+        if cache.raster_tiles_revision != Some(revision) {
+            cache.raster_tiles_revision = Some(revision);
+            cache.tile_misses.retain(|(vector, ..)| *vector);
+        }
+        let mut cursor = host.visible_raster_tile_cursor();
+        while let Some(tile) = cursor.peek() {
+            let held = host.has_tile(&map_tiles::tile_key(tile.z, tile.x, tile.y));
+            reserve_map_tile_fetch(surface, cache, held, &map.tile_url_template, false, (tile.z, tile.x, tile.y));
+            cursor.advance();
+        }
+    }
+    if !matches!(mode, "vector" | "combined") {
+        return;
+    }
+    let revision = host.visible_vector_tiles_revision();
+    if cache.vector_tiles_revision != Some(revision) {
+        cache.vector_tiles_revision = Some(revision);
+        cache.tile_misses.retain(|(vector, ..)| !*vector);
+    }
+    let Some(mut cursor) = host.visible_vector_tile_cursor() else { return };
+    while let Some(tile) = cursor.peek() {
+        let held = host.has_vector_tile(&map_tiles::tile_key(tile.z, tile.x, tile.y));
+        reserve_map_tile_fetch(surface, cache, held, &map.vector_tile_url_template, true, (tile.z, tile.x, tile.y));
+        cursor.advance();
+    }
+}
+
+/// 🗺️📥️ Hands one fetched tile to the surface's `MapHost` and clears its pending slot — the wgpu
+/// twin of `session.uploadTile`/`uploadVectorTile`. Bytes the host refuses record a miss, so the
+/// tile is not re-requested until its lane's visible range changes.
 pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
     let WorldAssetRequestKind::MapTile { surface, key: _, vector, z, x, y } = kind else { return };
     ENGINE_SURFACES.with(|cell| {
@@ -3889,10 +4305,17 @@ pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
         let Some(entry) = map.get_mut(surface.as_str()) else {
             return;
         };
+        let slot = (vector, z, x, y);
+        entry.map_sync_cache.tile_pending.remove(&slot);
         let Some(host) = entry.map_host.as_mut() else {
             return;
         };
-        let _ = if vector { host.upload_vector_tile(z, x, y, bytes) } else { host.upload_tile(z, x, y, bytes) };
+        let uploaded = if vector { host.upload_vector_tile(z, x, y, bytes) } else { host.upload_tile(z, x, y, bytes) };
+        if uploaded.is_err() {
+            entry.map_sync_cache.tile_misses.insert(slot);
+            return;
+        }
+        entry.scene_revision = entry.scene_revision.wrapping_add(1);
     });
 }
 
@@ -3921,6 +4344,9 @@ pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
     ((x - inner.x) as f64, (y - inner.y) as f64)
 }
 
+/// 🎯️ Port of `marqueeModeFromModifiers` (ui `⚛️react` target) for a map marquee — the unmodified
+/// case is `"replace"`, the `MergeMode` variant the guest actually declares; the `"default"` this
+/// used to send is in no `MergeMode` taxonomy and never merged anything.
 pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
     if shift && ctrl_or_meta {
         "invertive"
@@ -3929,7 +4355,7 @@ pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
     } else if ctrl_or_meta {
         "subtractive"
     } else {
-        "default"
+        "replace"
     }
 }
 
@@ -3991,100 +4417,40 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
 
 
 
-struct MapInteractionSnapshot {
-    camera: [f64; 3],
-    positions: Vec<String>,
-    routes: Vec<String>,
-    hover: Option<(String, String)>,
-}
-
-fn map_interaction_snapshot(host: &MapHost, camera: [f64; 3]) -> Result<MapInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
-    let position_count = host.selected_position_ids().len();
-    let route_count = host.selected_route_ids().len();
-    if position_count.checked_add(route_count).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)? > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 4 {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
-    }
-    let mut bytes = 0usize;
-    for part in host.selected_position_ids().chain(host.selected_route_ids()).chain(host.hovered_kind()).chain(host.hovered_id()) {
-        if part.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
-        }
-        bytes = bytes.checked_add(part.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-        if bytes > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
-        }
-    }
-    let positions = host.selected_position_ids().map(str::to_owned).collect();
-    let routes = host.selected_route_ids().map(str::to_owned).collect();
-    let hover = host.hovered_kind().zip(host.hovered_id()).map(|(kind, id)| (kind.to_owned(), id.to_owned()));
-    Ok(MapInteractionSnapshot { camera, positions, routes, hover })
-}
-
-fn write_map_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: MapInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+/// 🗺️📷️ The ONE action a map pan/zoom gesture publishes. React's `mirrorSessionCameraToReact`
+/// dispatches `setCamera` and nothing else: feature selection and hover ride the generic
+/// `interactionSelect`/`interactionHover` verbs from the pointer lane (`🎞️Scenes/🎯️targets/🧊️wgpu`'s
+/// `write_tiled_map_selection`/`write_tiled_map_hover`). The deleted `setFeatureSelection`/`setHover`
+/// pair this used to also emit on every wheel tick has no handler left in the GIS app at all — its
+/// `"features"` interaction definition auto-injects the generic verbs instead.
+fn write_map_camera_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, camera: [f64; 3]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let camera_action = ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA;
     let camera_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, camera_action, "surfaceId", surface_id, "camera", "x", "y", "zoom"])?;
     batch.action(controller_id, camera_action, camera_bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), surface_id)?;
         builder.begin_object(Some("camera"))?;
-        builder.number(Some("x"), snapshot.camera[0])?;
-        builder.number(Some("y"), snapshot.camera[1])?;
-        builder.number(Some("zoom"), snapshot.camera[2])?;
+        builder.number(Some("x"), camera[0])?;
+        builder.number(Some("y"), camera[1])?;
+        builder.number(Some("zoom"), camera[2])?;
         builder.end_container()?;
         builder.end_container()
-    })?;
-    let selection_action = ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION;
-    let selection_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, selection_action, "surfaceId", surface_id, "positions", "routes"])?
-        + snapshot.positions.iter().map(String::len).sum::<usize>()
-        + snapshot.routes.iter().map(String::len).sum::<usize>();
-    batch.action(controller_id, selection_action, selection_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), surface_id)?;
-        builder.begin_array(Some("positions"))?;
-        for id in &snapshot.positions {
-            builder.string(None, id)?;
-        }
-        builder.end_container()?;
-        builder.begin_array(Some("routes"))?;
-        for id in &snapshot.routes {
-            builder.string(None, id)?;
-        }
-        builder.end_container()?;
-        builder.end_container()
-    })?;
-    let hover_action = ui_wgpu::wgpu::tiled_map_actions::SET_HOVER;
-    let (kind, id) = snapshot.hover.as_ref().map(|(kind, id)| (kind.as_str(), id.as_str())).unwrap_or(("", ""));
-    let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "surfaceId", surface_id, "hover", "kind", "id", kind, id])?;
-    batch.action(controller_id, hover_action, hover_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), surface_id)?;
-        if snapshot.hover.is_some() {
-            builder.begin_object(Some("hover"))?;
-            builder.string(Some("kind"), kind)?;
-            builder.string(Some("id"), id)?;
-            builder.end_container()?;
-        } else {
-            builder.null(Some("hover"))?;
-        }
-        builder.end_container()
-    })?;
-    Ok(())
+    })
 }
 
 pub fn with_map_interaction_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, intent: MapInteractionIntent) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(1, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let planned = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
-        let Some(host) = map.get(surface_id).and_then(|entry| entry.map_host.as_ref()) else {
-            return Ok(None);
-        };
+        let host = map.get(surface_id).and_then(|entry| entry.map_host.as_ref())?;
         let plan = host.plan_interaction(intent);
-        map_interaction_snapshot(host, plan.camera()).map(|snapshot| Some((plan, snapshot)))
-    })?;
-    let Some((plan, snapshot)) = planned else {
+        let camera = plan.camera();
+        Some((plan, camera))
+    });
+    let Some((plan, camera)) = planned else {
         return Ok(false);
     };
-    write_map_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    write_map_camera_action(&mut reservation, surface_id, controller_id, camera)?;
     reservation.publish_with_checked(|| ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|entry| entry.map_host.as_mut()).is_some_and(|host| host.commit_interaction(plan))))?;
     Ok(true)
 }
@@ -4159,14 +4525,59 @@ pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<S
     .flatten()
 }
 
+/// 📬️ Verbatim port of React's `PUZZLE2D_TRANSIENT_EVENT_NAMES` (`🖥️Board2dHost/🟦️.tsx:293`).
+/// `Hover` and `TransformPreview` were MISSING here: every board pointermove therefore carried a
+/// hover row into `applyBoardEvents`, i.e. a whole-surface republish per move, where React keeps
+/// hover on its own coalesced `interactionHover` lane (see [`puzzle_board_hover_into`]).
 fn board_event_transient(kind: infinite_canvas::BoardEventKind) -> bool {
     use infinite_canvas::BoardEventKind;
-    matches!(kind, BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing)
+    matches!(kind, BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing | BoardEventKind::TransformPreview | BoardEventKind::Hover)
 }
 
+/// 📬️ Verbatim port of React's `PUZZLE2D_FLUSH_NOW_EVENT_NAMES` (`🖥️Board2dHost/🟦️.tsx:294`) — the
+/// four region/rotate kinds were missing, so a rotate or a region edit sat in the buffer until some
+/// later event happened to flush it.
 fn board_event_flush_now(kind: infinite_canvas::BoardEventKind) -> bool {
     use infinite_canvas::BoardEventKind;
-    matches!(kind, BoardEventKind::Select | BoardEventKind::PreselectCancel | BoardEventKind::BrushCandidates | BoardEventKind::BrushPlace | BoardEventKind::EdgeCreate | BoardEventKind::EdgeDelete | BoardEventKind::NodeDelete)
+    matches!(
+        kind,
+        BoardEventKind::Select
+            | BoardEventKind::PreselectCancel
+            | BoardEventKind::BrushCandidates
+            | BoardEventKind::BrushPlace
+            | BoardEventKind::EdgeCreate
+            | BoardEventKind::EdgeDelete
+            | BoardEventKind::NodeDelete
+            | BoardEventKind::NodeRotate
+            | BoardEventKind::RegionCreate
+            | BoardEventKind::RegionMove
+            | BoardEventKind::RegionResize
+    )
+}
+
+/// 🎯️ Classifies every entity id a board fixture carries into the granularity a pick or hover
+/// reports it under — the Rust twin of React's `board2dGranularityById`
+/// (`🖥️Board2dHost/🟦️.tsx:190`), including its rule that an id the document does not carry reads as
+/// a `node` rather than being dropped. A refused fixture classifies nothing.
+fn board2d_granularity_by_id(fixture_json: &str) -> HashMap<String, String> {
+    let mut by_id = HashMap::new();
+    let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else { return by_id };
+    for node in fixture.get("nodes").and_then(Value::as_array).into_iter().flatten() {
+        if let Some(id) = node.get("id").and_then(Value::as_str) {
+            by_id.insert(id.to_string(), "node".to_string());
+        }
+        for handle in node.get("handles").and_then(Value::as_array).into_iter().flatten() {
+            if let Some(id) = handle.get("id").and_then(Value::as_str) {
+                by_id.insert(id.to_string(), "handle".to_string());
+            }
+        }
+    }
+    for edge in fixture.get("edges").and_then(Value::as_array).into_iter().flatten() {
+        if let Some(id) = edge.get("id").and_then(Value::as_str) {
+            by_id.insert(id.to_string(), "edge".to_string());
+        }
+    }
+    by_id
 }
 
 fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infinite_canvas::BoardOwnedEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
@@ -4463,6 +4874,118 @@ pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &m
     })
 }
 
+/// 📤️ Unconditional drain + coalesce + dispatch of the board's own event buffer — the wgpu twin of
+/// React's `flushBoardEvents`. `puzzle_board_wheel_into` inlines the same three steps because it
+/// must ride the camera action's reservation; this is the standalone form the keyboard chords use.
+fn puzzle_board_flush_events_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    board_drain_into_buffer(surface_id);
+    let Some(events_json) = board_peek_buffer_coalesced(surface_id) else {
+        return Ok(false);
+    };
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
+    let mut reservation = input.reserve_actions(1, bytes)?;
+    write_board_events_flat(&mut reservation, controller_id, &events_json)?;
+    reservation.publish_with_checked(|| {
+        ENGINE_SURFACES.with(|cell| {
+            let mut map = cell.borrow_mut();
+            let Some(entry) = map.get_mut(surface_id) else { return false };
+            let pending = std::mem::take(&mut entry.board_pending_events);
+            entry.board_retiring_events = Some(pending);
+            true
+        })
+    })?;
+    Ok(true)
+}
+
+/// 🐁️ Publishes the board's live hover on the framework's own `interactionHover` lane, scoped to the
+/// `Board2dScene.domain_id` the app declared — the wgpu twin of React's `dispatchBoardHover`
+/// (`🖥️Board2dHost/🟦️.tsx:774-781`), including its two refusals: an app that declares NO domain
+/// publishes nothing at all, and an unchanged target costs no round trip. The granularity comes from
+/// the fixture's own classification, defaulting to `"node"` exactly as React's
+/// `granularityByIdRef.current.get(id) || "node"` does.
+///
+/// 🎯️ `domain_id` used to be carried on `Board2dScene` and read NOWHERE in this target, so every
+/// board hover was invisible to the framework's interaction domain (outliner rows, sibling panes).
+pub fn puzzle_board_hover_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let planned = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        let domain_id = entry.board_sync_cache.domain_id.clone()?;
+        let hovered = entry.board_host.as_ref()?.hovered_id.clone();
+        if entry.board_hover_published.as_ref() == Some(&hovered) {
+            return None;
+        }
+        let granularity = hovered.as_ref().and_then(|id| entry.board_sync_cache.granularity_by_id.get(id).cloned()).unwrap_or_else(|| "node".to_string());
+        Some((domain_id, hovered, granularity))
+    });
+    let Some((domain_id, hovered, granularity)) = planned else {
+        return Ok(false);
+    };
+    let targets = match hovered.as_deref() {
+        Some(id) => json!([{ "granularity": granularity, "id": id }]).to_string(),
+        None => "[]".to_string(),
+    };
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", &domain_id, "channel", "pointer", "targets", &targets])?;
+    let mut reservation = input.reserve_actions(1, bytes)?;
+    write_interaction_hover(&mut reservation, controller_id, &domain_id, &targets)?;
+    reservation.publish_with_checked(|| {
+        ENGINE_SURFACES.with(|cell| {
+            let mut map = cell.borrow_mut();
+            let Some(entry) = map.get_mut(surface_id) else { return false };
+            entry.board_hover_published = Some(hovered.clone());
+            true
+        })
+    })?;
+    Ok(true)
+}
+
+/// ⌨️ Board2d's keyboard chords, the wgpu twin of React's two `Board2dHost` keydown listeners:
+/// `Escape` cancels an in-flight area-select (`🟦️.tsx:1292-1313`, `session.cancelAreaSelect`), and
+/// `Tab`/`shift+Tab` walk the open brush slot's candidates forward/back (`🟦️.tsx:1338-1339`, a
+/// CAPTURE-phase listener so it beats the shell's own chord table). Both were absent: the Board2d
+/// wgpu region had zero keyboard handling of any kind, so an area-select could only be released by
+/// pointer-up and the candidate picker was unreachable without the pointer.
+///
+/// Returns `true` when the chord was consumed and must NOT fall through to the shell's keybinding
+/// dispatch — the Rust equivalent of React's `event.preventDefault()`.
+pub fn puzzle_board_key_into(
+    surface_id: &str,
+    controller_id: &str,
+    key: &KeyAction,
+    modifiers: &PointerModifiers,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    // 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
+    // on `scene.interactive`; the pointer-inside witness is this target's equivalent.
+    let armed = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        entry.board_pointer_inside.then_some(entry.board_sync_cache.active_utility.clone().unwrap_or_else(|| "select".into()))
+    });
+    let Some(active_utility) = armed else {
+        return Ok(false);
+    };
+    let acted = match key {
+        KeyAction::Escape => with_board_host_mut(surface_id, |host| host.cancel_area_select()).unwrap_or(false),
+        KeyAction::Tab => {
+            if active_utility != "brush" {
+                return Ok(false);
+            }
+            with_board_host_mut(surface_id, |host| {
+                host.brush_cycle_candidate(!modifiers.shift);
+                true
+            })
+            .unwrap_or(false)
+        }
+        _ => return Ok(false),
+    };
+    if !acted {
+        return Ok(false);
+    }
+    puzzle_board_flush_events_into(surface_id, controller_id, input)?;
+    Ok(true)
+}
+
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
@@ -4501,7 +5024,8 @@ pub fn puzzle_board_pointer_move_into(
     let mut reservation = input.reserve_actions(1, bytes)?;
     write_board_events_flat(&mut reservation, controller_id, events_json)?;
     reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, Some(true)))?;
-    Ok(true)
+    let hovered = puzzle_board_hover_into(surface_id, controller_id, input)?;
+    Ok(true | hovered)
 }
 
 pub fn puzzle_board_pointer_up_into(
@@ -4544,6 +5068,11 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     if !was_inside {
         return Ok(false);
     }
+    // 🐁️ The leave clears the domain's hover before the board events go out — React's
+    // `dispatchBoardHover(null)` on the same transition. The engine's own `hovered_id` is already
+    // `None` by the time a leave is planned, so the witness comparison publishes exactly one clear.
+    let cleared = puzzle_board_hover_into(surface_id, controller_id, input)?;
+    let _ = cleared;
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
@@ -4611,6 +5140,373 @@ pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rec
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-board2d-engine/🦀️.rs"]
 mod board2d_engine_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🖌️wgpu-paint2d-engine/🦀️.rs"]
+mod paint2d_engine_tests;
+
+//#region Paint2d
+/** 🕹️ Raster's framework-owned layer interaction domain and its one granularity — the same pair
+ * `✏️editor/🦀️.rs`'s `.interaction(InteractionDefinition { id: "layers", granularities: [layer] })`
+ * declares, and the same pair React dispatches `interactionHover`/`interactionSelect` under. Raster
+ * declares NO bespoke `setHover`: the bespoke verbs were refused "undeclared-action" on every
+ * pointer move (ticket 26/09/05/RASTER-PLUGIN-END-TO-END).
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `PAINT2D_INTERACTION_DOMAIN` */
+const PAINT2D_INTERACTION_DOMAIN: &str = "layers";
+const PAINT2D_LAYER_GRANULARITY: &str = "layer";
+
+pub fn with_raster_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut RasterHost) -> R) -> Option<R> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(surface_id)?;
+        let host = entry.raster_host.as_mut()?;
+        let result = f(host);
+        entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        Some(result)
+    })
+}
+
+/// 🖱️ The topmost pixel layer under a surface-local point — the wgpu twin of
+/// `resolveTargetsAtClient`'s `pickTargetsAtScreenJson(...)` read, narrowed to the `layer`
+/// granularity that raster's interaction domain actually declares.
+fn paint2d_pick_layer(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let host = map.get(surface_id)?.raster_host.as_ref()?;
+        let hits: Vec<Value> = serde_json::from_str(&host.pick_targets_at_screen_json(sx, sy)).ok()?;
+        hits.iter().find(|hit| hit.get("domain").and_then(Value::as_str) == Some("pixel")).and_then(|hit| hit.get("id").and_then(Value::as_str)).map(str::to_owned)
+    })
+}
+
+//#region 🖱️ContextMenuTargets
+/// 🖱️ Every pick target under a surface-local point, as the `hits` rows a context-menu request
+/// carries — the wgpu twin of each React host's `JSON.parse(session.pickTargetsAtScreenJson(sx, sy))
+/// .map(target => ({ domain, id, label }))`. Order is the host's own most-general-last order, which
+/// is what React sends and what a plugin's `hits[0]` reads as "the thing under the pointer".
+fn pick_target_hits(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
+    serde_json::from_str::<Vec<Value>>(json)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|target| {
+            let domain = target.get("domain").and_then(Value::as_str)?.to_string();
+            let id = target.get("id").and_then(Value::as_str)?.to_string();
+            Some(ui_wgpu::wgpu::ContextMenuHit { domain, id, label: target.get("label").and_then(Value::as_str).map(str::to_owned) })
+        })
+        .collect()
+}
+
+/// 🖱️ `nodes`/`edges`/`handles` off a node-graph host's own selection read, tolerating both the
+/// object form and the bare id array — port of `parseSelectionDomainsFromSession`
+/// (`🧱️elements/🌐️World3dHost/🟦️.tsx:1801`).
+fn selection_domains(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
+    let Ok(parsed) = serde_json::from_str::<Value>(json) else {
+        return (Vec::new(), Vec::new(), Vec::new());
+    };
+    if let Some(array) = parsed.as_array() {
+        return (array.iter().filter_map(Value::as_str).map(str::to_owned).collect(), Vec::new(), Vec::new());
+    }
+    let list = |primary: &str, fallback: &str| -> Vec<String> {
+        parsed
+            .get(primary)
+            .or_else(|| parsed.get(fallback))
+            .and_then(Value::as_array)
+            .map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+            .unwrap_or_default()
+    };
+    (list("nodes", "nodes"), list("edges", "edgeIds"), list("handles", "handleIds"))
+}
+
+/// 🕸️ One node-graph right-click's surface target: the pick targets under the point plus the live
+/// selection split into React's `node`/`edge`/`handle` groups — port of `NodeGraph`'s own
+/// `onContextMenu` (`🧱️elements/🕸️NodeGraph/🟦️.tsx:3509`, `selectionGroupsFromDomains`).
+pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
+    ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let engine = map.get(surface_id)?.node_graph.as_ref()?;
+            let (picks, domains) = match engine {
+                NodeGraphEngine::Flow(host) => (host.pick_targets_at_screen_json(sx, sy), host.selection_domains_json()),
+                NodeGraphEngine::Dag(host) => (host.pick_targets_at_screen_json(sx, sy), host.dag.selection_domains_json()),
+            };
+            let (nodes, edges, handles) = selection_domains(&domains);
+            let mut selection = Vec::new();
+            for (domain, ids) in [("node", nodes), ("edge", edges), ("handle", handles)] {
+                if !ids.is_empty() {
+                    selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: domain.into(), ids });
+                }
+            }
+            Some((pick_target_hits(&picks), selection))
+        })
+        .unwrap_or_default()
+}
+
+/// 🖥️ One board-2d right-click's surface target: every canvas pick target under the point, plus the
+/// scene's own selection as the `node` group — port of `Board2dHost`'s `onContextMenu`
+/// (`🧱️elements/🖥️Board2dHost/🟦️.tsx:1355`).
+pub fn board2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
+    let hits = with_board_host(surface_id, |host| pick_target_hits(&host.pick_targets_at_screen_json(sx, sy))).unwrap_or_default();
+    let ids: Vec<String> = serde_json::from_str(selection_json).unwrap_or_default();
+    let selection = if ids.is_empty() { Vec::new() } else { vec![ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "node".into(), ids }] };
+    (hits, selection)
+}
+
+/// 🖌️ One paint-2d right-click's surface target: the raster host's pick targets, fresh at the click
+/// point (raster keeps no cached hover), plus the scene's selection as the `layer` group — port of
+/// `Paint2dHost`'s `onContextMenu` (`🧱️elements/🖌️Paint2dHost/🟦️.tsx:540`).
+pub fn paint2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
+    let hits = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        map.get(surface_id).and_then(|entry| entry.raster_host.as_ref()).map(|host| pick_target_hits(&host.pick_targets_at_screen_json(sx, sy))).unwrap_or_default()
+    });
+    let ids: Vec<String> = serde_json::from_str(selection_json).unwrap_or_default();
+    let selection = if ids.is_empty() { Vec::new() } else { vec![ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "layer".into(), ids }] };
+    (hits, selection)
+}
+
+/// ✏️ One text-editor right-click's surface target: the editor's own pick targets under the point and
+/// the `text` context a menu resolver reads (caret, whether a selection exists, whether rename and
+/// completions are offered) — port of `TextEditor`'s `onContextMenu`
+/// (`🧱️elements/✏️TextEditor/🟦️.tsx:479`). `selection` stays empty: the editor reports its text state
+/// through `text`, never as selection groups.
+pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Option<ui_wgpu::wgpu::ContextMenuTextContext>) {
+    let sx = f64::from(x - inner.x);
+    let sy = f64::from(y - inner.y);
+    ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let host = map.get(&scene.surface_id)?.editor.as_ref()?;
+            let editor = scene.text_editor.as_ref();
+            let text = ui_wgpu::wgpu::ContextMenuTextContext {
+                caret: host.caret(),
+                has_selection: host.anchor() != host.caret(),
+                word: None,
+                can_rename: editor.and_then(|editor| editor.rename_json.as_deref()).is_some(),
+                has_completions: editor.and_then(|editor| editor.completions_json.as_deref()).is_some_and(|json| json != "[]"),
+            };
+            Some((pick_target_hits(&host.pick_targets_at_screen_json(sx, sy)), Some(text)))
+        })
+        .unwrap_or_default()
+}
+/// 🧪️ `pick_target_hits`, for the surface-context-menu law (this module's own tests never construct
+/// a live engine host, and the JSON shape is the contract that drifts).
+#[cfg(test)]
+pub fn pick_target_hits_for_test(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
+    pick_target_hits(json)
+}
+
+/// 🧪️ `selection_domains`, for the surface-context-menu law.
+#[cfg(test)]
+pub fn selection_domains_for_test(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
+    selection_domains(json)
+}
+//#endregion 🖱️ContextMenuTargets
+
+/// 🎯️ `[{ granularity, id }]` — the `targets` string both interaction verbs carry, byte-identical to
+/// React's `JSON.stringify(targets)` in `world3dHoverActionArgs`/`world3dSelectionActionArgs`.
+fn interaction_targets_json(granularity: &str, ids: &[String]) -> String {
+    serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
+}
+
+fn write_interaction_hover(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", domain_id, "channel", "pointer", "targets", targets])?;
+    batch.action(controller_id, "interactionHover", bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("domainId"), domain_id)?;
+        builder.string(Some("channel"), "pointer")?;
+        builder.string(Some("targets"), targets)?;
+        builder.end_container()
+    })
+}
+
+fn write_interaction_select(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str, merge: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "interactionSelect", "domainId", domain_id, "targets", targets, "merge", merge, "method", "pick"])?;
+    batch.action(controller_id, "interactionSelect", bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("domainId"), domain_id)?;
+        builder.string(Some("targets"), targets)?;
+        builder.string(Some("merge"), merge)?;
+        builder.string(Some("method"), "pick")?;
+        builder.end_container()
+    })
+}
+
+fn write_surface_camera(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, camera: (f64, f64, f64)) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let controller_id = scene.controller_id.as_str();
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    batch.action(controller_id, "setCamera", bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.begin_object(Some("camera"))?;
+        builder.number(Some("x"), camera.0)?;
+        builder.number(Some("y"), camera.1)?;
+        builder.number(Some("zoom"), camera.2)?;
+        builder.end_container()?;
+        builder.end_container()
+    })
+}
+
+/// 🖌️ Whether this utility puts the surface in selection mode rather than paint mode — React's
+/// `isPaint2dSelectionUtility`.
+fn paint2d_selection_utility(active_utility: &str) -> bool {
+    matches!(active_utility, "selectMarquee" | "selectLasso" | "selectWand")
+}
+
+/// 🕹️ The merge mode a modifier combination selects — the wgpu twin of `marqueeModeFromModifiers`.
+fn paint2d_merge_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
+    if shift {
+        "add"
+    } else if ctrl_or_meta {
+        "subtract"
+    } else {
+        "replace"
+    }
+}
+
+/// 🕹️ `selectionMergeIds` — the id list `interactionSelect` carries once a merge mode is applied to
+/// the scene's current selection.
+fn paint2d_merge_ids(mode: &str, current: &[String], next: &[String]) -> Vec<String> {
+    match mode {
+        "add" => {
+            let mut merged = current.to_vec();
+            for id in next {
+                if !merged.contains(id) {
+                    merged.push(id.clone());
+                }
+            }
+            merged
+        }
+        "subtract" => current.iter().filter(|id| !next.contains(id)).cloned().collect(),
+        _ => next.to_vec(),
+    }
+}
+
+fn paint2d_selection(scene: &UiComponentSceneNode) -> Vec<String> {
+    scene.paint_2d.as_ref().and_then(|paint| serde_json::from_str::<Vec<String>>(&paint.selection_json).ok()).unwrap_or_default()
+}
+
+/** 🖱️ One paint-2d pointer press or release. Selection utilities pick a layer and publish
+ * `interactionSelect`; every other utility is a brush gesture driven straight into the `RasterHost`,
+ * whose resulting camera is republished as `setCamera` exactly as React's `onPointerUp` does.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onPointerDown`/`onPointerUp` */
+pub fn paint2d_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, down: bool, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(paint) = scene.paint_2d.as_ref() else {
+        return Ok(false);
+    };
+    if paint.view_mode == "navigator" {
+        return Ok(false);
+    }
+    let sx = f64::from(x - inner.x);
+    let sy = f64::from(y - inner.y);
+    if paint2d_selection_utility(&paint.active_utility) {
+        if down {
+            return Ok(false);
+        }
+        let merge = paint2d_merge_mode(shift, ctrl_or_meta);
+        // 🖱️ React reaches `onSelectTarget(target, …)` only through a resolved pick, so an empty
+        // release is a dismissed pick menu, never a selection clear.
+        let Some(hit) = paint2d_pick_layer(&scene.surface_id, sx, sy) else {
+            return Ok(false);
+        };
+        let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), std::slice::from_ref(&hit));
+        let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, &ids);
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
+        let mut batch = input.reserve_actions(1, bytes)?;
+        write_interaction_select(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets, merge)?;
+        batch.publish()?;
+        return Ok(true);
+    }
+    let Some(camera) = with_raster_host_mut(&scene.surface_id, |host| {
+        if down {
+            host.pointer_down_screen(sx, sy, button.max(0) as u8);
+        } else {
+            host.pointer_up_screen(sx, sy);
+        }
+        engine_camera_from_json(&host.camera_json())
+    })
+    .flatten() else {
+        return Ok(false);
+    };
+    if down {
+        return Ok(true);
+    }
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let mut batch = input.reserve_actions(1, bytes)?;
+    write_surface_camera(&mut batch, scene, camera)?;
+    batch.publish()?;
+    Ok(true)
+}
+
+/** 🖱️ One paint-2d pointer move: a hover pick under a selection utility, a live brush stroke plus
+ * `setCamera` republish otherwise.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onPointerMove` */
+pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(paint) = scene.paint_2d.as_ref() else {
+        return Ok(false);
+    };
+    if paint.view_mode == "navigator" {
+        return Ok(false);
+    }
+    let sx = f64::from(x - inner.x);
+    let sy = f64::from(y - inner.y);
+    if paint2d_selection_utility(&paint.active_utility) {
+        let hit = paint2d_pick_layer(&scene.surface_id, sx, sy);
+        if hit.as_deref() == paint.hovered_id.as_deref() {
+            return Ok(false);
+        }
+        let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, hit.as_slice());
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "domainId", PAINT2D_INTERACTION_DOMAIN, "channel", "pointer", "targets", &targets])?;
+        let mut batch = input.reserve_actions(1, bytes)?;
+        write_interaction_hover(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets)?;
+        batch.publish()?;
+        return Ok(true);
+    }
+    let Some(camera) = with_raster_host_mut(&scene.surface_id, |host| {
+        host.pointer_move_screen(sx, sy);
+        engine_camera_from_json(&host.camera_json())
+    })
+    .flatten() else {
+        return Ok(false);
+    };
+    if engine_camera_from_json(&paint.camera_json) == Some(camera) {
+        return Ok(false);
+    }
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let mut batch = input.reserve_actions(1, bytes)?;
+    write_surface_camera(&mut batch, scene, camera)?;
+    batch.publish()?;
+    Ok(true)
+}
+
+/** 🎡️ One paint-2d wheel notch — the host owns the zoom-at-cursor math and the resulting camera is
+ * republished, matching React's `onWheel`.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onWheel` */
+pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(paint) = scene.paint_2d.as_ref() else {
+        return Ok(false);
+    };
+    if paint.view_mode == "navigator" {
+        return Ok(false);
+    }
+    let sx = f64::from(x - inner.x);
+    let sy = f64::from(y - inner.y);
+    let Some(camera) = with_raster_host_mut(&scene.surface_id, |host| {
+        host.wheel_screen(sx, sy, f64::from(delta));
+        engine_camera_from_json(&host.camera_json())
+    })
+    .flatten() else {
+        return Ok(false);
+    };
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let mut batch = input.reserve_actions(1, bytes)?;
+    write_surface_camera(&mut batch, scene, camera)?;
+    batch.publish()?;
+    Ok(true)
+}
+//#endregion Paint2d
 
 //#region TextEditor
 
@@ -4841,6 +5737,28 @@ pub fn text_editor_caret(scene: &UiComponentSceneNode) -> (usize, usize) {
         };
         (host.anchor(), host.caret())
     })
+}
+
+/** @emoji ✏️ Publishes the multi-span rename PREVIEW into the live `EditorHost`: the rewritten
+ * buffer, the occurrence highlights and one extra caret per occurrence — React's
+ * `updateRenamePreview` (`setText` + `setSelectionOccurrencesJson` + `setExtraCaretsJson` +
+ * `renderFrame`, `🧱️elements/✏️TextEditor/🟦️.tsx:301-309`). Host-local only: nothing is dispatched
+ * until the commit, so a cancelled rename is undone by re-previewing the committed buffer. */
+pub fn text_editor_preview_rename(scene: &UiComponentSceneNode, text: &str, occurrences: &[(usize, usize)]) -> bool {
+    let spans = serde_json::to_string(&occurrences.iter().map(|(start, end)| json!({ "start": start, "end": end })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
+    let carets = serde_json::to_string(&occurrences.iter().map(|(start, _)| *start).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
+    ENGINE_SURFACES
+        .with(|cell| {
+            let mut map = cell.borrow_mut();
+            let entry = map.get_mut(&scene.surface_id)?;
+            let host = entry.editor.as_mut()?;
+            host.set_text(text.to_string());
+            host.set_selection_occurrences_json(&spans);
+            host.set_extra_carets_json(&carets);
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+            Some(true)
+        })
+        .unwrap_or(false)
 }
 
 /// 📍️ Screen-space caret position (surface-local, i.e. already offset by `inner.x/y`), for placing the

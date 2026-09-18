@@ -76,7 +76,10 @@
     "wireHighlight": 2.85,
     "handle": 2,
     "selectionPreview": 1.5,
-    "selectionPreviewDash": [5, 4],
+    "selectionPreviewDash": [
+      5,
+      4
+    ],
     "gridLarge": 1,
     "gridMedium": 0.72,
     "gridSmall": 0.48,
@@ -264,10 +267,26 @@
       "previewMinSize": 20,
       "variadicPlusZoomThreshold": 1.5,
       "lodZoomShift": 0.25,
-      "lodBandFloorZoom": [0.05, 0.15, 0.35, 0.55, 1.25, 2.5]
+      "lodBandFloorZoom": [
+        0.05,
+        0.15,
+        0.35,
+        0.55,
+        1.25,
+        2.5
+      ]
     },
     "map": {
-      "labelPxBands": [26, 26, 20, 14, 12.5, 12, 10.5, 10.5],
+      "labelPxBands": [
+        26,
+        26,
+        20,
+        14,
+        12.5,
+        12,
+        10.5,
+        10.5
+      ],
       "labelMaxMin": 48,
       "labelMaxMax": 140,
       "layerWeightMin": 0.25,
@@ -344,9 +363,28 @@
     }
   },
   "presence": {
-    "hues": [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
-    "light": { "s": 0.68, "l": 0.32 },
-    "dark": { "s": 0.72, "l": 0.62 }
+    "hues": [
+      0,
+      210,
+      120,
+      30,
+      270,
+      180,
+      330,
+      60,
+      240,
+      150,
+      300,
+      90
+    ],
+    "light": {
+      "s": 0.68,
+      "l": 0.32
+    },
+    "dark": {
+      "s": 0.72,
+      "l": 0.62
+    }
   },
   "appearances": {
     "light": {
@@ -371,7 +409,11 @@
           "token": "secondary"
         },
         "edgeStrokeDisabled": {
-          "mix": ["gray", "transparent", 0.38],
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "nodeFill": {
@@ -393,18 +435,47 @@
           "token": "primary"
         },
         "nodeFillSelectionExit": {
-          "mix": ["secondary", "light-5-7", 0.24]
+          "mix": [
+            "secondary",
+            "light-5-7",
+            0.24
+          ]
         },
         "nodeStrokeSelectionExit": {
           "token": "secondary"
         },
         "nodeFillDisabled": {
-          "mix": ["light-5-7", "transparent", 0.5],
+          "mix": [
+            "light-5-7",
+            "transparent",
+            0.5
+          ],
           "alpha": 0.5
         },
         "nodeStrokeDisabled": {
-          "mix": ["gray", "transparent", 0.38],
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
+        },
+        "nodeStrokeComputing": {
+          "token": "secondary"
+        },
+        "nodeStrokeStale": {
+          "mix": [
+            "warning",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.9
+        },
+        "nodeStrokeError": {
+          "token": "danger"
+        },
+        "nodeStrokeBlocked": {
+          "token": "gray"
         },
         "indirectHandleFill": {
           "token": "indirect-handle"
@@ -432,17 +503,29 @@
           "token": "primary"
         },
         "handleFillSelectionExit": {
-          "mix": ["secondary", "light-5-7", 0.24]
+          "mix": [
+            "secondary",
+            "light-5-7",
+            0.24
+          ]
         },
         "handleStrokeSelectionExit": {
           "token": "secondary"
         },
         "handleFillDisabled": {
-          "mix": ["light-5-7", "transparent", 0.5],
+          "mix": [
+            "light-5-7",
+            "transparent",
+            0.5
+          ],
           "alpha": 0.5
         },
         "handleStrokeDisabled": {
-          "mix": ["gray", "transparent", 0.38],
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "wireStroke": {
@@ -458,11 +541,19 @@
           "token": "secondary"
         },
         "wireStrokeDisabled": {
-          "mix": ["gray", "transparent", 0.38],
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "selectionPreviewFill": {
-          "mix": ["primary", "transparent", 0.12],
+          "mix": [
+            "primary",
+            "transparent",
+            0.12
+          ],
           "alpha": 0.12
         },
         "selectionPreviewStroke": {
@@ -480,7 +571,11 @@
           "alpha": 0.78
         },
         "minimapWidgetPanelFill": {
-          "mix": ["light-8-9", "gray", 0.12],
+          "mix": [
+            "light-8-9",
+            "gray",
+            0.12
+          ],
           "alpha": 0.92
         },
         "minimapWidgetPanelStroke": {
@@ -488,7 +583,11 @@
           "alpha": 0.65
         },
         "minimapWidgetViewportFill": {
-          "mix": ["primary", "transparent", 0.08],
+          "mix": [
+            "primary",
+            "transparent",
+            0.08
+          ],
           "alpha": 0.08
         },
         "minimapWidgetViewportStroke": {
@@ -557,17 +656,11 @@
         "base": {
           "token": "light"
         },
-        "canvas": {
-          "token": "light-8-9"
-        },
-        "window": {
-          "token": "light-6-7"
-        },
-        "panel": {
-          "token": "light-5-7"
-        },
         "foreground": {
           "token": "dark"
+        },
+        "muted": {
+          "token": "light-8-9"
         },
         "mutedForeground": {
           "token": "gray"
@@ -585,16 +678,14 @@
           "token": "dark"
         },
         "activeHover": {
-          "mix": ["primary", "black", 0.9]
+          "mix": [
+            "primary",
+            "black",
+            0.9
+          ]
         },
         "hoverInteractiveFill": {
           "token": "gray"
-        },
-        "hoverWindow": {
-          "token": "light-gray"
-        },
-        "hoverPanel": {
-          "token": "gray-600"
         },
         "borderNormal": {
           "token": "gray"
@@ -604,13 +695,65 @@
         },
         "borderElement": {
           "token": "gray"
+        }
+      },
+      "outcome": {
+        "error": {
+          "token": "danger"
         },
-        "temporary": {
-          "token": "light-4-7"
+        "warning": {
+          "token": "warning"
         },
-        "overlayBg": {
-          "token": "light-4-7",
-          "alpha": 0.98
+        "success": {
+          "token": "success"
+        },
+        "progress": {
+          "token": "secondary"
+        }
+      },
+      "diagram": {
+        "checkerLight": {
+          "token": "gray-900"
+        },
+        "checkerDark": {
+          "token": "gray-700"
+        },
+        "stroke": {
+          "token": "secondary",
+          "alpha": 0.95
+        },
+        "seam": {
+          "token": "tertiary",
+          "alpha": 0.95
+        },
+        "accent": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.55
+          ],
+          "alpha": 0.9
+        },
+        "accentFill": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.8
+        },
+        "shapeOutline": {
+          "token": "gray",
+          "alpha": 0.9
+        },
+        "fieldResidual": {
+          "token": "warning"
+        },
+        "fieldReaction": {
+          "token": "primary"
+        },
+        "fieldDisplacement": {
+          "token": "success"
         }
       }
     },
@@ -636,7 +779,11 @@
           "token": "secondary"
         },
         "edgeStrokeDisabled": {
-          "mix": ["gray-400", "transparent", 0.38],
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "nodeFill": {
@@ -658,21 +805,54 @@
           "token": "primary"
         },
         "nodeFillSelectionExit": {
-          "mix": ["secondary", "dark-5-7", 0.24]
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
         },
         "nodeStrokeSelectionExit": {
           "token": "secondary"
         },
         "nodeFillDisabled": {
-          "mix": ["dark-5-7", "transparent", 0.5],
+          "mix": [
+            "dark-5-7",
+            "transparent",
+            0.5
+          ],
           "alpha": 0.5
         },
         "nodeStrokeDisabled": {
-          "mix": ["gray-400", "transparent", 0.38],
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
+        "nodeStrokeComputing": {
+          "token": "secondary"
+        },
+        "nodeStrokeStale": {
+          "mix": [
+            "warning",
+            "gray-600",
+            0.35
+          ],
+          "alpha": 0.9
+        },
+        "nodeStrokeError": {
+          "token": "danger"
+        },
+        "nodeStrokeBlocked": {
+          "token": "gray-600"
+        },
         "indirectHandleFill": {
-          "mix": ["secondary", "dark-5-7", 0.24]
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
         },
         "indirectHandleStroke": {
           "token": "secondary"
@@ -697,17 +877,29 @@
           "token": "primary"
         },
         "handleFillSelectionExit": {
-          "mix": ["secondary", "dark-5-7", 0.24]
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
         },
         "handleStrokeSelectionExit": {
           "token": "secondary"
         },
         "handleFillDisabled": {
-          "mix": ["dark-5-7", "transparent", 0.5],
+          "mix": [
+            "dark-5-7",
+            "transparent",
+            0.5
+          ],
           "alpha": 0.5
         },
         "handleStrokeDisabled": {
-          "mix": ["gray-400", "transparent", 0.38],
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "wireStroke": {
@@ -723,11 +915,19 @@
           "token": "secondary"
         },
         "wireStrokeDisabled": {
-          "mix": ["gray-400", "transparent", 0.38],
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
           "alpha": 0.38
         },
         "selectionPreviewFill": {
-          "mix": ["primary", "transparent", 0.12],
+          "mix": [
+            "primary",
+            "transparent",
+            0.12
+          ],
           "alpha": 0.12
         },
         "selectionPreviewStroke": {
@@ -745,7 +945,11 @@
           "alpha": 0.78
         },
         "minimapWidgetPanelFill": {
-          "mix": ["dark-6-7", "gray-400", 0.18],
+          "mix": [
+            "dark-6-7",
+            "gray-400",
+            0.18
+          ],
           "alpha": 0.94
         },
         "minimapWidgetPanelStroke": {
@@ -753,7 +957,11 @@
           "alpha": 0.75
         },
         "minimapWidgetViewportFill": {
-          "mix": ["primary", "transparent", 0.1],
+          "mix": [
+            "primary",
+            "transparent",
+            0.1
+          ],
           "alpha": 0.1
         },
         "minimapWidgetViewportStroke": {
@@ -822,17 +1030,11 @@
         "base": {
           "token": "dark"
         },
-        "canvas": {
-          "token": "dark-6-7"
-        },
-        "window": {
-          "token": "dark-8-9"
-        },
-        "panel": {
-          "token": "dark-7-9"
-        },
         "foreground": {
           "token": "light"
+        },
+        "muted": {
+          "token": "dark-8-9"
         },
         "mutedForeground": {
           "token": "gray"
@@ -850,16 +1052,14 @@
           "token": "light"
         },
         "activeHover": {
-          "mix": ["primary", "black", 0.9]
+          "mix": [
+            "primary",
+            "black",
+            0.9
+          ]
         },
         "hoverInteractiveFill": {
           "token": "gray"
-        },
-        "hoverWindow": {
-          "token": "dark-gray"
-        },
-        "hoverPanel": {
-          "token": "gray-400"
         },
         "borderNormal": {
           "token": "gray"
@@ -869,13 +1069,65 @@
         },
         "borderElement": {
           "token": "gray"
+        }
+      },
+      "outcome": {
+        "error": {
+          "token": "danger"
         },
-        "temporary": {
+        "warning": {
+          "token": "warning"
+        },
+        "success": {
+          "token": "success"
+        },
+        "progress": {
+          "token": "secondary"
+        }
+      },
+      "diagram": {
+        "checkerLight": {
           "token": "dark-gray"
         },
-        "overlayBg": {
-          "token": "dark-gray",
-          "alpha": 0.98
+        "checkerDark": {
+          "token": "dark-dark-gray"
+        },
+        "stroke": {
+          "token": "secondary",
+          "alpha": 0.95
+        },
+        "seam": {
+          "token": "tertiary",
+          "alpha": 0.95
+        },
+        "accent": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.55
+          ],
+          "alpha": 0.9
+        },
+        "accentFill": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.8
+        },
+        "shapeOutline": {
+          "token": "gray",
+          "alpha": 0.9
+        },
+        "fieldResidual": {
+          "token": "warning"
+        },
+        "fieldReaction": {
+          "token": "primary"
+        },
+        "fieldDisplacement": {
+          "token": "success"
         }
       }
     }

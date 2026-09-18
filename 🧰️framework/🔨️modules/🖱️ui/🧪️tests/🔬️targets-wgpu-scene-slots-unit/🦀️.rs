@@ -2,7 +2,6 @@
 use super::*;
 use crate::wgpu::Label;
 use crate::wgpu::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
-use crate::wgpu::flex::LayoutEngine;
 use crate::wgpu::theme::Theme;
 
 fn text(value: &str) -> UiNode {
@@ -52,10 +51,7 @@ fn layout(node: &UiNode) -> UiTree {
     let mut tree = UiTree::new();
     tree.apply_tree(node);
     let root = tree.root.unwrap();
-    let mut engine = LayoutEngine::new();
-    let mut atlas = FontAtlas::builtin();
-    let theme = Theme::default();
-    engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 400.0, 400.0), "layout pass");
     tree
 }
 

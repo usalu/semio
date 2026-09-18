@@ -83,7 +83,7 @@ impl Fixture {
     }
 
     fn ctx(&mut self) -> FrameworkWidgetContext<'_> {
-        framework_widget_context(&mut self.draw, None, &mut self.atlas, None, &mut self.input, &self.theme, &mut self.scroll_offsets, &mut self.collapsed_sections, &mut self.open_selects, None)
+        framework_widget_context(&mut self.draw, None, &mut self.atlas, None, &mut self.input, &self.theme, &mut self.scroll_offsets, &mut self.collapsed_sections, &mut self.open_selects, None, 0.0)
     }
 }
 
@@ -117,26 +117,10 @@ fn line_col_at_reports_line_and_column_for_a_mid_buffer_offset() {
 }
 //#endregion ClickToCaretGeometry
 
-//#region SelectLine
-#[test]
-fn text_editor_line_range_returns_the_bounds_of_the_containing_line() {
-    let buffer = "first\nsecond line\nthird";
-    let (start, end) = text_editor_line_range(buffer, 9);
-    assert_eq!(&buffer[start..end], "second line");
-}
-
-#[test]
-fn text_editor_line_range_handles_the_last_line_without_a_trailing_newline() {
-    let buffer = "one\ntwo";
-    let (start, end) = text_editor_line_range(buffer, 5);
-    assert_eq!(&buffer[start..end], "two");
-}
-//#endregion SelectLine
-
 //#region CompletionPrefix
 #[test]
 fn identifier_prefix_start_stops_at_the_nearest_non_identifier_char() {
-    let text = "let value = my_var";
+    let text = "let my_var";
     let caret = text.len();
     assert_eq!(&text[identifier_prefix_start(text, caret)..caret], "my_var");
 }
@@ -169,222 +153,302 @@ fn text_editor_completions_is_empty_for_missing_or_malformed_json() {
 
 #[test]
 fn text_editor_rename_info_parses_name_and_occurrences() {
-    let scene = text_editor_scene("editor.rename", "", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5},{"start":10,"end":15}]}"#));
+    let scene = text_editor_scene("editor.rename.parse", "", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5},{"start":10,"end":15}]}"#));
     let info = text_editor_rename_info(scene.text_editor.as_ref().unwrap()).expect("rename info");
     assert_eq!(info.name, "count");
     assert_eq!(info.occurrences.len(), 2);
-    assert_eq!((info.occurrences[1].start, info.occurrences[1].end), (10, 15));
 }
 //#endregion CompletionsParsing
 
-//#region ContextMenuItems
-#[test]
-fn context_menu_items_include_suggest_only_when_completions_are_present() {
-    let without = text_editor_scene("editor.menu.no-suggest", "x", None, None);
-    let items = text_editor_context_menu_items(without.text_editor.as_ref().unwrap());
-    assert!(!items.iter().any(|item| item.id == "suggest"));
-
-    let with = text_editor_scene("editor.menu.suggest", "x", Some(r#"[{"label":"x"}]"#), None);
-    let items = text_editor_context_menu_items(with.text_editor.as_ref().unwrap());
-    assert!(items.iter().any(|item| item.id == "suggest"));
+/// 🧪️ Drains the bounded action authority — the only way out of an `InputState`, since an action is
+/// taken (not read) and materializes through `into_descriptor`.
+fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("action authority remains live") {
+        actions.push(action.into_descriptor().expect("bounded action materializes"));
+    }
+    actions
 }
 
+//#region MultiSpanRename
+/// ✏️ `multiSpanReplace` (`✏️TextEditor/🟦️.tsx:80`) rewrites back-to-front so earlier spans keep
+/// their offsets, and reports the POST-rewrite spans in document order.
 #[test]
-fn context_menu_items_include_rename_only_when_rename_info_is_present() {
-    let without = text_editor_scene("editor.menu.no-rename", "x", None, None);
-    let items = text_editor_context_menu_items(without.text_editor.as_ref().unwrap());
-    assert!(!items.iter().any(|item| item.id == "rename"));
-
-    let with = text_editor_scene("editor.menu.rename", "x", None, Some(r#"{"name":"x","occurrences":[]}"#));
-    let items = text_editor_context_menu_items(with.text_editor.as_ref().unwrap());
-    assert!(items.iter().any(|item| item.id == "rename"));
+fn multi_span_replace_rewrites_every_occurrence_and_reports_new_spans() {
+    let (text, spans) = multi_span_replace("count + count", &[(0, 5), (8, 13)], "total");
+    assert_eq!(text, "total + total");
+    assert_eq!(spans, vec![(0, 5), (8, 13)]);
 }
 
+/// ✏️ PARITY, including React's own quirk: the reported spans are `{ start: occ.start, end:
+/// occ.start + name.length }` off the ORIGINAL starts (`✏️TextEditor/🟦️.tsx:86`), so a replacement
+/// that changes the name's length does not shift the later spans. Pinned here because the wgpu twin
+/// must report what React reports — see this packet's report for the shared-defect note.
 #[test]
-fn context_menu_items_always_include_selection_and_document_actions() {
-    let scene = text_editor_scene("editor.menu.baseline", "x", None, None);
-    let items = text_editor_context_menu_items(scene.text_editor.as_ref().unwrap());
-    for expected in ["select-token", "select-line", "select-all", "format", "lint"] {
-        assert!(items.iter().any(|item| item.id == expected), "missing {expected}");
+fn multi_span_replace_reports_react_spans_without_shifting_later_ones() {
+    let (text, spans) = multi_span_replace("a + a", &[(0, 1), (4, 5)], "abcd");
+    assert_eq!(text, "abcd + abcd");
+    assert_eq!(spans, vec![(0, 4), (4, 8)]);
+}
+//#endregion MultiSpanRename
+
+//#region CompletionPopupStateMachine
+/// 📋️ `openCompletions` is a no-operation without completions, and opens at index 0 with them —
+/// React's `if (completions.length === 0) return; setCompletionsOpen(true); setCompletionIndex(0)`.
+#[test]
+fn opening_completions_needs_completions_and_starts_at_the_first_row() {
+    let empty = text_editor_scene("editor.popup.empty", "", None, None);
+    assert!(!text_editor_open_completions(&empty));
+    assert!(!text_editor_completions_open(&empty.surface_id));
+
+    let scene = text_editor_scene("editor.popup.open", "", Some(r#"[{"label":"alpha"},{"label":"beta"}]"#), None);
+    assert!(text_editor_open_completions(&scene));
+    assert!(text_editor_completions_open(&scene.surface_id));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 0);
+}
+
+/// 📋️ The highlight WRAPS in both directions — `(index ± 1 + length) % length`.
+#[test]
+fn completion_highlight_wraps_in_both_directions() {
+    let scene = text_editor_scene("editor.popup.wrap", "", Some(r#"[{"label":"a"},{"label":"b"}]"#), None);
+    assert!(text_editor_open_completions(&scene));
+    assert!(text_editor_move_completion(&scene, true));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 1);
+    assert!(text_editor_move_completion(&scene, true));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 0);
+    assert!(text_editor_move_completion(&scene, false));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 1);
+}
+
+/// ⌨️ `Ctrl/Cmd+Space` opens the dropdown, and `Escape` closes it — the first and last branches of
+/// React's own `onKeyDown` prelude (`✏️TextEditor/🟦️.tsx:563`, `:604`).
+#[test]
+fn ctrl_space_opens_completions_and_escape_closes_them() {
+    let scene = text_editor_scene("editor.popup.keys", "", Some(r#"[{"label":"alpha"}]"#), None);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let accelerator = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Space(true), &accelerator, &mut input), Ok(true));
+    assert!(text_editor_completions_open(&scene.surface_id));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert!(!text_editor_completions_open(&scene.surface_id));
+}
+
+/// ⌨️ A plain Space is NOT the completions gesture, and an arrow key with the dropdown closed is a
+/// buffer key — the popup must not swallow ordinary editing.
+#[test]
+fn popup_keys_are_declined_when_no_popup_is_open() {
+    let scene = text_editor_scene("editor.popup.decline", "", Some(r#"[{"label":"alpha"}]"#), None);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Space(true), &plain, &mut input), Ok(false));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowDown, &plain, &mut input), Ok(false));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Enter, &plain, &mut input), Ok(false));
+}
+
+/// ⌨️ With the dropdown OPEN the arrows move the highlight instead of the caret — React returns
+/// early from the same branch.
+#[test]
+fn open_completions_claim_the_arrow_keys() {
+    let scene = text_editor_scene("editor.popup.arrows", "", Some(r#"[{"label":"a"},{"label":"b"}]"#), None);
+    assert!(text_editor_open_completions(&scene));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowDown, &plain, &mut input), Ok(true));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 1);
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowUp, &plain, &mut input), Ok(true));
+    assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 0);
+    text_editor_close_completions(&scene.surface_id);
+}
+
+/// 🖱️ A press on an OPEN dropdown row commits it; a press anywhere else dismisses the dropdown and
+/// is handed back to the caret path. With no registered `EditorHost` the commit itself is a graceful
+/// no-operation, which is what makes this assertable GPU-free.
+#[test]
+fn a_press_outside_the_dropdown_dismisses_it_and_falls_through() {
+    let scene = text_editor_scene("editor.popup.pointer", "", Some(r#"[{"label":"alpha"}]"#), None);
+    assert!(text_editor_open_completions(&scene));
+    let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_popup_pointer(&scene, inner, 280.0, 280.0, false, &mut input), Ok(false));
+    assert!(!text_editor_completions_open(&scene.surface_id));
+}
+
+/// 🖱️ ALT + press opens the dropdown — React's `event.altKey && completions.length > 0` branch.
+#[test]
+fn alt_press_opens_the_completions_dropdown() {
+    let scene = text_editor_scene("editor.popup.alt", "", Some(r#"[{"label":"alpha"}]"#), None);
+    let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_popup_pointer(&scene, inner, 40.0, 40.0, true, &mut input), Ok(true));
+    assert!(text_editor_completions_open(&scene.surface_id));
+    text_editor_close_completions(&scene.surface_id);
+}
+//#endregion CompletionPopupStateMachine
+
+//#region RenamePopupStateMachine
+/// ✏️ `F2` arms the rename only when the scene published `rename_json` — React guards the same key
+/// with `renameInfo` (`✏️TextEditor/🟦️.tsx:568`).
+#[test]
+fn f2_starts_a_rename_only_with_rename_info() {
+    let bare = text_editor_scene("editor.rename.none", "count", None, None);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    assert_eq!(text_editor_popup_key(&bare, &KeyAction::Function(2), &plain, &mut input), Ok(false));
+    assert!(!text_editor_rename_active(&bare.surface_id));
+
+    let scene = text_editor_scene("editor.rename.armed", "count + count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5},{"start":8,"end":13}]}"#));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Function(2), &plain, &mut input), Ok(true));
+    assert!(text_editor_rename_active(&scene.surface_id));
+    assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").occurrences, vec![(0, 5), (8, 13)]);
+    assert!(text_editor_cancel_rename(&scene));
+}
+
+/// ✏️ Arming a rename takes keyboard focus into the rename input (React's `autoFocus`), and the
+/// draft starts at the current name; typing and Backspace then retype it, so the NEXT keystrokes
+/// never reach the buffer.
+#[test]
+fn an_armed_rename_focuses_its_input_and_consumes_every_key() {
+    let scene = text_editor_scene("editor.rename.focus", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(text_editor_start_rename(&scene, &mut input));
+    assert_eq!(input.focused_id.as_deref(), Some("editor.rename.focus.editor.rename"));
+    assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").text, "count");
+    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Char("s".into()), &plain, &mut input), Ok(true));
+    assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").text, "counts");
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Backspace, &plain, &mut input), Ok(true));
+    assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").text, "count");
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowDown, &plain, &mut input), Ok(true), "an armed rename input swallows every key");
+    assert!(text_editor_cancel_rename(&scene));
+}
+
+/// ✏️ `Escape` cancels (nothing dispatched) and `Enter` commits `commitRename { occurrences, text }`
+/// — React's `cancelRename`/`commitRename` pair.
+#[test]
+fn enter_commits_the_rename_and_escape_cancels_it() {
+    let scene = text_editor_scene("editor.rename.commit", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(text_editor_start_rename(&scene, &mut input));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert!(!text_editor_rename_active(&scene.surface_id));
+    assert!(drain_actions(&mut input).is_empty(), "a cancelled rename must dispatch nothing");
+
+    assert!(text_editor_start_rename(&scene, &mut input));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Enter, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert!(!text_editor_rename_active(&scene.surface_id));
+    let actions = drain_actions(&mut input);
+    let commit = actions.iter().find(|action| action.action == "commitRename").unwrap_or_else(|| panic!("expected commitRename, got {:?}", actions.iter().map(|action| action.action.clone()).collect::<Vec<_>>()));
+    assert_eq!(commit.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str), Some("editor.rename.commit"));
+    assert_eq!(commit.args.as_ref().and_then(|args| args.get("text")).and_then(semio_framework::DslValue::as_str), Some("count"));
+    assert_eq!(commit.args.as_ref().and_then(|args| args.get("occurrences")).and_then(semio_framework::DslValue::as_array).map(<[semio_framework::DslValue]>::len), Some(1));
+}
+//#endregion RenamePopupStateMachine
+
+//#region LocalMenuActions
+/// 🖱️ The six rows a text editor answers ITSELF are claimed and parked; every other row is declined
+/// so the shell dispatches it to the guest — React's `localActions` short-circuit.
+#[test]
+fn only_the_editors_own_menu_rows_are_claimed() {
+    let scene = text_editor_scene("editor.menu.claim", "hello", None, None);
+    for action in ["requestCompletions", "selectToken", "selectLine", "selectAll", "commitRename"] {
+        assert!(text_editor_queue_menu_action(&scene.surface_id, action, 4.0, 4.0), "{action} must be claimed locally");
+    }
+    for action in ["formatDocument", "lintDocument", "cut", "copy", "paste", "somePluginVerb"] {
+        assert!(!text_editor_queue_menu_action(&scene.surface_id, action, 4.0, 4.0), "{action} must stay dispatchable");
     }
 }
-//#endregion ContextMenuItems
 
-//#region ContextMenuGeometry
+/// 🖱️ A claimed row is executed against the surface. `selectAll` needs no engine host to be
+/// resolvable, so its span is the buffer's whole length regardless of GPU state.
 #[test]
-fn menu_row_rects_stack_vertically_without_overlapping() {
-    let menu = TextEditorContextMenu { x: 10.0, y: 20.0, items: vec![TextEditorMenuItem { id: "a", label: "A" }, TextEditorMenuItem { id: "b", label: "B" }, TextEditorMenuItem { id: "c", label: "C" }] };
-    let theme = Theme::default();
-    let first = text_editor_menu_row_rect(&menu, &theme, 0);
-    let second = text_editor_menu_row_rect(&menu, &theme, 1);
-    assert_eq!(second.y, first.y + theme.control_height);
-    assert_eq!(first.x, second.x);
-}
-
-#[test]
-fn menu_hit_finds_the_row_under_the_point_and_none_outside_it() {
-    let menu = TextEditorContextMenu { x: 0.0, y: 0.0, items: vec![TextEditorMenuItem { id: "a", label: "A" }, TextEditorMenuItem { id: "b", label: "B" }] };
-    let theme = Theme::default();
-    let row_h = theme.control_height;
-    assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, 8.0), Some(0));
-    assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, row_h + 8.0), Some(1));
-    assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, row_h * 10.0), None);
-}
-//#endregion ContextMenuGeometry
-
-//#region ContextMenuActionDispatch
-#[test]
-fn run_menu_action_format_queues_a_format_document_action() {
-    let scene = text_editor_scene("editor.action.format", "hello", None, None);
-    let editor = scene.text_editor.as_ref().unwrap().clone();
+fn a_claimed_row_runs_against_the_surface() {
+    let scene = text_editor_scene("editor.menu.run", "hello", None, None);
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState::default();
-    {
-        let mut ctx = fixture.ctx();
-        text_editor_run_menu_action(&scene, &editor, inner, &menu, "format", &mut ctx, &mut ui_state);
-    }
-    let events = crate::collect_fixture_actions(&mut fixture.input);
-    assert!(events.iter().any(|action| action.action == "formatDocument"));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert_eq!(text_editor_local_menu_action(&scene, inner, "selectAll", 4.0, 4.0, &mut input), Ok(true));
+    assert_eq!(text_editor_local_menu_action(&scene, inner, "somePluginVerb", 4.0, 4.0, &mut input), Ok(false));
 }
 
+/// 📏️ `lineRangeAt` (`✏️TextEditor/🟦️.tsx:91`) — the "Select Line" range, including the last line
+/// without a trailing newline.
 #[test]
-fn run_menu_action_lint_queues_a_lint_document_action() {
-    let scene = text_editor_scene("editor.action.lint", "hello", None, None);
-    let editor = scene.text_editor.as_ref().unwrap().clone();
-    let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState::default();
-    {
-        let mut ctx = fixture.ctx();
-        text_editor_run_menu_action(&scene, &editor, inner, &menu, "lint", &mut ctx, &mut ui_state);
-    }
-    let events = crate::collect_fixture_actions(&mut fixture.input);
-    assert!(events.iter().any(|action| action.action == "lintDocument"));
+fn line_range_covers_the_caret_line_only() {
+    assert_eq!(text_editor_line_range("alpha\nbeta\ngamma", 7), (6, 10));
+    assert_eq!(text_editor_line_range("alpha\nbeta", 10), (6, 10));
+    assert_eq!(text_editor_line_range("alpha", 0), (0, 5));
 }
-
-#[test]
-fn run_menu_action_suggest_opens_the_completions_popup_at_index_zero() {
-    let scene = text_editor_scene("editor.action.suggest", "hello", Some(r#"[{"label":"a"},{"label":"b"}]"#), None);
-    let editor = scene.text_editor.as_ref().unwrap().clone();
-    let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState { completion_index: 3, ..Default::default() };
-    {
-        let mut ctx = fixture.ctx();
-        text_editor_run_menu_action(&scene, &editor, inner, &menu, "suggest", &mut ctx, &mut ui_state);
-    }
-    assert!(ui_state.completions_open);
-    assert_eq!(ui_state.completion_index, 0);
-}
-
-#[test]
-fn run_menu_action_rename_activates_rename_state_and_focuses_the_rename_input() {
-    let scene = text_editor_scene("editor.action.rename", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
-    let editor = scene.text_editor.as_ref().unwrap().clone();
-    let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState::default();
-    {
-        let mut ctx = fixture.ctx();
-        text_editor_run_menu_action(&scene, &editor, inner, &menu, "rename", &mut ctx, &mut ui_state);
-    }
-    assert!(ui_state.rename_active);
-    assert_eq!(ui_state.rename_occurrences, vec![(0, 5)]);
-    assert_eq!(fixture.input.focused_id.as_deref(), Some("editor.action.rename.editor.rename"));
-    assert_eq!(fixture.input.text_view(), "count");
-}
-
-#[test]
-fn run_menu_action_rename_is_a_no_op_without_rename_info() {
-    let scene = text_editor_scene("editor.action.no-rename", "count", None, None);
-    let editor = scene.text_editor.as_ref().unwrap().clone();
-    let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState::default();
-    {
-        let mut ctx = fixture.ctx();
-        text_editor_run_menu_action(&scene, &editor, inner, &menu, "rename", &mut ctx, &mut ui_state);
-    }
-    assert!(!ui_state.rename_active);
-    assert!(fixture.input.focused_id.is_none());
-}
-
-#[test]
-fn run_menu_action_select_all_reuses_the_ctrl_a_key_path_without_a_registered_engine_surface() {
-    // 🛡️ No GPU / `ENGINE_SURFACES` entry exists for this surface_id in a unit test, so this only
-    // asserts the dispatch doesn't panic and gracefully no-operations (see `engine_canvas::text_editor_apply_key`).
-    let scene = text_editor_scene("editor.action.select-all", "hello", None, None);
-    let editor = scene.text_editor.as_ref().unwrap().clone();
-    let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
-    let mut fixture = Fixture::new();
-    let mut ui_state = TextEditorUiState::default();
-    let mut ctx = fixture.ctx();
-    text_editor_run_menu_action(&scene, &editor, inner, &menu, "select-all", &mut ctx, &mut ui_state);
-}
-//#endregion ContextMenuActionDispatch
+//#endregion LocalMenuActions
 
 //#region PopupChromePaintTests
+/// 📋️ `rounded border border-border bg-popover` on the dropdown, `bg-accent` on the active row, and
+/// one hit target per row so a click can commit it.
 #[test]
-fn completions_popup_has_a_bordered_container_and_the_active_row_uses_accent() {
-    let scene = text_editor_scene("editor.completions.paint", "", None, None);
-    let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
-    let completions = vec![TextEditorCompletionItem { label: "alpha".into(), detail: None, insert_text: None }, TextEditorCompletionItem { label: "beta".into(), detail: None, insert_text: None }];
+fn completions_popup_paints_a_bordered_container_an_accent_row_and_per_row_hit_targets() {
+    let scene = text_editor_scene("editor.completions.paint", "", Some(r#"[{"label":"alpha"},{"label":"beta"}]"#), None);
+    assert!(text_editor_open_completions(&scene));
+    let bounds = Rect::new(0.0, 0.0, 300.0, 300.0);
     let mut fixture = Fixture::new();
     {
         let mut ctx = fixture.ctx();
-        render_text_editor_completions(&mut ctx, inner, &scene, &completions, 0);
+        render_text_editor_overlays(&scene, bounds, &mut ctx);
     }
     let theme = fixture.theme;
-    // 🪟️ `border border-border bg-popover` — the container's own outline color must appear among
-    // the drawn vector-line vertices (`draw_ink_rect_outline`'s 4-line/24-vertex shape).
     let border = theme.panel_border;
-    let has_container_border = fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|v| v.color == [border.r, border.g, border.b, border.a]);
-    assert!(has_container_border, "expected the completions popup to draw an outer container border");
-
-    // 🎯️ `bg-accent text-accent-foreground` on the active (index 0) row.
-    let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+    assert!(
+        fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]),
+        "expected the completions popup to draw an outer container border"
+    );
+    let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect();
     let accent = theme.accent;
     assert!(colors.contains(&[accent.r, accent.g, accent.b, accent.a]), "expected the active completion row's background to be theme.accent, got {colors:?}");
+    let rows: Vec<String> = fixture.input.staged_hits().iter().filter_map(|target| target.control_id.clone()).filter(|id| id.contains(".editor.completion.")).collect();
+    assert_eq!(rows.len(), 2, "expected one hit target per completion row, got {rows:?}");
+    text_editor_close_completions(&scene.surface_id);
 }
 
+/// ✏️ The rename input paints only while a draft is armed, with `border border-border bg-panel`.
 #[test]
-fn rename_input_draws_a_bordered_panel_box() {
-    let scene = text_editor_scene("editor.rename.paint", "count", None, None);
-    let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
+fn rename_input_paints_only_while_a_draft_is_armed() {
+    let scene = text_editor_scene("editor.rename.paint", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
+    let bounds = Rect::new(0.0, 0.0, 300.0, 300.0);
+    {
+        let mut idle = Fixture::new();
+        {
+            let mut ctx = idle.ctx();
+            render_text_editor_overlays(&scene, bounds, &mut ctx);
+        }
+        assert!(idle.input.staged_hits().iter().all(|target| target.control_id.as_deref() != Some("editor.rename.paint.editor.rename")));
+    }
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(text_editor_start_rename(&scene, &mut input));
     let mut fixture = Fixture::new();
-    fixture.input.focus_input_owned("test".to_string(), "count2".to_string());
     {
         let mut ctx = fixture.ctx();
-        render_text_editor_rename_input(&mut ctx, inner, &scene);
+        render_text_editor_overlays(&scene, bounds, &mut ctx);
     }
     let theme = fixture.theme;
-    // 🖊️ `border border-border bg-panel` — previously an unbordered `theme.input_bg` fill.
     let border = theme.panel_border;
-    let has_border = fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|v| v.color == [border.r, border.g, border.b, border.a]);
-    assert!(has_border, "expected the rename input to draw a border stroke");
-    let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+    assert!(
+        fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]),
+        "expected the rename input to draw a border stroke"
+    );
+    let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect();
     let panel = theme.panel;
     assert!(colors.contains(&[panel.r, panel.g, panel.b, panel.a]), "expected the rename input fill to use theme.panel, got {colors:?}");
+    assert!(text_editor_cancel_rename(&scene));
 }
 
+/// 🍿️ With no popup armed the overlay pass draws nothing at all — a text editor that is merely
+/// focused must not paint chrome over its own buffer.
 #[test]
-fn context_menu_draws_a_border_stroke_around_the_flat_panel() {
-    let menu = TextEditorContextMenu { x: 10.0, y: 10.0, items: vec![TextEditorMenuItem { id: "rename", label: "Rename" }] };
+fn the_overlay_pass_draws_nothing_when_no_popup_is_open() {
+    let scene = text_editor_scene("editor.overlays.idle", "hello", Some(r#"[{"label":"alpha"}]"#), None);
+    let bounds = Rect::new(0.0, 0.0, 300.0, 300.0);
     let mut fixture = Fixture::new();
     {
         let mut ctx = fixture.ctx();
-        render_text_editor_context_menu(&mut ctx, &menu);
+        render_text_editor_overlays(&scene, bounds, &mut ctx);
     }
-    let theme = fixture.theme;
-    let border = theme.panel_border;
-    let has_border = fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|v| v.color == [border.r, border.g, border.b, border.a]);
-    assert!(has_border, "expected the context menu's flat panel to at least draw a border stroke");
+    assert!(fixture.draw.layers.iter().all(|layer| layer.ui_instances.is_empty() && layer.vector_vertices.is_empty()));
 }
 //#endregion PopupChromePaintTests

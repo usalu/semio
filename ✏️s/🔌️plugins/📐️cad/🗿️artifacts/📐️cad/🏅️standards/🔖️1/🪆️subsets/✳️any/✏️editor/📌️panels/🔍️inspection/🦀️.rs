@@ -1,6 +1,7 @@
 //! 🔍️ CAD play app panel — the inspection panel: the field groups for whatever is selected
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
+use crate::editor::cad::engine::picking;
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
@@ -8,7 +9,7 @@ use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
 use crate::{CadNode, CadPaneId};
 use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
+    tree_item, tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 
@@ -164,16 +165,64 @@ fn selected_node_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<U
     Some(build())
 }
 
+/// 🧲️ What the pick engine offers on one pane, at the visibility its model definition defaults to:
+/// the typology object rows, the kernel primitive targets behind them, and the per-typology row
+/// counts — React's `ModelStatsPane`/`SelectionPropertiesPane` summary, derived once here so both
+/// renderers read the same numbers.
+pub(crate) struct PaneGeometryCensus {
+    pub objects: usize,
+    pub primitives: usize,
+    pub by_typology: Vec<(String, usize)>,
+}
+
+pub(crate) fn pane_geometry_census(envelope: &CadPlayView, pane: CadPaneId) -> PaneGeometryCensus {
+    let model_definition_id = pane.model_definition_id();
+    let Some(scene) = edit::cad_pane_working_scene(&envelope.document, pane) else {
+        return PaneGeometryCensus { objects: 0, primitives: 0, by_typology: Vec::new() };
+    };
+    let (objects, geometry) = edit::cad_pane_working_objects(&scene, pane);
+    let targets = picking::create_spatial_pick_targets(objects, geometry, Some(model_definition_id));
+    let targets = picking::filter_spatial_pick_targets_for_active_view(targets, Some(model_definition_id));
+    let visibility = picking::spatial_scene_kind_toggles_for_model_definition(Some(model_definition_id), &picking::default_spatial_primitive_toggles());
+    let targets = picking::filter_spatial_pick_targets_for_visibility(targets, visibility);
+    let mut by_typology: Vec<(String, usize)> = Vec::new();
+    for typology_id in crate::editor::cad::engine::typology::model_definition_typology_ids(Some(model_definition_id)) {
+        let count = objects.iter().filter(|object| object.typology == typology_id).count();
+        if count > 0 {
+            by_typology.push((typology_id, count));
+        }
+    }
+    PaneGeometryCensus { objects: targets.iter().filter(|target| picking::pick_target_primitive_kind(target).is_none()).count(), primitives: targets.iter().filter(|target| picking::pick_target_primitive_kind(target).is_some()).count(), by_typology }
+}
+
+/// 🧲️ Appends the per-pane pick census under the summary rows — the counts React's `ModelStatsPane`
+/// shows, derived from the shared pick engine so both renderers report the same numbers.
+fn push_geometry_census(fields: &mut UiFixedList<BuiltNode>, envelope: &CadPlayView, labels: &CadLabels) -> UiAssemblyResult<()> {
+    for pane in CadPaneId::all() {
+        let census = pane_geometry_census(envelope, pane);
+        if census.objects == 0 && census.primitives == 0 {
+            continue;
+        }
+        let suffix = cad_pane_suffix(pane);
+        read_only(fields, &format!("geometry.{suffix}.objects"), labels.objects.as_str(), format!("{} · {suffix}", census.objects))?;
+        read_only(fields, &format!("geometry.{suffix}.primitives"), labels.primitive.as_str(), format!("{} · {suffix}", census.primitives))?;
+        for (typology_id, count) in census.by_typology {
+            read_only(fields, &format!("geometry.{suffix}.typology.{typology_id}"), typology_label(&typology_id, labels), count)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     if let Some(section) = selected_object_section(envelope, labels, windows).or_else(|| selected_reference_section(envelope, labels)).or_else(|| selected_node_section(envelope, labels)) {
         return section;
     }
     let objects = CadPaneId::all().into_iter().filter_map(|pane| edit::cad_pane_working_scene(&envelope.document, pane).map(|scene| edit::cad_pane_working_objects(&scene, pane).0.len())).sum::<usize>();
-    let rows = ui_node_list([
-        tree_item("cad-play-inspector.schema", ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
-        tree_item("cad-play-inspector.utility", ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?),
-        tree_item("cad-play-inspector.objects", ui_label(format!("{}: {objects}", labels.objects.as_str()))?),
-    ])?;
+    let mut rows = UiFixedList::default();
+    push(&mut rows, tree_item("cad-play-inspector.schema", ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?))?;
+    push(&mut rows, tree_item("cad-play-inspector.utility", ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?))?;
+    push(&mut rows, tree_item("cad-play-inspector.objects", ui_label(format!("{}: {objects}", labels.objects.as_str()))?))?;
+    push_geometry_census(&mut rows, envelope, labels)?;
     PanelTreeBuilder::new("cad-play-inspector")?.section("cad-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 

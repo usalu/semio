@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 pub struct PixelRun {
     pub offset: u32,
     #[serde(with = "run_bytes_base64")]
+    #[value(with = "crate::bytes_base64")]
     pub bytes: Vec<u8>,
 }
 

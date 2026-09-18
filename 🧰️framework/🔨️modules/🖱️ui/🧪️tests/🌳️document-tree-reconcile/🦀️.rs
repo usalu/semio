@@ -435,3 +435,169 @@ fn the_ingress_generation_holds_still_while_a_surface_does_and_never_moves_backw
     }
 }
 //#endregion 🪪️IngressGeneration
+
+//#region 🎬️IntentStamping
+// 🎬️ LAW: mounting a record stamps the arena node with the dispatch contract its gestures fire
+// through — the surface/revision/node/nodeKey address plus every `(trigger, ActionId)` it binds, the
+// exact inputs React's `UiDocumentStore::buildIntent` reads off its own store and record
+// (`📃️UiDocumentStore/🟦️.tsx`). Without it the wgpu target had nothing but a stringly
+// `ActionDescriptor` and could neither drop a stale gesture nor order two of them.
+
+fn button_record(id: u64, key: &str, action: &str, version: u64) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "key": key,
+        "component": { "type": "button", "icon": "circle-dot", "label": "Go" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "bindings": [{ "trigger": "activate", "action": { "scope": "ctrl", "name": action, "version": version }, "args": { "windowId": "w1" } }],
+        "children": []
+    })
+}
+
+fn extension_record(id: u64, key: &str) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "key": key,
+        "component": { "type": "extension", "extension": "body.inspector", "props": null },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": []
+    })
+}
+
+/// 🌳️ A one-record-deep document rooted at `root`, so a law can pin projection without the whole
+/// fixture tree — `document_from`'s `extra` slot only ever appends a LEAF.
+fn tiny_document(surface: &str, revision: u64, root: &serde_json::Value, child: Option<&serde_json::Value>) -> UiDocumentTree {
+    let header = UiDocumentLeaseHeader {
+        generation: 11,
+        surface: SurfaceId::try_from(surface).expect("surface id"),
+        revision: UiRevision(revision),
+        root: UiNodeId(root["id"].as_u64().expect("root id")),
+        layout_epoch: 1,
+        node_count: 1 + usize::from(child.is_some()),
+    };
+    let mut document = UiDocumentTree::new(header).expect("header admits");
+    document.try_upsert_record(record(root)).expect("root admits");
+    if let Some(child) = child {
+        document.try_upsert_record(record(child)).expect("child admits");
+    }
+    document
+}
+
+/// 🧹️ Hands every record and arena slot back before the test ends. The `UiNodeRecord` table draws on
+/// a PROCESS-WIDE fixed arena, so a law that merely drops its tree leaves those pages held until the
+/// allocator notices — and a neighbouring test running in parallel meets `ArenaFull` instead of its
+/// own law. Retiring explicitly is the same rule the runtime itself follows.
+fn retire(mut tree: UiTree) {
+    while !tree.close_document_binding_step() {}
+    if let Some(mut document) = tree.take_document() {
+        while !document.close_step() {}
+    }
+}
+
+fn container_record(id: u64, key: &str, children: &[u64]) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "key": key,
+        "component": { "type": "container", "role": "plain" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "md", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": true, "wrap": false },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": children
+    })
+}
+
+#[test]
+fn mounting_a_record_stamps_its_whole_dispatch_contract_onto_the_arena_node() {
+    let mut tree = UiTree::new();
+    let mut cursor = UiDocumentReconcileCursor::default();
+    let root = container_record(0, "panel", &[1]);
+    let button = button_record(1, "run", "runTool", 1);
+    tree.publish_document(tiny_document("note.play.navigator", 5, &root, Some(&button)));
+    cursor.rearm(11);
+    for _ in 0..4096 {
+        match tree.step_document_reconcile(&mut cursor, "note.play.navigator", "note") {
+            UiDocumentReconcileStep::Pending => {}
+            terminal => {
+                assert_eq!(terminal, UiDocumentReconcileStep::Complete);
+                break;
+            }
+        }
+    }
+
+    let node = tree.document_node(UiNodeId(1)).and_then(|node| tree.node(node)).expect("the button mounted");
+    let intent = node.intent.as_ref().expect("a published record always carries its dispatch contract");
+    assert_eq!(intent.address.surface, "note.play.navigator");
+    assert_eq!(intent.address.revision, 5, "the address carries the revision the gesture will be judged stale against");
+    assert_eq!(intent.address.node, 1);
+    assert_eq!(intent.address.node_key, "run", "the key survives id churn from an intervening reconciliation — that is why it travels alongside the id");
+    assert!(intent.binds(ui_contract::Trigger::Activate));
+    assert!(!intent.binds(ui_contract::Trigger::Delta), "binding PRESENCE is answerable — this is what gates a stepper's relative path");
+    let action = intent.action_for(ui_contract::Trigger::Activate).expect("the bound action id");
+    assert_eq!(action.scope.as_str(), "ctrl", "the versioned ActionId survives whole; the legacy descriptor kept only its name");
+    assert_eq!(action.name.as_str(), "runTool");
+    assert_eq!(action.version, 1);
+    retire(tree);
+}
+
+#[test]
+fn a_new_revision_restamps_every_surviving_node_so_its_own_gestures_never_read_stale() {
+    let mut tree = UiTree::new();
+    let mut cursor = UiDocumentReconcileCursor::default();
+    let root = container_record(0, "panel", &[1]);
+    let button = button_record(1, "run", "runTool", 1);
+    let drive = |tree: &mut UiTree, cursor: &mut UiDocumentReconcileCursor| {
+        cursor.rearm(11);
+        for _ in 0..4096 {
+            match tree.step_document_reconcile(cursor, "note.play.navigator", "note") {
+                UiDocumentReconcileStep::Pending => {}
+                terminal => return terminal,
+            }
+        }
+        panic!("reconcile did not terminate");
+    };
+    tree.publish_document(tiny_document("note.play.navigator", 5, &root, Some(&button)));
+    assert_eq!(drive(&mut tree, &mut cursor), UiDocumentReconcileStep::Complete);
+    let slot = tree.document_node(UiNodeId(1)).expect("mounted");
+
+    tree.publish_document(tiny_document("note.play.navigator", 9, &root, Some(&button)));
+    assert_eq!(drive(&mut tree, &mut cursor), UiDocumentReconcileStep::Complete);
+
+    assert_eq!(tree.document_node(UiNodeId(1)), Some(slot), "the identity survives the revision");
+    let intent = tree.node(slot).and_then(|node| node.intent.as_ref()).expect("still stamped");
+    assert_eq!(intent.address.revision, 9, "a node left at its old revision would start refusing its own live gestures as stale");
+    retire(tree);
+}
+
+#[test]
+fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string() {
+    let mut tree = UiTree::new();
+    let mut cursor = UiDocumentReconcileCursor::default();
+    let root = container_record(0, "panel", &[1]);
+    let extension = extension_record(1, "inspector-slot");
+    tree.publish_document(tiny_document("note.play.navigator", 2, &root, Some(&extension)));
+    cursor.rearm(11);
+    for _ in 0..4096 {
+        match tree.step_document_reconcile(&mut cursor, "note.play.navigator", "note") {
+            UiDocumentReconcileStep::Pending => {}
+            terminal => {
+                assert_eq!(terminal, UiDocumentReconcileStep::Complete);
+                break;
+            }
+        }
+    }
+
+    let node = tree.document_node(UiNodeId(1)).and_then(|node| tree.node(node)).expect("the extension mounted");
+    let crate::wgpu::component::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("an extension projects to an external slot, got {:?}", node.spec.0) };
+    assert_eq!(slot.plugin_id, "note", "a surface id's first segment IS its owning plugin — an empty id would compose empty ids into everything built from it");
+    assert_eq!(slot.app_id, "note");
+    assert_eq!(slot.body_key, "body.inspector");
+    retire(tree);
+}
+//#endregion 🎬️IntentStamping

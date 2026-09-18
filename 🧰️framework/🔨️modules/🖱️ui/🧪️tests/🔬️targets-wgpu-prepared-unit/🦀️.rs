@@ -432,6 +432,8 @@ fn receiver_survives_worker_ownership_of_the_job() {
     let packet = receiver.take_latest().expect("prepared packet handoff");
     assert_eq!((packet.scene_revision(), packet.preview_generation()), (7, 3));
     assert!(receiver.take_latest().is_none());
+    drop(packet);
+    drain_abandoned_preparations();
 }
 
 #[test]
@@ -443,6 +445,8 @@ fn preparation_yields_at_the_configured_item_budget() {
     let mut preview = 0;
     let first = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
     assert!(matches!(first, StepOutcome::Yield));
+    drop(job);
+    drain_abandoned_preparations();
 }
 
 #[test]
@@ -466,6 +470,8 @@ fn preparation_rejects_a_stale_generation_before_publication() {
     let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert!(job.take_packet().is_none());
+    drop(job);
+    drain_abandoned_preparations();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -477,6 +483,8 @@ async fn preparation_observes_cancellation_without_replacing_a_packet() {
     let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), cancel, now_ms, &mut preview, &mut None);
     assert!(matches!(outcome, StepOutcome::Cancelled));
     assert!(job.take_packet().is_none());
+    drop(job);
+    drain_abandoned_preparations();
 }
 
 #[test]

@@ -340,7 +340,11 @@ describe("Tree windowed containers", () => {
   /** 🔑️ A window is addressed by its PATH, because its node key is also the pick target id and two
    * containers under different parents legitimately share one (📓️f2-sdk-body-node-ledger.md §10). */
   it("stamps a window path that nests, and leaves a top-level container's path equal to its key", () => {
-    expect(TREE_WINDOW_PATH_SEPARATOR).toBe("\u001f");
+    // 🚧️ PRINTABLE (U+241F), never the control character it depicts: a window path crosses the wasm boundary
+    // inside `PluginViewState.treeWindows`, and `parseResolvedPluginViewState` refuses `[\u0000-\u001f\u007f]`.
+    expect(TREE_WINDOW_PATH_SEPARATOR).toBe("\u241f");
+    expect(/[\u0000-\u001f\u007f]/u.test(TREE_WINDOW_PATH_SEPARATOR)).toBe(false);
+    expect(Array.from(TREE_WINDOW_PATH_SEPARATOR).length).toBe(1);
     expect(treeWindowPathOf(undefined, "objects")).toBe("objects");
     expect(treeWindowPathOf("objects", "shared")).toBe(`objects${TREE_WINDOW_PATH_SEPARATOR}shared`);
     expect(treeWindowPathOf("a", undefined)).toBeUndefined();

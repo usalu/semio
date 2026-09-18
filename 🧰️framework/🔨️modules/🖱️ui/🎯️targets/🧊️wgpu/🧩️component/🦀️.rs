@@ -2905,8 +2905,8 @@ pub mod ui {
         #[serde(rename = "paint-2d")]
         #[value(rename = "paint-2d")]
         Paint2d,
-        #[serde(rename = "virtualFileSystem")]
-        #[value(rename = "virtualFileSystem")]
+        #[serde(rename = "virtual-file-system")]
+        #[value(rename = "virtual-file-system")]
         VirtualFileSystem,
         #[serde(rename = "tiled-map")]
         #[value(rename = "tiled-map")]
@@ -2943,7 +2943,7 @@ pub mod ui {
                 Self::TextEditor => "text-editor",
                 Self::Table => "table",
                 Self::Paint2d => "paint-2d",
-                Self::VirtualFileSystem => "virtualFileSystem",
+                Self::VirtualFileSystem => "virtual-file-system",
                 Self::TiledMap => "tiled-map",
                 Self::Board2d => "board-2d",
                 Self::IconRender => "icon-render",

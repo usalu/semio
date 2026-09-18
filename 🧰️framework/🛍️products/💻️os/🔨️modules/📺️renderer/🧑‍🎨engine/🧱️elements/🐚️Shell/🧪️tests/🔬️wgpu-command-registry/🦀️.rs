@@ -359,7 +359,7 @@ fn directory_test_runner(since: u64) -> std::sync::Arc<ShellDirectoryRunner> {
     let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("directory-bootstrap-law"), None);
     let compute = std::sync::Arc::new(ComputePool::with_pool(1, pool.clone()));
-    let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 1_000_000, 1, DirectoryPackageId("directory-bootstrap-law".into()), DirectoryActorId(0));
+    let transport = ShellDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 1_000_000, 1, DirectoryPackageId("directory-bootstrap-law".into()), DirectoryActorId(0));
     let stream = std::sync::Arc::new(DirectoryClient::new(transport, "http://hub.test")).stream_acknowledged(since).expect("acknowledged native stream");
     std::sync::Arc::new(ShellDirectoryRunner {
         pool,
@@ -932,23 +932,31 @@ fn build_command_panel_ui_groups_rows_under_category_headers() {
     assert_eq!(panel.children.len(), 4);
 }
 
+// 🔎️ The three laws below used to be asserted against this target's own hand-rolled
+// `fuzzy_match_score`; they now read the React-ported `rank_fuzzy_items`/`fuzzy_token_score` that
+// replaced it (`🔎️FuzzyRankingParity`, ticket 26/09/17 packet W1c) — same laws, and LOWER now wins.
+
 #[test]
-fn fuzzy_match_score_finds_scattered_subsequence_and_rejects_non_matches() {
-    assert!(fuzzy_match_score("stlc", "Set Locale").is_some());
-    assert!(fuzzy_match_score("xyz", "Set Locale").is_none());
-    assert!(fuzzy_match_score("", "Set Locale").is_some());
+fn fuzzy_ranking_finds_a_scattered_subsequence_and_rejects_non_matches() {
+    assert!(fuzzy_token_score("stlc", "set locale", 0.4).is_some());
+    assert!(fuzzy_token_score("xyz", "set locale", 0.4).is_none());
+    let items = vec!["Set Locale", "Set Appearance"];
+    assert_eq!(rank_fuzzy_items(items.clone(), "", &[(|item: &&str| Some(*item), 1.0)], 0.4, 20), items, "an empty query keeps every item, in order");
 }
 
 #[test]
-fn fuzzy_match_score_ranks_contiguous_prefix_above_scattered_match() {
-    let contiguous = fuzzy_match_score("set", "Set Locale").expect("contiguous match");
-    let scattered = fuzzy_match_score("sca", "Set Locale").expect("scattered match");
-    assert!(contiguous > scattered, "contiguous {contiguous} should outrank scattered {scattered}");
+fn fuzzy_ranking_puts_a_contiguous_prefix_above_a_scattered_match() {
+    let contiguous = fuzzy_token_score("set", "set locale", 0.4).expect("contiguous match");
+    let scattered = fuzzy_token_score("sca", "set locale", 0.4).expect("scattered match");
+    assert!(contiguous < scattered, "contiguous {contiguous} should outrank scattered {scattered} (lower is better)");
 }
 
 #[test]
-fn fuzzy_match_score_is_case_insensitive() {
-    assert_eq!(fuzzy_match_score("SET", "set locale"), fuzzy_match_score("set", "SET LOCALE"));
+fn fuzzy_ranking_is_case_insensitive() {
+    let upper = rank_fuzzy_items(vec!["SET LOCALE"], "SET", &[(|item: &&str| Some(*item), 1.0)], 0.4, 20);
+    let lower = rank_fuzzy_items(vec!["set locale"], "set", &[(|item: &&str| Some(*item), 1.0)], 0.4, 20);
+    assert_eq!(upper.len(), lower.len(), "case never decides whether a row matches");
+    assert_eq!(upper.len(), 1);
 }
 
 //#region ShellCommandHistoryTests

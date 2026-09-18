@@ -122,10 +122,8 @@ pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max:
 /// entry point that actually localizes.
 pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
     let id = id.into();
-    let terminology = Terminology::ALL[0];
     if peers.is_empty() {
-        let empty_text = LocalizedLabel::native("No one else is here", "Niemand sonst ist hier").resolve(terminology, locale).to_string();
-        return presence_stack(id, vec![presence_text(empty_text)]);
+        return presence_stack(id, vec![presence_text(presence_empty_label(locale))]);
     }
 
     let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
@@ -140,11 +138,43 @@ pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeer
     }
 
     if overflow_count > 0 {
-        let more_word = LocalizedLabel::native("more", "weitere").resolve(terminology, locale).to_string();
-        children.push(presence_stack("peer:overflow".into(), vec![presence_text(format!("+{overflow_count} {more_word}"))]));
+        children.push(presence_stack("peer:overflow".into(), vec![presence_text(presence_overflow_label(overflow_count, locale))]));
     }
 
     presence_stack(id, children)
+}
+
+/// 👥️ This element's own empty-state copy — React's `ui.presence.empty`
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s translation table). Shared by the `UiNode` roster above and by
+/// [`presence_bar_chip_text`], so the two can never drift.
+// 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
+pub fn presence_empty_label(locale: Locale) -> String {
+    LocalizedLabel::native("No one else is here", "Niemand sonst ist hier").resolve(Terminology::ALL[0], locale).to_string()
+}
+
+/// 👥️ The `+N more` suffix past the visible cap — React's `ui.presence.overflow`.
+// 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
+pub fn presence_overflow_label(overflow_count: usize, locale: Locale) -> String {
+    format!("+{overflow_count} {}", LocalizedLabel::native("more", "weitere").resolve(Terminology::ALL[0], locale))
+}
+
+/// 👥️ The roster as ONE line of text, for a shell that paints `#s-presence-peers` as a chrome chip
+/// rather than walking a `UiNode` tree through the Interpreter — the wgpu OS shell's footer, whose
+/// every other pill (`#s-sync-status`, `#s-checkin`) is an immediate-mode `ChromeGroupItem` for the
+/// same reason: they are SHELL-owned chrome, not plugin-declared nodes. Identical vocabulary to
+/// [`build_presence_bar_localized`]: the empty state, the same visible cap, the same overflow suffix.
+// 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
+pub fn presence_bar_chip_text(peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> String {
+    if peers.is_empty() {
+        return presence_empty_label(locale);
+    }
+    let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
+    let visible_count = peers.len().min(max);
+    let mut parts: Vec<String> = peers[..visible_count].iter().map(|peer| peer.label.clone()).collect();
+    if peers.len() > visible_count {
+        parts.push(presence_overflow_label(peers.len() - visible_count, locale));
+    }
+    parts.join(" · ")
 }
 
 #[cfg(test)]

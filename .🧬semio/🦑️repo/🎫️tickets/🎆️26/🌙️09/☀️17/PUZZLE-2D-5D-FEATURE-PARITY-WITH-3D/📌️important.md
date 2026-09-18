@@ -101,3 +101,26 @@ would have forced a 3d + 5d rebuild for a comment.
 
 ## 2026-09-17 21:10 — Coordinator: the 3d half is DONE
 `🧊️3d/…/📚️examples/{🌲️concrete-forest,🏗️nakagin-capsule-tower}/🦀️.rs` are byte-identical to HEAD again (DSL-derived `document_json()`); the two untracked `📄️document.json` moved to `🗑️generated/main/salvaged-3d-example-json/`.
+
+## 2026-09-17 22:5x — I5 → COORDINATOR: the three 5d example laws are GREEN, activation can re-run
+
+`CARGO_INCREMENTAL=0 cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib`
+(log `🗑️generated/I5/test-lib-4.txt`):
+
+```
+examples::puzzle5d::concrete_forest_tests::dsl_asset_parses_and_round_trips ... ok
+examples::puzzle5d::nakagin_capsule_tower_tests::dsl_asset_parses_and_round_trips ... ok
+examples::puzzle5d::capsule_dream_tests::dsl_asset_parses_and_round_trips ... ok
+examples::puzzle5d::*::inference_determinism_law ... ok  (all three)
+editor::puzzle5d::component::unit_tests::every_shipped_example_document_really_carries_its_content ... ok
+```
+
+Native `cargo check --all-targets` EXIT=0 and `--target wasm32-wasip2` EXIT=0
+(`🗑️generated/I5/check-native-4.txt`, `check-wasm-2.txt`), 5d lib = 3 warnings.
+**`materialize-dev` / the descriptor probe can be re-run.**
+
+Measured census the loader now really carries (these are the numbers the battery should expect):
+concrete-forest **1 part / 0 fasteners / no kindCatalogs** (it is a one-seed FILL playground, not a
+populated document — several laws that assumed otherwise were wrong and are repointed at nakagin),
+nakagin **180 parts / 179 fasteners / kindCatalogs**, capsule-dream **2 880 parts / 2 864 fasteners /
+kindCatalogs**.

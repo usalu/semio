@@ -143,11 +143,40 @@ fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String
     UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
+/// 🔽️ Opens `id`'s popup the way `events::EventRouter::toggle_select_popup` does, then re-applies —
+/// a CLOSED `Select` synthesizes no option rows at all, so every law about those rows is a law about
+/// an OPEN one.
+fn open_select(tree: &mut UiTree, ui: &UiNode) -> NodeId {
+    tree.apply_tree(ui);
+    let root = tree.root.unwrap();
+    tree.node_mut(root).unwrap().state.open = true;
+    tree.apply_tree(ui);
+    root
+}
+
+#[test]
+fn a_closed_select_materializes_no_option_rows_at_all() {
+    let mut tree = UiTree::new();
+    let ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
+    tree.apply_tree(&ui);
+    let root = tree.root.unwrap();
+
+    assert_eq!(tree.children(root).count(), 0, "React's `SelectContent` mounts only while the dropdown is open; the rows used to be built unconditionally because `WidgetState` had nowhere to record the bit");
+    assert!(tree.node(root).unwrap().flags.contains(NodeFlags::HAS_POPUP), "the popup is still ANNOUNCED — only its rows wait for the open gesture");
+
+    tree.node_mut(root).unwrap().state.open = true;
+    tree.apply_tree(&ui);
+    assert_eq!(tree.children(root).count(), 2, "opening it materializes exactly its items");
+
+    tree.node_mut(root).unwrap().state.open = false;
+    tree.apply_tree(&ui);
+    assert_eq!(tree.children(root).count(), 0, "closing it retires them again");
+}
+
 #[test]
 fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() {
     let mut tree = UiTree::new();
-    tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
-    let root = tree.root.unwrap();
+    let root = open_select(&mut tree, &select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
 
     assert!(tree.node(root).unwrap().flags.contains(NodeFlags::HAS_POPUP));
     let children: Vec<NodeId> = tree.children(root).collect();
@@ -166,8 +195,7 @@ fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_fla
 #[test]
 fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
     let mut tree = UiTree::new();
-    tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
-    let root = tree.root.unwrap();
+    let root = open_select(&mut tree, &select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
     let children_before: Vec<NodeId> = tree.children(root).collect();
     let removed = children_before[1];
 
@@ -229,8 +257,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
 fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
     let mut tree = UiTree::new();
     let select_ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
-    tree.apply_tree(&select_ui);
-    let root = tree.root.unwrap();
+    let root = open_select(&mut tree, &select_ui);
     clear_dirty(&mut tree, root);
     tree.apply_tree(&select_ui);
     assert!(!any_dirty(&tree, root), "re-applying an identical Select must not dirty its synthesized rows");

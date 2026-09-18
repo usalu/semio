@@ -1,4 +1,13 @@
 //! 🧾 Fixed-credit action construction and FIFO ownership for interactive renderer input.
+//!
+//! 🎬️ Two channels leave this target, exactly as React's own Interpreter splits them
+//! (`🗣️Interpreter/🟦️.tsx`'s `UiInterpreterContext`): every SEMANTIC control
+//! (Button/Input/Select/Toggle/Slider/NumberStepper/Ring/IconSelect/Tree row) fires a
+//! [`UiIntentCommand`] — the renderer-side twin of [`ui_contract::UiIntent`] — while the bare
+//! [`ActionDescriptor`] stays reserved for the unowned scene-host elements and the chrome's own
+//! immediate-mode widgets, which address no published node. An intent additionally carries the
+//! addressing (`surface`/`revision`/`node`/`node_key`) that makes [`intent_is_stale`] and
+//! [`BoundedActionQueue::admit_intent`] possible; a descriptor never could.
 
 use crate::wgpu::ActionDescriptor;
 use dsl::{DslValue, Number};
@@ -12,6 +21,144 @@ pub const ACTION_ITEM_BYTE_CAPACITY: usize = 16 * 1024;
 pub const ACTION_QUEUE_BYTE_CAPACITY: usize = 1024 * 1024;
 pub const ACTION_CLAIM_CAPACITY: usize = 256;
 pub const ACTION_CLAIM_BATCH_CAPACITY: usize = 16;
+
+//#region 🎬️Intent
+/// 🏷️ The argument field a trigger's scalar payload travels under — React's `uiInputField`
+/// (`🛠️ShellHelpers/🟦️.tsx`). The name belongs to the TRIGGER, not to the control that fired it.
+pub const INTENT_VALUE_FIELD: &str = "value";
+pub const INTENT_DELTA_FIELD: &str = "delta";
+
+/// 🎯️ Where a gesture happened, as the published document addressed it: the addressing half of
+/// [`ui_contract::UiIntent`], stamped onto a retained node by the document reconcile and read back
+/// when that node fires. `surface`/`revision` are what [`intent_is_stale`] compares; `node`/`node_key`
+/// are the identity a replay or a log still resolves after id churn from an intervening
+/// reconciliation. A node with no address (the chrome's immediate-mode widgets, a synthesized
+/// recovery panel) is not addressable and never gets an intent.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct UiIntentAddress {
+    pub surface: String,
+    pub revision: u64,
+    pub node: u64,
+    pub node_key: String,
+}
+
+/// 🔗️ One retained node's dispatch contract: where it lives plus the versioned [`ui_contract::ActionId`]
+/// it binds per [`ui_contract::Trigger`]. The bindings list is the wgpu twin of
+/// `UiNodeRecord::bindings` — carried whole rather than flattened into one action name per field, so
+/// binding PRESENCE is answerable (React's `NumberStepperView` gates `onDelta` on exactly that) and so
+/// the action's `scope`/`version` survive, which a stringly [`ActionDescriptor`] drops.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct UiIntentBindings {
+    pub address: UiIntentAddress,
+    pub bindings: Vec<(ui_contract::Trigger, ui_contract::ActionId)>,
+}
+
+impl UiIntentBindings {
+    pub fn action_for(&self, trigger: ui_contract::Trigger) -> Option<&ui_contract::ActionId> {
+        self.bindings.iter().find(|(bound, _)| *bound == trigger).map(|(_, action)| action)
+    }
+
+    pub fn binds(&self, trigger: ui_contract::Trigger) -> bool {
+        self.bindings.iter().any(|(bound, _)| *bound == trigger)
+    }
+}
+
+/// 🎬️ One user gesture against one addressed node — the renderer-side twin of
+/// [`ui_contract::UiIntent`], carrying the `controller_id` the host's own dispatch seam still needs
+/// (the contract's intent resolves its controller from the surface instead; wgpu's host cannot yet).
+/// `args` are the binding's AUTHORED arguments and `input` is the trigger's own payload, kept apart
+/// exactly as the contract keeps them — [`Self::descriptor`] is the one place they merge.
+#[derive(Clone, Debug, PartialEq)]
+pub struct UiIntentCommand {
+    pub address: UiIntentAddress,
+    pub trigger: ui_contract::Trigger,
+    pub action: ui_contract::ActionId,
+    pub args: Option<DslValue>,
+    pub input: Option<DslValue>,
+    pub seq: u64,
+}
+
+impl UiIntentCommand {
+    /// 🌉️ This intent on the plugin action address — React's `uiIntentToActionDescriptor`. A scalar
+    /// payload is NAMED by its trigger and merged OVER the authored args (replacing them wholesale
+    /// threw the authored `{windowId}` away and muted whole panels); a map payload merges key-wise.
+    pub fn descriptor(&self) -> ActionDescriptor {
+        ActionDescriptor { controller_id: self.controller_id().to_string(), action: self.action_name(), args: self.payload() }
+    }
+
+    /// 🆔️ Who answers this intent — React's `intent.action.scope` (`🛠️ShellHelpers/🟦️.tsx:2054`).
+    pub fn controller_id(&self) -> &str {
+        self.action.scope.as_str()
+    }
+
+    /// 🆔️ The verb as the host addresses it — the bare name at version one, `name@version` beyond it,
+    /// so a renderer can never silently invoke a different version of the same verb.
+    pub fn action_name(&self) -> String {
+        if self.action.version == 1 {
+            self.action.name.as_str().to_string()
+        } else {
+            format!("{}@{}", self.action.name.as_str(), self.action.version)
+        }
+    }
+
+    pub fn payload(&self) -> Option<DslValue> {
+        let Some(input) = self.input.as_ref() else { return self.args.clone() };
+        let named = match input {
+            DslValue::Object(_) | DslValue::Array(_) => input.clone(),
+            scalar => DslValue::Object(vec![(self.input_field().to_string(), scalar.clone())]),
+        };
+        match (self.args.as_ref(), &named) {
+            (Some(DslValue::Object(authored)), DslValue::Object(merged)) => {
+                let mut entries: Vec<(String, DslValue)> = authored.iter().filter(|(key, _)| !merged.iter().any(|(name, _)| name == key)).cloned().collect();
+                entries.extend(merged.iter().cloned());
+                Some(DslValue::Object(entries))
+            }
+            _ => Some(named),
+        }
+    }
+
+    pub fn input_field(&self) -> &'static str {
+        if matches!(self.trigger, ui_contract::Trigger::Delta) {
+            INTENT_DELTA_FIELD
+        } else {
+            INTENT_VALUE_FIELD
+        }
+    }
+}
+
+/// 🔢️ master.md's own rule ("Stale intents (revision < current − 1) are dropped"), the same
+/// predicate `🖌️render/🖱️dispatch/🦀️.rs::is_stale` applies: a gesture recorded more than one revision
+/// behind the surface it is now being resolved against was fired at geometry the user never saw.
+pub fn intent_is_stale(recorded: u64, current: u64) -> bool {
+    current > recorded.saturating_add(1)
+}
+
+/// 🔢️ Renderer-monotonic per surface — the `seq` a fired intent carries, minted once per gesture so
+/// the receiving side can order and de-duplicate independently of transport delivery order.
+#[derive(Debug, Default)]
+pub struct UiIntentSequencer {
+    surfaces: Vec<(String, u64)>,
+}
+
+impl UiIntentSequencer {
+    pub fn next(&mut self, surface: &str) -> u64 {
+        match self.surfaces.iter_mut().find(|(name, _)| name == surface) {
+            Some((_, seq)) => {
+                *seq += 1;
+                *seq
+            }
+            None => {
+                self.surfaces.push((surface.to_string(), 1));
+                1
+            }
+        }
+    }
+
+    pub fn last(&self, surface: &str) -> u64 {
+        self.surfaces.iter().find(|(name, _)| name == surface).map_or(0, |(_, seq)| *seq)
+    }
+}
+//#endregion 🎬️Intent
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BoundedActionFault {
@@ -619,11 +766,59 @@ pub struct BoundedActionQueue {
     claimed_items: usize,
     claimed_bytes: usize,
     next_claim_epoch: u64,
+    admitted_seq: Vec<(String, u64)>,
 }
 
 impl Default for BoundedActionQueue {
     fn default() -> Self {
-        Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, bytes: 0, claims: Box::new(std::array::from_fn(|_| None)), claimed_items: 0, claimed_bytes: 0, next_claim_epoch: 1 }
+        Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, bytes: 0, claims: Box::new(std::array::from_fn(|_| None)), claimed_items: 0, claimed_bytes: 0, next_claim_epoch: 1, admitted_seq: Vec::new() }
+    }
+}
+
+/// 🚦️ Why an intent did not reach the queue — the two refusals React's runtime already applies to a
+/// `UiIntent` before it becomes a command (`🧠️runtime/🎯️dispatch/🦀️.rs`'s `DispatchOutcome::Stale`
+/// and the store's own per-surface `seq` ordering), named apart so a log or a metric can tell them
+/// from a credit refusal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiIntentAdmission {
+    Accepted,
+    /// 🕰️ The gesture's revision trails the surface's current one by more than one.
+    Stale,
+    /// 🔁️ This surface already admitted this `seq` or a later one — a duplicate or a reorder.
+    Duplicate,
+}
+
+impl BoundedActionQueue {
+    /// 🚦️ Orders and de-duplicates one surface's intents by `seq`, and drops a stale one outright —
+    /// the last gate before a gesture becomes a queued action. `current_revision` is the revision of
+    /// the document the intent is being resolved against, not the one it was fired at.
+    pub fn admit_intent(&mut self, intent: &UiIntentCommand, current_revision: u64) -> UiIntentAdmission {
+        if intent_is_stale(intent.address.revision, current_revision) {
+            return UiIntentAdmission::Stale;
+        }
+        self.admit_intent_seq(intent)
+    }
+
+    /// 🔁️ The ordering half of [`Self::admit_intent`] alone, for a host that reaches the queue
+    /// without the live document in hand — the renderer's own `events::EventRouter::build_intent`
+    /// already refused the stale ones against the tree it dispatched them on, which is the same place
+    /// React's `Dispatcher` refuses them.
+    pub fn admit_intent_seq(&mut self, intent: &UiIntentCommand) -> UiIntentAdmission {
+        match self.admitted_seq.iter_mut().find(|(surface, _)| *surface == intent.address.surface) {
+            Some((_, admitted)) if intent.seq <= *admitted => UiIntentAdmission::Duplicate,
+            Some((_, admitted)) => {
+                *admitted = intent.seq;
+                UiIntentAdmission::Accepted
+            }
+            None => {
+                self.admitted_seq.push((intent.address.surface.clone(), intent.seq));
+                UiIntentAdmission::Accepted
+            }
+        }
+    }
+
+    pub fn admitted_seq(&self, surface: &str) -> u64 {
+        self.admitted_seq.iter().find(|(name, _)| name == surface).map_or(0, |(_, seq)| *seq)
     }
 }
 

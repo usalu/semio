@@ -4,6 +4,7 @@
 use crate::wgpu::component::ui::{UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
+use ui_contract::SpaceToken;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
@@ -11,21 +12,71 @@ pub enum Direction {
     Horizontal,
 }
 
+/// 📐️ The [`SpaceToken`] a legacy declarative `UiStackNode.gap` string names. The declarative
+/// `UiNode` path is in-crate chrome with no React counterpart (plugin content arrives as
+/// `UiNodeRecord`s carrying a real `LayoutSpec`), so these three names are the whole vocabulary —
+/// they are mapped ONTO the shared ramp here instead of carrying private pixel literals, which is
+/// what let `gap`'s `tight` (4px) and `padding`'s `tight` (6px) drift apart before.
+pub fn gap_space_token(token: Option<&str>) -> SpaceToken {
+    match token {
+        Some("loose") => SpaceToken::Md,
+        Some("tight") => SpaceToken::Xs,
+        named => named_space_token(named).unwrap_or(SpaceToken::Xs),
+    }
+}
+
+/// 📐️ A [`SpaceToken`]'s own wire name, the vocabulary `reconcile::space_token` stamps onto a
+/// record-mounted node's legacy strings so that channel stays lossless for diffing.
+pub fn named_space_token(token: Option<&str>) -> Option<SpaceToken> {
+    match token? {
+        "none" | "0" => Some(SpaceToken::None),
+        "xs" => Some(SpaceToken::Xs),
+        "sm" => Some(SpaceToken::Sm),
+        "md" => Some(SpaceToken::Md),
+        "lg" => Some(SpaceToken::Lg),
+        "xl" => Some(SpaceToken::Xl),
+        "xxl" => Some(SpaceToken::Xxl),
+        _ => None,
+    }
+}
+
+/// 📐️ The inverse of [`named_space_token`].
+pub fn space_token_name(token: SpaceToken) -> &'static str {
+    match token {
+        SpaceToken::None => "none",
+        SpaceToken::Xs => "xs",
+        SpaceToken::Sm => "sm",
+        SpaceToken::Md => "md",
+        SpaceToken::Lg => "lg",
+        SpaceToken::Xl => "xl",
+        SpaceToken::Xxl => "xxl",
+    }
+}
+
+/// 📐️ The [`SpaceToken`] a legacy declarative `UiStackNode.padding` string names — one step looser
+/// than [`gap_space_token`] at `tight`/`loose`, the same relation the two private literal tables had.
+pub fn padding_space_token(token: Option<&str>) -> SpaceToken {
+    match token {
+        Some("tight") => SpaceToken::Sm,
+        Some("loose") => SpaceToken::Lg,
+        named => named_space_token(named).unwrap_or(SpaceToken::Xs),
+    }
+}
+
+/// 📐️ A declarative gap string in px. `None`/`"standard"` stay theme-resolved (the theme's own
+/// `--ui-spacing` step); every named token resolves through [`SpaceToken::px`], the ONE ramp React's
+/// `spaceTokenRem` uses.
 pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
-        Some("tight") => 4.0,
-        Some("loose") => 12.0,
-        Some("none") | Some("0") => 0.0,
-        _ => theme.gap_standard,
+        None | Some("standard") => theme.gap_standard,
+        named => gap_space_token(named).px(),
     }
 }
 
 pub fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
-        Some("none") | Some("0") => 0.0,
-        Some("tight") => 6.0,
-        Some("loose") => 16.0,
-        _ => theme.padding_standard,
+        None | Some("standard") => theme.padding_standard,
+        named => padding_space_token(named).px(),
     }
 }
 

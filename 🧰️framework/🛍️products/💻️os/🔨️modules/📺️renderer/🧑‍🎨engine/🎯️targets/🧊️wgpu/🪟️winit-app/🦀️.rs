@@ -236,7 +236,7 @@ impl OsHost {
         // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
         // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
         // "input never dispatched" unless it says who is holding it.
-        crate::log_debug_once_per_transition("frame-gate", self.presenter.has_pending_presentation(), &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()));
+        crate::log_debug_diagnostic_once_per_transition("frame-gate", self.presenter.has_pending_presentation(), &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()));
         let frame_build = &mut self.frame_build;
         let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
         // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
@@ -685,14 +685,32 @@ mod native {
         }
     }
 
+    /// 📐️ Device pixels per logical pixel for the live window, or `1.0` before one exists. `winit`
+    /// hands every pointer position in PHYSICAL pixels; the renderer hit-tests, lays out and paints
+    /// in LOGICAL ones, so this is the native half of the ingress conversion the browser transport
+    /// performs on its own side. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn pointer_scale_factor(app: &WinitApp) -> f32 {
+        app.window.as_ref().map_or(1.0, |window| {
+            let scale = window.scale_factor() as f32;
+            if scale.is_finite() && scale > 0.0 {
+                scale
+            } else {
+                1.0
+            }
+        })
+    }
+
     /// 🔀️ Raw `winit::event::WindowEvent` → `ui_render::DispatchEvent`, ported from
     /// `ui_host::window::native::NativeHost::normalize` (private, see this file's own struct docstring).
+    /// Pointer and touch positions arrive PHYSICAL and leave LOGICAL — see [`pointer_scale_factor`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
         use winit::event::{ElementState, TouchPhase};
+        let scale = pointer_scale_factor(app);
         match event {
             WindowEvent::CursorMoved { device_id, position } => {
-                app.last_pointer_pos = (position.x as f32, position.y as f32);
+                app.last_pointer_pos = (position.x as f32 / scale, position.y as f32 / scale);
                 let pointer = pointer_info_for_mouse(app, *device_id);
                 Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1 })
             }
@@ -712,8 +730,8 @@ mod native {
             }
             WindowEvent::Touch(touch) => {
                 let pointer = pointer_info_for_touch(app, touch);
-                let x = touch.location.x as f32;
-                let y = touch.location.y as f32;
+                let x = touch.location.x as f32 / scale;
+                let y = touch.location.y as f32 / scale;
                 Some(match touch.phase {
                     TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: PointerButton::Primary },
                     TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y },
@@ -733,6 +751,17 @@ mod native {
     }
 
     //#endregion 🎛️WinitEventNormalization
+
+    /// 🌓️ Publishes the OS light/dark preference winit reports into [`crate::set_host_appearance`],
+    /// leaving that value's persisted-preference term untouched. `None` — a platform that reports no
+    /// preference, and every wasm realm, where winit has no OS theme to read — changes NOTHING, so a
+    /// value the page thread already forwarded survives window creation instead of being reset to
+    /// light by it.
+    // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
+    fn publish_system_appearance(theme: Option<winit::window::Theme>) {
+        let Some(theme) = theme else { return };
+        crate::set_host_appearance(crate::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..crate::host_appearance() });
+    }
 
     impl ApplicationHandler<HostUserEvent> for WinitApp {
         /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
@@ -766,6 +795,7 @@ mod native {
                 attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
             }
             let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
+            publish_system_appearance(window.theme());
             self.window = Some(window.clone());
             let proxy = self.proxy.clone();
             let plugin_filter = self.plugin_filter.clone();
@@ -869,6 +899,15 @@ mod native {
                     if let Some(host) = self.host.as_mut() {
                         host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
                     }
+                }
+                // 🌓️ The OS switched light/dark under a shell whose appearance preference is
+                // `"system"`. The next `FrameBuildPhase::ThemeResolve` re-reads the published value,
+                // so the only thing owed here is a redraw — the twin of React's ONE shared
+                // `matchMedia("(prefers-color-scheme: dark)")` `change` listener
+                // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`).
+                WindowEvent::ThemeChanged(theme) => {
+                    publish_system_appearance(Some(*theme));
+                    window.request_redraw();
                 }
                 WindowEvent::RedrawRequested => {
                     if let Some(reason) = self.pending_reason.take() {

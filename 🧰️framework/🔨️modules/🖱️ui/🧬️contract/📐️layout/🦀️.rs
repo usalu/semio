@@ -28,6 +28,49 @@ pub enum SpaceToken {
     Xxl,
 }
 
+/// 📐️ The ONE spacing ramp every renderer resolves a [`SpaceToken`] against — the multiplier table
+/// React's own `SPACE_TOKEN_MULTIPLIER`
+/// (`os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`) carries, times
+/// `ui_styling`'s generated `--ui-spacing` compact step. Renderers call [`SpaceToken::px`]/
+/// [`EdgeSpace::px`]; none of them owns a private table, so a DOM rect and a GPU rect can never drift.
+const SPACE_TOKEN_MULTIPLIER: [f32; 7] = [0.0, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0];
+
+impl SpaceToken {
+    /// 📐️ This token's multiple of the compact `--ui-spacing` step — React's `SPACE_TOKEN_MULTIPLIER`.
+    pub const fn multiplier(self) -> f32 {
+        SPACE_TOKEN_MULTIPLIER[self as usize]
+    }
+
+    /// 📐️ This token in logical pixels at the compact reference root, e.g. `Md → 12.8`.
+    pub fn px(self) -> f32 {
+        self.multiplier() * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32
+    }
+}
+
+/// 📐️ A resolved [`EdgeSpace`] in logical pixels — the four independent CSS values React writes as a
+/// `padding`/`inset` shorthand, never one representative side applied to all four.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct EdgePx {
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub left: f32,
+}
+
+impl EdgeSpace {
+    /// 📐️ Resolves all four sides through [`SpaceToken::px`].
+    pub fn px(self) -> EdgePx {
+        match self {
+            Self::All(token) => {
+                let value = token.px();
+                EdgePx { top: value, right: value, bottom: value, left: value }
+            }
+            Self::Symmetric { vertical, horizontal } => EdgePx { top: vertical.px(), right: horizontal.px(), bottom: vertical.px(), left: horizontal.px() },
+            Self::Each { top, right, bottom, left } => EdgePx { top: top.px(), right: right.px(), bottom: bottom.px(), left: left.px() },
+        }
+    }
+}
+
 /// 📏️ How a node sizes itself along one axis relative to its parent's flow — `Fixed` still names a
 /// [`SpaceToken`], never a pixel value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -244,6 +287,96 @@ impl Default for LayoutSpec {
     }
 }
 //#endregion 🔖️Layout
+
+//#region 🧭️Flow
+
+/// 🧭️ Horizontal reading direction — `Rtl` mirrors inline chrome. The renderer-neutral twin of
+/// React's `FlowInline` (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:14`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum FlowInline {
+    #[default]
+    Ltr,
+    Rtl,
+}
+
+impl FlowInline {
+    /// ↔️ Whether inline `Start` means the RIGHT edge — the single predicate every mirrored formula
+    /// branches on, so no call site repeats the comparison React writes as `flow.inline === "rtl"`.
+    pub const fn is_rtl(self) -> bool {
+        matches!(self, FlowInline::Rtl)
+    }
+
+    /// ↔️ `+1.0` under `Ltr`, `-1.0` under `Rtl` — the sign an inline delta (a horizontal scroll, a
+    /// slider's `ArrowRight`) carries once mirrored.
+    pub const fn inline_sign(self) -> f32 {
+        match self {
+            FlowInline::Ltr => 1.0,
+            FlowInline::Rtl => -1.0,
+        }
+    }
+}
+
+/// 🧭️ Vertical stacking direction — `Up` grows content toward the display centre, which is what a
+/// bottom-docked panel does. Twin of React's `FlowBlock`
+/// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:17`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum FlowBlock {
+    #[default]
+    Down,
+    Up,
+}
+
+impl FlowBlock {
+    /// ⬆️ Whether a stack in this flow paints its children bottom-up — React's
+    /// `flow.block === "up" ? "flex-col-reverse" : "flex-col"` (`🧱️elements/🖼️Panel/🟦️.tsx:513`).
+    pub const fn is_reversed(self) -> bool {
+        matches!(self, FlowBlock::Up)
+    }
+}
+
+/// 🧭️ The logical flow a subtree inherits — twin of React's `Flow`
+/// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:20-23`), whose default is `{ ltr, down }`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct UiFlow {
+    pub inline: FlowInline,
+    pub block: FlowBlock,
+}
+
+impl UiFlow {
+    /// 🧭️ React's `DEFAULT_FLOW` (`🧭️flow-direction-context/🟦️.tsx:35`).
+    pub const DEFAULT: Self = Self { inline: FlowInline::Ltr, block: FlowBlock::Down };
+
+    /// 🧭️ React's `FlowProvider` merge rule (`🧭️flow-direction-context/🟦️.tsx:41-44`): a `None`
+    /// override inherits the parent axis, so a provider that sets only `block` keeps the inherited
+    /// `inline`.
+    pub const fn merged(self, inline: Option<FlowInline>, block: Option<FlowBlock>) -> Self {
+        Self { inline: match inline { Some(value) => value, None => self.inline }, block: match block { Some(value) => value, None => self.block } }
+    }
+
+    /// 🧭️ React's `flowFromAnchor` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:6859-6860`): the mirrored flow a
+    /// `Panel`/`Pane` grows into. A RIGHT anchor flips inline, a BOTTOM anchor flips block, and a
+    /// middle anchor on either axis never mirrors. The one production origin of a non-default flow
+    /// on BOTH renderers — flow is dock geometry, not language.
+    pub const fn for_anchor(anchor: Anchor) -> Self {
+        let inline = match anchor {
+            Anchor::TopEnd | Anchor::End | Anchor::BottomEnd => FlowInline::Rtl,
+            _ => FlowInline::Ltr,
+        };
+        let block = match anchor {
+            Anchor::BottomStart | Anchor::Bottom | Anchor::BottomEnd => FlowBlock::Up,
+            _ => FlowBlock::Down,
+        };
+        Self { inline, block }
+    }
+}
+
+//#endregion 🧭️Flow
 
 //#region 🔖️WindowLayout
 

@@ -1,0 +1,70 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the paint-2d scene lane carrier — the raster twin of 🚚️canvas2d-scene-lanes and 🚚️board2d-scene-lanes. Rust pins Paint2dSceneLane / PAINT2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins PAINT2D_SCENE_LANES / paint2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. Both lanes always publish: the documentSync channel carries the whole RasterSession document and assets carries one entry per imported bitmap, so either outgrows the 32 KiB surface doc on a real painting — before these lanes existed scene_surface.encode refused the whole surface instead of paging.",
+  "schema": "paint-2d@1",
+  "laneKeyPrefix": "framework.scene.paint2d.",
+  "spineFields": [
+    "documentSyncJson",
+    "assetsJson",
+    "cameraJson",
+    "selectionJson",
+    "hoveredId",
+    "activeUtility",
+    "brushSize",
+    "brushOpacity",
+    "viewMode",
+    "compositeViewportJson",
+    "lanes"
+  ],
+  "lanes": [
+    {
+      "lane": "documentSync",
+      "field": "documentSyncJson",
+      "bodyKey": "framework.scene.paint2d.documentSync",
+      "optional": false
+    },
+    {
+      "lane": "assets",
+      "field": "assetsJson",
+      "bodyKey": "framework.scene.paint2d.assets",
+      "optional": false
+    }
+  ],
+  "roundTrip": {
+    "assembled": {
+      "documentSyncJson": "{\"revision\":3,\"layers\":[{\"id\":\"base\",\"kind\":\"raster\"}]}",
+      "assetsJson": "[{\"id\":\"photo\",\"url\":\"data:image/png;base64,iVBORw0KGgo=\"}]",
+      "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+      "selectionJson": "[]",
+      "activeUtility": "brush",
+      "brushSize": 4.0,
+      "brushOpacity": 1.0,
+      "viewMode": "composite"
+    },
+    "laneTexts": {
+      "framework.scene.paint2d.documentSync": "{\"revision\":3,\"layers\":[{\"id\":\"base\",\"kind\":\"raster\"}]}",
+      "framework.scene.paint2d.assets": "[{\"id\":\"photo\",\"url\":\"data:image/png;base64,iVBORw0KGgo=\"}]"
+    },
+    "spine": {
+      "documentSyncJson": "",
+      "assetsJson": "",
+      "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+      "selectionJson": "[]",
+      "activeUtility": "brush",
+      "brushSize": 4.0,
+      "brushOpacity": 1.0,
+      "viewMode": "composite",
+      "lanes": [
+        {
+          "lane": "documentSync",
+          "bytes": 55,
+          "hash": "d02ff1d15304d574"
+        },
+        {
+          "lane": "assets",
+          "bytes": 59,
+          "hash": "4ae639c70f2cf7e4"
+        }
+      ]
+    }
+  }
+}

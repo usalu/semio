@@ -293,6 +293,9 @@ pub struct SchurResult {
     pub iterations: usize,
     pub converged: bool,
     pub a_block_covariance_diagonals: Vec<MatD>,
+    /// 🎚️ The damping the solver ended on, so a caller that spends one iteration per call can
+    /// resume the schedule where it left off instead of restarting from [`LmConfig::initial_lambda`].
+    pub lambda: f64,
 }
 
 /// 🧮️ Accumulates `Jᵀ W J` into `target` (`target` sized `j.cols x j.cols`) for a single term's block Jacobian.
@@ -541,7 +544,7 @@ pub fn schur_lm(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<VecD>,
     }
     let final_reduced_h = last_reduced_h.or_else(|| schur_step(ad, num_a, &haa, &hbb, &hab, &ga, &gb, 0.0).map(|(_, _, h)| h));
     let covariances = final_reduced_h.map_or_else(Vec::new, |h| covariance_diagonals(&h, ad, num_a));
-    SchurResult { a_params, b_params, cost, iterations, converged, a_block_covariance_diagonals: covariances }
+    SchurResult { a_params, b_params, cost, iterations, converged, a_block_covariance_diagonals: covariances, lambda }
 }
 
 /// 📊️ The marginal covariance diagonal blocks computed during `result`'s final accepted iteration.

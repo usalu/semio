@@ -217,6 +217,7 @@ impl ActiveFrameBuild {
             Ok(session) => ActiveFramePhase::Deadlines(session),
             Err(mut rejected) => {
                 rejected.begin_close();
+                debug_frame_build("deadline session admission rejected");
                 ActiveFramePhase::DeadlineAdmissionRejected(rejected)
             }
         };
@@ -261,6 +262,7 @@ impl ActiveFrameBuild {
     fn advance(&mut self) -> ActiveFrameStep {
         if self.cancel.is_cancelled_now() {
             if self.retire_cancelled_phase() {
+                debug_frame_build("cancelled build retired with no frame");
                 self.phase = ActiveFramePhase::Terminal;
                 return ActiveFrameStep::Complete(None);
             }
@@ -310,6 +312,7 @@ impl ActiveFrameBuild {
                         ActiveFrameStep::Pending
                     }
                     Some(StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Cancelled | StepOutcome::Fault(_)) => {
+                        debug_frame_build("deadline session outcome cancelled or faulted");
                         session.begin_close();
                         self.cancel.cancel_now();
                         ActiveFrameStep::Pending
@@ -377,6 +380,7 @@ impl ActiveFrameBuild {
                 match outcome {
                     StepOutcome::Complete(_) => {
                         let frame = preparation.take_presentation();
+                        debug_frame_build(&format!("prepare complete presentation={}", frame.is_some()));
                         self.phase = ActiveFramePhase::Terminal;
                         ActiveFrameStep::Complete(frame)
                     }
@@ -387,7 +391,10 @@ impl ActiveFrameBuild {
                     }
                 }
             }
-            ActiveFramePhase::Terminal => ActiveFrameStep::Complete(None),
+            ActiveFramePhase::Terminal => {
+                debug_frame_build("terminal phase with no frame");
+                ActiveFrameStep::Complete(None)
+            }
         }
     }
 }
@@ -454,6 +461,38 @@ impl InteractiveJob for ActiveFrameBuild {
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.completed.is_none() && matches!(self.phase, ActiveFramePhase::Terminal)
     }
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary frame-outcome probe")]
+fn debug_frame_outcome(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if seen < 8 || seen % 25 == 0 {
+        crate::log_debug(&format!("[DEBUG] w5c outcome seen={seen} {tag}"));
+    }
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary frame-poll probe")]
+fn debug_frame_poll(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if seen > 80 {
+        return;
+    }
+    crate::log_debug(&format!("[DEBUG] w5c poll seen={seen} {tag}"));
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary frame-build probe")]
+fn debug_frame_build(tag: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static SEEN: AtomicU32 = AtomicU32::new(0);
+    let seen = SEEN.fetch_add(1, Ordering::Relaxed);
+    if !(seen < 6 || seen % 25 == 0) || seen > 600 {
+        return;
+    }
+    crate::log_debug(&format!("[DEBUG] w5c build seen={seen} {tag}"));
 }
 
 fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
@@ -641,12 +680,22 @@ impl FrameBuildHandle {
                 match session.poll() {
                     semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_caller() {
                         Ok((ticket, _)) => self.ticket = Some(ticket),
-                        Err(_) => break,
+                        Err(_) => {
+                            debug_frame_poll("idle step refused");
+                            break;
+                        }
                     },
                     semio_framework_job::WorkerJobPoll::Outcome => {
-                        let Some(ticket) = self.ticket.take() else { break };
-                        let Ok(mut owner) = session.take_outcome(ticket) else { break };
+                        let Some(ticket) = self.ticket.take() else {
+                            debug_frame_poll("outcome without a ticket");
+                            break;
+                        };
+                        let Ok(mut owner) = session.take_outcome(ticket) else {
+                            debug_frame_poll("outcome checkout refused");
+                            break;
+                        };
                         if !matches!(owner.outcome(), StepOutcome::Yield) {
+                            debug_frame_outcome(&format!("outcome {:?} closes the build", owner.outcome()));
                             owner.begin_close();
                             break;
                         }
@@ -657,11 +706,13 @@ impl FrameBuildHandle {
                         let Ok(mut owner) = session.take_terminal() else { break };
                         let frame_generation = owner.job().generation;
                         let frame = owner.job_mut().completed.take();
+                        debug_frame_build(&format!("terminal requested={generation:?} frame={frame_generation:?} completed={} outcome={:?}", frame.is_some(), owner.outcome()));
                         owner.begin_close();
                         presentation = generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
                         break;
                     }
                     semio_framework_job::WorkerJobPoll::Closing => {
+                        debug_frame_poll("closing step");
                         let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                         if session.terminal_is_empty() {
                             retire_session = true;
@@ -669,10 +720,14 @@ impl FrameBuildHandle {
                         }
                     }
                     semio_framework_job::WorkerJobPoll::TerminalEmpty => {
+                        debug_frame_poll("terminal empty");
                         retire_session = true;
                         break;
                     }
-                    _ => break,
+                    other => {
+                        debug_frame_poll(&format!("poll {other:?}"));
+                        break;
+                    }
                 }
                 if drive_deadline_us.is_none_or(|deadline| now_us().is_none_or(|now| now >= deadline)) {
                     break;
@@ -694,7 +749,7 @@ impl FrameBuildHandle {
         // that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
         // `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
         // is the authority that gate was standing in for.
-        crate::log_debug(&format!("[DEBUG] frame build admitted generation={generation:?}"));
+        crate::log_debug_diagnostic(&format!("[DEBUG] frame build admitted generation={generation:?}"));
         self.cancel = root_cancel_token();
         self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
         self.last_submitted_generation = Some(generation);

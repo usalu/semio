@@ -195,6 +195,7 @@ light_dir: vec4<f32>,
 struct VertexInput {
 @location(0) position: vec3<f32>,
 @location(1) normal: vec3<f32>,
+@location(2) color: vec4<f32>,
 }
 
 struct InstanceInput {
@@ -225,7 +226,7 @@ let normal_matrix = mat3x3<f32>(
     model[2].xyz
 );
 out.normal = normalize(normal_matrix * vertex.normal);
-out.color = instance.color;
+out.color = instance.color * vertex.color;
 out.flags = instance.flags;
 return out;
 }

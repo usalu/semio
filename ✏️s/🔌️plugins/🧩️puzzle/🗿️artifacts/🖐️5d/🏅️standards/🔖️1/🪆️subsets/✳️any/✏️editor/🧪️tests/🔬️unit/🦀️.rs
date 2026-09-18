@@ -650,7 +650,7 @@ async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
+    let result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
     assert!(result.mutations.is_empty(), "copy must not record an undo entry");
     assert_eq!(result.requested_effects.len(), 1);
     let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -662,7 +662,7 @@ async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
 #[semio_framework_async_macros::async_test]
 async fn copy_with_no_selection_is_a_benign_no_operation() {
     let mut app = app();
-    let result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
+    let result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
     assert!(result.mutations.is_empty());
     assert!(result.requested_effects.is_empty());
 }
@@ -674,7 +674,7 @@ async fn cut_removes_selected_part_and_undo_restores_it() {
     let before_count = part_count(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let result = semio_framework::io::resolve_ready(app.handle_action("cut", None, &meta("local"))).expect("cut");
+    let result = app.handle_action("cut", None, &meta("local")).await.expect("cut");
     assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
     assert_eq!(part_count(&app), before_count - 1);
     let after = projection_of(&app);
@@ -690,12 +690,12 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     let projection = projection_of(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let copy_result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
+    let copy_result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
     let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
     let before_count = part_count(&app);
     let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
     let paste_args: dsl::DslValue = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] }).into();
-    semio_framework::io::resolve_ready(app.handle_action("paste", Some(&paste_args), &meta("local"))).expect("paste");
+    app.handle_action("paste", Some(&paste_args), &meta("local")).await.expect("paste");
     assert_eq!(part_count(&app), before_count + 1);
     let after = projection_of(&app);
     let pasted_parts: Vec<&Value> = after["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
@@ -711,7 +711,7 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
 async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
     let mut app = app();
     let before_count = part_count(&app);
-    let result = semio_framework::io::resolve_ready(app.handle_action("paste", None, &meta("local"))).expect("paste");
+    let result = app.handle_action("paste", None, &meta("local")).await.expect("paste");
     assert!(result.mutations.is_empty());
     assert_eq!(part_count(&app), before_count);
 }
@@ -1897,16 +1897,16 @@ async fn patch_part_writes_the_document_and_notices_an_inapplicable_edit() {
 /// silently into an empty 5d document instead of failing. This law is the one place that refuses it.
 #[test]
 fn every_shipped_example_document_really_carries_its_content() {
-    for (id, document) in [
-        (PUZZLE5D_EXAMPLE_CONCRETE_FOREST, concrete_forest_example_document()),
-        (PUZZLE5D_EXAMPLE_NAKAGIN, nakagin_example_document()),
-        (PUZZLE5D_EXAMPLE_CAPSULE_DREAM, capsule_dream_example_document()),
+    for (id, document, parts, fasteners, catalogs) in [
+        (PUZZLE5D_EXAMPLE_CONCRETE_FOREST, concrete_forest_example_document(), 1, 0, false),
+        (PUZZLE5D_EXAMPLE_NAKAGIN, nakagin_example_document(), 180, 179, true),
+        (PUZZLE5D_EXAMPLE_CAPSULE_DREAM, capsule_dream_example_document(), 2880, 2864, true),
     ] {
         assert_eq!(document.schema, PUZZLE5D_SCHEMA, "{id} declares the puzzle 5d schema");
         assert!(document.label.as_deref().is_some_and(|label| !label.is_empty()), "{id} carries a label (the export filename is its slug)");
-        assert!(!document.parts.is_empty(), "{id} carries parts — an empty example means the shipped document.json is not a puzzle 5d document");
-        assert!(!document.fasteners.is_empty(), "{id} carries fasteners");
-        assert!(document.kind_catalogs.is_some(), "{id} carries kindCatalogs (the catalogue panel and the add-part dialog read them)");
+        assert_eq!(document.parts.len(), parts, "{id} carries its own part census — a wrong count means the example asset is not this artifact's document");
+        assert_eq!(document.fasteners.len(), fasteners, "{id} carries its own fastener census");
+        assert_eq!(document.kind_catalogs.is_some(), catalogs, "{id} authors kindCatalogs exactly as its shipped asset does");
     }
 }
 
@@ -2124,8 +2124,14 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
                 .map(|entries| entries.iter().filter_map(|entry| entry.get("id").and_then(serde_json::Value::as_str).map(str::to_string)).collect::<Vec<_>>())
                 .unwrap_or_default()
         })
+        .chain(
+            [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()]
+                .iter()
+                .flat_map(|document| document.parts.iter().map(|part| part.part_kind.clone()).collect::<Vec<_>>())
+                .collect::<Vec<_>>(),
+        )
         .collect();
-    assert!(offered.iter().all(|option| declared.contains(*option)), "every offered kind is declared by a shipped catalog: {offered:?}");
+    assert!(offered.iter().all(|option| declared.contains(*option)), "every offered kind is declared by a shipped catalog or inferred from a shipped part: {offered:?}");
     assert!(declared.iter().any(|kind| offered.contains(&kind.as_str())), "at least one real catalog kind is reachable");
     let actions = declared_actions(&definition);
     let form = actions.iter().find(|action| action.id == "addPartKind").expect("addPartKind is declared");
@@ -2183,6 +2189,7 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
         .map(|action| action.id.as_str())
         .collect();
     let mut app = app_with_registry();
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
@@ -2216,6 +2223,7 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_rows_follow_the_selected_granularity() {
     let mut app = app_with_registry();
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
@@ -2257,7 +2265,7 @@ async fn context_menu_rows_follow_the_selected_granularity() {
 /// gesture, and the fasteners of a surviving part survive with it. The unlocked siblings still go.
 #[test]
 fn a_cut_copies_a_locked_part_but_never_removes_it() {
-    let mut document = concrete_forest_example_document();
+    let mut document = nakagin_example_document();
     assert!(document.parts.len() >= 2, "the locked-cut law needs at least two parts");
     let locked_id = document.parts[0].id.clone();
     let free_id = document.parts[1].id.clone();
@@ -2282,7 +2290,7 @@ fn a_cut_copies_a_locked_part_but_never_removes_it() {
 /// between copied parts with their endpoints remapped onto the fresh ids, and lands as ONE edit.
 #[test]
 fn a_paste_preserves_both_poses_and_the_fasteners_between_copied_parts() {
-    let document = concrete_forest_example_document();
+    let document = nakagin_example_document();
     let with_fastener = document.fasteners.first().cloned().expect("the shipped example connects parts");
     let endpoints = vec![owning_part_id_local(&with_fastener.source).to_string(), owning_part_id_local(&with_fastener.target).to_string()];
     let (parts, fasteners) = copy_selection_local(&document, &endpoints, &[]);
@@ -2309,7 +2317,7 @@ fn a_paste_preserves_both_poses_and_the_fasteners_between_copied_parts() {
 /// never lands exactly under the original where it is invisible.
 #[test]
 fn the_default_paste_placement_offsets_the_fragment_in_both_poses() {
-    let document = concrete_forest_example_document();
+    let document = nakagin_example_document();
     let ids: Vec<String> = document.parts.iter().take(2).map(|part| part.id.clone()).collect();
     let (parts, _) = copy_selection_local(&document, &ids, &[]);
     let placement = PastePlacement { anchor: PasteAnchor::Centroid, position: None };

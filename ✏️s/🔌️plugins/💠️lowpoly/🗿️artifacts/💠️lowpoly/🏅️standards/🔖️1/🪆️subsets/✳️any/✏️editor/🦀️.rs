@@ -11,7 +11,7 @@
 
 pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
-use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
+use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
 use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
@@ -297,6 +297,9 @@ semio_framework_plugin::app_commands! {
         "transformEnd" as "transform-end" => transform_end::TransformEnd,
         "importSnapshotJson" as "import-snapshot-json" => set_snapshot_json::ImportSnapshotJson,
         "replaceSnapshotJson" as "replace-snapshot-json" => replace_snapshot_json::ReplaceSnapshotJson,
+        "exportMesh" as "export-mesh" => export_mesh::ExportMesh,
+        "loadMeshRequest" as "load-mesh-request" => load_mesh_request::LoadMeshRequest,
+        "importMeshFile" as "import-mesh-file" => import_mesh_file::ImportMeshFile,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
         "setActivePaintLayer" as "set-active-paint-layer" => set_active_paint_layer::SetActivePaintLayer,
@@ -326,6 +329,7 @@ use camera::set_camera;
 use chrome::toggle_show_edges;
 use engagement::{engagement_input, engagement_submit};
 use document::{replace_snapshot_json, set_snapshot_json};
+use media::{export_mesh, import_mesh_file, load_mesh_request};
 use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
 use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
 use selection::{set_active_object, set_active_paint_layer};
@@ -499,6 +503,9 @@ mod args_bridge {
             "transformEnd" => LowpolyCommand::TransformEnd(decode(action, none())?),
             "importSnapshotJson" => LowpolyCommand::ImportSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
             "replaceSnapshotJson" => LowpolyCommand::ReplaceSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
+            "exportMesh" => LowpolyCommand::ExportMesh(decode(action, fold(args, &[("value", "format")], &[("format", DslValue::String("obj".into()))]))?),
+            "loadMeshRequest" => LowpolyCommand::LoadMeshRequest(decode(action, none())?),
+            "importMeshFile" => LowpolyCommand::ImportMeshFile(decode(action, fold(args, &[("filename", "name"), ("contents", "payload")], &[]))?),
             "engagementSubmit" => LowpolyCommand::EngagementSubmit(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[])))?),
             "setActiveObject" => LowpolyCommand::SetActiveObject(decode(action, fold(args, OBJECT, &[]))?),
             "setActivePaintLayer" => LowpolyCommand::SetActivePaintLayer(decode(action, fold(args, &[("index", "layer_index"), ("value", "layer_index")], &[]))?),
@@ -549,6 +556,9 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "importSnapshotJson",
     "replaceSnapshotJson",
+    "exportMesh",
+    "loadMeshRequest",
+    "importMeshFile",
     "paintSample",
     "paintStrokeBegin",
     "transformBegin",
@@ -614,7 +624,7 @@ fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDispositio
         // every one of these is `Artifact` (the real edit) `+ Transient` (the cache bookkeeping).
         "paintStrokeEnd" | "extrude" | "inset" | "bevel" | "loopCut" | "subdivide" | "triangulate" | "mirror" | "decimate" | "flipFaces" | "merge" | "dissolve" | "snap" | "toggleSmooth" | "unwrapActive" | "markUvSeam" | "clearSeam"
         | "engagementSubmit" | "translateSelection" | "rotateSelection" | "scaleSelection" | "transformEnd" => LowpolyCommandDisposition::ArtifactTransient,
-        "importSnapshotJson" | "replaceSnapshotJson" => LowpolyCommandDisposition::HostOnly,
+        "importSnapshotJson" | "replaceSnapshotJson" | "exportMesh" | "loadMeshRequest" | "importMeshFile" => LowpolyCommandDisposition::HostOnly,
         "paintStrokeBegin" | "transformBegin" => LowpolyCommandDisposition::Transient,
         // 🖌️ Every paint-tick command (`paint_tick` mutates the mid-drag stroke scratch, or — eyedropper — emits a `Config` mutation instead):
         // both outcomes need the same `[Config, Transient]` lane pair the tick's own disposition can't
@@ -657,6 +667,9 @@ fn lowpoly_command_admitted(command: &LowpolyCommand, snapshot: &LowpolySnapshot
             LowpolyCommand::EngagementInput(payload) => field(&payload.value),
             LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
             LowpolyCommand::ReplaceSnapshotJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
+            LowpolyCommand::ExportMesh(payload) => field(&payload.format),
+            LowpolyCommand::LoadMeshRequest(_) => true,
+            LowpolyCommand::ImportMeshFile(payload) => field(&payload.name) && payload.payload.len() <= media::LOWPOLY_MESH_FILE_BYTES,
             LowpolyCommand::PaintSample(payload) => payload.object_id.as_deref().is_none_or(field),
             LowpolyCommand::PaintStrokeEnd(_) => true,
             LowpolyCommand::PaintStrokeBegin(_) | LowpolyCommand::TransformBegin(_) => true,
@@ -708,10 +721,15 @@ fn lowpoly_sample_pixel(snapshot: &LowpolySnapshot, config: &LowpolyConfig, payl
     let offset = (y * size + x) * 4;
     let mut color = [0_u8; 4];
     for layer in object.paint_layers.iter().filter(|layer| layer.visible) {
-        if offset.saturating_add(4) > layer.pixels.len() {
+        // 🎨️ A sparse (never painted) layer IS opaque white everywhere; only a buffer too short for the
+        // sample point is skipped.
+        let source = if layer.pixels.is_empty() {
+            [255_u8; 4]
+        } else if offset.saturating_add(4) > layer.pixels.len() {
             continue;
-        }
-        let source = [layer.pixels[offset], layer.pixels[offset + 1], layer.pixels[offset + 2], layer.pixels[offset + 3]];
+        } else {
+            [layer.pixels[offset], layer.pixels[offset + 1], layer.pixels[offset + 2], layer.pixels[offset + 3]]
+        };
         let source_alpha = (source[3] as f32 / 255.0) * layer.opacity.clamp(0.0, 1.0);
         let destination_alpha = color[3] as f32 / 255.0;
         let alpha = source_alpha + destination_alpha * (1.0 - source_alpha);
@@ -760,7 +778,6 @@ fn lowpoly_retained_reduce(
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone()).map_err(Fault::from)?;
             threaded.set_selection_object_id(selection_object_id.clone());
             let step_emit = ($handle)(&doc, &cfg, &mut threaded)?;
-            eprintln!("[DEBUG] lowpoly threaded {} artifact={} config={} selection={:?}", command.command_id(), step_emit.artifact_mutations.len(), step_emit.config_mutations.len(), selection);
             let transient = threaded.transient_snapshot().map_err(Fault::from)?;
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step_emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } });
         }};
@@ -782,6 +799,9 @@ fn lowpoly_retained_reduce(
         LowpolyCommand::SetCamera(payload) => set_camera::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::ImportSnapshotJson(payload) => set_snapshot_json::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::ReplaceSnapshotJson(payload) => replace_snapshot_json::handle(payload, &doc, &cfg, &mut bounded),
+        LowpolyCommand::ExportMesh(payload) => export_mesh::handle(payload, &doc, &cfg, &mut bounded),
+        LowpolyCommand::LoadMeshRequest(payload) => load_mesh_request::handle(payload, &doc, &cfg, &mut bounded),
+        LowpolyCommand::ImportMeshFile(payload) => import_mesh_file::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::PaintSample(payload) => return Ok(ArtifactCommandWorkStep::Complete(lowpoly_sample_pixel(snapshot, config, payload))),
         LowpolyCommand::PaintStrokeBegin(_) => {
             let transient = context.transient.begin_stroke_drag();
@@ -913,17 +933,24 @@ impl LowpolyRetainedCommandWork {
             }
         }
         let end = self.paint_cursor.saturating_add(LOWPOLY_RETAINED_PAINT_CHUNK_BYTES).min(before.len());
-        for index in self.paint_cursor..end {
-            if before[index] == after[index] {
+        // 🩸 Whole RGBA pixels, like `pixel_runs_from_diff`: a byte-wise walk minted one run per pixel for
+        // a fill that keeps a channel (2026-09-18). The chunk is a multiple of four, so pixels never split.
+        let mut index = self.paint_cursor;
+        while index + 4 <= end {
+            if before[index..index + 4] == after[index..index + 4] {
                 self.flush_paint_run()?;
+                index += 4;
                 continue;
             }
             if self.paint_open_offset.is_none() {
                 self.paint_open_offset = Some(index as u32);
             }
-            self.paint_open_bytes.push(after[index]);
-            self.paint_digest = (self.paint_digest ^ (index as u64)).wrapping_mul(0x1000_0000_01b3);
-            self.paint_digest = (self.paint_digest ^ u64::from(after[index])).wrapping_mul(0x1000_0000_01b3);
+            for (byte, value) in after[index..index + 4].iter().enumerate().map(|(offset, value)| (index + offset, *value)) {
+                self.paint_open_bytes.push(value);
+                self.paint_digest = (self.paint_digest ^ (byte as u64)).wrapping_mul(0x1000_0000_01b3);
+                self.paint_digest = (self.paint_digest ^ u64::from(value)).wrapping_mul(0x1000_0000_01b3);
+            }
+            index += 4;
         }
         self.paint_cursor = end;
         if self.paint_replay_target.is_some() {
@@ -960,7 +987,6 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
-        eprintln!("[DEBUG] lp work step tool={} stage={} complete={} closing={}", self.tool_id, self.stage, self.complete, self.closing);
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
         }
@@ -1048,7 +1074,6 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        eprintln!("[DEBUG] lp work close tool={} items={} bytes={}", self.tool_id, maximum_items, maximum_bytes);
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
@@ -1167,6 +1192,9 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportMesh", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadMeshRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintStrokeBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
@@ -1418,7 +1446,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
         let authority = self.authority.as_ref().ok_or_else(|| "Lowpoly Artifact preparation lost its Store authority".to_string())?;
         let edit = lowpoly_store_edit("lowpoly-artifact-retained", forward, inverse, self.description.take(), authority);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        eprintln!("[DEBUG] lp prepared kind={} retained={} prepared_bytes={}", "one-item", self.retained_bytes, self.prepared_bytes);
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1445,7 +1472,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
     }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        eprintln!("[DEBUG] lp close_step closing={} items={} bytes={} prepared={} prepared_bytes={} mutation={}", self.closing, grant.maximum_items, grant.maximum_bytes, self.prepared.is_some(), self.prepared_bytes, self.mutation.is_some());
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1568,7 +1594,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
         let authority = self.authority.as_ref().ok_or_else(|| "Lowpoly config preparation lost its Store authority".to_string())?;
         let edit = lowpoly_store_edit("lowpoly-config-retained", forward, inverse, self.description.take(), authority);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        eprintln!("[DEBUG] lp prepared kind={} retained={} prepared_bytes={}", "one-item", self.retained_bytes, self.prepared_bytes);
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1595,7 +1620,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
     }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        eprintln!("[DEBUG] lp close_step closing={} items={} bytes={} prepared={} prepared_bytes={} mutation={}", self.closing, grant.maximum_items, grant.maximum_bytes, self.prepared.is_some(), self.prepared_bytes, self.mutation.is_some());
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1745,6 +1769,18 @@ impl ArtifactEditor for LowpolyPlayApp {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
+    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` this editor emits
+    /// (`reset_document_effect`: mesh import, fixture import) — the trait default refuses the envelope,
+    /// which the host reported as `artifact-store.persisted-initializer-refused` on every import
+    /// (react playground, 2026-09-18). The note/fem shape over the bounded owners above.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, LOWPOLY_DOCUMENT_SCHEMA, operation, generation))
+    }
+
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
@@ -1812,6 +1848,12 @@ impl ArtifactEditor for LowpolyPlayApp {
             "setCamera" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "importSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "replaceSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "exportMesh" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "loadMeshRequest" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            // 📥️ Every row must equal the ONE contract `LowpolyCommandJobFactory` registers
+            // (`registration.contract == row.contract`, else the boot-time proof join refuses the tool);
+            // the mesh file rides inside that shared wire budget.
+            "importMeshFile" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintStrokeBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "transformBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
@@ -2020,33 +2062,14 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
 /// `"mesh:in"`/`"artifact:in"` above, `commands::document::{set_snapshot_json,replace_snapshot_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
-/// for `scene` — a genesis envelope with no history to encode.
-// 🚫️async: E5 executor bridge — `store::print_document_spr` is `async fn` per R2, but every caller of
-// `reset_document_effect` (`commands::document::{set_snapshot_json,replace_snapshot_json}`) is a plain sync
-// `handle` in this crate's `app_commands!` dispatch, and the `envelope` built here is always a genesis
-// envelope with empty `vcs.edits`/`edit_messages`/`conflicts` — `print_document_spr`'s only work on
-// that shape is the unconditional `validate_persisted_conflicts` call, which does no real I/O over an
-// empty conflict set, so this poll-once bridge completes on the first poll by construction (same E5
-// shape as `🎠️kernel/🦀️.rs`'s `extension_activation_tests::block_on`). One per crate, as R2 requires.
-fn block_on<F: std::future::Future>(future: F) -> F::Output {
-    fn no_op(_: *const ()) {}
-    fn clone(_: *const ()) -> std::task::RawWaker {
-        std::task::RawWaker::new(std::ptr::null(), &VTABLE)
-    }
-    static VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(clone, no_op, no_op, no_op);
-    let waker = unsafe { std::task::Waker::from_raw(std::task::RawWaker::new(std::ptr::null(), &VTABLE)) };
-    let mut cx = std::task::Context::from_waker(&waker);
-    let mut future = std::pin::pin!(future);
-    match future.as_mut().poll(&mut cx) {
-        std::task::Poll::Ready(value) => value,
-        std::task::Poll::Pending => panic!("block_on: reset_document_effect's spr encode was not ready on first poll — this fn is documented I/O-free for a genesis envelope"),
-    }
-}
-
+/// (`store::empty_document_spr`, the `🏗️fem`/process3d shape) — never a live `ArtifactEnvelope`
+/// minted just to print it: such an envelope owns a bounded retirement authority, and dropping it at
+/// the end of this function trapped the guest (`artifact envelope terminal shell reached Drop before
+/// its app-owned bounded retirement authority detached every nested owner`) on every mesh import and
+/// `replaceSnapshotJson` (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
 pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
     let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
-    let spr = block_on(store::print_document_spr(&envelope)).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("lowpoly", LOWPOLY_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -2066,7 +2089,7 @@ fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group
 /// `.example(...)`/`.workflow(...)` methods (`App { definition, examples }` split — `.editor::<E>(def)`
 /// only takes the definition, examples always end up empty). The old
 /// `.example("default", …, &default_example, "file")` / `.workflow("lowpoly", "Lowpoly", "mesh")` tail
-/// calls this app used to make are DROPPED here, not ported — the subset's own `📚️examples/🎬️demo`
+/// calls this app used to make are DROPPED here, not ported — the subset's own `📚️examples/🌲️hexagonal-cut-concrete-forest-left`
 /// facet is the intended replacement mechanism per the pilot's report, not confirmed with the
 /// coordinator by this packet.
 pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
@@ -2122,6 +2145,10 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
             .mutation("importSnapshotJson", LocalizedLabel::native("Import Snapshot Json", "Snapshot-JSON importieren"))
             .mutation("replaceSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
+            // 📤️ Shell effects: a mesh download, a file-open request, and the import the shell answers it with.
+            .shell_action("exportMesh", LocalizedLabel::native("Export Mesh", "Mesh exportieren"))
+            .shell_action("loadMeshRequest", LocalizedLabel::native("Load Mesh…", "Mesh laden…"))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("importMeshFile", LocalizedLabel::native("Import Mesh File", "Mesh-Datei importieren"), semio_framework_plugin::ActionKind::Mutation) })
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
@@ -2146,6 +2173,28 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             // stages typed overrides read out of `args`; `config.utility_params_json` remains the live backing store.
             .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", LocalizedLabel::native("Extrude Distance", "Extrusionsabstand"), 0.01, 2.0).default_value(&0.25)])
             .action_args("inset", vec![ActionArgDef::number("insetAmount", LocalizedLabel::native("Inset Amount", "Einzugsbetrag")).default_value(&0.1)])
+            // 🧲️ Numeric transform entry from the Actions pane — the gumball drag fills the same fields.
+            .action_args("translateSelection", vec![
+                ActionArgDef::number("dx", LocalizedLabel::native("Move X", "Verschieben X")).default_value(&0.0),
+                ActionArgDef::number("dy", LocalizedLabel::native("Move Y", "Verschieben Y")).default_value(&0.0),
+                ActionArgDef::number("dz", LocalizedLabel::native("Move Z", "Verschieben Z")).default_value(&0.0),
+            ])
+            .action_args("rotateSelection", vec![
+                ActionArgDef::number("angle", LocalizedLabel::native("Angle", "Winkel")).default_value(&0.0),
+                ActionArgDef::number("ax", LocalizedLabel::native("Axis X", "Achse X")).default_value(&0.0),
+                ActionArgDef::number("ay", LocalizedLabel::native("Axis Y", "Achse Y")).default_value(&1.0),
+                ActionArgDef::number("az", LocalizedLabel::native("Axis Z", "Achse Z")).default_value(&0.0),
+            ])
+            .action_args("scaleSelection", vec![
+                ActionArgDef::number("sx", LocalizedLabel::native("Scale X", "Skalieren X")).default_value(&1.0),
+                ActionArgDef::number("sy", LocalizedLabel::native("Scale Y", "Skalieren Y")).default_value(&1.0),
+                ActionArgDef::number("sz", LocalizedLabel::native("Scale Z", "Skalieren Z")).default_value(&1.0),
+            ])
+            .action_args("exportMesh", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
+                ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
+                ActionArgOption::new("ply", LocalizedLabel::native("PLY", "PLY")),
+                ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
+            ]).required().default_value(&"obj")])
             .action_args("bevel", vec![
                 ActionArgDef::number("bevelAmount", LocalizedLabel::native("Bevel Amount", "Fasenbetrag")).default_value(&0.05),
                 ActionArgDef::number("bevelSegments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(&1),
@@ -2232,6 +2281,9 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("transformEnd", InteractiveJobClassification::Migrated)
             .action_interactive_job("importSnapshotJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("replaceSnapshotJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportMesh", InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadMeshRequest", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importMeshFile", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveObject", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActivePaintLayer", InteractiveJobClassification::Migrated)

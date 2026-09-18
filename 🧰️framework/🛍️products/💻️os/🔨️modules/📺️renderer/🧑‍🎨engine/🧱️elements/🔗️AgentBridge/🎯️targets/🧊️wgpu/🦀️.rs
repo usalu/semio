@@ -1,0 +1,585 @@
+//! 🌉️ wgpu twin of the `🔗️AgentBridge` element (`🟦️.tsx`, 476 lines) — the headless ShellBridge
+//! consumer the wgpu shell needs so an `os.agent.*` frame delivered to a wgpu-rendered shell can
+//! reach the user at all. React's hook owns three things: the `semio.mcp.bridge.v1` frame codec, a
+//! `ShellState` mirror reduced from inbound `shellCommand` frames, and the presence/approval state
+//! `🚦️AgentPresence`/`🤖️AgentApprovals` render. This file owns the first and the third; the
+//! `ShellState` mirror is deliberately NOT ported — the wgpu shell IS the authority (it holds the
+//! live `ShellState` directly), so mirroring it into a second reduced copy would be the React-only
+//! half of the design, not parity.
+//!
+//! 🔁️ Codec provenance: the Rust SSOT is `💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs`, which cannot be
+//! depended on from here — `semio-framework-os-mcp` pulls `axum` + `tokio` with the `full` feature
+//! and therefore does not build for `wasm32-unknown-unknown`, which this crate must. This file is
+//! consequently the THIRD implementation of the same byte layout (Rust SSOT, `🟦️.ts` twin, this
+//! one) and is held to the SSOT's own documented anti-drift mechanism: every row of
+//! `🧵️bridge/🧫️fixtures/📨️frames.json` is replayed byte-for-byte against this codec in
+//! `../../🧪️tests/🔬️wgpu-unit/🦀️.rs`, exactly as `mod quick`'s
+//! `every_fixture_round_trips_through_the_rust_codec` does for the SSOT.
+//!
+//! 🔌️ Transport: this module is transport-free on purpose. [`AgentBridgeState::apply_encoded_frame`]
+//! takes the bytes one socket message carried and [`AgentBridgeState::take_outbox`] yields the bytes
+//! to send back, so the browser (`🚪️host-io`) and native halves both drive it the same way the
+//! plugin bridge is driven — see the packet report for the socket wiring that is still absent.
+
+use ui_wgpu::wgpu::{Locale, LocalizedLabel, Terminology};
+
+//#region 🔖️BridgeVersion
+/// 🔢️ `BRIDGE_VERSION` from the SSOT — the value a `Hello` frame carries.
+pub const BRIDGE_VERSION: u16 = 1;
+
+/// 🔗️ First (exact) websocket subprotocol; the second is the admission proof, which keeps admission
+/// out of URLs, logs and referrers exactly as `bridgeProtocols` does on the React side.
+pub const BRIDGE_SUBPROTOCOL: &str = "semio.mcp.bridge.v1";
+
+/// ⏱️ Reconnect backoff and keep-alive cadence — same three constants React's hook uses.
+pub const RECONNECT_BASE_MS: f64 = 1000.0;
+pub const RECONNECT_MAX_MS: f64 = 30_000.0;
+pub const PING_INTERVAL_MS: f64 = 20_000.0;
+
+/// ⏱️ `min(RECONNECT_BASE_MS * 2^(attempt-1), RECONNECT_MAX_MS)` — attempt `0` means "not
+/// reconnecting yet" and yields the base delay, matching `scheduleReconnect`'s own first step.
+pub fn reconnect_delay_ms(attempt: u32) -> f64 {
+    let exponent = attempt.saturating_sub(1).min(32);
+    (RECONNECT_BASE_MS * 2f64.powi(exponent as i32)).min(RECONNECT_MAX_MS)
+}
+//#endregion 🔖️BridgeVersion
+
+//#region 🔖️SharedTypes
+/// 🐚️ Which shell dialled the bridge — the wgpu shell announces `WgpuWeb`/`WgpuNative`, the two
+/// tags the gateway already reserves for it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShellKind {
+    React,
+    WgpuWeb,
+    WgpuNative,
+}
+
+impl ShellKind {
+    pub fn to_tag(self) -> u8 {
+        match self {
+            ShellKind::React => 0,
+            ShellKind::WgpuWeb => 1,
+            ShellKind::WgpuNative => 2,
+        }
+    }
+
+    pub fn from_tag(tag: u8) -> Result<Self, BridgeFrameFault> {
+        match tag {
+            0 => Ok(ShellKind::React),
+            1 => Ok(ShellKind::WgpuWeb),
+            2 => Ok(ShellKind::WgpuNative),
+            other => Err(BridgeFrameFault::UnknownTag(other)),
+        }
+    }
+
+    /// 🖥️ The tag this build announces: a browser wgpu shell is `WgpuWeb`, a winit one `WgpuNative`.
+    pub fn for_this_target() -> Self {
+        if cfg!(target_arch = "wasm32") {
+            ShellKind::WgpuWeb
+        } else {
+            ShellKind::WgpuNative
+        }
+    }
+}
+
+/// 🚩️ `RelayAppCommands|SharedBackbone|Elicit` — a bitmask on the wire, named booleans in Rust.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct BridgeFlags {
+    pub relay_app_commands: bool,
+    pub shared_backbone: bool,
+    pub elicit: bool,
+}
+
+impl BridgeFlags {
+    pub const NONE: Self = Self { relay_app_commands: false, shared_backbone: false, elicit: false };
+
+    pub fn to_bits(self) -> u8 {
+        (self.relay_app_commands as u8) | ((self.shared_backbone as u8) << 1) | ((self.elicit as u8) << 2)
+    }
+
+    pub fn from_bits(bits: u8) -> Self {
+        Self { relay_app_commands: bits & 0b001 != 0, shared_backbone: bits & 0b010 != 0, elicit: bits & 0b100 != 0 }
+    }
+}
+
+/// ✅️ The three human decisions `🤖️AgentApprovals` offers, in wire-tag order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ApprovalDecision {
+    Deny,
+    Once,
+    Session,
+}
+
+impl ApprovalDecision {
+    pub fn to_tag(self) -> u8 {
+        match self {
+            ApprovalDecision::Deny => 0,
+            ApprovalDecision::Once => 1,
+            ApprovalDecision::Session => 2,
+        }
+    }
+
+    pub fn from_tag(tag: u8) -> Result<Self, BridgeFrameFault> {
+        match tag {
+            0 => Ok(ApprovalDecision::Deny),
+            1 => Ok(ApprovalDecision::Once),
+            2 => Ok(ApprovalDecision::Session),
+            other => Err(BridgeFrameFault::UnknownTag(other)),
+        }
+    }
+
+    /// 🆔️ Control-id suffix the modal registers each decision button under.
+    pub fn control_suffix(self) -> &'static str {
+        match self {
+            ApprovalDecision::Deny => "deny",
+            ApprovalDecision::Once => "once",
+            ApprovalDecision::Session => "session",
+        }
+    }
+
+    pub const ALL: [ApprovalDecision; 3] = [ApprovalDecision::Deny, ApprovalDecision::Once, ApprovalDecision::Session];
+}
+
+/// ⚠️ Why a frame could not be read — no `GatewayError` here, because that type lives in the
+/// gateway crate this build cannot link (see the module docstring).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BridgeFrameFault {
+    Truncated,
+    TrailingBytes,
+    UnknownTag(u8),
+    NotUtf8,
+}
+//#endregion 🔖️SharedTypes
+
+//#region 🔖️Wire
+/// 🧵️ Length-prefixed little-endian primitives — the byte layout the SSOT's private `mod wire`
+/// defines, reproduced here (and fixture-checked) rather than imported.
+mod wire {
+    use super::BridgeFrameFault;
+
+    pub struct Reader<'a> {
+        bytes: &'a [u8],
+        position: usize,
+    }
+
+    impl<'a> Reader<'a> {
+        pub fn new(bytes: &'a [u8]) -> Self {
+            Self { bytes, position: 0 }
+        }
+
+        fn take(&mut self, count: usize) -> Result<&'a [u8], BridgeFrameFault> {
+            let end = self.position.checked_add(count).ok_or(BridgeFrameFault::Truncated)?;
+            let slice = self.bytes.get(self.position..end).ok_or(BridgeFrameFault::Truncated)?;
+            self.position = end;
+            Ok(slice)
+        }
+
+        pub fn read_u8(&mut self) -> Result<u8, BridgeFrameFault> {
+            Ok(self.take(1)?[0])
+        }
+
+        pub fn read_bool(&mut self) -> Result<bool, BridgeFrameFault> {
+            match self.read_u8()? {
+                0 => Ok(false),
+                1 => Ok(true),
+                other => Err(BridgeFrameFault::UnknownTag(other)),
+            }
+        }
+
+        pub fn read_u16(&mut self) -> Result<u16, BridgeFrameFault> {
+            let bytes = self.take(2)?;
+            Ok(u16::from_le_bytes([bytes[0], bytes[1]]))
+        }
+
+        pub fn read_u64(&mut self) -> Result<u64, BridgeFrameFault> {
+            let bytes = self.take(8)?;
+            let mut value = [0u8; 8];
+            value.copy_from_slice(bytes);
+            Ok(u64::from_le_bytes(value))
+        }
+
+        pub fn read_bytes(&mut self) -> Result<Vec<u8>, BridgeFrameFault> {
+            let len = self.read_u32()? as usize;
+            Ok(self.take(len)?.to_vec())
+        }
+
+        pub fn read_u32(&mut self) -> Result<u32, BridgeFrameFault> {
+            let bytes = self.take(4)?;
+            Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
+        }
+
+        pub fn read_string(&mut self) -> Result<String, BridgeFrameFault> {
+            let bytes = self.read_bytes()?;
+            String::from_utf8(bytes).map_err(|_| BridgeFrameFault::NotUtf8)
+        }
+
+        pub fn read_option_string(&mut self) -> Result<Option<String>, BridgeFrameFault> {
+            if self.read_bool()? {
+                self.read_string().map(Some)
+            } else {
+                Ok(None)
+            }
+        }
+
+        pub fn finish(self) -> Result<(), BridgeFrameFault> {
+            if self.position == self.bytes.len() {
+                Ok(())
+            } else {
+                Err(BridgeFrameFault::TrailingBytes)
+            }
+        }
+    }
+
+    pub fn write_u8(buf: &mut Vec<u8>, value: u8) {
+        buf.push(value);
+    }
+
+    pub fn write_bool(buf: &mut Vec<u8>, value: bool) {
+        buf.push(value as u8);
+    }
+
+    pub fn write_u16(buf: &mut Vec<u8>, value: u16) {
+        buf.extend_from_slice(&value.to_le_bytes());
+    }
+
+    pub fn write_u64(buf: &mut Vec<u8>, value: u64) {
+        buf.extend_from_slice(&value.to_le_bytes());
+    }
+
+    pub fn write_bytes(buf: &mut Vec<u8>, value: &[u8]) {
+        buf.extend_from_slice(&(value.len() as u32).to_le_bytes());
+        buf.extend_from_slice(value);
+    }
+
+    pub fn write_string(buf: &mut Vec<u8>, value: &str) {
+        write_bytes(buf, value.as_bytes());
+    }
+
+    pub fn write_option_string(buf: &mut Vec<u8>, value: &Option<String>) {
+        match value {
+            Some(value) => {
+                write_bool(buf, true);
+                write_string(buf, value);
+            }
+            None => write_bool(buf, false),
+        }
+    }
+}
+//#endregion 🔖️Wire
+
+//#region 🔖️GatewayToShell
+/// 📤️ Gateway→Shell frames, tags `0..7` in SSOT declaration order.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GatewayToShell {
+    Welcome { bridge_version: u16, connection: String, principal: String },
+    ShellCommand { seq: u64, command: Vec<u8> },
+    AppCommand { seq: u64, instance_id: String, command: Vec<u8> },
+    ApprovalRequested { approval_id: String, summary: String },
+    ApprovalResolved { approval_id: String, decision: ApprovalDecision },
+    AgentPresence { active: bool, label: String, invocation_id: Option<String> },
+    Pong,
+    Bye { reason: String },
+}
+
+impl GatewayToShell {
+    pub fn decode(bytes: &[u8]) -> Result<Self, BridgeFrameFault> {
+        let mut reader = wire::Reader::new(bytes);
+        let frame = match reader.read_u8()? {
+            0 => GatewayToShell::Welcome { bridge_version: reader.read_u16()?, connection: reader.read_string()?, principal: reader.read_string()? },
+            1 => GatewayToShell::ShellCommand { seq: reader.read_u64()?, command: reader.read_bytes()? },
+            2 => GatewayToShell::AppCommand { seq: reader.read_u64()?, instance_id: reader.read_string()?, command: reader.read_bytes()? },
+            3 => GatewayToShell::ApprovalRequested { approval_id: reader.read_string()?, summary: reader.read_string()? },
+            4 => GatewayToShell::ApprovalResolved { approval_id: reader.read_string()?, decision: ApprovalDecision::from_tag(reader.read_u8()?)? },
+            5 => GatewayToShell::AgentPresence { active: reader.read_bool()?, label: reader.read_string()?, invocation_id: reader.read_option_string()? },
+            6 => GatewayToShell::Pong,
+            7 => GatewayToShell::Bye { reason: reader.read_string()? },
+            other => return Err(BridgeFrameFault::UnknownTag(other)),
+        };
+        reader.finish()?;
+        Ok(frame)
+    }
+
+    /// 🧪️ Encoder for the inbound direction — production never sends these, but a simulated
+    /// `ApprovalRequested`/`AgentPresence` frame is exactly how this packet's acceptance tests and
+    /// the fixture replay drive the consumer.
+    pub fn encode(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        match self {
+            GatewayToShell::Welcome { bridge_version, connection, principal } => {
+                wire::write_u8(&mut buf, 0);
+                wire::write_u16(&mut buf, *bridge_version);
+                wire::write_string(&mut buf, connection);
+                wire::write_string(&mut buf, principal);
+            }
+            GatewayToShell::ShellCommand { seq, command } => {
+                wire::write_u8(&mut buf, 1);
+                wire::write_u64(&mut buf, *seq);
+                wire::write_bytes(&mut buf, command);
+            }
+            GatewayToShell::AppCommand { seq, instance_id, command } => {
+                wire::write_u8(&mut buf, 2);
+                wire::write_u64(&mut buf, *seq);
+                wire::write_string(&mut buf, instance_id);
+                wire::write_bytes(&mut buf, command);
+            }
+            GatewayToShell::ApprovalRequested { approval_id, summary } => {
+                wire::write_u8(&mut buf, 3);
+                wire::write_string(&mut buf, approval_id);
+                wire::write_string(&mut buf, summary);
+            }
+            GatewayToShell::ApprovalResolved { approval_id, decision } => {
+                wire::write_u8(&mut buf, 4);
+                wire::write_string(&mut buf, approval_id);
+                wire::write_u8(&mut buf, decision.to_tag());
+            }
+            GatewayToShell::AgentPresence { active, label, invocation_id } => {
+                wire::write_u8(&mut buf, 5);
+                wire::write_bool(&mut buf, *active);
+                wire::write_string(&mut buf, label);
+                wire::write_option_string(&mut buf, invocation_id);
+            }
+            GatewayToShell::Pong => wire::write_u8(&mut buf, 6),
+            GatewayToShell::Bye { reason } => {
+                wire::write_u8(&mut buf, 7);
+                wire::write_string(&mut buf, reason);
+            }
+        }
+        buf
+    }
+}
+//#endregion 🔖️GatewayToShell
+
+//#region 🔖️ShellToGateway
+/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has nine variants
+/// (`ShellState`/`ShellStatePatch`/`Instances`/`AppFrames` carry the React mirror's snapshots); the
+/// wgpu shell publishes none of those yet, so encoding them here would be dead wire with no
+/// producer — their tags (`1`,`2`,`3`,`4`) stay reserved and unread.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ShellToGateway {
+    Hello { bridge_version: u16, shell_kind: ShellKind, shell_session_id: String, principal_actor: String, flags: BridgeFlags },
+    ShellCommandResult { in_reply_to: u64, ok: bool, fault: Option<String> },
+    Approval { approval_id: String, decision: ApprovalDecision, note: Option<String> },
+    Ping,
+    Bye,
+}
+
+impl ShellToGateway {
+    pub fn encode(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        match self {
+            ShellToGateway::Hello { bridge_version, shell_kind, shell_session_id, principal_actor, flags } => {
+                wire::write_u8(&mut buf, 0);
+                wire::write_u16(&mut buf, *bridge_version);
+                wire::write_u8(&mut buf, shell_kind.to_tag());
+                wire::write_string(&mut buf, shell_session_id);
+                wire::write_string(&mut buf, principal_actor);
+                wire::write_u8(&mut buf, flags.to_bits());
+            }
+            ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => {
+                wire::write_u8(&mut buf, 5);
+                wire::write_u64(&mut buf, *in_reply_to);
+                wire::write_bool(&mut buf, *ok);
+                wire::write_option_string(&mut buf, fault);
+            }
+            ShellToGateway::Approval { approval_id, decision, note } => {
+                wire::write_u8(&mut buf, 6);
+                wire::write_string(&mut buf, approval_id);
+                wire::write_u8(&mut buf, decision.to_tag());
+                wire::write_option_string(&mut buf, note);
+            }
+            ShellToGateway::Ping => wire::write_u8(&mut buf, 7),
+            ShellToGateway::Bye => wire::write_u8(&mut buf, 8),
+        }
+        buf
+    }
+
+    /// 🧪️ Decoder for the outbound direction — the fixture replay's other half; production reads
+    /// these only on the gateway side.
+    pub fn decode(bytes: &[u8]) -> Result<Self, BridgeFrameFault> {
+        let mut reader = wire::Reader::new(bytes);
+        let frame = match reader.read_u8()? {
+            0 => ShellToGateway::Hello {
+                bridge_version: reader.read_u16()?,
+                shell_kind: ShellKind::from_tag(reader.read_u8()?)?,
+                shell_session_id: reader.read_string()?,
+                principal_actor: reader.read_string()?,
+                flags: BridgeFlags::from_bits(reader.read_u8()?),
+            },
+            5 => ShellToGateway::ShellCommandResult { in_reply_to: reader.read_u64()?, ok: reader.read_bool()?, fault: reader.read_option_string()? },
+            6 => ShellToGateway::Approval { approval_id: reader.read_string()?, decision: ApprovalDecision::from_tag(reader.read_u8()?)?, note: reader.read_option_string()? },
+            7 => ShellToGateway::Ping,
+            8 => ShellToGateway::Bye,
+            other => return Err(BridgeFrameFault::UnknownTag(other)),
+        };
+        reader.finish()?;
+        Ok(frame)
+    }
+}
+//#endregion 🔖️ShellToGateway
+
+//#region 🔖️State
+/// 🚦️ Connection status, one-for-one with React's `AgentBridgeStatus` string union.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentBridgeStatus {
+    #[default]
+    Disabled,
+    Connecting,
+    Open,
+    Reconnecting,
+    Closed,
+}
+
+/// 🤖️ What the agent is doing right now, as the last `agentPresence` frame reported it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AgentBridgePresence {
+    pub active: bool,
+    pub label: String,
+    pub invocation_id: Option<String>,
+}
+
+/// ⏸️ One parked capability request awaiting a human decision.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PendingAgentApproval {
+    pub approval_id: String,
+    pub summary: String,
+    pub requested_at_ms: f64,
+}
+
+/// 🌉️ The whole consumer: frames in, presence/approvals out, decisions back. Holds no socket and
+/// no timer, so it is `Send`, unit-testable, and identical on the browser and native builds.
+#[derive(Clone, Debug, Default)]
+pub struct AgentBridgeState {
+    pub status: AgentBridgeStatus,
+    pub presence: AgentBridgePresence,
+    pub pending_approvals: Vec<PendingAgentApproval>,
+    pub last_error: Option<String>,
+    pub reconnect_attempt: u32,
+    outbox: Vec<ShellToGateway>,
+}
+
+impl AgentBridgeState {
+    /// 🔌️ The socket is dialling — `connecting` the first time, `reconnecting` after a drop.
+    pub fn note_connecting(&mut self) {
+        self.status = if self.reconnect_attempt > 0 { AgentBridgeStatus::Reconnecting } else { AgentBridgeStatus::Connecting };
+    }
+
+    /// 👋️ The socket opened: queue the `Hello` frame the gateway answers with `Welcome`.
+    pub fn note_socket_opened(&mut self, shell_session_id: impl Into<String>, principal_actor: impl Into<String>, flags: BridgeFlags) {
+        self.outbox.push(ShellToGateway::Hello {
+            bridge_version: BRIDGE_VERSION,
+            shell_kind: ShellKind::for_this_target(),
+            shell_session_id: shell_session_id.into(),
+            principal_actor: principal_actor.into(),
+            flags,
+        });
+    }
+
+    /// 🔌️ The socket closed: the next dial is a reconnect, and presence can no longer be trusted.
+    pub fn note_socket_closed(&mut self) {
+        self.reconnect_attempt = self.reconnect_attempt.saturating_add(1);
+        self.status = AgentBridgeStatus::Reconnecting;
+        self.presence = AgentBridgePresence::default();
+    }
+
+    /// ⏱️ How long to wait before the next dial.
+    pub fn reconnect_delay_ms(&self) -> f64 {
+        reconnect_delay_ms(self.reconnect_attempt)
+    }
+
+    /// 📥️ Applies one decoded inbound frame. `shellCommand`/`appCommand` are acknowledged with a
+    /// refusal rather than silently dropped: the wgpu shell has no `ShellState` reducer twin, so
+    /// claiming `ok` would lie to the gateway.
+    pub fn apply_frame(&mut self, frame: GatewayToShell, now_ms: f64) {
+        match frame {
+            GatewayToShell::Welcome { .. } => {
+                self.reconnect_attempt = 0;
+                self.status = AgentBridgeStatus::Open;
+                self.last_error = None;
+            }
+            GatewayToShell::ShellCommand { seq, .. } => {
+                self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok: false, fault: Some("wgpu shell has no ShellState reducer twin".into()) });
+            }
+            GatewayToShell::AppCommand { .. } => {}
+            GatewayToShell::ApprovalRequested { approval_id, summary } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                self.pending_approvals.push(PendingAgentApproval { approval_id, summary, requested_at_ms: now_ms });
+            }
+            GatewayToShell::ApprovalResolved { approval_id, .. } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+            }
+            GatewayToShell::AgentPresence { active, label, invocation_id } => {
+                self.presence = AgentBridgePresence { active, label, invocation_id };
+            }
+            GatewayToShell::Pong => {}
+            GatewayToShell::Bye { reason } => {
+                self.last_error = (!reason.is_empty()).then_some(reason);
+                self.status = AgentBridgeStatus::Closed;
+            }
+        }
+    }
+
+    /// 📥️ [`Self::apply_frame`] straight off the bytes one socket message carried; a fault is
+    /// recorded in `last_error` rather than thrown, matching the hook's own `onmessage` catch.
+    pub fn apply_encoded_frame(&mut self, bytes: &[u8], now_ms: f64) -> Result<(), BridgeFrameFault> {
+        match GatewayToShell::decode(bytes) {
+            Ok(frame) => {
+                self.apply_frame(frame, now_ms);
+                Ok(())
+            }
+            Err(fault) => {
+                self.last_error = Some(format!("failed to decode bridge frame: {fault:?}"));
+                Err(fault)
+            }
+        }
+    }
+
+    /// ✅️ The human decided: queue the `Approval` frame and drop the request from the modal, the
+    /// exact pair `resolveApproval` performs.
+    pub fn resolve_approval(&mut self, approval_id: &str, decision: ApprovalDecision, note: Option<String>) {
+        self.outbox.push(ShellToGateway::Approval { approval_id: approval_id.to_string(), decision, note });
+        self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+    }
+
+    /// 💓️ Keep-alive frame the transport schedules every [`PING_INTERVAL_MS`].
+    pub fn queue_ping(&mut self) {
+        self.outbox.push(ShellToGateway::Ping);
+    }
+
+    /// 👋️ Farewell frame sent best-effort before the socket closes.
+    pub fn queue_bye(&mut self) {
+        self.outbox.push(ShellToGateway::Bye);
+    }
+
+    /// 📤️ Drains everything queued for the transport to write.
+    pub fn take_outbox(&mut self) -> Vec<ShellToGateway> {
+        std::mem::take(&mut self.outbox)
+    }
+
+    /// 📤️ [`Self::take_outbox`] already encoded — what a byte-oriented transport wants.
+    pub fn take_outbox_encoded(&mut self) -> Vec<Vec<u8>> {
+        self.take_outbox().iter().map(ShellToGateway::encode).collect()
+    }
+
+    pub fn outbox_len(&self) -> usize {
+        self.outbox.len()
+    }
+
+    /// 🔔️ Whether the approvals modal must be showing, the sole condition React's dialog opens on.
+    pub fn has_pending_approvals(&self) -> bool {
+        !self.pending_approvals.is_empty()
+    }
+}
+//#endregion 🔖️State
+
+//#region 🌐️Labels
+/// 🌐️ This element's own framework-owned copy, resolved without a default language — the same
+/// `LocalizedLabel::native(en, de)` shape `👥️PresenceBar`'s wgpu twin uses, standing in for the
+/// React side's `registerUiTranslationBundles` bundle under `os.agent.*`.
+pub fn agent_label(english: &'static str, german: &'static str, locale: Locale) -> String {
+    LocalizedLabel::native(english, german).resolve(Terminology::ALL[0], locale).to_string()
+}
+//#endregion 🌐️Labels
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
+mod tests;

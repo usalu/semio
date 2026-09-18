@@ -1,0 +1,30 @@
+{
+  "$comment": "🪟️ The per-pane overlay rows React paints inside every window body, and the footer composition that is left once the wgpu-only utility rail is gone. Geometry source: React's `Pane` (🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9922) positioned by `anchorPositionStyle` (:6864) — a corner anchor insets `--spacing-single` on BOTH its edges, a middle anchor centres on that axis; mount source: 🪟️Window/🟦️.tsx:320-412 plus the world projection pane portalled through `usePaneSlot` (🌐️World3dHost/🟦️.tsx:5210). Measured on the React reference at 1440×900 for the puzzle3d two-pane split (📓️w3b-chip-text-and-footer-dock.md §5, read off `getBoundingClientRect`): pane top row y=64 `Actions` left / `Search` centred / `Window Options` right, pane bottom row y=710 `Utilities` left / `Projection` right.",
+  "viewport": { "width": 1440, "height": 900 },
+  "paneChips": [
+    { "chip": "actions", "anchor": "top-left", "icon": "play", "label": { "en": "Actions", "de": "Aktionen" }, "controlId": "shell.action.fold.{windowId}", "react": "framework.window.{windowId}.engagement.toggle", "mounted": "always" },
+    { "chip": "search", "anchor": "top-middle", "icon": "search", "label": { "en": "Search", "de": "Suchen" }, "controlId": "shell.window.search.toggle.{windowId}", "react": "framework.window.{windowId}.search.toggle", "mounted": "always" },
+    { "chip": "windowOptions", "anchor": "top-right", "icon": "settings-2", "label": { "en": "Window Options", "de": "Fensteroptionen" }, "controlId": "shell.measures.unfold.{windowId}", "controlIdOpen": "shell.measures.fold.{windowId}", "react": "framework.window.{windowId}.measures.unfold", "mounted": "always", "disabledWithoutBody": true },
+    { "chip": "utilities", "anchor": "bottom-left", "icon": "hammer", "label": { "en": "Utilities", "de": "Werkzeuge" }, "controlId": "shell.utilityBar.unfold.{windowId}", "controlIdOpen": "shell.utilityBar.fold.{windowId}", "react": "framework.window.{windowId}.utilityBar.unfold", "mounted": "always", "disabledWithoutBody": true },
+    { "chip": "projection", "anchor": "bottom-right", "icon": "projection-three-point", "label": { "en": "Projection", "de": "Projektion" }, "controlId": "shell.projection.fold.{windowId}", "controlIdOpen": "shell.projection.fold.{windowId}", "react": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "mounted": "withWorldSurface", "disabledWithoutBody": false }
+  ],
+  "paneAnchorInsets": {
+    "$comment": "🧭️ anchorPositionStyle's edges per anchor — `middle` centres on that axis. Both renderers resolve the inset distance from the same --spacing-single / PANEL_INSET_UI_SPACING token.",
+    "top-left": ["left", "top"],
+    "top-middle": ["middle", "top"],
+    "top-right": ["right", "top"],
+    "bottom-left": ["left", "bottom"],
+    "bottom-right": ["right", "bottom"]
+  },
+  "footerComposition": {
+    "$comment": "🔚️ React's footerItems (🏛️ShellHost/🟦️.tsx:10613-10635): bottom-left bar, centred bottom-middle bar, a fill, the presence pill, bottom-right bar. No utility rail and no framework.sync.* toggles — React hands buildFrameworkSyncUtilities' three leaves to the bottom-left `s-sync-status` tab's SyncAttachCard (:9076) instead.",
+    "forbiddenControlIds": ["framework.utility.button", "framework.utility.toggle", "framework.utility.collection", "s-checkin"],
+    "forbiddenUtilityIds": ["framework.sync.file", "framework.sync.folder", "framework.sync.remote"],
+    "bands": ["bottom-left", "bottom-middle", "bottom-right"],
+    "$orderComment": "🔚️ Left to right, measured on the React reference at vw 1024 (📓️w3b §3): Display x3 · Remote: detached (#s-sync-status) x78 | Tool x439 · Command x497 (centred on 512) | No one else is here (#s-presence-peers) x660 | Settings x764 · Marketplace x845 · History x946 (ends at vw−3). #s-checkin is NOT footer chrome on either renderer — React renders it inside the History panel's own tree (framework.history.checkin, 🏛️ShellHost/🟦️.tsx:9016), gated by canCheckIn(role).",
+    "order": ["Display", "Remote: detached", "Tool", "Command", "No one else is here", "Settings", "Marketplace", "History"],
+    "leadingBand": { "tabs": "bottom-left", "trailingPills": ["s-sync-status"] },
+    "centredBand": { "tabs": "bottom-middle" },
+    "trailingBand": { "leadingPills": ["s-presence-peers"], "tabs": "bottom-right" }
+  }
+}

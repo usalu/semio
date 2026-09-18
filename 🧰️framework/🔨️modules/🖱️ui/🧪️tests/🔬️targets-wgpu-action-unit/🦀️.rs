@@ -244,3 +244,110 @@ fn production_boundary_has_no_forget_or_background_drop_escape() {
     assert!(!SOURCE.contains(concat!("impl Clone", " for BoundedAction")));
     assert!(!SOURCE.contains(concat!("#[derive(Clone, Debug)]", "\npub struct BoundedAction")));
 }
+
+//#region 🎬️IntentAdmission
+// 🎬️ LAW: the wgpu target's semantic controls speak `UiIntent`, not the legacy `ActionDescriptor` —
+// carrying the addressing React's own `UiDocumentStore::buildIntent` stamps, and refused by the same
+// two rules React's runtime applies before an intent becomes a command: a revision more than one
+// behind the surface is STALE, and a `seq` this surface already admitted is a DUPLICATE.
+// Parity reference: `🗣️Interpreter/🟦️.tsx`'s `onIntent`, `📃️UiDocumentStore/🟦️.tsx`'s `buildIntent`,
+// `🛠️ShellHelpers/🟦️.tsx`'s `uiIntentPayload`/`uiIntentToActionDescriptor`.
+
+fn intent(seq: u64, revision: u64) -> UiIntentCommand {
+    UiIntentCommand {
+        address: UiIntentAddress { surface: "note.play.navigator".into(), revision, node: 7, node_key: "spacing".into() },
+        trigger: ui_contract::Trigger::Change,
+        action: ui_contract::ActionId::try_v1("ctrl", "setValue").expect("action id"),
+        args: Some(DslValue::Object(vec![("windowId".into(), DslValue::String("w1".into()))])),
+        input: Some(DslValue::float(10.5)),
+        seq,
+    }
+}
+
+#[test]
+fn a_stale_revision_intent_never_reaches_the_queue() {
+    let mut queue = BoundedActionQueue::default();
+    assert!(!intent_is_stale(4, 5), "one revision behind is the in-flight case every live gesture is in");
+    assert!(intent_is_stale(4, 6), "two behind is geometry the user never saw");
+    assert_eq!(queue.admit_intent(&intent(1, 4), 5), UiIntentAdmission::Accepted);
+    assert_eq!(queue.admit_intent(&intent(2, 4), 6), UiIntentAdmission::Stale);
+    assert_eq!(queue.admitted_seq("note.play.navigator"), 1, "a refused intent must not advance the surface's cursor");
+}
+
+#[test]
+fn per_surface_seq_orders_and_deduplicates_intents() {
+    let mut queue = BoundedActionQueue::default();
+    assert_eq!(queue.admit_intent_seq(&intent(1, 1)), UiIntentAdmission::Accepted);
+    assert_eq!(queue.admit_intent_seq(&intent(2, 1)), UiIntentAdmission::Accepted);
+    assert_eq!(queue.admit_intent_seq(&intent(2, 1)), UiIntentAdmission::Duplicate, "the same seq twice is one gesture delivered twice");
+    assert_eq!(queue.admit_intent_seq(&intent(1, 1)), UiIntentAdmission::Duplicate, "an out-of-order arrival is refused, not applied behind a newer one");
+    assert_eq!(queue.admit_intent_seq(&intent(3, 1)), UiIntentAdmission::Accepted);
+
+    let mut other = intent(1, 1);
+    other.address.surface = "note.play.inspector".into();
+    assert_eq!(queue.admit_intent_seq(&other), UiIntentAdmission::Accepted, "seq is monotonic PER SURFACE, never globally");
+}
+
+#[test]
+fn a_surfaces_sequencer_is_monotonic_and_independent_of_its_neighbours() {
+    let mut sequencer = UiIntentSequencer::default();
+    assert_eq!(sequencer.next("a"), 1);
+    assert_eq!(sequencer.next("a"), 2);
+    assert_eq!(sequencer.next("b"), 1);
+    assert_eq!(sequencer.next("a"), 3);
+    assert_eq!(sequencer.last("a"), 3);
+    assert_eq!(sequencer.last("b"), 1);
+    assert_eq!(sequencer.last("c"), 0);
+}
+
+#[test]
+fn an_intents_payload_names_its_scalar_by_trigger_and_merges_over_the_authored_args() {
+    let change = intent(1, 1);
+    let descriptor = change.descriptor();
+    assert_eq!(descriptor.controller_id, "ctrl", "the controller IS the action's authored scope — React's `intent.action.scope`");
+    assert_eq!(descriptor.action, "setValue");
+    let args = descriptor.args.expect("merged args");
+    assert_eq!(args.get("windowId").and_then(DslValue::as_str), Some("w1"), "the authored args survive the merge — replacing them wholesale muted whole panels");
+    assert_eq!(args.get("value").and_then(DslValue::as_f64), Some(10.5));
+
+    let mut delta = intent(2, 1);
+    delta.trigger = ui_contract::Trigger::Delta;
+    delta.input = Some(DslValue::float(-1.0));
+    assert_eq!(delta.descriptor().args.and_then(|args| args.get("delta").and_then(DslValue::as_f64)), Some(-1.0), "a relative bump travels under `delta`, not `value`");
+
+    let mut bare = intent(3, 1);
+    bare.input = None;
+    let bare_args = bare.descriptor().args.expect("a payload-free trigger still carries the authored args");
+    assert_eq!(bare_args.get("windowId").and_then(DslValue::as_str), Some("w1"), "a payload-free trigger dispatches the authored args untouched");
+}
+
+#[test]
+fn a_versioned_action_id_survives_as_its_own_address() {
+    let mut versioned = intent(1, 1);
+    versioned.action = ui_contract::ActionId::new(ui_contract::UiText::try_from_str("ctrl").unwrap(), ui_contract::UiText::try_from_str("setValue").unwrap(), 2);
+    assert_eq!(versioned.descriptor().action, "setValue@2", "version two must never be dispatched as version one — React's `uiIntentToActionDescriptor` spells it the same way");
+}
+//#endregion 🎬️IntentAdmission
+
+//#region 🆔️ControllerIdentity
+// 🆔️ W2k: `descriptor()` used to answer the SESSION controller the reconcile pass stamped, while
+// React's `uiIntentToActionDescriptor` answers `intent.action.scope` (`🛠️ShellHelpers/🟦️.tsx:2054`).
+// The two agree for every SDK-authored binding (`ActionFactory` mints the scope FROM the controller
+// id), and diverged for anything else — a document binding a verb in another app's scope.
+
+#[test]
+fn an_intents_controller_is_its_actions_authored_scope_not_the_session() {
+    let mut command = intent(1, 1);
+    command.action = ui_contract::ActionId::try_v1("other-app", "setValue").expect("action id");
+    assert_eq!(command.controller_id(), "other-app");
+    assert_eq!(command.descriptor().controller_id, "other-app", "React addresses the scope, so wgpu must too");
+}
+
+#[test]
+fn a_versioned_verb_still_travels_as_name_at_version() {
+    let mut command = intent(1, 1);
+    command.action = ui_contract::ActionId::new(command.action.scope.clone(), command.action.name.clone(), 3);
+    assert_eq!(command.descriptor().action, "setValue@3");
+    assert_eq!(command.descriptor().controller_id, "ctrl");
+}
+//#endregion 🆔️ControllerIdentity

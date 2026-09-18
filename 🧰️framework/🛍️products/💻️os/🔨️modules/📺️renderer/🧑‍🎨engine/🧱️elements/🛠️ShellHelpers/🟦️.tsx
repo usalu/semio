@@ -2123,6 +2123,7 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
   const bodies = new Map<string, TreeWindowBodyState>();
   const pending = new Set<string>();
   const inFlight = new Set<string>();
+  const unsendable = new Set<string>();
   let viewportRows: number | undefined;
   let timer: unknown = null;
 
@@ -2203,6 +2204,7 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
         const state = bodies.get(bodyKey)!;
         const nodeKeys = [...new Set([...state.open.keys(), ...state.windows.keys()])].sort();
         for (const nodeKey of nodeKeys) {
+          if (!treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable)) continue;
           const open = state.open.get(nodeKey);
           const window = state.windows.get(nodeKey);
           // 🪟️ A container the user just opened has no measurement yet — it was not in the body when the
@@ -2226,9 +2228,32 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
       bodies.clear();
       pending.clear();
       inFlight.clear();
+      unsendable.clear();
       viewportRows = undefined;
     },
   };
+}
+
+/**
+ * 🚧️ Whether one window path may cross the wasm boundary at all, by the SAME law the view context itself is
+ * admitted under — `parseResolvedPluginViewState`'s `identifier` (`🛂️manifest/🟦️.ts:977`): non-empty, at most
+ * 256 code points, no C0 control character and no DEL. Mirrored rather than imported because this module must
+ * not depend on the manifest parser, and pinned by a law that runs the REAL parser over this function's output.
+ *
+ * 🧯️ The view context is validated as ONE object, so a single unsendable path does not lose that path — it
+ * takes the whole crossing down. Measured on the fem3d House lane: every `refreshUi` answered
+ * `view context: invalid identifier` and every unrelated `interactionSelect` was refused `dispatch-failed`,
+ * because one nested window path carried a control character. Tree-window state is a convenience; it must
+ * never be able to break a refresh or an action. So an unsendable path is DROPPED, loudly, once.
+ */
+function treeWindowSendableIdentifierV1(bodyKey: string, nodeKey: string, reported: Set<string>): boolean {
+  if (nodeKey.length > 0 && Array.from(nodeKey).length <= 256 && !/[\u0000-\u001f\u007f]/u.test(nodeKey)) return true;
+  const once = `${bodyKey}/${nodeKey}`;
+  if (!reported.has(once)) {
+    reported.add(once);
+    console.error(`[tree-window] unsendable path ${JSON.stringify(nodeKey)} in panel body ${JSON.stringify(bodyKey)} — a window path must be a view-context identifier (1…256 code points, no control characters); this container will not stream`);
+  }
+  return false;
 }
 
 /** 🪟️ What `ShellHost` hands the panel builders — one stable object per shell, so the per-tab memo

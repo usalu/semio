@@ -58,7 +58,7 @@ fn copy_then_paste_round_trips_the_concrete_forest_seed() {
     let fragment = clipboard_fragment(&dispatch(&mut app, "copy", None, None).expect("copy"));
     assert_eq!(fragment.schema, PUZZLE2D_CLIPBOARD_SCHEMA, "the fragment must carry this artifact's own clipboard schema");
     let pasted = dispatch(&mut app, "paste", Some(&paste_args(&fragment)), None).expect("paste");
-    assert!(!pasted.mutations.is_empty(), "paste must commit one document edit");
+    assert!(committed_edits(&pasted) > 0, "paste must commit one document edit");
     let after = fixture_of(&app);
     let nodes = fixture_nodes(&after);
     assert_eq!(nodes.len(), 2, "paste clones the copied node");
@@ -149,7 +149,7 @@ fn cut_refuses_a_locked_node_with_a_notice() {
     dispatch(&mut app, "setSelectionFlag", Some(&json!({ "flag": "locked", "value": true })), None).expect("lock");
     let before = fixture_of(&app);
     let refused = dispatch(&mut app, "cut", None, None).expect("cut a locked node");
-    assert!(refused.mutations.is_empty(), "a locked cut must emit no edit: {:?}", refused.mutations);
+    assert_eq!(committed_edits(&refused), 0, "a locked cut must emit no edit");
     assert_eq!(notices(&refused).len(), 1, "a locked cut raises exactly one notice: {:?}", refused.requested_effects);
     assert_eq!(fixture_of(&app), before, "a locked cut leaves the document byte-identical");
     close_app(&mut app);

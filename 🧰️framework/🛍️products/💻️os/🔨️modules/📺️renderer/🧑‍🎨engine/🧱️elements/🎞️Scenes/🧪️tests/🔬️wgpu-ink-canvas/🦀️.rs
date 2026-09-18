@@ -115,7 +115,7 @@ fn item_card_background_uses_the_background_token_not_panel() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let camera = InkCameraF { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 400.0, 300.0);
         draw_ink_item(&mut ctx, &scene, &block, camera, inner, &doc, false, false);

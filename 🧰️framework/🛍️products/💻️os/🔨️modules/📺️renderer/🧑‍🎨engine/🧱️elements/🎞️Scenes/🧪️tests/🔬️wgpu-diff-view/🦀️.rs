@@ -91,7 +91,7 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::wgpu:
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_diff_view(&scene, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     (draw, theme)

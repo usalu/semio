@@ -2,28 +2,29 @@ use super::*;
 use crate::empty_paint_pixels;
 
 #[semio_framework_async_macros::async_test]
-async fn default_snapshot_has_unit_box_object() {
+async fn default_snapshot_has_concrete_forest_left_object() {
     let projection = default_snapshot();
     assert_eq!(projection.schema, crate::LOWPOLY_DOCUMENT_SCHEMA);
     assert_eq!(projection.objects.len(), 1);
     assert_eq!(projection.objects[0].id, "obj-1");
-    assert_eq!(projection.objects[0].name, "Unit Box");
+    assert_eq!(projection.objects[0].name, LOWPOLY_DEFAULT_EXAMPLE_LABEL);
     assert_eq!(projection.objects[0].paint_layers.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn default_unit_box_mesh_parses_and_has_faces() {
+async fn default_concrete_forest_mesh_parses_and_has_faces() {
     let projection = default_snapshot();
     let workspace = default_mesh_workspace();
     let mesh_json = workspace.get(&projection.objects[0].id).expect("workspace entry for default object");
     let mesh = HalfedgeMesh::from_json(mesh_json).expect("default mesh");
-    assert!(mesh.face_count() >= 6, "unit box should expose six faces");
-    assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
+    assert!(mesh.face_count() > 6, "concrete forest should expose more than a unit box");
+    assert!(mesh.vertex_count() > 8, "concrete forest should expose more than eight vertices");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn projection_round_trips_paint_pixels_through_base64_json() {
     let mut projection = default_snapshot();
+    projection.objects[0].paint_layers[0].pixels = empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
     let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&projection))).unwrap();
@@ -49,28 +50,27 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
     let inverse = mutation.inverse(&base);
     let mut state = after;
     for step in &inverse {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
+        state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
     }
-    assert_eq!(state.objects[0].name, "Unit Box");
+    assert_eq!(state.objects[0].name, LOWPOLY_DEFAULT_EXAMPLE_LABEL);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn pixel_runs_from_diff_captures_only_changed_bytes() {
+async fn pixel_runs_from_diff_captures_only_changed_pixels() {
+    // 🩸 Runs are whole RGBA pixels: bytes 4..8 are pixel 1, byte 10 lies in pixel 2 — two runs, each
+    // carrying its full pixel, and never one run per differing byte.
     let mut before = vec![0u8; 16];
     let mut after = before.clone();
     after[4] = 9;
     after[5] = 9;
     after[10] = 3;
     let runs = pixel_runs_from_diff(&before, &after);
-    assert_eq!(runs.len(), 2);
-    assert_eq!(runs[0].0, 4);
-    assert_eq!(runs[0].1, vec![9, 9]);
-    assert_eq!(runs[1].0, 10);
-    assert_eq!(runs[1].1, vec![3]);
+    assert_eq!(runs, vec![(4, vec![9, 9, 0, 0, 0, 0, 3, 0])], "adjacent changed pixels merge into one run");
     before[4] = 9;
     before[5] = 9;
-    before[10] = 3;
-    assert!(pixel_runs_from_diff(&before, &after).is_empty());
+    let runs = pixel_runs_from_diff(&before, &after);
+    assert_eq!(runs, vec![(8, vec![0, 0, 3, 0])], "an unchanged pixel splits the runs");
+    assert!(pixel_runs_from_diff(&after, &after).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -120,6 +120,8 @@ async fn flood_fill_only_affects_contiguous_matching_region() {
     }
     flood_fill(&mut pixels, 0.99, 0.01, [255, 0, 0, 255]);
     assert_eq!(&pixels[0..4], &[0, 255, 0, 255]);
-    let far_offset = (500 * size + 500) * 4;
+    let far_x = size - 10;
+    let far_y = size - 10;
+    let far_offset = (far_y * size + far_x) * 4;
     assert_eq!(&pixels[far_offset..far_offset + 4], &[255, 0, 0, 255]);
 }

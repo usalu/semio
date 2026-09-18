@@ -566,6 +566,53 @@ async fn url_backed_objects_share_one_mesh_reference_beside_inline_solids() {
     assert_eq!(instances[2]["meshId"].as_str(), Some(objects[2].id.as_str()));
 }
 
+/// 🎨️ An instance's wire colour is its TYPOLOGY's resolved style, not a hardcoded blue/grey premix:
+/// both hosts layer selection/hover on top of it as separate booleans, so a premixed colour double-
+/// paints on one target and loses the typology on both (ticket 26/09/17 packet W2f).
+#[semio_framework_async_macros::async_test]
+async fn world_instances_carry_their_typology_colour_not_a_selection_premix() {
+    use crate::editor::cad::engine::typology::resolve_typology_style;
+    let scene = forest_working_scene();
+    let objects = &scene.building_objects;
+    let instances: Vec<serde_json::Value> = serde_json::from_str(&edit::world_instances_json(objects, &forest_view())).expect("instances json");
+    let visible: Vec<&crate::standards::v1::subsets::any::io::geometry_import::CadObject> = objects.iter().filter(|object| object.visible).collect();
+    assert_eq!(instances.len(), visible.len());
+    for (object, instance) in visible.iter().zip(&instances) {
+        assert_eq!(instance["color"].as_str(), Some(resolve_typology_style(&object.typology).color.as_str()), "{}", object.typology);
+    }
+    assert!(!instances.iter().any(|instance| instance["color"].as_str() == Some("#3b82f6")), "no selection premix survives on the colour lane");
+    let selected = view(forest_play_scene(), CadPlayRuntime::default());
+    let with_selection: Vec<serde_json::Value> = serde_json::from_str(&edit::world_instances_json(objects, &selected)).expect("instances json");
+    assert_eq!(with_selection[0]["color"], instances[0]["color"], "selection never rewrites the colour lane");
+}
+
+/// 🧲️ The geometry pick overlay rides the `engagementPreview` lane only while the live session's
+/// state accepts a selection, and it is capped so a forest-scale pane can never overrun the lane.
+#[semio_framework_async_macros::async_test]
+async fn the_pick_overlay_is_bounded_and_only_published_while_a_selection_is_accepted() {
+    use crate::editor::cad::engine::interaction::{accepts_selection, start_session};
+    let scene = forest_working_scene();
+    let document = forest_play_scene();
+    let idle = edit::build_world_scene_for_pane(&view(document, CadPlayRuntime::default()), CadPaneId::Building, "cad.play.scene3d/building", None, Default::default()).expect("idle scene");
+    let idle_scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: idle }).expect("projected")).expect("world scene");
+    assert!(idle_scene.engagement_preview_json.is_none(), "no session, no overlay");
+
+    let session = start_session("feature.extrudeWire", CadPaneId::Building).expect("extrude-wire session");
+    assert!(accepts_selection(&session), "extrudeWire opens on its `selectWire` selection state");
+    assert!(!accepts_selection(&start_session("primitive.box", CadPaneId::Shape).expect("box session")), "a construction interaction that starts on a ground pick publishes no overlay");
+
+    let overlay = edit::pick_target_preview_items(&scene.building_objects, scene.building_geometry.as_ref(), CadPaneId::Building);
+    assert!(!overlay.is_empty(), "a selection state publishes the pick overlay");
+    assert!(overlay.len() <= edit::CAD_PICK_OVERLAY_ITEM_BUDGET, "the overlay stays inside its budget, got {}", overlay.len());
+    for item in &overlay {
+        let kind = item.get("kind").and_then(protocol::DslValue::as_str).expect("item kind");
+        assert!(matches!(kind, "point" | "segment"), "{kind} is not a pick-overlay wire kind");
+        assert!(item.get("role").and_then(protocol::DslValue::as_str).is_some_and(|role| role.contains(':')), "every item carries its `kind:id` pick key as its role");
+    }
+    assert!(overlay.iter().any(|item| item.get("kind").and_then(protocol::DslValue::as_str) == Some("segment")), "a solid pane draws its members as segments");
+    assert!(edit::pick_target_preview_items(&scene.building_objects, None, CadPaneId::Building).is_empty(), "a pane with no kernel geometry offers no overlay");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn world_fit_revision_follows_the_document_not_object_poses() {
     let document = forest_play_scene();

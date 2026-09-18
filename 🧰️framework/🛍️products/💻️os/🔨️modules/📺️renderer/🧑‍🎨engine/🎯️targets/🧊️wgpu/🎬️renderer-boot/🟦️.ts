@@ -5,15 +5,36 @@
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
 import { loadPluginModule, pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
 import { installWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
+import { WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, type WgpuBootDefaults, type WgpuBootHub, type WgpuBootLocks } from "../🧭️boot-descriptor/🟦️.ts";
 
+/** 🧊️ The embeddable wgpu boot door. Field-for-field React's `FrameworkOsBootOptions`
+ * (`🧱️elements/🐚️Shell/🟦️.tsx`), so one call site can swap renderers without dropping options: it
+ * used to carry `rootId`/`plugin`/`plugins`/`rendererModuleUrl` alone, which silently discarded
+ * `appId`/`appRole`/`locks`/`defaults`/`brand` on this target. Like React's own library door it reads
+ * NO `?query=` — an embedder says what it wants — but it does read the one-shot `#semio-broker=` proof
+ * the way `🏛️ShellHost/🟦️.tsx` does, because that hash addresses the page, not the mount.
+ *
+ * `surfaceSessionFactories` is React-only by construction (a JS `AppSurfaceSessionFactory` closure
+ * cannot cross into the renderer wasm); the wgpu twin of that seam is the plugin bridge. */
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+  readonly appRole?: "viewer" | "editor";
+  readonly appMode?: string;
+  readonly appExample?: string;
+  readonly locks?: Partial<WgpuBootLocks>;
+  readonly defaults?: Partial<WgpuBootDefaults>;
+  readonly brand?: string;
+  readonly hub?: WgpuBootHub;
   readonly rendererModuleUrl?: string;
 };
 
 const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js";
+
+/** 🧩️ The variant an embedder that names none boots — the host shell, as this door always defaulted. */
+const DEFAULT_EMBEDDED_VARIANT = "s";
 
 const SEMIO_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 350"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
@@ -119,6 +140,11 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error(`missing #${rootId}`);
+  const descriptor = resolveWgpuBootDescriptor({
+    hash: typeof window === "undefined" ? "" : window.location.hash,
+    defaultVariant: DEFAULT_EMBEDDED_VARIANT,
+    overrides: { plugin: options.plugin, appId: options.appId, appRole: options.appRole, appMode: options.appMode, appExample: options.appExample, brandId: options.brand, locks: options.locks, defaults: options.defaults, hub: options.hub },
+  });
   // 🚪️ This variant mounts the shell on the PAGE, so it installs the file door directly rather than
   // through the Worker bridge — one `semioWgpuHostIo` binding, two installs, so neither io journey can
   // work on one variant and vanish on the other (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -143,18 +169,50 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
     default?: (input?: WebAssembly.Module | BufferSource | Response) => Promise<void>;
     semioWgpuMount?: (canvas: HTMLCanvasElement, plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => void;
+    semioWgpuSetBootDescriptor?: (descriptorJson: string) => void;
+    semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
+    semioWgpuSetHostAppearance?: (preference: string, systemDark: boolean) => void;
+    semioWgpuSetHostPlatform?: (platform: string) => void;
+    semioWgpuSetHostStorage?: (snapshotJson: string) => void;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();
   if (!rendererModule.semioWgpuMount) {
     throw new Error("wgpu renderer module missing semioWgpuMount");
   }
-  rendererModule.semioWgpuMount(canvas, handles, options.plugin ?? "s");
+  // 🧭️ Boot axes cross BEFORE the mount, the same ordering the frame Worker keeps: `ShellState::boot`
+  // reads them while it opens the session, so a descriptor applied afterwards would be read by nobody.
+  rendererModule.semioWgpuSetBootDescriptor?.(JSON.stringify(descriptor));
+  if (descriptor.hub) rendererModule.semioWgpuSetHubEnv?.(descriptor.hub.hubUrl, descriptor.hub.user, descriptor.hub.dataDir);
+  // 🌓️ This door runs ON the page, so unlike the frame Worker it CAN read both appearance inputs —
+  // it forwards them through the same one hook, and keeps the `system` half live for as long as the
+  // mount lives (React's own shared `matchMedia` listener, per shell).
+  const publishAppearance = () => {
+    const appearance = resolveWgpuHostAppearance(window);
+    rendererModule.semioWgpuSetHostAppearance?.(appearance.preference, appearance.systemDark);
+  };
+  // 🗄️ Same story for the durable preference census: this door runs ON the page, so it seeds the
+  // renderer's synchronous cache itself before the mount reads a single key, and re-seeds whenever
+  // another document on this origin rewrites one.
+  const publishHostStorage = () => rendererModule.semioWgpuSetHostStorage?.(JSON.stringify(readWgpuHostStorageSnapshot(window)));
+  publishHostStorage();
+  publishAppearance();
+  // ⌨️ Constant for the life of a navigation, so it is published once and never listened to — unlike
+  // the two above, no user action can change which machine this is.
+  rendererModule.semioWgpuSetHostPlatform?.(resolveWgpuHostPlatform(window));
+  const darkQuery = window.matchMedia?.(WGPU_PREFERS_DARK_MEDIA_QUERY);
+  darkQuery?.addEventListener("change", publishAppearance);
+  window.addEventListener("storage", publishAppearance);
+  window.addEventListener("storage", publishHostStorage);
+  rendererModule.semioWgpuMount(canvas, handles, descriptor.pluginVariant);
   if (rendererModule.uploadIconAtlas) {
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   return async () => {
+    darkQuery?.removeEventListener("change", publishAppearance);
+    window.removeEventListener("storage", publishAppearance);
+    window.removeEventListener("storage", publishHostStorage);
     root.replaceChildren();
     const results = await Promise.allSettled(loadedHandles.map((handle) => handle.dispose()));
     const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");

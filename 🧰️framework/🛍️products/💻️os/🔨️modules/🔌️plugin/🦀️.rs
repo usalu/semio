@@ -6067,6 +6067,13 @@ pub mod app {
         /// the enclosing windowed containers' keys, outermost first, then `node_key`, joined by
         /// [`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR`]. At the top level this is
         /// `node_key` itself, so a flat body's requests and laws are byte-identical to before.
+        ///
+        /// 🔑️ A path is a **view-context identifier**: printable, at most 256 code points, because it
+        /// crosses the process boundary inside `ViewModel::tree_windows` and both sides admit it with
+        /// the same law (`parseResolvedPluginViewState`, `🛂️manifest/🟦️.ts`). A path longer than that
+        /// is one the host never files a request for, so the container it names simply renders as
+        /// UNREQUESTED — the author's default plus the shared first-paint budget — which is already
+        /// what an absent seat means here.
         pub fn path_of(&self, node_key: &str) -> String {
             let path = self.path.borrow();
             if path.is_empty() {
@@ -6104,6 +6111,18 @@ pub mod app {
         /// host has never addressed stamps nothing, so it is not addressable and two of them cannot
         /// steer each other. That is what keeps a tree of leaf rows (a JSON document, an AST) out of
         /// the uniqueness requirement — it binds containers, not rows.
+        /// 🔑️ A container key carrying the path separator would make its own path ambiguous — it could
+        /// not be told from a parent/child pair — so it is refused at assembly rather than mis-addressed.
+        fn admit_key(node_key: &str) -> UiAssemblyResult<()> {
+            if node_key.contains(TREE_WINDOW_PATH_SEPARATOR) {
+                return Err(PluginAssemblyError::new(
+                    "ui.tree-window.separator-in-key",
+                    format!("[tree-window] node key {node_key:?} contains the window-path separator {TREE_WINDOW_PATH_SEPARATOR:?}, which would make its path ambiguous"),
+                ));
+            }
+            Ok(())
+        }
+
         fn claim_window(&self, path: &str, entries: usize) -> UiAssemblyResult<()> {
             if entries == 0 && self.seat(path).is_none() {
                 return Ok(());
@@ -6231,6 +6250,7 @@ pub mod app {
     /// never a `+N` continuation row. The section node itself is charged to the body-wide node ledger
     /// before its rows are — see [`TreeWindows`].
     pub fn tree_window_section<T>(windows: &TreeWindows<'_>, id: &str, label: Label, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        TreeWindows::admit_key(id)?;
         let path = windows.path_of(id);
         windows.claim_window(&path, entries.len())?;
         windows.debit_container();
@@ -6258,6 +6278,7 @@ pub mod app {
         if !entries.is_empty() {
             return tree_window_section(windows, id, label, default_open, entries, row);
         }
+        TreeWindows::admit_key(id)?;
         windows.debit_container();
         windows.debit(1);
         let empty_id = UiText::try_format(format_args!("{id}.empty")).ok_or_else(|| ui_assembly_error("tree-window.placeholder-id"))?;
@@ -6275,6 +6296,7 @@ pub mod app {
     /// charges its own. Either way its rows come off the same body-wide ledger as the sections around
     /// it — see [`TreeWindows`].
     pub fn tree_window_item<T>(windows: &TreeWindows<'_>, item: TreeItemBuilder, id: &str, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        TreeWindows::admit_key(id)?;
         let path = windows.path_of(id);
         windows.claim_window(&path, entries.len())?;
         windows.debit_container();
@@ -19374,7 +19396,13 @@ pub mod app {
                             Some(ActiveArtifactEnvelopeDecodeState::Ready)
                         }
                         semio_framework_job::StepOutcome::Cancelled => Some(ActiveArtifactEnvelopeDecodeState::ClosingCancelled),
-                        semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Complete(_) => Some(ActiveArtifactEnvelopeDecodeState::ClosingFault),
+                        semio_framework_job::StepOutcome::Fault(fault) => {
+                            // 🔎 The detail page is the only record of WHY a live decode failed; it retires
+                            // with the outcome, so it is reported here before the close loop releases it.
+                            eprintln!("[DEBUG] live envelope decode faulted: {}", String::from_utf8_lossy(fault.detail.page(0).unwrap_or(&[])));
+                            Some(ActiveArtifactEnvelopeDecodeState::ClosingFault)
+                        }
+                        semio_framework_job::StepOutcome::Complete(_) => Some(ActiveArtifactEnvelopeDecodeState::ClosingFault),
                         _ => None,
                     };
                     *self.retained_outcome = Some(outcome);
@@ -26440,13 +26468,19 @@ pub mod app {
         /// and completed record are reclaimed — so pumping only the worker would stall every load.
         fn drive_artifact_envelope_decode_worker(&mut self) -> Result<(), Fault> {
             let started_us = semio_framework_job::default_now_us();
+            // 📏️ A decode job's terminal outcome (its fault detail above all) is a `RetainedJobPayload`
+            // whose pages are `JOB_PAYLOAD_PAGE_BYTES` (16 KiB) — a close grant under one page
+            // releases nothing, so a faulted decode spun on its own close forever and the host poll
+            // never learnt of the fault (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END). The envelope page
+            // grant stays for the field-decoder and completed-record returns, which page at 4 KiB.
+            const DECODE_JOB_CLOSE_BYTES: usize = if semio_framework_job::JOB_PAYLOAD_PAGE_BYTES > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { semio_framework_job::JOB_PAYLOAD_PAGE_BYTES } else { store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES };
             for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
                 if !self.has_runnable_artifact_envelope_decode() {
                     return Ok(());
                 }
                 self.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
                 self.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
-                self.drive_envelope_decode_jobs(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, false)?;
+                self.drive_envelope_decode_jobs(1, DECODE_JOB_CLOSE_BYTES, false)?;
                 let Some(started_us) = started_us else { return Ok(()) };
                 if semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US) {
                     return Ok(());
@@ -29237,7 +29271,6 @@ pub mod app {
             {
                 return self.advance_snapshot_read_returns_one(maximum_bytes);
             }
-            eprintln!("[DEBUG] maintenance idle probe config={} draft={} window={} store={} completed={}", self.config_store.maintenance_retirements_terminal_is_empty(), self.draft_store.maintenance_retirements_terminal_is_empty(), self.window_config_store.maintenance_retirements_terminal_is_empty(), self.store.maintenance_retirements_terminal_is_empty(), self.envelope_completed_records.terminal_is_empty());
             // 🌡️ Pressure beats fairness: a queue a quarter full is drained out of turn until it is
             // under the mark again, and the stage cursor does not move — the rotation resumes where
             // it stood once the burst is over.

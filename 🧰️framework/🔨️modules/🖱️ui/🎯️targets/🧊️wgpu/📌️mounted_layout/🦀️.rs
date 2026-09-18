@@ -4,8 +4,8 @@
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
-use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
-use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_item_height, tree_node_height, tree_row_control_rect, tree_section_header_height, tree_section_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
+use crate::wgpu::flex::{FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint};
+use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_item_height, tree_node_height, tree_section_header_height, tree_section_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
 
@@ -15,7 +15,6 @@ pub(crate) const LAYOUT_DEPTH_CREDITS: usize = 64;
 pub(crate) const LAYOUT_ATLAS_PAGE_CREDITS: usize = 4;
 pub(crate) const LAYOUT_ATLAS_PAGE_BYTES: usize = 16 * 1024;
 const DEFAULT_TEXT_SIZE_PX: f32 = 14.0;
-const SECTION_HEADER_HEIGHT: f32 = 24.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum MountedLayoutFault {
@@ -23,6 +22,9 @@ pub(crate) enum MountedLayoutFault {
     GlyphCredits,
     DepthCredits,
     Stale,
+    /// 📐️ The flex solver refused the tree (an insert, a link, or the solve itself) — reported as a
+    /// fault rather than publishing a half-solved surface.
+    Solver,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -31,36 +33,20 @@ struct IntrinsicSize {
     height: f32,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-struct ChildAggregate {
-    count: usize,
-    width_sum: f32,
-    height_sum: f32,
-    max_width: f32,
-    max_height: f32,
+/// 🧩️ The band a host-provided content leaf reserves, read off the slot's own `params_json`
+/// (`{"hostContentHeight": <logical px>}`) and clamped to something a panel can actually hold. A slot
+/// whose params carry no height (or no JSON at all) falls back to [`HOST_CONTENT_DEFAULT_ROWS`] control
+/// rows, so a host that forgets to declare one still gets a visible box rather than a collapsed line.
+pub(crate) fn host_content_height(params_json: &str, theme: &Theme) -> f32 {
+    let declared = serde_json::from_str::<serde_json::Value>(params_json).ok().and_then(|params| params.get("hostContentHeight").and_then(serde_json::Value::as_f64)).map(|height| height as f32);
+    declared.unwrap_or(theme.control_height * HOST_CONTENT_DEFAULT_ROWS).clamp(0.0, HOST_CONTENT_MAX_HEIGHT_PX)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum LayoutNodeKind {
-    Text,
-    Stack { horizontal: bool, gap: f32, padding: f32 },
-    Field { top: f32 },
-    Section { gap: f32 },
-    /// 🌳️ A `Tree`, measured from its own spec through `layout`'s shared row geometry rather than
-    /// from arena children — a tree's rows carry no children of their own, so aggregating them
-    /// measured a whole tree as the sum of its rows' padding.
-    Tree { height: f32 },
-    TreeSection { header: f32, height: f32 },
-    /// 🌳️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
-    /// its nested rows are REACHED at all — the arena mounts a collapsed branch's children, and the
-    /// painter draws none of them, so an unreached row must measure zero rather than overlap the
-    /// row that visually follows it.
-    TreeRow { row: f32, height: f32, expanded: bool },
-    /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
-    /// children by intrinsic height (a `Section`) never collapses it to zero.
-    Control { height: f32 },
-    Leaf,
-}
+/// 🧩️ Control rows a host-provided leaf reserves when its host declares no height.
+const HOST_CONTENT_DEFAULT_ROWS: f32 = 6.0;
+/// 🧩️ The ceiling one host-provided leaf may reserve, so a malformed number cannot ask for a band no
+/// viewport could hold (the host scrolls inside its own rect instead).
+const HOST_CONTENT_MAX_HEIGHT_PX: f32 = 4096.0;
 
 /// 🌳️ The `UiTreeNode` spec that owns the row `id` mounts as — the nearest `UiNode::Tree`
 /// ancestor, the same walk `events::find_tree_item_spec` does to re-derive a row's authored item.
@@ -124,14 +110,20 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
     }
 }
 
+/// 🧩️ One admitted node's layout identity: where it sits in the arena, which flex box it became,
+/// and — for a `Text` node — the half-open glyph range the shaping stage filled, which is the whole
+/// input the intrinsic measurement callback needs (no tree access on the worker thread).
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct LayoutInputNode {
     id: NodeId,
     parent: Option<usize>,
+    first_child: Option<usize>,
+    last_child: Option<usize>,
+    next_sibling: Option<usize>,
     kind: LayoutNodeKind,
     intrinsic: IntrinsicSize,
-    children: ChildAggregate,
-    child_offset: f32,
+    glyph_start: usize,
+    glyph_end: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -183,7 +175,7 @@ impl OwnedTextWorker for DeterministicTextWorker {
         if let Some(cancel) = self.cancel_after_shape.take() {
             cancel.cancel_now();
         }
-        RetainedGlyphPreview { scalar: input.scalar, advance, height: DEFAULT_TEXT_SIZE_PX * 1.35, generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
+        RetainedGlyphPreview { scalar: input.scalar, advance, height: crate::wgpu::text::line_height(DEFAULT_TEXT_SIZE_PX), generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
     }
 }
 
@@ -229,6 +221,65 @@ impl RetainedAtlasCandidate {
 
     fn is_empty(&self) -> bool {
         self.pages.iter().all(Option::is_none)
+    }
+}
+
+/// 📏️ One text node's intrinsic size against the space the solver offers it, from the shaped
+/// advances alone — the worker thread holds no tree and no font atlas. This is CSS's own reading of
+/// a text run inside a flex item: `MaxContent` is the whole run on one line, `MinContent` is the
+/// widest unbreakable word (the floor a flex item may shrink to before it overflows), and a
+/// `Definite` width is first-fit greedy wrapping at space/newline break opportunities, which is what
+/// a browser resolves simple Latin runs to. A trailing space never pushes a line over the edge.
+fn measure_text(nodes: &ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>, glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>, previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>, index: usize, constraint: MeasureConstraint) -> (f32, f32) {
+    let Some(node) = nodes.get(index) else { return (0.0, 0.0) };
+    let (start, end) = (node.glyph_start, node.glyph_end);
+    if end <= start {
+        return (0.0, 0.0);
+    }
+    let line = crate::wgpu::text::line_height(DEFAULT_TEXT_SIZE_PX);
+    let advance = |cursor: usize| previews.get(cursor).map_or(0.0, |preview| preview.advance);
+    let scalar = |cursor: usize| glyphs.get(cursor).map_or(' ', |glyph| glyph.scalar);
+    match constraint {
+        MeasureConstraint::MaxContent => ((start..end).map(advance).sum(), line),
+        MeasureConstraint::MinContent => {
+            let (mut widest, mut word) = (0.0_f32, 0.0_f32);
+            for cursor in start..end {
+                if matches!(scalar(cursor), ' ' | '\n' | '\t') {
+                    widest = widest.max(word);
+                    word = 0.0;
+                } else {
+                    word += advance(cursor);
+                }
+            }
+            (widest.max(word), line)
+        }
+        MeasureConstraint::Definite(available) => {
+            let (mut widest, mut placed, mut word, mut space, mut lines) = (0.0_f32, 0.0_f32, 0.0_f32, 0.0_f32, 1_usize);
+            for cursor in start..end {
+                match scalar(cursor) {
+                    '\n' => {
+                        widest = widest.max(placed + space + word);
+                        (placed, word, space) = (0.0, 0.0, 0.0);
+                        lines += 1;
+                    }
+                    ' ' | '\t' => {
+                        placed += space + word;
+                        word = 0.0;
+                        space = advance(cursor);
+                    }
+                    _ => {
+                        word += advance(cursor);
+                        if placed > 0.0 && placed + space + word > available {
+                            widest = widest.max(placed);
+                            (placed, space) = (0.0, 0.0);
+                            lines += 1;
+                        }
+                    }
+                }
+            }
+            widest = widest.max(placed + space + word);
+            (widest, line * lines as f32)
+        }
     }
 }
 
@@ -293,6 +344,9 @@ pub(crate) struct MountedLayoutJob {
     line_cursor: usize,
     measure_cursor: usize,
     arrange_cursor: usize,
+    collect_cursor: usize,
+    child_scratch: Vec<usize>,
+    flex: FlexTree,
     preview_cursor: usize,
     publish_cursor: usize,
     publication_committed: bool,
@@ -356,6 +410,9 @@ impl MountedLayoutJob {
             line_cursor: 0,
             measure_cursor: 0,
             arrange_cursor: 0,
+            collect_cursor: 0,
+            child_scratch: Vec::new(),
+            flex: FlexTree::new(),
             preview_cursor: 0,
             publish_cursor: 0,
             publication_committed: false,
@@ -392,7 +449,6 @@ impl MountedLayoutJob {
             AdmissionPhase::Text => self.admit_text_one(tree),
             AdmissionPhase::Unwind => self.unwind_one(tree),
             AdmissionPhase::Ready => {
-                self.measure_cursor = self.nodes.len();
                 self.stage = LayoutJobStage::ShapeText;
                 (0, 0)
             }
@@ -424,14 +480,47 @@ impl MountedLayoutJob {
             UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
             UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
             UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Button(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height },
+            // 🧩️ The panel content-projection ESCAPE HATCH. An `ExternalSlot` is the one node whose
+            // pixels this engine does not author: its host paints inside the solved rect. It used to
+            // fall into `Leaf`, which measures from arena children — a slot has none, so the band
+            // collapsed to nothing and any host-provided content (React hosts an arbitrary subtree
+            // here through `Tree`'s `emptyState`: an agent chat transcript, a marketplace list) had no
+            // box at all. The host declares its band in the slot's own `params_json`
+            // (`{"hostContentHeight": <px>}`), so the reservation costs one node and no measurement,
+            // and every other panel's node credit is untouched.
+            UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
             _ => LayoutNodeKind::Leaf,
         };
         let index = self.nodes.len();
-        let input = LayoutInputNode { id, parent, kind, intrinsic: IntrinsicSize::default(), children: ChildAggregate::default(), child_offset: 0.0 };
+        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
+        let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0 };
         if let Err(owner) = self.nodes.try_push(input) {
             self.rejected_node = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
+        }
+        let metrics = self.row_metrics;
+        if !self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind) {
+            self.fault = Some(MountedLayoutFault::Solver);
+            return (0, 0);
+        }
+        if let Some(parent) = parent {
+            let previous = self.nodes.get(parent).and_then(|owner| owner.last_child);
+            match previous {
+                Some(sibling) => {
+                    if let Some(sibling) = self.nodes.get_mut(sibling) {
+                        sibling.next_sibling = Some(index);
+                    }
+                }
+                None => {
+                    if let Some(owner) = self.nodes.get_mut(parent) {
+                        owner.first_child = Some(index);
+                    }
+                }
+            }
+            if let Some(owner) = self.nodes.get_mut(parent) {
+                owner.last_child = Some(index);
+            }
         }
         if let Err(owner) = self.walk.try_push(WalkFrame { next_child: node.first_child, node: index }) {
             self.rejected_walk = Some(owner);
@@ -471,6 +560,10 @@ impl MountedLayoutJob {
                 self.rejected_run = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
                 return (0, 0);
+            }
+            if let Some(node) = self.nodes.get_mut(index) {
+                node.glyph_start = run.glyph_start;
+                node.glyph_end = run.glyph_end;
             }
             self.text_node = None;
             self.text_byte = 0;
@@ -513,8 +606,9 @@ impl MountedLayoutJob {
         cx.set_stage(self.stage_label());
         match self.stage {
             LayoutJobStage::ShapeText => self.shape_one(),
-            LayoutJobStage::MeasureFallback => self.measure_one(),
-            LayoutJobStage::ArrangeFallback => self.arrange_one(),
+            LayoutJobStage::MeasureLayout => self.measure_one(),
+            LayoutJobStage::SolveLayout => self.arrange_one(),
+            LayoutJobStage::CollectResults => self.collect_one(),
             _ => (0, 0),
         };
         cx.consume_fuel(1);
@@ -536,7 +630,12 @@ impl MountedLayoutJob {
 
     fn shape_one(&mut self) -> (usize, usize) {
         let Some(run) = self.runs.get(self.run_cursor).copied() else {
-            self.stage = LayoutJobStage::MeasureFallback;
+            if self.flex.len() != self.nodes.len() {
+                self.fault = Some(MountedLayoutFault::Solver);
+                return (0, 0);
+            }
+            self.measure_cursor = self.nodes.len();
+            self.stage = LayoutJobStage::MeasureLayout;
             return (0, 0);
         };
         if self.glyph_cursor < run.glyph_start {
@@ -573,110 +672,93 @@ impl MountedLayoutJob {
         (0, 1)
     }
 
+    /// 👶️ Collects node `index`'s direct children into the reusable scratch buffer, in document
+    /// order — the sibling links admission built, so no scan over the node array is ever needed.
+    fn gather_children(&mut self, index: usize) {
+        self.child_scratch.clear();
+        let mut cursor = self.nodes.get(index).and_then(|owner| owner.first_child);
+        while let Some(child) = cursor {
+            self.child_scratch.push(child);
+            cursor = self.nodes.get(child).and_then(|owner| owner.next_sibling);
+        }
+    }
+
+    /// 📏️ Measures exactly ONE node's intrinsic size, walking the admission order in REVERSE so every
+    /// child is already measured when its parent is reached. Work in this grant is that node's child
+    /// count, never its subtree.
     fn measure_one(&mut self) -> (usize, usize) {
         let Some(index) = self.measure_cursor.checked_sub(1) else {
-            self.stage = LayoutJobStage::ArrangeFallback;
+            self.arrange_cursor = 0;
+            let root = FlexRect { x: 0.0, y: 0.0, width: self.width, height: self.height };
+            if !self.flex.set_root_box(0, root) {
+                self.fault = Some(MountedLayoutFault::Solver);
+            }
+            self.stage = LayoutJobStage::SolveLayout;
             return (0, 0);
         };
         self.measure_cursor = index;
-        let Some(input) = self.nodes.get(index).copied() else {
-            self.fault = Some(MountedLayoutFault::Stale);
+        self.gather_children(index);
+        let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
+        let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
+        let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
+        if !flex.measure_one(index, child_scratch, &mut measure) {
+            self.fault = Some(MountedLayoutFault::Solver);
+            return (0, 0);
+        }
+        (1, 0)
+    }
+
+    /// 📐️ Arranges exactly ONE container's direct children inside its own already-resolved box,
+    /// walking the admission order FORWARD so a parent's box is always settled before its children
+    /// are placed. This is the grant the eight-millisecond slice law is charged against: its cost is
+    /// the container's child count, so a 1,025-node surface is ~1,025 small solves, never one large one.
+    fn arrange_one(&mut self) -> (usize, usize) {
+        if self.nodes.get(self.arrange_cursor).is_none() {
+            self.stage = LayoutJobStage::CollectResults;
+            return (0, 0);
+        }
+        let index = self.arrange_cursor;
+        self.arrange_cursor += 1;
+        self.gather_children(index);
+        if self.child_scratch.is_empty() {
+            return (1, 0);
+        }
+        let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
+        let (nodes_ref, glyphs_ref, previews_ref) = (&**nodes, &**glyphs, &**glyph_previews);
+        let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
+        if !flex.arrange_one(index, child_scratch, &mut measure) {
+            self.fault = Some(MountedLayoutFault::Solver);
+            return (0, 0);
+        }
+        (1, 0)
+    }
+
+    /// 📐️ Reads exactly ONE solved box back out of the flex tree, in admission order so
+    /// `results[i]` stays the box of `nodes[i]` — the invariant `publish_one` re-checks.
+    fn collect_one(&mut self) -> (usize, usize) {
+        let Some(input) = self.nodes.get(self.collect_cursor).copied() else {
+            self.stage = LayoutJobStage::PublishResults;
             return (0, 0);
         };
-        let aggregate = input.children;
-        let size = match input.kind {
-            LayoutNodeKind::Text => input.intrinsic,
-            LayoutNodeKind::Stack { horizontal: true, gap, padding } => IntrinsicSize { width: aggregate.width_sum + gap * aggregate.count.saturating_sub(1) as f32 + padding * 2.0, height: aggregate.max_height + padding * 2.0 },
-            LayoutNodeKind::Stack { horizontal: false, gap, padding } => IntrinsicSize { width: aggregate.max_width + padding * 2.0, height: aggregate.height_sum + gap * aggregate.count.saturating_sub(1) as f32 + padding * 2.0 },
-            LayoutNodeKind::Field { top } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + top },
-            LayoutNodeKind::Section { gap } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + SECTION_HEADER_HEIGHT + gap * aggregate.count.saturating_sub(1) as f32 },
-            LayoutNodeKind::Tree { height } | LayoutNodeKind::TreeSection { height, .. } | LayoutNodeKind::TreeRow { height, .. } => IntrinsicSize { width: aggregate.max_width, height },
-            LayoutNodeKind::Control { height } => IntrinsicSize { width: aggregate.max_width, height: height.max(aggregate.height_sum) },
-            LayoutNodeKind::Leaf => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum },
+        let Some(rect) = self.flex.rect(self.collect_cursor) else {
+            self.fault = Some(MountedLayoutFault::Solver);
+            return (0, 0);
         };
+        let index = self.collect_cursor;
+        self.collect_cursor += 1;
         if matches!(input.kind, LayoutNodeKind::Text) {
-            if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: size.width, height: size.height }) {
+            if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
                 self.rejected_line = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
                 return (0, 0);
             }
             self.line_cursor += 1;
         }
-        if let Some(node) = self.nodes.get_mut(index) {
-            node.intrinsic = size;
-        }
-        if let Some(parent) = input.parent.and_then(|parent| self.nodes.get_mut(parent)) {
-            parent.children.count += 1;
-            parent.children.width_sum += size.width;
-            parent.children.height_sum += size.height;
-            parent.children.max_width = parent.children.max_width.max(size.width);
-            parent.children.max_height = parent.children.max_height.max(size.height);
-        }
-        (1, 0)
-    }
-
-    fn arrange_one(&mut self) -> (usize, usize) {
-        let Some(input) = self.nodes.get(self.arrange_cursor).copied() else {
-            self.stage = LayoutJobStage::PublishResults;
-            return (0, 0);
-        };
-        let (x, y, width, height) = if input.id == self.root {
-            (0.0, 0.0, self.width, self.height)
-        } else {
-            let Some(parent_index) = input.parent else {
-                self.fault = Some(MountedLayoutFault::Stale);
-                return (0, 0);
-            };
-            let Some(parent) = self.nodes.get(parent_index).copied() else {
-                self.fault = Some(MountedLayoutFault::Stale);
-                return (0, 0);
-            };
-            let Some(parent_result) = self.results.get(parent_index).copied() else {
-                self.fault = Some(MountedLayoutFault::Stale);
-                return (0, 0);
-            };
-            match parent.kind {
-                LayoutNodeKind::Stack { horizontal: true, gap, padding } => {
-                    let content = (parent_result.width - padding * 2.0).max(0.0);
-                    let extra = ((content - parent.children.width_sum - gap * parent.children.count.saturating_sub(1) as f32) / parent.children.count.max(1) as f32).max(0.0);
-                    (padding + parent.child_offset, padding, input.intrinsic.width + extra, (parent_result.height - padding * 2.0).max(0.0))
-                }
-                LayoutNodeKind::Stack { horizontal: false, gap, padding } => {
-                    let content = (parent_result.height - padding * 2.0).max(0.0);
-                    let extra = ((content - parent.children.height_sum - gap * parent.children.count.saturating_sub(1) as f32) / parent.children.count.max(1) as f32).max(0.0);
-                    (padding, padding + parent.child_offset, (parent_result.width - padding * 2.0).max(0.0), input.intrinsic.height + extra)
-                }
-                LayoutNodeKind::Field { top } => (0.0, top, parent_result.width, (parent_result.height - top).max(0.0)),
-                LayoutNodeKind::Section { .. } => (0.0, SECTION_HEADER_HEIGHT + parent.child_offset, parent_result.width, input.intrinsic.height),
-                LayoutNodeKind::TreeSection { header, .. } => (0.0, header + parent.child_offset, parent_result.width, input.intrinsic.height),
-                LayoutNodeKind::TreeRow { row, .. } => match input.kind {
-                    LayoutNodeKind::TreeRow { .. } => (0.0, row + parent.child_offset, parent_result.width, input.intrinsic.height),
-                    _ => {
-                        let rect = tree_row_control_rect(parent_result.width, &self.row_metrics);
-                        (rect.x, rect.y, rect.w, rect.h)
-                    }
-                },
-                _ => (0.0, parent.child_offset, parent_result.width, input.intrinsic.height),
-            }
-        };
-        if let Err(owner) = self.results.try_push(MountedLayoutResult { id: input.id, x, y, width, height }) {
+        if let Err(owner) = self.results.try_push(MountedLayoutResult { id: input.id, x: rect.x, y: rect.y, width: rect.width, height: rect.height }) {
             self.rejected_result = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
         }
-        if let Some(parent_index) = input.parent {
-            let parent_kind = self.nodes.get(parent_index).map(|parent| parent.kind);
-            let child_is_row = matches!(input.kind, LayoutNodeKind::TreeRow { .. });
-            if let Some(parent) = self.nodes.get_mut(parent_index) {
-                parent.child_offset += match parent_kind {
-                    Some(LayoutNodeKind::Stack { horizontal: true, gap, .. }) => width + gap,
-                    Some(LayoutNodeKind::Stack { horizontal: false, gap, .. }) | Some(LayoutNodeKind::Section { gap }) => height + gap,
-                    Some(LayoutNodeKind::TreeRow { .. }) if !child_is_row => 0.0,
-                    _ => height,
-                };
-            }
-        }
-        self.arrange_cursor += 1;
         (1, 0)
     }
 
@@ -744,11 +826,10 @@ impl MountedLayoutJob {
         match self.stage {
             LayoutJobStage::CollectNodes => "Layout.CollectNodes",
             LayoutJobStage::ShapeText => "Layout.ShapeText",
-            LayoutJobStage::MeasureFallback => "Layout.MeasureFallback",
-            LayoutJobStage::ArrangeFallback => "Layout.ArrangeFallback",
+            LayoutJobStage::MeasureLayout => "Layout.MeasureLayout",
+            LayoutJobStage::SolveLayout => "Layout.SolveLayout",
+            LayoutJobStage::CollectResults => "Layout.CollectResults",
             LayoutJobStage::PublishResults => "Layout.PublishResults",
-            #[cfg(test)]
-            _ => "Layout.CursorBoundary",
         }
     }
 
@@ -774,6 +855,13 @@ impl MountedLayoutJob {
         {
             return false;
         }
+        if !self.child_scratch.is_empty() {
+            self.child_scratch.clear();
+            return false;
+        }
+        if !self.flex.release_one() {
+            return false;
+        }
         self.atlas_candidate.close_one()
     }
 
@@ -792,8 +880,54 @@ impl MountedLayoutJob {
             && self.runs.is_empty()
             && self.walk.is_empty()
             && self.nodes.is_empty()
+            && self.child_scratch.is_empty()
+            && self.flex.is_empty()
             && self.atlas_candidate.is_empty()
     }
+}
+
+/// 🧪️ Drives ONE whole bounded layout pass to completion in a single call and mirrors the solved
+/// boxes into both the accepted (double-buffered) layout the painter reads and the immediate-mode
+/// `LayoutBucket` older probes read. It drives the REAL [`MountedLayoutJob`] stage ladder rather than
+/// re-deriving geometry, so a suite laying a tree out this way can never disagree with the shipped
+/// renderer, which walks the identical stages one grant at a time through `engine::Ui`.
+#[cfg(any(test, feature = "testkit"))]
+pub(crate) fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32) -> bool {
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height) else { return false };
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview = 0;
+    while !job.is_admitted() {
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview);
+        if matches!(job.admit_one(tree, &mut cx), LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) {
+            return false;
+        }
+    }
+    while job.stage() != LayoutJobStage::PublishResults {
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview);
+        if matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut cx), semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled) {
+            return false;
+        }
+    }
+    while let Some(result) = job.take_preview_one() {
+        if let Some(node) = tree.node_mut(result.id) {
+            node.layout.x = result.x;
+            node.layout.y = result.y;
+            node.layout.width = result.width;
+            node.layout.height = result.height;
+        }
+    }
+    let published = job.identity();
+    loop {
+        match job.publish_one(tree, published) {
+            LayoutJobStep::Complete => break,
+            LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled => return false,
+            LayoutJobStep::Yield { .. } => {}
+        }
+    }
+    job.begin_close();
+    while !job.close_one() {}
+    true
 }
 
 impl MountedLayoutFault {
@@ -803,6 +937,7 @@ impl MountedLayoutFault {
             Self::GlyphCredits => "layout.glyph-credits",
             Self::DepthCredits => "layout.depth-credits",
             Self::Stale => "layout.stale",
+            Self::Solver => "layout.solver",
         }
     }
 }

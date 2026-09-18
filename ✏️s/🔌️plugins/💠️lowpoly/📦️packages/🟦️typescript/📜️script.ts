@@ -31,10 +31,16 @@ type Fixture = {
 const ownKeys = (value: object, expected: string[]): boolean =>
   Object.keys(value).sort().join("\u0000") === [...expected].sort().join("\u0000");
 
+/** 🧮️ Every classified lowpoly verb: 46 since 2026-09-08 (`setActiveUtility` became framework-owned,
+ * `setFixtureJson` became `replaceSnapshotJson`) plus the three 2026-09-18 media verbs
+ * (`exportMesh`/`loadMeshRequest`/`importMeshFile`). The source's `.action_interactive_job` count is
+ * checked against the fixture below, so this literal only pins the fixture's own shape. */
+const LOWPOLY_CLASSIFIED_ROUTES = 49;
+
 const validateOwnedFixture = (value: unknown): value is Fixture => {
   if (typeof value !== "object" || value === null || !ownKeys(value, ["version", "owner", "maximumPollMicros", "maximumRawBytes", "maximumWorkItems", "artifactStoreMaximumBytes", "configStoreMaximumBytes", "routes"])) return false;
   const fixture = value as Fixture;
-  if (fixture.version !== 1 || fixture.owner !== "LowpolyPlayApp" || fixture.maximumRawBytes !== 16_384 || fixture.maximumWorkItems !== 258 || fixture.artifactStoreMaximumBytes !== 16_777_216 || fixture.configStoreMaximumBytes !== 16_384 || !Number.isInteger(fixture.maximumPollMicros) || fixture.maximumPollMicros < 1 || fixture.maximumPollMicros > 8_000 || !Array.isArray(fixture.routes) || fixture.routes.length !== 47) return false;
+  if (fixture.version !== 1 || fixture.owner !== "LowpolyPlayApp" || fixture.maximumRawBytes !== 16_384 || fixture.maximumWorkItems !== 258 || fixture.artifactStoreMaximumBytes !== 16_777_216 || fixture.configStoreMaximumBytes !== 16_384 || !Number.isInteger(fixture.maximumPollMicros) || fixture.maximumPollMicros < 1 || fixture.maximumPollMicros > 8_000 || !Array.isArray(fixture.routes) || fixture.routes.length !== LOWPOLY_CLASSIFIED_ROUTES) return false;
   const ids = new Set<string>();
   let migrated = 0;
   let batch = 0;
@@ -52,7 +58,7 @@ const validateOwnedFixture = (value: unknown): value is Fixture => {
       return false;
     }
   }
-  return migrated === 47 && batch === 0;
+  return migrated === LOWPOLY_CLASSIFIED_ROUTES && batch === 0;
 };
 
 const reject = (condition: boolean, message: string): void => {
@@ -63,7 +69,7 @@ const reject = (condition: boolean, message: string): void => {
 //#region 🧪️InteractiveJobSourceTest
 class TestScript extends BundleScript {
   run(): void {
-    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const root = resolve(import.meta.dir, "../..");
     const module = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
@@ -72,14 +78,16 @@ class TestScript extends BundleScript {
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
     const sessionSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"), "utf8");
     reject(validateOwnedFixture(fixture), "owned Lowpoly fixture validation failed");
+    const sourceCollapsed = source.replace(/\s+/g, " ").replace(/,\s*\}/g, " }");
     const registered = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => ({ toolId: match[1]!, classification: match[2]! }));
-    reject(registered.length === 47, "Lowpoly source must register exactly 47 classified actions");
+    reject(registered.length === fixture.routes.length, `Lowpoly source must register exactly ${fixture.routes.length} classified actions (found ${registered.length})`);
     for (const route of fixture.routes) {
       reject(registered.some((row) => row.toolId === route.toolId && row.classification === variant(route.classification)), `Lowpoly source classification drift: ${route.toolId}`);
       if (route.classification === "migrated") {
         const lanes = route.lanes.map((lane) => `semio_framework_plugin::ArtifactToolPublicationLane::${variant(lane)}`).join(", ");
-        reject(source.includes(`ArtifactToolPublicationContract { tool_id: "${route.toolId}", lanes: &[${lanes}] }`), `Lowpoly publication lane drift: ${route.toolId}`);
-        reject(source.includes(`"${route.toolId}" => semio_framework::ToolExecutionContract::resumable`), `Lowpoly proof drift: ${route.toolId}`);
+        // 🧹️ rustfmt wraps the longest contract row over several lines; compare with whitespace collapsed.
+        reject(sourceCollapsed.includes(`ArtifactToolPublicationContract { tool_id: "${route.toolId}", lanes: &[${lanes}] }`.replace(/\s+/g, " ")), `Lowpoly publication lane drift: ${route.toolId}`);
+        reject(source.includes(`"${route.toolId}" => ToolExecutionContract::resumable`), `Lowpoly proof drift: ${route.toolId}`);
       }
     }
     const structural = [
@@ -108,7 +116,7 @@ class TestScript extends BundleScript {
     reject(schemaSource.includes("pub fn default_owned_document() -> LowpolyOwnedDefaultDocument"), "Lowpoly schema lacks caller-owned default child payload construction");
     reject(sessionSource.includes("pub(crate) fn stroke_diff_parts(&self)"), "Lowpoly session lacks borrowed paint diff ownership");
     reject(sessionSource.includes("pub(crate) fn finish_stroke_drag(&self)"), "Lowpoly session lacks bounded transient completion");
-    console.log("lowpoly interactive-job owned source/fixture ok: 47 Migrated, 0 BatchOnlyPendingRewrite");
+    console.log(`lowpoly interactive-job owned source/fixture ok: ${fixture.routes.length} Migrated, 0 BatchOnlyPendingRewrite`);
 
     const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });

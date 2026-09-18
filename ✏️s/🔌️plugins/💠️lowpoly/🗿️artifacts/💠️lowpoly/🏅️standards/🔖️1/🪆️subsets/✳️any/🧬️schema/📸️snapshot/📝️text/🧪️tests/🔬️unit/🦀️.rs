@@ -14,18 +14,20 @@ async fn dsl_round_trips_the_default_snapshot() {
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_a_projection_with_a_painted_layer() {
     let mut projection = crate::schema::default_snapshot();
+    projection.objects[0].paint_layers[0].pixels = crate::empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn handcrafted_example_text_uses_structural_object_codec() {
-    assert!(!LOWPOLY_EXAMPLE_TEXT.contains("mesh-json"));
+async fn handcrafted_example_text_is_concrete_forest_left_with_mesh_content() {
     let parsed = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("handcrafted example should parse");
     assert_eq!(parsed.objects.len(), 1);
     assert_eq!(parsed.objects[0].id, "obj-1");
-    assert!(parsed.objects[0].mesh.is_none());
+    assert_eq!(parsed.objects[0].name, crate::schema::LOWPOLY_DEFAULT_EXAMPLE_LABEL);
+    assert!(!parsed.objects[0].mesh_content.is_empty());
+    assert!(parsed.objects[0].mesh.is_some());
     assert!(COMPONENT_GRAMMAR_SEMIO.contains("halfedge"));
 }
 

@@ -10,7 +10,9 @@ use semio_framework_tool_run::{ToolRunId, ToolRunVerdict, TOOL_RUN_ACTION_IDS};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-type JackApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>>;
+/// 🧩️ Members-aware (`SemioMembers`): the snapshot composes an `s.stdio.semio` content child, which a
+/// `NoMembers` roster refuses at genesis (`derived child dialect ... is not declared by this app's member roster`).
+type JackApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
 const FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️layout-run.json");
 
@@ -207,7 +209,7 @@ fn history_len(app: &mut JackApp) -> usize {
 }
 
 fn nakagin_app() -> JackApp {
-    let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }));
+    let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }));
     semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }

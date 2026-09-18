@@ -20,6 +20,14 @@ fn typed_kind(name: &str) -> infinite_canvas::BoardEventKind {
         "edgeCreate" => BoardEventKind::EdgeCreate,
         "edgeDelete" => BoardEventKind::EdgeDelete,
         "nodeDelete" => BoardEventKind::NodeDelete,
+        "hover" => BoardEventKind::Hover,
+        "linkCompatibleNodes" => BoardEventKind::LinkCompatibleNodes,
+        "linkTargetRing" => BoardEventKind::LinkTargetRing,
+        "transformPreview" => BoardEventKind::TransformPreview,
+        "nodeRotate" => BoardEventKind::NodeRotate,
+        "regionCreate" => BoardEventKind::RegionCreate,
+        "regionMove" => BoardEventKind::RegionMove,
+        "regionResize" => BoardEventKind::RegionResize,
         _ => panic!("fixture kind {name}"),
     }
 }
@@ -107,4 +115,54 @@ fn coalesce_empty_input_produces_empty_array_and_no_flush() {
     let result = coalesce_board2d_events(&[]);
     assert!(!result.flush_now);
     assert_eq!(result.events_json, "[]");
+}
+
+/// ⚖️ Law: the transient and flush-now tables must name exactly what React's own two sets name
+/// (`PUZZLE2D_TRANSIENT_EVENT_NAMES`/`PUZZLE2D_FLUSH_NOW_EVENT_NAMES`, `🖥️Board2dHost/🟦️.tsx:293-294`).
+/// `hover` and `transformPreview` were missing from transient, so every pointermove republished the
+/// whole surface where React coalesces the hover onto `interactionHover`; `nodeRotate` and the three
+/// region kinds were missing from flush-now, so those edits sat in the buffer.
+#[test]
+fn transient_and_flush_now_tables_match_the_react_sets() {
+    for name in ["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing", "transformPreview", "hover"] {
+        assert!(board_event_transient(typed_kind(name)), "{name} must be transient like React's own set");
+    }
+    for name in ["camera", "nodeMove", "select", "nodeDelete"] {
+        assert!(!board_event_transient(typed_kind(name)), "{name} is not transient");
+    }
+    for name in ["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "nodeRotate", "regionCreate", "regionMove", "regionResize"] {
+        assert!(board_event_flush_now(typed_kind(name)), "{name} must flush immediately like React's own set");
+    }
+    for name in ["camera", "nodeMove", "hover", "preselect"] {
+        assert!(!board_event_flush_now(typed_kind(name)), "{name} must not force a flush");
+    }
+}
+
+/// ⚖️ Law: a hover row never reaches `applyBoardEvents` — it travels on the coalesced
+/// `interactionHover` lane instead (see `puzzle_board_hover_into`), exactly as React's own drain
+/// excludes it from the batch.
+#[test]
+fn coalesce_drops_hover_rows_so_a_pointermove_never_republishes_the_surface() {
+    let coalesced = typed_coalesce(&[row("hover", json!({ "id": "node-a" })), row("transformPreview", json!({ "ids": ["node-a"] }))]);
+    assert_eq!(coalesced.events_json, "[]");
+    assert!(!coalesced.flush_now);
+}
+
+/// 🎯️ Port check for `board2d_granularity_by_id` against React's `board2dGranularityById`
+/// (`🖥️Board2dHost/🟦️.tsx:190`): handles nested under a node are `handle`, ids in `edges` are `edge`,
+/// everything else — including an id the fixture never carries — reads as `node`.
+#[test]
+fn board_granularity_classification_matches_the_react_table() {
+    let fixture = json!({
+        "nodes": [{ "id": "n1", "handles": [{ "id": "n1:h1" }] }, { "id": "n2" }],
+        "edges": [{ "id": "e1" }],
+    })
+    .to_string();
+    let by_id = board2d_granularity_by_id(&fixture);
+    assert_eq!(by_id.get("n1").map(String::as_str), Some("node"));
+    assert_eq!(by_id.get("n2").map(String::as_str), Some("node"));
+    assert_eq!(by_id.get("n1:h1").map(String::as_str), Some("handle"));
+    assert_eq!(by_id.get("e1").map(String::as_str), Some("edge"));
+    assert_eq!(by_id.get("never-published"), None, "an unknown id is absent, and the hover writer defaults it to node");
+    assert!(board2d_granularity_by_id("not json").is_empty(), "a refused fixture classifies nothing");
 }

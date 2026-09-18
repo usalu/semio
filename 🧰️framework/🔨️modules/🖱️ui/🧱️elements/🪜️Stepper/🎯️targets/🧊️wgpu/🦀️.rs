@@ -38,7 +38,7 @@ pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _
     draw_text(ctx, "−", minus.x + seg * 0.5 - 4.0, minus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
     let text = format!("{value:.3}");
     let input_id = format!("{id}.input");
-    register_input_meta(ctx, &input_id, &text, None, on_absolute.clone());
+    register_input_meta(ctx, &input_id, "number", &text, None, (None, None, Some(step), None), on_absolute.clone());
     render_input(&input_id, &text, None, center, ctx);
     draw_text(ctx, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
     if let (Some(maps), Some(on_absolute), Some(on_delta)) = (ctx.interaction_maps.as_deref_mut(), on_absolute, on_delta) {

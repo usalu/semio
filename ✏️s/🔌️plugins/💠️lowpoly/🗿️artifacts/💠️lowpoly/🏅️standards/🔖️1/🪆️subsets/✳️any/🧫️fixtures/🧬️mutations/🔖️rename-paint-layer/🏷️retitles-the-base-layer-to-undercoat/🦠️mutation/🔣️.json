@@ -1,7 +1,7 @@
 {
   "RenamePaintLayer": {
-    "objectId": "obj-hull",
     "index": 0,
-    "newName": "Undercoat"
+    "newName": "Undercoat",
+    "objectId": "obj-hull"
   }
 }

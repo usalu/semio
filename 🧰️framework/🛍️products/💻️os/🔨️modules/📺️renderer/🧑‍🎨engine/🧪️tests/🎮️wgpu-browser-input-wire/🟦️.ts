@@ -23,6 +23,17 @@ import {
   type BrowserFrameWorkerMessage,
   type BrowserFrameWorkerPort,
 } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+
+/** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
+ * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
+ * (`🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts`). */
+function testBootDescriptor(variant: string): WgpuBootDescriptor {
+  return resolveWgpuBootDescriptor({ defaultVariant: variant });
+}
+
+/** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
+const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 
 type FixtureRow = { readonly id: string; readonly why: string; readonly dom: Record<string, unknown>; readonly wire: Record<string, unknown>; readonly dispatch: Record<string, unknown> | null };
 
@@ -54,7 +65,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
 function readyTransport(worker: FakeWorker): BrowserFrameTransport {
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "generate", appExample: "" },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE },
     setTimer: () => 1,
     clearTimer: () => {},
     now: () => 0,
@@ -78,18 +89,29 @@ describe("wgpu browser input wire", () => {
     });
   }
 
-  it("scales coordinates by the device pixel ratio exactly once", () => {
+  /** 📐️ Pointer coordinates are CSS pixels on BOTH sides of this wire: the renderer lays out,
+   * hit-tests and paints in logical pixels exactly like the React host's DOM, so a density change
+   * must not move a single coordinate. Scaling here was the HiDPI placement bug
+   * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g). */
+  it("never scales a pointer coordinate by the device pixel ratio", () => {
     const retina = fixture.rows.find((row) => row.id === "pointer-move-on-a-retina-surface")!;
     const { event } = domEvent(retina);
-    expect(browserFrameEventFromDom(event, 1)).toMatchObject({ x: 160.5, y: 69 });
-    expect(browserFrameEventFromDom(event, 2)).toMatchObject({ x: 321, y: 138 });
-    expect(browserFrameEventFromDom(event, 3)).toMatchObject({ x: 481.5, y: 207 });
+    for (const dpr of [1, 2, 3]) expect(browserFrameEventFromDom(event, dpr), `dpr ${dpr}`).toMatchObject({ x: 160.5, y: 69 });
   });
 
-  it("never scales a scroll delta", () => {
+  /** 📐️ The ONE event that carries physical pixels: a resize sizes the GPU surface, and ships the
+   * dpr the renderer divides by to recover the logical extent layout consumes. */
+  it("scales only the resize extent by the device pixel ratio", () => {
+    const dom: BrowserFrameDomEvent = { type: "resize", clientWidth: 717, clientHeight: 418 };
+    expect(browserFrameEventFromDom(dom, 1)).toEqual({ kind: "resize", width: 717, height: 418, dpr: 1 });
+    expect(browserFrameEventFromDom(dom, 2)).toEqual({ kind: "resize", width: 1434, height: 836, dpr: 2 });
+    expect(browserFrameEventFromDom(dom, 3)).toEqual({ kind: "resize", width: 2151, height: 1254, dpr: 3 });
+  });
+
+  it("never scales a scroll delta or its position", () => {
     const wheel = fixture.rows.find((row) => row.id === "wheel-over-the-preview")!;
     const { event } = domEvent(wheel);
-    for (const dpr of [1, 2, 3]) expect(browserFrameEventFromDom(event, dpr)).toMatchObject({ deltaX: 0, deltaY: 120 });
+    for (const dpr of [1, 2, 3]) expect(browserFrameEventFromDom(event, dpr)).toMatchObject({ x: 250.88, y: 406.8, deltaX: 0, deltaY: 120 });
   });
 
   it("puts pointer moves, wheels and resizes on the coalescing lane and transitions on the lossless one", () => {

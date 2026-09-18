@@ -546,6 +546,7 @@ light_dir: vec4<f32>,
 struct VertexInput {
 @location(0) position: vec3<f32>,
 @location(1) normal: vec3<f32>,
+@location(2) color: vec4<f32>,
 }
 
 struct InstanceInput {
@@ -576,7 +577,7 @@ let normal_matrix = mat3x3<f32>(
     model[2].xyz
 );
 out.normal = normalize(normal_matrix * vertex.normal);
-out.color = instance.color;
+out.color = instance.color * vertex.color;
 out.flags = instance.flags;
 return out;
 }
@@ -598,9 +599,13 @@ return vec4<f32>(color, in.color.a);
 
 const WORLD3D_MESH_VERTEX_BUFFERS: &[VertexBufferSpec] = &[
     VertexBufferSpec {
-        stride: 24,
+        stride: 40,
         step_mode: VertexStepMode::Vertex,
-        attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x3, offset: 12 }],
+        attributes: &[
+            VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 },
+            VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x3, offset: 12 },
+            VertexAttributeSpec { shader_location: 2, format: VertexFormat::Float32x4, offset: 24 },
+        ],
     },
     VertexBufferSpec {
         stride: 96,
@@ -708,14 +713,10 @@ pub const WORLD3D_LINE_PIPELINE: PipelineSpec = PipelineSpec {
     depth_stencil: Some(DepthStencilSpec { format: DepthStencilFormat::Depth24PlusStencil8, depth_write_enabled: false, depth_compare: CompareFunction::LessEqual, stencil: WORLD_CONTENT_STENCIL, bias: NO_DEPTH_BIAS }),
 };
 
-/// 🖼️ Textured mesh variant (position + uv, per-instance model + tint). Declared in the original
-/// `🎯️targets/🧊️wgpu/🦀️shaders.rs` but — confirmed by grepping the whole `🧰️framework` tree —
-/// **never imported or built into a pipeline anywhere**: `draw.rs:4` imports only 7 of the 8
-/// constants, omitting this one, and no other file references it. It is dead code in the committed
-/// wgpu-old path, not a wired-but-broken feature. Kept here because the canonical contract is
-/// forward-looking (the shader itself is valid WGSL and a real backend may want a textured mesh
-/// pass), but its `PipelineSpec` below is **not** derived from any real pipeline construction —
-/// see the doc comment on `WORLD3D_TEXTURED_PIPELINE` for exactly which fields are inferred.
+/// 🖼️ Textured world quad (position + uv, per-instance model + tint) — the reference underlay every
+/// `ScenePass3d::textured_draws` entry carries. Built as `world3d_textured_pipeline` in
+/// `🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs` since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c; the
+/// spec below is read off that construction, not inferred.
 pub const WORLD3D_TEXTURED_SHADER: &str = r#"
 struct Globals {
 view_proj: mat4x4<f32>,
@@ -763,16 +764,13 @@ return vec4<f32>(sampled.rgb * in.tint.rgb, sampled.a * in.tint.a);
 }
 "#;
 
-/// ⚠️ INFERRED, not source-derived — no pipeline for this shader exists in `draw.rs` to read state
-/// from. `vertex_entry`/`fragment_entry`, `vertex_buffers` (stride/offsets from the WGSL struct
-/// field order above) and `bind_groups` (group 0 mirrors `WORLD_GLOBALS_BIND_GROUP`'s uniform
-/// shape; group 1 is read directly off this shader's own `@group(1)` declarations) are solid.
-/// `blend`/`cull_mode`/`depth_stencil`/`WORLD_GLOBALS_BIND_GROUP`'s `dynamic_offset` reuse on group
-/// 0 are a documented best guess mirroring `WORLD3D_OPAQUE_PIPELINE` (nearest analog: opaque,
-/// depth-writing mesh geometry) — reported, not silently assumed; see
-/// `📓️terra-shader-repair-report.md`.
+/// 🖼️ An UNDERLAY, so it blends and never writes depth: the plan image is semi-transparent
+/// (`tint.a = 0.85` from `render_world_3d`) and sits under geometry that has already written the
+/// depth buffer, so `LessEqual` keeps it behind the model while `ALPHA_BLENDING` composites it over
+/// the ground. `cull_mode: None` is React's `side={DoubleSide}`; the quad geometry is
+/// `WORLD_PLANE_VERTICES`, a centred unit XY plane the instance `model` scales to `[width, height]`.
 pub const WORLD3D_TEXTURED_PIPELINE: PipelineSpec = PipelineSpec {
-    label: "world3d_textured_pipeline (inferred — unwired in draw.rs)",
+    label: "world3d_textured_pipeline",
     vertex_entry: "vs_main",
     fragment_entry: "fs_main",
     vertex_buffers: &[
@@ -797,12 +795,12 @@ pub const WORLD3D_TEXTURED_PIPELINE: PipelineSpec = PipelineSpec {
         WORLD_GLOBALS_BIND_GROUP,
         BindGroupSpec { group_index: 1, entries: &[BindGroupEntrySpec { binding: 0, visibility: FRAGMENT_STAGE, kind: BindingKind::Texture2D }, BindGroupEntrySpec { binding: 1, visibility: FRAGMENT_STAGE, kind: BindingKind::Sampler }] },
     ],
-    blend: BlendMode::Replace,
+    blend: BlendMode::AlphaBlending,
     color_write: ColorWriteMask::All,
     target: ColorTarget::SurfaceFormat,
     topology: PrimitiveTopology::TriangleList,
     cull_mode: CullMode::None,
-    depth_stencil: Some(DepthStencilSpec { format: DepthStencilFormat::Depth24PlusStencil8, depth_write_enabled: true, depth_compare: CompareFunction::Less, stencil: WORLD_CONTENT_STENCIL, bias: NO_DEPTH_BIAS }),
+    depth_stencil: Some(DepthStencilSpec { format: DepthStencilFormat::Depth24PlusStencil8, depth_write_enabled: false, depth_compare: CompareFunction::LessEqual, stencil: WORLD_CONTENT_STENCIL, bias: NO_DEPTH_BIAS }),
 };
 
 pub const WORLD3D_FAMILY: ShaderFamily = ShaderFamily {

@@ -728,15 +728,7 @@ impl store::ErasedSnapshotRetirement for JackOwnedRetirement {
                 step => Ok(step),
             };
         }
-        let phase_before = self.phase;
         let step = self.advance(maximum_items.min(1), maximum_bytes);
-        if let Some(JackRetirementOwner::Snapshot(value)) = self.owner.as_ref() {
-            if phase_before != self.phase || self.phase == 4 && value.manifest.node_kinds.len() % 16 == 0 {
-                eprintln!("[DEBUG] jack snapshot retirement phase {phase_before}->{} node_kinds={}", self.phase, value.manifest.node_kinds.len());
-            }
-        } else if self.owner.is_none() && phase_before != 0 {
-            eprintln!("[DEBUG] jack owned retirement terminal step={step:?}");
-        }
         Ok(step)
     }
 

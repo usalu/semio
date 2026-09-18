@@ -1,16 +1,12 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "obj-fin",
+        "paintLayers": null,
         "patch": {
-          "name": null,
-          "smoothShading": null,
-          "transform": null,
           "mesh": {
             "childId": "mesh-fin-01",
             "target": {
@@ -21,11 +17,16 @@
                 "subset": "mesh"
               }
             }
-          }
-        },
-        "paintLayers": null
+          },
+          "meshContent": "{\"vertices\":[],\"faces\":[]}",
+          "name": null,
+          "smoothShading": null,
+          "transform": null
+        }
       }
     ],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null
 }

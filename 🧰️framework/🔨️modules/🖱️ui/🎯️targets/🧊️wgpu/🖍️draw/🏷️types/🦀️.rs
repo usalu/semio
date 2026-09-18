@@ -171,6 +171,7 @@ pub struct DrawList {
     clip_stack: Vec<ClipRegion>,
     glass_content_stack: Vec<usize>,
     screen_h: f32,
+    clock_seconds: f32,
     retained_output: Option<RetainedOutputGrant>,
     prepared_items: usize,
     prepared_bytes: usize,
@@ -195,6 +196,7 @@ impl Default for DrawList {
             clip_stack: Vec::new(),
             glass_content_stack: Vec::new(),
             screen_h: 720.0,
+            clock_seconds: 0.0,
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
@@ -262,7 +264,7 @@ impl std::error::Error for RetainedOutputError {}
 impl DrawList {
     /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
     pub fn empty() -> Self {
-        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0 }
+        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, clock_seconds: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0 }
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
@@ -560,6 +562,28 @@ impl DrawList {
 
     pub fn set_screen_height(&mut self, height: f32) {
         self.screen_h = height;
+    }
+
+    /// ⏱️ The frame clock this list's time-varying paints read, in monotonic seconds — stamped once
+    /// per frame by `Ui::advance_clock`, the same value the tooltip dwell deadlines run on. `0.0`
+    /// means unstamped, which freezes every such paint at the start of its cycle rather than
+    /// jittering.
+    pub fn set_clock_seconds(&mut self, seconds: f32) {
+        if seconds.is_finite() {
+            self.clock_seconds = seconds;
+        }
+    }
+
+    /// ⏱️ This list's frame clock in monotonic seconds.
+    pub fn clock_seconds(&self) -> f32 {
+        self.clock_seconds
+    }
+
+    /// 📐️ The measured surface height this list draws into, in logical pixels — what an
+    /// immediate-mode widget pass hands `WidgetContext::viewport_height` so a `Select` popup can
+    /// flip and clamp the way React's `window.innerHeight` lets `resolveSelectPlacement` do.
+    pub fn screen_height(&self) -> f32 {
+        self.screen_h
     }
 
     fn active_foreground_of(&self) -> Option<usize> {
@@ -988,23 +1012,36 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 pub mod gizmo {
     use crate::wgpu::{Camera3d, Rect, Rgba, Vec3, Vec3Math};
 
-    /// 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome.
+    /// 🧭️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
+    /// the exact triple React's `SPATIAL_AXIS_COLOR_REFS`/`resolveSpatialAxisColors` resolves. The
+    /// previous hand-written channels were sRGB fractions stored in a linear-float `Rgba`, so every
+    /// axis painted a different color than React's.
     pub fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
         match axis {
-            0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
-            1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
-            _ => Rgba::new(0.980, 0.584, 0.0, alpha),   // tertiary #fa9500
+            0 => Rgba::from_token(&ui_styling::colors::PRIMARY).with_alpha(alpha),
+            1 => Rgba::from_token(&ui_styling::colors::SECONDARY).with_alpha(alpha),
+            _ => Rgba::from_token(&ui_styling::colors::TERTIARY).with_alpha(alpha),
         }
     }
 
-    /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome.
+    /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` (`🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx:390`) — the
+    /// navigation cube's CENTRE offset from the viewport's bottom-right corner. The two axes are NOT
+    /// the same: the inline margin clears the pane's `--spacing-single` chrome inset, the block margin
+    /// additionally clears the FOLDED projection pane (`h-medium`, 7 × ui-spacing) plus one more
+    /// inset, so the cube sits directly above that chip instead of under it. Each axis is clamped
+    /// against its OWN third of the viewport, never the shorter side's.
+    ///
+    /// 🩸️ This priced both axes at the inline margin, which put the cube on the pane's bottom edge —
+    /// exactly where the `Utilities`/`Projection` row lands (React: `[32, 58]` at 1280×720, this:
+    /// `(32, 32)`).
     pub fn orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
-        let chrome_inset = 4.0_f32;
+        let chrome_inset = 4.0_f32.max(ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX.round() as f32);
+        let folded_pane_chrome = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING).round() as f32;
         let gizmo_half_extent = 28.0_f32;
-        let preferred = chrome_inset + gizmo_half_extent;
-        let max_fit = (viewport.w.min(viewport.h) / 3.0).floor().max(22.0);
-        let margin = preferred.min(max_fit);
-        (margin, margin)
+        let preferred_x = chrome_inset + gizmo_half_extent;
+        let preferred_y = chrome_inset + folded_pane_chrome + chrome_inset + gizmo_half_extent;
+        let max_fit = |extent: f32| (extent / 3.0).floor().max(22.0);
+        (preferred_x.min(max_fit(viewport.w)), preferred_y.min(max_fit(viewport.h)))
     }
 
     /// 🧭️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint.
@@ -1036,7 +1073,7 @@ pub mod gizmo {
         }
         let right = right.scale_m(1.0 / right_len);
         let up = right.cross_m(forward).normalize_m();
-        let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
+        let neutral = Rgba::from_token(&ui_styling::colors::GRAY).with_alpha(0.9);
         let axes = [
             (Vec3 { x: 1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 1.0), true),
             (Vec3 { x: -1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 0.75), false),

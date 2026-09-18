@@ -1,6 +1,6 @@
 {
   "title": "wgpu browser input wire",
-  "why": "One row per input the wgpu browser shell admits, pinned across all three hops it crosses: the DOM event a listener on #semio-wgpu-canvas observes, the wire event the UI isolate transfers to the frame Worker, and the DispatchEvent the Worker projects it onto before Ui::dispatch_event sees it. The middle hop is where a browser-only mistake hides: coordinates are multiplied by devicePixelRatio exactly once (offset* are CSS pixels, the renderer works in physical pixels), the wire spells its fields in camelCase while Rust spells them in snake_case, and `button` is a name, not a DOM integer.",
+  "why": "One row per input the wgpu browser shell admits, pinned across all three hops it crosses: the DOM event a listener on #semio-wgpu-canvas observes, the wire event the UI isolate transfers to the frame Worker, and the DispatchEvent the Worker projects it onto before Ui::dispatch_event sees it. The middle hop is where a browser-only mistake hides: coordinates are NOT scaled (offset* are CSS pixels and the renderer lays out, hit-tests and paints in the same logical pixels — only a resize carries the physical surface extent plus its dpr), the wire spells its fields in camelCase while Rust spells them in snake_case, and `button` is a name, not a DOM integer.",
   "consumers": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-browser-input-wire/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-browser-input-wire/🟦️.ts"
@@ -15,10 +15,10 @@
     },
     {
       "id": "pointer-move-on-a-retina-surface",
-      "why": "Exactly one devicePixelRatio multiplication: a CSS-pixel offset of 160.5 on a dpr-2 surface is physical pixel 321.",
+      "why": "ZERO devicePixelRatio multiplications: a CSS-pixel offset of 160.5 on a dpr-2 surface stays 160.5, because the renderer's layout, chrome constants and hit registry are all logical pixels — exactly like the React host's DOM. Scaling here was the HiDPI placement bug (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g).",
       "dom": { "type": "pointermove", "pointerId": 1, "pointerType": "mouse", "offsetX": 160.5, "offsetY": 69, "devicePixelRatio": 2 },
-      "wire": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 321, "y": 138 },
-      "dispatch": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 321, "y": 138, "pressure": null, "tilt": null }
+      "wire": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.5, "y": 69 },
+      "dispatch": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.5, "y": 69, "pressure": null, "tilt": null }
     },
     {
       "id": "pointer-down-primary-on-a-tree-row",
@@ -64,10 +64,10 @@
     },
     {
       "id": "wheel-over-the-preview",
-      "why": "The orbit gesture. The position is scaled by dpr like any pointer; the deltas are NOT — they are already device-independent scroll units.",
+      "why": "The orbit gesture. The position stays a CSS pixel like any pointer, and the deltas are already device-independent scroll units — a dpr-2 surface changes neither.",
       "dom": { "type": "wheel", "offsetX": 250.88, "offsetY": 406.8, "deltaX": 0, "deltaY": 120, "devicePixelRatio": 2 },
-      "wire": { "kind": "wheel", "x": 501.76, "y": 813.6, "deltaX": 0, "deltaY": 120 },
-      "dispatch": { "kind": "scroll", "x": 501.76, "y": 813.6, "deltaX": 0, "deltaY": 120 }
+      "wire": { "kind": "wheel", "x": 250.88, "y": 406.8, "deltaX": 0, "deltaY": 120 },
+      "dispatch": { "kind": "scroll", "x": 250.88, "y": 406.8, "deltaX": 0, "deltaY": 120 }
     },
     {
       "id": "key-down-f-fits-the-graph",
@@ -99,7 +99,7 @@
     },
     {
       "id": "resize-is-metrics-not-a-dispatch",
-      "why": "A surface resize crosses the same wire but is NOT a DispatchEvent: the Worker hands it to handle_metrics. The width/height are already physical pixels, so they are never scaled again.",
+      "why": "A surface resize crosses the same wire but is NOT a DispatchEvent: the Worker hands it to handle_metrics. It is the ONE event that carries physical pixels — the GPU surface extent — beside the dpr the renderer divides by to get the logical extent layout uses.",
       "dom": { "type": "resize", "clientWidth": 717, "clientHeight": 418, "devicePixelRatio": 2 },
       "wire": { "kind": "resize", "width": 1434, "height": 836, "dpr": 2 },
       "dispatch": null

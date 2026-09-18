@@ -40,22 +40,30 @@ async fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
     }
 }
 
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the source block is selected via
-/// the framework's injected `interactionSelect` verb now (`select_blocks`), not an app command —
-/// requires `note_app_with_registry()` (see that helper's own doc comment).
+/// 🕹️ Selection is framework-owned and reaches a command as `NoteDispatchCtx::selected_block_ids`, so this
+/// law drives the handler with that resolved selection: the native app harness hands a migrated verb's tool
+/// job an EMPTY `InteractionState` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END), while the react shell delivers it
+/// (see that ticket's interact probe).
 #[semio_framework_async_macros::async_test]
 async fn duplicate_selection_clones_with_offset() {
-    use crate::editor::note::unit_tests::context::{note_app_with_registry, select_blocks};
-    let mut app = note_app_with_registry().await;
-    dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 10.0, y: 10.0 })).await;
-    let source_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
-    select_blocks(&mut app, &[&source_id]).await;
-
-    let result = dispatch(&mut app, NoteCommand::DuplicateSelection(crate::editor::note::commands::duplicate_selection::DuplicateSelection {})).await;
-    assert_eq!(result.mutations.len(), 1);
-    let projection = app.snapshot().expect("snapshot");
-    assert_eq!(projection.blocks.len(), 2);
-    let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
+    use crate::schema::mutations::apply_note_mutation;
+    let mut ids = crate::schema::NoteIdOwner::new("duplicate-test", 0);
+    let source = crate::schema::create_block_by_kind(&mut ids, "text", 10.0, 10.0);
+    let source_id = block_id(&source).to_string();
+    let document = crate::NoteSnapshot { blocks: vec![source], ..crate::schema::empty_note_snapshot() };
+    let history = semio_framework_plugin::HistoryView::empty();
+    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![source_id.clone()], id_owner: crate::schema::NoteIdOwner::new("duplicate-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let emit = crate::editor::note::commands::duplicate_selection::handle(
+        &crate::editor::note::commands::duplicate_selection::DuplicateSelection {},
+        &semio_framework_plugin::ArtifactView::new(&document, &history),
+        &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None },
+        &mut ctx,
+    )
+    .expect("duplicate selection");
+    assert_eq!(emit.artifact_mutations.len(), 1, "one duplicate is one semantic mutation");
+    let next = apply_note_mutation(&document, &emit.artifact_mutations[0]).expect("apply duplicate");
+    assert_eq!(next.blocks.len(), 2);
+    let clone = next.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
     let (x, y, ..) = crate::schema::block_bounds(clone);
     assert_eq!((x, y), (34.0, 34.0));
 }

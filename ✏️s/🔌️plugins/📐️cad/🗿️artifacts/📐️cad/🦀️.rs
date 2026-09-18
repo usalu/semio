@@ -1234,6 +1234,25 @@ pub mod editor {
         pub mod engine {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs"]
             pub mod interaction;
+            /// 🧲️ Crate-local: the pick engine reads the EPHEMERAL `CadGeometry`/`CadObject` import
+            /// types, which are `pub(crate)` by design (`🚪️io/🗺️geometry-import/🦀️.rs`'s module doc),
+            /// so its own surface must not exceed theirs.
+            ///
+            /// 🧯️ `dead_code` — this module is a COMPLETE, test-pinned port of the React renderer's
+            /// `🧲️GeometryTargets`/`🧲️GeometryInteraction` regions (ticket
+            /// `26/09/17/WGPU-RENDERER-REACT-PARITY` packet W2f), so every React export has a twin
+            /// here whether or not the play app calls it yet. Today `modes::edit` consumes the
+            /// pick-target/visibility/entity-flag half through the `engagementPreview` overlay and
+            /// `panels::inspection` the census half; the selection-merge, hover-alias, reveal and
+            /// target-style half has no production caller until `World3dScene` grows a pick-target
+            /// lane that both hosts read (W2f report §5, hand-off 1). Splitting the port to match
+            /// today's call sites would leave the two implementations diverging silently, which is
+            /// exactly what the parity laws in `🧲️picking/🧪️tests/🔬️unit/🦀️.rs` exist to prevent.
+            #[allow(dead_code)]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking/🦀️.rs"]
+            pub(crate) mod picking;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🦀️.rs"]
+            pub mod typology;
         }
 
         #[path = "."]

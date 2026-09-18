@@ -439,6 +439,16 @@ impl PatchMatchPreparation {
         self.phase
     }
 
+    /// 🧮️ Retained heap bytes of this checkpoint: the three hypothesis buffers plus the output map.
+    pub fn retained_bytes(&self) -> usize {
+        self.depths.capacity() * std::mem::size_of::<f32>()
+            + self.normals.capacity() * std::mem::size_of::<[f32; 3]>()
+            + self.costs.capacity() * std::mem::size_of::<f32>()
+            + self.output.depth.capacity() * std::mem::size_of::<f32>()
+            + self.output.normal.capacity() * std::mem::size_of::<[f32; 3]>()
+            + self.output.confidence.capacity() * std::mem::size_of::<f32>()
+    }
+
     pub fn advance(
         &mut self,
         ref_img: &remodeling_image::ImageGray,
@@ -1031,6 +1041,15 @@ pub struct TsdfVolume {
     pub voxel_size: f64,
     pub truncation: f64,
     blocks: BTreeMap<[i32; 3], TsdfBlock>,
+    /// 🧱️ Optional inclusive global-voxel box outside which [`Self::integrate`] allocates nothing.
+    /// `None` (the default) integrates wherever a ray lands, which is only safe when the caller
+    /// already knows the depth range is scene-scaled: one 4 KiB block is allocated for every touched
+    /// `8³` neighbourhood, so a depth hypothesis range spanning orders of magnitude more than the
+    /// scene (PatchMatch initialises in `[depth_min, depth_max]`) scatters hundreds of thousands of
+    /// blocks over empty space. A caller that knows which voxels will ever be *read* — a surface
+    /// extraction is always run over an explicit `[bounds_min, bounds_max]` lattice — sets the box and
+    /// keeps every sample the extraction can see while allocating nothing beyond it.
+    bounds: Option<([i32; 3], [i32; 3])>,
 }
 
 /// 🧊️ Splits a global voxel coordinate into its block coordinate and within-block local coordinate.
@@ -1044,15 +1063,39 @@ impl TsdfVolume {
     /// 🧊️ Empty volume with the given voxel edge length and truncation distance (both in world
     /// units).
     pub fn new(voxel_size: f64, truncation: f64) -> Self {
-        Self { voxel_size, truncation, blocks: BTreeMap::new() }
+        Self { voxel_size, truncation, blocks: BTreeMap::new(), bounds: None }
+    }
+
+    /// 🧱️ The same volume restricted to an inclusive global-voxel box: integration outside it is
+    /// dropped instead of allocating a block. Pass a box that *contains every voxel a later surface
+    /// extraction samples* (a surface-net extraction over `[min, max]` reads one voxel past each face,
+    /// so pad by at least one) and the retained grid shrinks to the meshed neighbourhood without any
+    /// sampled value changing. See [`Self::bounds`].
+    pub fn with_voxel_bounds(mut self, minimum: [i32; 3], maximum: [i32; 3]) -> Self {
+        self.bounds = Some((minimum, maximum));
+        self
+    }
+
+    /// 🧱️ The integration box, if this volume is bounded.
+    pub fn voxel_bounds(&self) -> Option<([i32; 3], [i32; 3])> {
+        self.bounds
     }
 
     fn voxel_coord(&self, p: [f64; 3]) -> [i32; 3] {
         p.map(|c| (c / self.voxel_size).floor() as i32)
     }
 
+    /// 🧱️ Whether this global voxel coordinate is inside the integration box (always, when unbounded).
+    fn admits_voxel(&self, voxel: [i32; 3]) -> bool {
+        self.bounds.is_none_or(|(minimum, maximum)| (0..3).all(|axis| voxel[axis] >= minimum[axis] && voxel[axis] <= maximum[axis]))
+    }
+
     fn integrate_point(&mut self, p: [f64; 3], sdf: f32, weight: f32) {
-        let (block_coord, local) = tsdf_block_and_local(self.voxel_coord(p));
+        let voxel = self.voxel_coord(p);
+        if !self.admits_voxel(voxel) {
+            return;
+        }
+        let (block_coord, local) = tsdf_block_and_local(voxel);
         let block = self.blocks.entry(block_coord).or_insert_with(TsdfBlock::new);
         let li = TsdfBlock::local_index(local);
         let old_w = block.weight[li];
@@ -1145,7 +1188,24 @@ impl TsdfVolume {
         let v = self.voxel_coord(p);
         self.sample(v[0], v[1], v[2]).map(|(_, w)| w)
     }
+
+    /// 🔢️ How many `8x8x8` blocks are currently allocated — the volume's whole retained footprint is
+    /// this count times [`TSDF_BLOCK_RETAINED_BYTES`], so a caller (or a memory probe) can see the
+    /// sparse grid's real cost without walking it.
+    pub fn block_count(&self) -> usize {
+        self.blocks.len()
+    }
+
+    /// 🧮️ Retained heap bytes of the hashed grid: one dense `sdf`/`weight` pair per allocated block.
+    pub fn retained_bytes(&self) -> usize {
+        self.blocks.len() * TSDF_BLOCK_RETAINED_BYTES
+    }
 }
+
+/// 🧮️ Heap bytes one allocated [`TsdfBlock`] costs: two dense `f32` buffers of `8³` voxels each,
+/// plus the ordered map's own node share. Any voxel a depth ray touches allocates the whole block,
+/// which is why an unbounded integration extent is a memory hazard rather than a mere slowdown.
+pub const TSDF_BLOCK_RETAINED_BYTES: usize = TSDF_BLOCK_VOXELS * 2 * std::mem::size_of::<f32>() + 64;
 
 /// 🧊️ Cursor for one depth-map integration. A continuation performs at most the requested number of
 /// ray samples; sparse blocks use an ordered map so insertion never triggers a whole-table rehash.

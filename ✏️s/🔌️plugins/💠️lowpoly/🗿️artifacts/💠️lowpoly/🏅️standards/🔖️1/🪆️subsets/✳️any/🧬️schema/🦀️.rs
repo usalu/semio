@@ -76,6 +76,12 @@ pub fn lowpoly_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaD
 //#endregion 🔖️Descriptor
 
 //#region 🔖️DocumentHelpers
+pub const LOWPOLY_DEFAULT_EXAMPLE_ID: &str = "hexagonal-cut-concrete-forest-left";
+
+pub const LOWPOLY_DEFAULT_EXAMPLE_LABEL: &str = "Hexagonal Cut Concrete Forest Left";
+
+const CONCRETE_FOREST_LEFT_MESH_JSON: &str = include_str!("../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🧊️.mesh.json");
+
 /// 🧺 One caller-owned default document pair. The parent snapshot owns only the exact
 /// `ArtifactChild` handle while the app session owns its matching mesh payload.
 pub struct LowpolyOwnedDefaultDocument {
@@ -83,14 +89,18 @@ pub struct LowpolyOwnedDefaultDocument {
     pub mesh_workspace: std::collections::HashMap<String, String>,
 }
 
-/// 🧱️ Builds the deterministic primitive without UV repacking, so every owner gets a fresh matching
-/// handle/payload pair and no process-global child payload cache is required.
-pub fn default_owned_document() -> LowpolyOwnedDefaultDocument {
-    let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
-    let mesh_json = mesh.to_json().expect("mesh json");
-    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box");
+/// 🌲️ Hexagonal Cut Concrete Forest Left — the same CAD-derived mesh fixture puzzle 3d and cad shape use.
+pub fn concrete_forest_left_owned_document() -> LowpolyOwnedDefaultDocument {
+    let mesh_json = CONCRETE_FOREST_LEFT_MESH_JSON.to_string();
+    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", LOWPOLY_DEFAULT_EXAMPLE_LABEL);
     let mesh_workspace = std::collections::HashMap::from([("obj-1".to_string(), mesh_json)]);
     LowpolyOwnedDefaultDocument { snapshot, mesh_workspace }
+}
+
+/// 🧱️ Builds the default play document without UV repacking, so every owner gets a fresh matching
+/// handle/payload pair and no process-global child payload cache is required.
+pub fn default_owned_document() -> LowpolyOwnedDefaultDocument {
+    concrete_forest_left_owned_document()
 }
 
 /// 🎞️ Default document projection used by tests and the play app.
@@ -306,20 +316,25 @@ pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
 /// (`(offset, bytes)`) that turn `before` into `after`; the seam where a mutated scratch buffer becomes
 /// a `PaintStroke` operation. Returns raw `(offset, bytes)` tuples — `op` wraps each into its own
 /// `PixelRun`. Relocated from `⚙️engine/🎨️paint`.
+/// 🩸 Runs are formed per RGBA PIXEL, never per byte: a fill of (255,64,64,255) over opaque white leaves
+/// bytes 0 and 3 of every pixel equal, and a byte-wise diff then minted one two-byte run PER PIXEL —
+/// 65 536 runs for one 256² layer against the 4 096-run retained envelope (`paintFill` refused with
+/// `exceeds its fixed run envelope`, 2026-09-18). A run now spans consecutive changed pixels whole.
 pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> {
     let mut runs = Vec::new();
-    let len = before.len().min(after.len());
-    let mut index = 0;
-    while index < len {
-        if before[index] == after[index] {
-            index += 1;
+    let pixels = before.len().min(after.len()) / 4;
+    let changed = |pixel: usize| before[pixel * 4..pixel * 4 + 4] != after[pixel * 4..pixel * 4 + 4];
+    let mut pixel = 0;
+    while pixel < pixels {
+        if !changed(pixel) {
+            pixel += 1;
             continue;
         }
-        let start = index;
-        while index < len && before[index] != after[index] {
-            index += 1;
+        let start = pixel;
+        while pixel < pixels && changed(pixel) {
+            pixel += 1;
         }
-        runs.push((start as u32, after[start..index].to_vec()));
+        runs.push(((start * 4) as u32, after[start * 4..pixel * 4].to_vec()));
     }
     runs
 }

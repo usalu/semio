@@ -19,7 +19,11 @@ use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnaps
 //#region 🔖️FixtureConstants
 /// 🎲 splitmix64 seed shared with the Python reference generator.
 const SEED: u64 = 0x5EED_0B17_5CE9_E000;
-const FRAME_COUNT: usize = 10;
+/// 🛰️ Views around the orbit, 10° apart. The step is what the matcher can bridge: the bounded ORB
+/// features pair correctly across 5–10° of this orbit (83 of 91 accepted matches within 2 px at 10°),
+/// degrade past 15° and are noise at 36° — a walked or flown capture samples far denser than that,
+/// and ten views 36° apart never were a capture the pipeline could register.
+const FRAME_COUNT: usize = 36;
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
 /// 📷️ Phone-like focal ratio of the rendering camera: `fx = fy = 0.85 · width`.
@@ -33,6 +37,13 @@ const CUBE_HALF: f64 = 1.0;
 const ORBIT_RADIUS: f64 = 2.6;
 const ORBIT_ELEVATION: f64 = 2.2;
 const MARKERS_PER_FACE: usize = 22;
+/// 🧱️ Face texture: two octaves of seeded value noise in the face's `(u, v)` plane, cells of these
+/// side lengths (world units) with these luminance swings. A flat face carries no local structure
+/// a gradient descriptor can tell apart — every marker edge looks like every other — so the faces
+/// are "painted" with a blocky pattern whose cell junctions are the corners that real surfaces
+/// (plaster, timber, brick) offer a detector; the coarse octave spans ~12 px, the fine ~5 px in
+/// the nearest view.
+const TEXTURE_CELLS: [(f64, f64); 1] = [(0.16, 0.45)];
 const FPS_HINT: f64 = 2.0;
 const BACKGROUND: [u8; 3] = [35, 35, 40];
 const FACE_BASE_COLORS: [[u8; 3]; 6] = [[150, 60, 60], [60, 60, 150], [60, 150, 60], [150, 150, 60], [150, 60, 150], [60, 150, 150]];
@@ -260,6 +271,19 @@ fn ray_box_intersect(origin: [f64; 3], direction: [f64; 3]) -> Option<([f64; 3],
     Some(([origin[0] + direction[0] * t, origin[1] + direction[1] * t, origin[2] + direction[2] * t], hit_axis))
 }
 
+/// 🧱️ Multiplicative shade of the face texture at `(u, v)`: one seeded hash per (face, octave,
+/// cell), so every view samples the identical pattern.
+fn texture_shade(face: usize, u: f64, v: f64) -> f64 {
+    let mut shade = 1.0;
+    for (octave, &(cell, swing)) in TEXTURE_CELLS.iter().enumerate() {
+        let iu = (u / cell).floor() as i64;
+        let iv = (v / cell).floor() as i64;
+        let mut rng = SplitMix64(SEED ^ ((face as u64) << 56) ^ ((octave as u64) << 48) ^ ((iu as u64).wrapping_mul(0x9E37_79B9)) ^ ((iv as u64).wrapping_mul(0x85EB_CA6B) << 20));
+        shade *= 1.0 + swing * rng.unit();
+    }
+    shade
+}
+
 fn face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>]) -> [u8; 3] {
     let positive = p[axis] > 0.0;
     let (u, v) = match axis {
@@ -273,13 +297,18 @@ fn face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>]) -> [u8; 3] 
             return marker.color;
         }
     }
-    FACE_BASE_COLORS[idx]
+    let shade = texture_shade(idx, u, v);
+    FACE_BASE_COLORS[idx].map(|channel| (f64::from(channel) * shade).round().clamp(0.0, 255.0) as u8)
 }
 
 /// 🖼️ Re-derives one committed view from scratch, pixel for pixel.
 fn render_reference_frame(index: usize) -> remodeling_image::ImageRgba8 {
+    render_from(camera_eyes()[index])
+}
+
+/// 🖼️ The scene rendered from an arbitrary eye looking at the cube's centre.
+fn render_from(eye: [f64; 3]) -> remodeling_image::ImageRgba8 {
     let markers = generate_markers();
-    let eye = camera_eyes()[index];
     let r_cw = camera_to_world_rotation(eye);
     let mut image = remodeling_image::ImageRgba8::new(WIDTH, HEIGHT);
     for y in 0..HEIGHT {
@@ -416,19 +445,27 @@ fn align_to_truth(recovered: &[[f64; 3]], truth: &[[f64; 3]]) -> Option<(Sim3, V
     best.map(|(_, sim, assignment)| (sim, assignment))
 }
 
-/// 🎯️ `(max rotation error in degrees, translation RMSE as a fraction of scene scale)`.
-fn pose_errors(poses: &[(Quatd, [f64; 3])], truth: &GroundTruth) -> (f64, f64) {
+/// 🎯️ `(max rotation error in degrees, translation RMSE as a fraction of scene scale, per-pose
+/// ledger)` — the ledger lists, per recovered pose in registration order, the truth camera it was
+/// assigned to, its rotation error in degrees and its centre error as a fraction of scene scale,
+/// so a failing bound names the camera that broke it.
+fn pose_errors(poses: &[(Quatd, [f64; 3])], truth: &GroundTruth) -> (f64, f64, Vec<(usize, f64, f64)>) {
     let recovered: Vec<[f64; 3]> = poses.iter().map(|(_, center)| *center).collect();
     let (sim, assignment) = align_to_truth(&recovered, &truth.centers).expect("recovered cameras must admit a Sim(3) registration onto the truth orbit");
+    let scale = scene_scale(&truth.centers);
     let mut max_rotation = 0.0f64;
     let mut squared = 0.0f64;
+    let mut ledger = Vec::with_capacity(poses.len());
     for ((quat, center), index) in poses.iter().zip(&assignment) {
         let aligned = sim.r.semio_compose_rs(&So3::from_quat(*quat));
         let expected = So3::from_quat(truth.rotations_camera_to_world[*index]);
-        max_rotation = max_rotation.max(norm3(expected.inverse().semio_compose_rs(&aligned).log()).to_degrees());
-        squared += norm3(sub3(sim.act(*center), truth.centers[*index])).powi(2);
+        let rotation = norm3(expected.inverse().semio_compose_rs(&aligned).log()).to_degrees();
+        let centre = norm3(sub3(sim.act(*center), truth.centers[*index]));
+        max_rotation = max_rotation.max(rotation);
+        squared += centre.powi(2);
+        ledger.push((*index, rotation, centre / scale));
     }
-    (max_rotation, (squared / poses.len() as f64).sqrt() / scene_scale(&truth.centers))
+    (max_rotation, (squared / poses.len() as f64).sqrt() / scale, ledger)
 }
 //#endregion 📌️Alignment
 
@@ -439,16 +476,64 @@ fn frame_payload(bytes: &[u8]) -> String {
 
 /// 📥️ Feeds every committed frame through the real still-image import command — the same handler a
 /// file-picker drop reaches — so the document under test is built by the product, not by the test.
+/// The rendering camera's calibration and the fixture's engine tuning (the same values
+/// [`fixture_document`] commits) arrive the same way, through the calibration and parameter-group
+/// commands: the boot document is the uncalibrated `demo` (ORB, 5 mm voxels, textured), under which
+/// this scene has no chance, and a user who reconstructs a calibrated capture edits exactly these.
 async fn imported_app() -> RemodelingApp {
+    use crate::editor::remodeling::commands::{edit_calibration::EditCalibration, set_dense_params::SetDenseParams, set_feature_params::SetFeatureParams, set_ingest_params::SetIngestParams, set_match_params::SetMatchParams, set_mesh_params::SetMeshParams, set_sfm_params::SetSfmParams};
     let mut app = app_with_registry().await;
+    let fixture = fixture_document();
+    let camera = &fixture.calibration.cameras[0];
+    let calibration = EditCalibration {
+        camera_id: camera.id.clone(),
+        label: camera.label.clone(),
+        model: camera.model.clone(),
+        fx: camera.fx,
+        fy: camera.fy,
+        cx: camera.cx,
+        cy: camera.cy,
+        skew: camera.skew,
+        k1: camera.distortion[0],
+        k2: camera.distortion[1],
+        k3: camera.distortion[2],
+        p1: camera.distortion[3],
+        p2: camera.distortion[4],
+        locked: camera.locked,
+    };
+    dispatch(&mut app, RemodelingCommand::EditCalibration(calibration)).await;
+    settle(&mut app, "the camera calibration").await;
     for (index, (_, bytes)) in FRAMES.iter().enumerate() {
         let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 };
         dispatch(&mut app, RemodelingCommand::ImportFramePayload(payload)).await;
         settle(&mut app, "the frame import").await;
     }
-    let ingest = RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 32, downscale_long_edge_px: 320, min_sharpness: 0.0 });
-    dispatch(&mut app, ingest).await;
-    settle(&mut app, "the ingest parameters").await;
+    let params = &fixture.params;
+    let tuning = [
+        RemodelingCommand::SetIngestParams(SetIngestParams { frame_sample_stride: params.ingest.frame_sample_stride, max_frames: params.ingest.max_frames, downscale_long_edge_px: params.ingest.downscale_long_edge_px, min_sharpness: params.ingest.min_sharpness }),
+        RemodelingCommand::SetFeatureParams(SetFeatureParams { detector: "akaze".into(), target_count: params.feature.target_count, octaves: params.feature.octaves, edge_threshold: params.feature.edge_threshold }),
+        RemodelingCommand::SetMatchParams(SetMatchParams { matcher: "brute-force".into(), ratio_test: params.matching.ratio_test, cross_check: params.matching.cross_check, sequential_window: params.matching.sequential_window, max_pairs_per_frame: params.matching.max_pairs_per_frame, loop_closure: params.matching.loop_closure }),
+        RemodelingCommand::SetSfmParams(SetSfmParams { ransac_iterations: params.sfm.ransac_iterations, ransac_threshold_px: params.sfm.ransac_threshold_px, min_track_length: params.sfm.min_track_length, ba_max_iterations: params.sfm.ba_max_iterations, robust_loss: "huber".into(), huber_delta_px: params.sfm.huber_delta_px }),
+        RemodelingCommand::SetDenseParams(SetDenseParams { resolution: "low".into(), window_radius_px: params.dense.window_radius_px, min_view_consistency: params.dense.min_view_consistency, confidence_threshold: params.dense.confidence_threshold, max_points: params.dense.max_points }),
+        RemodelingCommand::SetMeshParams(SetMeshParams {
+            tsdf_voxel_size_mm: params.mesh.tsdf_voxel_size_mm,
+            tsdf_truncation_mm: params.mesh.tsdf_truncation_mm,
+            decimate_target_triangles: params.mesh.decimate_target_triangles,
+            smoothing_iterations: params.mesh.smoothing_iterations,
+            texture_enabled: params.mesh.texture_enabled,
+            texture_size: params.mesh.texture_size,
+            guarantee_watertight: params.mesh.guarantee_watertight,
+            hole_fill_max_boundary_verts: params.mesh.hole_fill_max_boundary_verts,
+            self_intersection_check: params.mesh.self_intersection_check,
+        }),
+    ];
+    for command in tuning {
+        dispatch(&mut app, command).await;
+        settle(&mut app, "the reconstruction parameters").await;
+    }
+    let tuned = app.snapshot().expect("tuned snapshot");
+    assert_eq!(tuned.params, fixture.params, "the parameter commands must land the fixture's tuning");
+    assert_eq!(tuned.calibration.cameras.len(), 1, "the calibration command must land the rendering camera");
     app
 }
 
@@ -556,9 +641,9 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
             (Quatd { w: f64::from(q[0]), x: f64::from(q[1]), y: f64::from(q[2]), z: f64::from(q[3]) }, [f64::from(pose.translation[0]), f64::from(pose.translation[1]), f64::from(pose.translation[2])])
         })
         .collect();
-    let (rotation_deg, translation_ratio) = pose_errors(&poses, &truth);
-    assert!(rotation_deg < MAX_ROTATION_ERROR_DEG * UNCALIBRATED_GAUGE_SLACK, "aligned rotation error {rotation_deg:.3}° exceeds the gauge-slackened bound");
-    assert!(translation_ratio < MAX_TRANSLATION_RMSE_RATIO * UNCALIBRATED_GAUGE_SLACK, "aligned translation RMSE {:.3}% of scene scale exceeds the gauge-slackened bound", translation_ratio * 100.0);
+    let (rotation_deg, translation_ratio, ledger) = pose_errors(&poses, &truth);
+    assert!(rotation_deg < MAX_ROTATION_ERROR_DEG * UNCALIBRATED_GAUGE_SLACK, "aligned rotation error {rotation_deg:.3}° exceeds the gauge-slackened bound; per pose (truth camera, rotation°, centre error/scale): {ledger:?}");
+    assert!(translation_ratio < MAX_TRANSLATION_RMSE_RATIO * UNCALIBRATED_GAUGE_SLACK, "aligned translation RMSE {:.3}% of scene scale exceeds the gauge-slackened bound; per pose (truth camera, rotation°, centre error/scale): {ledger:?}", translation_ratio * 100.0);
 
     let mesh = &scene.results.mesh;
     assert_ne!(mesh.source, crate::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
@@ -613,7 +698,83 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
 }
 //#endregion 🧪️EndToEnd
 
+//#region 🔭️Diagnostics
+/// 🔭️ How the bounded ORB features survive one orbit step of the given size: two views of the scene
+/// (at angle 0 and at `step`) are detected, described (steered and upright) and brute-force matched
+/// exactly as the engine does, then scored against the true transfer through the known cube. Prints,
+/// per step, the true-pair Hamming median against the best impostor and the share of accepted matches
+/// that land within 2 px of the truth. Diagnostic, therefore `#[ignore]`:
+/// `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture diagnose_orb_matching_vs_orbit_step`.
+#[test]
+#[ignore = "diagnostic feature audit over synthetic orbit steps, run explicitly"]
+fn diagnose_orb_matching_vs_orbit_step() {
+    use crate::editor::remodeling::engine::feature as remodeling_feature;
+    let eye_at = |angle: f64| [ORBIT_RADIUS * angle.cos(), ORBIT_ELEVATION, ORBIT_RADIUS * angle.sin()];
+    let luma = |image: &remodeling_image::ImageRgba8| remodeling_image::ImageGray::from_rgba8_luma(image);
+    let detect = |gray: remodeling_image::ImageGray, upright: bool| {
+        let mut preparation = remodeling_feature::BoundedDetectionPreparation::new(gray, 3, 600, remodeling_feature::BoundedDetector::Orb, upright);
+        while !preparation.advance(16) {}
+        let (pyramid, keypoints) = preparation.finish();
+        let descriptors = remodeling_feature::describe_orb(&pyramid, &keypoints);
+        (keypoints, descriptors)
+    };
+    let transfer = |eye_a: [f64; 3], eye_b: [f64; 3], px: [f64; 2]| -> Option<[f64; 2]> {
+        let r_a = camera_to_world_rotation(eye_a);
+        let ray = normalize3(mat_act(&r_a, unproject_ray(px[0], px[1])));
+        let (point, _) = ray_box_intersect(eye_a, ray)?;
+        let r_b = camera_to_world_rotation(eye_b);
+        let r_wc = [[r_b[0][0], r_b[1][0], r_b[2][0]], [r_b[0][1], r_b[1][1], r_b[2][1]], [r_b[0][2], r_b[1][2], r_b[2][2]]];
+        let camera = mat_act(&r_wc, sub3(point, eye_b));
+        if camera[2] <= 1e-9 {
+            return None;
+        }
+        let normalized = distort([camera[0] / camera[2], camera[1] / camera[2]]);
+        Some([CX + FX * normalized[0], CY + FX * normalized[1]])
+    };
+    for step_deg in [5.0f64, 10.0, 15.0, 18.0, 36.0] {
+        let (eye_a, eye_b) = (eye_at(0.0), eye_at(step_deg.to_radians()));
+        let (image_a, image_b) = (render_from(eye_a), render_from(eye_b));
+        if step_deg == 5.0 {
+            eprintln!("[ORB] a rendered view encodes to {} PNG bytes", remodeling_image::encode_png(&image_a).map_or(0, |bytes| bytes.len()));
+        }
+        for upright in [false, true] {
+            let (keypoints_a, descriptors_a) = detect(luma(&image_a), upright);
+            let (keypoints_b, descriptors_b) = detect(luma(&image_b), upright);
+            let scale = |keypoint: &remodeling_feature::Keypoint| f64::from(1u32 << keypoint.octave);
+            let pixel = |keypoint: &remodeling_feature::Keypoint| [f64::from(keypoint.x) * scale(keypoint), f64::from(keypoint.y) * scale(keypoint)];
+            let matches = remodeling_feature::match_brute(&descriptors_a, &descriptors_b, 0.85, true);
+            let mut correct = 0usize;
+            for matched in &matches {
+                let Some(expected) = transfer(eye_a, eye_b, pixel(&keypoints_a[matched.a as usize])) else { continue };
+                let got = pixel(&keypoints_b[matched.b as usize]);
+                if ((got[0] - expected[0]).powi(2) + (got[1] - expected[1]).powi(2)).sqrt() < 2.0 {
+                    correct += 1;
+                }
+            }
+            let mut true_pair = Vec::new();
+            let mut impostor = Vec::new();
+            for (index, keypoint) in keypoints_a.iter().enumerate() {
+                let Some(expected) = transfer(eye_a, eye_b, pixel(keypoint)) else { continue };
+                let Some(partner) = keypoints_b.iter().enumerate().filter(|(_, k)| k.octave == keypoint.octave).map(|(j, k)| (j, { let g = pixel(k); ((g[0] - expected[0]).powi(2) + (g[1] - expected[1]).powi(2)).sqrt() })).filter(|(_, d)| *d < 1.5).min_by(|x, y| x.1.total_cmp(&y.1)).map(|(j, _)| j) else { continue };
+                true_pair.push(remodeling_feature::hamming(&descriptors_a[index], &descriptors_b[partner]));
+                impostor.push(descriptors_b.iter().enumerate().filter(|(j, _)| *j != partner).map(|(_, d)| remodeling_feature::hamming(&descriptors_a[index], d)).min().unwrap_or(u32::MAX));
+            }
+            true_pair.sort_unstable();
+            impostor.sort_unstable();
+            let mid = |v: &[u32]| v.get(v.len() / 2).copied().unwrap_or(0);
+            let quarter = |v: &[u32]| v.get(v.len() / 4).copied().unwrap_or(0);
+            eprintln!("[ORB] step {step_deg:>4}° upright={upright}: {} / {} keypoints, {} true pairs (Hamming q25 {} median {}; impostor median {}), {} matches, {correct} within 2 px", keypoints_a.len(), keypoints_b.len(), true_pair.len(), quarter(&true_pair), mid(&true_pair), mid(&impostor), matches.len());
+        }
+    }
+}
+//#endregion 🔭️Diagnostics
+
 //#region 🛠️Regeneration
+/// 🎞️ Asset id of the `index`-th view, the same naming `FRAMES` commits.
+fn frame_asset_id(index: usize) -> String {
+    format!("synthetic-orbit-frame-{index}")
+}
+
 /// 🛠️ Rewrites `🖼️assets/` from the constants above — `bun ./📜️script.ts regenerate-example`, or
 /// `cargo test -p semio-s-plugin-remodel --lib synthetic_orbit -- --ignored --exact
 /// artifacts::remodeling::…::regenerates_the_synthetic_orbit_example`. Deterministic: running it twice
@@ -637,7 +798,7 @@ fn regenerates_the_synthetic_orbit_example() {
         let rotation_wc = rotation_cw.inverse();
         let translation = rotation_wc.act(*eye);
         let (q_wc, q_cw) = (rotation_wc.to_quat(), rotation_cw.to_quat());
-        frames.push(serde_json::json!({ "index": index, "timestampMs": index as f64 * 1000.0 / FPS_HINT, "assetId": FRAMES[index].0, "file": format!("🎞️frame-{index:02}.png") }));
+        frames.push(serde_json::json!({ "index": index, "timestampMs": index as f64 * 1000.0 / FPS_HINT, "assetId": frame_asset_id(index), "file": format!("🎞️frame-{index:02}.png") }));
         extrinsics.push(serde_json::json!({
             "frameIndex": index,
             "cameraCenterM": eye,
@@ -682,13 +843,13 @@ fn fixture_document() -> RemodelingSnapshot {
         locked: true,
     }];
     scene.params.ingest.frame_sample_stride = 1;
-    scene.params.ingest.max_frames = 32;
+    scene.params.ingest.max_frames = 64;
     scene.params.ingest.downscale_long_edge_px = WIDTH;
     scene.params.ingest.min_sharpness = 0.0;
     scene.params.feature.detector = crate::FeatureDetector::Akaze;
     scene.params.feature.target_count = 600;
     scene.params.matching.ratio_test = 0.85;
-    scene.params.matching.sequential_window = 6;
+    scene.params.matching.sequential_window = 3;
     scene.params.sfm.min_track_length = 2;
     scene.params.sfm.ba_max_iterations = 25;
     scene.params.dense.resolution = crate::DenseResolution::Low;
@@ -707,7 +868,7 @@ fn fixture_document() -> RemodelingSnapshot {
         camera_id: Some(CAMERA_ID.into()),
         sync_offset_ms: 0.0,
         fps_hint: FPS_HINT,
-        frames: FRAMES.iter().enumerate().map(|(index, (asset_id, _))| FrameRef { index: index as u32, timestamp_ms: index as f64 * 1000.0 / FPS_HINT, asset_id: (*asset_id).into() }).collect(),
+        frames: (0..FRAME_COUNT).map(|index| FrameRef { index: index as u32, timestamp_ms: index as f64 * 1000.0 / FPS_HINT, asset_id: frame_asset_id(index) }).collect(),
         source: None,
     }];
     scene

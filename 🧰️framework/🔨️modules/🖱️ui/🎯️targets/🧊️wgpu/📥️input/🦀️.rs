@@ -403,6 +403,14 @@ impl<E: Clone> InputState<E> {
         self.pending_actions.reserve(controller_id, action, byte_credits)
     }
 
+    /// 🚦️ Orders and de-duplicates one fired intent by its per-surface `seq` before anything is
+    /// reserved — the host-side half of the admission React's runtime applies to a `UiIntent`. A
+    /// caller that holds the live document passes its revision through
+    /// [`crate::wgpu::BoundedActionQueue::admit_intent`] instead, which also refuses a stale one.
+    pub fn admit_intent(&mut self, intent: &crate::wgpu::UiIntentCommand) -> crate::wgpu::UiIntentAdmission {
+        self.pending_actions.admit_intent_seq(intent)
+    }
+
     pub fn reserve_actions(&mut self, item_credits: usize, byte_credits: usize) -> Result<BoundedActionBatchReservation<'_>, BoundedActionFault> {
         self.pending_actions.reserve_batch(item_credits, byte_credits)
     }

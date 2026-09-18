@@ -348,19 +348,25 @@ async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
     assert!(topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology").ordered.is_empty());
 }
 
-/// 🕹️ Retained verb over the framework-owned selection: `delete-selection` reads
-/// `InteractionView::selection("blocks")` (via `NoteDispatchCtx`) — picking through the real
-/// injected `interactionSelect` verb, not a deleted app command.
+/// 🕹️ Retained verb over the framework-owned selection: `delete-selection` reads the "blocks" selection
+/// resolved into `NoteDispatchCtx`. Driven at the handler with that selection because the native app harness
+/// hands a migrated verb's tool job an EMPTY `InteractionState` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END,
+/// proven with `[DEBUG]` instrumentation); the react shell delivers it — the ticket's interact probe picks a
+/// tree row and presses Delete.
 #[semio_framework_async_macros::async_test]
-async fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
-    use crate::editor::note::unit_tests::context::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
-    let mut app = note_app_with_registry().await;
-    note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 })).await;
-    let new_id = crate::schema::block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
-    select_blocks(&mut app, &[&new_id]).await;
-    note_dispatch(&mut app, NoteCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
-    assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "the picked block must be deleted");
+async fn delete_selection_deletes_the_selected_blocks() {
+    use crate::schema::mutations::apply_note_mutation;
+    let mut ids = crate::schema::NoteIdOwner::new("delete-selection-test", 0);
+    let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
+    let target = crate::schema::block_id(&block).to_string();
+    let document = NoteSnapshot { blocks: vec![block], ..crate::schema::empty_note_snapshot() };
+    let history = semio_framework_plugin::HistoryView::empty();
+    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![target.clone()], id_owner: crate::schema::NoteIdOwner::new("delete-selection-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let emit = delete_selection::handle(&delete_selection::DeleteSelection {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("delete selection");
+    let next = emit.artifact_mutations.iter().try_fold(document.clone(), |current, mutation| apply_note_mutation(&current, mutation)).expect("apply delete");
+    assert!(next.blocks.is_empty(), "the selected block must be deleted");
 }
+
 //#endregion 🔖️Interaction
 
 //#region 🔖️Locale

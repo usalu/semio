@@ -1,6 +1,5 @@
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
-use semio_s_artifact_cad_cad::io::geometry_import::{objects_from_host_snapshot_model, parse_geometry};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
+use semio_s_artifact_cad_cad::io::geometry_import::concrete_forest_left_shape_solid_face_loops;
 use std::collections::HashMap;
 
 /// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
@@ -58,15 +57,7 @@ async fn export_concrete_forest_left_lowpoly_mesh_json() {
     if std::env::var("EXPORT_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
         return;
     }
-    let source = include_str!("../../../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
-    let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
-    let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-    let mut kernel = Brep::new();
-    let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
-    let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
-    let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");
-    let holed = face_loops.iter().filter(|(_, holes)| !holes.is_empty()).count();
+    let (positions, face_loops) = concrete_forest_left_shape_solid_face_loops().expect("CAD face loops");
     let mut mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).expect("halfedge from CAD wires");
     let flips = mesh.orient_faces_consistently().expect("orient faces");
     let before_merge = mesh.face_count();
@@ -90,4 +81,8 @@ async fn export_concrete_forest_left_lowpoly_mesh_json() {
     eprintln!("LOWPOLY_FOREST_MESH_JSON_START");
     eprintln!("{json}");
     eprintln!("LOWPOLY_FOREST_MESH_JSON_END");
+    let snapshot = crate::snapshot_from_mesh_json(&json, "obj-1", "Hexagonal Cut Concrete Forest Left");
+    eprintln!("LOWPOLY_FOREST_DSL_START");
+    eprintln!("{}", crate::standards::v1::subsets::any::schema::snapshot::text::print_dsl(&snapshot));
+    eprintln!("LOWPOLY_FOREST_DSL_END");
 }

@@ -15,7 +15,7 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         paint_icon_render_chrome(&mut ctx, bounds, frame, &request, "rectangle", None);
     }
     // 🖼️ The top border strip is `[frame.x, frame.y, frame.w, hair]` — its rect's height (index 3)
@@ -33,4 +33,40 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
     let colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
     assert!(colors.contains(&[expected_badge_bg.r, expected_badge_bg.g, expected_badge_bg.b, expected_badge_bg.a]), "expected the badge chip to use theme.background@0.8, got {colors:?}");
     assert!(!colors.contains(&[stale_badge_bg.r, stale_badge_bg.g, stale_badge_bg.b, stale_badge_bg.a]), "the badge chip must no longer use the stale theme.panel@0.8 token");
+}
+
+/// ⚖️ Law: the three states React's `IconRenderHost` shows — error, ready, and `ui.host.rendering`
+/// while the shot is still being produced (`🖼️IconRenderHost/🟦️.tsx:55-61`) — must all exist here.
+/// The wgpu twin used to have ONE: an empty shot frame for the whole fetch, and forever on a miss.
+#[test]
+fn icon_render_status_reports_rendering_until_the_subject_mesh_is_resident() {
+    assert_eq!(icon_render_status(false, false), IconRenderStatus::Rendering, "no lease and no fault is React's `Rendering…`");
+    assert_eq!(icon_render_status(true, false), IconRenderStatus::Ready, "a published lease means the frame draws real geometry");
+    assert_eq!(icon_render_status(false, true), IconRenderStatus::Failed, "a recorded fault with no lease is React's error arm");
+    assert_eq!(icon_render_status(true, true), IconRenderStatus::Ready, "residency wins: the shot IS on screen whatever else faulted");
+}
+
+/// 🖼️ The status line is centred INSIDE the shot frame, like React's text inside `IconShotFrame`.
+#[test]
+fn icon_render_status_line_paints_inside_the_frame() {
+    let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+    let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = Theme::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_icon_render_status(&mut ctx, frame, ICON_RENDER_RENDERING_MESSAGE, theme.text_muted);
+    }
+    let glyphs: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect();
+    assert!(!glyphs.is_empty(), "the rendering status line must paint glyphs");
+    for rect in &glyphs {
+        assert!(rect[0] >= frame.x - 1.0 && rect[0] <= frame.x + frame.w, "status glyph {rect:?} left the shot frame {frame:?}");
+        assert!(rect[1] >= frame.y - 1.0 && rect[1] <= frame.y + frame.h, "status glyph {rect:?} left the shot frame {frame:?}");
+    }
+    let _ = bounds;
 }

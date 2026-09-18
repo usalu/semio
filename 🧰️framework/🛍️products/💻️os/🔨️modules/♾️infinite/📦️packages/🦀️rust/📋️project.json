@@ -62,6 +62,18 @@
         "command": "bun ./📜️script.ts fonts"
       }
     },
+    "test-wgpu-world-terrain": {
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-wgpu-world-terrain",
+        "forwardAllArgs": true
+      }
+    },
     "test-quick": {
       "cache": true,
       "outputs": [],

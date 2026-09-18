@@ -8,9 +8,7 @@
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
 
-#[cfg(test)]
-use crate::scenes::queue_canvas_image_upload_sized;
-use crate::scenes::{queue_canvas_image_upload_with, render_component_scene_step};
+use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -434,6 +432,13 @@ pub fn retained_pointer_capture_window() -> Option<String> {
     UI_ENGINE.with(|cell| cell.borrow().window_with_pointer_capture().map(str::to_owned))
 }
 
+/// 📐️ The SOLVED content height of one retained surface — what a floating panel hugs up to
+/// `calc(100% - 2 · spacing)`, React's `<Panel>` sizing (`🖼️Panel/🟦️.tsx`). `None` until that surface's
+/// layout has been accepted once, so the caller keeps its own band for the first frame.
+pub fn retained_content_height(window_id: &str) -> Option<f32> {
+    UI_ENGINE.with(|cell| cell.borrow().surface_content_height(window_id))
+}
+
 /// 🫳️ Retained panel/catalogue drags (`EventRouter::DragSession`) the legacy shell `tree_drag` path never sees.
 pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collections::HashMap<String, String>)> {
     UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
@@ -463,18 +468,28 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
  *    `events::EventRouter` bookkeeping the retained engine already repaints correctly on its own; no
  *    `UiNode` variant carries an "on close"/`onOpenChange` callback today (confirmed by grep across
  *    every `Ui*Node` struct in `ui_wgpu::wgpu::component::ui`), so there is nothing for a host to fire.
- *  - `FocusChanged` → intentional no-op HERE: the sibling `w3-shell-input-cutover` workstream's own
- *    `note_content_focus_commands` (off-limits `shell::ShellInput` region, see that fn's doc comment)
- *    already consumes the raw command list `dispatch_ui_event` returns to ITS OWN callers for this —
- *    duplicating that bookkeeping in this fn would double-track the same state from two places.
+ *  - `FocusChanged` → no-op HERE by design, and no longer DEFERRED: the shell's own
+ *    `note_content_focus_commands` (`🐚️Shell/🎯️targets/🧊️wgpu`, region `ShellInput`) is the single
+ *    consumer, and since ticket 26/09/17 packet W2k it records WHICH node took focus rather than a
+ *    bare "content is focused" boolean — React's own `focusin` listener stores the active ROOT the
+ *    same way (`🧱️elements/🌈️Surface/🟦️.tsx:186-197`). Consuming it here as well would double-track
+ *    one piece of state from two places; the modality half React gets free from `:focus-visible` is
+ *    handled at the source instead, by `EventRouter`'s `NodeFlags::FOCUS_VISIBLE`.
  *  - `Scene` → `apply_scene_ui_command`, below (`w4-scene-input`): a real per-event pointer/wheel hit
  *    on a `ComponentScene` leaf, routed into the matching per-`SurfaceKind` handler in `scenes`
  *    instead of that region's own once-per-render-frame `InputState` sample. */
 fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     for command in commands {
         match command {
-            ui_wgpu::wgpu::UiCommand::App { window_id, action } => {
-                if let Err(fault) = publish_retained_action(input, window_id, action) {
+            ui_wgpu::wgpu::UiCommand::App { window_id, intent } => {
+                // 🚦️ One gate before the gesture becomes a queued action: a `seq` this surface has
+                // already admitted is a duplicate or a reorder and is dropped, exactly as React's
+                // runtime drops one. The stale-revision half already ran in the renderer's own
+                // `events::EventRouter::build_intent`, against the tree that dispatched it.
+                if input.admit_intent(intent) != ui_wgpu::wgpu::UiIntentAdmission::Accepted {
+                    continue;
+                }
+                if let Err(fault) = publish_retained_action(input, window_id, &intent.descriptor()) {
                     input.record_action_fault(fault);
                     return;
                 }
@@ -886,6 +901,70 @@ fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::Su
     }
 }
 
+//#region ✍️TextEditorFocus
+/** ✍️ The text-editor surface the keyboard belongs to — the wgpu twin of the focused `<textarea>`
+ * React's `TextEditorHost` keeps: a key event has no hit point, so the surface a keystroke is
+ * addressed to is the one whose body was last pressed. Cleared implicitly whenever that node stops
+ * resolving to the same live `TextEditor` scene.
+ *
+ * @see `🧱️elements/✏️TextEditor/🟦️.tsx` — `onKeyDown` */
+struct FocusedTextEditor {
+    window_id: String,
+    node: NodeId,
+    surface_id: String,
+}
+
+thread_local! {
+    static FOCUSED_TEXT_EDITOR: std::cell::RefCell<Option<FocusedTextEditor>> = const { std::cell::RefCell::new(None) };
+}
+
+fn focus_text_editor(window_id: &str, node: NodeId, surface_id: &str) {
+    FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = Some(FocusedTextEditor { window_id: window_id.to_string(), node, surface_id: surface_id.to_string() }));
+}
+
+/** ⌨️ Applies one key to the focused text editor, returning whether it consumed the key. The ONLY
+ * production caller of `engine_canvas::text_editor_apply_key_into`: the renderer's own `handle_key`
+ * offers every key here before the shell's chord table sees it, so typing into an editor never
+ * reaches a global accelerator — the same precedence React gets for free from DOM focus. */
+pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let focus = FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.node, focus.surface_id.clone())));
+    let Some((window_id, node, surface_id)) = focus else {
+        return false;
+    };
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+            return None;
+        };
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.surface_id != surface_id {
+            return None;
+        }
+        // 🍿️ The POPUPS see the key first: `Ctrl/Cmd+Space` opens completions, `F2` starts a rename,
+        // and while either is open its own arrow/commit/dismiss keys win over editing — React's own
+        // `onKeyDown` prelude order (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`). A key the popups do
+        // not claim falls through to the buffer unchanged.
+        match crate::scenes::text_editor_popup_key(scene, key, modifiers, input) {
+            Ok(true) => return Some(Ok(true)),
+            Ok(false) => {}
+            Err(fault) => return Some(Err(fault)),
+        }
+        Some(crate::engine_canvas::text_editor_apply_key_into(scene, key, modifiers, input))
+    });
+    match outcome {
+        Some(Ok(consumed)) => consumed,
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            true
+        }
+        None => {
+            FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
+            false
+        }
+    }
+}
+//#endregion ✍️TextEditorFocus
+
 pub fn drive_scene_interaction_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     let Some(mut intent) = SCENE_INTENTS.with(|cell| cell.borrow_mut().pop_front()) else {
         return false;
@@ -908,6 +987,73 @@ pub fn close_scene_interaction_step() -> bool {
 pub fn scene_interaction_terminal_is_empty() -> bool {
     SCENE_INTENTS.with(|cell| cell.borrow().is_empty())
 }
+
+//#region 🖱️SurfaceContextMenu
+/** @emoji 🖱️ One component scene resolved for a right-click: which surface the pointer is over, and
+ * that kind's own `hits`/`selection`/`text` — the `surface` half of React's
+ * `openSurfaceContextMenu({ surface: { surfaceId, kind, hits, selection } })`. */
+pub struct SurfaceContextMenuTarget {
+    pub surface_id: String,
+    pub kind: ui_wgpu::wgpu::SurfaceKind,
+    pub rect: Rect,
+    pub target: crate::scenes::SceneContextMenuTarget,
+}
+
+/** @emoji 🖱️ The component scene under a WINDOW-LOCAL point, already resolved into its context-menu
+ * surface target. `None` when the point is over chrome that no scene owns — the caller then falls
+ * back to the shell's own `"window"` menu, exactly as React's `ShellContextMenu` does when no scene
+ * host claimed the event.
+ *
+ * `Ui::scene_at` is a READ-ONLY query: it resolves the leaf through the same reverse-paint-order walk
+ * a press uses without moving focus or arming a capture, which a right-click must not do (React's
+ * `onContextMenu` calls `preventDefault()` and never lets the press through either).
+ *
+ * `SurfaceKind::World3d` answers with an EMPTY target on purpose: a world surface's hover/selection
+ * authority is `World3dState`, which lives in the shell's own `world3d_states` map, so the shell
+ * fills it from `infinite_world::world::world3d_context_menu_surface`. */
+pub fn surface_context_menu_target(window_id: &str, x: f32, y: f32) -> Option<SurfaceContextMenuTarget> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y)?;
+        let tree = engine.tree(window_id)?;
+        let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
+        let target = crate::scenes::scene_context_menu_target(scene, hit.rect, x, y);
+        Some(SurfaceContextMenuTarget { surface_id: hit.surface_id, kind: hit.kind, rect: hit.rect, target })
+    })
+}
+
+/** @emoji 🖱️ Parks a context-menu row on the text-editor surface under a WINDOW-LOCAL point when
+ * that row is one the editor answers itself, and reports whether it did — React's
+ * `dispatchTextEditorMenu`, which runs an id present in its own `localActions` map instead of
+ * dispatching it to the guest. `false` for every other surface kind and every other row. */
+pub fn text_editor_claim_menu_action(window_id: &str, x: f32, y: f32, action: &str) -> bool {
+    UI_ENGINE
+        .with(|cell| {
+            let engine = cell.borrow();
+            let hit = engine.scene_at(window_id, x, y)?;
+            (hit.kind == ui_wgpu::wgpu::SurfaceKind::TextEditor).then(|| crate::scenes::text_editor_queue_menu_action(&hit.surface_id, action, x, y))
+        })
+        .unwrap_or(false)
+}
+
+/** @emoji 📋️ An ALT-held secondary press on a text editor opens the completions dropdown instead of
+ * a context menu — React's `event.altKey && completions.length > 0` branch in the host's own
+ * `onContextMenu` (`🧱️elements/✏️TextEditor/🟦️.tsx:413`). `false` leaves the press to the menu. */
+pub fn text_editor_claim_alt_completions(window_id: &str, x: f32, y: f32) -> bool {
+    UI_ENGINE
+        .with(|cell| {
+            let engine = cell.borrow();
+            let hit = engine.scene_at(window_id, x, y)?;
+            if hit.kind != ui_wgpu::wgpu::SurfaceKind::TextEditor {
+                return None;
+            }
+            let tree = engine.tree(window_id)?;
+            let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
+            Some(crate::scenes::text_editor_open_completions(scene))
+        })
+        .unwrap_or(false)
+}
+//#endregion 🖱️SurfaceContextMenu
 
 enum SceneIntentProgress {
     Pending,
@@ -953,10 +1099,43 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input),
+                SceneIntentEvent::PointerDown { x, y, button } => {
+                    focus_text_editor(window_id, node, &scene.surface_id);
+                    // 🍿️ A press on an open completions dropdown COMMITS that row (and a press
+                    // anywhere else dismisses it) before the caret path moves the caret — React's
+                    // popup is a real element above the canvas and swallows the press the same way.
+                    match crate::scenes::text_editor_popup_pointer(scene, rect, x, y, false, input) {
+                        Ok(true) => return Ok(SceneIntentProgress::Complete),
+                        Ok(false) => {}
+                        Err(fault) => return Err(fault),
+                    }
+                    crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
+                }
                 SceneIntentEvent::PointerUp { x, y, button } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
                 SceneIntentEvent::PointerMove { x, y } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { delta_y, .. } => Ok(crate::engine_canvas::text_editor_wheel_into(scene, delta_y)),
+            };
+            result.map(|_| SceneIntentProgress::Complete)
+        });
+    }
+    if kind == ui_wgpu::wgpu::SurfaceKind::Paint2d {
+        return UI_ENGINE.with(|cell| {
+            let engine = cell.borrow();
+            let Some(tree) = engine.tree(window_id) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let Some(retained) = tree.node(node) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let result = match intent.event {
+                SceneIntentEvent::PointerDown { x, y, button } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, true, button, false, false, input),
+                SceneIntentEvent::PointerUp { x, y, button } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, false, button, false, false, input),
+                SceneIntentEvent::PointerMove { x, y } => crate::engine_canvas::paint2d_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::Scroll { x, y, delta_y } if delta_y.abs() >= 0.01 => crate::engine_canvas::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
+                SceneIntentEvent::Scroll { .. } => Ok(false),
             };
             result.map(|_| SceneIntentProgress::Complete)
         });
@@ -1042,14 +1221,13 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
         };
         match intent.event {
             SceneIntentEvent::PointerDown { x, y, button } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button);
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button, input)?;
             }
             SceneIntentEvent::PointerUp { x, y, button } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button);
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button, input)?;
             }
             SceneIntentEvent::PointerMove { x, y } => {
-                let (_, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
-                crate::scenes::passive_scene_pointer_move(scene, rect, x, y, x - last_x, y - last_y);
+                crate::scenes::passive_scene_pointer_move(scene, rect, x, y);
             }
             SceneIntentEvent::Scroll { x, y, delta_y } => {
                 if delta_y.abs() >= 0.01 {
@@ -1119,7 +1297,8 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
             Ok(false) => return ui_wgpu::wgpu::ScenePaintStep::Pending,
             Err(_) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
         }
-        let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
+        let viewport_height = draw.screen_height();
+        let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None, viewport_height);
         let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources, window_id: self.window_id };
         match &slot.content {
             ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts),
@@ -1507,7 +1686,6 @@ fn svg_dimensions(svg_text: &str) -> Option<(u32, u32)> {
     Some(((natural_w * scale).round().max(1.0) as u32, (natural_h * scale).round().max(1.0) as u32))
 }
 
-#[cfg(test)]
 fn percent_decode_basic(input: &str) -> Vec<u8> {
     let bytes = input.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -1529,7 +1707,6 @@ fn percent_decode_basic(input: &str) -> Vec<u8> {
 /** 🖊️ Decodes a `data:image/svg+xml[;base64],...` URL's SVG text (base64 or percent-encoded/plain
  * UTF-8 body) — `decode_canvas_image` only handles `image/png`/`image/jpeg`, so inline SVG data URLs
  * previously fell straight through to the `alt`-text fallback. */
-#[cfg(test)]
 fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     use base64::Engine;
     #[cfg(test)]
@@ -1545,7 +1722,6 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     }
 }
 
-#[cfg(test)]
 fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
     let size = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
@@ -1564,6 +1740,39 @@ fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u3
         |bytes| std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba).map(|(pixels, _, _)| pixels),
     );
     (key, size.get())
+}
+
+/** 🖼️ Resolves an INLINE `data:` source in place and publishes it into the same three caches a
+ * fetched URL lands in, so `render_ui_image_step`'s draw phase reads exactly ONE cache either way.
+ * `data:image/svg+xml` rasterises through `resvg`; every other `data:` media type decodes through the
+ * renderer's png/jpeg support (`decode_canvas_image_bytes`). This is what phase 2 used to answer
+ * `ScenePaintStep::Fault` for: every `Component::Image` carrying an inline bitmap faulted the whole
+ * paint step instead of rendering, on browser and native alike.
+ *
+ * Nothing is recorded as a miss on failure: `queue_canvas_image_upload_*` answers `None` for genuine
+ * back-pressure (a busy raster queue) as well as for an undecodable payload, and a permanent miss on
+ * the former would blank the image forever. An unresolved source is simply re-offered next paint,
+ * bounded by the raster queue's own admission.
+ *
+ * @see `🧱️elements/🗣️Interpreter/🟦️.tsx` — `ImageView` (a plain `<img src>`, where the browser owns
+ * data-URL decoding natively)
+ */
+fn resolve_ui_image_data_url(id: &str, src: &str) {
+    let current = UI_IMAGE_LAST_URL.with(|cell| cell.borrow().get(id).is_some_and(|last| last == src));
+    if current {
+        return;
+    }
+    let (key, size) = if src.starts_with("data:image/svg+xml") { resolve_ui_image_svg(id, src) } else { queue_canvas_image_upload_sized("ui-image", id, src) };
+    let (Some(key), Some((width, height))) = (key, size) else { return };
+    UI_IMAGE_URL_CACHE.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), key);
+    });
+    UI_IMAGE_SIZES.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), (width, height));
+    });
+    UI_IMAGE_LAST_URL.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), src.to_string());
+    });
 }
 
 #[cfg(test)]
@@ -1648,9 +1857,8 @@ fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &
         2 => {
             let src = image.src.trim();
             if src.starts_with("data:") {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
-            }
-            if !src.is_empty() {
+                resolve_ui_image_data_url(&image.id, src);
+            } else if !src.is_empty() {
                 queue_ui_image_url_fetch(&image.id, src);
             }
             if cursor.advance_phase().is_err() {
@@ -1680,6 +1888,10 @@ fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &
 }
 
 
+/// 🪀️ One immediate-mode widget pass's context. `viewport_height` is the measured surface height in
+/// logical pixels — React hands `window.innerHeight` to `resolveSelectPlacement`
+/// (`🧱️elements/🔽️Select/🟦️.tsx:514`) and the kit needs the same number to flip and clamp a popup;
+/// `0.0` means unmeasured and degrades to a below-the-trigger placement at natural height.
 pub fn framework_widget_context<'a>(
     draw: &'a mut ui_wgpu::wgpu::DrawList,
     overlay: Option<&'a mut ui_wgpu::wgpu::DrawList>,
@@ -1691,8 +1903,9 @@ pub fn framework_widget_context<'a>(
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
     open_selects: &'a mut std::collections::HashMap<String, bool>,
     interaction_maps: Option<&'a mut WidgetInteractionMaps<ActionDescriptor>>,
+    viewport_height: f32,
 ) -> FrameworkWidgetContext<'a> {
-    WidgetContext { draw, overlay, atlas, icons, input, theme, scroll_offsets, collapsed_sections, open_selects, interaction_maps, pick_clip: None }
+    WidgetContext { draw, overlay, atlas, icons, input, theme, scroll_offsets, collapsed_sections, open_selects, interaction_maps, pick_clip: None, viewport_height }
 }
 
 //#region RenderPlanValidatorTests
@@ -1791,7 +2004,7 @@ struct DumpAccessibility {
     windows: Vec<DumpAccessibilityWindow>,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpFrameStats {
@@ -2105,7 +2318,7 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
 /// names none keeps the previous rule, the largest last-known viewport area. The optional argument
 /// is what makes the smaller pane of a two-pane mode layout measurable at all — the zero-arg export
 /// could only ever answer for the larger one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 fn dump_window_id(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Option<String> {
     match requested {
         Some(id) if !id.is_empty() => engine.window_ids().find(|live| *live == id).map(str::to_string),
@@ -2146,12 +2359,12 @@ fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32, requested: Option<
 /// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
     instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
@@ -2180,7 +2393,7 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
     DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
@@ -2361,6 +2574,171 @@ fn build_mesh_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dump
 
 //#endregion 🔬️IntrospectionBuilders
 
+//#region 🎯️ChromeLedger
+/** 🎯️ The chrome's own introspection lane — the one thing this region's header calls structurally
+ * unreachable. The shell's navbar, footer, dock, window caps, pane chips and overlays are
+ * immediate-mode and never enter `UI_ENGINE`, so `dumpStructure` cannot see them; what they DO
+ * publish is a pointer registry (`ui_wgpu::wgpu::InputState`'s hits, one row per interactive rect of
+ * the last complete chrome walk) and a single action chokepoint
+ * (`🐚️Shell/🎯️targets/🧊️wgpu`'s `dispatch_action`). Those two are exactly what a behavioural-parity
+ * probe needs where React reads the DOM: a control to aim at by id, and the action that control
+ * actually dispatched.
+ *
+ * 🩺️ Armed only while `SEMIO_RUNTIME_DIAGNOSTICS` is (`runtime_diagnostics_enabled`), like every
+ * other per-frame census W3a gated out, and bounded on every axis — at most `CHROME_HIT_CAPACITY`
+ * registry rows per published walk, `CHROME_ACTION_CAPACITY` remembered dispatches, and
+ * `CHROME_ACTION_ARGS_BYTES` of each dispatch's arguments. */
+const CHROME_HIT_CAPACITY: usize = 2_048;
+const CHROME_ACTION_CAPACITY: usize = 128;
+const CHROME_ACTION_ARGS_BYTES: usize = 512;
+
+/// 🎯️ One registered pointer target of the last published chrome walk, at the ABSOLUTE page rect it
+/// was registered with — the rect a probe aims a pointer at, no dock-plan reconstruction needed.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpHitTarget {
+    control_id: String,
+    kind: String,
+    rect: [f32; 4],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    controller_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    action: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    drag_axis: Option<String>,
+}
+
+/// 🎬️ One dispatched action, in dispatch order. `seq` is monotonic for the life of the isolate, so a
+/// probe reads the ledger before a step and after it and takes everything above the remembered `seq`.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpDispatchedAction {
+    seq: u64,
+    controller_id: String,
+    action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    args: Option<String>,
+    at_ms: f64,
+}
+
+#[derive(Default)]
+struct ChromeLedger {
+    hits: Vec<DumpHitTarget>,
+    generation: u64,
+    actions: std::collections::VecDeque<DumpDispatchedAction>,
+    next_seq: u64,
+}
+
+static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new();
+
+/// ⏱️ Wall clock for the ledger's stamps. The renderer wasm runs inside a DEDICATED WORKER, which owns
+/// no `window` and therefore no `window.performance` — `js_sys::Date::now()` is the one clock both
+/// realms answer.
+fn chrome_ledger_now_ms() -> f64 {
+    #[cfg(target_arch = "wasm32")]
+    {
+        js_sys::Date::now()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|since| since.as_secs_f64() * 1000.0).unwrap_or_default()
+    }
+}
+
+/// ✂️ Args as JSON, truncated on a CHARACTER boundary so the dump is always parseable text.
+fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
+    let args = action.args.as_ref()?;
+    let mut json = dsl::json::from_dsl_value(args).to_string();
+    if json.len() > CHROME_ACTION_ARGS_BYTES {
+        let cut = (0..=CHROME_ACTION_ARGS_BYTES).rev().find(|index| json.is_char_boundary(*index)).unwrap_or_default();
+        json.truncate(cut);
+    }
+    Some(json)
+}
+
+/// 🎯️ Projects one published registry row, naming the retained body that minted its control id when
+/// `owners` knows it — chrome rows own no window and answer `None`, which is how a probe tells the two apart.
+fn chrome_hit_row(hit: &ui_wgpu::wgpu::HitTarget<ActionDescriptor>, owners: &std::collections::HashMap<String, (String, Rect)>) -> DumpHitTarget {
+    let control_id = hit.control_id.clone().unwrap_or_default();
+    DumpHitTarget {
+        window_id: owners.get(&control_id).map(|(window_id, _)| window_id.clone()),
+        kind: format!("{:?}", hit.kind),
+        rect: [hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h],
+        controller_id: hit.event.as_ref().map(|event| event.controller_id.clone()),
+        action: hit.event.as_ref().map(|event| event.action.clone()),
+        drag_axis: hit.drag_axis.map(|axis| format!("{axis:?}")),
+        control_id,
+    }
+}
+
+/** 🎯️ Replaces the published registry snapshot — called once per COMPLETE chrome walk, from
+ * `🐚️Shell/🎯️targets/🧊️wgpu`'s `publish_retained_hit_registry`, right after `InputState::publish_hits`
+ * promotes the staged rows. An abandoned walk publishes nothing and therefore records nothing, so the
+ * snapshot and the pointer's own authority can never disagree. */
+pub fn note_chrome_hit_registry(hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
+    ledger_publish_hits(&mut CHROME_LEDGER.borrow_mut(), hits, owners);
+}
+
+/// 🎯️ The pure half of `note_chrome_hit_registry`, over a ledger a law can own.
+fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
+    ledger.hits = hits.iter().take(CHROME_HIT_CAPACITY).map(|hit| chrome_hit_row(hit, owners)).collect();
+    ledger.generation += 1;
+}
+
+/** 🎬️ Records ONE dispatched action. `🐚️Shell/🎯️targets/🧊️wgpu`'s `dispatch_action` is the single
+ * funnel every chrome press, keybinding, command-palette entry, panel row and retained body action
+ * crosses, so the ledger is the target's complete answer to "what did that click do". */
+pub fn note_dispatched_action(action: &ActionDescriptor) {
+    if !semio_framework_trace::runtime_diagnostics_enabled() {
+        return;
+    }
+    ledger_push_action(&mut CHROME_LEDGER.borrow_mut(), action);
+}
+
+/// 🎬️ The pure half of `note_dispatched_action`: mints the next `seq` and trims the oldest entry past
+/// `CHROME_ACTION_CAPACITY`, so the ledger's footprint is fixed however long a session runs.
+fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor) {
+    let window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework::DslValue::as_str).map(str::to_string);
+    ledger.next_seq += 1;
+    let entry = DumpDispatchedAction { seq: ledger.next_seq, controller_id: action.controller_id.clone(), action: action.action.clone(), window_id, args: chrome_action_args(action), at_ms: chrome_ledger_now_ms() };
+    ledger.actions.push_back(entry);
+    while ledger.actions.len() > CHROME_ACTION_CAPACITY {
+        ledger.actions.pop_front();
+    }
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpChrome {
+    armed: bool,
+    generation: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_id: Option<String>,
+    hits: Vec<DumpHitTarget>,
+    actions: Vec<DumpDispatchedAction>,
+}
+
+/// 🎯️ A named window keeps that window's body rows PLUS every chrome row (which owns no window and is
+/// what the caller is usually aiming at); an unnamed read answers the whole registry.
+#[cfg(any(target_arch = "wasm32", test))]
+fn project_chrome_dump(ledger: &ChromeLedger, requested: Option<&str>, armed: bool) -> DumpChrome {
+    let named = requested.filter(|id| !id.is_empty()).map(str::to_string);
+    let hits = match &named {
+        Some(id) => ledger.hits.iter().filter(|hit| hit.window_id.as_deref().is_none_or(|owner| owner == id)).cloned().collect(),
+        None => ledger.hits.clone(),
+    };
+    DumpChrome { armed, generation: ledger.generation, window_id: named, hits, actions: ledger.actions.iter().cloned().collect() }
+}
+//#endregion 🎯️ChromeLedger
+
 //#region 🔬️IntrospectionExports
 /// 📤️ `dumpStructure()`/`dumpFrameStats()` — reachable exactly like `semioWgpuMount`/
 /// `uploadIconAtlas` already are: Trunk's dev-server boot glue (`framework/renderer/wgpu/js/
@@ -2415,6 +2793,18 @@ pub fn dump_mesh_stats(window_id: Option<String>) -> String {
 /// retained document the paint walk consumes, so what is announced is always what is on screen.
 ///
 /// Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #3 of `📓️audit-wgpu-parity-2026-09-13.md`.
+/// 🎯️📤️ `dumpChrome()` — the shell chrome's pointer registry and its dispatched-action ledger, the two
+/// things a DOM renderer publishes for free (an element to click, a handler that ran) and a GPU canvas
+/// otherwise publishes not at all. Its three neighbours answer the retained DOCUMENT; this one answers
+/// the chrome around it, which is where a behavioural-parity journey spends most of its steps
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W5b).
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = dumpChrome)]
+pub fn dump_chrome(window_id: Option<String>) -> String {
+    let dump = project_chrome_dump(&CHROME_LEDGER.borrow(), window_id.as_deref(), semio_framework_trace::runtime_diagnostics_enabled());
+    serde_json::to_string(&dump).unwrap_or_else(|_| "{}".to_string())
+}
+
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = dumpAccessibility)]
 pub fn dump_accessibility(window_id: Option<String>) -> String {

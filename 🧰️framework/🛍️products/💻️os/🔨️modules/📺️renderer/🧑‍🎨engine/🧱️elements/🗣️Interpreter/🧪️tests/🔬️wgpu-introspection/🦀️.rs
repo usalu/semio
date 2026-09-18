@@ -139,3 +139,167 @@ fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
     assert_eq!(surfaces[0].rect, [15.0, 26.0, 400.0, 300.0]);
     assert!(surfaces[0].meshes.is_empty(), "an empty publication is an empty row list, never a missing surface");
 }
+
+/// 🎬️ A scene host for a tree that declares no engine surface — it can never be called, and saying
+/// so is cheaper than pulling the real one into an introspection law.
+struct NoSceneHost;
+
+impl ui_wgpu::wgpu::SceneHost for NoSceneHost {
+    fn paint_slot_step(
+        &mut self,
+        _slot: &ui_wgpu::wgpu::SceneSlot<'_>,
+        _cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+        _draw: &mut ui_wgpu::wgpu::DrawList,
+        _atlas: &mut ui_wgpu::wgpu::FontAtlas,
+        _icons: Option<&ui_wgpu::wgpu::IconAtlas>,
+    ) -> ui_wgpu::wgpu::ScenePaintStep {
+        ui_wgpu::wgpu::ScenePaintStep::Fault
+    }
+}
+
+/// 🖼️ LAW: a window that really painted chrome answers `drawCalls > 0` and `glyphCount > 0`.
+///
+/// 🩸️ `dumpFrameStats` is the ONLY oracle a headless probe has for "did anything reach the frame",
+/// and the wgpu shell's black-canvas regression was read off it: `drawCalls:0, glyphCount:0` against
+/// a canvas that had, in fact, built 121 frames. This law drives the real pipeline — `apply_tree`,
+/// the real `MountedLayoutJob`, the real retained paint — so an oracle that stops counting a painted
+/// window fails here instead of in a screenshot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+#[test]
+fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let window_id = "chrome-law";
+    engine.apply_tree(window_id, &stack_node(Some("root"), vec![text_node("Puzzle 3D"), text_node("Catalogue")]));
+    engine.set_viewport(window_id, 640.0, 360.0);
+
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::from_bytes(&[]).expect("the deterministic builtin bitmap atlas");
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    let operation = semio_framework_job::allocate_operation_id();
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview_sequence = 0;
+    for _ in 0..64 {
+        for _ in 0..16_384 {
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+            if matches!(engine.step_layouts(&pool, &mut atlas, &mut cx), ui_wgpu::wgpu::UiLayoutStep::Idle) {
+                break;
+            }
+        }
+        if !engine.layout_is_dirty(window_id) {
+            break;
+        }
+        engine.request_layout(window_id);
+    }
+    assert!(!engine.layout_is_dirty(window_id), "layout never settled");
+
+    let mut painted = false;
+    for _ in 0..131_072 {
+        match engine.frame_step::<NoSceneHost>(window_id, 640.0, 360.0, &mut atlas, None, None) {
+            ui_wgpu::wgpu::UiFrameStep::Pending => {}
+            ui_wgpu::wgpu::UiFrameStep::Ready => {
+                painted = true;
+                break;
+            }
+            step => panic!("retained paint answered {step:?}"),
+        }
+    }
+    assert!(painted, "retained paint never completed");
+
+    let stats = build_frame_stats(&engine, Some(window_id));
+    assert_eq!(stats.window_id.as_deref(), Some(window_id));
+    assert!(stats.draw_calls > 0, "a painted chrome window submits at least one non-empty layer, got {stats:?}", stats = (stats.draw_calls, stats.quad_count, stats.glyph_count));
+    assert!(stats.quad_count > 0, "chrome quads reach the frame");
+    assert!(stats.glyph_count > 0, "and so does every glyph of its labels");
+    assert!(stats.glyph_count <= stats.quad_count, "a glyph is itself one quad, so it can never outnumber them");
+}
+
+//#region 🎯️ChromeLedgerLaws
+fn chrome_hit(control_id: &str, kind: ui_wgpu::wgpu::HitKind, rect: Rect, event: Option<ActionDescriptor>) -> ui_wgpu::wgpu::HitTarget<ActionDescriptor> {
+    ui_wgpu::wgpu::HitTarget { rect, event, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None }
+}
+
+fn chrome_action(controller_id: &str, action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
+/// 🎯️ The registry row a probe aims with: the ABSOLUTE rect the chrome registered, the control id it
+/// minted, the hit kind, and — only for a retained body row — the window that owns it. Chrome rows own
+/// no window, which is the ONE signal that tells a navbar chip apart from a document row.
+#[test]
+fn chrome_hit_rows_carry_absolute_rect_kind_and_only_body_rows_name_a_window() {
+    let owners = [("puzzle3d-tree.row.0".to_string(), ("puzzle3d-tree".to_string(), Rect::new(0.0, 0.0, 300.0, 600.0)))].into_iter().collect::<std::collections::HashMap<_, _>>();
+    let chrome = chrome_hit("shell.panel.tab.artifact", ui_wgpu::wgpu::HitKind::PanelTab, Rect::new(12.0, 40.0, 96.0, 28.0), None);
+    let body = chrome_hit("puzzle3d-tree.row.0", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(8.0, 120.0, 280.0, 24.0), Some(chrome_action("puzzle3d", "selectNode", Some(serde_json::json!({"nodeId": "n1"})))));
+
+    let chrome_row = chrome_hit_row(&chrome, &owners);
+    assert_eq!(chrome_row.control_id, "shell.panel.tab.artifact");
+    assert_eq!(chrome_row.kind, "PanelTab");
+    assert_eq!(chrome_row.rect, [12.0, 40.0, 96.0, 28.0], "the rect is the one the pointer resolves against, not a parent-relative one");
+    assert_eq!(chrome_row.window_id, None, "a chrome control belongs to the shell, never to a window body");
+    assert_eq!(chrome_row.action, None);
+
+    let body_row = chrome_hit_row(&body, &owners);
+    assert_eq!(body_row.window_id.as_deref(), Some("puzzle3d-tree"));
+    assert_eq!(body_row.controller_id.as_deref(), Some("puzzle3d"));
+    assert_eq!(body_row.action.as_deref(), Some("selectNode"), "a registered event publishes the action the row will dispatch");
+}
+
+/// 🎬️ Every dispatch is one entry with a monotonic `seq`, its `windowId` lifted out of the arguments,
+/// and the ledger never grows past `CHROME_ACTION_CAPACITY` however long a session runs.
+#[test]
+fn chrome_action_ledger_mints_monotonic_seq_and_stays_bounded() {
+    let mut ledger = ChromeLedger::default();
+    ledger_push_action(&mut ledger, &chrome_action("framework", "togglePanel", Some(serde_json::json!({"panelId": "artifact", "windowId": "puzzle3d-scene"}))));
+    assert_eq!(ledger.actions.len(), 1);
+    assert_eq!(ledger.actions[0].seq, 1);
+    assert_eq!(ledger.actions[0].controller_id, "framework");
+    assert_eq!(ledger.actions[0].action, "togglePanel");
+    assert_eq!(ledger.actions[0].window_id.as_deref(), Some("puzzle3d-scene"), "the window an action addresses is lifted out of its arguments");
+    assert!(ledger.actions[0].args.as_deref().is_some_and(|args| args.contains("\"artifact\"")), "the arguments are published as JSON text, got {:?}", ledger.actions[0].args);
+
+    for _ in 0..CHROME_ACTION_CAPACITY + 16 {
+        ledger_push_action(&mut ledger, &chrome_action("puzzle3d", "setCamera", None));
+    }
+    assert_eq!(ledger.actions.len(), CHROME_ACTION_CAPACITY, "the ledger is a ring, not a leak");
+    assert_eq!(ledger.actions.back().map(|entry| entry.seq), Some(CHROME_ACTION_CAPACITY as u64 + 17), "seq keeps counting past the trim so a probe can diff across steps");
+    assert!(ledger.actions.front().map(|entry| entry.seq).is_some_and(|seq| seq > 1), "the oldest entries are the ones that fall off");
+}
+
+/// ✂️ An action carrying a large payload is remembered truncated — the ledger is a witness, never a
+/// second copy of the wire.
+#[test]
+fn chrome_action_args_are_truncated_on_a_character_boundary() {
+    let long = "ü".repeat(CHROME_ACTION_ARGS_BYTES);
+    let args = chrome_action_args(&chrome_action("puzzle3d", "setDocument", Some(serde_json::json!({"document": long})))).expect("args are published");
+    assert!(args.len() <= CHROME_ACTION_ARGS_BYTES, "got {} bytes", args.len());
+    assert!(std::str::from_utf8(args.as_bytes()).is_ok(), "the truncation never splits a character");
+    assert!(chrome_action_args(&chrome_action("puzzle3d", "undo", None)).is_none(), "an action with no arguments publishes none");
+}
+
+/// 🪟️ A named window keeps that window's rows PLUS the chrome (which owns no window and is what a probe
+/// usually aims at); an unnamed read answers the whole registry, and `armed` reports the diagnostics gate
+/// so a probe tells "switch off" from "nothing registered".
+#[test]
+fn chrome_dump_window_filter_keeps_chrome_and_reports_the_diagnostics_gate() {
+    let owners = [
+        ("a.row".to_string(), ("window-a".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))),
+        ("b.row".to_string(), ("window-b".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))),
+    ]
+    .into_iter()
+    .collect::<std::collections::HashMap<_, _>>();
+    let hits = vec![
+        chrome_hit("shell.navbar.artifact", ui_wgpu::wgpu::HitKind::NavbarItem, Rect::new(0.0, 0.0, 40.0, 40.0), None),
+        chrome_hit("a.row", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(0.0, 40.0, 40.0, 20.0), None),
+        chrome_hit("b.row", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(0.0, 60.0, 40.0, 20.0), None),
+    ];
+    let mut ledger = ChromeLedger::default();
+    ledger_publish_hits(&mut ledger, &hits, &owners);
+    assert_eq!(ledger.generation, 1, "each published walk moves the generation, so a stale snapshot is visible as one");
+
+    let all = project_chrome_dump(&ledger, None, true);
+    assert_eq!(all.hits.len(), 3);
+    assert!(all.armed);
+    let scoped = project_chrome_dump(&ledger, Some("window-a"), false);
+    assert_eq!(scoped.hits.iter().map(|hit| hit.control_id.as_str()).collect::<Vec<_>>(), vec!["shell.navbar.artifact", "a.row"], "the other window's rows drop, the chrome stays");
+    assert!(!scoped.armed, "an unarmed page says so rather than answering an empty registry");
+    assert_eq!(project_chrome_dump(&ledger, Some(""), true).hits.len(), 3, "an empty window id is no filter at all");
+}
+//#endregion 🎯️ChromeLedgerLaws

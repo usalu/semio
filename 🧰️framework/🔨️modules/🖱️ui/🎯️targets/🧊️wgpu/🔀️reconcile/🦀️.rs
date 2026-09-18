@@ -33,7 +33,7 @@ use crate::wgpu::component::ui::{
     UiTreeSectionNode, UiTreeWindow,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
-use crate::wgpu::IconName;
+use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
 use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
 
 //#region 📄️DocumentPageReconcile
@@ -196,35 +196,60 @@ fn record_consumes_subtree(record: &UiNodeRecord) -> bool {
     matches!(record.component, ui_contract::Component::Surface(_))
 }
 
+/// 📐️ A record's [`ui_contract::SpaceToken`] as the legacy `UiStackNode` string. It stamps the
+/// token's OWN name (`"md"`, `"lg"`, …), not the old three-bucket `none`/`tight`/`loose` collapse
+/// that rendered `Xs` and `Sm` identically and shrank `Md` fourfold: a record-mounted node's real
+/// geometry now travels on `Node::layout_spec` (see `flex`'s header), and this channel stays
+/// lossless so the reconcile diff still sees every token change.
 fn space_token(token: ui_contract::SpaceToken) -> Option<String> {
-    match token {
-        ui_contract::SpaceToken::None => Some("none".to_string()),
-        ui_contract::SpaceToken::Xs | ui_contract::SpaceToken::Sm => Some("tight".to_string()),
-        ui_contract::SpaceToken::Md => None,
-        ui_contract::SpaceToken::Lg | ui_contract::SpaceToken::Xl | ui_contract::SpaceToken::Xxl => Some("loose".to_string()),
-    }
+    Some(crate::wgpu::layout::space_token_name(token).to_string())
 }
 
+/// 📐️ A record's [`ui_contract::EdgeSpace`] as one legacy string — every side, space-separated in
+/// CSS shorthand order, so an asymmetric padding no longer collapses onto one sampled side.
 fn edge_token(edge: ui_contract::EdgeSpace) -> Option<String> {
-    match edge {
-        ui_contract::EdgeSpace::All(token) => space_token(token),
-        ui_contract::EdgeSpace::Symmetric { vertical, .. } => space_token(vertical),
-        ui_contract::EdgeSpace::Each { top, .. } => space_token(top),
-    }
+    let name = crate::wgpu::layout::space_token_name;
+    Some(match edge {
+        ui_contract::EdgeSpace::All(token) => name(token).to_string(),
+        ui_contract::EdgeSpace::Symmetric { vertical, horizontal } => format!("{} {}", name(vertical), name(horizontal)),
+        ui_contract::EdgeSpace::Each { top, right, bottom, left } => format!("{} {} {} {}", name(top), name(right), name(bottom), name(left)),
+    })
 }
 
 /// 📐️ The `(direction, gap, padding)` triple `UiStackNode` carries, read off the record's own
-/// `LayoutSpec` — the contract keeps geometry on the record, never on the component props.
+/// `LayoutSpec` — the contract keeps geometry on the record, never on the component props. These
+/// three strings are the LEGACY declarative dialect's vocabulary and the reconcile diff's baseline;
+/// the layout engine itself reads the full `LayoutSpec` off `Node::layout_spec`, so `Grid`/`Scroll`/
+/// `Overlay`/`Absolute` no longer lose their columns, axes, insets or sizing here.
 fn stack_metrics(layout: &ui_contract::LayoutSpec) -> (String, Option<String>, Option<String>) {
     match layout {
         ui_contract::LayoutSpec::Stack(stack) => {
             let direction = if matches!(stack.axis, ui_contract::Axis::Horizontal) { "horizontal" } else { "vertical" };
             (direction.to_string(), space_token(stack.gap), edge_token(stack.padding))
         }
-        ui_contract::LayoutSpec::Grid(grid) => ("vertical".to_string(), space_token(grid.row_gap), edge_token(grid.padding)),
-        ui_contract::LayoutSpec::Scroll(scroll) => ("vertical".to_string(), None, edge_token(scroll.padding)),
-        ui_contract::LayoutSpec::Overlay(overlay) => ("vertical".to_string(), None, edge_token(overlay.inset)),
-        ui_contract::LayoutSpec::Leaf(_) | ui_contract::LayoutSpec::Absolute(_) => ("vertical".to_string(), None, None),
+        ui_contract::LayoutSpec::Grid(grid) => ("grid".to_string(), space_token(grid.row_gap), edge_token(grid.padding)),
+        ui_contract::LayoutSpec::Scroll(scroll) => ("scroll".to_string(), None, edge_token(scroll.padding)),
+        ui_contract::LayoutSpec::Overlay(overlay) => ("overlay".to_string(), None, edge_token(overlay.inset)),
+        ui_contract::LayoutSpec::Absolute(_) => ("absolute".to_string(), None, None),
+        ui_contract::LayoutSpec::Leaf(_) => ("vertical".to_string(), None, None),
+    }
+}
+
+/// 🖱️ The input-routing bits a `LayoutSpec` implies, which `events` already understands: a `Scroll`
+/// container owns a scrollable, clipping viewport (`nearest_scrollable_ancestor` walks `SCROLLABLE`,
+/// `hit_test` refuses a point outside a `CLIPS_CHILDREN` box), and an `Overlay` is hit-tested ahead
+/// of its in-flow siblings — the same priority `EventRouter::open_overlay` grants a Select popup.
+struct LayoutRoutingFlags {
+    scrollable: bool,
+    clips: bool,
+    overlay: bool,
+}
+
+fn layout_routing_flags(layout: &ui_contract::LayoutSpec) -> LayoutRoutingFlags {
+    match layout {
+        ui_contract::LayoutSpec::Scroll(scroll) => LayoutRoutingFlags { scrollable: !matches!(scroll.axes, ui_contract::ScrollAxes::None), clips: true, overlay: false },
+        ui_contract::LayoutSpec::Overlay(_) => LayoutRoutingFlags { scrollable: false, clips: false, overlay: true },
+        _ => LayoutRoutingFlags { scrollable: false, clips: false, overlay: false },
     }
 }
 
@@ -271,8 +296,11 @@ fn record_presence(record: &UiNodeRecord) -> UiPresence {
     UiPresence { state, status, ..UiPresence::default() }
 }
 
-/// 🎬️ The record's binding for `trigger`, as the legacy `ActionDescriptor` the wgpu paint/event
-/// path dispatches. `controller_id` is the OWNING APP's controller — the same value
+/// 🎬️ The record's binding for `trigger`, as the `ActionDescriptor` the retained spec carries for
+/// paint and for the immediate-mode widget path. This is the DESCRIPTOR half only: the dispatchable
+/// half is [`record_intent_bindings`], stamped onto the arena node itself, and `events` builds a
+/// `UiIntentCommand` from that — the descriptor here never reaches the host on its own for a
+/// published node. `controller_id` is the OWNING APP's controller — the same value
 /// `ShellState::queue_host_effects` stamps on every effect-borne descriptor — because a descriptor's
 /// controller is who answers it, and the contract moved that identity off the node onto the session.
 fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger, controller: &str) -> Option<ActionDescriptor> {
@@ -285,6 +313,26 @@ fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger, controlle
 
 fn record_action_or_inert(record: &UiNodeRecord, trigger: ui_contract::Trigger, controller: &str) -> ActionDescriptor {
     record_action(record, trigger, controller).unwrap_or_else(|| ActionDescriptor { controller_id: controller.to_string(), action: String::new(), args: None })
+}
+
+/// 🎬️ The record's whole dispatch contract for the arena node it mounts as: its address on this
+/// surface at this revision, plus every `(trigger, ActionId)` it binds. The twin of React's
+/// `UiDocumentStore::buildIntent` inputs — `surface`/`revision` come from the store there and from
+/// the published document header here, `node`/`node_key` from the record itself.
+fn record_intent_bindings(record: &UiNodeRecord, surface: &str, revision: u64) -> UiIntentBindings {
+    UiIntentBindings {
+        address: UiIntentAddress { surface: surface.to_string(), revision, node: record.id.0, node_key: record.key.as_str().to_string() },
+        bindings: record.bindings.iter().map(|binding| (binding.trigger, binding.action.clone())).collect(),
+    }
+}
+
+/// 🔌️ The plugin that owns `surface`. A [`ui_contract::SurfaceId`] is a dotted address whose first
+/// segment IS the owning plugin (`"note.play.navigator"` → `"note"`, that type's own docstring), and
+/// `ExtensionProps` carries no plugin id of its own — so the slot's host is the publisher's host, and
+/// nothing else in the record could name it. Previously hardcoded to `""`, which would have composed
+/// empty plugin ids into every id built from it.
+fn surface_plugin_id(surface: &str) -> String {
+    surface.split('.').next().unwrap_or(surface).to_string()
 }
 
 fn drop_overlay(spec: Option<&ui_contract::DropOverlaySpec>) -> Option<UiDropOverlaySpec> {
@@ -304,8 +352,9 @@ fn input_kind(kind: ui_contract::InputKind) -> String {
 }
 
 /// 🗺️ The contract's own `SurfaceKind` in this target's spelling. Both enums name the same fifteen
-/// kinds; only `virtual-file-system` differs on the wire (see `ui_contract::SurfaceKind`'s own
-/// docstring for why that rename landed there and not here).
+/// kinds and, since the `virtualFileSystem` -> `virtual-file-system` rename reached this target too,
+/// the same fifteen wire tags — `ui_contract::SurfaceKind::as_wire`/`SurfaceKind::as_str` agree
+/// verbatim and `🧪️tests/🔬️targets-wgpu-component-ui-ui-node-wire-format` pins that agreement.
 fn surface_kind(kind: ui_contract::SurfaceKind) -> SurfaceKind {
     match kind {
         ui_contract::SurfaceKind::Canvas2d => SurfaceKind::Canvas2d,
@@ -351,7 +400,7 @@ fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
 
 /// 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
 /// `lane_name` resolves a carrier key to its declared lane name (`World3dSceneLane`,
-/// `Canvas2dSceneLane`, `Board2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
+/// `Canvas2dSceneLane`, `Board2dSceneLane`, `Paint2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
 /// at its spine value rather than guessed — a truncated `meshes` payload would parse to an EMPTY
 /// scene, which is strictly worse than the previous frame's.
 fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree, record: &UiNodeRecord, scene: &mut T, declared: &[ui_scene::SceneLaneRef], lane_name: impl Fn(&str) -> Option<&'static str>) {
@@ -428,7 +477,14 @@ fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &
         }
         ui_contract::SurfaceKind::TextEditor => node.text_editor = ui_scene::decode::<ui_scene::TextEditorScene>(props).ok(),
         ui_contract::SurfaceKind::Table => node.table = ui_scene::decode::<ui_scene::TableScene>(props).ok(),
-        ui_contract::SurfaceKind::Paint2d => node.paint_2d = ui_scene::decode::<ui_scene::Paint2dScene>(props).ok(),
+        ui_contract::SurfaceKind::Paint2d => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::Paint2dScene>(props) {
+                let declared = std::mem::take(&mut scene.lanes);
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| ui_scene::Paint2dSceneLane::from_body_key(key).map(ui_scene::Paint2dSceneLane::name));
+                scene.lanes = declared;
+                node.paint_2d = Some(scene);
+            }
+        }
         ui_contract::SurfaceKind::VirtualFileSystem => node.virtual_file_system = ui_scene::decode::<ui_scene::VirtualFileSystemScene>(props).ok(),
         ui_contract::SurfaceKind::TiledMap => node.tiled_map = ui_scene::decode::<ui_scene::TiledMapScene>(props).ok(),
         ui_contract::SurfaceKind::Board2d => {
@@ -824,7 +880,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         }),
         ui_contract::Component::Surface(props) => UiNode::ComponentScene(surface_scene_node(document, record, props, surface, controller)),
         ui_contract::Component::Extension(props) => UiNode::ExternalSlot(crate::wgpu::component::ui::UiExternalSlotNode {
-            plugin_id: String::new(),
+            plugin_id: surface_plugin_id(surface),
             app_id: controller.to_string(),
             body_key: props.extension.as_str().to_string(),
             params_json: serde_json::to_string(&props.props).unwrap_or_else(|_| "null".to_string()),
@@ -895,11 +951,17 @@ impl UiTree {
                     cursor.phase = UiDocumentReconcilePhase::Retire;
                     return UiDocumentReconcileStep::Pending;
                 };
-                let (key, spec) = {
+                let (key, spec, layout_spec, intent) = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(planned.id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)))
+                    (
+                        NodeKey::Explicit(record.key.as_str().to_string()),
+                        WidgetSpec(ui_node_from_record(document, record, surface, controller)),
+                        record.layout.clone(),
+                        record_intent_bindings(record, surface, document.revision().0),
+                    )
                 };
+                let routing = layout_routing_flags(&layout_spec);
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
                     Some(node) => {
                         if let Some(existing) = self.node_mut(node) {
@@ -909,15 +971,40 @@ impl UiTree {
                             if existing.spec != spec {
                                 existing.spec = spec;
                             }
+                            // 📐️ The record's own `LayoutSpec` is the React-parity geometry channel
+                            // (`layoutSpecStyle`'s input); a change to it alone — a grid gaining a
+                            // column, a stack flipping to `justify: SpaceBetween` — moves every
+                            // descendant's box without touching the projected `UiNode` at all, so it
+                            // is re-stamped unconditionally. `Publish` below already re-dirties the
+                            // whole surface's layout, so no per-node bubble is needed here.
+                            existing.layout_spec = Some(layout_spec);
+                            // 🎬️ Always re-stamped, never diffed: the address carries the document's
+                            // CURRENT revision, which moves on every published patch even when the
+                            // node's own spec did not — and a node left at an old revision would
+                            // start dropping its own live gestures as stale.
+                            existing.intent = Some(intent);
                         }
                         node
                     }
                     None => {
-                        let node = self.insert_detached(Node::new(key, spec));
+                        let mut mounted = Node::new(key, spec);
+                        mounted.layout_spec = Some(layout_spec);
+                        mounted.intent = Some(intent);
+                        let node = self.insert_detached(mounted);
                         self.bind_document_node(planned.id, node);
                         node
                     }
                 };
+                if let Some(mounted) = self.node_mut(node) {
+                    mounted.flags.set(NodeFlags::SCROLLABLE, routing.scrollable);
+                    mounted.flags.set(NodeFlags::CLIPS_CHILDREN, routing.clips);
+                    // 🪟️ Only ever RAISED here: `events::EventRouter::open_overlay`/`close_overlay`
+                    // own this bit at runtime for popups the document knows nothing about, so a
+                    // re-mount must not drop an open Select's hit-test priority.
+                    if routing.overlay {
+                        mounted.flags.set(NodeFlags::OVERLAY, true);
+                    }
+                }
                 if let Some(entry) = cursor.plan.get_mut(cursor.mount) {
                     entry.node = Some(node);
                 }
@@ -1018,17 +1105,22 @@ fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
 /// 🌿️ The keyed-diffable children of `node`: `Stack`/`Section`'s own `children`, `Field`'s single
 /// `child`, borrowed straight from `node` (no allocation); `Select`/`Tree`'s *synthesized* rows (see
 /// `🔖️CompositeExpansion`), freshly built each call since they're derived from non-`UiNode` payload.
+/// 🔽️ `open` is the parent's own `tree::WidgetState::open` — a CLOSED `Select` materializes no option
+/// rows at all, matching React, whose `SelectContent` mounts only while the dropdown is open. The
+/// rows used to be built unconditionally because `WidgetState` had nowhere to record the bit; it does
+/// now (`events::toggle_select_popup`/`finish_close` own it), so the gate lives here.
 /// Everything else has no nested `UiNode` payload to recurse into. `presence.state == Hidden`
 /// children are dropped here — hidden means not rendered at all, so they get no retained node, no
 /// layout, no paint, no hit-test; this is the one choke point every caller goes through.
 #[cfg(any(test, feature = "testkit"))]
-fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
+fn children_of(node: &UiNode, open: bool) -> Vec<Cow<'_, UiNode>> {
     let children = match node {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Section(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Group(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Field(n) => vec![Cow::Borrowed(n.child.as_ref())],
-        UiNode::Select(select) => select.items.iter().map(|item| Cow::Owned(select_item_row(select, item))).collect(),
+        UiNode::Select(select) if open => select.items.iter().map(|item| Cow::Owned(select_item_row(select, item))).collect(),
+        UiNode::Select(_) => Vec::new(),
         UiNode::Tree(tree_node) => tree_node.sections.iter().map(|section| Cow::Owned(tree_section_row(tree_node, section))).collect(),
         _ => Vec::new(),
     };
@@ -1226,7 +1318,8 @@ impl UiTree {
 
     fn reconcile_children(&mut self, parent: NodeId, incoming: &UiNode) {
         self.sync_composite_flags(parent, incoming);
-        let incoming_children = children_of(incoming);
+        let open = self.node(parent).is_some_and(|node| node.state.open);
+        let incoming_children = children_of(incoming, open);
         let existing_children: Vec<NodeId> = self.children(parent).collect();
 
         let mut existing_by_key: HashMap<NodeKey, NodeId> = HashMap::with_capacity(existing_children.len());

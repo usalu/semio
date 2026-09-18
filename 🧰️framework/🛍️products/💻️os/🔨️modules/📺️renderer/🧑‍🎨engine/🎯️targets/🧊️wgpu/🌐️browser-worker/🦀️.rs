@@ -122,14 +122,19 @@ impl BrowserRendererWorker {
             .map_err(|error| js_error("asset-request-encode", &error.to_string()))
     }
 
+    /// 📡️ Admits the declared response bytes. Answers `false` while the renderer is BUSY (its
+    /// runtime locked, or its interaction state checked out by a live apply), leaving the request
+    /// untouched for the caller to retry — see [`Self::seal_asset_response`] for why that is
+    /// back-pressure and not a fault.
     #[wasm_bindgen(js_name = reserveAssetResponse)]
-    pub fn reserve_asset_response(&mut self, byte_credits: usize) -> Result<(), JsValue> {
+    pub fn reserve_asset_response(&mut self, byte_credits: usize) -> Result<bool, JsValue> {
         let owner = self.asset_fetch.as_mut().ok_or_else(|| js_error("asset-request-state", "asset response arrived without an active request"))?;
         let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
-        if !host.runtime.reserve_renderer_asset_response(owner, byte_credits) {
-            return Err(js_error("asset-response-credits", "asset response exceeded fixed aggregate byte credits"));
+        match host.runtime.reserve_renderer_asset_response(owner, byte_credits) {
+            crate::RendererAssetSealStep::Granted => Ok(true),
+            crate::RendererAssetSealStep::Busy => Ok(false),
+            crate::RendererAssetSealStep::Refused(detail) => Err(js_error("asset-response-credits", detail)),
         }
-        Ok(())
     }
 
     #[wasm_bindgen(js_name = pushAssetResponsePage)]
@@ -148,25 +153,44 @@ impl BrowserRendererWorker {
         }
     }
 
+    /// 📡️ Seals the streamed response and hands its owner back. Answers `false` when the renderer
+    /// was momentarily BUSY — its runtime locked, or its interaction state checked out by a live apply
+    /// — leaving the request exactly where it was so the caller can come back; the pump retries on the
+    /// next macrotask. Only a real refusal throws.
+    ///
+    /// 🩸️ Both halves used to be fatal. A World3d surface whose GLB sealed into a live apply raised
+    /// `asset-stream-fault`, which quarantines the WHOLE shell — a black canvas for a lock that was
+    /// free a millisecond later, on every boot where a mesh happened to arrive mid-apply (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3d-world3d-glb-url-lane.md`). Sealing is not retried
+    /// once it succeeded: the authority's witness refuses a second seal, so a retry that only owes the
+    /// HANDBACK skips straight to it.
     #[wasm_bindgen(js_name = sealAssetResponse)]
-    pub fn seal_asset_response(&mut self) -> Result<(), JsValue> {
+    pub fn seal_asset_response(&mut self) -> Result<bool, JsValue> {
         let mut owner = self.asset_fetch.take().ok_or_else(|| js_error("asset-request-state", "asset seal arrived without an active request"))?;
         let Some(host) = self.host.as_ref() else {
             owner.begin_close();
             self.asset_blocked = Some(owner);
             return Err(js_error("worker-closed", "renderer host is unavailable"));
         };
-        if !host.runtime.seal_renderer_asset_response(&mut owner) {
-            owner.begin_close();
-            self.asset_blocked = Some(owner);
-            return Err(js_error("asset-seal", "asset response could not release its unused byte credits"));
+        if !owner.owner().is_sealed() {
+            match host.runtime.seal_renderer_asset_response(&mut owner) {
+                crate::RendererAssetSealStep::Granted => {}
+                crate::RendererAssetSealStep::Busy => {
+                    self.asset_fetch = Some(owner);
+                    return Ok(false);
+                }
+                crate::RendererAssetSealStep::Refused(detail) => {
+                    owner.begin_close();
+                    self.asset_blocked = Some(owner);
+                    return Err(js_error("asset-seal", detail));
+                }
+            }
         }
         match host.runtime.return_renderer_asset_owner(owner) {
-            Ok(()) => Ok(()),
-            Err(mut owner) => {
-                owner.begin_close();
-                self.asset_blocked = Some(owner);
-                Err(js_error("asset-return", "asset owner could not return to its generation authority"))
+            Ok(()) => Ok(true),
+            Err(owner) => {
+                self.asset_fetch = Some(owner);
+                Ok(false)
             }
         }
     }
@@ -262,6 +286,7 @@ impl BrowserRendererWorker {
                 || host.scheduler.next_deadline().is_some()
                 || host.runtime.has_pending_text_work()
                 || host.runtime.has_pending_world3d_work()
+                || host.runtime.has_pending_asset_decode()
                 || host.runtime.has_pending_settle()
                 || host.runtime.has_pending_applies()
                 || host.frame_build.has_live_session()
@@ -527,8 +552,11 @@ pub struct BrowserRendererBootstrap {
     gpu: Option<GpuContext>,
     plugins: JsValue,
     plugin_filter: String,
+    /// 📐️ PHYSICAL (device) canvas extent — what the GPU surface is configured with. Layout never
+    /// sees it; `dpr` divides it into the logical extent the shell and every chrome constant use.
     width: u32,
     height: u32,
+    dpr: f32,
     wake: js_sys::Function,
     atlas: Option<FontAtlas>,
     icons: Option<IconAtlas>,
@@ -543,14 +571,16 @@ impl BrowserRendererBootstrap {
         let started_at = worker_now_ms();
         let phase = match self.phase {
             0 => {
-                self.atlas = Some(FontAtlas::from_bytes(&[]).map_err(|error| js_error("font-atlas", &error.to_string()))?);
+                let mut atlas = FontAtlas::shaped_default();
+                atlas.set_raster_scale(self.dpr);
+                self.atlas = Some(atlas);
                 BootPhase { stage: "font-atlas", progress: 0.1, shell_boot: false, complete: false }
             }
             1 => {
                 if crate::icon_atlas::icon_atlas_source_count() > ICON_SOURCE_CAPACITY {
                     return Err(js_error("icon-credits", "icon atlas source count exceeds the Worker boot cap"));
                 }
-                self.icons = Some(crate::icon_atlas::build_icon_atlas());
+                self.icons = Some(crate::icon_atlas::build_icon_atlas_scaled(self.dpr));
                 BootPhase { stage: "icon-atlas", progress: 0.25, shell_boot: false, complete: false }
             }
             2 => {
@@ -567,8 +597,8 @@ impl BrowserRendererBootstrap {
             }
             5 => {
                 let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone());
-                shell.screen_w = self.width.max(1) as f32;
-                shell.screen_h = self.height.max(1) as f32;
+                shell.screen_w = self.width.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
+                shell.screen_h = self.height.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
                 self.shell = Some(shell);
                 BootPhase { stage: "shell-construct", progress: 0.65, shell_boot: false, complete: false }
             }
@@ -610,6 +640,8 @@ impl BrowserRendererBootstrap {
         let runtime = RuntimeMailbox::new(AppRuntime {
             atlas,
             icons,
+            icon_rebuild: None,
+            icon_raster_scale: self.dpr,
             interaction: Some(AppInteractionState {
                 shell,
                 input: InputState::<ActionDescriptor>::default(),
@@ -692,7 +724,15 @@ fn install_worker_panic_trace() {
     INSTALLED.call_once(|| {
         let previous = std::panic::take_hook();
         std::panic::set_hook(Box::new(move |info| {
-            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker panicked: {info}")));
+            // 🧭️ A wasm panic's own `PanicInfo` names the file the ALLOCATOR panicked in
+            // (`raw_vec/mod.rs:28: capacity overflow`), never the code that asked — a bare message
+            // that cannot be acted on. A JS `Error` minted here captures the whole live call stack,
+            // and a debug renderer build keeps its name section, so the stack names the Rust
+            // functions (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+            // `📓️w3a-asset-decoder-boot-fault.md`).
+            let witness = js_sys::Error::new("wgpu-worker panic stack");
+            let stack = js_sys::Reflect::get(&witness, &wasm_bindgen::JsValue::from_str("stack")).unwrap_or_else(|_| wasm_bindgen::JsValue::from_str("<stack unavailable>"));
+            web_sys::console::error_2(&wasm_bindgen::JsValue::from_str(&format!("[DEBUG] wgpu-worker panicked: {info}")), &stack);
             previous(info);
         }));
     });
@@ -709,7 +749,7 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     canvas.set_width(width.max(1));
     canvas.set_height(height.max(1));
     let gpu = GpuContext::from_offscreen_canvas(canvas, css_width, css_height, dpr).await.map_err(|error| js_error("gpu-boot", &error))?;
-    Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
+    Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
 

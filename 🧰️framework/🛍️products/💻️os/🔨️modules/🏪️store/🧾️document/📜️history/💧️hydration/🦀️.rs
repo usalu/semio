@@ -245,13 +245,6 @@ where
     }
 
     pub fn step(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
-        {
-            static DEBUG_PHASE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(usize::MAX);
-            let phase = self.phase as usize;
-            if DEBUG_PHASE.swap(phase, std::sync::atomic::Ordering::Relaxed) != phase {
-                eprintln!("[DEBUG] hydration phase {:?} active={}", self.phase, self.active.is_some());
-            }
-        }
         if let Some(diagnostic) = self.diagnostic {
             return PersistedDocumentHydrationStep::Rejected(diagnostic);
         }

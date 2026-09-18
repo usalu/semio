@@ -7,10 +7,10 @@
 
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::view::build_doc;
+use crate::editor::lowpoly::view::{build_doc, try_build_doc};
 use crate::op::{LowpolyMutation, PixelRun};
 use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
-use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use protocol::Mutation;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -193,33 +193,35 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 /// `ctx: &mut LowpolyScratch` (round 2 of this ticket's round-trip law fix) — the compute session's
 /// live `mesh_workspace` content now lives session-side, never on `LowpolyObject`, so building the
 /// doc and reading back its post-edit content both need the cache.
-pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-    let Some(mut doc) = build_doc(projection, config, ctx) else {
-        eprintln!("[DEBUG] mesh_edit build_doc refused");
-        return Emit::default();
-    };
+///
+/// 🔊️ Every refusal is an `Err` naming its cause — a session that cannot be built, an edit the kernel
+/// rejects, an active object the projection does not carry. Handlers surface it as their `Fault`, so a
+/// command that does nothing says why in the host's console instead of landing as a silent no-op
+/// (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17: `extrude` after a
+/// store-level undo was invisible for hours). An edit that changes nothing is still `Ok(Emit::default())`.
+pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Result<Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation>, String> {
+    let mut doc = try_build_doc(projection, config, ctx).map_err(|error| format!("lowpoly mesh edit: compute session refused: {error}"))?;
     let object_id = doc.active_object_id().to_string();
-    let Some(before) = projection.objects.iter().find(|object| object.id == object_id).cloned() else {
-        return Emit::default();
-    };
-    let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
-    if let Err(error) = edit(&mut doc) {
-        eprintln!("[DEBUG] mesh_edit edit failed: {error} selection={:?}", doc.selection());
-        return Emit::default();
-    }
-    if doc.sync_meshes_to_snapshot().is_err() {
-        return Emit::default();
-    }
+    let before = projection.objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} is not in the document"))?;
+    // 🕸️ The "before" geometry is the DOCUMENT's — `reload_meshes` just resolved every object from its
+    // persisted `mesh_content`, so the compute session's cache is authoritative here and the scratch
+    // transient is not: after an undo the transient still carries the undone edit's mesh, and an
+    // identical edit (same face, same default distance) then diffed to "nothing changed" and landed as a
+    // silent no-op (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17, react
+    // playground: extrude → ⌘Z → extrude did nothing). Resyncing the scratch keeps every later read
+    // (`transient_snapshot`, the stroke and transform sessions) on the same live geometry.
     ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
-    let Some(after) = doc.snapshot().objects.iter().find(|object| object.id == object_id).cloned() else {
-        return Emit::default();
-    };
+    let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
+    edit(&mut doc).map_err(|error| format!("lowpoly mesh edit on {object_id} (selection {:?}): {error}", doc.selection()))?;
+    doc.sync_meshes_to_snapshot().map_err(|error| format!("lowpoly mesh edit: sync meshes: {error}"))?;
+    ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
+    let after = doc.snapshot().objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} vanished from the edited document"))?;
     let after_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
     let patch = object_patch_diff(&before, &after);
-    match semantic_mutation_for_patch(object_id, &before.transform, &patch, &before_mesh_workspace, &after_mesh_workspace) {
+    Ok(match semantic_mutation_for_patch(object_id, &before.transform, &patch, &before_mesh_workspace, &after_mesh_workspace) {
         Some(mutation) => Emit::mutations(vec![mutation]),
         None => Emit::default(),
-    }
+    })
 }
 //#endregion 🔖️Transform
 
@@ -451,7 +453,7 @@ impl LowpolyScratch {
             None => true,
         };
         if need_new {
-            let base = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map_or_else(empty_paint_pixels, |layer| layer.pixels.clone());
+            let base = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map_or_else(empty_paint_pixels, LowpolyPaintLayer::materialized_pixels);
             self.stroke = Some(PaintStrokeSession { object_id: object_id.to_string(), layer_index, scratch: base.clone(), base });
         }
         let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
@@ -478,9 +480,10 @@ impl LowpolyScratch {
         let Some(layer) = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)) else {
             return Emit::default();
         };
-        let mut scratch = layer.pixels.clone();
+        let base = layer.materialized_pixels();
+        let mut scratch = base.clone();
         flood_fill(&mut scratch, u, v, color);
-        let runs: Vec<PixelRun> = pixel_runs_from_diff(&layer.pixels, &scratch).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect();
+        let runs: Vec<PixelRun> = pixel_runs_from_diff(&base, &scratch).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect();
         if runs.is_empty() {
             return Emit::default();
         }
@@ -509,7 +512,8 @@ impl LowpolyScratch {
                 doc.apply_selection(mode, ids);
             }
             apply_transform(doc, transform)
-        });
+        })
+        .unwrap_or_default();
         if emitted.artifact_mutations.is_empty() {
             Emit::default()
         } else {
@@ -590,12 +594,22 @@ struct GesturePreviewPayload {
 //#endregion 🔖️LowpolyScratch
 
 //#region 🔖️Transient
+/// 🎨️ `(object, layer, before, after)` of a live stroke — see `LowpolyTransient::stroke_diff_parts`.
+pub(crate) type StrokeDiffParts<'a> = (&'a str, usize, std::borrow::Cow<'a, [u8]>, &'a [u8]);
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 struct PaintStrokeState {
     object_id: String,
     layer_index: usize,
+    /// 🎨️ The stroke's pre-edit layer, SPARSE when it is the never-painted default (`empty` = opaque
+    /// white, exactly `LowpolyPaintLayer::compacted`'s law) and base64 on the wire: the transient
+    /// mutation is JSON text, where an int-array pixel buffer costs ~4 bytes per byte — two 256²
+    /// buffers came to ~2 MB against the 1 MiB one-item publication bound (`paintAt` refused with
+    /// `transient mutation exceeds the one-item publication bound`, 2026-09-18).
+    #[value(with = "crate::bytes_base64")]
     base: Vec<u8>,
+    #[value(with = "crate::bytes_base64")]
     scratch: Vec<u8>,
 }
 
@@ -734,8 +748,13 @@ impl LowpolyTransient {
         }
     }
 
-    pub(crate) fn stroke_diff_parts(&self) -> Option<(&str, usize, &[u8], &[u8])> {
-        self.state.stroke.as_deref().map(|stroke| (stroke.object_id.as_str(), stroke.layer_index, stroke.base.as_slice(), stroke.scratch.as_slice()))
+    /// 🎨️ `(object, layer, before, after)` of the live stroke — `before` materialised from its sparse
+    /// (never painted, opaque white) wire form when needed, so both buffers always agree in length.
+    pub(crate) fn stroke_diff_parts(&self) -> Option<StrokeDiffParts<'_>> {
+        self.state.stroke.as_deref().map(|stroke| {
+            let before = if stroke.base.is_empty() { std::borrow::Cow::Owned(empty_paint_pixels()) } else { std::borrow::Cow::Borrowed(stroke.base.as_slice()) };
+            (stroke.object_id.as_str(), stroke.layer_index, before, stroke.scratch.as_slice())
+        })
     }
 
     pub(crate) fn finish_stroke_drag(&self) -> Self {
@@ -1005,7 +1024,7 @@ impl LowpolyScratch {
             })
             .transpose()?;
         Ok(Self {
-            stroke: state.stroke.as_deref().map(|stroke| PaintStrokeSession { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: stroke.base.clone(), scratch: stroke.scratch.clone() }),
+            stroke: state.stroke.as_deref().map(|stroke| PaintStrokeSession { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: if stroke.base.is_empty() { empty_paint_pixels() } else { stroke.base.clone() }, scratch: stroke.scratch.clone() }),
             stroke_drag_active: state.stroke_drag_active,
             stroke_dirty: state.stroke_dirty,
             transform,
@@ -1021,14 +1040,19 @@ impl LowpolyScratch {
     pub fn transient_snapshot(&self) -> Result<LowpolyTransient, String> {
         let transform = self.transform.as_ref().map(|session| TransformState {
             object_id: session.object_id.clone(),
-            before: session.before.clone(),
+            before: LowpolyObject { paint_layers: session.before.paint_layers.iter().cloned().map(LowpolyPaintLayer::compacted).collect(), ..session.before.clone() },
             before_mesh_workspace: session.before_mesh_workspace.clone(),
-            snapshot: session.doc.snapshot().clone(),
+            // 🎨️ The drag's working snapshot carries materialised paint buffers; the transient only needs
+            // the geometry, so every untouched layer rides as its sparse default.
+            snapshot: LowpolySnapshot {
+                objects: session.doc.snapshot().objects.iter().map(|object| LowpolyObject { paint_layers: object.paint_layers.iter().cloned().map(LowpolyPaintLayer::compacted).collect(), ..object.clone() }).collect(),
+                ..session.doc.snapshot().clone()
+            },
             selection: session.doc.selection().clone(),
             mesh_workspace: session.doc.mesh_workspace().clone().into_iter().collect(),
         });
         let state = LowpolyTransientState {
-            stroke: self.stroke.as_ref().map(|stroke| Arc::new(PaintStrokeState { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: stroke.base.clone(), scratch: stroke.scratch.clone() })),
+            stroke: self.stroke.as_ref().map(|stroke| Arc::new(PaintStrokeState { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: LowpolyPaintLayer { pixels: stroke.base.clone(), ..LowpolyPaintLayer::new("") }.compacted().pixels, scratch: stroke.scratch.clone() })),
             stroke_drag_active: self.stroke_drag_active,
             stroke_dirty: self.stroke_dirty,
             transform: transform.map(Arc::new),

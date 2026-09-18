@@ -126,17 +126,28 @@ if (wants("delete")) {
   baseline = after;
 }
 if (wants("undo")) {
-  // ⏪️ The app's own Undo action row, NOT mod+z: the shell's keybinding pops the shared input ledger,
-  // whose top entry after a panel toggle is that toggle (it replays as a refused `shell.panelToggle`).
+  // ⏪️ Nothing may touch a panel between the mutation and the undo: `undo` pops the SHELL's shared input
+  // ledger, whose top entry after a panel toggle is that toggle (it replays as a refused `shell.panelToggle`).
   const picked = await selectRow(/^jack_prune\b/);
   const a = await submitAction("deleteSelection", {}, /graph/i);
-  const deleted = await countWithPanel((x) => x.treeItems < baseline.treeItems);
-  await note("undo-delete-mutation", { picked, ...a, itemsBefore: baseline.treeItems, deleted: deleted.treeItems < baseline.treeItems, itemsAfter: deleted.treeItems }, a.from);
-  const from = lines.length;
+  await page.waitForTimeout(8000);
   const undo = await submitAction("undo", {}, /graph/i);
+  await page.waitForTimeout(8000);
   const restored = await countWithPanel((x) => x.treeItems === baseline.treeItems);
-  await note("undo-restores", { ...undo, itemsAfterDelete: deleted.treeItems, itemsBefore: baseline.treeItems, restored: restored.treeItems === baseline.treeItems, itemsAfter: restored.treeItems }, from);
+  const history = await page.evaluate(() => [...document.querySelectorAll('[id^="panel:framework.panel.history"], [id^="framework.panel.history"]')].map((el) => el.innerText.replace(/\s+/g, " ").trim().slice(0, 80)).slice(0, 12));
+  await note("undo-restores", { picked, deleteSubmitted: a.clicked, undoClicked: undo.clicked, itemsBefore: baseline.treeItems, restored: restored.treeItems === baseline.treeItems, itemsAfter: restored.treeItems, history }, a.from);
   baseline = restored;
+}
+if (wants("query")) {
+  // 📊️ `runQuery` publishes into the Results window's transient lane — the lane whose admission
+  // preflight priced every result at the executor's 1 MiB ceiling and so refused ALL of them
+  // (`Jack results-window transient exceeds its retained publication envelope`, fixed 09-18).
+  const resultsHost = () => page.evaluate(() => { const el = document.querySelector('[data-surface-id="window:trinity-jack-results"]'); return { text: (el?.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 400), tables: el ? el.querySelectorAll("table, [role=\"table\"], [role=\"grid\"]").length : 0, rows: el ? el.querySelectorAll("tr, [role=\"row\"]").length : 0 }; });
+  const before = await resultsHost();
+  const a = await submitAction("runQuery", { query: "MATCH (a:Piece) RETURN a.name", resultsWindowId: "trinity-jack-results" }, /editor/i);
+  let after = before;
+  for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await resultsHost(); if (after.rows > before.rows || /t_f0|nakagin|a\.name/i.test(after.text)) break; }
+  await note("run-query", { ...a, before, after, published: after.rows > before.rows || after.text !== before.text, transientLines: lines.slice(a.from).filter((l) => /results|transient|runQuery/i.test(l)).slice(0, 6).map((l) => l.slice(0, 300)) }, a.from);
 }
 if (wants("patch")) {
   const nodeId = rawId(baseline.rowsHead.find((r) => /^b\b/.test(r.text)) ?? pickRow);

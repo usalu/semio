@@ -336,6 +336,33 @@
       "blocker": null
     },
     {
+      "toolId": "exportMesh",
+      "classification": "migrated",
+      "lanes": [
+        "host-only"
+      ],
+      "preparation": [],
+      "blocker": null
+    },
+    {
+      "toolId": "loadMeshRequest",
+      "classification": "migrated",
+      "lanes": [
+        "host-only"
+      ],
+      "preparation": [],
+      "blocker": null
+    },
+    {
+      "toolId": "importMeshFile",
+      "classification": "migrated",
+      "lanes": [
+        "host-only"
+      ],
+      "preparation": [],
+      "blocker": null
+    },
+    {
       "toolId": "engagementSubmit",
       "classification": "migrated",
       "lanes": [
@@ -532,18 +559,6 @@
         "transient"
       ],
       "preparation": [],
-      "blocker": null
-    },
-    {
-      "toolId": "setActiveUtility",
-      "classification": "migrated",
-      "lanes": [
-        "config",
-        "transient"
-      ],
-      "preparation": [
-        "Config"
-      ],
       "blocker": null
     }
   ]

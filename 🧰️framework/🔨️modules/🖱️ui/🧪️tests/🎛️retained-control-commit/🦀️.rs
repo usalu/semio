@@ -176,7 +176,7 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
     commands
         .into_iter()
         .filter_map(|command| match command {
-            UiCommand::App { action, .. } => Some(action),
+            UiCommand::App { intent, .. } => Some(intent.descriptor()),
             _ => None,
         })
         .collect()
@@ -238,7 +238,7 @@ fn a_dragged_slider_reports_every_intermediate_value() {
     let value = moved
         .iter()
         .find_map(|command| match command {
-            UiCommand::App { action, .. } => match action.args.as_ref() {
+            UiCommand::App { intent, .. } => match intent.descriptor().args.as_ref() {
                 Some(DslValue::Object(entries)) => entries.iter().find(|(key, _)| key == "value").map(|(_, value)| value.as_f64().expect("numeric slider value")),
                 _ => None,
             },
@@ -248,3 +248,185 @@ fn a_dragged_slider_reports_every_intermediate_value() {
     assert!((value - 5.0).abs() < f64::EPSILON, "half way along a 0..10 track is 5, got {value}");
     let _ = control;
 }
+
+//#region 🎬️IntentAddressing
+// 🎬️ LAW: a retained control's gesture becomes an ADDRESSED intent, not a bare descriptor — it
+// carries the node it fired on, it is dropped when the revision it was recorded at is already more
+// than one behind the live document, and its per-surface `seq` advances once per gesture. React
+// applies exactly these rules in `UiDocumentStore::buildIntent` + its runtime's `Stale` outcome.
+
+use crate::wgpu::{UiIntentAddress, UiIntentBindings};
+use ui_contract::{ActionId, Trigger};
+
+/// 🔗️ Stamps `node` with the dispatch contract the document reconcile would have stamped, so a law
+/// can drive the router over a hand-placed tree and still exercise the addressed path.
+fn stamp(tree: &mut UiTree, node: NodeId, revision: u64, bindings: &[(Trigger, &str)]) {
+    let key = format!("node-{}", bindings.len());
+    tree.node_mut(node).expect("stamped node").intent = Some(UiIntentBindings {
+        address: UiIntentAddress { surface: "note.play.navigator".into(), revision, node: 3, node_key: key },
+        bindings: bindings.iter().map(|(trigger, name)| (*trigger, ActionId::try_v1("ctrl", name).expect("action id"))).collect(),
+    });
+}
+
+fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> UiNode {
+    UiNode::Input(UiInputNode {
+        id: id.into(),
+        input_kind: "number".into(),
+        value: value.into(),
+        placeholder: None,
+        commit: Some("blur".into()),
+        min,
+        max,
+        step,
+        accept: None,
+        on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+/// ⌨️ Types `text` into `control` and commits it with `Enter`, returning every dispatched intent.
+fn type_and_commit(tree: &mut UiTree, router: &mut EventRouter, root: NodeId, text: &str) -> Vec<UiCommand> {
+    let mut commands = Vec::new();
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::TextInput { text: text.to_string() }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() }));
+    commands
+}
+
+fn committed_values(commands: &[UiCommand]) -> Vec<f64> {
+    commands
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => intent.descriptor().args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_f64),
+            _ => None,
+        })
+        .collect()
+}
+
+fn number_field(min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (UiTree, EventRouter, NodeId) {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", min, max, step), (0.0, 0.0, 120.0, 24.0));
+    stamp(&mut tree, control, 5, &[(Trigger::Commit, "setValue")]);
+    (tree, EventRouter::new("main"), root)
+}
+
+#[test]
+fn a_number_inputs_min_max_and_step_constrain_what_it_commits() {
+    let (mut tree, mut router, root) = number_field(Some(0.0), Some(10.0), None);
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "999")), vec![10.0], "a value above `max` is clamped, exactly as React's own `<input type=\"number\" max>` refuses it");
+
+    let (mut tree, mut router, root) = number_field(Some(2.0), Some(10.0), None);
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "-4")), vec![2.0], "…and below `min`");
+
+    let (mut tree, mut router, root) = number_field(Some(0.0), Some(10.0), Some(0.5));
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "3.3")), vec![3.5], "`step` snaps to the nearest legal value off `min`");
+
+    let (mut tree, mut router, root) = number_field(None, None, None);
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "3.3")), vec![3.3], "an unconstrained field commits what was typed");
+}
+
+/// 🕰️ Gives `tree` a live document at `revision`, so `build_intent` has a real current revision to
+/// judge a node's stamped one against — the arena alone carries none.
+fn publish_revision(tree: &mut UiTree, revision: u64) {
+    let header = ui_contract::UiDocumentLeaseHeader {
+        generation: 3,
+        surface: ui_contract::SurfaceId::try_from("note.play.navigator").expect("surface id"),
+        revision: ui_contract::UiRevision(revision),
+        root: ui_contract::UiNodeId(0),
+        layout_epoch: 1,
+        node_count: 0,
+    };
+    tree.publish_document(crate::wgpu::tree::UiDocumentTree::new(header).expect("header admits"));
+}
+
+#[test]
+fn an_intent_fired_against_a_revision_the_user_never_saw_is_dropped() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
+    publish_revision(&mut tree, 9);
+    // 🕰️ Recorded at 6 against a live 9 — the user pressed against geometry three revisions of churn
+    // ago, which is exactly the case master.md's rule ("revision < current − 1") refuses.
+    stamp(&mut tree, control, 6, &[(Trigger::Commit, "setValue")]);
+    let mut router = EventRouter::new("main");
+
+    let commands = type_and_commit(&mut tree, &mut router, root, "7");
+    assert!(committed_values(&commands).is_empty(), "a gesture more than one revision away from the live document must never reach the guest: {commands:?}");
+
+    // 🆕️ A fresh tree, because the refused gesture left its own typed buffer behind on the node.
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
+    publish_revision(&mut tree, 9);
+    stamp(&mut tree, control, 8, &[(Trigger::Commit, "setValue")]);
+    let mut router = EventRouter::new("main");
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "7")), vec![7.0], "one revision behind is the in-flight case every live gesture is in and must still fire");
+}
+
+#[test]
+fn each_gesture_on_a_surface_advances_that_surfaces_own_seq() {
+    let (mut tree, mut router, root) = number_field(None, None, None);
+    let first = type_and_commit(&mut tree, &mut router, root, "1");
+    let second = type_and_commit(&mut tree, &mut router, root, "2");
+    let seq = |commands: &[UiCommand]| {
+        commands
+            .iter()
+            .find_map(|command| match command {
+                UiCommand::App { intent, .. } => Some((intent.seq, intent.address.surface.clone(), intent.address.node_key.clone())),
+                _ => None,
+            })
+            .expect("a dispatched intent")
+    };
+    let (first_seq, surface, node_key) = seq(&first);
+    let (second_seq, _, _) = seq(&second);
+    assert_eq!(first_seq, 1);
+    assert_eq!(second_seq, 2, "seq is renderer-monotonic per surface — it is what lets the receiving side order and de-duplicate");
+    assert_eq!(surface, "note.play.navigator", "the intent names the surface it was fired on");
+    assert_eq!(node_key, "node-1", "…and the node key that survives an intervening reconciliation");
+}
+
+#[test]
+fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
+    let stepper = |bindings: &[(Trigger, &str)]| {
+        let mut tree = UiTree::new();
+        let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+        let node = UiNode::NumberStepper(UiNumberStepperNode {
+            id: "count".into(),
+            value: 4.0,
+            step: 1.0,
+            uniform: true,
+            on_absolute: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
+            // 🩸️ Both descriptors are NON-empty here, so only the stamped binding list can decide —
+            // which is precisely the case React's `NumberStepperView` gates on `record.bindings`.
+            on_delta: ActionDescriptor { controller_id: "ctrl".into(), action: "bumpValue".into(), args: None },
+            presence: UiPresence::default(),
+            menu: None,
+        });
+        let control = place(&mut tree, Some(root), 1, node, (0.0, 0.0, 90.0, 24.0));
+        stamp(&mut tree, control, 0, bindings);
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary });
+        commands
+            .iter()
+            .find_map(|command| match command {
+                UiCommand::App { intent, .. } => Some((intent.trigger, intent.descriptor())),
+                _ => None,
+            })
+            .expect("a press on the increment third always commits something")
+    };
+
+    let (trigger, descriptor) = stepper(&[(Trigger::Change, "setValue")]);
+    assert_eq!(trigger, Trigger::Change, "a node that binds only `change` must not be sent down a trigger it never declared — that swallowed every +/− click on puzzle 3d's Settings panel");
+    assert_eq!(descriptor.action, "setValue");
+    assert_eq!(descriptor.args.and_then(|args| args.get("value").and_then(DslValue::as_f64)), Some(5.0), "the absolute path reports the stepped value, not the delta");
+
+    let (trigger, descriptor) = stepper(&[(Trigger::Change, "setValue"), (Trigger::Delta, "bumpValue")]);
+    assert_eq!(trigger, Trigger::Delta);
+    assert_eq!(descriptor.action, "bumpValue");
+    assert_eq!(descriptor.args.and_then(|args| args.get("delta").and_then(DslValue::as_f64)), Some(1.0));
+}
+//#endregion 🎬️IntentAddressing

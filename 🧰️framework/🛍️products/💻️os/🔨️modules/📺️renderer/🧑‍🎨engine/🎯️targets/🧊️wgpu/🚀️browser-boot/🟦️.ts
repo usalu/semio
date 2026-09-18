@@ -5,15 +5,15 @@ import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsRep
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
+import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
+import { WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, documentBootMetaReader, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, stripBootBrokerProof, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 /** 🚏️ Resolves completed renderer artifacts and the generated frame worker through the browser host. */
 const RENDERER_MODULE_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js", import.meta.url).href;
 const RENDERER_WASM_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
 const FRAME_WORKER_URL = new URL("../🎞️frame-worker.js/🟨️.js", import.meta.url);
-const BOOT_FIELD_CAPACITY = 2048;
-const LOCATION_SEARCH_CAPACITY = 8192;
 
 await new Promise<void>((resolve) => {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => resolve(), { once: true });
@@ -38,22 +38,38 @@ function locale(): "en" | "de" {
   return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
-function bounded(value: string, field: string): string {
-  if (value.length > BOOT_FIELD_CAPACITY) throw new Error(`boot-descriptor-overflow: ${field} exceeds ${BOOT_FIELD_CAPACITY} code units`);
-  return value;
+/** @emoji 🌓️ The page realm's appearance reads — `prefers-color-scheme` plus the persisted
+ * `os.config.ui-preferences` appearance. The frame Worker owns neither `window` nor `localStorage`,
+ * so these are made HERE and forwarded; see `../🧭️boot-descriptor/🟦️.ts`'s 🌓️HostAppearance region. */
+function hostAppearance(): WgpuHostAppearance {
+  return resolveWgpuHostAppearance(window);
 }
 
-function bootDescriptor(): { pluginVariant: string; appRole: string; appMode: string; appExample: string; hub?: { hubUrl: string; user: string; dataDir: string } } {
-  if (window.location.search.length > LOCATION_SEARCH_CAPACITY) throw new Error(`boot-descriptor-overflow: location.search exceeds ${LOCATION_SEARCH_CAPACITY} code units`);
-  const params = new URLSearchParams(window.location.search);
-  const hubUrl = params.get("hub");
-  return {
-    pluginVariant: bounded(params.get("plugin") ?? document.querySelector<HTMLMetaElement>('meta[name="semio-plugin"]')?.content ?? DEFAULT_HOST_VARIANT, "plugin"),
-    appRole: params.get("role") === "viewer" ? "viewer" : "editor",
-    appMode: bounded(params.get("mode") ?? "", "mode"),
-    appExample: bounded(params.get("example") ?? "", "example"),
-    ...(hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}),
-  };
+/** @emoji ⌨️ The page realm's platform read — `userAgentData.platform`, else `navigator.platform`.
+ * The frame Worker's own `cfg!(target_os = "macos")` is false in every wasm build, so without this a
+ * macOS browser formatted `mod` as `Ctrl`; see `../🧭️boot-descriptor/🟦️.ts`'s ⌨️HostPlatform region. */
+function hostPlatform(): WgpuHostPlatform {
+  return resolveWgpuHostPlatform(window);
+}
+
+/** @emoji 🗄️ The page realm's read of every durable preference key the shell owns. It lives HERE for
+ * the same reason both appearance reads do: the frame Worker owns no `localStorage`, so its whole
+ * preference store — appearance, locale, terminology, themes, keybinding overrides, the compute worker
+ * count, the dock skeleton and `ui.introduction.seen.*` — was invisible and unwritable on the browser
+ * build. See `../🧭️boot-descriptor/🟦️.ts`'s 🗄️HostStorage census. */
+function hostStorage(): WgpuHostStorageSnapshot {
+  return readWgpuHostStorageSnapshot(window);
+}
+
+/** @emoji 🧭️ The page's own boot axes: `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` over
+ * the per-server `<meta name="semio-*">` seeds, plus the one-shot `#semio-broker=` proof — the SAME
+ * vocabulary `../🎬️renderer-boot/🟦️.ts` and `../⌨️native-entrypoint/🦀️.rs` build, resolved by the ONE
+ * shared resolver so the three doors cannot drift. The proof is read and then removed from the address
+ * bar, exactly as React does (`🏛️ShellHost/🟦️.tsx:209-214`). */
+function bootDescriptor(): WgpuBootDescriptor {
+  const descriptor = resolveWgpuBootDescriptor({ search: window.location.search, hash: window.location.hash, meta: documentBootMetaReader(document), defaultVariant: DEFAULT_HOST_VARIANT });
+  stripBootBrokerProof(window.location, window.history);
+  return descriptor;
 }
 
 /** @emoji 🪪️ The trunk shell is single-mount by construction (`#root`, one transferred `OffscreenCanvas`),
@@ -83,12 +99,12 @@ function canvasElement(): HTMLCanvasElement {
  * a page error. */
 export const WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
 
-type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string>; readonly dumpAccessibility: (windowId?: string) => Promise<string>; readonly dumpMeshStats: (windowId?: string) => Promise<string> };
+type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string>; readonly dumpAccessibility: (windowId?: string) => Promise<string>; readonly dumpMeshStats: (windowId?: string) => Promise<string>; readonly dumpChrome: (windowId?: string) => Promise<string> };
 
 function attachIntrospectionBindings(transport: BrowserFrameTransport): () => void {
   const probe = (kind: BrowserFrameIntrospectionProbe) => async (windowId?: string) => (await transport.introspect(kind, windowId)) ?? "";
   const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection };
-  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats"), dumpAccessibility: probe("accessibility"), dumpMeshStats: probe("mesh-stats") };
+  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats"), dumpAccessibility: probe("accessibility"), dumpMeshStats: probe("mesh-stats"), dumpChrome: probe("chrome") };
   return () => delete host.semioWgpuIntrospection;
 }
 
@@ -384,6 +400,7 @@ function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport):
 async function mount(root: HTMLElement): Promise<void> {
   armUiTurnDiagnostics();
   const descriptor = bootDescriptor();
+  const beacon = wgpuReadinessBeacon(document.documentElement, descriptor.pluginVariant);
   if (typeof Worker === "undefined") throw new Error("worker-unavailable: Dedicated Worker is not supported");
   const canvas = canvasElement();
   if (typeof canvas.transferControlToOffscreen !== "function") throw new Error("offscreen-canvas-unavailable: OffscreenCanvas transfer is not supported");
@@ -402,7 +419,7 @@ async function mount(root: HTMLElement): Promise<void> {
   }
   let worker: Worker;
   try {
-    worker = new Worker(FRAME_WORKER_URL, { type: "module", name: "semio-frame-worker" });
+    worker = new Worker(stampShardWorkerDiagnostics(FRAME_WORKER_URL.href), { type: "module", name: "semio-frame-worker" });
   } catch (error) {
     throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -411,7 +428,7 @@ async function mount(root: HTMLElement): Promise<void> {
   let accessibility: { readonly refresh: () => void; readonly dispose: () => void } | undefined;
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, appMode: descriptor.appMode, appExample: descriptor.appExample, hub: descriptor.hub },
+    boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, locale: locale(), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
     requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
     // 🚪️ The PAGE half of the shell's file door. The frame Worker owns the whole shell but has no
@@ -427,6 +444,7 @@ async function mount(root: HTMLElement): Promise<void> {
       canvas.dataset.uiTurn = `${outcome.verdict}:${outcome.site}:${outcome.executingMs.toFixed(3)}`;
     },
     onReady: () => {
+      beacon.ready();
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
       accessibility = accessibilityMirror(root, transport);
@@ -450,6 +468,7 @@ async function mount(root: HTMLElement): Promise<void> {
       accessibility?.refresh();
     },
     onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
+      beacon.error();
       cleanupInput();
       detachIntrospection();
       accessibility?.dispose();
@@ -457,15 +476,51 @@ async function mount(root: HTMLElement): Promise<void> {
     },
   });
   const previousInteractiveJobPort = setInteractiveJobPort(transport.interactiveJobs);
-  const resize = new ResizeObserver(() => {
+  const publishMetrics = (site: string) => {
     const startedAt = performance.now();
     const nextDpr = window.devicePixelRatio || 1;
     transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, nextDpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
-    transport.observeUiTurn("resize-observer", performance.now() - startedAt);
-  });
+    transport.observeUiTurn(site, performance.now() - startedAt);
+  };
+  const resize = new ResizeObserver(() => publishMetrics("resize-observer"));
   resize.observe(canvas);
+  // 📐️ A ResizeObserver never fires when only the DENSITY changes — the window dragged onto a display
+  // with a different scale factor, or a browser zoom step — yet the physical surface extent, the
+  // projection divisor and the glyph atlas raster all move with it. `(resolution: Ndppx)` matches the
+  // CURRENT ratio, so the query has to be re-armed against the new one each time it stops matching.
+  // Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
+  let resolutionQuery: MediaQueryList | undefined;
+  const armResolutionQuery = () => {
+    resolutionQuery?.removeEventListener("change", onResolutionChange);
+    resolutionQuery = window.matchMedia?.(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    resolutionQuery?.addEventListener("change", onResolutionChange);
+  };
+  function onResolutionChange() {
+    publishMetrics("resolution-change");
+    armResolutionQuery();
+  }
+  armResolutionQuery();
+  // 🌓️ React re-applies every `appearance: "system"` root from ONE shared `matchMedia` `change`
+  // listener (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`) and
+  // re-reads the persisted preference from the `storage` event (`🎚️UiPreferences/🟦️.ts`'s
+  // `installBrowserStorageListener`). Both listeners live here for the same reason both reads do:
+  // the Worker realm has neither.
+  const republishAppearance = () => transport.setHostAppearance(hostAppearance());
+  // 🗄️ A `storage` event fires only for OTHER documents on this origin, so it is exactly the cross-tab
+  // case: re-read the whole census and re-seed the Worker's cache. This isolate's own writes never
+  // arrive this way — they went out through the door and are already in both halves.
+  const republishHostStorage = () => transport.setHostStorage(hostStorage());
+  const darkQuery = window.matchMedia?.(WGPU_PREFERS_DARK_MEDIA_QUERY);
+  darkQuery?.addEventListener("change", republishAppearance);
+  window.addEventListener("storage", republishAppearance);
+  window.addEventListener("storage", republishHostStorage);
   window.addEventListener("pagehide", () => {
+    beacon.clear();
     resize.disconnect();
+    darkQuery?.removeEventListener("change", republishAppearance);
+    window.removeEventListener("storage", republishAppearance);
+    window.removeEventListener("storage", republishHostStorage);
+    resolutionQuery?.removeEventListener("change", onResolutionChange);
     cleanupInput();
     detachIntrospection();
     accessibility?.dispose();
@@ -480,6 +535,7 @@ try {
   await mount(root);
 } catch (error) {
   const detail = error instanceof Error ? error.message : String(error);
+  wgpuReadinessBeacon(document.documentElement, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN).error();
   renderFault(root, "worker-boot-failed", detail);
   throw error;
 }

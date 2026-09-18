@@ -19,8 +19,8 @@ fn a_fixed_size_leaf_resolves_to_exactly_that_size() {
     cx.compute(leaf, 200.0, 200.0);
 
     let rect = cx.resolved(leaf);
-    assert_eq!(rect.w, space_token_px(SpaceToken::Lg));
-    assert_eq!(rect.h, space_token_px(SpaceToken::Md));
+    assert_eq!(rect.w, snap_logical(space_token_px(SpaceToken::Lg)));
+    assert_eq!(rect.h, snap_logical(space_token_px(SpaceToken::Md)));
 }
 
 #[test]

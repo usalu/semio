@@ -49,6 +49,9 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
     "paintStrokeEnd",
     "paintFill",
     "fillBucket",
+    "exportMesh",
+    "loadMeshRequest",
+    "importMeshFile",
 ];
 //#endregion 🔖️Constants
 
@@ -72,7 +75,7 @@ pub fn definition() -> WindowKindDefinition {
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
         // only the Model window selects/hovers mesh components; the UV window paints textures.
-        interactions: vec![InteractionRef::new(crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN)],
+        interactions: vec![InteractionRef::new(MESH_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

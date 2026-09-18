@@ -6,9 +6,9 @@ use super::*;
 use semio_framework::PanelTabKind;
 
 fn fresh_state() -> ShellState {
-    // 🧪️ `ShellState::new` calls `load_persisted_panel_layout`, which — on native — reads whatever
-    // happens to be at `~/.semio/panel-layout.json` on the machine running the test. Every assertion
-    // below explicitly sets the fields it exercises afterward, so the outcome never depends on that.
+    // 🧪️ `ShellState::new` calls `load_persisted_dock`, which — on native — reads whatever the
+    // machine running the test happens to have in its `semio.os.config` document. Every assertion
+    // below explicitly sets the state it exercises afterward, so the outcome never depends on that.
     ShellState::new(Vec::new(), String::new())
 }
 
@@ -95,9 +95,8 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     assert_eq!(after.active_panel_tab, "s-play-inspector");
     assert_eq!(after.spawned_apps, before.spawned_apps);
     assert_eq!(after.active_spawned_id, before.active_spawned_id);
-    assert!(shell.right_panel_open);
-    assert_eq!(shell.active_right_kind, RightPanelKind::Details);
-    assert_eq!(shell.active_right_tab.as_deref(), Some("s-play-inspector"));
+    assert!(shell.anchor_open(PanelAnchor::TopRight), "a Details-group leaf reveals the top-right anchor");
+    assert_eq!(shell.anchor_state(PanelAnchor::TopRight).active_tab(), Some("s-play-inspector"));
 
     let accepted_json = shell.session.as_ref().unwrap().view_state.panel_json.clone();
     let container_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
@@ -125,9 +124,8 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     assert_eq!(restored_panel.active_panel_tab, "home-library");
     assert_eq!(restored_panel.spawned_apps, after.spawned_apps);
     assert_eq!(restored_panel.active_spawned_id, after.active_spawned_id);
-    assert!(shell.left_panel_open);
-    assert_eq!(shell.active_left_kind, LeftPanelKind::Display);
-    assert_eq!(shell.active_left_tab.as_deref(), Some("home-library"));
+    assert!(shell.anchor_open(PanelAnchor::BottomLeft), "a Display-group leaf reveals the bottom-left anchor");
+    assert_eq!(shell.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("home-library"));
     eprintln!("[DEBUG] native host panel action stayed in session ownership, rejected invalid claimed routes before the missing guest, and restored DirectoryHomeProjection state");
 }
 
@@ -165,8 +163,11 @@ fn panel_anchor_as_str_matches_react_panel_anchor_ids() {
         (PanelAnchor::BottomLeft, "bottom-left"),
         (PanelAnchor::LeftMiddle, "left-middle"),
     ];
-    for (anchor, id) in expected {
+    for (index, (anchor, id)) in expected.into_iter().enumerate() {
         assert_eq!(anchor.as_str(), id);
+        assert_eq!(PanelAnchor::from_str(id), Some(anchor));
+        assert_eq!(anchor.index(), index, "`index()` must agree with `ALL`'s own order");
+        assert_eq!(PanelAnchor::ALL[index], anchor);
     }
     assert_eq!(PanelAnchor::ALL.len(), 8);
 }
@@ -178,114 +179,349 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
     assert!(DEFAULT_PANEL_WIDTH_PX > 280.0);
 }
 
+//#region 🧭️DefaultDockFixture
+/// 🧭️ The shared default-dock fixture both renderers assert against — the id-only skeleton React's
+/// `defaultDock` (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly) and this shell's `default_dock` must agree on.
+fn default_dock_fixture() -> Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🧭️default-dock/🔣️.json")).expect("default dock fixture")
+}
+
+fn fixture_group(group: &str) -> PanelGroup {
+    match group {
+        "workbench" => PanelGroup::Workbench,
+        "details" => PanelGroup::Details,
+        "display" => PanelGroup::Display,
+        _ => PanelGroup::Settings,
+    }
+}
+
+/// 🧭️ A shell whose session declares exactly the fixture's panel tabs, plus the framework History tab
+/// `AppBuilder::try_build_definition` injects into every app, and one attached sync backbone.
+fn fixture_dock_shell() -> ShellState {
+    let fixture = default_dock_fixture();
+    let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    app.id = "fixture-app".into();
+    app.controller_id = "fixture.controller".into();
+    app.panel_tabs = fixture["app"]["panelTabs"]
+        .as_array()
+        .expect("fixture panel tabs")
+        .iter()
+        .map(|tab| PanelTabDefinition {
+            kind: PanelTabKind::App(tab["id"].as_str().expect("tab id").to_string()),
+            label: LocalizedLabel::data(tab["label"].as_str().expect("tab label")),
+            group: fixture_group(tab["group"].as_str().expect("tab group")),
+            body_key: Some(tab["id"].as_str().expect("tab id").replace('.', "/")),
+            children: vec![],
+        })
+        .collect();
+    app.panel_tabs.push(PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()),
+        label: LocalizedLabel::data("History"),
+        group: PanelGroup::Settings,
+        body_key: Some("framework/history".into()),
+        children: vec![],
+    });
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.sync_backbone_uri = Some("folder:///tmp/fixture".into());
+    shell.sync_dock_tabs();
+    shell
+}
+
+/// 🧭️ **The parity pin.** `default_dock` must produce, anchor by anchor and id by id, exactly the
+/// arrangement the shared fixture declares — the same one React's `defaultDock` builds from the same
+/// sources. A renderer that silently drops an anchor (which is precisely what the former hardcoded
+/// left/right fold did to six of eight) fails here rather than in a screenshot.
 #[test]
-fn panel_anchor_snapshot_top_left_visible_only_when_workbench_active_and_open() {
-    let mut state = fresh_state();
-    state.left_panel_open = true;
-    state.active_left_kind = LeftPanelKind::Workbench;
-    state.left_panel_width = 300.0;
-    let top_left = state.panel_anchor_snapshot(PanelAnchor::TopLeft);
+fn default_dock_matches_the_shared_react_fixture() {
+    let fixture = default_dock_fixture();
+    let shell = fixture_dock_shell();
+    let skeleton = dock_skeleton_of(&shell.default_dock());
+    let expected: DockSkeleton = serde_json::from_value(fixture["expected"].clone()).expect("fixture skeleton");
+    assert_eq!(skeleton.version, 3);
+    for anchor in PanelAnchor::ALL {
+        let empty = Vec::new();
+        let actual_ids: Vec<&str> = skeleton.anchors.get(anchor.as_str()).unwrap_or(&empty).iter().map(|tab| tab.id.as_str()).collect();
+        let expected_ids: Vec<&str> = expected.anchors.get(anchor.as_str()).unwrap_or(&empty).iter().map(|tab| tab.id.as_str()).collect();
+        assert_eq!(actual_ids, expected_ids, "🧭️ anchor {} must carry the fixture's tabs in the fixture's order", anchor.as_str());
+    }
+    assert_eq!(skeleton, expected, "🧭️ the whole skeleton, branch children included, must match the fixture");
+    eprintln!("[DEBUG] wgpu default dock matched the shared React default-dock fixture across all 8 anchors");
+}
+
+/// 🧭️ The command palette is a REAL `bottom-middle` anchor now, not a Settings tab — the packet's
+/// headline gap. Its branch id and category leaf ids are React's.
+#[test]
+fn default_dock_puts_the_command_branch_on_bottom_middle() {
+    let shell = fixture_dock_shell();
+    let dock = shell.default_dock();
+    let branch = dock.tabs(PanelAnchor::BottomMiddle).first().expect("bottom-middle carries the Command branch");
+    assert_eq!(branch.id, FRAMEWORK_CATEGORY_COMMAND_ID);
+    assert!(branch.is_branch(), "the Command branch nests its category leaves");
+    assert!(branch.children.iter().all(|child| child.id.starts_with(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX)));
+    assert_eq!(dock.locate(FRAMEWORK_CATEGORY_COMMAND_ID).map(|(anchor, _)| anchor), Some(PanelAnchor::BottomMiddle));
+}
+//#endregion 🧭️DefaultDockFixture
+
+//#region 🧭️AnchorGeometry
+/// 🧭️ `anchorPositionStyle`'s insets: a left column starts one inset in from the body's left edge, a
+/// right column ends one inset in from its right, and a middle column centres — mirrored on the vertical
+/// axis by the column banding. Checked against the same `anchorInsets` table the shared fixture carries.
+#[test]
+fn anchor_rects_sit_at_the_react_anchor_insets() {
+    let fixture = default_dock_fixture();
+    let theme = Theme::default();
+    let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+    let inset = theme.panel_inset;
+    for anchor in PanelAnchor::ALL {
+        let rect = anchor_panel_rect(anchor, DEFAULT_PANEL_WIDTH_PX, None, 1, 0, body, &theme);
+        let sides = fixture["anchorInsets"][anchor.as_str()].as_array().expect("fixture insets");
+        assert_eq!(sides[0].as_str(), Some(anchor.horizontal()), "🧭️ {}'s column must match the fixture", anchor.as_str());
+        assert_eq!(sides[1].as_str(), Some(anchor.vertical()), "🧭️ {}'s row must match the fixture", anchor.as_str());
+        match anchor.horizontal() {
+            "left" => assert_eq!(rect.x, body.x + inset),
+            "right" => assert_eq!(rect.x + rect.w, body.x + body.w - inset),
+            _ => assert!((rect.x + rect.w * 0.5 - (body.x + body.w * 0.5)).abs() < 0.01, "🧭️ a middle column centres on the body"),
+        }
+        assert_eq!(rect.y, body.y + inset, "🧭️ a column's only open anchor spans the whole band");
+        assert_eq!(rect.h, body.h - inset * 2.0);
+        assert_eq!(rect.w, DEFAULT_PANEL_WIDTH_PX);
+    }
+}
+
+/// 🧭️ Two open anchors in one column band between themselves instead of painting over each other —
+/// the geometric consequence of there being eight independent anchors rather than two slots.
+#[test]
+fn two_open_anchors_in_one_column_split_its_band() {
+    let theme = Theme::default();
+    let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+    let top = anchor_panel_rect(PanelAnchor::TopLeft, DEFAULT_PANEL_WIDTH_PX, None, 2, 0, body, &theme);
+    let bottom = anchor_panel_rect(PanelAnchor::BottomLeft, DEFAULT_PANEL_WIDTH_PX, None, 2, 1, body, &theme);
+    assert_eq!(top.x, bottom.x, "both sit in the same column");
+    assert!(top.y + top.h <= bottom.y + 0.01, "🧭️ the top anchor's band ends before the bottom anchor's begins");
+    assert!((bottom.y + bottom.h - (body.y + body.h - theme.panel_inset)).abs() < 0.01, "🧭️ the bottom anchor ends one inset above the body's bottom edge");
+}
+
+/// 🧭️ The live per-anchor geometry: only OPEN anchors claim a band, so opening the second anchor of a
+/// column halves the first rather than leaving it full height and overlapped.
+#[test]
+fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
+    let theme = Theme::default();
+    let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor(PanelAnchor::TopLeft);
+    let alone = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    assert_eq!(alone.h, body.h - theme.panel_inset * 2.0);
+    shell.toggle_anchor(PanelAnchor::BottomLeft);
+    let shared = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    assert!(shared.h < alone.h * 0.6, "🧭️ opening the column's other anchor must shrink this one's band");
+    assert_eq!(shell.open_anchors(), vec![PanelAnchor::TopLeft, PanelAnchor::BottomLeft]);
+}
+//#endregion 🧭️AnchorGeometry
+
+//#region 🧭️AnchorState
+#[test]
+fn panel_anchor_snapshot_reports_the_open_anchor_and_its_active_leaf() {
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
+    let top_left = shell.panel_anchor_snapshot(PanelAnchor::TopLeft);
     assert!(top_left.visible);
-    assert_eq!(top_left.size, 300.0);
-    assert_eq!(top_left.active_tab.as_deref(), Some("workbench"));
-    let bottom_left = state.panel_anchor_snapshot(PanelAnchor::BottomLeft);
-    assert!(!bottom_left.visible, "display anchor must stay hidden while workbench occupies the left column");
+    assert_eq!(top_left.size, DEFAULT_PANEL_WIDTH_PX);
+    assert_eq!(top_left.active_tab.as_deref(), Some("fixture.workbench"));
+    assert_eq!(shell.panel_anchor_snapshot(PanelAnchor::BottomLeft), PanelAnchorSnapshot::default(), "a folded anchor reports nothing");
+}
+
+/// 🧭️ Every anchor opens INDEPENDENTLY — the whole point of the packet. The former model could only
+/// ever have one left and one right panel open at a time.
+#[test]
+fn all_eight_anchors_open_independently() {
+    let mut shell = fixture_dock_shell();
+    for anchor in PanelAnchor::ALL {
+        *shell.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf(format!("leaf.{}", anchor.as_str()), "Leaf", "circle-dot", 0)];
+    }
+    for anchor in PanelAnchor::ALL {
+        shell.toggle_anchor(anchor);
+    }
+    assert_eq!(shell.open_anchors().len(), 8);
+    shell.toggle_anchor(PanelAnchor::TopLeft);
+    assert!(!shell.anchor_open(PanelAnchor::TopLeft));
+    assert_eq!(shell.open_anchors().len(), 7, "folding one anchor leaves the other seven alone");
+}
+
+/// 🧭️ An anchor carrying no tab never opens — no empty glass box over the canvas.
+#[test]
+fn an_empty_anchor_never_opens() {
+    let mut shell = fixture_dock_shell();
+    assert!(shell.dock_tabs.tabs(PanelAnchor::LeftMiddle).is_empty());
+    shell.anchor_state_mut(PanelAnchor::LeftMiddle).visible = true;
+    assert!(!shell.anchor_open(PanelAnchor::LeftMiddle));
+    assert!(!shell.open_anchors().contains(&PanelAnchor::LeftMiddle));
+}
+
+/// 🧭️ `left_panel_open`/`right_panel_open` survive only as COLUMN projections of their two corner
+/// anchors — the contract the overlay safe area and the `⌘️B` chords still read.
+#[test]
+fn column_projections_follow_their_corner_anchors() {
+    let mut shell = fixture_dock_shell();
+    assert!(!shell.left_panel_open() && !shell.right_panel_open());
+    shell.toggle_anchor(PanelAnchor::BottomLeft);
+    assert!(shell.left_panel_open(), "the left column is open while EITHER of its corners is");
+    assert!(!shell.right_panel_open());
+    shell.toggle_column(true);
+    assert!(!shell.left_panel_open(), "the column chord folds every anchor in that column");
+    shell.toggle_column(true);
+    assert!(shell.anchor_open(PanelAnchor::TopLeft), "reopening a folded column reopens its top corner");
 }
 
 #[test]
-fn panel_anchor_snapshot_switches_corner_with_active_kind_not_visibility_alone() {
-    let mut state = fresh_state();
-    state.left_panel_open = true;
-    state.active_left_kind = LeftPanelKind::Display;
-    assert!(!state.panel_anchor_snapshot(PanelAnchor::TopLeft).visible);
-    assert!(state.panel_anchor_snapshot(PanelAnchor::BottomLeft).visible);
-    state.right_panel_open = true;
-    state.active_right_kind = RightPanelKind::Settings;
-    assert!(!state.panel_anchor_snapshot(PanelAnchor::TopRight).visible);
-    assert!(state.panel_anchor_snapshot(PanelAnchor::BottomRight).visible);
+fn reconcile_path_drills_a_branch_to_its_first_leaf_and_drops_vanished_tabs() {
+    let mut dock = ShellDock::default();
+    *dock.tabs_mut(PanelAnchor::BottomMiddle) = vec![DockTabNode::branch("branch", "Branch", "wrench", 0, vec![DockTabNode::leaf("leaf-a", "A", "circle-dot", 0), DockTabNode::leaf("leaf-b", "B", "circle-dot", 1)])];
+    assert_eq!(dock.reconcile_path(PanelAnchor::BottomMiddle, &["branch".to_string()]), vec!["branch".to_string(), "leaf-a".to_string()]);
+    assert_eq!(dock.reconcile_path(PanelAnchor::BottomMiddle, &["branch".to_string(), "leaf-b".to_string()]), vec!["branch".to_string(), "leaf-b".to_string()]);
+    assert_eq!(dock.reconcile_path(PanelAnchor::BottomMiddle, &["gone".to_string()]), dock.default_path(PanelAnchor::BottomMiddle));
 }
+//#endregion 🧭️AnchorState
 
+//#region 🗄️DockOverrideRoundTrip
+/// 🗄️ `apply_dock_skeleton` REARRANGES the default dock, never reconstructs it: a tab moved to another
+/// anchor lands there, and a default tab the skeleton never mentions is appended at its default home.
 #[test]
-fn panel_anchor_snapshot_middle_anchors_are_always_empty() {
-    let mut state = fresh_state();
-    state.left_panel_open = true;
-    state.right_panel_open = true;
-    assert_eq!(state.panel_anchor_snapshot(PanelAnchor::TopMiddle), PanelAnchorSnapshot::default());
-    assert_eq!(state.panel_anchor_snapshot(PanelAnchor::BottomMiddle), PanelAnchorSnapshot::default());
-    assert_eq!(state.panel_anchor_snapshot(PanelAnchor::LeftMiddle), PanelAnchorSnapshot::default());
-    assert_eq!(state.panel_anchor_snapshot(PanelAnchor::RightMiddle), PanelAnchorSnapshot::default());
+fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
+    let shell = fixture_dock_shell();
+    let default_dock = shell.default_dock();
+    let mut skeleton = dock_skeleton_of(&default_dock);
+    skeleton.anchors.insert("top-left".to_string(), Vec::new());
+    skeleton.anchors.insert("left-middle".to_string(), vec![DockTabSkeleton { id: "fixture.workbench".into(), children: None, trees: Some(vec![dock_leaf_tree_unit_id("fixture.workbench")]) }]);
+    let rearranged = apply_dock_skeleton(&default_dock, Some(&skeleton));
+    assert_eq!(rearranged.locate("fixture.workbench").map(|(anchor, _)| anchor), Some(PanelAnchor::LeftMiddle));
+    assert!(rearranged.tabs(PanelAnchor::TopLeft).is_empty());
+    assert_eq!(
+        rearranged.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(),
+        default_dock.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(),
+        "an untouched anchor keeps its default row"
+    );
 }
 
+/// 🗄️ A skeleton that mentions nothing is the identity, and an id the default no longer declares is
+/// dropped rather than resurrected.
 #[test]
-fn panel_layout_snapshot_round_trips_through_apply_panel_layout() {
-    let mut source = fresh_state();
-    source.left_panel_open = true;
-    source.right_panel_open = false;
-    source.active_left_kind = LeftPanelKind::Display;
-    source.active_right_kind = RightPanelKind::Settings;
-    source.left_panel_width = 411.0;
-    source.right_panel_width = 233.0;
-    let snapshot = source.panel_layout_snapshot();
-    assert_eq!(snapshot.active_left_kind.as_deref(), Some("display"));
-    assert_eq!(snapshot.active_right_kind.as_deref(), Some("settings"));
-
-    let mut target = fresh_state();
-    target.apply_panel_layout(&snapshot);
-    assert_eq!(target.left_panel_open, source.left_panel_open);
-    assert_eq!(target.right_panel_open, source.right_panel_open);
-    assert_eq!(target.active_left_kind, source.active_left_kind);
-    assert_eq!(target.active_right_kind, source.active_right_kind);
-    assert_eq!(target.left_panel_width, source.left_panel_width);
-    assert_eq!(target.right_panel_width, source.right_panel_width);
+fn apply_dock_skeleton_is_identity_for_none_and_drops_unknown_ids() {
+    let shell = fixture_dock_shell();
+    let default_dock = shell.default_dock();
+    assert_eq!(apply_dock_skeleton(&default_dock, None), default_dock);
+    let mut stale = DockSkeleton::default();
+    stale.anchors.insert("top-middle".to_string(), vec![DockTabSkeleton { id: "tab.that.no.longer.exists".into(), children: None, trees: None }]);
+    let applied = apply_dock_skeleton(&default_dock, Some(&stale));
+    assert!(applied.tabs(PanelAnchor::TopMiddle).is_empty());
+    assert_eq!(applied.tabs(PanelAnchor::TopLeft).len(), default_dock.tabs(PanelAnchor::TopLeft).len(), "nothing mentioned it, so the default row is re-seeded");
 }
 
+/// 🎯️ A tab dragged to another anchor is a pure `move_tab_in_dock` transform, and dropping a subtree
+/// into itself is refused.
 #[test]
-fn apply_panel_layout_leaves_widths_untouched_when_absent_from_snapshot() {
-    let mut state = fresh_state();
-    state.left_panel_width = 555.0;
-    state.right_panel_width = 666.0;
-    let sparse = PanelLayoutPersisted { left_panel_open: true, right_panel_open: true, active_left_kind: None, active_right_kind: None, left_panel_width: None, right_panel_width: None };
-    state.apply_panel_layout(&sparse);
-    assert_eq!(state.left_panel_width, 555.0, "absent width in a persisted snapshot must not clobber the current width");
-    assert_eq!(state.right_panel_width, 666.0);
-    assert_eq!(state.active_left_kind, LeftPanelKind::Workbench, "absent active kind falls back to the default");
+fn move_tab_in_dock_reanchors_a_tab_and_refuses_self_drops() {
+    let shell = fixture_dock_shell();
+    let mut dock = shell.default_dock();
+    let target = DockTabMoveTarget { anchor: PanelAnchor::RightMiddle, parent_path: Vec::new(), index: 0 };
+    assert!(move_tab_in_dock(&mut dock, "fixture.workbench", &target));
+    assert_eq!(dock.locate("fixture.workbench").map(|(anchor, _)| anchor), Some(PanelAnchor::RightMiddle));
+    assert!(dock.tabs(PanelAnchor::TopLeft).is_empty());
+    let into_itself = DockTabMoveTarget { anchor: PanelAnchor::BottomMiddle, parent_path: vec![FRAMEWORK_CATEGORY_COMMAND_ID.to_string()], index: 0 };
+    let before = dock.clone();
+    assert!(!move_tab_in_dock(&mut dock, FRAMEWORK_CATEGORY_COMMAND_ID, &into_itself));
+    assert_eq!(dock, before, "a refused move leaves the dock byte-identical");
 }
 
-/// 🗄️ Now that panel layout storage routes through the same `prefs_get`/`prefs_set` primitives as
-/// every other uiPref (see the dedup note on `load_panel_layout_from_store`), a round trip through
-/// `save_panel_layout_to_store`/`load_panel_layout_from_store` exercises the exact same `PREFS_STORE`
-/// thread-local singleton `file_prefs_store_round_trips_through_disk` (🧪️UiPrefsThemesI18nTests)
-/// already proves is disk-durable on native — this only needs to prove the panel-layout JSON shape
-/// itself round-trips through that singleton correctly.
+/// 🗄️ The override ROUND TRIP through the exact `semio.os.config` document React's `DockLayoutStore`
+/// owns. It runs over an in-memory document rather than the process-global store on purpose: every
+/// `prefs_set` is a read-modify-write of that ONE document, so a parallel test writing an unrelated
+/// `preferences` key clobbers whatever dock layer was written a microsecond earlier. The layer rules —
+/// per-app precedence, `None` removal, the version gate — are what this pins, and they are the whole
+/// of what a renderer switch depends on.
 #[test]
-fn panel_layout_round_trips_through_prefs_store() {
-    let layout = PanelLayoutPersisted { left_panel_open: true, right_panel_open: false, active_left_kind: Some("display".to_string()), active_right_kind: Some("details".to_string()), left_panel_width: Some(321.0), right_panel_width: Some(210.0) };
-    save_panel_layout_to_store(&layout);
-    let loaded = load_panel_layout_from_store().expect("round-tripped layout must parse back");
-    assert_eq!(loaded, layout);
+fn dock_override_round_trips_through_the_os_shell_config_document() {
+    let mut shell = fixture_dock_shell();
+    let target = DockTabMoveTarget { anchor: PanelAnchor::TopMiddle, parent_path: Vec::new(), index: 0 };
+    assert!(shell.move_dock_tab("fixture.details", &target));
+    let moved = shell.dock_override.clone().expect("a rearranged dock stops matching its default");
+
+    let mut config = serde_json::json!({ "version": 1, "preferences": {} });
+    write_os_shell_config_layer_in(&mut config, "dockLayouts", Some("fixture-app"), Some(&moved));
+    assert_eq!(config["dockLayouts"]["apps"]["fixture-app"]["version"], serde_json::json!(3));
+    assert_eq!(config["dockLayouts"]["apps"]["fixture-app"]["anchors"]["top-middle"][0]["id"], serde_json::json!("fixture.details"));
+
+    let loaded: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("the per-app layer reads back");
+    assert!(dock_skeletons_equal(Some(&loaded), Some(&moved)));
+    let reloaded = apply_dock_skeleton(&shell.default_dock(), Some(&loaded));
+    assert_eq!(reloaded.locate("fixture.details").map(|(anchor, _)| anchor), Some(PanelAnchor::TopMiddle));
+    assert_eq!(dock_skeleton_of(&reloaded), dock_skeleton_of(&shell.dock_tabs));
+
+    // 🗄️ A per-app layer wins over the shared `os` one; removing it falls back to `os`; removing both
+    // leaves nothing — `DockLayoutStore::getSnapshot`/`save`/`saveOs` exactly.
+    let default_skeleton = dock_skeleton_of(&shell.default_dock());
+    write_os_shell_config_layer_in(&mut config, "dockLayouts", None, Some(&default_skeleton));
+    let still_app: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("per-app layer still wins");
+    assert!(dock_skeletons_equal(Some(&still_app), Some(&moved)));
+    write_os_shell_config_layer_in::<DockSkeleton>(&mut config, "dockLayouts", Some("fixture-app"), None);
+    let os_layer: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("falls back to the os layer");
+    assert!(dock_skeletons_equal(Some(&os_layer), Some(&default_skeleton)));
+    write_os_shell_config_layer_in::<DockSkeleton>(&mut config, "dockLayouts", None, None);
+    assert!(read_os_shell_config_layer::<DockSkeleton>(&config, "dockLayouts", Some("fixture-app")).is_none());
+
+    // 🧭️ And moving the tab back to its computed default drops the override entirely, so nothing persists.
+    let back = DockTabMoveTarget { anchor: PanelAnchor::TopRight, parent_path: Vec::new(), index: 0 };
+    assert!(shell.move_dock_tab("fixture.details", &back));
+    assert!(shell.dock_override.is_none(), "a dock back at its computed default persists no override");
+    eprintln!("[DEBUG] dock override round-tripped through semio.os.config's dockLayouts layers and cleared at the default");
 }
 
-/// 🗄️ `persist_panel_layout_if_changed`'s dirty-check: a second call with no field changes since the
-/// last persist must not touch storage again — mirrors `persist_ui_prefs_if_changed_is_idempotent_
-/// when_nothing_changed` (🧪️UiPrefsThemesI18nTests) one region over, same shape for the same reason
-/// (this is the render-loop hook that replaces patching every `ui.panelToggle.*` call site — see
-/// `persist_panel_layout_if_changed`'s doc comment).
+/// 🗄️ The per-anchor chrome round trip: visibility, size and active path survive a reload, and an
+/// anchor absent from the persisted document reloads folded.
 #[test]
-fn persist_panel_layout_if_changed_is_idempotent_when_nothing_changed() {
-    let mut state = fresh_state();
-    state.left_panel_open = true;
-    state.active_left_kind = LeftPanelKind::Display;
-    state.persist_panel_layout_if_changed();
-    let after_first = load_panel_layout_from_store().expect("first call must persist");
-    assert_eq!(after_first.active_left_kind.as_deref(), Some("display"));
+fn dock_ui_state_round_trips_visibility_size_and_path() {
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor_tab(PanelAnchor::BottomRight, "fixture.settings");
+    shell.anchor_state_mut(PanelAnchor::BottomRight).size = 412.0;
+    let snapshot = shell.dock_ui_snapshot();
+    assert_eq!(snapshot.version, 3);
+    assert_eq!(snapshot.anchors.get("bottom-right").and_then(|entry| entry.size), Some(412.0));
+    assert!(snapshot.anchors.get("top-left").is_none(), "a default anchor stores nothing");
 
-    // A second call with identical state must be a no-op — flip storage underneath it directly so a
-    // wrongly-unconditional write would be observable.
-    save_panel_layout_to_store(&PanelLayoutPersisted::default());
-    state.persist_panel_layout_if_changed();
-    let after_second = load_panel_layout_from_store().expect("storage still has a value");
-    assert_eq!(after_second, PanelLayoutPersisted::default(), "unchanged state must not re-persist and clobber the manual write above");
+    let mut config = serde_json::json!({ "version": 1, "preferences": {} });
+    write_os_shell_config_layer_in(&mut config, "dockUi", Some("fixture-app"), Some(&snapshot));
+    let loaded: DockUiState = read_os_shell_config_layer(&config, "dockUi", Some("fixture-app")).expect("dockUi layer reads back");
+    assert_eq!(loaded, snapshot);
+
+    let mut target = fixture_dock_shell();
+    target.apply_dock_ui(&loaded);
+    assert!(target.anchor_open(PanelAnchor::BottomRight));
+    assert_eq!(target.anchor_state(PanelAnchor::BottomRight).size, 412.0);
+    assert_eq!(target.anchor_state(PanelAnchor::BottomRight).active_tab(), Some("fixture.settings"));
+    assert!(!target.anchor_open(PanelAnchor::TopLeft));
 }
+
+/// 🗄️ `persist_dock_ui_if_changed`'s dirty-check: the first call after a real change persists, and a
+/// second call with nothing changed must not write again — the render-loop hook that replaces patching
+/// every `ui.panelToggle.*` call site. Asserted against the owned present-state snapshot rather than the
+/// shared store, for the same read-modify-write reason the override test above documents.
+#[test]
+fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
+    let mut shell = fixture_dock_shell();
+    shell.chrome_present.last_persisted_dock_ui = Some(shell.dock_ui_snapshot());
+    shell.toggle_anchor(PanelAnchor::TopLeft);
+    shell.persist_dock_ui_if_changed();
+    let persisted = shell.chrome_present.last_persisted_dock_ui.clone().expect("first call must persist");
+    assert!(persisted.anchors.get("top-left").and_then(|entry| entry.visible).unwrap_or(false));
+
+    // Nothing changed since: a wrongly-unconditional write would be observable as a new snapshot object
+    // replacing this deliberately-wrong marker.
+    shell.chrome_present.last_persisted_dock_ui = Some(persisted.clone());
+    shell.persist_dock_ui_if_changed();
+    assert_eq!(shell.chrome_present.last_persisted_dock_ui.as_ref(), Some(&persisted), "unchanged state must not re-persist");
+    assert_eq!(shell.chrome_present.last_persisted_dock_skeleton, Some(shell.dock_override.clone()));
+}
+//#endregion 🗄️DockOverrideRoundTrip
 
 /// 🎨️ `build_settings_theme_ui`'s reachability contract: a select node listing the built-in themes
 /// plus any saved custom ones, a reset button always present, and a delete button gated strictly on
@@ -310,3 +546,414 @@ fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
     let button_count = custom_panel.children.iter().filter(|node| matches!(node, UiNode::Button(_))).count();
     assert_eq!(button_count, 2, "Reset and Delete once a custom theme is active");
 }
+
+//#region ⚙️SettingsBranchAndShellOwnedLeaves
+/// ⚙️ The bottom-right Settings BRANCH: one toggle carrying the app's own Settings-group tabs first and
+/// then the five framework leaves, exactly React's
+/// `integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettingsTab, settingsBottomRightTabs)`
+/// child order — plus the Marketplace leaf and the framework-owned History leaf beside it, never
+/// nested inside it.
+#[test]
+fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
+    let fixture = default_dock_fixture();
+    let shell = fixture_dock_shell();
+    let dock = shell.default_dock();
+    let roots: Vec<&str> = dock.tabs(PanelAnchor::BottomRight).iter().map(|tab| tab.id.as_str()).collect();
+    assert_eq!(roots, vec![FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_MARKETPLACE_TAB_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID], "⚙️ bottom-right carries one Settings branch, then Marketplace, then History");
+    let branch = dock.tabs(PanelAnchor::BottomRight).first().expect("the Settings branch");
+    assert!(branch.is_branch(), "⚙️ Settings is a branch, not a leaf");
+    let children: Vec<&str> = branch.children.iter().map(|child| child.id.as_str()).collect();
+    assert_eq!(children.first(), Some(&"fixture.settings"), "⚙️ the app's own Settings tabs come first (document-first child order)");
+    let declared: Vec<&str> = fixture["settingsBranch"]["children"].as_array().expect("fixture settings children").iter().map(|id| id.as_str().expect("child id")).collect();
+    assert_eq!(&children[1..], declared.as_slice(), "⚙️ then React's five framework leaves, in React's order");
+    for (index, child) in branch.children.iter().enumerate() {
+        assert_eq!(child.order, index as i32, "⚙️ children are re-ordered past the app's, React's own `+ appSettingsTabs.length`");
+    }
+}
+
+/// 🧾️ Every SHELL-OWNED leaf the dock declares has a body, and every body the shell publishes is a
+/// leaf the dock declares — the assembler's own closure property. A leaf that is dockable but paints
+/// nothing (which is exactly what the Settings branch's children were before this packet) fails here.
+#[test]
+fn every_shell_owned_leaf_projects_into_retained_records() {
+    let shell = fixture_dock_shell();
+    let dock = shell.default_dock();
+    for tab_id in shell.shell_owned_panel_leaves() {
+        assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
+        let node = match tab_id.as_str() {
+            FRAMEWORK_SETTINGS_GENERAL_TAB_ID => shell.build_settings_general_ui(),
+            FRAMEWORK_SETTINGS_THEME_TAB_ID => shell.build_settings_theme_ui(),
+            FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID => shell.build_settings_keybindings_ui(),
+            FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID => shell.build_settings_default_apps_ui(),
+            FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => shell.build_settings_conflicts_ui(),
+            FRAMEWORK_MARKETPLACE_TAB_ID => shell.build_marketplace_ui(),
+            FRAMEWORK_CHAT_PANEL_ID => shell.build_agent_chat_ui(),
+            other => shell.build_command_category_ui(other.trim_start_matches(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX)),
+        };
+        let records = panel_ui_records(&tab_id, &node).unwrap_or_else(|error| panic!("🧾️ {tab_id} must project: {error}"));
+        assert!(!records.is_empty(), "🧾️ {tab_id} projected an empty document");
+        assert_eq!(records[0].id, ui_contract::UiNodeId(1), "🧾️ the root record is always id 1 (the published assembly identity's root)");
+        for (index, record) in records.iter().enumerate() {
+            assert_eq!(record.id, ui_contract::UiNodeId(index as u64 + 1), "🧾️ records are parent-first and densely numbered");
+        }
+    }
+    eprintln!("[DEBUG] wgpu shell-owned panel leaves all project into retained records");
+}
+
+/// 🧾️ The assembler refuses a node it cannot project instead of silently dropping it, so a builder
+/// that grows a `Tree`/`Image`/`ComponentScene` fails at publication rather than painting a hole.
+#[test]
+fn the_panel_assembler_refuses_an_unprojectable_node() {
+    let node = UiNode::Image(ui_wgpu::wgpu::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
+    let error = panel_ui_records("framework.settings.general", &node).expect_err("an image is not projectable by this assembler");
+    assert!(error.contains("image"), "the refusal names the variant: {error}");
+}
+//#endregion ⚙️SettingsBranchAndShellOwnedLeaves
+
+//#region ⌨️RemappableKeybindings
+/// ⌨️ An override REPLACES a row's chord: the new chord resolves to that row's verb and is reserved,
+/// and the default it replaced stops being the shell's — React's `composeControlKeybindings` (the
+/// override wins unconditionally) plus `reservedShellChordsV1` over the same resolved table.
+#[test]
+fn a_keybinding_override_remaps_a_shell_chord_and_frees_its_default() {
+    let mut overrides = HashMap::new();
+    overrides.insert("ui.search.toggle".to_string(), "ctrl+j".to_string());
+    let table = shell_shortcut_table(&overrides);
+    let accelerator = PointerModifiers { ctrl: true, ..PointerModifiers::default() };
+    let remapped = ui_wgpu::wgpu::KeyAction::Char("j".into());
+    let default = ui_wgpu::wgpu::KeyAction::Char("p".into());
+    assert_eq!(shell_shortcut_for_in(&table, &remapped, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the override's chord opens the palette");
+    assert!(is_reserved_shell_chord_in(&table, &remapped, &accelerator), "⌨️ and is reserved at its new spelling");
+    assert_eq!(shell_shortcut_for_in(&table, &default, &accelerator), None, "⌨️ `mod+p` is no longer the shell's");
+    assert!(!is_reserved_shell_chord_in(&table, &default, &accelerator), "⌨️ so an app may claim it");
+    assert_eq!(shell_shortcut_for(&default, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the DEFAULT table is untouched");
+}
+
+/// ⌨️ An override carrying no parsable chord is dropped rather than blanking the row — React's
+/// `parseUiKeybindingOverrides` gate.
+#[test]
+fn a_blank_keybinding_override_keeps_the_declared_default() {
+    let mut overrides = HashMap::new();
+    overrides.insert("ui.find.toggle".to_string(), "  ,  ".to_string());
+    let table = shell_shortcut_table(&overrides);
+    let row = table.iter().find(|(id, _)| id == "ui.find.toggle").expect("the find row");
+    assert_eq!(row.1, "mod+f", "⌨️ a chordless override never retires the default");
+}
+
+/// ⌨️ The conflict marker is React's exactly: last writer of a first chord owns it, so the EARLIER row
+/// of a colliding pair is the flagged one and the later is clean.
+#[test]
+fn keybinding_rows_flag_the_earlier_owner_of_a_shared_chord() {
+    let mut overrides = HashMap::new();
+    overrides.insert("ui.find.toggle".to_string(), "mod+p".to_string());
+    let rows = shell_keybinding_rows(&overrides);
+    let conflicted: Vec<&str> = rows.iter().filter(|row| row.conflicted).map(|row| row.control_id.as_str()).collect();
+    assert_eq!(conflicted.len(), 1, "⌨️ exactly one of a colliding pair is marked, never both: {conflicted:?}");
+    assert!(rows.iter().any(|row| row.control_id == "ui.find.toggle" && row.overridden), "⌨️ the remapped row reports itself overridden");
+    assert!(rows.windows(2).all(|pair| pair[0].control_id <= pair[1].control_id), "⌨️ rows are control-id sorted, React's own `localeCompare` order");
+}
+
+/// ⌨️ An armed capture turns the next key event into that row's override and consumes it — the chord
+/// spelling is React's `chordFromKeyboardEvent` order (`ctrl, meta, alt, shift`, then the key).
+#[test]
+fn an_armed_capture_writes_the_next_chord_as_an_override() {
+    let mut shell = fresh_state();
+    shell.keybinding_capture_control_id = Some("ui.nav.up".into());
+    let modifiers = PointerModifiers { ctrl: true, alt: true, shift: true, ..PointerModifiers::default() };
+    assert!(shell.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::ArrowUp, &modifiers), "⌨️ the capture consumes the event");
+    assert_eq!(shell.chrome_build.preferences.keybinding_overrides.get("ui.nav.up").map(String::as_str), Some("ctrl+alt+shift+arrowup"));
+    assert_eq!(shell.keybinding_capture_control_id, None, "⌨️ one gesture, one write, then disarmed");
+    shell.keybinding_capture_control_id = Some("ui.nav.back".into());
+    assert!(shell.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::Escape, &modifiers), "⌨️ Escape cancels and still consumes");
+    assert!(!shell.chrome_build.preferences.keybinding_overrides.contains_key("ui.nav.back"), "⌨️ a cancelled capture writes nothing");
+}
+
+/// ⌨️ Every shortcut row the Keybindings leaf paints is addressable and every chord it prints is the
+/// one in force — the rows W1c's shortcut list and this leaf must agree on.
+#[test]
+fn the_keybindings_leaf_paints_one_row_per_shortcut() {
+    let mut shell = fresh_state();
+    shell.chrome_build.preferences.keybinding_overrides.insert("ui.search.toggle".into(), "ctrl+j".into());
+    let UiNode::Stack(panel) = shell.build_settings_keybindings_ui() else { panic!("expected a stack root") };
+    let UiNode::Section(section) = panel.children.first().expect("the keybindings section") else { panic!("expected a section") };
+    assert_eq!(section.children.len(), SHELL_SHORTCUT_ROWS.len(), "⌨️ one row per declared shortcut");
+    let ids: Vec<String> = section.children.iter().filter_map(|node| if let UiNode::Stack(row) = node { row.id.clone() } else { None }).collect();
+    assert!(ids.contains(&"framework.settings.keybindings.ui.search.toggle".to_string()));
+    let overridden_row = section.children.iter().find_map(|node| if let UiNode::Stack(row) = node { (row.id.as_deref() == Some("framework.settings.keybindings.ui.search.toggle")).then_some(row) } else { None }).expect("the remapped row");
+    assert_eq!(overridden_row.children.iter().filter(|node| matches!(node, UiNode::Button(_))).count(), 2, "⌨️ a remapped row offers capture AND reset");
+}
+//#endregion ⌨️RemappableKeybindings
+
+//#region 📐️ContentHug
+/// 📐️ A measured panel takes exactly its content's height from its own bonded edge, and never more
+/// than React's `calc(100% - spacing*2)` clamp — the divergence `📓️w1h`'s gap 1 recorded.
+#[test]
+fn a_panel_hugs_its_measured_content_up_to_the_react_clamp() {
+    let theme = Theme::default();
+    let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+    let inset = theme.panel_inset;
+    let band = body.h - inset * 2.0;
+    let top = anchor_panel_rect(PanelAnchor::TopLeft, DEFAULT_PANEL_WIDTH_PX, Some(180.0), 1, 0, body, &theme);
+    assert_eq!(top.h, 180.0, "📐️ a top anchor takes its content's height");
+    assert_eq!(top.y, body.y + inset, "📐️ and grows DOWN from its own inset");
+    let bottom = anchor_panel_rect(PanelAnchor::BottomLeft, DEFAULT_PANEL_WIDTH_PX, Some(180.0), 1, 0, body, &theme);
+    assert_eq!(bottom.h, 180.0);
+    assert_eq!(bottom.y + bottom.h, body.y + inset + band, "📐️ a bottom anchor grows UP from the body's bottom inset");
+    let middle = anchor_panel_rect(PanelAnchor::LeftMiddle, DEFAULT_PANEL_WIDTH_PX, Some(180.0), 1, 0, body, &theme);
+    assert!((middle.y + middle.h * 0.5 - (body.y + inset + band * 0.5)).abs() < 0.01, "📐️ a middle anchor centres on its band");
+    let oversized = anchor_panel_rect(PanelAnchor::TopLeft, DEFAULT_PANEL_WIDTH_PX, Some(5000.0), 1, 0, body, &theme);
+    assert_eq!(oversized.h, band, "📐️ the clamp is React's own maxHeight, never the content");
+    let unmeasured = anchor_panel_rect(PanelAnchor::TopLeft, DEFAULT_PANEL_WIDTH_PX, None, 1, 0, body, &theme);
+    assert_eq!(unmeasured.h, band, "📐️ an unmeasured surface keeps its full band rather than collapsing");
+}
+
+/// 📐️ Two hugging anchors in one column still cannot overlap: each is clamped to its own share.
+#[test]
+fn two_hugging_anchors_in_one_column_never_overlap() {
+    let theme = Theme::default();
+    let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+    let top = anchor_panel_rect(PanelAnchor::TopLeft, DEFAULT_PANEL_WIDTH_PX, Some(5000.0), 2, 0, body, &theme);
+    let bottom = anchor_panel_rect(PanelAnchor::BottomLeft, DEFAULT_PANEL_WIDTH_PX, Some(5000.0), 2, 1, body, &theme);
+    assert!(top.y + top.h <= bottom.y + 0.01, "📐️ {top:?} must not reach into {bottom:?}");
+}
+//#endregion 📐️ContentHug
+
+//#region 📱️MobileFlattening
+/// 📱️ Below React's `UI_MOBILE_MEDIA_QUERY` breakpoint the eight anchors flatten into ONE panel whose
+/// tab list is every anchor's root tabs in `ANCHORS` order — React's `mobilePanelTabs`, which flattens
+/// `defaultDock` and appends the synthetic app leaf only when the navbar has clusters with no room.
+#[test]
+fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
+    let fixture = default_dock_fixture();
+    let mut shell = fixture_dock_shell();
+    shell.screen_w = 1280.0;
+    assert!(!shell.mobile_panel_active(), "📱️ a desktop viewport keeps the eight anchors");
+    shell.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    assert!(shell.mobile_panel_active(), "📱️ the breakpoint itself is mobile (React's `max-width: 767px` is inclusive)");
+    let ids: Vec<String> = shell.mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
+    let expected: Vec<String> = fixture["mobilePanelTabs"]["ids"].as_array().expect("fixture mobile ids").iter().map(|id| id.as_str().expect("id").to_string()).collect();
+    assert_eq!(ids, expected, "📱️ the flattened order is the fixture's");
+    eprintln!("[DEBUG] wgpu mobile panel flattened {} tabs across all 8 anchors", ids.len());
+}
+
+/// 📱️ The mobile panel's remembered path reconciles onto the flattened list and drills a branch to its
+/// first leaf, so selecting the Settings branch on mobile lands on a real body.
+#[test]
+fn the_mobile_panel_path_drills_a_branch_to_its_first_leaf() {
+    let shell = fixture_dock_shell();
+    let tabs = shell.mobile_panel_tabs();
+    let path = mobile_panel_reconcile_path(&tabs, &[FRAMEWORK_SETTINGS_PANEL_ID.to_string()]);
+    assert_eq!(path.first().map(String::as_str), Some(FRAMEWORK_SETTINGS_PANEL_ID));
+    assert_eq!(path.last().map(String::as_str), Some("fixture.settings"), "📱️ drilled to the branch's first leaf");
+    let vanished = mobile_panel_reconcile_path(&tabs, &["gone".to_string()]);
+    assert_eq!(vanished.first().map(String::as_str), tabs.first().map(|tab| tab.id.as_str()), "📱️ a vanished path falls back to the first tab");
+}
+//#endregion 📱️MobileFlattening
+
+//#region 🎛️StagedCommandForm
+/// 🎛️ `expanded_command_id`'s READER — the gap `📓️w1c` recorded. The expanded command's staged form is
+/// a section of its own carrying one control per argument plus Execute and Reset, and that command is
+/// filtered out of the list section below it (React's `buildCommandCategoryTree`).
+#[test]
+fn the_command_dock_opens_the_expanded_commands_staged_form() {
+    let mut shell = fresh_state();
+    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("an arg-carrying os command");
+    let key = command_address_stable_key(&entry.address);
+    let category = entry.definition.category.clone();
+    shell.expanded_command_id = Some(key.clone());
+    let UiNode::Stack(panel) = shell.build_command_category_ui(&category) else { panic!("expected a stack root") };
+    let UiNode::Section(form) = panel.children.first().expect("the form section") else { panic!("the expanded form is the FIRST section, so a bottom anchor paints it above the list") };
+    assert_eq!(form.id, format!("command.category.{category}.form"));
+    let buttons: Vec<&str> = form.children.iter().filter_map(|node| if let UiNode::Button(button) = node { button.id.as_deref() } else { None }).collect();
+    assert_eq!(buttons.len(), 2, "🎛️ Execute and Reset, React's own two section actions");
+    assert!(buttons[0].ends_with("-execute") && buttons[1].ends_with("-reset"));
+    let arg_rows = form.children.iter().filter(|node| matches!(node, UiNode::Field(_))).count();
+    assert_eq!(arg_rows, entry.definition.args.len(), "🎛️ one control per declared argument");
+    let list = panel.children.iter().find_map(|node| if let UiNode::Section(section) = node { (section.id == "command.category.list").then_some(section) } else { None });
+    let listed: Vec<String> = list.map(|section| section.children.iter().filter_map(|node| if let UiNode::Select(select) = node { Some(select.id.clone()) } else { None }).collect()).unwrap_or_default();
+    assert!(!listed.contains(&format!("shell.commands.{}", entry.definition.id)), "🎛️ the expanded command is not also listed");
+}
+
+/// 🎛️ An Execute is DISABLED while a required argument is unstaged — React's `missing.length > 0` gate.
+#[test]
+fn execute_is_disabled_until_every_required_argument_is_staged() {
+    let mut shell = fresh_state();
+    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && entry.definition.args.iter().any(|arg| arg.required)).map(|entry| (command_address_stable_key(&entry.address), entry.definition.category.clone(), entry.definition.args.iter().find(|arg| arg.required).expect("a required arg").id.clone()));
+    let Some((key, category, arg_id)) = entry else {
+        eprintln!("[DEBUG] no os command declares a required argument — gate exercised by the assembler only");
+        return;
+    };
+    shell.expanded_command_id = Some(key.clone());
+    let disabled = |shell: &ShellState| {
+        let UiNode::Stack(panel) = shell.build_command_category_ui(&category) else { panic!("stack root") };
+        let UiNode::Section(form) = panel.children.first().expect("form") else { panic!("form section") };
+        form.children.iter().any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)))
+    };
+    assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
+    shell.staged_command_args.entry(key).or_default().insert(arg_id, serde_json::Value::String("x".into()));
+    assert!(!disabled(&shell), "🎛️ staging it enables Execute");
+}
+//#endregion 🎛️StagedCommandForm
+
+//#region 💬️AgentChatTranscript
+/// 💬️ The chat panel's BODY, not just W1j's header: two seeded assistant lines, then the user's line
+/// and a local echo per send, and Send disabled on a blank draft — React's `BasicChatPanel` exactly.
+#[test]
+fn the_chat_panel_paints_a_transcript_and_echoes_each_send() {
+    let mut shell = fresh_state();
+    assert_eq!(shell.agent_chat_messages.len(), 2, "💬️ two seeded assistant lines, so the panel is never blank");
+    assert!(shell.agent_chat_messages.iter().all(|message| message.role == "assistant"));
+    shell.send_agent_chat_draft();
+    assert_eq!(shell.agent_chat_messages.len(), 2, "💬️ a blank draft sends nothing");
+    shell.agent_chat_draft = "  hello  ".into();
+    shell.send_agent_chat_draft();
+    assert_eq!(shell.agent_chat_messages.len(), 4, "💬️ the user's line plus the local echo");
+    assert_eq!(shell.agent_chat_messages[2].role, "user");
+    assert_eq!(shell.agent_chat_messages[2].body, "hello", "💬️ trimmed, React's own `trimmed`");
+    assert!(shell.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
+    assert!(shell.agent_chat_messages[3].body.contains("hello"), "💬️ the echo quotes the preview");
+    let records = panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &shell.build_agent_chat_ui()).expect("the transcript projects");
+    assert!(records.iter().any(|record| record.key.as_str().contains("framework.chat.draft")), "💬️ the draft box is part of the published body");
+    assert!(records.iter().any(|record| record.key.as_str().contains("framework.chat.send")), "💬️ so is Send");
+}
+//#endregion 💬️AgentChatTranscript
+
+//#region 🌳️TreeUnits
+/// 🌳️ Every persisted LEAF carries its single `<leafId>.tree` unit and every BRANCH carries none —
+/// React's `panelTabNodeToSkeleton`, so a skeleton this renderer writes round-trips through React's
+/// own unit resolution instead of dropping every leaf's units.
+#[test]
+fn a_persisted_skeleton_carries_each_leafs_tree_unit() {
+    let shell = fixture_dock_shell();
+    let skeleton = dock_skeleton_of(&shell.default_dock());
+    fn walk(entries: &[DockTabSkeleton]) {
+        for entry in entries {
+            match entry.children.as_deref() {
+                Some(children) => {
+                    assert_eq!(entry.trees, None, "🌳️ a branch carries no tree units: {}", entry.id);
+                    walk(children);
+                }
+                None => assert_eq!(entry.trees.as_deref(), Some([dock_leaf_tree_unit_id(&entry.id)].as_slice()), "🌳️ leaf {} carries its own single unit", entry.id),
+            }
+        }
+    }
+    for anchor in PanelAnchor::ALL {
+        walk(skeleton.anchors.get(anchor.as_str()).map(Vec::as_slice).unwrap_or_default());
+    }
+}
+//#endregion 🌳️TreeUnits
+
+//#region 🧭️ChromeBandFixture
+/// 🖥️ The Display branch is FRAMEWORK chrome: its children are the framework's own two display
+/// leaves (React's `createFrameworkDisplayPanelTabs`), and an app's display-group tabs are its
+/// SIBLINGS. Before this, wgpu built the branch out of the app's tabs and dropped the whole "Display"
+/// chip for an app that declares none — which is exactly what the first real wgpu boot showed.
+#[test]
+fn default_dock_display_branch_carries_the_framework_display_leaves() {
+    let fixture = default_dock_fixture();
+    let shell = fixture_dock_shell();
+    let dock = shell.default_dock();
+    let bottom_left = dock.tabs(PanelAnchor::BottomLeft);
+    let branch = bottom_left.first().expect("bottom-left opens with the framework Display branch");
+    assert_eq!(branch.id, fixture["displayBranch"]["id"].as_str().expect("fixture display branch id"));
+    assert!(branch.is_branch(), "the Display branch nests the framework display leaves");
+    let expected: Vec<&str> = fixture["displayBranch"]["children"].as_array().expect("fixture display children").iter().map(|child| child.as_str().expect("child id")).collect();
+    assert_eq!(branch.children.iter().map(|child| child.id.as_str()).collect::<Vec<_>>(), expected);
+    assert!(bottom_left.iter().any(|tab| tab.id == "fixture.display"), "🧭️ an app's display-group tab is a SIBLING of the branch, not one of its children");
+    assert!(!branch.children.iter().any(|child| child.id == "fixture.display"));
+    let empty_app_shell = ShellState::new(Vec::new(), String::new());
+    assert!(empty_app_shell.default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
+}
+
+/// 🧭️ A dock whose chrome bands are exactly what the shared fixture declares.
+fn banded_dock_shell() -> ShellState {
+    let mut shell = fixture_dock_shell();
+    shell.dock_override = None;
+    shell.sync_dock_tabs();
+    shell
+}
+
+/// 📑️ **The navbar band pin.** Top-left's folded tabs read at the navbar's LEADING edge in declared
+/// order, and the trailing row is enumerated right-to-left so top-middle/top-right read left-to-right
+/// with the last tab nearest `Fullscreen` — React's `navbarItems` order. The pre-parity renderer
+/// packed all three navbar anchors onto the trailing side in reverse, which is why the boot showed
+/// `Catalogue · Artifact · Chat · Tool runs · Inspection` all on the right.
+#[test]
+fn navbar_bands_match_the_react_chrome_band_fixture() {
+    let fixture = default_dock_fixture();
+    let shell = banded_dock_shell();
+    let bands = &fixture["chromeBands"]["navbar"];
+    let leading: Vec<&str> = bands["leading"].as_array().expect("navbar leading band").iter().map(|anchor| anchor.as_str().expect("anchor id")).collect();
+    let trailing: Vec<&str> = bands["trailing"].as_array().expect("navbar trailing band").iter().map(|anchor| anchor.as_str().expect("anchor id")).collect();
+    let expected_leading: Vec<(String, String)> = leading
+        .iter()
+        .flat_map(|anchor| {
+            let anchor = PanelAnchor::from_str(anchor).expect("fixture anchor");
+            shell.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
+        })
+        .collect();
+    for (index, (anchor, id)) in expected_leading.iter().enumerate() {
+        let (actual_anchor, actual) = shell.navbar_leading_tab_row_item(index).expect("the leading band carries every top-left tab");
+        assert_eq!((actual_anchor.as_str(), actual.id.as_str()), (anchor.as_str(), id.as_str()), "📑️ leading navbar slot {index}");
+    }
+    assert!(shell.navbar_leading_tab_row_item(expected_leading.len()).is_none(), "📑️ the leading band ends with top-left's last tab");
+    let mut expected_trailing: Vec<(String, String)> = trailing
+        .iter()
+        .flat_map(|anchor| {
+            let anchor = PanelAnchor::from_str(anchor).expect("fixture anchor");
+            shell.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
+        })
+        .collect();
+    expected_trailing.reverse();
+    for (index, (anchor, id)) in expected_trailing.iter().enumerate() {
+        let (actual_anchor, actual) = shell.navbar_trailing_tab_row_item(index).expect("the trailing band carries every top-middle/top-right tab");
+        assert_eq!((actual_anchor.as_str(), actual.id.as_str()), (anchor.as_str(), id.as_str()), "📑️ trailing navbar paint slot {index}");
+    }
+    assert!(shell.navbar_trailing_tab_row_item(expected_trailing.len()).is_none());
+    assert!(!expected_leading.is_empty() && !expected_trailing.is_empty(), "🧭️ the fixture app populates both navbar bands");
+    eprintln!("[DEBUG] navbar leading={expected_leading:?} trailing(paint order)={expected_trailing:?}");
+}
+
+/// 📑️ **The footer band pin.** bottom-left hugs the leading edge, bottom-middle is CENTRED on the
+/// footer and bottom-right ends at the trailing edge — React's `footerItems` (`centered: true` on the
+/// middle bar, a fill before the right one). The renderer used to left-pack all three in one run.
+#[test]
+fn footer_bands_match_the_react_chrome_band_fixture() {
+    let fixture = default_dock_fixture();
+    let shell = banded_dock_shell();
+    let theme = Theme::light();
+    let mut atlas = FontAtlas::builtin();
+    let (width, btn_h) = (1440.0_f32, theme.control_height);
+    let lead_x = theme.padding_standard;
+    let mut rows = Vec::new();
+    for index in 0..64 {
+        let Some((anchor, node, rect)) = shell.footer_tab_row_rect(&mut atlas, &theme, index, width, 0.0, btn_h) else { break };
+        rows.push((anchor, node.id.clone(), rect));
+    }
+    assert!(!rows.is_empty(), "the fixture dock populates the footer");
+    let band = |name: &str| -> Vec<(PanelAnchor, String, Rect)> {
+        let anchor = PanelAnchor::from_str(name).expect("fixture anchor");
+        rows.iter().filter(|(candidate, _, _)| *candidate == anchor).cloned().collect()
+    };
+    for name in fixture["chromeBands"]["footer"]["leading"].as_array().expect("footer leading band").iter().map(|value| value.as_str().expect("anchor id")) {
+        let rows = band(name);
+        assert_eq!(rows.first().map(|(_, _, rect)| rect.x), Some(lead_x), "📑️ {name} opens at the footer's leading edge");
+    }
+    for name in fixture["chromeBands"]["footer"]["centre"].as_array().expect("footer centre band").iter().map(|value| value.as_str().expect("anchor id")) {
+        let rows = band(name);
+        let (Some(first), Some(last)) = (rows.first(), rows.last()) else { continue };
+        let span = (last.2.x + last.2.w) - first.2.x;
+        assert!((first.2.x + span * 0.5 - width * 0.5).abs() < 0.5, "📑️ {name} is centred on the footer");
+    }
+    for name in fixture["chromeBands"]["footer"]["trailing"].as_array().expect("footer trailing band").iter().map(|value| value.as_str().expect("anchor id")) {
+        let rows = band(name);
+        let Some(last) = rows.last() else { continue };
+        assert!(((last.2.x + last.2.w) - (width - theme.padding_standard)).abs() < 0.5, "📑️ {name} ends at the footer's trailing edge");
+    }
+    for window in rows.windows(2) {
+        let (left, right) = (&window[0], &window[1]);
+        assert!(left.2.x + left.2.w <= right.2.x + 0.01, "📑️ footer chips never overlap: {} then {}", left.1, right.1);
+    }
+    eprintln!("[DEBUG] footer bands {:?}", rows.iter().map(|(anchor, id, rect)| (anchor.as_str(), id.as_str(), rect.x, rect.w)).collect::<Vec<_>>());
+}
+//#endregion 🧭️ChromeBandFixture

@@ -20,12 +20,31 @@ const MAX_INTERACTIVE_SEED_CORRESPONDENCES: usize = 64;
 const MAX_INTERACTIVE_SEED_HYPOTHESES: usize = 32;
 const MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES: usize = 64;
 const MAX_INTERACTIVE_REGISTRATION_ATTEMPTS: u64 = 64;
+/// 🎯️ Hypotheses the bounded PnP registration draws before it commits when the running best already
+/// explains most correspondences; a poorer best keeps drawing up to
+/// [`MAX_INTERACTIVE_REGISTRATION_ATTEMPTS`].
+const MIN_INTERACTIVE_REGISTRATION_ATTEMPTS: u64 = 8;
+/// 🎯️ Inlier share of the 2D–3D correspondences a bounded PnP pose must explain to be committed.
+const MIN_INTERACTIVE_REGISTRATION_INLIER_SHARE: f64 = 0.25;
+/// 🎯️ Reprojection tolerance of the bounded PnP relative to the configured RANSAC threshold: the
+/// points it registers against were triangulated from neighbouring views a few degrees apart, from
+/// integer-pixel keypoints, so they carry a few pixels of error the later bundle cleanup removes;
+/// held to the seed threshold, a correct pose on the orbit fixture explained 29 % of its
+/// correspondences and was refused.
+const INTERACTIVE_REGISTRATION_THRESHOLD_FACTOR: f64 = 2.0;
+/// 🎯️ Inlier share past which the bounded PnP stops drawing early.
+const EARLY_INTERACTIVE_REGISTRATION_INLIER_SHARE: f64 = 0.6;
 /// 🎯️ Bounded hypothesis batches the two-view registration fallback spends before it commits to the
 /// best essential matrix it found (each batch is one [`MAX_INTERACTIVE_SEED_HYPOTHESES`] draw from
 /// each of the five-point and eight-point estimators).
 const MAX_INTERACTIVE_TWO_VIEW_ATTEMPTS: usize = 8;
 const MAX_INTERACTIVE_TRACK_OBSERVATIONS: usize = 8;
-const MAX_INTERACTIVE_TRACKS: usize = 512;
+/// 🧵️ Tracks the bounded registration, triangulation and snapshot walks consider. Every walk is a
+/// cursor advanced by the call's work budget, so this caps the reconstruction's point count, not a
+/// call's cost. It must exceed the tracks a registrable capture produces before its later frames
+/// start: at 512 a 36-view orbit had every track past the first ~4 views ignored, so PnP starved
+/// from the fifth camera on.
+const MAX_INTERACTIVE_TRACKS: usize = 4_096;
 
 // #region 🔖️Mat3Helpers
 fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -1129,27 +1148,41 @@ pub fn triangulation_angle(pose_a: &CameraPose, pose_b: &CameraPose, point: [f64
 /// pairwise viewing-ray angle is at least `min_angle_rad`, every view's reprojection error is at most
 /// `max_reproj_err_px`, and every view sees the point in front of its camera (folded into the
 /// reprojection check via [`reproject`]'s own cheirality test).
+///
+/// 🩹️ One wrong observation in a track of three or more does not sink the track: when the
+/// full-track estimate is rejected by some views but at least two views agree with it, the point is
+/// re-triangulated from the agreeing views alone and validated strictly on them (one round).
 pub fn triangulate_and_validate(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], min_angle_rad: f64, max_reproj_err_px: f64) -> Option<[f64; 3]> {
-    let initial = triangulate_dlt(poses, obs_px)?;
-    let refined = refine_point_lm(poses, obs_px, initial);
-    let mut max_angle = 0.0_f64;
-    for i in 0..poses.len() {
-        for j in (i + 1)..poses.len() {
-            max_angle = max_angle.max(triangulation_angle(&poses[i].0, &poses[j].0, refined));
+    fn validate(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], min_angle_rad: f64, max_reproj_err_px: f64) -> Result<[f64; 3], Vec<usize>> {
+        let initial = triangulate_dlt(poses, obs_px).ok_or_else(Vec::new)?;
+        let refined = refine_point_lm(poses, obs_px, initial);
+        let mut max_angle = 0.0_f64;
+        for i in 0..poses.len() {
+            for j in (i + 1)..poses.len() {
+                max_angle = max_angle.max(triangulation_angle(&poses[i].0, &poses[j].0, refined));
+            }
         }
-    }
-    if max_angle < min_angle_rad {
-        return None;
-    }
-    for (item, &obs) in poses.iter().zip(obs_px.iter()) {
-        let (pose, intr) = item;
-        let pred = reproject(intr, pose, refined)?;
-        let err = ((pred[0] - obs[0]).powi(2) + (pred[1] - obs[1]).powi(2)).sqrt();
-        if err > max_reproj_err_px {
-            return None;
+        if max_angle < min_angle_rad {
+            return Err(Vec::new());
         }
+        let agreeing: Vec<usize> = poses
+            .iter()
+            .zip(obs_px.iter())
+            .enumerate()
+            .filter(|(_, ((pose, intr), &obs))| reproject(intr, pose, refined).is_some_and(|pred| ((pred[0] - obs[0]).powi(2) + (pred[1] - obs[1]).powi(2)).sqrt() <= max_reproj_err_px))
+            .map(|(index, _)| index)
+            .collect();
+        if agreeing.len() == poses.len() { Ok(refined) } else { Err(agreeing) }
     }
-    Some(refined)
+    match validate(poses, obs_px, min_angle_rad, max_reproj_err_px) {
+        Ok(point) => Some(point),
+        Err(agreeing) if agreeing.len() >= 2 && agreeing.len() < poses.len() => {
+            let subset_poses: Vec<(CameraPose, Intrinsics)> = agreeing.iter().map(|&index| poses[index]).collect();
+            let subset_obs: Vec<[f64; 2]> = agreeing.iter().map(|&index| obs_px[index]).collect();
+            validate(&subset_poses, &subset_obs, min_angle_rad, max_reproj_err_px).ok()
+        }
+        Err(_) => None,
+    }
 }
 // #endregion 🔖️Triangulate
 
@@ -1931,6 +1964,12 @@ pub struct SfmBundleProblem {
     pub num_points: usize,
     pub terms: Vec<ResidualTerm>,
     pub observations: std::collections::HashMap<(usize, usize), [f64; 2]>,
+    /// 📌️ Cameras (by A-index) the adjustment holds still: their pose Jacobian is zero, so with
+    /// damping on the diagonal the solver's step for them is zero. Holding the two oldest cameras
+    /// of a window pins the reconstruction's gauge — rotation, translation AND scale — which
+    /// otherwise floats freely through every local adjustment and shows up as the seed pair's
+    /// pose wandering off by degrees while nothing in the images moved.
+    pub fixed_cameras: Vec<bool>,
 }
 
 impl BipartiteResiduals for SfmBundleProblem {
@@ -1967,7 +2006,8 @@ impl BipartiteResiduals for SfmBundleProblem {
         let point: [f64; 3] = std::array::from_fn(|k| b_params[bi].get(k));
         let r = residual_at(xi, point);
         let mut ja = MatD::zeros(2, 6);
-        for k in 0..6 {
+        let camera_free = !self.fixed_cameras.get(ai).copied().unwrap_or(false);
+        for k in (0..6).filter(|_| camera_free) {
             let mut xp = xi;
             xp[k] += eps;
             let mut xm = xi;
@@ -2100,11 +2140,17 @@ pub struct RegistrationPreparation {
     observations: Vec<[f64; 2]>,
     phase: RegistrationPhase,
     two_view: Option<Box<TwoViewFallback>>,
+    /// 🎯️ Best PnP hypothesis so far across the one-draw-per-call attempts: pose and inlier count.
+    /// One draw is one random 3-point sample, so committing the FIRST pose a call answers registers
+    /// the camera on whatever three correspondences came up — and every later triangulation and
+    /// registration inherits that pose's error (the orbit fixture's third camera came out 16° off,
+    /// the fourth 108°). The draws are kept and the best-supported pose is committed instead.
+    best: Option<(CameraPose, usize)>,
 }
 
 impl RegistrationPreparation {
     pub fn new(frame: usize) -> Self {
-        Self { frame, cursor: 0, attempts: 0, world_points: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), observations: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), phase: RegistrationPhase::Collect, two_view: None }
+        Self { frame, cursor: 0, attempts: 0, world_points: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), observations: Vec::with_capacity(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES), phase: RegistrationPhase::Collect, two_view: None, best: None }
     }
 }
 
@@ -2119,6 +2165,8 @@ pub struct BundlePreparation {
     point_track_ids: Vec<usize>,
     cursor: usize,
     phase: BundlePhase,
+    /// 🧹️ Multiple of the RANSAC threshold a point's worst reprojection may reach before pruning.
+    tolerance: f64,
 }
 
 pub struct ReconstructionSnapshotPreparation {
@@ -2132,6 +2180,25 @@ impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
     pub fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
         Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::BTreeMap::new(), point_events: None }
+    }
+
+    /// 🧮️ Retained heap bytes of everything this reconstruction holds on to: the tracks and keypoints it
+    /// was handed, the pairwise match table, the registered cameras, the triangulated point map and any
+    /// recorded point events. A memory probe needs this without seeing the private fields.
+    pub fn retained_bytes(&self) -> usize {
+        let nested = |outer: usize, inner: usize| outer + inner;
+        nested(
+            self.tracks.tracks.len() * std::mem::size_of::<Vec<(usize, u32)>>(),
+            self.tracks.tracks.iter().map(|track| track.capacity() * std::mem::size_of::<(usize, u32)>()).sum::<usize>(),
+        ) + nested(
+            self.keypoints_per_frame.len() * std::mem::size_of::<Vec<Keypoint>>(),
+            self.keypoints_per_frame.iter().map(|frame| frame.capacity() * std::mem::size_of::<Keypoint>()).sum::<usize>(),
+        ) + nested(
+            self.pairwise_matches.len() * std::mem::size_of::<(usize, usize, Vec<Match>)>(),
+            self.pairwise_matches.iter().map(|(_, _, matches)| matches.capacity() * std::mem::size_of::<Match>()).sum::<usize>(),
+        ) + self.cameras.capacity() * std::mem::size_of::<(usize, CameraPose)>()
+            + self.points.len() * (std::mem::size_of::<usize>() + std::mem::size_of::<[f64; 3]>() + 16)
+            + self.point_events.as_ref().map_or(0, |events| events.capacity() * std::mem::size_of::<(usize, [f64; 3], bool)>())
     }
 
     /// 🔭️ Starts recording every triangulated (`true`) and pruned (`false`) point by track id.
@@ -2202,6 +2269,28 @@ impl IncrementalSfm {
     #[cfg(test)]
     pub fn has_camera(&self, frame: usize) -> bool {
         self.is_registered(frame)
+    }
+
+    /// 🔢️ How many triangulated points `frame` observes — the 2D–3D correspondences a PnP
+    /// registration of that frame can draw from.
+    pub fn correspondence_count(&self, frame: usize) -> usize {
+        self.points.keys().filter(|&&track_id| self.tracks.tracks.get(track_id).is_some_and(|track| track.iter().any(|&(observed, _)| observed == frame))).count()
+    }
+
+    /// 🧵️ The observations `(frame, keypoint)` of every triangulated track `frame` observes, with
+    /// the track's point — what a registration of `frame` sees, laid out for an audit.
+    pub fn correspondences_of(&self, frame: usize) -> Vec<(usize, [f64; 3], Vec<(usize, u32)>)> {
+        self.points.iter().filter_map(|(&track_id, &point)| self.tracks.tracks.get(track_id).filter(|track| track.iter().any(|&(observed, _)| observed == frame)).map(|track| (track_id, point, track.clone()))).collect()
+    }
+
+    /// 🧵️ Every track observing `frame`, with whether it already carries a point.
+    pub fn tracks_observing(&self, frame: usize) -> Vec<(Vec<(usize, u32)>, bool)> {
+        self.tracks.tracks.iter().enumerate().filter(|(_, track)| track.iter().any(|&(observed, _)| observed == frame)).map(|(track_id, track)| (track.clone(), self.points.contains_key(&track_id))).collect()
+    }
+
+    /// 🔢️ Triangulated points.
+    pub fn point_count(&self) -> usize {
+        self.points.len()
     }
 
     pub fn registered_count(&self) -> usize {
@@ -2451,7 +2540,16 @@ impl IncrementalSfm {
                 if preparation.correspondences.len() < 8 {
                     return Err(SfmError::InsufficientMatches);
                 }
-                let estimate = estimate_essential_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
+                // 🎯️ Five-point minimal solve with the nonlinear polish first: it stays on the
+                // essential matrix's 5-DOF manifold, so the seed pose it yields is accurate enough
+                // for the triangulations everything downstream (PnP registration, bundle adjustment)
+                // is anchored to. The unconstrained 8-point fit is only the fallback for a pair the
+                // five-point search cannot solve within its hypothesis budget.
+                const SEED_FIVE_POINT_THRESHOLD: f64 = 0.005;
+                let estimate = estimate_essential_five_point_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, SEED_FIVE_POINT_THRESHOLD, 1, MAX_INTERACTIVE_SEED_HYPOTHESES)
+                    .filter(|estimate| estimate.inliers.len() >= 8)
+                    .or_else(|| estimate_essential_with_limit(&preparation.correspondences, &self.intrinsics, &self.intrinsics, MAX_INTERACTIVE_SEED_HYPOTHESES))
+                    .ok_or(SfmError::DegenerateGeometry)?;
                 let TwoViewModel::Fundamental(essential) = estimate.model else { return Err(SfmError::DegenerateGeometry) };
                 let rays: Vec<([f64; 2], [f64; 2])> = estimate
                     .inliers
@@ -2510,14 +2608,25 @@ impl IncrementalSfm {
                 if preparation.world_points.len() < P3pSolver::SAMPLE_SIZE {
                     preparation.phase = RegistrationPhase::TwoViewSelect;
                 } else {
-                    let config = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.5, max_iters: 1, seed: preparation.frame as u64 ^ preparation.attempts.wrapping_mul(0x9E37_79B9), scoring: RansacScoring::Msac };
+                    let config = RansacConfig { threshold: self.cfg.ransac_threshold_px * INTERACTIVE_REGISTRATION_THRESHOLD_FACTOR, confidence: 0.5, max_iters: 1, seed: preparation.frame as u64 ^ preparation.attempts.wrapping_mul(0x9E37_79B9), scoring: RansacScoring::Msac };
                     preparation.attempts += 1;
-                    if let Some((pose, _)) = pnp_ransac(&self.intrinsics, &preparation.world_points, &preparation.observations, &config) {
-                        self.cameras.push((preparation.frame, pose));
-                        preparation.cursor = 0;
-                        preparation.phase = RegistrationPhase::Triangulate;
-                    } else if preparation.attempts >= MAX_INTERACTIVE_REGISTRATION_ATTEMPTS {
-                        preparation.phase = RegistrationPhase::TwoViewSelect;
+                    if let Some((pose, inliers)) = pnp_ransac(&self.intrinsics, &preparation.world_points, &preparation.observations, &config) {
+                        if preparation.best.as_ref().is_none_or(|(_, best)| inliers.len() > *best) {
+                            preparation.best = Some((pose, inliers.len()));
+                        }
+                    }
+                    let correspondences = preparation.world_points.len() as f64;
+                    let share = preparation.best.as_ref().map_or(0.0, |(_, inliers)| *inliers as f64 / correspondences);
+                    let settled = preparation.attempts >= MAX_INTERACTIVE_REGISTRATION_ATTEMPTS || (preparation.attempts >= MIN_INTERACTIVE_REGISTRATION_ATTEMPTS && share >= EARLY_INTERACTIVE_REGISTRATION_INLIER_SHARE);
+                    if settled {
+                        match preparation.best.take() {
+                            Some((pose, inliers)) if inliers >= 2 * P3pSolver::SAMPLE_SIZE && share >= MIN_INTERACTIVE_REGISTRATION_INLIER_SHARE => {
+                                self.cameras.push((preparation.frame, pose));
+                                preparation.cursor = 0;
+                                preparation.phase = RegistrationPhase::Triangulate;
+                            }
+                            _ => preparation.phase = RegistrationPhase::TwoViewSelect,
+                        }
                     }
                 }
             }
@@ -2754,7 +2863,7 @@ impl IncrementalSfm {
     }
 
     #[cfg(test)]
-    fn build_bundle_problem(&self, camera_frames: &[usize]) -> (SfmBundleProblem, Vec<VecD>, Vec<VecD>, Vec<usize>) {
+    fn build_bundle_problem(&self, camera_frames: &[usize], fixed_frames: &[usize]) -> (SfmBundleProblem, Vec<VecD>, Vec<VecD>, Vec<usize>) {
         let a_index_of: std::collections::HashMap<usize, usize> = camera_frames.iter().enumerate().map(|(i, &f)| (f, i)).collect();
         let mut point_track_ids: Vec<usize> = Vec::new();
         let mut b_index_of: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
@@ -2779,8 +2888,54 @@ impl IncrementalSfm {
             })
             .collect();
         let b0: Vec<VecD> = point_track_ids.iter().map(|&tid| VecD::from_vec(self.points[&tid].to_vec())).collect();
-        let problem = SfmBundleProblem { intrinsics: self.intrinsics, num_cameras: camera_frames.len(), num_points: point_track_ids.len(), terms, observations };
+        let fixed_cameras = camera_frames.iter().map(|frame| fixed_frames.contains(frame)).collect();
+        let problem = SfmBundleProblem { intrinsics: self.intrinsics, num_cameras: camera_frames.len(), num_points: point_track_ids.len(), terms, observations, fixed_cameras };
         (problem, a0, b0, point_track_ids)
+    }
+
+    /// 🎯️ One damped Gauss-Newton iteration of the bundle adjustment over `camera_frames` and the
+    /// points they see, resuming the damping schedule at `lambda`; answers the damping to resume
+    /// with and whether the solver reports convergence. Rebuilding the problem per call costs one
+    /// pass over the window's observations, which is what keeps a call inside a worker step.
+    pub fn bundle_adjustment_iteration(&mut self, camera_frames: &[usize], fixed_frames: &[usize], lambda: f64, loss: RobustLoss) -> (f64, bool) {
+        if camera_frames.is_empty() {
+            return (lambda, true);
+        }
+        let (problem, a0, b0, point_track_ids) = self.build_bundle_problem(camera_frames, fixed_frames);
+        if problem.terms.is_empty() {
+            return (lambda, true);
+        }
+        let cfg = LmConfig { max_iters: 1, initial_lambda: lambda, loss, ..LmConfig::default() };
+        let result: SchurResult = schur_lm(&problem, a0, b0, &cfg);
+        eprintln!("TEMPDIAG ba cameras {} points {} terms {} cost {:.3} iterations {} converged {} lambda_in {lambda:.2e} lambda_out {:.2e}", camera_frames.len(), point_track_ids.len(), problem.terms.len(), result.cost, result.iterations, result.converged, result.lambda);
+        for (frame, a) in camera_frames.iter().zip(result.a_params.iter()) {
+            let xi: [f64; 6] = std::array::from_fn(|k| a.get(k));
+            if let Some(entry) = self.cameras.iter_mut().find(|entry| entry.0 == *frame) {
+                entry.1 = CameraPose(Se3::exp(xi));
+            }
+        }
+        for (tid, b) in point_track_ids.iter().zip(result.b_params.iter()) {
+            self.points.insert(*tid, [b.get(0), b.get(1), b.get(2)]);
+        }
+        (result.lambda, result.converged)
+    }
+
+    /// 🎯️ The configured robust loss, the one a local adjustment uses.
+    pub fn robust_loss(&self) -> RobustLoss {
+        self.cfg.robust_loss
+    }
+
+    /// 🎯️ The frames a local bundle adjustment after the latest registration refines: the last
+    /// `window` registered cameras in registration order.
+    pub fn local_bundle_frames(&self, window: usize) -> Vec<usize> {
+        let frames: Vec<usize> = self.cameras.iter().map(|&(f, _)| f).collect();
+        let start = frames.len().saturating_sub(window);
+        frames[start..].to_vec()
+    }
+
+    /// 🌐️ Every registered frame in registration order, for a global bundle adjustment.
+    pub fn registered_frames(&self) -> Vec<usize> {
+        self.cameras.iter().map(|&(f, _)| f).collect()
     }
 
     #[cfg(test)]
@@ -2788,7 +2943,7 @@ impl IncrementalSfm {
         if camera_frames.is_empty() {
             return;
         }
-        let (problem, a0, b0, point_track_ids) = self.build_bundle_problem(camera_frames);
+        let (problem, a0, b0, point_track_ids) = self.build_bundle_problem(camera_frames, &[]);
         if problem.terms.is_empty() {
             return;
         }
@@ -2879,9 +3034,17 @@ impl IncrementalSfm {
     }
 
     pub fn begin_bundle(&self) -> BundlePreparation {
+        self.begin_bundle_with_tolerance(3.0)
+    }
+
+    /// 🧹️ [`Self::begin_bundle`] pruning at `tolerance` times the RANSAC threshold instead of three:
+    /// the cleanup that precedes a global adjustment keeps the loop-closure observations — the ones
+    /// a drifted chain reprojects tens of pixels off, and the only ones that can pull the loop shut —
+    /// by pruning only gross outliers; the cleanup after it prunes at the strict tolerance.
+    pub fn begin_bundle_with_tolerance(&self, tolerance: f64) -> BundlePreparation {
         let mut point_track_ids: Vec<usize> = self.points.keys().copied().take(MAX_INTERACTIVE_TRACKS).collect();
         point_track_ids.sort_unstable();
-        BundlePreparation { point_track_ids, cursor: 0, phase: BundlePhase::Prune }
+        BundlePreparation { point_track_ids, cursor: 0, phase: BundlePhase::Prune, tolerance }
     }
 
     /// 🎯️ Incremental robust bundle cleanup: one triangulated point's complete bounded observation
@@ -2912,7 +3075,7 @@ impl IncrementalSfm {
                         };
                         maximum = maximum.max(((predicted[0] - observed[0]).powi(2) + (predicted[1] - observed[1]).powi(2)).sqrt());
                     }
-                    if visible < 2 || maximum > self.cfg.ransac_threshold_px * 3.0 {
+                    if visible < 2 || maximum > self.cfg.ransac_threshold_px * preparation.tolerance {
                         self.points.remove(&track_id);
                         if let Some(events) = self.point_events.as_mut() {
                             events.push((track_id, point, false));

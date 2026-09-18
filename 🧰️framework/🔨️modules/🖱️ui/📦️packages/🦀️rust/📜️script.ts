@@ -4,16 +4,22 @@ import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleS
 import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../../🎚️axes/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], this.root, ["--features", "tui-terminal,wgpu", ...rest]);
+    await runCargoTestBudgeted([], this.root, ["--features", "tui-terminal,wgpu", ...rest]);
   }
 }
 
+/**
+ * 🧊️ The retained wgpu engine's own unit laws: `--lib`, because every one of the
+ * `🧪️tests/🔬️targets-wgpu-*` case directories is mounted into the library with `#[cfg(test)]
+ * #[path = …]` rather than declared as a `[[test]]` binary — `--lib` is what compiles and runs them,
+ * and leaving it off drags in integration targets this lane does not own.
+ */
 class TestWgpuEngineScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], this.root, ["--features", "wgpu-engine", ...rest]);
+    await runCargoTestBudgeted([], this.root, ["--features", "wgpu-engine", "--lib", ...rest]);
   }
 }
 

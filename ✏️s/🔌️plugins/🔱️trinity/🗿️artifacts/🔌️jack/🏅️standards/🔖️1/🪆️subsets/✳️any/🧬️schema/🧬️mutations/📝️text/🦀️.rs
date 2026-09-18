@@ -4,7 +4,7 @@ use crate::JackSnapshot;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 pub use crate::standards::v1::subsets::any::schema::operations::{
-    apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope, dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, validate_trinity_graph_operation, TrinityGraphEnvelope, TrinityGraphStore,
+    apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope, dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, new_trinity_graph_store, validate_trinity_graph_operation, OwnedTrinityGraphStore, TrinityGraphEnvelope, TrinityGraphStore,
 };
 
 //#region 🧾️DerivedRegistry

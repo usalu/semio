@@ -137,7 +137,7 @@ fn dispatch_registers_semantic_descriptors() {
     for kind in <Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 28);
+    assert_eq!(<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 35);
 }
 //#endregion 🔖️MutationLaws
 

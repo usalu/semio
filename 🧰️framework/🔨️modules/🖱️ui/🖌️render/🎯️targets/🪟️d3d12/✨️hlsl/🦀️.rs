@@ -228,6 +228,7 @@ cbuffer WorldGlobals : register(b0) {
 struct VSInput {
     float3 position : ATTRIB0;
     float3 normal : ATTRIB1;
+    float4 vertex_color : ATTRIB2;
     float4 model0 : ATTRIB3;
     float4 model1 : ATTRIB4;
     float4 model2 : ATTRIB5;
@@ -250,7 +251,7 @@ PSInput world3d_mesh_vertex_main(VSInput input) {
     out_v.clip_position = mul(view_proj, world_pos);
     float3x3 normal_matrix = float3x3(model[0].xyz, model[1].xyz, model[2].xyz);
     out_v.normal = normalize(mul(normal_matrix, input.normal));
-    out_v.color = input.color;
+    out_v.color = input.color * input.vertex_color;
     out_v.flags = input.flags;
     return out_v;
 }

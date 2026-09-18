@@ -40,21 +40,74 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 /// 🕹️ Registry-backed (not the bare `artifact_app_laws::new_app`): `interactionSelect`/`interactionHover`
 /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
 /// domain "graph" selection needs the real manifest's `.interaction(...)` declaration present.
-async fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>> {
-    artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await
+/// 🔌️ Mounted (`bind_instance_id`): `dispatch_typed` refuses `interactive-job.live-instance` for an
+/// unbound app, and the mounted app answers BEFORE its retained typed operation publishes, so a
+/// dispatching test settles through `settle(&mut app)` before reading the projection.
+/// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
+/// app through the framework's exact close loop (skipped while unwinding).
+async fn new_app() -> RewritingTestApp {
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await;
+    app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
+    RewritingTestApp(app)
+}
+
+const REWRITING_TEST_INSTANCE: u32 = 1;
+
+pub(crate) struct RewritingTestApp(VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>);
+
+impl std::ops::Deref for RewritingTestApp {
+    type Target = VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for RewritingTestApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for RewritingTestApp {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+}
+
+/// 📬️ Drives the mounted app's retained typed operation to quiescence — the receipt carries the
+/// lanes, effects and events the host would have seen.
+async fn settle(app: &mut RewritingTestApp) -> artifact_app_laws::TypedOperationFixtureReceipt {
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE).await.expect("settle the typed operation")
+}
+
+/// ↩️ Dispatches a framework-reserved history verb (`undo`/`redo`) and settles its reserved job.
+async fn history(app: &mut RewritingTestApp, verb: &str) {
+    artifact_app_laws::settle_history_verb(&mut app.0, verb, REWRITING_TEST_INSTANCE).await;
+}
+
+/// 🖼️ Projects a rendered body through the fixture transport — a bare `serde_json::to_string(&tree.root)`
+/// fails `BuiltChildren requires retained page transport`.
+async fn render(app: &mut RewritingTestApp, body_key: &str, view: &ViewModel) -> String {
+    let tree = app.render(body_key, None, view).await.expect("render");
+    artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project semantic UI test tree")
 }
 
 /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
-/// replacement for the deleted `TrinityRewritingCommand::SetSelection`.
-async fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, ids: &[&str]) {
+/// replacement for the deleted `TrinityRewritingCommand::SetSelection`. On a mounted app the verb is
+/// admitted as a framework-reserved job and publishes later, so both are settled here.
+async fn select_graph(app: &mut RewritingTestApp, ids: &[&str]) {
     let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
     let args = pack::json_to_dsl_value(&pack::json!({ "domainId": "graph", "targets": pack::to_json_string(&targets) }));
-    app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
+    let admitted = app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
+    settle(app).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await;
+    let mut app = new_app().await;
     let request = ContextMenuRequest {
         menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
         surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -78,10 +131,10 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 #[semio_framework_async_macros::async_test]
 async fn renders_before_and_after_graphs() {
     let mut app = new_app().await;
-    let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
-    let after = app.render(TRINITY_REWRITING_PLAY_BODY_AFTER, None, &ViewModel::default()).await.expect("render");
-    assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("node-graph"));
-    assert!(serde_json::to_string(&after.root).expect("serialize semantic UI test tree").contains("node-graph"));
+    let before = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::default()).await;
+    let after = render(&mut app, TRINITY_REWRITING_PLAY_BODY_AFTER, &ViewModel::default()).await;
+    assert!(before.contains("node-graph"));
+    assert!(after.contains("node-graph"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,21 +153,26 @@ async fn apply_rewriting_changes_after_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn renders_lhs_rhs_graphs() {
     let mut app = new_app().await;
-    let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_LHS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
-    let rhs_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_RHS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let lhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_LHS, &ViewModel::default()).await;
+    let rhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_RHS, &ViewModel::default()).await;
     assert!(lhs_json.contains("node-graph"));
     assert!(rhs_json.contains("node-graph"));
-    assert!(lhs_json.contains("\"editable\":true"));
-    assert!(rhs_json.contains("\"editable\":true"));
+    let lhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&lhs_json).expect("lhs node-graph scene");
+    let rhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rhs_json).expect("rhs node-graph scene");
+    assert_eq!(lhs.editable, Some(true));
+    assert_eq!(rhs.editable, Some(true));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_parameter_emits_one_op_and_is_undoable() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).await.expect("set parameter");
-    assert_eq!(result.mutations.len(), 1, "a single-key parameter edit is one ChangeParameterBinding operation");
+    let history_before = app.history_snapshot().await.expect("history").upserts.len();
+    app.dispatch_typed(TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).await.expect("set parameter");
+    let receipt = settle(&mut app).await;
+    assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a parameter edit publishes on the artifact lane: {:?}", receipt.lanes);
+    assert_eq!(app.history_snapshot().await.expect("history").upserts.len(), history_before + 1, "a single-key parameter edit is one ChangeParameterBinding operation (one history entry)");
     assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
+    history(&mut app, "undo").await;
     assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
 }
 
@@ -122,6 +180,7 @@ async fn set_parameter_emits_one_op_and_is_undoable() {
 async fn add_and_delete_rhs_set_clause() {
     let mut app = new_app().await;
     app.dispatch_typed(TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local")).await.expect("add clause");
+    settle(&mut app).await;
     let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
     assert_eq!(rhs.set.len(), 2);
     select_graph(&mut app, &["rhs-set-1"]).await;
@@ -129,7 +188,8 @@ async fn add_and_delete_rhs_set_clause() {
         .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
         .await
         .expect("delete selection");
-    assert!(!result.mutations.is_empty());
+    let receipt = settle(&mut app).await;
+    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "deleteSelection must publish an artifact mutation: {:?}", receipt.lanes);
     let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
     assert_eq!(rhs.set.len(), 1);
 }
@@ -137,15 +197,17 @@ async fn add_and_delete_rhs_set_clause() {
 #[semio_framework_async_macros::async_test]
 async fn jack_view_renders_compiled_query_tokens() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_REWRITING_PLAY_BODY_JACK, None, &ViewModel::default()).await.expect("render");
-    assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("tokensJson"));
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_JACK, &ViewModel::default()).await;
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
+    assert!(scene.tokens_json.is_some_and(|tokens| !tokens.is_empty()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn graph_scenes_have_lod_json() {
     let mut app = new_app().await;
-    let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
-    assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("lodJson"));
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::default()).await;
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
+    assert!(scene.lod_json.is_some(), "lodJson lane missing: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -159,7 +221,7 @@ async fn app_definition_declares_reorganize_and_history_actions() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_resolve_native_by_default() {
     let mut app = new_app().await;
-    let json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &ViewModel::default()).await;
     assert!(json.contains("\"Pieces\""));
     assert!(!json.contains("Stücke"));
 }
@@ -168,14 +230,14 @@ async fn trinity_rewriting_labels_resolve_native_by_default() {
 async fn trinity_rewriting_labels_translate_panels_in_german() {
     let mut app = new_app().await;
     let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
-    let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_ARTIFACT, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
+    let document_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &view).await;
     assert!(document_json.contains("Stücke"));
     assert!(!document_json.contains("\"Pieces\""));
-    let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
+    let catalogue_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_CATALOGUE, &view).await;
     assert!(catalogue_json.contains("Katalog"));
     assert!(catalogue_json.contains("Zu LHS hinzufügen"));
     assert!(catalogue_json.contains("Zu RHS hinzufügen"));
-    let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_PARAMETERS, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
+    let parameters_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_PARAMETERS, &view).await;
     assert!(parameters_json.contains("\"Parameter\""));
     let definition = create_rewriting_app();
     let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");
@@ -188,10 +250,11 @@ async fn set_lhs_json_undo_redo_round_trip() {
     let original = app.snapshot().unwrap().lhs_json;
     let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
     app.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local")).await.expect("set lhs");
+    settle(&mut app).await;
     assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
+    history(&mut app, "undo").await;
     assert_eq!(app.snapshot().unwrap().lhs_json, original);
-    app.handle_action("redo", None, &meta("local")).await.expect("redo");
+    history(&mut app, "redo").await;
     assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
 }
 

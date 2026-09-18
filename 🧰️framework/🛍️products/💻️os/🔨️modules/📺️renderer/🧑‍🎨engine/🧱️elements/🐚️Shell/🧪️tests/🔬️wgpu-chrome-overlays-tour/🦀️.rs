@@ -12,7 +12,10 @@ fn chrome_state() -> ShellChromeBuildState {
 fn chrome_build_state_moves_across_threads_without_losing_state() {
     assert_shell_chrome_build_state_is_send();
     let mut chrome = chrome_state();
-    chrome.content_focus.insert("main".to_string(), true);
+    // 🎯️ `content_focus` records WHICH node holds focus, not a bare bool (ticket 26/09/17 packet W2k),
+    // so the fixture mints a real arena id rather than `true`.
+    let mut focus_arena = ui_wgpu::wgpu::Arena::<u8>::default();
+    chrome.content_focus.insert("main".to_string(), Some(focus_arena.insert(0)));
     chrome.register_tooltip("nav.help", "Help");
     chrome.preferences.theme_id = "mono".to_string();
     let chrome = std::thread::spawn(move || {
@@ -456,12 +459,12 @@ fn utility_subtree_has_active_path_false_when_nothing_pressed() {
     assert!(!utility_subtree_has_active_path(&nodes));
 }
 
-/// 🧪️ Item 5's core regression test: before this fix, `render_footer_utility_nodes` filtered nested
+/// 🧪️ Item 5's core regression test: before this fix, `render_utility_nodes` filtered nested
 /// `Collection`s out of `children` before recursing (`.filter(|child| !matches!(child,
 /// UtilityNode::Collection { .. }))`), so a 2nd-level nested toggle never got a hit target at all —
 /// expanding both levels here must reach it.
 #[test]
-fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
+fn render_utility_nodes_recurses_at_least_two_levels_deep() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
     let leaf_toggle = ui_wgpu::wgpu::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
     let inner_collection = ui_wgpu::wgpu::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
@@ -477,7 +480,7 @@ fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::light();
-    render_footer_utility_nodes(&mut ShellChromeBuildState::default(), &mut draw, &mut atlas, &icons, &mut input, &theme, 0.0, 0.0, theme.control_height, &utilities, &collection_expanded);
+    render_utility_nodes(&mut ShellChromeBuildState::default(), &mut draw, &mut atlas, &icons, &mut input, &theme, 0.0, 0.0, theme.control_height, &utilities, &collection_expanded);
 
     assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("framework.utility.toggle.leaf")), "a toggle nested two Collection levels deep must still get a real hit target once both ancestors are expanded");
 }

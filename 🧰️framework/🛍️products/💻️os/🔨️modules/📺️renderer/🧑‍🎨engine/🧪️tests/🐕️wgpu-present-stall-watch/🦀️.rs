@@ -31,7 +31,8 @@ mod present_stall_watch_tests {
                 gpu[0].as_u64().expect("gpu phase") as u8,
                 gpu[1].as_u64().expect("gpu command") as usize,
                 gpu[2].as_u64().expect("gpu glass command") as usize,
-                gpu[3].as_u64().expect("gpu blur mip") as u32,
+                gpu[3].as_u64().expect("gpu glass foreground command") as usize,
+                gpu[4].as_u64().expect("gpu blur mip") as u32,
             )
         });
         (phase(row[0].as_str().expect("phase tag")), row[1].as_u64().expect("engine index") as usize, row[2].as_u64().expect("upload index") as usize, gpu)

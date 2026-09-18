@@ -223,6 +223,11 @@ mod tree_element;
 #[cfg(feature = "wgpu")]
 #[path = "../../🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod presence_bar;
+/// 📑️ wgpu twin of the `Tabs` element — declarative `UiNode` builder plus React's own roving-focus
+/// key table, so it needs only the light `wgpu` feature (ticket 26/09/17 packet W2k).
+#[cfg(feature = "wgpu")]
+#[path = "../../🧱️elements/📑️Tabs/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod tabs;
 
 #[cfg(feature = "wgpu-engine")]
 #[path = "🪀️widgets/🦀️.rs"]
@@ -250,8 +255,8 @@ pub use component::ui::*;
 pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use geometry::Rect;
 #[cfg(feature = "wgpu")]
-pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_color, presence_css_var, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
-pub use theme::{GlassStyle, Level, Rgba, Theme};
+pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
+pub use theme::{shell_floor_paints, GlassStyle, Level, Rgba, SurfaceFill, SurfaceScope, Theme};
 // 🧩️ `DrawList`'s CPU draw-command accumulator + the two selection-marquee paint helpers that push
 // into it, plus the orbit-view-gizmo placement/hit-test math — all target-neutral, split out of the
 // `wgpu-engine`-only `draw`/`widgets` modules into `draw_types` so `wasm32-wasip2` program
@@ -277,7 +282,11 @@ pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, U
 // `Ui::dispatch_event`), but the data these `UiCommand`s/the host's own drag-ghost rendering need are
 // now part of the crate's curated public API like every other `events` type already was.
 #[cfg(feature = "wgpu-engine")]
-pub use events::{resolve_overlay_placement, CaptureKind, DismissPolicy, DragGhost, DragPayload, DragSession, EventModifiers, ImeEvent, OpenOverlay, OverlayAnchor, OverlayKind, OverlayPlacement, PointerButton, ScrollAxis, UiCommand, UiEvent};
+pub use events::{
+    overlay_rect, resolve_anchored_placement, resolve_centered_placement, resolve_overlay_placement, resolve_overlay_placement_side, resolve_select_inline_left, AnchoredPlacement, CaptureKind,
+    DismissPolicy, DragGhost, DragPayload, DragSession, EventModifiers, ImeEvent, OpenOverlay, OverlayAlign, OverlayAnchor, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, PointerButton,
+    ResolvedOverlayPlacement, ScrollAxis, TooltipStep, UiCommand, UiEvent, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS,
+};
 #[cfg(feature = "wgpu-engine")]
 pub use scene_slots::{SceneHost, ScenePaintCursor, ScenePaintCursorError, ScenePaintStep, SceneSlot, SlotContent};
 #[cfg(feature = "wgpu-engine")]
@@ -287,13 +296,16 @@ pub use shell::{Shell, ShellEvent};
 // this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
 // own closing wiring request.
 pub use action::{
-    checked_action_string_bytes, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, BoundedClaimedActionDraft,
-    BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, ACTION_ITEM_BYTE_CAPACITY, ACTION_STRING_BYTE_CAPACITY,
+    checked_action_string_bytes, intent_is_stale, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue,
+    BoundedActionReservation, BoundedClaimedActionDraft, BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, UiIntentAddress, UiIntentAdmission, UiIntentBindings, UiIntentCommand,
+    UiIntentSequencer, ACTION_ITEM_BYTE_CAPACITY, ACTION_STRING_BYTE_CAPACITY, INTENT_DELTA_FIELD, INTENT_VALUE_FIELD,
 };
 #[cfg(feature = "wgpu-engine")]
-pub use chrome::{chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY};
+pub use chrome::{
+    chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
+};
 #[cfg(feature = "wgpu-engine")]
-pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep};
+pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiSceneHit};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
@@ -312,13 +324,17 @@ pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, 
 #[cfg(feature = "wgpu-engine")]
 pub use input::RetainedHitRegistration;
 #[cfg(feature = "wgpu-engine")]
-pub use paint::{paint_retained_glyph_step, RetainedGlyphCursor, RetainedGlyphStep, RETAINED_NODE_TEXT_MAX_BYTES};
+pub use paint::{
+    admit_ui_image, close_ui_image_ledger_step, paint_overlay_backdrop, paint_overlay_surface, paint_retained_glyph_step, paint_retained_glyph_step_flowed, paint_tooltip, skeleton_blocks, skeleton_kind,
+    skeleton_replaces_content, take_ui_image_upload, tooltip_surface_size, ui_image_content_rect, ui_image_natural_size, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, SkeletonKind, UiImageAdmission, UiImageUpload,
+    OVERLAY_BACKDROP_ALPHA, RETAINED_NODE_TEXT_MAX_BYTES, SKELETON_MAX_BLOCKS, UI_IMAGE_LEDGER_ENTRIES, UI_IMAGE_MAX_BOX_HEIGHT, UI_IMAGE_MAX_DIMENSION, UI_IMAGE_SOURCE_MAX_BYTES,
+};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use prepared::OffscreenPresentToken;
 pub use prepared::{
     PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate,
     PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload,
-    PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
+    PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_ITEM_BYTES, PREPARED_RASTER_PAGE_BYTES,
 };
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated
@@ -343,10 +359,17 @@ pub use kernel_3d_scene::{
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 #[cfg(feature = "wgpu-engine")]
-pub use text::{fetch_font_bytes, FontAtlas};
+pub use text::{faux_bold_offset, fetch_font_bytes, FontAtlas, TextWeight};
 #[cfg(feature = "wgpu-engine")]
 pub use widgets::{
     draw_icon, draw_text, draw_text_overlay, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction,
     TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
 // #endregion re-exports
+
+// ⚖️ Structural law over the wgpu unit-test wiring itself — see the case file's own docstring. It
+// lives on the wgpu target root because it owns no module's behaviour, only the `#[path]` mounts
+// every other wgpu case directory is reached through.
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️targets-wgpu-case-wiring-law/🦀️.rs"]
+mod case_wiring_law_tests;

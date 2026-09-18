@@ -14,7 +14,6 @@ export type WgpuBrowserConfiguration = {
   readonly compilerRoot: string;
   readonly moduleRoot: string;
   readonly extensionRoot: string;
-  readonly fontRoot: string;
   readonly bootRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
@@ -49,16 +48,37 @@ export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (
     ["/renderer-modules/wgpu", options.compilerRoot],
     ["/🚀️boot.js", options.bootRoot],
     ["/🎞️frame-worker.js", options.workerRoot],
-    [MODULE_ROUTES.plugin + "/🪞️vendor", options.fontRoot],
     [MODULE_ROUTES.plugin, options.moduleRoot],
     [MODULE_ROUTES.extension, options.extensionRoot],
   ];
 }
 
 /** 🧊️ Mounts completed compiler/generator outputs and live modules without compiling or copying them. */
+/** @emoji 🧭️ The per-SERVER boot axes this serve bakes into the page, the wgpu twin of React's
+ * `VITE_SEMIO_*` build-time env (`🧑‍💻dev/🟦️.ts`): the `?query=` is the per-navigation axis, a
+ * `<meta name="semio-*">` is the per-server default. Names and precedence are owned by
+ * `../🧭️boot-descriptor/🟦️.ts`'s `WGPU_BOOT_META_NAMES`, restated here because a Vite config cannot
+ * import the browser bundle. An unset variable injects no tag at all, so the page never carries an
+ * empty pin. */
+function bootAxisMetaTags(variant: string | undefined): { tag: string; attrs: Record<string, string>; injectTo: "head" }[] {
+  const axes: [string, string | undefined][] = [
+    ["semio-plugin", variant],
+    ["semio-app-id", process.env.SEMIO_APP_ID],
+    ["semio-app-role", process.env.SEMIO_APP_ROLE],
+    ["semio-brand", process.env.SEMIO_BRAND],
+    ["semio-default-example", process.env.SEMIO_DEFAULT_EXAMPLE],
+    ["semio-locked-example", process.env.SEMIO_LOCKED_EXAMPLE],
+    ["semio-locked-locale", process.env.SEMIO_LOCKED_LOCALE],
+    ["semio-locked-terminology", process.env.SEMIO_LOCKED_TERMINOLOGY],
+    ["semio-locked-theme", process.env.SEMIO_LOCKED_THEME],
+    ["semio-locked-appearance", process.env.SEMIO_LOCKED_APPEARANCE],
+  ];
+  return axes.filter((entry): entry is [string, string] => Boolean(entry[1])).map(([name, content]) => ({ tag: "meta", attrs: { name, content }, injectTo: "head" }));
+}
+
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["dev", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [options.fontRoot, FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [join(options.moduleRoot, "🪞️vendor"), FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {
     root: options.root,
@@ -86,7 +106,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
         },
       },
       completedArtifactReload(options.reloadFile),
-      { name: "wgpu-browser-selection", transformIndexHtml: () => options.variant ? [{ tag: "meta", attrs: { name: "semio-plugin", content: options.variant }, injectTo: "head" }] : [] },
+      { name: "wgpu-browser-selection", transformIndexHtml: () => bootAxisMetaTags(options.variant) },
       { name: "wgpu-serve-only", config(_config, environment) { if (environment.command !== "serve") throw new Error("Build the finite WGPU wasm target through Nx"); } },
     ],
   };

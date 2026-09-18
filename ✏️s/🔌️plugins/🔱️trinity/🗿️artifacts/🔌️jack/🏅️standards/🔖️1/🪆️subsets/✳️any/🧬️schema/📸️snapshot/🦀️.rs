@@ -40,16 +40,23 @@ pub struct JackSnapshot {
 /// derive macro's own generated `missing` arm being unreachable here since every field is
 /// present below — no separate default handling needed in a hand-written impl).
 impl dsl::ToValue for JackSnapshot {
+    /// 🕳️ `manifestId`/`rootNodeId` are SKIPPED while `None` (the old `skip_serializing_if` law the
+    /// committed `📸️snapshot` fixture vectors are written against): decode→encode of a committed
+    /// snapshot is a fixed point only if an absent id stays absent instead of surfacing as `null`.
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
-            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-            ("name".to_string(), dsl::ToValue::to_value(&self.name)),
-            ("manifestId".to_string(), dsl::ToValue::to_value(&self.manifest_id)),
-            ("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)),
-            ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
-            ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
-            ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
-        ])
+        let mut entries: Vec<(String, dsl::DslValue)> = Vec::with_capacity(7);
+        entries.push(("schema".to_string(), dsl::ToValue::to_value(&self.schema)));
+        entries.push(("name".to_string(), dsl::ToValue::to_value(&self.name)));
+        if let Some(manifest_id) = self.manifest_id.as_ref() {
+            entries.push(("manifestId".to_string(), dsl::ToValue::to_value(manifest_id)));
+        }
+        entries.push(("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)));
+        entries.push(("camera".to_string(), dsl::ToValue::to_value(&self.camera)));
+        entries.push(("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")));
+        if let Some(root_node_id) = self.root_node_id.as_ref() {
+            entries.push(("rootNodeId".to_string(), dsl::ToValue::to_value(root_node_id)));
+        }
+        dsl::DslValue::object(entries)
     }
 }
 impl dsl::FromValue for JackSnapshot {

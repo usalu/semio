@@ -231,6 +231,7 @@ struct WorldGlobals {
 struct WorldMeshVertexIn {
     float3 position [[attribute(0)]];
     float3 normal [[attribute(1)]];
+    float4 vertex_color [[attribute(2)]];
     float4 model0 [[attribute(3)]];
     float4 model1 [[attribute(4)]];
     float4 model2 [[attribute(5)]];
@@ -254,7 +255,7 @@ vertex WorldMeshVertexOut world3d_mesh_vertex_main(WorldMeshVertexIn in [[stage_
     out.clip_position = globals.view_proj * world_pos;
     float3x3 normal_matrix = float3x3(model[0].xyz, model[1].xyz, model[2].xyz);
     out.normal = normalize(normal_matrix * in.normal);
-    out.color = in.color;
+    out.color = in.color * in.vertex_color;
     out.flags = in.flags;
     return out;
 }

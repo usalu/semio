@@ -30,16 +30,22 @@ pub enum JsonIJsonIJsonEditorCommand {
     SetNode { node_id: String, value: String },
 }
 
-/// 🧭️ `main::encode_path_id`'s inverse — `main::JSON_ROOT_NODE_ID` (and the legacy empty string a
-/// pre-window body sent) decodes to the empty (root) path.
+/// 🧭️ `main::encode_path_id`'s inverse. `node_id` is the addressed node's window PATH — its
+/// ancestors' sibling keys and its own, joined by `TREE_WINDOW_PATH_SEPARATOR` — and
+/// `main::JSON_ROOT_NODE_ID` alone (or the legacy empty string a pre-window body sent) is the root.
+/// A `/`-joined id from the pre-window encoding still decodes, so an in-flight command survives.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
     if node_id.is_empty() || node_id == main::JSON_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
-    node_id
-        .split('/')
+    let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+    let segments: Vec<&str> = if node_id.contains(separator) { node_id.split(separator).collect() } else { node_id.split('/').collect() };
+    segments
+        .into_iter()
+        .filter(|segment| !segment.is_empty() && *segment != main::JSON_ROOT_NODE_ID)
         .map(|segment| {
+            let segment = main::strip_sibling_ordinal(segment);
             if let Some(key) = segment.strip_prefix("k=") {
                 Ok(JsonPathSegment::Key(key.to_string()))
             } else if let Some(index) = segment.strip_prefix("i=") {

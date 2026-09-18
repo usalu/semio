@@ -91,22 +91,13 @@ struct LeafContext {
 
 //#region 🎨️StyleMapping
 
-/// 📐️ Provisional px scale for [`SpaceToken`], mirroring the wgpu-old target's `gap_for_token`/
-/// `padding_for_token` hand-picked values (`tight`→4, `loose`→12, `none`→0) but covering the full
-/// `None..Xxl` ramp `contract-layout` actually shipped. `contract-layout`'s own docstring already
-/// flags that tokens.json has no real spacing ramp yet — this is the same open item, not a new one;
-/// see this packet's report for the registrar-request to replace this table once one lands.
+/// 📐️ The px scale for [`SpaceToken`] — delegated to the contract's own [`SpaceToken::px`], which is
+/// the ONE ramp React's `SPACE_TOKEN_MULTIPLIER` and the wgpu target resolve against too. The former
+/// hand-picked `4/8/12/16/24/32` table lived here; it is gone rather than kept beside the shared one,
+/// so a DOM rect and a GPU rect cannot drift (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W1l).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn space_token_px(token: SpaceToken) -> f32 {
-    match token {
-        SpaceToken::None => 0.0,
-        SpaceToken::Xs => 4.0,
-        SpaceToken::Sm => 8.0,
-        SpaceToken::Md => 12.0,
-        SpaceToken::Lg => 16.0,
-        SpaceToken::Xl => 24.0,
-        SpaceToken::Xxl => 32.0,
-    }
+    token.px()
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

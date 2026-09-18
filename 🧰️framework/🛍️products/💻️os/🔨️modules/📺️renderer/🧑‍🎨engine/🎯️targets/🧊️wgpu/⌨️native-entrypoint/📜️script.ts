@@ -44,18 +44,31 @@ export async function runNativeSession(executable: string, args: readonly string
   }
 }
 
-/** 🎛️ Rejects undeclared profiles and variants before reading completed artifacts. */
-function selection(args: string[], smoke = false): { variant: string; profile: "dev" | "release" } {
+/** 🧭️ The per-navigation boot axes the native binary reads, the CLI twin of the browser's
+ * `?app=&role=&mode=&example=&hub=&user=&dataDir=` (`../🧭️boot-descriptor/🟦️.ts`). `--brand` is here
+ * too so a dev can override the playground row's own brand; `--plugin` is not, because the variant
+ * positional already names it. */
+const BOOT_AXIS_FLAGS = ["--app", "--role", "--mode", "--example", "--brand", "--hub", "--user", "--data-dir"] as const;
+
+/** 🎛️ Rejects undeclared profiles and variants before reading completed artifacts, and admits the
+ * boot axes as `--flag value` pairs so one invocation can open the document a url opens. */
+function selection(args: string[], smoke = false): { variant: string; profile: "dev" | "release"; axes: string[] } {
   const [variant, profile, ...rest] = args;
   nativeRuntimeDirectory(".", variant, profile);
-  if (rest.length && !(smoke && rest.length === 1 && rest[0] === "--smoke")) throw new Error("Native runtime accepts a variant, profile and optional --smoke");
-  return { variant, profile: profile as "dev" | "release" };
+  const axes: string[] = [];
+  for (let index = 0; index < rest.length; index++) {
+    const flag = rest[index]!;
+    if (smoke && flag === "--smoke") continue;
+    if (!(BOOT_AXIS_FLAGS as readonly string[]).includes(flag) || rest[index + 1] === undefined) throw new Error(`Native runtime accepts a variant, profile, optional --smoke and ${BOOT_AXIS_FLAGS.join("/")} value pairs`);
+    axes.push(flag, rest[++index]!);
+  }
+  return { variant, profile: profile as "dev" | "release", axes };
 }
 
 /** 🖥️ Runs completed native artifacts without compiling or invoking another Nx graph. */
 class RunScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const { variant, profile } = selection(args, true), repo = this.repoRoot, runtime = nativeRuntimeDirectory(join(repo, ownerPath), variant, profile);
+    const { variant, profile, axes } = selection(args, true), repo = this.repoRoot, runtime = nativeRuntimeDirectory(join(repo, ownerPath), variant, profile);
     const manifest = JSON.parse(readFileSync(join(runtime, "🔣️runtime.json"), "utf8"));
     if (manifest.version !== 1 || manifest.variant !== variant || manifest.profile !== profile || !existsSync(join(runtime, ".nx-artifact.json"))) throw new Error("Missing or mismatched Nx native runtime artifact");
     const catalog = JSON.parse(readFileSync(join(repo, registryPath, "🤖️generated/🎠️playgrounds.json"), "utf8"));
@@ -65,7 +78,10 @@ class RunScript extends BundleScript {
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
       const binary = nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile);
-      await runNativeSession(binary, ["--plugin", variant, ...(row.app ? ["--app", row.app] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => startAssetServer(repo, 0, row.assets) : undefined);
+      // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
+      // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
+      // serve injects as `<meta name="semio-*">` for the browser.
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => startAssetServer(repo, 0, row.assets) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

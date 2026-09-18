@@ -18,7 +18,7 @@ use super::*;
         let shared = crate::editor::puzzle2d::config::Puzzle2dConfig::default();
         let spr = dsl::json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(3));
+        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
         let pack = store::ArtifactPack::encode_pack(&shared);
         for forbidden in ["cameraX", "engagementInput", "brushCandidates", "fillJobCheckpointSequence"] {
             assert!(!spr.contains(forbidden));

@@ -3,7 +3,6 @@ use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
 use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_SOLID, KIND_WAITING_BORDER};
-use crate::wgpu::flex::LayoutEngine;
 use crate::wgpu::tree::EditState;
 
 fn action() -> ActionDescriptor {
@@ -47,9 +46,8 @@ fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
     tree.apply_tree(ui);
     let root = tree.root.unwrap();
     let theme = Theme::default();
-    let mut atlas = FontAtlas::builtin();
-    let mut engine = LayoutEngine::new();
-    engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+    let atlas = FontAtlas::builtin();
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     (tree, root, theme, atlas)
 }
 
@@ -430,8 +428,13 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
 
 #[test]
 fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout() {
-    let (mut tree, root, theme, mut atlas) = setup(&select("sel", "a"));
+    let fixture = select("sel", "a");
+    let (mut tree, root, theme, mut atlas) = setup(&fixture);
     tree.node_mut(root).unwrap().state.open = true;
+    // 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
+    // `WidgetState::open`), so the popup's rows only exist after re-reconciling with the bit set.
+    tree.apply_tree(&fixture);
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
     let mut draw = DrawList::default();
 
@@ -534,7 +537,17 @@ fn input(id: &str, value: &str) -> UiNode {
     UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(), menu: None })
 }
 
+// ⌨️ Keyboard focus: BOTH bits, the way `EventRouter::set_focus` stamps them for a `Tab` move.
+// The accent ring is `focus-visible:border-accent`, so `FOCUSED` alone (a pointer press) must not
+// paint one — `focus_pointer` below is the counter-case (ticket 26/09/17 packet W2k).
 fn focus(tree: &mut UiTree, id: NodeId) {
+    tree.node_mut(id).unwrap().flags.set(NodeFlags::FOCUSED, true);
+    tree.node_mut(id).unwrap().flags.set(NodeFlags::FOCUS_VISIBLE, true);
+    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+}
+
+// 👆️ Pointer focus: `FOCUSED` without `FOCUS_VISIBLE`, which is what a click produces.
+fn focus_pointer(tree: &mut UiTree, id: NodeId) {
     tree.node_mut(id).unwrap().flags.set(NodeFlags::FOCUSED, true);
     tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
 }
@@ -610,8 +623,10 @@ fn icon_select(id: &str) -> UiNode {
 
 /// 🎯️ Shared assertion for the border-swap-on-focus fix: an otherwise-identical pair of trees,
 /// one with `NodeFlags::FOCUSED` set on the root, should differ in at least one border instance's
-/// color (`theme.border_emphasized` replacing `theme.border_normal`) — mirrors
-/// `formControlFocusBorderClass`'s `focus-visible:border-accent` (`ui/js/react/index.tsx`).
+/// color — `theme.accent` replacing `theme.border_normal`, the literal color React's shared
+/// `formControlFocusBorderClass` swaps in (`focus-visible:border-accent`,
+/// `🔨️modules/📝️form-control-presentation/🟦️.ts:14`); it used to be the unrelated
+/// `border_emphasized` token (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1o).
 fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
     let (mut unfocused_tree, unfocused_root, theme, mut unfocused_atlas) = setup(&make());
     let mut unfocused_draw = DrawList::default();
@@ -622,32 +637,41 @@ fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
     let mut focused_draw = DrawList::default();
     paint_tree(&mut focused_tree, focused_root, &focused_theme, &mut focused_atlas, None, false, &mut focused_draw);
 
-    assert!(!has_solid_instance_colored(&unfocused_draw, theme.border_emphasized), "{label}: an unfocused control must not paint its border_emphasized color");
-    assert!(has_solid_instance_colored(&focused_draw, theme.border_emphasized), "{label}: a focused control should swap its border to theme.border_emphasized");
+    let (mut pointer_tree, pointer_root, pointer_theme, mut pointer_atlas) = setup(&make());
+    focus_pointer(&mut pointer_tree, pointer_root);
+    let mut pointer_draw = DrawList::default();
+    paint_tree(&mut pointer_tree, pointer_root, &pointer_theme, &mut pointer_atlas, None, false, &mut pointer_draw);
+
+    assert!(!has_solid_instance_colored(&unfocused_draw, theme.accent), "{label}: an unfocused control must not paint its focus-ring color");
+    assert!(has_solid_instance_colored(&focused_draw, theme.accent), "{label}: a keyboard-focused control should swap its border to theme.accent, React's own focus-visible border");
+    assert!(
+        !has_solid_instance_colored(&pointer_draw, theme.accent),
+        "{label}: a POINTER-focused control must not paint the ring — React's selector is `:focus-visible`, not `:focus` (ticket 26/09/17 packet W2k)"
+    );
 }
 
 #[test]
-fn painting_a_focused_button_swaps_its_border_to_border_emphasized() {
+fn painting_a_focused_button_swaps_its_border_to_the_accent_focus_ring() {
     assert_focus_swaps_border_color(|| button("btn", false), "Button");
 }
 
 #[test]
-fn painting_a_focused_select_swaps_its_border_to_border_emphasized() {
+fn painting_a_focused_select_swaps_its_border_to_the_accent_focus_ring() {
     assert_focus_swaps_border_color(|| select("sel", "a"), "Select");
 }
 
 #[test]
-fn painting_a_focused_toggle_swaps_its_border_to_border_emphasized() {
+fn painting_a_focused_toggle_swaps_its_border_to_the_accent_focus_ring() {
     assert_focus_swaps_border_color(|| toggle("tog"), "Toggle");
 }
 
 #[test]
-fn painting_a_focused_number_stepper_swaps_its_outer_border_to_border_emphasized() {
+fn painting_a_focused_number_stepper_swaps_its_outer_border_to_the_accent_focus_ring() {
     assert_focus_swaps_border_color(|| stepper("ns", 2.0, true), "NumberStepper");
 }
 
 #[test]
-fn painting_a_focused_icon_select_swaps_its_border_to_border_emphasized() {
+fn painting_a_focused_icon_select_swaps_its_border_to_the_accent_focus_ring() {
     assert_focus_swaps_border_color(|| icon_select("ic"), "IconSelect");
 }
 
@@ -735,9 +759,12 @@ fn retained_select_max_plus_one_refuses_before_output_without_moving_tree_owner(
 
 #[test]
 fn retained_select_sync_writes_at_most_one_row_per_grant() {
-    let (mut tree, root, theme, _) = setup(&select("retained-sync-select", "a"));
+    let fixture = select("retained-sync-select", "a");
+    let (mut tree, root, theme, _) = setup(&fixture);
     let Some(root_node) = tree.node_mut(root) else { panic!("retained select root") };
     root_node.state.open = true;
+    // 🔽️ See `opening_a_selects_popup_...`: the rows exist only once the tree is reconciled OPEN.
+    tree.apply_tree(&fixture);
     let children: Vec<NodeId> = tree.children(root).collect();
     let mut cursor = RetainedInteractiveSyncCursor::default();
     let mut complete = false;
@@ -857,8 +884,9 @@ fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
     UiProgressNode { id: "progress".into(), completed, total, value_text: Label::data("progress"), presence: UiPresence::default(), menu: None }
 }
 
-/// 📶️ Every case of the shared progress law fills exactly the fraction it declares, on a centred track
-/// one `padding_standard` tall — the same fraction React's bar is sized by.
+/// 📶️ Every case of the shared progress law fills exactly the fraction it declares, on a centred
+/// `--size-tiny` track — React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`'s `ProgressView`),
+/// and the same fraction sizes its fill.
 #[test]
 fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
@@ -868,7 +896,8 @@ fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
         let component = &case["component"];
         let node = progress(component["completed"].as_f64().expect("completed"), component["total"].as_f64());
         let (track, fill) = progress_bar_rects(&node, bounds, &theme);
-        assert_eq!(track, [10.0, 20.0 + (40.0 - theme.padding_standard) * 0.5, 300.0, theme.padding_standard], "{}: the track spans the bounds, vertically centred", case["id"]);
+        let height = crate::wgpu::chrome::SIZE_TINY;
+        assert_eq!(track, [10.0, 20.0 + (40.0 - height) * 0.5, 300.0, height], "{}: the track spans the bounds, vertically centred", case["id"]);
         match case["fraction"].as_f64() {
             Some(fraction) => assert_eq!(fill, [track[0], track[1], 300.0 * fraction as f32, track[3]], "{}: determinate fill", case["id"]),
             None => assert_eq!(fill, [10.0 + 100.0, track[1], 100.0, track[3]], "{}: a still, centred indeterminate sweep", case["id"]),
@@ -876,8 +905,9 @@ fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
     }
 }
 
-/// 🎨️ A progress bar paints with theme tokens only: the `separator` track, then the `progress` fill —
-/// and an empty determinate bar paints no zero-width fill instance at all.
+/// 🎨️ A progress bar paints with theme tokens only: the `separator` track, then the `accent` fill
+/// React's own `bg-muted`/`bg-accent` pair resolves to — and an empty determinate bar paints no
+/// zero-width fill instance at all.
 #[test]
 fn a_progress_bar_paints_its_track_and_fill_from_theme_tokens() {
     let theme = Theme::default();
@@ -888,8 +918,268 @@ fn a_progress_bar_paints_its_track_and_fill_from_theme_tokens() {
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect::<Vec<_>>()
     };
     let token = |color: Rgba| [color.r, color.g, color.b, color.a];
-    assert_eq!(colors(&progress(12.0, Some(100.0))), vec![token(theme.separator), token(theme.progress)]);
-    assert_eq!(colors(&progress(3.0, None)), vec![token(theme.separator), token(theme.progress)]);
-    assert_eq!(colors(&progress(0.0, Some(100.0))), vec![token(theme.separator)]);
+    assert_eq!(colors(&progress(12.0, Some(100.0))), vec![token(theme.muted), token(theme.accent)]);
+    assert_eq!(colors(&progress(3.0, None)), vec![token(theme.muted), token(theme.accent)]);
+    assert_eq!(colors(&progress(0.0, Some(100.0))), vec![token(theme.muted)]);
+    assert_ne!(token(theme.muted), token(theme.separator), "React's track is `bg-muted`, a distinct token from the separator stroke it stood in for until packet W2k");
 }
 //#endregion 📶️ProgressPaint
+
+//#region 🖼️UiImagePaint
+// 🖼️ W1n: `Component::Image`'s default (no-`SceneHost`) path used to paint a grey placeholder box
+// forever — `paint_image` was `#[cfg(test)]`-gated and nothing decoded `src` at all. These cover the
+// three halves of the fix: decode, the `object-contain` rect, and the raster quad the paint step emits.
+
+fn encode_base64(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in bytes.chunks(3) {
+        let b0 = u32::from(chunk[0]);
+        let b1 = chunk.get(1).copied().map_or(0, u32::from);
+        let b2 = chunk.get(2).copied().map_or(0, u32::from);
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(ALPHABET[(triple >> 18) as usize & 0x3F] as char);
+        out.push(ALPHABET[(triple >> 12) as usize & 0x3F] as char);
+        out.push(if chunk.len() > 1 { ALPHABET[(triple >> 6) as usize & 0x3F] as char } else { '=' });
+        out.push(if chunk.len() > 2 { ALPHABET[triple as usize & 0x3F] as char } else { '=' });
+    }
+    out
+}
+
+/// 🖼️ A `data:image/png;base64` source of `width`x`height` solid opaque red, built through the same
+/// owned codec the paint registry decodes with — the third-party-free round trip AGENTS.md asks for.
+fn png_data_url(width: u32, height: u32) -> String {
+    let mut image = semio_framework_pixels::RasterImage::new(width, height);
+    for pixel in image.pixels.chunks_mut(4) {
+        pixel.copy_from_slice(&[255, 0, 0, 255]);
+    }
+    let encoded = semio_framework_pixels::encode_png(&image).expect("owned png encode");
+    format!("data:image/png;base64,{}", encode_base64(&encoded))
+}
+
+fn image_node(id: &str, src: &str) -> UiNode {
+    UiNode::Image(UiImageNode { id: id.into(), src: src.into(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None })
+}
+
+#[test]
+fn a_data_url_png_source_decodes_to_its_natural_size() {
+    let src = png_data_url(6, 3);
+    assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready);
+    assert_eq!(ui_image_natural_size(&src), Some((6, 3)));
+    assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready, "re-admitting an already-decoded source is a lookup, not a second decode");
+}
+
+#[test]
+fn an_admitted_source_publishes_exactly_one_pending_upload() {
+    let src = png_data_url(2, 2);
+    assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready);
+    let upload = std::iter::from_fn(take_ui_image_upload).find(|upload| upload.key == src).expect("the decoded source is queued for the raster table");
+    assert_eq!((upload.width, upload.height), (2, 2));
+    assert_eq!(upload.pixels.len(), 2 * 2 * 4, "RGBA8, the exact layout PreparedRasterProducer admits");
+    assert_eq!(upload.pixels[..4], [255, 0, 0, 255]);
+}
+
+#[test]
+fn a_url_source_is_deferred_to_the_host_and_a_jpeg_data_url_is_unsupported() {
+    assert_eq!(admit_ui_image("https://example.test/picture.png"), UiImageAdmission::Deferred, "a fetch is the host asset pipeline's job, not this crate's");
+    assert_eq!(admit_ui_image("assets/picture.png"), UiImageAdmission::Deferred);
+    assert_eq!(admit_ui_image("data:image/jpeg;base64,/9j/4AAQ"), UiImageAdmission::Unsupported, "no third-party JPEG codec may enter the runtime graph");
+    assert_eq!(admit_ui_image(""), UiImageAdmission::Refused);
+}
+
+/// 📐️ React's `<img className="max-h-64 max-w-full object-contain">` (`🗣️Interpreter/🟦️.tsx:1974`):
+/// the box clamps per axis and the natural aspect ratio is letterboxed inside it, centred.
+#[test]
+fn the_image_content_rect_matches_react_object_contain() {
+    let bounds = Rect::new(10.0, 20.0, 100.0, 100.0);
+    let wide = ui_image_content_rect(bounds, 200, 100);
+    assert_eq!((wide.w, wide.h), (100.0, 50.0), "a wide picture fills the width and letterboxes the height");
+    assert_eq!(wide.x, 10.0);
+    assert_eq!(wide.y, 20.0 + (100.0 - 50.0) * 0.5);
+
+    let small = ui_image_content_rect(bounds, 40, 20);
+    assert_eq!((small.w, small.h), (40.0, 20.0), "a picture smaller than its box is never upscaled");
+
+    let tall = ui_image_content_rect(Rect::new(0.0, 0.0, 400.0, 1_000.0), 400, 800);
+    assert_eq!(tall.h, UI_IMAGE_MAX_BOX_HEIGHT, "max-h-64 caps the box at 16rem no matter how tall the layout rect is");
+    assert_eq!(tall.w, UI_IMAGE_MAX_BOX_HEIGHT / 2.0);
+}
+
+#[test]
+fn a_decoded_image_paints_a_raster_quad_instead_of_the_placeholder() {
+    let src = png_data_url(4, 2);
+    assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready);
+    let (tree, root, theme, mut atlas) = setup(&image_node("picture", &src));
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..8 {
+        if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
+    let rasters: Vec<_> = draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).collect();
+    assert_eq!(rasters.len(), 1, "exactly one KIND_RASTER quad, keyed by src");
+    assert_eq!(rasters[0].0, src);
+    let layout = tree.accepted_layout(root).expect("laid out image");
+    let expected = ui_image_content_rect(Rect::new(layout.x, layout.y, layout.width, layout.height), 4, 2);
+    assert_eq!(rasters[0].1.rect, [expected.x, expected.y, expected.w, expected.h]);
+    assert_eq!(draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count(), 0, "no alt-text fallback once the bitmap is real");
+}
+
+/// ⚖️ Law: the paint arm ADMITS the source itself. `admit_ui_image` had only test callers, so in
+/// production the ledger stayed empty forever, `ui_image_natural_size` always answered `None`, and
+/// EVERY `UiNode::Image` painted the `alt` placeholder however decodable its `src` was. No explicit
+/// `admit_ui_image` here on purpose: this is exactly what a host that only paints does.
+#[test]
+fn the_paint_arm_admits_its_own_source_without_a_separate_admit_call() {
+    let src = png_data_url(5, 5);
+    assert_eq!(ui_image_natural_size(&src), None, "nothing has admitted this source yet");
+    let (tree, root, theme, mut atlas) = setup(&image_node("self-admitting", &src));
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..64 {
+        if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
+    assert_eq!(ui_image_natural_size(&src), Some((5, 5)), "the paint arm admitted the source");
+    let rasters: Vec<_> = draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).collect();
+    assert_eq!(rasters.len(), 1, "one KIND_RASTER quad, not the placeholder");
+    assert_eq!(rasters[0].0, src);
+    assert_eq!(draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count(), 0, "no alt-text fallback once the bitmap is real");
+    assert!(std::iter::from_fn(take_ui_image_upload).any(|upload| upload.key == src), "the decoded bitmap is queued for the host's raster-table drain");
+}
+
+#[test]
+fn an_undecodable_source_still_paints_the_placeholder_and_alt_text() {
+    let (tree, root, theme, mut atlas) = setup(&image_node("remote", "https://example.test/remote.png"));
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..64 {
+        if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
+    assert_eq!(draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).count(), 0);
+    assert!(draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01), "alt text is what React's broken <img> shows too");
+}
+//#endregion 🖼️UiImagePaint
+
+//#region 🦴️SkeletonPaint
+// 🦴️ React's `interpretUiNodeBusyShell` (`🗣️Interpreter/🟦️.tsx:2147-2154`) swaps a busy element for
+// `elementSkeleton(kind)` entirely. These pin the same predicate, the same per-kind shape family, and
+// that the retained paint step really draws blocks instead of the element's own content.
+
+#[test]
+fn the_skeleton_predicate_matches_reacts_busy_shell() {
+    let busy = UiPresence::status(UiStatus::Loading);
+    let waiting = UiPresence::status(UiStatus::Waiting);
+    let idle = UiPresence::default();
+    assert!(skeleton_replaces_content(&text("hi"), &busy));
+    assert!(skeleton_replaces_content(&text("hi"), &waiting));
+    assert!(!skeleton_replaces_content(&text("hi"), &idle));
+    assert!(!skeleton_replaces_content(&UiNode::Progress(progress(1.0, Some(2.0))), &busy), "a progress bar IS the busy affordance — React exempts it");
+}
+
+#[test]
+fn each_element_kind_picks_reacts_own_skeleton_shape() {
+    assert_eq!(skeleton_kind(&text("x")), SkeletonKind::Line);
+    assert_eq!(skeleton_kind(&button("b", false)), SkeletonKind::Control);
+    assert_eq!(skeleton_kind(&image_node("i", "")), SkeletonKind::Image);
+    assert_eq!(skeleton_kind(&stack(Vec::new())), SkeletonKind::Fill);
+}
+
+#[test]
+fn a_skeletons_blocks_stay_inside_their_bounds_and_within_the_fixed_capacity() {
+    let theme = Theme::default();
+    let bounds = Rect::new(4.0, 8.0, 200.0, 120.0);
+    for kind in [SkeletonKind::Line, SkeletonKind::Control, SkeletonKind::Separator, SkeletonKind::Image, SkeletonKind::Rows, SkeletonKind::Ring, SkeletonKind::Field, SkeletonKind::Panel, SkeletonKind::Fill] {
+        let (blocks, count) = skeleton_blocks(kind, bounds, &theme);
+        assert!((1..=SKELETON_MAX_BLOCKS).contains(&count), "{kind:?} draws between one block and the fixed ceiling");
+        for block in blocks.iter().take(count) {
+            assert!(block.x >= bounds.x && block.y >= bounds.y, "{kind:?} never starts outside its rect");
+            assert!(block.w >= 0.0 && block.h >= 0.0, "{kind:?} never emits a negative extent");
+            assert!(block.x + block.w <= bounds.x + bounds.w + 0.01, "{kind:?} never overflows its width");
+        }
+    }
+}
+
+#[test]
+fn a_loading_text_node_paints_skeleton_blocks_instead_of_its_glyphs() {
+    let mut node = text("hello");
+    let UiNode::Text(inner) = &mut node else { panic!("text fixture") };
+    inner.presence = UiPresence::status(UiStatus::Loading);
+    let (tree, root, theme, mut atlas) = setup(&node);
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..8 {
+        if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
+    let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+    assert_eq!(instances.iter().filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count(), 0, "React never paints half-built text under `activity: loading`");
+    assert!(instances.iter().any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01), "the loading border treatment stays");
+    assert!(instances.len() > 1, "a shaped placeholder block is drawn, not just the border tint");
+}
+//#endregion 🦴️SkeletonPaint
+
+//#region 🎉️CelebratePaint
+// 🎉️ W2k: a celebrating element used to paint a STATIC `theme.accent` hairline ring, because `Theme`
+// carried no primary/secondary/tertiary triad and no frame clock reached paint. Both now exist, so
+// the ring spins through React's own conic stops and bursts to `--stroke-focus` at React's timing.
+
+#[test]
+fn the_celebrate_cycle_wraps_once_per_react_duration_and_never_divides_by_zero() {
+    let theme = Theme::default();
+    assert_eq!(theme.celebrate_duration_seconds, 1.2, "React's `--celebrate-border-duration`");
+    assert_eq!(celebrate_turns(0.0, theme.celebrate_duration_seconds), 0.0);
+    assert!((celebrate_turns(0.6, theme.celebrate_duration_seconds) - 0.5).abs() < 1e-6);
+    assert!(celebrate_turns(1.2, theme.celebrate_duration_seconds).abs() < 1e-6, "one duration is exactly one turn");
+    assert!((celebrate_turns(3.0, theme.celebrate_duration_seconds) - 0.5).abs() < 1e-6, "the cycle is infinite, so it wraps");
+    assert_eq!(celebrate_turns(1.0, 0.0), 0.0, "a zero duration freezes at the start");
+    assert_eq!(celebrate_turns(f32::NAN, 1.2), 0.0);
+}
+
+#[test]
+fn the_ring_thickness_bursts_from_hairline_to_the_focus_stroke_and_back() {
+    let theme = Theme::default();
+    assert!(theme.stroke_focus > theme.stroke_hairline, "React's `--stroke-focus` is three hairlines");
+    assert!((celebrate_stroke(&theme, 0.0) - theme.stroke_hairline).abs() < 1e-5, "0 % is hairline");
+    assert!((celebrate_stroke(&theme, 0.5) - theme.stroke_focus).abs() < 1e-5, "50 % is the focus stroke");
+    assert!((celebrate_stroke(&theme, 1.0) - theme.stroke_hairline).abs() < 1e-5, "100 % is hairline again");
+    assert!(celebrate_stroke(&theme, 0.25) > theme.stroke_hairline && celebrate_stroke(&theme, 0.25) < theme.stroke_focus, "the ramp is eased, not stepped");
+}
+
+#[test]
+fn the_ring_colour_cycles_the_three_conic_stops_and_wraps_back_to_the_first() {
+    let theme = Theme::default();
+    let [primary, secondary, tertiary] = theme.celebrate;
+    assert_ne!(primary, secondary);
+    assert_ne!(secondary, tertiary);
+    let near = |left: Rgba, right: Rgba| (left.r - right.r).abs() < 1e-5 && (left.g - right.g).abs() < 1e-5 && (left.b - right.b).abs() < 1e-5 && (left.a - right.a).abs() < 1e-5;
+    assert!(near(celebrate_color(&theme, 0.0), primary));
+    assert!(near(celebrate_color(&theme, 1.0 / 3.0), secondary));
+    assert!(near(celebrate_color(&theme, 2.0 / 3.0), tertiary));
+    assert!(near(celebrate_color(&theme, 1.0), primary), "the conic wraps through primary again");
+    let midway = celebrate_color(&theme, 1.0 / 6.0);
+    assert!(midway != primary && midway != secondary, "a sample between two stops is interpolated, not snapped");
+}
+
+#[test]
+fn a_celebrating_element_paints_a_different_ring_as_the_clock_advances_while_an_introducing_one_does_not() {
+    let ring = |state: UiState, seconds: f32| {
+        let mut node = button("b", false);
+        if let UiNode::Button(button) = &mut node {
+            button.presence.state = state;
+        }
+        let (mut tree, root, theme, mut atlas) = setup(&node);
+        let mut draw = DrawList::default();
+        draw.set_clock_seconds(seconds);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| (instance.color, instance.params)).collect::<Vec<_>>()
+    };
+    assert_ne!(ring(UiState::Celebrating, 0.0), ring(UiState::Celebrating, 0.6), "the celebrate ring is time-varying — that IS the spin and the burst");
+    assert_eq!(ring(UiState::Introducing, 0.0), ring(UiState::Introducing, 0.6), "the introduce pulse is shader-side, so paint emits the same instance at any clock");
+}
+//#endregion 🎉️CelebratePaint

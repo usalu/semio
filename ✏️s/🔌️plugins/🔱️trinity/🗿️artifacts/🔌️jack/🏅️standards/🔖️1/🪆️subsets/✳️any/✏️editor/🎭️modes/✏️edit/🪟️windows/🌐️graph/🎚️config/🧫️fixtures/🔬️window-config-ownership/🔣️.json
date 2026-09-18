@@ -12,17 +12,17 @@
       "mutation": {
         "kind": "set-camera",
         "camera": {
-          "x": 10,
-          "y": 20,
-          "zoom": 2
+          "x": 10.0,
+          "y": 20.0,
+          "zoom": 2.0
         }
       },
       "expected": {
         "graph-left": {
           "camera": {
-            "x": 10,
-            "y": 20,
-            "zoom": 2
+            "x": 10.0,
+            "y": 20.0,
+            "zoom": 2.0
           },
           "lodMode": "automatic"
         },
@@ -41,9 +41,9 @@
       "expected": {
         "graph-left": {
           "camera": {
-            "x": 10,
-            "y": 20,
-            "zoom": 2
+            "x": 10.0,
+            "y": 20.0,
+            "zoom": 2.0
           },
           "lodMode": "automatic"
         },

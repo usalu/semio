@@ -75,6 +75,20 @@ class NativeTestScript extends BundleScript {
   }
 }
 
+/**
+ * 🧊️ The crate's wgpu unit laws alone (`--lib`). Every `🧪️tests/🔬️wgpu-*` case directory under
+ * `🧑‍🎨engine` is mounted into this library with `#[cfg(test)] #[path = …]` instead of being declared
+ * as a `[[test]]` binary, so `--lib` is the selector that compiles and runs them — and the selector
+ * a dangling mount wedges, which is why it gets a target of its own rather than hiding inside
+ * `test-native`'s wider all-targets build.
+ */
+class WgpuUnitTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted([crateName], this.repoRoot, ["--lib", ...rest]);
+  }
+}
+
 /** 🏠️ Independently executes the neutral retained-Home bootstrap trace and audits the native mount. */
 function directoryRetainedHomeBootstrapOracle(): number {
   const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
@@ -268,7 +282,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -360,6 +374,7 @@ const router = new ScriptRouter(import.meta.dir)
   )
   .register("test", TestScript)
   .register("test-native", NativeTestScript)
+  .register("test-wgpu-unit", WgpuUnitTestScript)
   .register("directory-retained-home-bootstrap-source-check", DirectoryRetainedHomeBootstrapSourceCheckScript)
   .register("directory-retained-home-bootstrap-native-check", DirectoryRetainedHomeBootstrapNativeCheckScript)
   .register("normalized-presence-rows-source-check", NormalizedPresenceRowsSourceCheckScript)

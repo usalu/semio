@@ -121,7 +121,7 @@ fn open_artifact_relay_vectors_match_the_typescript_contract() {
 #[test]
 fn native_directory_command_queue_retains_a_transient_head_and_proceeds_past_a_terminal_failure() {
     let request = |index: usize| DirectoryCommandRequestV1::new(format!("{index:032x}"), DirectoryCommand::RenameSpace { space_id: "space-a".into(), name: format!("Name {index}") });
-    let mut queue = NativeDirectoryCommandQueueV1::default();
+    let mut queue = ShellDirectoryCommandQueueV1::default();
     for index in 0..MAX_PENDING_DIRECTORY_COMMANDS {
         queue.admit(request(index + 1));
     }
@@ -129,37 +129,37 @@ fn native_directory_command_queue_retains_a_transient_head_and_proceeds_past_a_t
     queue.admit(request(9_999));
     assert_eq!(queue.pending(), MAX_PENDING_DIRECTORY_COMMANDS, "a full transport never silently discards an older intent");
     assert_eq!(queue.head().map(|head| head.request_id.clone()), Some(request(1).request_id));
-    assert_eq!(queue.result(&request(9_999).request_id), Some(&NativeDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Capacity)));
+    assert_eq!(queue.result(&request(9_999).request_id), Some(&ShellDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Capacity)));
 
-    let mut malformed = NativeDirectoryCommandQueueV1::default();
+    let mut malformed = ShellDirectoryCommandQueueV1::default();
     malformed.admit(DirectoryCommandRequestV1::new("not-hex", DirectoryCommand::ArchiveSpace { space_id: "space-a".into() }));
     assert_eq!(malformed.pending(), 0, "a malformed correlation is terminal, never queued");
 
-    let mut fifo = NativeDirectoryCommandQueueV1::default();
+    let mut fifo = ShellDirectoryCommandQueueV1::default();
     fifo.admit(request(1));
     fifo.admit(request(2));
     let head = fifo.head().cloned().expect("transient head");
     assert!(!fifo.settle(Err(DirectoryCommandErrorCodeV1::Overloaded)), "a transient fault stops the FIFO");
     assert_eq!(fifo.head().map(DirectoryCommandRequestV1::canonical_json), Some(head.canonical_json()), "the retained head re-sends byte-identical bytes");
     assert!(fifo.settle(Err(DirectoryCommandErrorCodeV1::Forbidden)), "a terminal denial produces a result and lets the queue proceed");
-    assert_eq!(fifo.result(&head.request_id), Some(&NativeDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Forbidden)));
+    assert_eq!(fifo.result(&head.request_id), Some(&ShellDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Forbidden)));
     assert_eq!(fifo.pending(), 1);
 
     let second = fifo.head().cloned().expect("second operation");
     let receipt = DirectoryCommandReceiptV1::seal(second.request_id.clone(), directory_command_sha256(&second.command), DirectoryCommandOutcomeV1::Accepted, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.one-shot".into() });
     assert!(fifo.settle(Ok(receipt.clone())));
     assert_eq!(fifo.pending(), 0);
-    assert_eq!(fifo.result(&second.request_id), Some(&NativeDirectoryCommandResultV1::Receipt(receipt)));
+    assert_eq!(fifo.result(&second.request_id), Some(&ShellDirectoryCommandResultV1::Receipt(receipt)));
 
-    let mut bounded = NativeDirectoryCommandQueueV1::default();
+    let mut bounded = ShellDirectoryCommandQueueV1::default();
     for index in 0..MAX_DIRECTORY_COMMAND_RESULTS + 8 {
         bounded.admit(request(index + 1));
         assert!(bounded.settle(Err(DirectoryCommandErrorCodeV1::Forbidden)));
     }
     assert_eq!(bounded.result(&request(1).request_id), None, "the transient result slot is bounded");
-    assert_eq!(bounded.result(&request(MAX_DIRECTORY_COMMAND_RESULTS + 8).request_id), Some(&NativeDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Forbidden)));
+    assert_eq!(bounded.result(&request(MAX_DIRECTORY_COMMAND_RESULTS + 8).request_id), Some(&ShellDirectoryCommandResultV1::Failed(DirectoryCommandErrorCodeV1::Forbidden)));
 
-    let mut ordered = NativeDirectoryCommandQueueV1::default();
+    let mut ordered = ShellDirectoryCommandQueueV1::default();
     ordered.admit(request(1));
     ordered.admit_first(request(2));
     assert_eq!(ordered.head().map(|head| head.request_id.clone()), Some(request(2).request_id), "a freshly issued command is not stuck behind an offline backlog");
@@ -198,19 +198,27 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
 }
 
 /// 🧪️ Verify item: "the status pill renders each state" — mirrors the React twin's
-/// `computeSyncPillState`/`syncPillText` test coverage (`📓️w3-a-report.md`).
+/// `computeSyncPillState`/`syncPillText` test coverage (`📓️w3-a-report.md`). Since packet W4a the
+/// native-only `ArtifactSyncStatus` stops at `ShellState::sync_pill`, which answers the
+/// target-neutral `ShellSyncPill` both builds paint, so this drives the projection off a real shell.
 #[test]
 fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
-    assert_eq!(ShellState::sync_pill_text(None, None), "Remote: detached");
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 } }), None), "Persisted");
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 } }), None), "Pending (3)");
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting }), None), "Remote: connecting");
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached }), None), "Remote: detached");
+    let pill_for = |status: Option<ArtifactSyncStatus>, progress: Option<(u64, u64, u32, u32)>| {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.sync_status = status;
+        shell.sync_bootstrap_progress = progress;
+        shell_sync_pill_text(shell.sync_pill(), false)
+    };
+    assert_eq!(pill_for(None, None), "Remote: detached");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 } }), None), "Persisted");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 } }), None), "Pending (3)");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting }), None), "Remote: connecting");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached }), None), "Remote: detached");
     // 🎯️ A non-live remote takes priority over a nonzero pending count — the connection itself
     // being degraded is the more urgent fact, mirroring the React twin's own priority order.
-    assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
-    assert_eq!(ShellState::sync_pill_text(None, Some(&(4, 8, 1, 2))), "Recovering 4/8 bytes · 1/2 chunks");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } }), None), "Remote: backoff");
+    assert_eq!(pill_for(None, Some((4, 8, 1, 2))), "Recovering 4/8 · 1/2");
 }
 
 //#region 🧪️CheckInTests

@@ -39,8 +39,10 @@ export interface ThemePaintRef {
 /** @emoji 🖌️ Resolved sRGB8888 color. */
 export type Rgba8 = [number, number, number, number];
 
-/** @emoji 🗂️ The four paint groups every appearance carries. */
-export type ThemePaletteGroup = "board" | "map" | "canvas" | "chrome";
+/** @emoji 🗂️ The six paint groups every appearance carries — `outcome` (error/warning/success/progress
+ * status paints) and `diagram` (transparency checkerboard + diagram stroke/seam/accent) exist so the
+ * wgpu target reads them from this one source instead of hand-written `Rgba` literals. */
+export type ThemePaletteGroup = "board" | "map" | "canvas" | "chrome" | "outcome" | "diagram";
 
 /** @emoji 🌓️ Light/dark palette dimension within a theme. */
 export type ThemeAppearanceName = "light" | "dark";
@@ -53,7 +55,7 @@ export interface UiThemeIcons {
   readonly themedVariants?: Readonly<Partial<Record<string, string>>>;
 }
 
-const THEME_PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
+const THEME_PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome", "outcome", "diagram"];
 
 const THEME_APPEARANCE_NAMES: readonly ThemeAppearanceName[] = ["light", "dark"];
 

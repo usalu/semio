@@ -151,14 +151,27 @@ is not unique: `📐️cad` builds the same `object.id` under four pane sections
 containers shared one open state, one window, and each other's measurements.
 
 ```ts
-export const TREE_WINDOW_PATH_SEPARATOR = "\u001f";   // 🌳️Tree/🟦️.tsx, one line, U+001F
+export const TREE_WINDOW_PATH_SEPARATOR = "␟";   // 🌳️Tree/🟦️.tsx, one line, U+241F (PRINTABLE)
 treeWindowPathOf(parentWindowPath, windowKey)          // enclosing windowed containers, outermost first, then its own
 ```
 
-Byte-for-byte the SDK's `TreeWindows::path_of` (`🔌️plugin/🦀️.rs:6070`) and
-`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR = "\u{1f}"`. **A top-level section's path IS its
+Byte-for-byte the SDK's `TreeWindows::path_of` (`🔌️plugin/🦀️.rs:6070`). **A top-level section's path IS its
 key**, so every flat body — requests, view state, laws, probe expectations — is byte-identical to before.
 A nested container's path is `parent␟child`.
+
+🧯️ **The separator is U+241F SYMBOL FOR UNIT SEPARATOR, the printable glyph — not U+001F, the control
+character it depicts.** A window path crosses the wasm boundary inside `PluginViewState.treeWindows`, and
+`parseResolvedPluginViewState` (`🛂️manifest/🟦️.ts:977`) refuses any identifier matching
+`[\u0000-\u001f\u007f]`. The view context is admitted as ONE object, so the first nested path took the whole
+crossing down: on the fem3d House lane every `refreshUi` answered `view context: invalid identifier` and every
+unrelated `interactionSelect` was refused `dispatch-failed` (`🗑️generated/w5/fem3d-house/report.json` steps
+e9/h/i). U+241F is one code point, printable, greppable, absent from every authored node key, and passes.
+
+**And the host no longer trusts its own paths.** `viewStateFields()` validates every path against the same
+identifier law before flattening it (mirrored in `treeWindowSendableIdentifierV1`, with a law that runs the
+REAL `parseResolvedPluginViewState` over the scheduler's output); a path that fails is OMITTED with one
+`console.error("[tree-window] unsendable path …")` per body + path. Tree-window state is a convenience and
+must never be able to break a refresh or an unrelated action again.
 
 What is keyed by path: `TreeWindowBodyState.open` / `.windows` / `.measured`, the observer's container map and
 report signature, `treeWindows[].nodeKey` on the wire, duplicate detection, and the controlled open-state
@@ -208,7 +221,7 @@ nothing else in this contract changed with path identity, and on a flat body eve
 | --- | --- |
 | e1 | `scroller.scrollHeight − scroller.clientHeight > 1` — the observed element really scrolls. The inner `[data-slot="scroll-area-viewport"]` must NOT be the scroller (`scrollHeight === clientHeight` there). |
 | e2 | Every windowed container carries `data-tree-window-{key,path,total,offset,length}` on its `tree-section-content` / `tree-item-content` / `tree-property-content` element, with `offset + length ≤ total`. |
-| e2b | **`-path` is the identity**: a top-level container's `-path` equals its `-key`; a nested one's is `<parent path>\u001f<key>`. The same `-key` may appear twice in a body (that is legal and not a duplicate); the same `-path` may not. Every `treeWindows[].nodeKey` the host sends equals some container's `-path`. |
+| e2b | **`-path` is the identity**, joined by `␟` (U+241F, printable): a top-level container's `-path` equals its `-key`; a nested one's is `<parent path>\u001f<key>`. The same `-key` may appear twice in a body (that is legal and not a duplicate); the same `-path` may not. Every `treeWindows[].nodeKey` the host sends equals some container's `-path`. |
 | e3 | Each such container's own rows carry `data-tree-window-row`, values exactly `offset … offset+length−1` in ascending top order, selected by `[data-tree-window-row]` filtered on `closest('[data-tree-window-path]') === container`. |
 | e4 | Container extent: `rect.height ≈ total × rowHeight + Σ(nested expanded extents)`; leading spacer `data-tree-window-rows === offset`, trailing `=== total − offset − length`; a zero-row spacer is absent. |
 | e5 | **Streaming.** Set `scroller.scrollTop = k × rowHeight` for a `k` well past the current window, wait ≤ 500 ms, re-read: `data-tree-window-offset` has moved and the new `[offset, offset+length)` covers the row under `scroller.scrollTop` — i.e. `offset ≤ rowAt(scrollTop) < offset + length`, where `rowAt` is read off the `data-tree-window-row` tops, not off `scrollTop / rowHeight`. |
@@ -218,7 +231,22 @@ nothing else in this contract changed with path identity, and on a flat body eve
 | e9 | **Lazy expand.** Click a closed container whose `total > 0`: the header wears `.border-loading` and its content has a full-`total` spacer for at most one refresh, then `length > 0` and the ring clears. |
 | e10 | **Nesting.** Expand a group inside a windowed section, scroll into it: the SECTION's `data-tree-window-offset` still covers that group's own row index (the group's content element is still in the DOM), and the group's `-path` is `<section key>\u001f<group key>`. |
 | e11 | No duplicate `data-tree-window-path` within one body, and no `[tree-window] duplicate key` console error. (A duplicate `-key` under different parents is expected and must NOT be reported.) |
+| e13 | **No view-context rejection.** No `view context: invalid identifier`, no `[os-shell] tree window refresh failed`, no `[tree-window] unsendable path` in the console — every path the host sends is a legal identifier. |
+| e14 | **Nothing open stays empty.** No container is `total > 0 && length === 0` for longer than one refresh once it is in the DOM: an off-screen one that has never materialised is seeded with one row, and a visible one gets its whole window. |
 | e12 | Unchanged from before: no `.more` key, no `+N` label anywhere in the body. |
+
+## 7b. The w5 browser probe's failures, triaged
+
+| step | lane | verdict |
+| --- | --- | --- |
+| **i** — console clean | fem3d | **Product, fixed.** `view context: invalid identifier` on every refresh: the U+001F separator (§5b). Fixed by U+241F + the `viewStateFields` identifier guard. |
+| **h** — leaf pick selects | fem3d | **Product, same cause.** The pick's dispatch view state carries `treeWindows`, so one nested path refused every `interactionSelect` as `dispatch-failed`. Nothing wrong with the pick itself. |
+| **e9** — lazy expand | fem3d | **Product, same cause.** Expanding `combinations` needs a refresh to materialise its 2 rows, and every refresh was being rejected. |
+| **e10** — parent shows the owner row | both | **PROBE defect, fixed in `🐍️tree-window-probe.mjs`.** `ownerRowIndex` used `el.parentElement.closest("[data-tree-window-row]")`, but `TreeItem` renders an expandable row as a fragment of `[header row, branch content]`, so the header carrying `data-tree-window-row` is a **preceding SIBLING** of the content element, never an ancestor — `closest()` could not reach it and returned `null` for all nine containers, nested or not. Now: the owner is the last of the PARENT's own `[data-tree-window-row]` elements whose top is ≤ this container's. |
+| **e9** — lazy expand | **cad** | **Both.** (a) *Product*: a default-open container below the fold was answered `rows: 0` on first paint, which renders as an open container with a full-height spacer, no rows and a pending ring — `structure-classic` 0/11 at a 440 px viewport. It now gets a one-row seed while off screen (`TREE_WINDOW_OFFSCREEN_SEED_ROWS`), and its real window within one refresh of scrolling in; new law `seeds a never-materialised container below the fold, then gives it a real window when it scrolls in`. (b) *Probe*: `prepared: "already-closed"` was inferred from `rows === 0`, but that container was **open** — its header's `aria-expanded` is `"true"` (`isExpandable` is `total > 0`, `open` is the guest default) — so the probe's click FOLDED it instead of expanding it, and it stayed at zero rows for the whole 15 s. The probe must read `aria-expanded` / `data-state`, never row count, to decide whether a container is closed; the ring it saw on `cad-play-document.shape` is the same "open, nothing materialised yet" state on a different container. |
+
+The user-visible law both halves now satisfy: **a container scrolled into view materialises its rows within one
+refresh, and no open container stays at zero rows.** `e14` in §7 states it for the probe.
 
 ## 8. What was run, in the foreground, and what it said
 
@@ -285,11 +313,9 @@ harness under `🗑️generated/f1`, 11/11 green; it has been deleted now that t
    `treeWindowPathOf`): enclosing windowed containers' keys, outermost first, then its own, joined by U+001F;
    a top-level container's path IS its key. Every `treeWindows[].nodeKey` the host sends is a path. `node_key`
    in `TreeWindowRequest` therefore means "path"; the authored key is only ever the pick target id.
-6. **`TREE_WINDOW_PATH_SEPARATOR`** is on one line in `🌳️Tree/🟦️.tsx`. The parity law
-   (`🔌️plugin/🧪️tests/🔬️app-panel-kit/🦀️.rs:267`) accepts either a raw U+001F byte or the `\u001f` escape; the
-   file currently carries the **raw byte**, which a peer normalised it to. ⚠️ A raw control character in source
-   is invisible and easily lost — the coordinator's own brief lost it in transit — so if that line is ever
-   rewritten, prefer the escape; the law already accepts it.
+6. **`TREE_WINDOW_PATH_SEPARATOR` is now `"␟"` (U+241F), not U+001F** — see §5b. The Rust constant and the
+   parity law (`🔌️plugin/🧪️tests/🔬️app-panel-kit/🦀️.rs:267`, which still matches `\u001f`) must move with it,
+   or a path the host sends will not be the path the guest resolves.
 7. **Duplicate `node_key` within one body**: the host now logs `[tree-window] duplicate key …` once, on a
    duplicate **path**. Two containers sharing a node key under different parents are legal and silent. F2's SDK
    refusal should name the same thing so the two messages read as one fault.

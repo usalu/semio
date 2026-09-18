@@ -3544,6 +3544,39 @@
       }
     },
     {
+      "name": "📦️test🧊️wgpu🖱️ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-rs:test-wgpu-engine",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.148
+      }
+    },
+    {
+      "name": "📦️test🧊️wgpu📺️renderer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-wgpu-unit",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.149
+      }
+    },
+    {
+      "name": "📦️test🧊️wgpu♾️infinite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-infinite:test-wgpu-world-terrain",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.15
+      }
+    },
+    {
       "name": "📦️wasm🧊️wgpu",
       "type": "node-terminal",
       "request": "launch",

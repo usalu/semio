@@ -7,8 +7,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-mod art_lowpoly_demo_tests;
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"]
+mod art_lowpoly_hexagonal_cut_concrete_forest_left_tests;
 extern crate semio_framework_schema as framework_schema;
 
 use protocol::{Identified, Patchable};
@@ -19,8 +19,15 @@ pub use crate::schema::mutations::LowpolyMutation;
 
 pub use crate::schema::diff::LowpolyDiff;
 
-pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
+/// 🎨️ 256² RGBA = 256 KiB per layer. A paint stroke's transient carries the layer's base AND its
+/// scratch, and a transform drag's transient carries a whole snapshot clone, so a larger texture
+/// pushed both past the store's fixed 1 MiB one-item publication bound — the publication was then
+/// refused with `transient mutation exceeds the one-item publication bound`
+/// (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
+pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 256;
 pub const LOWPOLY_DOCUMENT_SCHEMA: &str = "lowpoly.document";
+
+pub use crate::schema::{LOWPOLY_DEFAULT_EXAMPLE_ID, LOWPOLY_DEFAULT_EXAMPLE_LABEL};
 
 /// @emoji 🎨️ An opaque-white RGBA buffer sized for one paint layer.
 pub fn empty_paint_pixels() -> Vec<u8> {
@@ -60,14 +67,37 @@ pub struct LowpolyPaintLayer {
     pub visible: bool,
     pub opacity: f32,
     pub blend_mode: String,
-    #[value(default = "empty_paint_pixels")]
+    #[value(default = "empty_paint_pixels", with = "bytes_base64")]
     #[dsl(base64)]
     pub pixels: Vec<u8>,
+}
+
+/// 🔤️ Byte fields ride the value codec as standard base64 STRINGS — the same wire form the JSON/TS/
+/// proto/GraphQL schema facets, the DSL text codec (`#[dsl(base64)]`) and the serde paths already
+/// declare. Without this the derived `FromValue` wanted a JSON integer array, so every committed
+/// fixture carrying a paint layer or a pixel run failed to decode (98 tests, found 2026-09-17 in
+/// ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS). Same shape as raster's
+/// `asset_data_base64`.
+pub mod bytes_base64 {
+    pub fn to_value(bytes: &Vec<u8>) -> dsl::DslValue {
+        dsl::DslValue::String(base64_codec::base64_standard_encode(bytes))
+    }
+
+    pub fn from_value(value: dsl::DslValue) -> Result<Vec<u8>, dsl::ValueError> {
+        let dsl::DslValue::String(encoded) = value else { return Err(dsl::ValueError::new("expected a base64 string")) };
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| dsl::ValueError::new(error.to_string()))
+    }
 }
 
 impl LowpolyPaintLayer {
     pub fn new(name: &str) -> Self {
         Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: Vec::new() }
+    }
+
+    /// 🎨️ The layer's pixels with the sparse empty form materialised as the opaque-white default —
+    /// what every in-place brush/fill/diff path must start from (a stamp into an empty `Vec` panics).
+    pub fn materialized_pixels(&self) -> Vec<u8> {
+        if self.pixels.is_empty() { empty_paint_pixels() } else { self.pixels.clone() }
     }
 
     /// 🎨️ Drops a never-painted buffer back to the sparse empty form (ticket 26/08/29/LOWPOLY-END-TO-END,
@@ -226,6 +256,13 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         }
         if let Some(value) = &patch.mesh_content {
             self.mesh_content = value.clone();
+            // 🕸️ `mesh` and `mesh_content` are set together, and the double-`Option` `mesh` slot cannot
+            // say "cleared" on the wire (`Some(None)` and `None` both print as `null` — the repo-wide
+            // Option-null gap): an explicit EMPTY content is the one unambiguous "no mesh" a
+            // delete-mesh patch carries, so it clears the handle too (2026-09-18).
+            if value.is_empty() && patch.mesh.is_none() {
+                self.mesh = None;
+            }
         }
     }
 
@@ -1045,8 +1082,8 @@ pub mod snapshot {
 #[path = "."]
 pub mod examples {
     #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    pub mod hexagonal_cut_concrete_forest_left {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
         mod component;
         pub use component::*;
     }
@@ -1100,6 +1137,8 @@ pub mod editor {
             pub mod engagement;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️.rs"]
             pub mod document;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🦀️.rs"]
+            pub mod media;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️.rs"]
             pub mod mesh_edit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️.rs"]

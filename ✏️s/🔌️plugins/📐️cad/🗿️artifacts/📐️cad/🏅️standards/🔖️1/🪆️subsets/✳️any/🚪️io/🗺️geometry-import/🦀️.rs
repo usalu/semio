@@ -656,6 +656,27 @@ pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<Cad
 }
 //#endregion 🔖️ModelBridge
 
+//#region 🔖️CrossArtifactFixtures
+const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+
+/// 🌲️ Face loops for the shape-pane solid in the Hexagonal Cut Concrete Forest Left play fixture.
+pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::SolidFaceLoops, String> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepError, GeometryHandle};
+    let root = protocol::json::parse(CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON).map_err(|error| error.to_string())?;
+    let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
+    let geometry = parse_geometry(geometry_value.as_ref());
+    let objects_value = root
+        .pointer("/models/0/model/objects")
+        .and_then(|value| value.as_array())
+        .map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect::<Vec<_>>())
+        .unwrap_or_default();
+    let mut kernel = Brep::new();
+    let imported = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);
+    let handle = GeometryHandle(imported.first().and_then(|object| object.solid_handle.clone()).ok_or_else(|| "concrete forest shape object has no solid handle".to_string())?);
+    kernel.solid_face_loops_sync(&handle).map_err(|error: BrepError| error.to_string())
+}
+//#endregion 🔖️CrossArtifactFixtures
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

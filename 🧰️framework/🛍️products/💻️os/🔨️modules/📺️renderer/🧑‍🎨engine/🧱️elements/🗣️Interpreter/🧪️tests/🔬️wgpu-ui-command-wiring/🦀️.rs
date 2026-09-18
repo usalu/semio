@@ -5,14 +5,28 @@ fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: semio_framework::optional_json_to_dsl(args) }
 }
 
+/** 🎬️ A `UiIntentCommand` standing in for one the renderer fired: the case's descriptor with a
+ * distinct per-surface `seq`, so `apply_ui_commands`' own admission gate accepts each case instead of
+ * de-duplicating the second one as a replay of the first. */
+fn fixture_intent(descriptor: ActionDescriptor, seq: usize) -> ui_wgpu::wgpu::UiIntentCommand {
+    ui_wgpu::wgpu::UiIntentCommand {
+        address: ui_wgpu::wgpu::UiIntentAddress { surface: "fixture".into(), revision: 1, node: 1, node_key: "control".into() },
+        trigger: ui_contract::Trigger::Change,
+        action: ui_contract::ActionId::try_v1(&descriptor.controller_id, &descriptor.action).expect("fixture action id"),
+        args: descriptor.args,
+        input: None,
+        seq: seq as u64 + 1,
+    }
+}
+
 #[test]
 fn window_action_context_retained_commands_preserve_the_clicked_window() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     let window_id = fixture["clickedWindowId"].as_str().unwrap();
-    for case in fixture["cases"].as_array().unwrap() {
+    for (case_index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let descriptor = action("setValue", (!case["args"].is_null()).then(|| case["args"].clone()));
-        apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::App { window_id: window_id.into(), action: descriptor }], &mut input);
+        apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::App { window_id: window_id.into(), intent: fixture_intent(descriptor, case_index) }], &mut input);
         let queued = crate::collect_fixture_actions(&mut input);
         assert_eq!(queued.len(), 1);
         let actual: Option<Value> = queued[0].args.as_ref().map(|args| serde_json::from_str(&dsl::json::from_dsl_value(args).to_string()).unwrap());
@@ -267,6 +281,46 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
 
     let queued = crate::collect_fixture_actions(&mut input);
     assert!(queued.iter().any(|action| action.action == "canvasPointerDown"), "a real per-event PointerDown over a canvas-2d scene should reach the same handler apply_scene_pointer used to sample, got {queued:?}");
+}
+
+/// ⚖️ Law (packet W2j): the canvas-2d pointer wire is `📐️Canvas2dHost`'s wire. React's gesture lane
+/// publishes `{ x, y, button, shift, ctrl, meta, alt, width, height }` with `x`/`y` SCREEN-LOGICAL
+/// inside the canvas and `width`/`height` its logical size, because every plugin reader converts them
+/// itself (`🖍️draw`'s `canvas_point_to_world(viewport, x, y, width, height)`, `📏️layout`'s
+/// `hit_test_at(doc, cfg, x, y, width, height)`). wgpu used to publish world coordinates in the `x`/`y`
+/// slots with no `width`/`height` at all, which converted twice against a 0×0 viewport.
+#[test]
+fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
+    let window_id = "apply-ui-commands-scene-canvas2d-pointer-payload";
+    let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let rect = Rect::new(30.0, 40.0, 200.0, 120.0);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+
+    apply_ui_commands(
+        &[ui_wgpu::wgpu::UiCommand::Scene {
+            window_id: window_id.into(),
+            node,
+            surface_id: "s1".into(),
+            kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            rect,
+            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+        }],
+        &mut input,
+    );
+
+    let queued = crate::collect_fixture_actions(&mut input);
+    let down = queued.iter().find(|action| action.action == "canvasPointerDown").expect("the press publishes canvasPointerDown");
+    let args = down.args.as_ref().expect("the pointer payload is present");
+    let number = |key: &str| args.get(key).and_then(semio_framework::DslValue::as_f64);
+    assert_eq!(number("x"), Some(20.0), "x is logical pixels inside the surface rect, not a world coordinate");
+    assert_eq!(number("y"), Some(30.0), "y is logical pixels inside the surface rect, not a world coordinate");
+    assert_eq!(number("width"), Some(200.0), "width is the surface's logical width — draw/layout divide by it");
+    assert_eq!(number("height"), Some(120.0), "height is the surface's logical height");
+    assert_eq!(number("button"), Some(0.0));
+    for flag in ["shift", "ctrl", "meta", "alt", "extend"] {
+        assert_eq!(args.get(flag).and_then(semio_framework::DslValue::as_bool), Some(false), "{flag} must be present under React's own name");
+    }
+    assert!(number("worldX").is_some() && number("worldY").is_some(), "the optional world lane 🖍️draw declares rides along, got {args:?}");
 }
 
 #[test]

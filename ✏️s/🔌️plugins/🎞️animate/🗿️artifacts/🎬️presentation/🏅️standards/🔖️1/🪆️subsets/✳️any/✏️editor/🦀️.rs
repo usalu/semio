@@ -275,6 +275,11 @@ const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublica
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
+/// 🧾️ The ONE execution contract this app's retained factory publishes AND declares in its
+/// `bounded_first_step_tool_proofs!` row. `validate_tool_job_rows`'s `typed_join` compares the two
+/// for equality, so a second literal in the proof row is a rejection waiting to happen — a
+/// `bounded_first_step(…)` literal there against this `resumable(…)` factory shape is exactly what
+/// used to fail the whole catalog (`interactive-job.catalog-authority`, `typed_join=false`).
 fn animate_presentation_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
 }
@@ -608,7 +613,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         artifact_schema: "animate.presentation",
         factory: "AnimatePresentationRetainedCommandJobFactory",
         factory_type: AnimatePresentationRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
+        contract: animate_presentation_retained_contract(),
         tools: ["setActiveExample", "engagementInput", "noMutation"]
     }
 

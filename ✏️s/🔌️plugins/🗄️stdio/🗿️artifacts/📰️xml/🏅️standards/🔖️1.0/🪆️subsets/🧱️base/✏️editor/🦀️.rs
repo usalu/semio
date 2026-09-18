@@ -34,7 +34,9 @@ fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
     if node_id.is_empty() || node_id == main::XML_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
-    node_id.split('/').map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()
+    let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+    let segments: Vec<&str> = if node_id.contains(separator) { node_id.split(separator).collect() } else { node_id.split('/').collect() };
+    segments.into_iter().filter(|segment| !segment.is_empty() && *segment != main::XML_ROOT_NODE_ID).map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

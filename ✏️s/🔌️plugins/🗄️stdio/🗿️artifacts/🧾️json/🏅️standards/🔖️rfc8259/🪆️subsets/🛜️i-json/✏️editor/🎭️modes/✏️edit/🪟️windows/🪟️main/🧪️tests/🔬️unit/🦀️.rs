@@ -17,5 +17,5 @@ async fn render_walks_object_and_array_members() {
     let a = root.children.get(0).expect("child");
     assert_eq!(a.key.as_str(), "k=a");
     let item0 = a.children.get(0).expect("child");
-    assert_eq!(item0.key.as_str(), "k=a/i=0");
+    assert_eq!(item0.key.as_str(), "i=0", "a node is keyed by its SIBLING segment, never by its path from the root");
 }

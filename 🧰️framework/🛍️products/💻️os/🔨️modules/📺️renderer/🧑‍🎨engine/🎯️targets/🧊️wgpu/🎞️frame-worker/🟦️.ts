@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
-import { TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
+import { TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS, setTurnDiagnostics, stampedTurnDiagnostics, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../🗄️wasm-module-cache/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
@@ -45,10 +45,34 @@ type RendererBindings = {
   dumpAccessibility?: (windowId?: string) => string;
   /** 🧊️ Every World3d surface's PUBLISHED mesh payload, per role — the oracle a committed fixture is compared against. */
   dumpMeshStats?: (windowId?: string) => string;
-  semioWgpuSetAppRole?: (role: string) => void;
-  semioWgpuSetBootMode?: (mode: string) => void;
-  semioWgpuSetBootExample?: (exampleId: string) => void;
+  /** 🎯️ The shell chrome's pointer registry and its dispatched-action ledger — the chrome twin of the DOM a
+   * React parity probe reads. Diagnostics-gated in the renderer, so an unarmed page answers `armed: false`. */
+  dumpChrome?: (windowId?: string) => string;
+  /** 🧭️ The ONE boot-axis door of the renderer wasm (`🧊️renderer/🦀️.rs` `WgpuBootDescriptor`), fed the
+   * JSON `../🧭️boot-descriptor/🟦️.ts` resolved. It replaced four per-axis setters, which is what let the
+   * three wgpu entry points carry three different subsets of the same vocabulary. */
+  semioWgpuSetBootDescriptor?: (descriptorJson: string) => void;
   semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
+  /** 🌓️ The appearance door (`🧊️renderer/🦀️.rs`, region 🌓️HostAppearance). This realm owns no
+   * `window`, so it can neither read `prefers-color-scheme` nor replay the persisted
+   * `os.config.ui-preferences` log; the UI isolate makes both reads and hands them here — at boot and
+   * again on every change. Without it every browser boot resolved DARK where React resolved LIGHT. */
+  semioWgpuSetHostAppearance?: (preference: string, systemDark: boolean) => void;
+  /** ⌨️ The platform door (`🧊️renderer/🦀️.rs`, region ⌨️HostPlatform). The renderer's own answer is
+   * `cfg!(target_os = "macos")`, which is FALSE in every wasm build, so a macOS browser formatted `mod`
+   * as `Ctrl` where React formatted `⌘️`. `userAgentData.platform` is page-thread-only, so the UI
+   * isolate makes the read and hands it here once, with the boot. */
+  semioWgpuSetHostPlatform?: (platform: string) => void;
+  /** 🗄️ The preference door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`, region 🚪️StorageDoor). This realm owns
+   * no `localStorage`, so every `prefs_get`/`prefs_set` used to read empty and write to nothing. The UI
+   * isolate hands the whole carried census over here BEFORE the shell boots — which is what makes the
+   * first frame's appearance, tour-seen and dock-skeleton reads synchronous — and the shell writes back
+   * through the host-io door. */
+  semioWgpuSetHostStorage?: (snapshotJson: string) => void;
+  /** 🩺️ Arms the renderer's own per-frame `[DEBUG]` dumps — `semio_framework_trace::set_runtime_diagnostics`,
+   * the wasm door of the `SEMIO_RUNTIME_DIAGNOSTICS` switch a native process reads from its environment
+   * and React reads from `localStorage`. */
+  semioWgpuSetRuntimeDiagnostics?: (enabled: boolean) => void;
   semioWgpuWorkerBootstrap?: (
     canvas: OffscreenCanvas,
     plugins: readonly { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> }[],
@@ -99,6 +123,9 @@ let bootDeclarationsOpen = true;
 const PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
+/** @emoji 🔁️ How many macrotasks one response seal may wait for the renderer to free its interaction
+ * state. Bounded on purpose: a seal that never lands is a renderer defect, not something to spin on. */
+const ASSET_SEAL_ATTEMPTS = 64;
 /** @emoji 🔬️ Introspection walks the whole retained tree, so it earns a wider turn than a frame step —
  * and a breach is reported on the answer instead of faulting the shell, because a diagnostic must never
  * be the thing that takes the surface down. */
@@ -225,6 +252,20 @@ async function driveChunks(unit: ResumableBootUnit, base: number, span: number):
 
 //#region 🧵️Worker
 const scope = self as DedicatedWorkerGlobalScope;
+
+/** @emoji 🩺️ The diagnostics preference the UI isolate stamped on THIS worker's url — the only channel
+ * that exists before the boot message, and the one the renderer wasm's own per-frame `[DEBUG]` dumps are
+ * armed from. A Worker owns no storage, so the page resolves `SEMIO_RUNTIME_DIAGNOSTICS` and stamps;
+ * `undefined` (no stamp) leaves the build-time switch in charge. */
+const diagnosticsStamp = stampedTurnDiagnostics(scope.location.search);
+setTurnDiagnostics(diagnosticsStamp);
+
+/** @emoji 🧭️ A wasm panic spends V8's default ten stack frames entirely inside the panic machinery
+ * (`capacity_overflow` → `panic_fmt` → `rust_begin_unwind` → the hook), so the Rust frame that
+ * actually asked for the allocation is always the one cut off. The renderer's panic hook mints an
+ * `Error` to capture that stack (`🌐️browser-worker/🦀️.rs` `install_worker_panic_trace`), and this is
+ * what makes it reach past the machinery. */
+Error.stackTraceLimit = 64;
 let lifecycle = 0;
 let runtime: BrowserRendererWorkerHandle | undefined;
 let bindings: RendererBindings | undefined;
@@ -278,6 +319,14 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     settleHostIo(message);
     return;
   }
+  if (message.kind === "host-appearance") {
+    ownedStep("host-appearance", () => bindings?.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark));
+    return;
+  }
+  if (message.kind === "host-storage") {
+    ownedStep("host-storage", () => bindings?.semioWgpuSetHostStorage?.(JSON.stringify(message.storage)));
+    return;
+  }
   if (closed || closing || failed || quarantined) return;
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
     if (!interactiveJobs) {
@@ -322,7 +371,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : message.probe === "chrome" ? bindings.dumpChrome : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;
@@ -485,13 +534,15 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     if (loaded.default) await instantiateRendererWasm(loaded, message.bindingsWasmUrl);
     if (!loaded.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
-      loaded.semioWgpuSetAppRole?.(message.appRole);
-      loaded.semioWgpuSetBootMode?.(message.appMode ?? "");
-      loaded.semioWgpuSetBootExample?.(message.appExample ?? "");
-      if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
+      loaded.semioWgpuSetRuntimeDiagnostics?.(diagnosticsStamp === true);
+      loaded.semioWgpuSetBootDescriptor?.(JSON.stringify(message.descriptor));
+      loaded.semioWgpuSetHostStorage?.(JSON.stringify(message.storage));
+      loaded.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark);
+      loaded.semioWgpuSetHostPlatform?.(message.platform);
+      if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, message.pluginVariant);
+    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, message.descriptor.pluginVariant);
     await driveChunks(planner, 0.25, 0.05);
     const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
@@ -499,7 +550,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     const plugins = await mountPluginHandles(bootPlan.plugins);
     await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
     })));
-    if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
+    if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
     progress("renderer-runtime", 0.65);
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), suspensionLedger);
     while (true) {
@@ -550,7 +601,12 @@ async function pumpAsset(): Promise<void> {
     const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));
     const declared = declaredHeader === null ? undefined : Number(declaredHeader);
     if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-length: Content-Length exceeded fixed aggregate credits");
-    ownedStep("asset-response-reserve", () => runtime!.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
+    let reserved = false;
+    for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !reserved; attempt++) {
+      reserved = ownedStep("asset-response-reserve", () => runtime!.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
+      if (!reserved) await macrotask();
+    }
+    if (!reserved) throw new Error("asset-reserve-busy: the renderer never freed its interaction state for the response credits");
     const reader = ownedStep("asset-stream-reader", () => response.body!.getReader({ mode: "byob" }) as ReadableStreamBYOBReader);
     let received = 0;
     for (;;) {
@@ -566,7 +622,17 @@ async function pumpAsset(): Promise<void> {
     }
     ownedStep("asset-stream-release", () => reader.releaseLock());
     if (declared !== undefined && received !== declared) throw new Error("asset-response-short-read: stream ended before declared bytes");
-    ownedStep("asset-seal", () => runtime!.sealAssetResponse());
+    // 🔏️ The seal needs the renderer's own interaction state, which a live apply owns for the length
+    // of that apply. `sealAssetResponse` answers `false` for exactly that — back-pressure, not a
+    // refusal — and leaves the request untouched, so this comes back on the next macrotask instead of
+    // raising `asset-stream-fault` and quarantining the whole shell over a lock that is already free
+    // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+    let sealed = false;
+    for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !sealed; attempt++) {
+      sealed = ownedStep("asset-seal", () => runtime!.sealAssetResponse());
+      if (!sealed) await macrotask();
+    }
+    if (!sealed) throw new Error("asset-seal-busy: the renderer never freed its interaction state for the sealed response");
     post({ kind: "wake", lifecycle });
   } catch (error) {
     if (runtime) {

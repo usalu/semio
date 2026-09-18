@@ -49,8 +49,9 @@ const RASTER_CELL_WORK: usize = 4_096;
 const REMODELING_RECONSTRUCTION_DSM_ASSET_ID: &str = "reconstruction-dsm";
 const REMODELING_RECONSTRUCTION_DTM_ASSET_ID: &str = "reconstruction-dtm";
 
-/// 🧭️ Stages of the run as the panel names them.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// 🧭️ Stages of the run as the panel names them. `Ord` follows the pipeline order, which is what
+/// keeps the reported stage monotone.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ReconstructionRunStage {
     Ingest,
     Features,
@@ -195,10 +196,12 @@ pub enum ReconstructionRunReason {
     RasterFailed,
     Resuming,
     InputsChanged,
+    /// 🧭️ Matches of a pair dropped by the geometric verification (appended last: codes are ordinals).
+    PairGeometryRejected,
 }
 
 impl ReconstructionRunReason {
-    pub const ALL: [Self; 27] = [
+    pub const ALL: [Self; 28] = [
         Self::FrameAccepted,
         Self::FrameSkipped,
         Self::FrameBlurred,
@@ -226,6 +229,7 @@ impl ReconstructionRunReason {
         Self::RasterFailed,
         Self::Resuming,
         Self::InputsChanged,
+        Self::PairGeometryRejected,
     ];
 
     pub fn code(self) -> u16 {
@@ -265,12 +269,13 @@ impl ReconstructionRunReason {
             Self::RasterFailed => "rasterFailed",
             Self::Resuming => "resuming",
             Self::InputsChanged => "inputsChanged",
+            Self::PairGeometryRejected => "pairGeometryRejected",
         }
     }
 
     pub fn verdict(self) -> ToolRunVerdict {
         match self {
-            Self::FrameSkipped | Self::FrameBlurred | Self::MatchAmbiguous | Self::CameraRejected | Self::DenseTraceCapped | Self::MeshOutsideEnvelope | Self::SparseCapped => ToolRunVerdict::Warning,
+            Self::FrameSkipped | Self::FrameBlurred | Self::MatchAmbiguous | Self::CameraRejected | Self::DenseTraceCapped | Self::MeshOutsideEnvelope | Self::SparseCapped | Self::PairGeometryRejected => ToolRunVerdict::Warning,
             Self::FrameUnreadable | Self::MatchAsymmetric | Self::PointsPruned | Self::TooFewFrames | Self::PipelineFailed | Self::RasterFailed | Self::InputsChanged => ToolRunVerdict::Danger,
             _ => ToolRunVerdict::Success,
         }
@@ -314,6 +319,7 @@ impl ReconstructionRunReason {
             Self::RasterFailed => LocalizedLabel::native("A terrain raster could not be encoded", "Ein Geländeraster konnte nicht kodiert werden"),
             Self::Resuming => LocalizedLabel::native("Resumed after {0} decisions", "Nach {0} Entscheidungen fortgesetzt"),
             Self::InputsChanged => LocalizedLabel::native("Frames, parameters or calibration changed since the run started; {0} provisional changes withdrawn", "Bilder, Parameter oder Kalibrierung haben sich seit dem Start geändert; {0} vorläufige Änderungen zurückgezogen"),
+            Self::PairGeometryRejected => LocalizedLabel::native("Frames {0} and {1}: {2} matches inconsistent with the pair's epipolar geometry dropped", "Bilder {0} und {1}: {2} Zuordnungen ohne epipolare Konsistenz verworfen"),
         }
     }
 }
@@ -954,6 +960,10 @@ impl ReconstructionRunJob {
                     self.upsert(match_trace_key(frame_a, frame_b, query), ReconstructionRunReason::MatchAsymmetric, ToolRunTraceSubject::Entity { entity: match_trace_key(frame_a, frame_b, query) & !KEY_MATCH });
                 }
                 EngineObservation::PairMatched { frame_a, frame_b, matches } => self.step(ReconstructionRunReason::PairMatched, &[frame_a as u64, frame_b as u64, matches as u64]),
+                EngineObservation::PairGeometryRejected { frame_a, frame_b, dropped } => {
+                    self.count(ReconstructionRunCounter::MatchesRejected, dropped as i64);
+                    self.step(ReconstructionRunReason::PairGeometryRejected, &[frame_a as u64, frame_b as u64, dropped as u64]);
+                }
                 EngineObservation::TracksBuilt { tracks } => self.step(ReconstructionRunReason::TracksBuilt, &[tracks as u64]),
                 EngineObservation::CameraRegistered { frame, pose } => {
                     self.count(ReconstructionRunCounter::Cameras, 1);
@@ -1096,7 +1106,10 @@ impl ReconstructionRunJob {
         match status {
             EngineStatus::Working { .. } => Ok(evidence),
             EngineStatus::Done => {
-                self.stage = ReconstructionRunStage::Fusion;
+                // 📈️ The dense trace replays the fused cloud AFTER meshing finished, so naming its
+                // own stage would walk the reported stage backwards (Surface -> Fusion); the run's
+                // visible stage only ever moves forward.
+                self.stage = self.stage.max(ReconstructionRunStage::Fusion);
                 self.phase = RunPhase::DenseTrace { cursor: 0 };
                 Ok(evidence)
             }

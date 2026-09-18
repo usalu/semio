@@ -42,7 +42,7 @@ use std::collections::HashMap;
 
 use crate::element::{Bounds, ElementId, Hitbox};
 use crate::schedule::InvalidationReason;
-use ui_contract::{ActionBinding, ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UiText, UiValue};
+use ui_contract::{ActionBinding, ActionId, FlowInline, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UiText, UiValue};
 
 //#region 🔖️HitTest
 
@@ -492,15 +492,13 @@ fn is_stale(recorded: UiRevision, current: UiRevision) -> bool {
 
 //#region 🪟️Overlay
 
-/// 🏷️ Ported from `events.rs::OverlayKind` verbatim.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OverlayKind {
-    SelectPopup,
-    ContextMenu,
-    Tooltip,
-    Dialog,
-    CommandPalette,
-}
+/// 🪟️ The overlay vocabulary, its dismissal policy table and React's positioner all come from
+/// `ui_contract::🪟️overlay` — the ONE implementation. This module used to carry a private, and by
+/// 2026-09-17 diverged, copy (a three-variant `BelowAnchorWithFlip`/`AtPointer`/`Centered` model
+/// that no longer matched React's `resolvePopoverPlacement`); ticket 26/09/17 packet W2k collapsed
+/// both copies into the contract. Only [`OverlayAnchor`] stays local, because it names this module's
+/// own [`ElementId`].
+pub use ui_contract::{AnchoredPlacement, DismissPolicy, OverlayAlign, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, ResolvedOverlayPlacement, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS};
 
 /// ⚓️ Ported from `events.rs::OverlayAnchor`, `NodeId` swapped for the stable [`ElementId`] (an
 /// overlay anchor must survive across the frame boundary that opens it, unlike a [`FrameNodeId`]).
@@ -508,41 +506,6 @@ pub enum OverlayKind {
 pub enum OverlayAnchor {
     Element(ElementId),
     Point { x: f32, y: f32 },
-}
-
-/// 📐️ Ported from `events.rs::OverlayPlacement` verbatim.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum OverlayPlacement {
-    BelowAnchorWithFlip,
-    AtPointer { offset_x: f32, offset_y: f32 },
-    Centered,
-}
-
-/// 🚪️ Ported from `events.rs::DismissPolicy` verbatim.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct DismissPolicy {
-    pub outside_press_swallow: bool,
-    pub escape_closes: bool,
-    pub hover_out_delay_seconds: Option<f32>,
-}
-
-impl OverlayKind {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn default_placement(self) -> OverlayPlacement {
-        match self {
-            OverlayKind::SelectPopup | OverlayKind::ContextMenu => OverlayPlacement::BelowAnchorWithFlip,
-            OverlayKind::Tooltip => OverlayPlacement::AtPointer { offset_x: 12.0, offset_y: 16.0 },
-            OverlayKind::Dialog | OverlayKind::CommandPalette => OverlayPlacement::Centered,
-        }
-    }
-
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn dismiss_policy(self) -> DismissPolicy {
-        match self {
-            OverlayKind::Tooltip => DismissPolicy { outside_press_swallow: false, escape_closes: true, hover_out_delay_seconds: Some(0.4) },
-            _ => DismissPolicy { outside_press_swallow: true, escape_closes: true, hover_out_delay_seconds: None },
-        }
-    }
 }
 
 /// 🪟️ Ported from `events.rs::OpenOverlay`, `root`/`anchor` swapped to [`ElementId`] for the same
@@ -593,31 +556,24 @@ impl OverlayStack {
     }
 }
 
-/// 📐️ Ported from `events.rs::resolve_overlay_placement` verbatim (field-for-field math), with
-/// `OverlayAnchor::Node` resolved through [`DispatchTree::element_node`] instead of a direct `NodeId`.
+/// 📐️ React's positioner over this module's own anchor vocabulary — a forwarding shim over
+/// `ui_contract::resolve_overlay_placement`, with `OverlayAnchor::Element` resolved through
+/// [`DispatchTree::element_node`]. `flow` is React's `rtl` argument (`useFlow().inline`).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn resolve_overlay_placement(tree: &DispatchTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement) -> (f32, f32) {
+pub fn resolve_overlay_placement(tree: &DispatchTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> (f32, f32) {
+    let resolved = resolve_overlay_placement_side(tree, anchor, content_size, viewport, placement, flow);
+    (resolved.x, resolved.y)
+}
+
+/// 📐️ [`resolve_overlay_placement`] plus the side a collision flip settled on, for a caller that
+/// also wants React's `transformOrigin`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn resolve_overlay_placement_side(tree: &DispatchTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
     let anchor_rect = match anchor {
-        OverlayAnchor::Element(element) => tree.element_node(element).and_then(|id| node_bounds(tree, id)).unwrap_or(Bounds::new(0.0, 0.0, 0.0, 0.0)),
-        OverlayAnchor::Point { x, y } => Bounds::new(x, y, 0.0, 0.0),
+        OverlayAnchor::Element(element) => tree.element_node(element).and_then(|id| node_bounds(tree, id)).map_or(OverlayRect::default(), |bounds| OverlayRect::new(bounds.x, bounds.y, bounds.w, bounds.h)),
+        OverlayAnchor::Point { x, y } => OverlayRect::point(x, y),
     };
-    let (content_w, content_h) = content_size;
-    let (viewport_w, viewport_h) = viewport;
-    match placement {
-        OverlayPlacement::BelowAnchorWithFlip => {
-            let below_y = anchor_rect.y + anchor_rect.h;
-            let fits_below = below_y + content_h <= viewport_h;
-            let y = if fits_below { below_y } else { (anchor_rect.y - content_h).max(0.0) };
-            let x = anchor_rect.x.clamp(0.0, (viewport_w - content_w).max(0.0));
-            (x, y)
-        }
-        OverlayPlacement::AtPointer { offset_x, offset_y } => {
-            let x = (anchor_rect.x + offset_x).clamp(0.0, (viewport_w - content_w).max(0.0));
-            let y = (anchor_rect.y + offset_y).clamp(0.0, (viewport_h - content_h).max(0.0));
-            (x, y)
-        }
-        OverlayPlacement::Centered => (((viewport_w - content_w) / 2.0).max(0.0), ((viewport_h - content_h) / 2.0).max(0.0)),
-    }
+    ui_contract::resolve_overlay_placement(anchor_rect, content_size, viewport, placement, flow)
 }
 
 //#endregion 🪟️Overlay

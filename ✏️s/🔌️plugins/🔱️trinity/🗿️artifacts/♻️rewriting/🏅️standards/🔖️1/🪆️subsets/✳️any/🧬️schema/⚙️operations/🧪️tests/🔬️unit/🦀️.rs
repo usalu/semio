@@ -39,7 +39,7 @@ async fn op_text_round_trip_remove_rule_layout_point() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_rewrite_rule_store() {
     let base = sample_rule_state();
-    let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", base.clone())).await.expect("valid artifact store");
+    let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone())).await.expect("valid artifact store");
     let mut next = base.clone();
     next.lhs_json = "{}".into();
     dispatch_rewrite_rule_mutations(&mut store, rewriting_snapshot_mutations(&base, &next)).await.unwrap();
@@ -60,7 +60,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let base = sample_rule_state();
-    let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", base.clone())).await.expect("valid artifact store");
+    let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone())).await.expect("valid artifact store");
     dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs("{}".into())]).await.unwrap();
     let edit: &Edit<RewriteRuleMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     ::store::os_store::test_support::assert_command_envelope_round_trip::<RewritingSnapshot, RewriteRuleMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

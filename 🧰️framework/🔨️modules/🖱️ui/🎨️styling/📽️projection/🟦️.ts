@@ -58,6 +58,8 @@ interface StylingLevels {
   glassBlurStepPx: number;
   glassSaturate: number;
   veilAlphaExtraSteps: number;
+  veilAlpha: number;
+  veilBlurPx: number;
   zStep: number;
 }
 
@@ -108,6 +110,8 @@ const LEVELS_DEFAULT: StylingLevels = {
   glassBlurStepPx: 8,
   glassSaturate: 1.45,
   veilAlphaExtraSteps: 1,
+  veilAlpha: 0.4,
+  veilBlurPx: 8,
   zStep: 10,
 };
 
@@ -180,6 +184,64 @@ if (import.meta.vitest) {
 function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppearances>): string[] {
   return Object.keys(resolvedAppearances.light ?? {}).sort();
 }
+
+//#region 🌓️Premade
+
+/** @emoji 🌓️ One premade theme as the projection sees it: its `id` plus its own full token set. Read from
+ * `🌓️theme/*.json`, the same files {@link validatePremadeThemes} parses. */
+type PremadeTheme = { id: string; tokens: Tokens };
+
+/** @emoji 🌓️ Every premade theme, id-sorted so the emitted constants are deterministic. */
+function loadPremadeThemes(): readonly PremadeTheme[] {
+  if (!existsSync(premadeThemeDir)) {
+    return [];
+  }
+  const themes: PremadeTheme[] = [];
+  for (const entry of readdirSync(premadeThemeDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".json")) {
+      continue;
+    }
+    const tokens = JSON.parse(readFileSync(join(premadeThemeDir, entry.name), "utf8")) as Tokens & { id?: string };
+    const id = typeof tokens.id === "string" ? tokens.id : entry.name.replace(/\.json$/, "");
+    themes.push({ id, tokens });
+  }
+  return themes.sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+}
+
+/** @emoji 🌓️ Emits `<GROUP>_<THEME>_<APPEARANCE>` constants over the SAME `<Group>Palette` struct the
+ * default theme produces. Requires key-set parity, which {@link validatePremadeThemes} enforces — a
+ * premade that declares its own extra chrome keys could not share the struct, which is exactly the drift
+ * that forced the os wgpu Shell to hand-port 20 literals (ticket 26/09/17 packet W2k). */
+function emitRustPremadePalettes(defaultAppearances: ReturnType<typeof resolveAppearances>): string[] {
+  const lines: string[] = [];
+  for (const premade of loadPremadeThemes()) {
+    const resolved = resolveAppearances(premade.tokens);
+    for (const group of paletteGroupNames(defaultAppearances)) {
+      const reference = Object.keys(defaultAppearances.light?.[group] ?? {});
+      for (const appearanceName of APPEARANCE_NAMES) {
+        const paints = resolved[appearanceName]?.[group];
+        if (!paints) {
+          continue;
+        }
+        const keys = Object.keys(paints);
+        if (JSON.stringify(keys) !== JSON.stringify(reference)) {
+          throw new Error(`premade theme "${premade.id}" ${appearanceName}.${group} keys do not match the default theme's; reconcile 🌓️theme/🔣️.json against 🔣️.json`);
+        }
+        const constName = `${group.toUpperCase()}_${toScreamingSnake(premade.id)}_${appearanceName.toUpperCase()}`;
+        lines.push(`pub const ${constName}: ${toPascalCase(group)}Palette = ${toPascalCase(group)}Palette {`);
+        for (const key of reference) {
+          const lin = rgba8ToLinear(paints[key]!);
+          lines.push(`    ${toSnakeCase(key)}: [${lin.map((x) => rustF32(x)).join(", ")}],`);
+        }
+        lines.push("};");
+        lines.push("");
+      }
+    }
+  }
+  return lines;
+}
+
+//#endregion 🌓️Premade
 
 function emitPaletteFonts(tokens: Tokens): string {
   const assetBase = SEMIO_ASSET_ROUTE;
@@ -374,6 +436,20 @@ function emitCSharp(tokens: Tokens): string {
 
 function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = ["// @emoji 🎨️ Auto-generated from framework/ui/styling/🔣️.json — do not edit by hand.", ""];
+  //#region 🎨️Colors
+  lines.push("/// 🎨️ Primitive palette tokens (🔣️.json `colors`) — the Rust twin of CSS's `--color-*`");
+  lines.push("/// custom properties and TypeScript's `STYLING_TOKENS`. `*_HEX` is the authored sRGB hex;");
+  lines.push("/// the `[f32; 4]` is that same hex decoded to linear-float RGBA for GPU paint.");
+  lines.push("pub mod colors {");
+  for (const [key, hex] of Object.entries(tokens.colors)) {
+    const name = toScreamingSnake(key.replaceAll("-", "_"));
+    const linear = rgba8ToLinear(resolvePaint(tokens.colors, { token: key }));
+    lines.push(`    pub const ${name}: [f32; 4] = [${linear.map((x) => rustF32(x)).join(", ")}];`);
+    lines.push(`    pub const ${name}_HEX: &str = ${JSON.stringify(hex)};`);
+  }
+  lines.push("}");
+  lines.push("");
+  //#endregion 🎨️Colors
   for (const [group, values] of Object.entries({ strokes: tokens.strokes, radii: tokens.radii, opacities: tokens.opacities })) {
     if (!values) {
       continue;
@@ -429,6 +505,8 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
     lines.push(`    pub const GLASS_BLUR_STEP_PX: f64 = ${rustF64Lit(levels.glassBlurStepPx)};`);
     lines.push(`    pub const GLASS_SATURATE: f64 = ${rustF64Lit(levels.glassSaturate)};`);
     lines.push(`    pub const VEIL_ALPHA_EXTRA_STEPS: u32 = ${levels.veilAlphaExtraSteps};`);
+    lines.push(`    pub const VEIL_ALPHA: f64 = ${rustF64Lit(levels.veilAlpha)};`);
+    lines.push(`    pub const VEIL_BLUR_PX: f64 = ${rustF64Lit(levels.veilBlurPx)};`);
     lines.push(`    pub const Z_STEP: f64 = ${rustF64Lit(levels.zStep)};`);
     lines.push("}");
     lines.push("");
@@ -470,6 +548,7 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
       lines.push("");
     }
   }
+  lines.push(...emitRustPremadePalettes(resolvedAppearances));
   return lines.join("\n");
 }
 
@@ -613,6 +692,29 @@ function validatePremadeThemes(): void {
       parseUiTheme(JSON.parse(raw));
     } catch (err) {
       throw new Error(`framework/ui/styling/theme/${entry.name} is invalid: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    assertPremadeAppearanceKeyParity(entry.name, JSON.parse(raw) as Tokens);
+  }
+}
+
+/** @emoji 🔎️ A premade theme must declare EXACTLY the default theme's appearance paint keys, in the same
+ * order: that is what lets one generated `<Group>Palette` struct carry every theme, and what stops a
+ * renderer from hand-resolving a premade's palette because it cannot share the struct. `parseUiTheme`
+ * only checks that the six GROUPS exist, never their keys, which is how mono drifted to 7 extra `chrome`
+ * keys and 8 missing `board`/`diagram` ones. */
+function assertPremadeAppearanceKeyParity(name: string, premade: Tokens): void {
+  const reference = loadTokens();
+  for (const appearanceName of APPEARANCE_NAMES) {
+    const referenceGroups = reference.appearances?.[appearanceName] ?? {};
+    const premadeGroups = premade.appearances?.[appearanceName] ?? {};
+    for (const [group, paints] of Object.entries(referenceGroups)) {
+      const expected = Object.keys(paints);
+      const actual = Object.keys(premadeGroups[group] ?? {});
+      if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+        const extra = actual.filter((key) => !expected.includes(key));
+        const missing = expected.filter((key) => !actual.includes(key));
+        throw new Error(`framework/ui/styling/theme/${name} ${appearanceName}.${group} paint keys diverge from 🔣️.json${missing.length > 0 ? ` (missing ${missing.join(", ")})` : ""}${extra.length > 0 ? ` (extra ${extra.join(", ")})` : ""}`);
+      }
     }
   }
 }

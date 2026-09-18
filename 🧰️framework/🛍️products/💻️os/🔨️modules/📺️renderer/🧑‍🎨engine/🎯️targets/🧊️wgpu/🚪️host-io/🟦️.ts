@@ -17,11 +17,37 @@
  */
 // #endregion 🧲️Header
 
+import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
+
 /** 🚪️ What the shell asks the page to do. `op` is the whole vocabulary — an unknown one is refused
  * loudly rather than answered with an empty pick, which is indistinguishable from a cancelled dialog. */
 export type WgpuHostIoRequest =
   | { readonly op: "download-media-export"; readonly filename: string; readonly mimeType: string }
-  | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean };
+  | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean }
+  | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly bearer?: string; readonly body?: string }
+  | { readonly op: "storage"; readonly verb: "get" | "set" | "remove"; readonly scope?: WgpuHostStorageScope; readonly key: string; readonly value?: string };
+
+/** 📇️ One hub directory hop the shell asks the page to make. It is the SAME call the React shell's
+ * TypeScript `DirectoryClient` makes — cookie session (`credentials: "include"`), JSON bodies, the
+ * frozen paths `/auth/sessions/me`, `/directory/spaces[/{id}]`, `/directory/commands`,
+ * `/directory/event-page/v1` — so both renderers reach one hub surface through one contract.
+ *
+ * 🐛️ Why the page and not the Worker: the shell's isolate is the Worker that owns the
+ * `OffscreenCanvas`, which has no `document` and therefore no same-site cookie jar to send. Routing
+ * the fetch through the page is what makes the session cookie travel at all. */
+export type WgpuDirectoryHttpAnswer = { readonly status: number; readonly body: string } | { readonly error: string };
+
+/** 🗄️ One durable preference hop the shell asks the page to make against the SAME keys and value
+ * encodings React's `StoragePort` uses (`🖥️platform/🟦️.ts`), so a preference survives a renderer
+ * switch in either direction. `value` is `null` for a key the store does not hold and for every
+ * `set`/`remove`, which answer only that they landed.
+ *
+ * 🐛️ Why the page and not the Worker: the shell's isolate is the Worker that owns the
+ * `OffscreenCanvas` and has no `window`, so its `localStorage` read resolved to nothing and EVERY
+ * `prefs_get`/`prefs_set` on the browser build was a silent no-op — appearance, locale, terminology,
+ * themes, keybinding overrides, the compute worker count, the dock skeleton and the introduction
+ * seen-flag all read as empty and written to nothing (`📓️w4a-boot-appearance-and-tour.md` §6). */
+export type WgpuHostStorageAnswer = { readonly value: string | null } | { readonly error: string };
 
 /** 📤️ One file a picker handed back. The NAME is half the payload: every import leaf in the repo
  * resolves the file's format from its extension, so contents alone can only be guessed at. */
@@ -100,10 +126,51 @@ function openFiles(accept: string, readAs: string | undefined, multiple: boolean
   });
 }
 
+/** 📇️ Makes one directory hop. A refusal is answered as `{error}` rather than a fabricated status:
+ * a fetch that never reached the hub and a hub that answered 5xx are different outcomes, and the
+ * shell's directory client branches its retry policy on exactly that distinction. */
+async function directoryHttp(request: Extract<WgpuHostIoRequest, { op: "directory-http" }>): Promise<WgpuDirectoryHttpAnswer> {
+  const headers: Record<string, string> = {};
+  if (request.body !== undefined) headers["content-type"] = "application/json";
+  if (request.bearer !== undefined) headers.authorization = `Bearer ${request.bearer}`;
+  try {
+    const response = await fetch(request.url, { body: request.body, credentials: "include", headers, method: request.method });
+    return { body: await response.text(), status: response.status };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/** 🗄️ Services one preference hop against the page's real stores. Bounded on BOTH sides: the key must
+ * be one the census carries and a written value must fit {@link WGPU_HOST_STORAGE_VALUE_MAX_BYTES}, so
+ * the door can never become a wider hole into the origin's storage than the shell's own store already
+ * is. A refusal is `{error}`, never a fabricated empty read: "this key holds nothing" and "this call
+ * was refused" are different answers and the shell branches on the difference. */
+function storageHop(request: Extract<WgpuHostIoRequest, { op: "storage" }>): WgpuHostStorageAnswer {
+  if (!wgpuHostStorageCarriesKey(request.key)) return { error: `wgpu-host-io.storage: ${JSON.stringify(request.key)} is not a carried key` };
+  const store = request.scope === "session" ? globalThis.sessionStorage : globalThis.localStorage;
+  if (!store) return { error: `wgpu-host-io.storage: this realm owns no ${request.scope ?? "local"}Storage` };
+  try {
+    if (request.verb === "get") return { value: store.getItem(request.key) };
+    if (request.verb === "remove") {
+      store.removeItem(request.key);
+      return { value: null };
+    }
+    const value = request.value ?? "";
+    if (value.length > WGPU_HOST_STORAGE_VALUE_MAX_BYTES) return { error: `wgpu-host-io.storage: ${request.key} exceeds ${WGPU_HOST_STORAGE_VALUE_MAX_BYTES} bytes` };
+    store.setItem(request.key, value);
+    return { value: null };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 /** 🚪️ The page-owned implementation of {@link WgpuHostIo}. */
 export function createWgpuPageHostIo(): WgpuHostIo {
   return async (requestJson, bytes) => {
     const request = JSON.parse(requestJson) as WgpuHostIoRequest;
+    if (request.op === "directory-http") return JSON.stringify(await directoryHttp(request));
+    if (request.op === "storage") return JSON.stringify(storageHop(request));
     if (request.op === "download-media-export") {
       if (!bytes) throw new Error("wgpu-host-io.download-media-export: no bytes");
       downloadBytes(request.filename, request.mimeType, bytes);

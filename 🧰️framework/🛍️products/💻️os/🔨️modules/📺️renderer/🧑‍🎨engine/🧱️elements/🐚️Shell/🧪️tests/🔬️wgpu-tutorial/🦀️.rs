@@ -62,16 +62,16 @@ fn camera_pose_close_only_compares_matching_kinds() {
 //#endregion CameraConversionTests
 
 //#region UiSnapshotTests
+/// 🧭️ The snapshot is keyed by `PanelGroup`, so each open CORNER anchor reports its own active leaf
+/// under the group whose default home that anchor is — `bottom-left` is Display, `bottom-right` Settings.
 #[test]
 fn ui_snapshot_round_trips_panel_tabs_and_focus() {
     let mut state = shell();
     state.active_window_id = Some("window-a".into());
-    state.left_panel_open = true;
-    state.active_left_kind = LeftPanelKind::Display;
-    state.active_left_tab = Some("tab-x".into());
-    state.right_panel_open = true;
-    state.active_right_kind = RightPanelKind::Settings;
-    state.active_right_tab = Some("tab-y".into());
+    *state.dock_tabs.tabs_mut(PanelAnchor::BottomLeft) = vec![DockTabNode::leaf("tab-x", "Tab X", "circle-dot", 0)];
+    *state.dock_tabs.tabs_mut(PanelAnchor::BottomRight) = vec![DockTabNode::leaf("tab-y", "Tab Y", "circle-dot", 0)];
+    state.toggle_anchor_tab(PanelAnchor::BottomLeft, "tab-x");
+    state.toggle_anchor_tab(PanelAnchor::BottomRight, "tab-y");
 
     let snapshot = tutorial_capture_ui_snapshot(&state);
     assert_eq!(snapshot.focused_window_id.as_deref(), Some("window-a"));
@@ -79,27 +79,28 @@ fn ui_snapshot_round_trips_panel_tabs_and_focus() {
     assert_eq!(snapshot.active_panel_tab_by_group.get("settings").map(String::as_str), Some("tab-y"));
 
     let mut fresh = shell();
+    *fresh.dock_tabs.tabs_mut(PanelAnchor::BottomLeft) = vec![DockTabNode::leaf("tab-x", "Tab X", "circle-dot", 0)];
+    *fresh.dock_tabs.tabs_mut(PanelAnchor::BottomRight) = vec![DockTabNode::leaf("tab-y", "Tab Y", "circle-dot", 0)];
     tutorial_apply_ui_snapshot(&mut fresh, &snapshot);
     assert_eq!(fresh.active_window_id.as_deref(), Some("window-a"));
-    assert!(fresh.left_panel_open);
-    assert_eq!(fresh.active_left_kind, LeftPanelKind::Display);
-    assert_eq!(fresh.active_left_tab.as_deref(), Some("tab-x"));
-    assert!(fresh.right_panel_open);
-    assert_eq!(fresh.active_right_kind, RightPanelKind::Settings);
-    assert_eq!(fresh.active_right_tab.as_deref(), Some("tab-y"));
+    assert!(fresh.anchor_open(PanelAnchor::BottomLeft));
+    assert_eq!(fresh.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("tab-x"));
+    assert!(fresh.anchor_open(PanelAnchor::BottomRight));
+    assert_eq!(fresh.anchor_state(PanelAnchor::BottomRight).active_tab(), Some("tab-y"));
+    eprintln!("[DEBUG] tutorial ui snapshot round-tripped both bottom corner anchors through PanelGroup keys");
 }
 
 #[test]
 fn ui_snapshot_absent_panel_tabs_close_the_panel() {
     let mut state = shell();
-    state.left_panel_open = true;
-    state.active_left_tab = Some("tab-x".into());
-    state.right_panel_open = true;
-    state.active_right_tab = Some("tab-y".into());
+    *state.dock_tabs.tabs_mut(PanelAnchor::BottomLeft) = vec![DockTabNode::leaf("tab-x", "Tab X", "circle-dot", 0)];
+    *state.dock_tabs.tabs_mut(PanelAnchor::BottomRight) = vec![DockTabNode::leaf("tab-y", "Tab Y", "circle-dot", 0)];
+    state.toggle_anchor_tab(PanelAnchor::BottomLeft, "tab-x");
+    state.toggle_anchor_tab(PanelAnchor::BottomRight, "tab-y");
     let empty_snapshot = semio_framework::TutorialUiSnapshot::default();
     tutorial_apply_ui_snapshot(&mut state, &empty_snapshot);
-    assert!(!state.left_panel_open);
-    assert!(!state.right_panel_open);
+    assert!(!state.left_panel_open());
+    assert!(!state.right_panel_open());
 }
 
 #[test]

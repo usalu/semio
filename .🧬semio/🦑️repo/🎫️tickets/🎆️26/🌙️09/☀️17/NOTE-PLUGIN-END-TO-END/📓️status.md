@@ -40,3 +40,29 @@
 - `bun nx run @semio-tech/note-plugin:describe` regenerated `🔣️.json` + `🛂️.descriptor.semio` (every command row `interactiveJob: migrated`, no `batch-only` verbs left).
 - Launch entry `note-react-attach` (6080) added to `.claude/launch.json`.
 - Native (`cargo test -p semio-s-artifact-note-note --lib`, targeted): 8/8 pass — the four new bridge/ink-wire tests, the rewritten `set_active_example_loads_the_registered_demo_and_refuses_unknown_ids`, `set_fixture_json_replaces_document`, and both DSL round trips (`semio_example_dsl_round_trips` was failing before this ticket).
+
+## Native test baseline (2026-09-17, `cargo test -p semio-s-artifact-note-note --lib`)
+344 pass / 45 fail. Every new or rewritten law passes. The 45 fall in four families, none of them in the runtime path this ticket
+touched (not verified against a clean HEAD tree — no git-modifying commands — but each is a known repo-wide pattern):
+- 22× `interactive-job.catalog-authority` — tests built on the registry-less `note_app()`: the proof catalog joins against
+  `migrated_tool_ids()`, which is empty without a manifest registry, so every proof row is rejected (layout's 30 of the same).
+- 18× fixture float/JSON canonical form (`Number(0.0)` vs `Number(0)`, "committed diff JSON is not canonical") in
+  `standards::v1::subsets::block::schema::mutations::*` — schema/fixture debt.
+- 3× `edit history insertion requires its exact mutation retirement facility` in `io::mutations|snapshot::binary`.
+- 2× JSON oracles outside note's canvas: the inspection panel heading (`label` Null) and the neutral window schema
+  (`invalid type: map, expected a sequence`).
+
+**Rewritten laws** (migration consequence, not a regression): the native harness hands a MIGRATED verb's tool job an empty
+`InteractionState` — proven by temporary `[DEBUG]` instrumentation in `🧵️retained`'s `NoteCommandWork::new`
+(`selection_domains=[] selected=[]` for `deleteSelection` right after a settled `interactionSelect`), while the react shell
+delivers it (interact probe step 5/6). `nudge_*`, `duplicate_selection` and `delete_selection` laws therefore drive their
+handlers with the resolved `NoteDispatchCtx::selected_block_ids` and apply the emitted mutations, instead of asserting the
+harness. The stale `result.mutations.len()` assertions are gone with them (a migrated verb's `InvocationResult` carries none).
+The canvas oracle fixture key `schema: note.document` became `canvasSchema: ink.document`.
+
+## Final state
+- Guest restaged from the exact working tree 22:43Z; final proof `🗑️generated/note-interact-final` reproduces all eleven steps
+  with the single known host fault line (`setHover` undeclared).
+- Serve left running: `screen note-serve`, vite 6080, launch entry `note-react-attach`.
+- Follow-up handed off (spawned task): route `InkCanvasHost`'s `setSelection`/`setHover` onto the framework
+  `interactionSelect`/`interactionHover` by giving the ink scene an interaction `domainId` (Board2d precedent).

@@ -1,51 +1,32 @@
 {
-  "schema": "lowpoly.document",
   "objects": [
     {
       "id": "obj-fin",
+      "mesh": null,
+      "meshContent": "",
       "name": "Fin",
+      "paintLayers": [],
+      "smoothShading": true,
       "transform": {
         "position": [
-          0,
-          0,
-          0
+          0.0,
+          0.0,
+          0.0
         ],
         "rotation": [
-          0,
-          0,
-          0
+          0.0,
+          0.0,
+          0.0
         ],
         "scale": [
-          1,
-          1,
-          1
+          1.0,
+          1.0,
+          1.0
         ]
-      },
-      "smoothShading": true,
-      "mesh": null,
-      "paintLayers": []
+      }
     },
     {
       "id": "obj-hull",
-      "name": "Hull",
-      "transform": {
-        "position": [
-          0,
-          0,
-          0
-        ],
-        "rotation": [
-          0,
-          0,
-          0
-        ],
-        "scale": [
-          1,
-          1,
-          1
-        ]
-      },
-      "smoothShading": false,
       "mesh": {
         "childId": "mesh-hull-01",
         "target": {
@@ -57,15 +38,36 @@
           }
         }
       },
+      "meshContent": "",
+      "name": "Hull",
       "paintLayers": [
         {
-          "name": "Base",
-          "visible": true,
-          "opacity": 1,
           "blendMode": "normal",
-          "pixels": "//////////8="
+          "name": "Base",
+          "opacity": 1.0,
+          "pixels": "//////////8=",
+          "visible": true
         }
-      ]
+      ],
+      "smoothShading": false,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
     }
-  ]
+  ],
+  "schema": "lowpoly.document"
 }

@@ -88,13 +88,14 @@ impl UiDocumentAssembly {
         size_of::<UiDocumentSlot>() + size_of::<Self>() + size_of::<SurfaceId>() + size_of::<UiResidentPermit>()
     }
 
-    /// 🧊️ Cold convenience reserves the fixed surface ceiling; retained callers transfer their admitted job permit.
+    /// 🧊️ Cold convenience reserves an EMPTY document and climbs through [`Self::reprice_resident`] as its
+    /// census grows; retained callers transfer their admitted job permit instead.
     pub fn open_into(&mut self, surface: &mut Option<SurfaceId>, identity: UiDocumentAssemblyIdentity, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
         if items == 0 || bytes < Self::required_open_bytes() {
             return Ok(Default::default());
         }
         let mut permit = None;
-        UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut permit, bytes).map_err(|_| error(UiDocumentAssemblyErrorKind::ArenaFull))?;
+        UiResidentPermit::try_reserve(ui_document_resident_limits(0), &mut permit, bytes).map_err(|_| error(UiDocumentAssemblyErrorKind::ArenaFull))?;
         let result = self.open_with_permit(&mut permit, surface, identity, items, bytes);
         if let Some(permit) = permit.as_mut() {
             let _ = permit.close_step(1);
@@ -194,6 +195,10 @@ impl UiDocumentAssembly {
             }
             self.compared += 1;
             return Ok(UiDocumentAssemblyProgress { progressed: true, metadata_items: 1, compared_bytes: 2 * size_of::<UiNodeId>(), ..Default::default() });
+        }
+        let census = slot.nodes.len().saturating_add(1);
+        if !slot.climb_resident(census) {
+            return Err(error(UiDocumentAssemblyErrorKind::ArenaFull));
         }
         if !slot.nodes.entries.has_reserved_slot() {
             let requested = slot.nodes.entries.next_allocation_bytes().map_err(|_| error(UiDocumentAssemblyErrorKind::Allocation))?;

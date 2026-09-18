@@ -205,7 +205,8 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     assert_eq!(arg(&action, "windowId"), fixture()["scene"]["surfaceId"].as_str().expect("surfaceId"));
     assert!(action.args.as_ref().and_then(|args| args.get("surfaceId")).is_none(), "the pre-fix `surfaceId` address is gone, not merely joined by `windowId`");
     let camera = action.args.as_ref().and_then(|args| args.get("camera")).expect("the pose nests under `camera`");
-    assert!(camera.get("position").is_some() && camera.get("target").is_some() && camera.get("fov").is_some(), "the pose carries position/target/fov");
+    assert!(camera.get("position").is_some() && camera.get("target").is_some() && camera.get("zoom").is_some() && camera.get("up").is_some(), "the pose carries React's `{{position, target, zoom, up}}` — never `fov`, which the guest camera value has no member for");
+    assert!(camera.get("fov").is_none(), "`fov` is gone from the wire, not merely joined by `zoom`");
     println!("[DEBUG] pointer-gestures orbit-completes-into-one-setcamera: windowId={} camera={:?}", arg(&action, "windowId"), camera);
 }
 

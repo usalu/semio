@@ -1569,6 +1569,7 @@ enum Puzzle5dSelectionStage {
 
 struct Puzzle5dSelectionScan {
     snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
+    projection: Option<Value>,
     part_ids: HashSet<String>,
     explicit_fastener_ids: HashSet<String>,
     stage: Puzzle5dSelectionStage,
@@ -1580,17 +1581,28 @@ struct Puzzle5dSelectionScan {
 impl Puzzle5dSelectionScan {
     fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::InteractionState) -> Self {
         let (part_ids, explicit_fastener_ids) = puzzle5d_selection_ids(interaction);
-        Self { snapshot: Some(snapshot), part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
+        Self { snapshot: Some(snapshot), projection: None, part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
     }
 
-    fn rows(&self, key: &str) -> Vec<Value> {
-        self.snapshot.as_ref().map(|snapshot| puzzle5d_projection_value(&snapshot.0)).and_then(|projection| projection.get(key).and_then(Value::as_array).cloned()).unwrap_or_default()
+    /// 🗂️ One cursored row of the scanned projection, which is derived ONCE and then cached. Re-deriving
+    /// it per step — and cloning the whole row array with it — cost O(document) on every one of a
+    /// selection's ~2N+M cursor turns and blew the interactive ceiling on a real document:
+    /// `framework route 'copy' overran the 8 ms step ceiling for 4 consecutive steps, worst 70521us`
+    /// on the 180-part Nakagin, which is what made `copy`/`cut` fault the moment the shipped examples
+    /// stopped loading empty. The cache is retired on its own rung of the close ladder.
+    fn row(&mut self, key: &str, index: usize) -> Option<Value> {
+        if self.projection.is_none() {
+            let projection = self.snapshot.as_ref().map(|snapshot| puzzle5d_projection_value(&snapshot.0))?;
+            self.projection = Some(projection);
+        }
+        self.projection.as_ref()?.get(key).and_then(Value::as_array).and_then(|rows| rows.get(index)).cloned()
     }
 
     fn step(&mut self) -> Result<bool, String> {
         match self.stage {
             Puzzle5dSelectionStage::Endpoints => {
-                if let Some(row) = self.rows("fasteners").get(self.cursor).cloned() {
+                let cursor = self.cursor;
+                if let Some(row) = self.row("fasteners", cursor) {
                     self.cursor += 1;
                     if row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id)) {
                         if let Some(source) = row.get("source").and_then(Value::as_str) {
@@ -1606,7 +1618,8 @@ impl Puzzle5dSelectionScan {
                 }
             }
             Puzzle5dSelectionStage::Fasteners => {
-                if let Some(row) = self.rows("fasteners").get(self.cursor).cloned() {
+                let cursor = self.cursor;
+                if let Some(row) = self.row("fasteners", cursor) {
                     self.cursor += 1;
                     let source = row.get("source").and_then(Value::as_str).map(owning_part_id_local);
                     let target = row.get("target").and_then(Value::as_str).map(owning_part_id_local);
@@ -1621,7 +1634,8 @@ impl Puzzle5dSelectionScan {
                 }
             }
             Puzzle5dSelectionStage::Parts => {
-                if let Some(row) = self.rows("parts").get(self.cursor).cloned() {
+                let cursor = self.cursor;
+                if let Some(row) = self.row("parts", cursor) {
                     self.cursor += 1;
                     if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)) {
                         self.parts.push(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
@@ -1952,6 +1966,9 @@ impl Puzzle5dClipboardWork {
             self.raw = Vec::new();
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
         }
+        if self.scan.projection.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if self.scan.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
             return Ok(PluginCloseStep::Blocked { reason: "puzzle5d clipboard snapshot has no mounted retained authority" });
         }
@@ -1972,6 +1989,7 @@ impl Puzzle5dClipboardWork {
             && self.raw.is_empty()
             && self.raw.capacity() == 0
             && self.scan.snapshot.is_none()
+            && self.scan.projection.is_none()
             && self.scan.part_ids.is_empty()
             && self.scan.part_ids.capacity() == 0
             && self.scan.explicit_fastener_ids.is_empty()

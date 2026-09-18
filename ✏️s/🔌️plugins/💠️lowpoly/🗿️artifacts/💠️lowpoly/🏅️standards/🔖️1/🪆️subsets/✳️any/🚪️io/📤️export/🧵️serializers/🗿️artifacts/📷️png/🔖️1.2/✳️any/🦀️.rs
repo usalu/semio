@@ -26,8 +26,10 @@ fn primary_paint_raster(snapshot: &LowpolySnapshot) -> (u32, u32, Vec<u8>) {
     let expected_len = LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4;
     for object in &snapshot.objects {
         if let Some(layer) = object.paint_layers.first() {
-            if layer.pixels.len() == expected_len {
-                return (size, size, layer.pixels.clone());
+            // 🎨️ A sparse (never painted) layer exports as the full opaque-white raster it stands for.
+            let pixels = layer.materialized_pixels();
+            if pixels.len() == expected_len {
+                return (size, size, pixels);
             }
         }
     }

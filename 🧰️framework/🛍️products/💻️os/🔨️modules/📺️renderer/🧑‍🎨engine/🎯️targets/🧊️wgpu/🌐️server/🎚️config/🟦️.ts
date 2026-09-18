@@ -22,7 +22,6 @@ export default () => {
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
     moduleRoot,
     extensionRoot: join(runtime, "extensions"),
-    fontRoot: resolve(root, "../../../../../♾️infinite/📦️packages/🦀️rust/dist/fonts"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
     assets: playground.assets,
   });

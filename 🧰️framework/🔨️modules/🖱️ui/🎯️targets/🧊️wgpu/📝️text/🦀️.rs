@@ -21,6 +21,11 @@ use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
 use swash::FontRef as SwashFontRef;
 
+/// 🔠️ One packed glyph. `atlas_*`/`width`/`height` are ATLAS TEXELS — device pixels, because the
+/// atlas is rasterised at `size_px * raster_scale` so text stays crisp on a HiDPI surface.
+/// `advance`/`bearing_*` and [`Self::logical_width`]/[`Self::logical_height`] are LOGICAL (CSS)
+/// pixels, the only unit a layout or paint call site is ever allowed to see. See the ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g report for the whole unit model.
 pub struct GlyphEntry {
     pub atlas_x: u32,
     pub atlas_y: u32,
@@ -29,11 +34,85 @@ pub struct GlyphEntry {
     pub advance: f32,
     pub bearing_x: f32,
     pub bearing_y: f32,
+    /// 📐️ The atlas raster scale this glyph was rasterised at — the divisor that turns its texel
+    /// extent back into the logical extent a draw-list quad must use.
+    pub raster_scale: f32,
     /// 🎨️ True when this glyph lives in the RGBA `color_pixels` page (COLR/bitmap color emoji)
     /// rather than the alpha-only `pixels` page. Paint call sites in `widgets`/`paint` (outside
     /// this region) still only sample the alpha page — see the report's wiring-request section.
     pub is_color: bool,
 }
+
+impl GlyphEntry {
+    /// 📏️ Quad width in LOGICAL pixels — what every `push_glyph` call site must use, so a glyph
+    /// rasterised at 2× covers the same CSS box it does at 1×.
+    pub fn logical_width(&self) -> f32 {
+        self.width as f32 / self.raster_scale.max(f32::MIN_POSITIVE)
+    }
+
+    /// 📏️ Quad height in LOGICAL pixels — the vertical twin of [`Self::logical_width`].
+    pub fn logical_height(&self) -> f32 {
+        self.height as f32 / self.raster_scale.max(f32::MIN_POSITIVE)
+    }
+}
+
+//#region 🅰️Weight
+
+/// 🅰️ The two faces the UI asks for — React's `font-semibold` vs its default weight
+/// (`🗣️Interpreter/🟦️.tsx:1168`'s `TextView`, which swaps ONLY the weight and keeps `text-sm`).
+///
+/// ⚠️ No bold Latin face ships in this repo: `🖼️assets/🔤️fonts/{🚀️anta,🧱️kelly-slab,⌨️share-tech-mono}`
+/// each carry `📖️regular` only (Anta and Share Tech Mono are single-weight upstream), and the only
+/// bold/semibold outlines on disk are Noto **Emoji**'s. [`TextWeight::Semibold`] is therefore
+/// SYNTHETIC — a second strike offset along x by [`faux_bold_offset`], the faux bold every renderer
+/// without a real face falls back to. It keeps the glyph ADVANCES, and so the line box and every wrap
+/// point, byte-identical to the regular face — which is what makes it a safe weight swap at React's
+/// own size instead of the size swap this target used to make.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TextWeight {
+    #[default]
+    Regular,
+    Semibold,
+}
+
+impl TextWeight {
+    /// 🅰️ React's own mapping: `emphasize` is `font-semibold`, everything else the default face.
+    pub const fn of(emphasize: bool) -> Self {
+        if emphasize {
+            TextWeight::Semibold
+        } else {
+            TextWeight::Regular
+        }
+    }
+
+    /// 🅰️ How many strikes one glyph costs at this weight — the number a per-glyph reservation must
+    /// price before the retained paint arm can carry a real weight swap.
+    pub const fn strikes(self) -> usize {
+        match self {
+            TextWeight::Regular => 1,
+            TextWeight::Semibold => 2,
+        }
+    }
+}
+
+/// 🅰️ The x offset of a synthetic semibold's second strike, in LOGICAL pixels. CSS `font-weight: 600`
+/// against `400` thickens a stem by roughly 4 % of the em, which is the ratio this reproduces — so it
+/// scales with the font size rather than being a fixed pixel smear, with a floor so the strike still
+/// shows at the smallest ramp step.
+pub fn faux_bold_offset(size_px: f32) -> f32 {
+    if !size_px.is_finite() || size_px <= 0.0 {
+        return 0.0;
+    }
+    (size_px * FAUX_BOLD_EM_RATIO).max(FAUX_BOLD_MIN_PX)
+}
+
+/// 🅰️ The em fraction a synthetic semibold offsets by.
+const FAUX_BOLD_EM_RATIO: f32 = 0.04;
+
+/// 🅰️ The floor below which a synthetic semibold would not show at all.
+const FAUX_BOLD_MIN_PX: f32 = 0.34;
+
+//#endregion 🅰️Weight
 
 /// 🔤️ Fixed family names every registered font is forced under via `FontInfoOverride`, so
 /// multi-file families (Noto Emoji's 12 codepoint-range buckets) merge into one fontique family
@@ -63,6 +142,38 @@ static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
 
 const BITMAP_GLYPH_W: u32 = 8;
 const BITMAP_GLYPH_H: u32 = 16;
+
+/// 📏️ The `(font size, line box)` ramp React's CSS declares as `--text-*` / `--text-*--line-height`
+/// (`🎨️styling/🖌️ui/🎨️.css`), read from the ONE generated token source both targets share
+/// (`ui_styling::metrics::typography`) — never a hand-picked multiplier. Ratios are
+/// `1.5 / 1.4286 / 1.5 / 1.5556 / 1.6`, so a single hardcoded factor cannot express them.
+const LINE_HEIGHT_RAMP: [(f32, f32); 5] = [
+    (ui_styling::metrics::typography::TEXT2XS_PX as f32, ui_styling::metrics::typography::TEXT2XS_LINE_HEIGHT_PX as f32),
+    (ui_styling::metrics::typography::TEXT_XS_PX as f32, ui_styling::metrics::typography::TEXT_XS_LINE_HEIGHT_PX as f32),
+    (ui_styling::metrics::typography::TEXT_SM_PX as f32, ui_styling::metrics::typography::TEXT_SM_LINE_HEIGHT_PX as f32),
+    (ui_styling::metrics::typography::TEXT_BASE_PX as f32, ui_styling::metrics::typography::TEXT_BASE_LINE_HEIGHT_PX as f32),
+    (ui_styling::metrics::typography::TEXT_LG_PX as f32, ui_styling::metrics::typography::TEXT_LG_LINE_HEIGHT_PX as f32),
+];
+
+/// 📏️ The line box `size` occupies — the ONE formula wrapped and single-line text both go through
+/// (`measure_text`, `measure_text_wrapped`, `paint`'s per-line baseline advance,
+/// `mounted_layout`'s glyph preview), so wgpu can no longer disagree with itself the way the
+/// pre-parity `size * 1.35` (wrapped) versus raw-glyph-bbox (single line) pair did. A token size
+/// resolves to exactly React's computed line box; anything between ramp steps borrows the nearest
+/// step's ratio, matching how a browser applies the inherited `--text-*--line-height` unitless
+/// ratio to whatever `font-size` an element actually ends up with.
+pub fn line_height(size: f32) -> f32 {
+    let mut ratio = LINE_HEIGHT_RAMP[0].1 / LINE_HEIGHT_RAMP[0].0;
+    let mut best = f32::INFINITY;
+    for (font_px, line_px) in LINE_HEIGHT_RAMP {
+        let distance = (size - font_px).abs();
+        if distance < best {
+            best = distance;
+            ratio = line_px / font_px;
+        }
+    }
+    size * ratio
+}
 
 static BITMAP_FONT: [[u8; 8]; 95] = [
     [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -179,6 +290,9 @@ struct RasterizedGlyph {
     bearing_x: f32,
     bearing_y: f32,
     advance: f32,
+    /// 📐️ Device pixels per logical pixel THIS raster used — the shaped path honours the atlas
+    /// scale, the fixed 8×16 ASCII bitmap fallback cannot and always reports `1.0`.
+    raster_scale: f32,
     is_color: bool,
 }
 
@@ -205,6 +319,10 @@ pub struct FontAtlas {
     layout_cx: LayoutContext<[u8; 4]>,
     scale_cx: ScaleContext,
     glyphs: HashMap<(char, u32), GlyphEntry>,
+    /// 📐️ Device pixels per logical pixel the atlas rasterises at — the ONLY place the surface
+    /// scale factor reaches the text stack. Everything a caller passes in or reads back stays
+    /// logical; see [`Self::set_raster_scale`].
+    raster_scale: f32,
     cursor_x: u32,
     cursor_y: u32,
     row_height: u32,
@@ -244,6 +362,7 @@ impl FontAtlas {
             layout_cx: LayoutContext::new(),
             scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
+            raster_scale: 1.0,
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
@@ -308,6 +427,7 @@ impl FontAtlas {
             layout_cx: LayoutContext::new(),
             scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
+            raster_scale: 1.0,
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
@@ -317,6 +437,18 @@ impl FontAtlas {
             dirty: false,
             color_dirty: false,
         }
+    }
+
+    /// 🔤️ The atlas every REAL host boots with: full `Shaped` mode over the embedded Anta /
+    /// Kelly Slab / Share Tech Mono / Noto Emoji families, with no host-fetched override. Anta is
+    /// exactly the face React's `--font-sans` names first
+    /// (`🎨️styling/🎨️palette/🎨️.css`'s `--font-sans: Anta, …`), so a host that cannot fetch a font
+    /// file still shapes the UI font at the reference's own advances instead of falling back to the
+    /// fixed-pitch 8×16 ASCII debug bitmap [`Self::builtin`] carries — which paints every chrome
+    /// label monospace at a flat 10 px advance and is why a frame worker booted from
+    /// `from_bytes(&[])` could never match a measured chip width.
+    pub fn shaped_default() -> Self {
+        Self::shaped(None)
     }
 
     /// 🔡️ `bytes` empty ⇒ deterministic `builtin()` bitmap mode (unchanged contract). Any
@@ -331,18 +463,48 @@ impl FontAtlas {
         Ok(Self::shaped(Some(bytes)))
     }
 
+    /// 📐️ The surface scale factor the atlas rasterises at. Callers keep speaking logical pixels;
+    /// only the swash raster size and the packed texel extents move. Changing it drops every cached
+    /// glyph and rewinds both pages, so the next frame re-rasterises at the new density and the
+    /// dirty flags force a full re-upload — this is what a window moved between a Retina and a
+    /// non-Retina display must do. A no-op when the scale is unchanged or not a positive finite.
+    pub fn set_raster_scale(&mut self, raster_scale: f32) {
+        if !raster_scale.is_finite() || raster_scale <= 0.0 || (raster_scale - self.raster_scale).abs() < f32::EPSILON {
+            return;
+        }
+        self.raster_scale = raster_scale;
+        self.glyphs.clear();
+        self.pixels.iter_mut().for_each(|texel| *texel = 0);
+        self.color_pixels.iter_mut().for_each(|texel| *texel = 0);
+        self.cursor_x = 1;
+        self.cursor_y = 1;
+        self.row_height = 0;
+        self.color_cursor_x = 1;
+        self.color_cursor_y = 1;
+        self.color_row_height = 0;
+        self.dirty = true;
+        self.color_dirty = !self.color_pixels.is_empty();
+    }
+
+    /// 📐️ The scale the atlas currently rasterises at — device pixels per logical pixel.
+    pub fn raster_scale(&self) -> f32 {
+        self.raster_scale
+    }
+
     /// 🔑️ Quantizes a float px size to the glyph-cache's integer key component, so float jitter
     /// (e.g. 15.999999 vs 16.0) doesn't fragment the cache into near-duplicate entries.
     fn quantize_size(size_px: f32) -> u32 {
         size_px.round().max(1.0) as u32
     }
 
-    /// 🔍️ Fetches (rasterizing on first use) the glyph for `ch` at `size_px`, keyed by
-    /// `(char, size_px)` so the same character rasterized at two different sizes never returns the
-    /// wrong bitmap (the pre-fix bug: a `char`-only key meant later sizes reused the first size's
-    /// rasterization, blurring text at any size other than whichever was cached first).
+    /// 🔍️ Fetches (rasterizing on first use) the glyph for `ch` at LOGICAL `size_px`, keyed by
+    /// `(char, device_size_px)` so the same character rasterized at two different sizes never
+    /// returns the wrong bitmap (the pre-fix bug: a `char`-only key meant later sizes reused the
+    /// first size's rasterization, blurring text at any size other than whichever was cached
+    /// first). The key is the DEVICE size — `size_px * raster_scale` — so 16 logical px at 2× and
+    /// 32 logical px at 1× stay distinct cache rows even though both rasterise 32 device px.
     pub fn ensure_glyph(&mut self, ch: char, size_px: f32) -> &GlyphEntry {
-        let key = (ch, Self::quantize_size(size_px));
+        let key = (ch, Self::quantize_size(size_px * self.raster_scale));
         if !self.glyphs.contains_key(&key) {
             self.rasterize_glyph(key);
         }
@@ -350,10 +512,10 @@ impl FontAtlas {
     }
 
     fn rasterize_glyph(&mut self, key: (char, u32)) {
-        let (ch, size_px) = key;
+        let (ch, device_size_px) = key;
         let glyph = match self.mode {
             AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch),
-            AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, size_px as f32),
+            AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, device_size_px as f32),
         };
         self.pack_glyph(key, glyph);
     }
@@ -390,13 +552,15 @@ impl FontAtlas {
         let mut scaler = self.scale_cx.builder(font_ref).size(size_px).hint(true).build();
         let image = Render::new(&[Source::ColorBitmap(StrikeWith::BestFit), Source::ColorOutline(0), Source::Outline]).format(SwashFormat::Alpha).render(&mut scaler, resolved.glyph_id)?;
         let is_color = matches!(image.content, SwashContent::Color);
+        let raster_scale = self.raster_scale;
         Some(RasterizedGlyph {
             bitmap: image.data,
             width: image.placement.width,
             height: image.placement.height,
-            bearing_x: image.placement.left as f32,
-            bearing_y: (image.placement.top - image.placement.height as i32) as f32,
-            advance: resolved.advance,
+            bearing_x: image.placement.left as f32 / raster_scale,
+            bearing_y: (image.placement.top - image.placement.height as i32) as f32 / raster_scale,
+            advance: resolved.advance / raster_scale,
+            raster_scale,
             is_color,
         })
     }
@@ -412,7 +576,7 @@ impl FontAtlas {
         if let Some(glyph) = self.render_resolved(&resolved, size_px) {
             return glyph;
         }
-        RasterizedGlyph { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, advance: resolved.advance, is_color: false }
+        RasterizedGlyph { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, advance: resolved.advance / self.raster_scale, raster_scale: self.raster_scale, is_color: false }
     }
 
     fn rasterize_bitmap_glyph(&self, ch: char) -> RasterizedGlyph {
@@ -427,13 +591,13 @@ impl FontAtlas {
                 }
             }
         }
-        RasterizedGlyph { bitmap, width: BITMAP_GLYPH_W, height: BITMAP_GLYPH_H, bearing_x: 0.0, bearing_y: 0.0, advance: BITMAP_GLYPH_W as f32 + 2.0, is_color: false }
+        RasterizedGlyph { bitmap, width: BITMAP_GLYPH_W, height: BITMAP_GLYPH_H, bearing_x: 0.0, bearing_y: 0.0, advance: BITMAP_GLYPH_W as f32 + 2.0, raster_scale: 1.0, is_color: false }
     }
 
     /// 📐️ Bin-packs one rasterized glyph into the alpha (`pixels`) or color (`color_pixels`)
     /// atlas page, per `RasterizedGlyph::is_color`, and records the resulting `GlyphEntry`.
     fn pack_glyph(&mut self, key: (char, u32), glyph: RasterizedGlyph) {
-        let RasterizedGlyph { bitmap, width, height, bearing_x, bearing_y, advance, is_color } = glyph;
+        let RasterizedGlyph { bitmap, width, height, bearing_x, bearing_y, advance, raster_scale, is_color } = glyph;
         let (atlas_x, atlas_y) = if is_color {
             if self.color_cursor_x + width + 2 >= self.color_width {
                 self.color_cursor_x = 1;
@@ -473,18 +637,20 @@ impl FontAtlas {
             self.dirty = true;
             (x, y)
         };
-        self.glyphs.insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y, is_color });
+        self.glyphs.insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y, raster_scale, is_color });
     }
 
+    /// 📏️ Advance-summed width and the CSS line box height (`line_height`) — a single line of text
+    /// occupies its whole line box in React, exactly as a wrapped paragraph's first line does.
     pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
         for ch in text.chars() {
             let glyph = self.ensure_glyph(ch, size);
             width += glyph.advance;
-            max_height = max_height.max(glyph.height as f32 + glyph.bearing_y);
+            max_height = max_height.max(glyph.logical_height() + glyph.bearing_y);
         }
-        (width, max_height.max(size))
+        (width, max_height.max(line_height(size)))
     }
 
     pub fn measure_text_wrapped(&mut self, text: &str, max_width: f32, size: f32) -> (f32, f32) {
@@ -503,8 +669,7 @@ impl FontAtlas {
         if !current.is_empty() {
             lines.push(current);
         }
-        let line_h = size * 1.35;
-        let height = lines.len().max(1) as f32 * line_h;
+        let height = lines.len().max(1) as f32 * line_height(size);
         let width = lines.iter().map(|line| self.measure_text(line, size).0).fold(0.0f32, f32::max).min(max_width);
         (width, height)
     }

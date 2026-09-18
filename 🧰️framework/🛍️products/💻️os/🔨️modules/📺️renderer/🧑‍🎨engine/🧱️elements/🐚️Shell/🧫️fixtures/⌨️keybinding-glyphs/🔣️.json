@@ -1,0 +1,26 @@
+{
+  "purpose": "⌨️ The ONE chord-glyph table both renderers answer to. React reads it in 🖱️ui/🧪️tests/🔤️keybinding-glyphs/🟦️.ts (formatKeybindingShortcut) and the wgpu shell reads it in 🐚️Shell/🧪️tests/🎓️tour-overlay-and-chord-glyphs/🦀️.rs (format_keybinding_shortcut). A row that disagrees is a renderer that names a different physical key than the one that fires.",
+  "platforms": {
+    "apple": ["MacIntel", "macOS", "iPhone", "iPad", "iPod"],
+    "other": ["Win32", "Linux x86_64", "", "Android"]
+  },
+  "rows": [
+    { "keys": "mod+alt+e", "apple": "⌘️⌥️E", "other": "Ctrl+Alt+E" },
+    { "keys": "mod+alt+v", "apple": "⌘️⌥️V", "other": "Ctrl+Alt+V" },
+    { "keys": "mod+k", "apple": "⌘️K", "other": "Ctrl+K" },
+    { "keys": "mod+shift+z", "apple": "⌘️⇧️Z", "other": "Ctrl+Shift+Z" },
+    { "keys": "ctrl+s", "apple": "⌃️S", "other": "Ctrl+S" },
+    { "keys": "meta+p", "apple": "⌘️P", "other": "⌘️P" },
+    { "keys": "escape", "apple": "⎋️", "other": "Esc" },
+    { "keys": "enter", "apple": "↵️", "other": "Enter" },
+    { "keys": "backspace", "apple": "⌫️", "other": "⌫️" },
+    { "keys": "delete", "apple": "⌦️", "other": "⌦️" },
+    { "keys": "mod+arrowleft", "apple": "⌘️←", "other": "Ctrl+←" },
+    { "keys": "mod+arrowright", "apple": "⌘️→", "other": "Ctrl+→" },
+    { "keys": "mod+arrowup", "apple": "⌘️↑", "other": "Ctrl+↑" },
+    { "keys": "mod+arrowdown", "apple": "⌘️↓", "other": "Ctrl+↓" },
+    { "keys": "mod+alt+arrowright,ctrl+k", "apple": "⌘️⌥️→", "other": "Ctrl+Alt+→" },
+    { "keys": "f2", "apple": "F2", "other": "F2" },
+    { "keys": "", "apple": "", "other": "" }
+  ]
+}

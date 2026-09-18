@@ -3,7 +3,7 @@
 
 use super::kernel_3d_scene::{Mat4Math, ScenePass3d};
 use crate::wgpu::prepared::PreparedRasterPages;
-use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
+use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER};
 #[cfg(test)]
 use crate::wgpu::theme::Rgba;
 use crate::wgpu::theme::Theme;
@@ -16,6 +16,36 @@ use wgpu::util::DeviceExt;
 pub use super::draw_types::*;
 
 pub const SCENE_MIP_LEVELS: u32 = 5;
+
+#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
+static DEBUG_MESH_SEEN: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
+fn debug_world_probe_mesh(message: &str) {
+    use std::sync::atomic::Ordering;
+    if DEBUG_MESH_SEEN.fetch_add(1, Ordering::Relaxed) >= 4 {
+        return;
+    }
+    debug_world_probe(message);
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
+fn debug_world_probe_line(message: &str) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static AFTER: AtomicU32 = AtomicU32::new(0);
+    if DEBUG_MESH_SEEN.load(Ordering::Relaxed) == 0 || AFTER.fetch_add(1, Ordering::Relaxed) >= 3 {
+        return;
+    }
+    debug_world_probe(message);
+}
+
+#[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
+fn debug_world_probe(message: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{message}");
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -139,6 +169,53 @@ impl SceneColorTarget {
     }
 }
 
+/// 🖼️ The surface-sized colour target a prepared frame composites into BEFORE it ever touches the
+/// swapchain — the scene blit lands here, every glass region lands here, and only the terminal
+/// present step copies it onto the acquired surface texture.
+///
+/// 🩸️ A swapchain texture is a SINGLE-TASK resource in a browser: WebGPU expires the canvas's
+/// current texture at the end of the task that obtained it, and presents whatever it held at that
+/// moment. The prepared present ladder is stepped across many host tasks, so acquiring in one task
+/// and compositing in a later one presented the untouched (opaque black) texture and threw the
+/// composite away — measured 6/6 on `26/09/17/WGPU-RENDERER-REACT-PARITY`: every black boot had its
+/// acquire and its composite in different host pumps, every painted boot had them in the same one.
+/// One extra full-surface blit buys an acquire→present span that cannot straddle a task.
+pub struct PreparedCompositeTarget {
+    view: wgpu::TextureView,
+    sampler: wgpu::Sampler,
+    width: u32,
+    height: u32,
+}
+
+impl PreparedCompositeTarget {
+    pub fn ensure(device: &wgpu::Device, target: &mut Option<Self>, width: u32, height: u32, format: wgpu::TextureFormat) {
+        let width = width.max(1);
+        let height = height.max(1);
+        if let Some(existing) = target {
+            if existing.width == width && existing.height == height {
+                return;
+            }
+        }
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("prepared_composite_color"),
+            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[format],
+        });
+        let view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_composite_color_view"), format: Some(format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("prepared_composite_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
+        *target = Some(Self { view, sampler, width, height });
+    }
+
+    pub fn view(&self) -> &wgpu::TextureView {
+        &self.view
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct UiGlobals {
@@ -218,11 +295,16 @@ fn point_in_triangle(p: [f32; 2], a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> bool
     !(has_neg && has_pos)
 }
 
+/// 🎨️ Per-vertex tint, multiplied with the per-INSTANCE colour in `WORLD3D_SHADER` — a mesh that
+/// declares no `Mesh3dField::Colors` uploads opaque white here and shades exactly as before. It is
+/// what lets a terrain tile carry the CONTINUOUS hypsometric ramp React samples from a texture
+/// (`getHypsometricTexture` in `🗺️WorldTerrainLayer/🟦️.tsx`) instead of being split into flat bands.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct World3dVertex {
     pub position: [f32; 3],
     pub normal: [f32; 3],
+    pub color: [f32; 4],
 }
 
 #[repr(C)]
@@ -255,6 +337,44 @@ impl World3dGpuInstance {
         }
     }
 }
+
+/// 🖼️ One world-space textured quad: a centred unit XY plane posed by `model` and tinted, the wgpu
+/// twin of React's `<mesh><planeGeometry args={[w, h]} /><meshBasicMaterial map=… transparent /></mesh>`
+/// in `WorldReferencePlaneItem` (`🎨️r3f/🟦️.tsx`). 80 bytes, the stride
+/// `semio_framework_ui_render::shader_contract::WORLD3D_TEXTURED_PIPELINE` declares.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct World3dTexturedGpuInstance {
+    pub model0: [f32; 4],
+    pub model1: [f32; 4],
+    pub model2: [f32; 4],
+    pub model3: [f32; 4],
+    pub tint: [f32; 4],
+}
+
+impl World3dTexturedGpuInstance {
+    pub fn from_instance(model: [f32; 16], tint: [f32; 4]) -> Self {
+        Self {
+            model0: [model[0], model[1], model[2], model[3]],
+            model1: [model[4], model[5], model[6], model[7]],
+            model2: [model[8], model[9], model[10], model[11]],
+            model3: [model[12], model[13], model[14], model[15]],
+            tint,
+        }
+    }
+}
+
+/// 🖼️ The one geometry every textured world draw uses: a unit XY quad centred on the model origin,
+/// with `v = 0` at `+y` so row 0 of the decoded image is its TOP — the orientation three.js gives a
+/// `PlaneGeometry` with a `flipY` texture, which is what React's reference underlay shows.
+const WORLD_PLANE_VERTICES: &[f32] = &[
+    -0.5, -0.5, 0.0, 0.0, 1.0, //
+    0.5, -0.5, 0.0, 1.0, 1.0, //
+    0.5, 0.5, 0.0, 1.0, 0.0, //
+    -0.5, -0.5, 0.0, 0.0, 1.0, //
+    0.5, 0.5, 0.0, 1.0, 0.0, //
+    -0.5, 0.5, 0.0, 0.0, 0.0,
+];
 
 pub struct GpuMeshBuffers {
     pub vertex_buffer: wgpu::Buffer,
@@ -393,6 +513,11 @@ impl MeshGpuTable {
         self.meshes.get(mesh_key, version)
     }
 
+    #[allow(dead_code, reason = "[DEBUG] temporary world-pass probe")]
+    pub fn debug_upload_cursor(&self) -> Option<(u32, u32, u32, u32)> {
+        self.upload.as_ref().map(|cursor| (cursor.vertex, cursor.schema.vertices, cursor.index, cursor.schema.indices))
+    }
+
     pub fn ensure_mesh_step(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
         if self.closing {
             return Err("mesh GPU table is closing");
@@ -422,7 +547,8 @@ impl MeshGpuTable {
         if cursor.vertex < cursor.schema.vertices {
             let position = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Positions, cursor.vertex).map_err(|_| "mesh upload position lease was stale")?;
             let normal = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, cursor.vertex).unwrap_or([0.0, 1.0, 0.0]);
-            let vertex = World3dVertex { position, normal };
+            let color = cursor.lease.vec4(crate::wgpu::kernel_3d_scene::Mesh3dField::Colors, cursor.vertex).unwrap_or([1.0, 1.0, 1.0, 1.0]);
+            let vertex = World3dVertex { position, normal, color };
             queue.write_buffer(cursor.vertex_buffer.as_ref().ok_or("mesh upload vertex buffer was retired")?, u64::from(cursor.vertex) * size_of::<World3dVertex>() as u64, bytemuck::bytes_of(&vertex));
             cursor.vertex += 1;
             return Ok(false);
@@ -577,6 +703,7 @@ impl GrowBuffer {
 #[derive(Default)]
 pub struct FrameBuffers {
     pub world_instances: GrowBuffer,
+    pub world_textured_instances: GrowBuffer,
     pub world_lines: GrowBuffer,
     pub ui_instances: GrowBuffer,
     pub mask_instances: GrowBuffer,
@@ -2020,10 +2147,13 @@ pub(crate) struct UiPipelines {
     world_pipeline: wgpu::RenderPipeline,
     world_pipeline_translucent: wgpu::RenderPipeline,
     world_line_pipeline: wgpu::RenderPipeline,
+    world_textured_pipeline: wgpu::RenderPipeline,
     blur_downsample_pipeline: wgpu::RenderPipeline,
     scene_blit_pipeline: wgpu::RenderPipeline,
     glass_pipeline: wgpu::RenderPipeline,
     quad_vertex_buffer: wgpu::Buffer,
+    world_plane_vertex_buffer: wgpu::Buffer,
+    world_plane_sampler: wgpu::Sampler,
     globals_buffer: wgpu::Buffer,
     blur_globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
@@ -2036,6 +2166,11 @@ pub(crate) struct UiPipelines {
     icon_sampler: wgpu::Sampler,
     glyph_bind_group: wgpu::BindGroup,
     bind_group_layout: wgpu::BindGroupLayout,
+    /// 📐️ Device pixels per logical pixel for the surface these pipelines encode into. Draw lists,
+    /// scissors and scene viewports are all authored in LOGICAL pixels; this is the only factor that
+    /// turns them into the physical rectangles `wgpu` demands. The projection itself needs no
+    /// multiplication — `update_globals` is handed the logical extent, so the divide does the work.
+    surface_scale: f32,
 }
 
 #[cfg(test)]
@@ -2116,11 +2251,28 @@ fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Ve
     (all_ui, all_vec, batches)
 }
 
-fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, width: f32, height: f32) {
+/// ✂️ One LOGICAL scissor as the PHYSICAL rectangle `wgpu` clips against. An already-empty rect
+/// stays empty, so "clip everything away" never becomes a one-pixel sliver at 2×.
+fn physical_scissor_rect(scissor: ScissorRect, scale: f32) -> ScissorRect {
+    if scissor.w == 0 || scissor.h == 0 {
+        return ScissorRect { x: 0, y: 0, w: 0, h: 0 };
+    }
+    ScissorRect {
+        x: (scissor.x as f32 * scale) as u32,
+        y: (scissor.y as f32 * scale) as u32,
+        w: ((scissor.w as f32 * scale).round() as u32).max(1),
+        h: ((scissor.h as f32 * scale).round() as u32).max(1),
+    }
+}
+
+/// ✂️ `scissor` and `width`/`height` are LOGICAL pixels; `scale` turns them into the physical
+/// rectangle `wgpu` clips against, so a clip lands on the same CSS box at any scale factor.
+fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, scale: f32, width: f32, height: f32) {
     if let Some(scissor) = scissor {
+        let scissor = physical_scissor_rect(scissor, scale);
         pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
     } else {
-        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+        pass.set_scissor_rect(0, 0, (width * scale).max(1.0) as u32, (height * scale).max(1.0) as u32);
     }
 }
 
@@ -2409,7 +2561,11 @@ impl UiPipelines {
                     wgpu::VertexBufferLayout {
                         array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 }, wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 }],
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
+                            wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
+                            wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
+                        ],
                     },
                     wgpu::VertexBufferLayout {
                         array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
@@ -2457,7 +2613,11 @@ impl UiPipelines {
                     wgpu::VertexBufferLayout {
                         array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 }, wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 }],
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
+                            wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
+                            wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
+                        ],
                     },
                     wgpu::VertexBufferLayout {
                         array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
@@ -2548,6 +2708,65 @@ impl UiPipelines {
             ],
         });
 
+        let world_textured_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_textured_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_TEXTURED_SHADER.into()) });
+        let world_plane_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_plane_vertices"), contents: bytemuck::cast_slice(WORLD_PLANE_VERTICES), usage: wgpu::BufferUsages::VERTEX });
+        let world_plane_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("world3d_plane_sampler"),
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+            ..Default::default()
+        });
+        let world_textured_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_textured_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout), Some(&scene_bind_group_layout)], immediate_size: 0 });
+        let world_textured_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_textured_pipeline"),
+            layout: Some(&world_textured_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &world_textured_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[
+                    wgpu::VertexBufferLayout {
+                        array_stride: 20,
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: &[wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 }, wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x2 }],
+                    },
+                    wgpu::VertexBufferLayout {
+                        array_stride: size_of::<World3dTexturedGpuInstance>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Instance,
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
+                        ],
+                    },
+                ],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_textured_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
+                stencil: content_stencil_state(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+
         let blur_globals_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("blur_globals"), contents: bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
 
@@ -2630,10 +2849,13 @@ impl UiPipelines {
             world_pipeline,
             world_pipeline_translucent,
             world_line_pipeline,
+            world_textured_pipeline,
             blur_downsample_pipeline,
             scene_blit_pipeline,
             glass_pipeline,
             quad_vertex_buffer,
+            world_plane_vertex_buffer,
+            world_plane_sampler,
             globals_buffer,
             blur_globals_buffer,
             world_globals_ring,
@@ -2646,7 +2868,22 @@ impl UiPipelines {
             icon_sampler,
             glyph_bind_group,
             bind_group_layout: globals_bind_group_layout,
+            surface_scale: 1.0,
         }
+    }
+
+    /// 📐️ Publishes the surface scale factor every scissor and scene viewport is multiplied by.
+    /// Ignores a non-positive or non-finite value rather than collapsing every clip rectangle.
+    pub fn set_surface_scale(&mut self, surface_scale: f32) {
+        if surface_scale.is_finite() && surface_scale > 0.0 {
+            self.surface_scale = surface_scale;
+        }
+    }
+
+    /// 📐️ One logical rectangle as the physical scissor `wgpu` takes. An empty logical rect stays
+    /// empty — "clip everything away" must not become a one-pixel sliver at 2×.
+    fn physical_scissor(&self, scissor: ScissorRect) -> ScissorRect {
+        physical_scissor_rect(scissor, self.surface_scale)
     }
 
     pub fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
@@ -2771,17 +3008,19 @@ impl UiPipelines {
     ) {
         let instance_stride = size_of::<World3dGpuInstance>() as u64;
         pass.set_pipeline(&self.world_pipeline);
+        let scale = self.surface_scale;
         let viewport = prepared.viewport;
-        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
         let scene_scissor = clip.map_or(scene_scissor, |clip| scene_scissor.intersect(&clip));
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
-            pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
-            set_pass_scissor(pass, clip, screen_w, screen_h);
+            pass.set_viewport(0.0, 0.0, screen_w * scale, screen_h * scale, 0.0, 1.0);
+            set_pass_scissor(pass, clip, scale, screen_w, screen_h);
             pass.set_pipeline(&self.ui_pipeline);
             pass.set_bind_group(0, &self.glyph_bind_group, &[]);
             return;
         }
+        let scene_scissor = self.physical_scissor(scene_scissor);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(slot)]);
         for draw_call in &prepared.draws {
@@ -2804,8 +3043,8 @@ impl UiPipelines {
                 Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer, instance_stride);
             }
         }
-        pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
-        set_pass_scissor(pass, clip, screen_w, screen_h);
+        pass.set_viewport(0.0, 0.0, screen_w * scale, screen_h * scale, 0.0, 1.0);
+        set_pass_scissor(pass, clip, scale, screen_w, screen_h);
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
@@ -2840,7 +3079,7 @@ impl UiPipelines {
             pass.set_stencil_reference(1);
             return;
         }
-        set_pass_scissor(pass, None, width, height);
+        set_pass_scissor(pass, None, self.surface_scale, width, height);
         pass.set_pipeline(&self.mask_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
         pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
@@ -2918,7 +3157,7 @@ impl UiPipelines {
                 flush(key, &batch_instances);
             }
         }
-        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+        pass.set_scissor_rect(0, 0, (width * self.surface_scale).max(1.0) as u32, (height * self.surface_scale).max(1.0) as u32);
     }
 
     #[cfg(test)]
@@ -3009,7 +3248,7 @@ impl UiPipelines {
                 }
             }
         }
-        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+        pass.set_scissor_rect(0, 0, (width * self.surface_scale).max(1.0) as u32, (height * self.surface_scale).max(1.0) as u32);
     }
 
     pub fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32, time_seconds: f32) {
@@ -3077,7 +3316,7 @@ impl UiPipelines {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
-        scene: &'a SceneColorTarget,
+        color_view: &'a wgpu::TextureView,
         depth_view: &'a wgpu::TextureView,
         frame_buffers: &'a mut FrameBuffers,
         raster_store: &'a RasterTextureTable,
@@ -3098,13 +3337,13 @@ impl UiPipelines {
         };
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_ui_scalar"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        set_pass_scissor(&mut pass, scissor, width, height);
+        set_pass_scissor(&mut pass, scissor, self.surface_scale, width, height);
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, bind_group, &[]);
         pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
@@ -3120,7 +3359,7 @@ impl UiPipelines {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
-        scene: &'a SceneColorTarget,
+        color_view: &'a wgpu::TextureView,
         depth_view: &'a wgpu::TextureView,
         frame_buffers: &'a mut FrameBuffers,
         vertices: &[VectorVertex],
@@ -3138,13 +3377,13 @@ impl UiPipelines {
         };
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_vector_triangle"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        set_pass_scissor(&mut pass, scissor, width, height);
+        set_pass_scissor(&mut pass, scissor, self.surface_scale, width, height);
         pass.set_pipeline(&self.vector_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
         pass.set_vertex_buffer(0, buffer);
@@ -3159,7 +3398,7 @@ impl UiPipelines {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
-        scene: &'a SceneColorTarget,
+        color_view: &'a wgpu::TextureView,
         depth_view: &'a wgpu::TextureView,
         frame_buffers: &'a mut FrameBuffers,
         mesh_store: &'a MeshGpuTable,
@@ -3179,20 +3418,33 @@ impl UiPipelines {
             return Err("prepared world instance buffer admission failed");
         };
         let mesh = mesh_store.get_versioned(mesh_key, mesh_version).ok_or("prepared world mesh was missing")?;
+        let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
+        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(());
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_world_instance"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        debug_world_probe_mesh(&format!(
+            "[DEBUG] w5c mesh key={mesh_key} version={mesh_version} indices={} translucent={translucent} scale={scale} viewport={viewport:?} scissor={scene_scissor:?} surface={width}x{height} color={:?} flags={:?} model=[{:?},{:?},{:?},{:?}] view_proj={:?} light={:?}",
+            mesh.index_count,
+            gpu_instance.color,
+            gpu_instance.flags,
+            gpu_instance.model0,
+            gpu_instance.model1,
+            gpu_instance.model2,
+            gpu_instance.model3,
+            globals.view_proj,
+            globals.light_dir,
+        ));
+        pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_pipeline(if translucent { &self.world_pipeline_translucent } else { &self.world_pipeline });
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
@@ -3200,7 +3452,75 @@ impl UiPipelines {
         pass.set_vertex_buffer(1, instance_buffer);
         pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         pass.draw_indexed(0..mesh.index_count, 0, 0..1);
-        pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
+        pass.set_viewport(0.0, 0.0, width * scale, height * scale, 0.0, 1.0);
+        Ok(())
+    }
+
+    /// 🖼️ Encodes one retained TEXTURED world quad — the reference underlay — under one scene-pass
+    /// owner.
+    ///
+    /// 🩸️ `ScenePass3d::textured_draws` has been measured by `advance_pipeline` and carried in every
+    /// prepared packet since the scene pass existed, and `DrawMeasureCursor::PassTextured*` walked it
+    /// page by page — but nothing ever ENCODED it: `encode_prepared_draw_scalar` had no arm for those
+    /// cursors and `WORLD3D_TEXTURED_PIPELINE` was declared in the shader contract as "inferred —
+    /// unwired in draw.rs". The plan underlay the puzzle3d playground decodes, admits and submits
+    /// (`textured=1` on both surfaces) could therefore never paint on any target, ever
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c).
+    ///
+    /// 🕰️ A key whose pixels have not landed yet draws NOTHING and is not a fault: the underlay's
+    /// instance is published the frame its url appears, long before the image is fetched and decoded,
+    /// exactly as React returns `null` from `WorldReferencePlaneItem` until `media` resolves.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_world_textured<'a>(
+        &'a mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        color_view: &'a wgpu::TextureView,
+        depth_view: &'a wgpu::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        raster_store: &'a RasterTextureTable,
+        pass_owner: &ScenePass3d,
+        instance: &crate::wgpu::kernel_3d_scene::TexturedInstance3d,
+    ) -> Result<(), &'static str> {
+        let Some(raster) = raster_store.get(&instance.texture_key) else { return Ok(()) };
+        let globals = World3dGlobals { view_proj: pass_owner.view_proj, light_dir: [pass_owner.light_dir[0], pass_owner.light_dir[1], pass_owner.light_dir[2], 0.0] };
+        self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
+        self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
+        let gpu_instance = World3dTexturedGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.tint);
+        let Some(instance_buffer) = frame_buffers.world_textured_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_textured") else {
+            return Err("prepared world textured buffer admission failed");
+        };
+        let texture_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world3d_textured_bind_group"),
+            layout: &self.scene_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&raster.view) },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&self.world_plane_sampler) },
+            ],
+        });
+        let scale = self.surface_scale;
+        let viewport = pass_owner.viewport;
+        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            return Ok(());
+        }
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_textured"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        pass.set_pipeline(&self.world_textured_pipeline);
+        pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+        pass.set_bind_group(1, &texture_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.world_plane_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, instance_buffer);
+        pass.draw(0..6, 0..1);
         Ok(())
     }
 
@@ -3211,7 +3531,7 @@ impl UiPipelines {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
-        scene: &'a SceneColorTarget,
+        color_view: &'a wgpu::TextureView,
         depth_view: &'a wgpu::TextureView,
         frame_buffers: &'a mut FrameBuffers,
         pass_owner: &ScenePass3d,
@@ -3227,20 +3547,29 @@ impl UiPipelines {
         let Some(line_buffer) = frame_buffers.world_lines.upload(device, queue, &gpu_vertices, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_line") else {
             return Err("prepared world line buffer admission failed");
         };
+        let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
+        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(());
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("prepared_world_line"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        debug_world_probe_line(&format!(
+            "[DEBUG] w5c line scale={scale} viewport={viewport:?} scissor={scene_scissor:?} v0={:?}/{:?} v1={:?}/{:?} view_proj={:?}",
+            gpu_vertices[0].position,
+            gpu_vertices[0].color,
+            gpu_vertices[1].position,
+            gpu_vertices[1].color,
+            globals.view_proj,
+        ));
+        pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_pipeline(&self.world_line_pipeline);
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
@@ -3330,7 +3659,13 @@ impl UiPipelines {
 
     /// 🖼️ Encodes one fixed scene-to-surface packet after all command pages are resident.
     pub fn blit_prepared_scene<'a>(&'a self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &'a wgpu::TextureView, scene: &'a SceneColorTarget) {
-        self.blit_scene_to_swapchain(device, encoder, view, scene);
+        self.blit_sampled_color(device, encoder, view, scene.sample_view(), scene.sampler());
+    }
+
+    /// 🖼️ The terminal copy of a finished composite onto the acquired surface texture — see
+    /// [`PreparedCompositeTarget`] for why nothing else may touch the swapchain.
+    pub fn blit_prepared_composite<'a>(&'a self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &'a wgpu::TextureView, composite: &'a PreparedCompositeTarget) {
+        self.blit_sampled_color(device, encoder, view, &composite.view, &composite.sampler);
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
@@ -3574,7 +3909,7 @@ impl UiPipelines {
         height: f32,
     ) {
         self.run_blur_chain(device, queue, scene);
-        self.blit_scene_to_swapchain(device, encoder, view, scene);
+        self.blit_sampled_color(device, encoder, view, scene.sample_view(), scene.sampler());
         let max_mip = SCENE_MIP_LEVELS - 1;
         self.composite_glass_regions(device, queue, encoder, view, scene, frame_buffers, &draw.glass_regions, max_mip, width, height);
         self.render_glass_foreground(device, queue, encoder, view, draw, depth_view, mesh_store, raster_store, frame_buffers, width, height);
@@ -3658,11 +3993,11 @@ impl UiPipelines {
         }
     }
 
-    fn blit_scene_to_swapchain(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView, scene: &SceneColorTarget) {
+    fn blit_sampled_color(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView, source: &wgpu::TextureView, sampler: &wgpu::Sampler) {
         let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("scene_blit_bind_group"),
             layout: &self.scene_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(scene.sample_view()) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(scene.sampler()) }],
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(source) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) }],
         });
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("scene_blit_pass"),

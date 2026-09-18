@@ -2,9 +2,9 @@ use super::*;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::terminology::lowpoly_play_labels;
 use crate::editor::lowpoly::unit_tests::context::render as render_body;
-use crate::{LowpolySelection, LowpolySnapshot, LowpolyTransform};
+use crate::{LowpolyObject, LowpolySelection, LowpolySnapshot, LowpolyTransform};
 use semio_framework_3d::mesh::HalfedgeMesh;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_PATH_SEPARATOR};
 use std::collections::HashMap;
 
 #[semio_framework_async_macros::async_test]
@@ -21,10 +21,10 @@ async fn document_tree_lists_active_object() {
 }
 
 //#region 🪟️WindowLaws
-fn object(index: usize, mesh_json: Option<&str>) -> crate::LowpolyObject {
+fn object(index: usize, mesh_json: Option<&str>) -> LowpolyObject {
     let id = format!("obj-{index}");
     let mesh = mesh_json.map(|json| crate::mesh_child_handle(&id, json));
-    crate::LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
+    LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
 }
 
 /// 🪟️ A document of `objects` objects whose ACTIVE first one carries a several-hundred-element mesh (an
@@ -36,10 +36,8 @@ fn object(index: usize, mesh_json: Option<&str>) -> crate::LowpolyObject {
 /// exactly the "many cheap siblings, one dense subject" shape these laws need.
 fn oversized(objects: usize) -> (LowpolySnapshot, LowpolyConfig, LowpolyDocument) {
     let dense = HalfedgeMesh::ico_sphere_prim(1.0, 3).expect("ico sphere").to_json().expect("dense mesh json");
-    let mut loaded = LowpolySnapshot::default();
-    loaded.objects.push(object(0, Some(&dense)));
-    let mut snapshot = LowpolySnapshot::default();
-    snapshot.objects = (0..objects).map(|index| object(index, None)).collect();
+    let loaded = LowpolySnapshot { objects: vec![object(0, Some(&dense))], ..Default::default() };
+    let snapshot = LowpolySnapshot { objects: (0..objects).map(|index| object(index, None)).collect(), ..Default::default() };
     let workspace = HashMap::from([("obj-0".to_string(), dense)]);
     let config = LowpolyConfig { active_object_id: "obj-0".into(), ..Default::default() };
     let doc = LowpolyDocument::with_context(loaded, "obj-0".into(), LowpolySelection::default(), workspace).expect("compute session");
@@ -58,8 +56,22 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
     TreeWindowRequest { body_key: LOWPOLY_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }
 }
 
+/// 🔑️ A nested container is addressed by its window PATH — the enclosing windowed containers' keys,
+/// outermost first, joined by `TREE_WINDOW_PATH_SEPARATOR` — never by its bare node key (`TreeWindows::path_of`).
+fn window_path(keys: &[&str]) -> String {
+    keys.join(TREE_WINDOW_PATH_SEPARATOR)
+}
+
+fn object_path(index: usize) -> String {
+    window_path(&["lowpoly-play-document.meshes", &format!("lowpoly-document.obj-{index}")])
+}
+
+fn group_path(index: usize, mode: &str) -> String {
+    window_path(&["lowpoly-play-document.meshes", &format!("lowpoly-document.obj-{index}"), &format!("lowpoly-document.obj-{index}.{mode}.group")])
+}
+
 fn vertex_group_key() -> String {
-    "lowpoly-document.obj-0.vertex.group".to_string()
+    group_path(0, "vertex")
 }
 
 /// 🪟️ Law (a): every container at ALL THREE levels stamps its full extent — the meshes section over the
@@ -74,7 +86,7 @@ fn an_oversized_document_stamps_every_level_and_never_a_continuation_row() {
         &snapshot,
         &config,
         &doc,
-        vec![request("lowpoly-play-document.meshes", Some(true), 0, 2), request("lowpoly-document.obj-0", Some(true), 0, 3), request(&vertex_group_key(), Some(true), 0, 12)],
+        vec![request("lowpoly-play-document.meshes", Some(true), 0, 2), request(&object_path(0), Some(true), 0, 3), request(&vertex_group_key(), Some(true), 0, 12)],
     );
     assert!(json.contains("\"total\":250"), "the meshes section stamps the whole document: {json}");
     assert!(json.contains("\"total\":3"), "the open object row stamps its three component groups: {json}");
@@ -121,7 +133,7 @@ fn a_host_window_materialises_exactly_its_slice() {
 #[test]
 fn pick_rows_carry_granularity_while_the_tree_carries_the_one_interaction_select() {
     let (snapshot, config, doc) = oversized(2);
-    let json = window_body(&snapshot, &config, &doc, vec![request("lowpoly-document.obj-0.face.group", Some(true), 0, 6)]);
+    let json = window_body(&snapshot, &config, &doc, vec![request(&group_path(0, "face"), Some(true), 0, 6)]);
     assert!(json.contains("\"interactionDomain\":\"mesh\""), "the tree binds the mesh domain: {json}");
     assert_eq!(json.matches("interactionSelect").count(), 1, "exactly one tree-level interactionSelect binding: {json}");
     assert!(json.contains("\"granularity\":\"object\""), "object rows are pick targets: {json}");

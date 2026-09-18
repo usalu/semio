@@ -1164,7 +1164,7 @@ broadcast: boolean, };"####,
         SchemaMetadata {
             name: "SurfaceKind",
             version: 1,
-            typescript: r####"export type SurfaceKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "virtualFileSystem" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";"####,
+            typescript: r####"export type SurfaceKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "virtual-file-system" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";"####,
         },
         SchemaMetadata {
             name: "ToolDefinition",

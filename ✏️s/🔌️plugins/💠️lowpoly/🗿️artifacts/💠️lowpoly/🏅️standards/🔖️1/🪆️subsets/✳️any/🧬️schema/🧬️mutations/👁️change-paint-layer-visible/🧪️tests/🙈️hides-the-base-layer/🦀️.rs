@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
     assert_eq!(produced, declared, "change-paint-layer-visible/hides-the-base-layer: raised diagnostics differ from the committed 🎯️outcome messages");
     let attempt = protocol::apply_mutation(&before(), &mutation());
     let applied = attempt.is_ok();
-    let snapshot = attempt.map(|(next, _)| next).unwrap_or_else(|_| before());
+    let snapshot = attempt.map_or_else(|_| before(), |(next, _)| next);
     match status {
         "applied" if declared.iter().any(|(_, code)| code == "mutation.no-op") => {
             assert!(applied, "change-paint-layer-visible/hides-the-base-layer: declared applied but the mutation was rejected");

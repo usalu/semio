@@ -1,348 +1,1145 @@
 {
-  "schema": "semio.remodeling.synthetic-orbit-ground-truth/1",
-  "seed": 6840135604016635904,
+  "cameraId": "synthetic-cam",
+  "extrinsics": [
+    {
+      "cameraCenterM": [
+        2.5950247111040956,
+        2.235184139427819,
+        0.38039653233729986
+      ],
+      "frameIndex": 0,
+      "rotationWxyzCameraToWorld": [
+        0.613530256515921,
+        0.22596942115270968,
+        -0.710022377326073,
+        0.261508448696499
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.613530256515921,
+        -0.22596942115270968,
+        0.710022377326073,
+        -0.261508448696499
+      ],
+      "translationWorldToCameraM": [
+        5.551115123125783e-17,
+        2.0816681711721685e-16,
+        3.445998100725654
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.5143707245916618,
+        2.1410707906328565,
+        0.549614974846569
+      ],
+      "frameIndex": 1,
+      "rotationWxyzCameraToWorld": [
+        0.5897141731935776,
+        0.21322191828188705,
+        -0.7325437668751823,
+        0.26486456371346867
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.5897141731935776,
+        -0.21322191828188705,
+        0.7325437668751823,
+        -0.26486456371346867
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -5.551115123125783e-17,
+        3.3478830463085774
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.338552264011018,
+        2.267038449160382,
+        1.0430943532491153
+      ],
+      "frameIndex": 2,
+      "rotationWxyzCameraToWorld": [
+        0.5090114704699011,
+        0.19294767128779639,
+        -0.7843919866927019,
+        0.29733437454650535
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.5090114704699011,
+        -0.19294767128779639,
+        0.7843919866927019,
+        -0.29733437454650535
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -1.6653345369377348e-16,
+        3.419990621516784
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.0471827829067357,
+        2.1119621365232737,
+        1.6143084868675848
+      ],
+      "frameIndex": 3,
+      "rotationWxyzCameraToWorld": [
+        -0.411308171268172,
+        -0.14569354246404587,
+        0.8481402585358316,
+        -0.3004281640976459
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.411308171268172,
+        -0.14569354246404587,
+        0.8481402585358316,
+        -0.3004281640976459
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.3551949725031522
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.9270498533304554,
+        2.207809259160051,
+        1.7653425621979397
+      ],
+      "frameIndex": 4,
+      "rotationWxyzCameraToWorld": [
+        -0.37828530884501627,
+        -0.13839922515501898,
+        0.8595630897257218,
+        -0.3144792113474148
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.37828530884501627,
+        -0.13839922515501898,
+        0.8595630897257218,
+        -0.3144792113474148
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.421166062026421
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.4385355337924606,
+        2.137359558595988,
+        2.1405681178568203
+      ],
+      "frameIndex": 5,
+      "rotationWxyzCameraToWorld": [
+        -0.2742777826248749,
+        -0.09888140949559086,
+        0.8998609850597357,
+        -0.3244138905501263
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.2742777826248749,
+        -0.09888140949559086,
+        0.8998609850597357,
+        -0.3244138905501263
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -2.220446049250313e-16,
+        3.3495853820869064
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.046126242295951,
+        2.20896972879064,
+        2.3860959272666498
+      ],
+      "frameIndex": 6,
+      "rotationWxyzCameraToWorld": [
+        -0.1925763200499905,
+        -0.07065073143393731,
+        0.9188506176565279,
+        -0.3370999518482178
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.1925763200499905,
+        -0.07065073143393731,
+        0.9188506176565279,
+        -0.3370999518482178
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -2.220446049250313e-16,
+        3.4157548436110186
+      ]
+    },
+    {
+      "cameraCenterM": [
+        0.6725477258858579,
+        2.2497165142820927,
+        2.502339564038711
+      ],
+      "frameIndex": 7,
+      "rotationWxyzCameraToWorld": [
+        -0.12262847225197747,
+        -0.045806950738685515,
+        0.9287162847204445,
+        -0.34691503794477396
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.12262847225197747,
+        -0.045806950738685515,
+        0.9287162847204445,
+        -0.34691503794477396
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        2.220446049250313e-16,
+        3.431508142490886
+      ]
+    },
+    {
+      "cameraCenterM": [
+        0.20923907622363547,
+        2.2977741231010462,
+        2.6272028432473986
+      ],
+      "frameIndex": 8,
+      "rotationWxyzCameraToWorld": [
+        -0.03720132093211428,
+        -0.013939900473866727,
+        0.9356775812900004,
+        -0.35061261353091566
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.03720132093211428,
+        -0.013939900473866727,
+        0.9356775812900004,
+        -0.35061261353091566
+      ],
+      "translationWorldToCameraM": [
+        -2.7755575615628914e-17,
+        -0.0,
+        3.496532809996056
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -0.2461877613603701,
+        2.1655785793073794,
+        2.5969575642102702
+      ],
+      "frameIndex": 9,
+      "rotationWxyzCameraToWorld": [
+        0.044433873083814905,
+        0.01604029130864394,
+        0.9395394344013702,
+        -0.33916661271749426
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.044433873083814905,
+        0.01604029130864394,
+        0.9395394344013702,
+        -0.33916661271749426
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        2.220446049250313e-16,
+        3.390358032318643
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -0.7108867367979845,
+        2.247808284432654,
+        2.5325644109796044
+      ],
+      "frameIndex": 10,
+      "rotationWxyzCameraToWorld": [
+        0.12796454814964883,
+        0.04722771745931321,
+        0.9293775926290962,
+        -0.3430042382236483
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.12796454814964883,
+        0.04722771745931321,
+        0.9293775926290962,
+        -0.3430042382236483
+      ],
+      "translationWorldToCameraM": [
+        1.1102230246251565e-16,
+        -0.0,
+        3.460041117079366
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -0.987886444313771,
+        2.273428339869614,
+        2.373541677173796
+      ],
+      "frameIndex": 11,
+      "rotationWxyzCameraToWorld": [
+        0.1832243297408251,
+        0.06939170507819122,
+        0.917054109033941,
+        -0.3473116717896641
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.1832243297408251,
+        0.06939170507819122,
+        0.917054109033941,
+        -0.3473116717896641
+      ],
+      "translationWorldToCameraM": [
+        1.1102230246251565e-16,
+        -2.220446049250313e-16,
+        3.4319230959714426
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -1.5500959275478075,
+        2.1546756788197117,
+        2.0185100630154174
+      ],
+      "frameIndex": 12,
+      "rotationWxyzCameraToWorld": [
+        0.30198349843767835,
+        0.11066551623266922,
+        0.8890507489061011,
+        -0.3258034316237298
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.30198349843767835,
+        0.11066551623266922,
+        0.8890507489061011,
+        -0.3258034316237298
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -2.220446049250313e-16,
+        3.3346375425212234
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -1.8098194560882457,
+        2.177318997274783,
+        1.8150648848035504
+      ],
+      "frameIndex": 13,
+      "rotationWxyzCameraToWorld": [
+        0.35857979934952083,
+        0.1317417712399204,
+        0.8674629042871089,
+        -0.318704789569909
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.35857979934952083,
+        0.1317417712399204,
+        0.8674629042871089,
+        -0.318704789569909
+      ],
+      "translationWorldToCameraM": [
+        2.220446049250313e-16,
+        1.1102230246251565e-16,
+        3.363127267228545
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.0267317424607127,
+        2.104887201785639,
+        1.5568590927255113
+      ],
+      "frameIndex": 14,
+      "rotationWxyzCameraToWorld": [
+        0.4160817665395281,
+        0.14928764007751177,
+        0.8442896260186621,
+        -0.3029260495082928
+      ],
+      "rotationWxyzWorldToCamera": [
+        -0.4160817665395281,
+        0.14928764007751177,
+        0.8442896260186621,
+        -0.3029260495082928
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        1.1102230246251565e-16,
+        3.310891409083197
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.462249065101783,
+        2.240578166028727,
+        0.9877611205573631
+      ],
+      "frameIndex": 15,
+      "rotationWxyzCameraToWorld": [
+        0.5261228488718874,
+        0.19244373704460976,
+        0.7779395858247227,
+        -0.28455255538141494
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.5261228488718874,
+        -0.19244373704460976,
+        -0.7779395858247227,
+        0.28455255538141494
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -2.7755575615628914e-16,
+        3.4725398497301647
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.5295987975521417,
+        2.1812108838674233,
+        0.7318935238235633
+      ],
+      "frameIndex": 16,
+      "rotationWxyzCameraToWorld": [
+        0.5652762116495239,
+        0.20370719000942114,
+        0.7520136215123571,
+        -0.27100128844988464
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.5652762116495239,
+        -0.20370719000942114,
+        -0.7520136215123571,
+        0.27100128844988464
+      ],
+      "translationWorldToCameraM": [
+        -1.1102230246251565e-16,
+        5.551115123125783e-17,
+        3.4193887065810196
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.6214676947981657,
+        2.1629961267507154,
+        0.10448840441923023
+      ],
+      "frameIndex": 17,
+      "rotationWxyzCameraToWorld": [
+        0.6521163723399938,
+        0.23415951441903046,
+        0.6786267199120191,
+        -0.24367875113481818
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.6521163723399938,
+        -0.23415951441903046,
+        -0.6786267199120191,
+        0.24367875113481818
+      ],
+      "translationWorldToCameraM": [
+        -1.3877787807814457e-17,
+        1.2923689896027213e-16,
+        3.4002298372120503
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.5978405943953042,
+        2.2480598089785055,
+        -0.27422575840620034
+      ],
+      "frameIndex": 18,
+      "rotationWxyzCameraToWorld": [
+        0.6968704638062396,
+        0.2585720319932492,
+        0.6271811962946897,
+        -0.23271400464888345
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.6968704638062396,
+        -0.2585720319932492,
+        -0.6271811962946897,
+        0.23271400464888345
+      ],
+      "translationWorldToCameraM": [
+        -5.551115123125783e-17,
+        -1.2836953722228372e-16,
+        3.4464109483934267
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.4738412314285214,
+        2.199900588214271,
+        -0.6542855659192465
+      ],
+      "frameIndex": 19,
+      "rotationWxyzCameraToWorld": [
+        0.742945894032504,
+        0.27545666781310035,
+        0.5719959016489957,
+        -0.2120747773647282
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.742945894032504,
+        -0.27545666781310035,
+        -0.5719959016489957,
+        0.2120747773647282
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -1.3877787807814457e-17,
+        3.3745433228974178
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.251487401348069,
+        2.288141982462914,
+        -1.1790559059514707
+      ],
+      "frameIndex": 20,
+      "rotationWxyzCameraToWorld": [
+        0.7987291699893012,
+        0.30657743623635464,
+        0.4833457193829508,
+        -0.18552332509181613
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.7987291699893012,
+        -0.30657743623635464,
+        -0.4833457193829508,
+        0.18552332509181613
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        3.3306690738754696e-16,
+        3.4197897712721232
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -2.1531544981342825,
+        2.193271871695661,
+        -1.3753142374511926
+      ],
+      "frameIndex": 21,
+      "rotationWxyzCameraToWorld": [
+        0.8224220955109303,
+        0.30458683385360363,
+        0.45056003555852653,
+        -0.16686644904218134
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8224220955109303,
+        -0.30458683385360363,
+        -0.45056003555852653,
+        0.16686644904218134
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -1.1102230246251565e-16,
+        3.3671954276137943
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -1.9417899073337026,
+        2.1047891589987806,
+        -1.8021252054459607
+      ],
+      "frameIndex": 22,
+      "rotationWxyzCameraToWorld": [
+        0.8654239678657478,
+        0.30194212787797126,
+        0.37752254315083805,
+        -0.1317157419177815
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8654239678657478,
+        -0.30194212787797126,
+        -0.37752254315083805,
+        0.1317157419177815
+      ],
+      "translationWorldToCameraM": [
+        2.220446049250313e-16,
+        3.3306690738754696e-16,
+        3.383539670842574
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -1.473159338108212,
+        2.188764230859549,
+        -2.1528869484870414
+      ],
+      "frameIndex": 23,
+      "rotationWxyzCameraToWorld": [
+        0.8977159156167527,
+        0.32672316337599006,
+        0.27774121972674715,
+        -0.1010837485783964
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8977159156167527,
+        -0.32672316337599006,
+        -0.27774121972674715,
+        0.1010837485783964
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.4052620320191895
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -1.1266661409239027,
+        2.1704633591637243,
+        -2.4093726289863735
+      ],
+      "frameIndex": 24,
+      "rotationWxyzCameraToWorld": [
+        0.9195729012574076,
+        0.3275850758668998,
+        0.20438342033647072,
+        -0.07280875520071212
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9195729012574076,
+        -0.3275850758668998,
+        -0.20438342033647072,
+        0.07280875520071212
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        2.220446049250313e-16,
+        3.43298183098678
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -0.718691423351981,
+        2.1344988577885884,
+        -2.466877274600405
+      ],
+      "frameIndex": 25,
+      "rotationWxyzCameraToWorld": [
+        0.9311008745369997,
+        0.336294128301044,
+        0.1328698572662114,
+        -0.04798980867571839
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9311008745369997,
+        -0.336294128301044,
+        -0.1328698572662114,
+        0.04798980867571839
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.3403721684627303
+      ]
+    },
+    {
+      "cameraCenterM": [
+        -0.26536881961674547,
+        2.210946862915093,
+        -2.5578664096683825
+      ],
+      "frameIndex": 26,
+      "rotationWxyzCameraToWorld": [
+        0.9363714367304051,
+        0.34718762143610965,
+        0.04844246985733977,
+        -0.017961489668017878
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9363714367304051,
+        -0.34718762143610965,
+        -0.04844246985733977,
+        0.017961489668017878
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        2.220446049250313e-16,
+        3.3913695184642885
+      ]
+    },
+    {
+      "cameraCenterM": [
+        0.09595316689291288,
+        2.1209668143186917,
+        -2.595444926719914
+      ],
+      "frameIndex": 27,
+      "rotationWxyzCameraToWorld": [
+        0.9417909043950796,
+        0.33569115286657086,
+        -0.017402982048798397,
+        0.0062031041922514145
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9417909043950796,
+        -0.33569115286657086,
+        0.017402982048798397,
+        -0.0062031041922514145
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.3532136235727803
+      ]
+    },
+    {
+      "cameraCenterM": [
+        0.6660501463900861,
+        2.1636192330855164,
+        -2.527893402279685
+      ],
+      "frameIndex": 28,
+      "rotationWxyzCameraToWorld": [
+        0.9330478298938432,
+        0.33603664573840486,
+        -0.12085752092304997,
+        0.04352676748400075
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9330478298938432,
+        -0.33603664573840486,
+        0.12085752092304997,
+        -0.04352676748400075
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.3933929976607446
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.0984352112715123,
+        2.237354254555409,
+        -2.34096717583922
+      ],
+      "frameIndex": 29,
+      "rotationWxyzCameraToWorld": [
+        0.9146217559668033,
+        0.3407553791133795,
+        -0.20391462962743942,
+        0.07597130340729014
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.9146217559668033,
+        -0.3407553791133795,
+        0.20391462962743942,
+        -0.07597130340729014
+      ],
+      "translationWorldToCameraM": [
+        1.1102230246251565e-16,
+        2.220446049250313e-16,
+        3.419421192555099
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.4328030669438998,
+        2.2876123045937846,
+        -2.109105778636108
+      ],
+      "frameIndex": 30,
+      "rotationWxyzCameraToWorld": [
+        0.8926380859257821,
+        0.3417412726105521,
+        -0.27452516407827104,
+        0.105100354124403
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8926380859257821,
+        -0.3417412726105521,
+        0.27452516407827104,
+        -0.105100354124403
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -4.440892098500626e-16,
+        3.4255542427830497
+      ]
+    },
+    {
+      "cameraCenterM": [
+        1.8959201735690934,
+        2.1170144438886815,
+        -1.7319446755305805
+      ],
+      "frameIndex": 31,
+      "rotationWxyzCameraToWorld": [
+        0.8611710423842178,
+        0.30921401769760387,
+        -0.3797134708096388,
+        0.136340775646478
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8611710423842178,
+        -0.30921401769760387,
+        0.3797134708096388,
+        -0.136340775646478
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -1.1102230246251565e-16,
+        3.32804684751857
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.061660573252189,
+        2.2829940478864037,
+        -1.6081125481018719
+      ],
+      "frameIndex": 32,
+      "rotationWxyzCameraToWorld": [
+        0.8413663054963189,
+        0.3156274644249954,
+        -0.41077512087051166,
+        0.15409686482839297
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8413663054963189,
+        -0.3156274644249954,
+        0.41077512087051166,
+        -0.15409686482839297
+      ],
+      "translationWorldToCameraM": [
+        -2.220446049250313e-16,
+        -1.1102230246251565e-16,
+        3.4710995533620155
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.354264333117607,
+        2.122753529292214,
+        -1.2265077601210899
+      ],
+      "frameIndex": 33,
+      "rotationWxyzCameraToWorld": [
+        0.8068271923997045,
+        0.2829235740289732,
+        -0.48941858377063674,
+        0.17162046125980038
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.8068271923997045,
+        -0.2829235740289732,
+        0.48941858377063674,
+        -0.17162046125980038
+      ],
+      "translationWorldToCameraM": [
+        -0.0,
+        -0.0,
+        3.398965192812291
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.4399463983049,
+        2.2362347298514775,
+        -0.8099580831922595
+      ],
+      "frameIndex": 34,
+      "rotationWxyzCameraToWorld": [
+        0.7594841695545752,
+        0.2840948575815214,
+        -0.5481204117095483,
+        0.20503151552648574
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.7594841695545752,
+        -0.2840948575815214,
+        0.5481204117095483,
+        -0.20503151552648574
+      ],
+      "translationWorldToCameraM": [
+        -1.1102230246251565e-16,
+        -8.326672684688674e-17,
+        3.4073620720615296
+      ]
+    },
+    {
+      "cameraCenterM": [
+        2.5305098684562215,
+        2.2470490592505405,
+        -0.22621207983851283
+      ],
+      "frameIndex": 35,
+      "rotationWxyzCameraToWorld": [
+        0.690070602412747,
+        0.2613847190777513,
+        -0.6311342998642894,
+        0.23906084550416606
+      ],
+      "rotationWxyzWorldToCamera": [
+        0.690070602412747,
+        -0.2613847190777513,
+        0.6311342998642894,
+        -0.23906084550416606
+      ],
+      "translationWorldToCameraM": [
+        2.7755575615628914e-17,
+        3.677613769070831e-16,
+        3.3917372501563157
+      ]
+    }
+  ],
+  "fpsHint": 2.0,
+  "frames": [
+    {
+      "assetId": "synthetic-orbit-frame-0",
+      "file": "🎞️frame-00.png",
+      "index": 0,
+      "timestampMs": 0.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-1",
+      "file": "🎞️frame-01.png",
+      "index": 1,
+      "timestampMs": 500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-2",
+      "file": "🎞️frame-02.png",
+      "index": 2,
+      "timestampMs": 1000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-3",
+      "file": "🎞️frame-03.png",
+      "index": 3,
+      "timestampMs": 1500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-4",
+      "file": "🎞️frame-04.png",
+      "index": 4,
+      "timestampMs": 2000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-5",
+      "file": "🎞️frame-05.png",
+      "index": 5,
+      "timestampMs": 2500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-6",
+      "file": "🎞️frame-06.png",
+      "index": 6,
+      "timestampMs": 3000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-7",
+      "file": "🎞️frame-07.png",
+      "index": 7,
+      "timestampMs": 3500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-8",
+      "file": "🎞️frame-08.png",
+      "index": 8,
+      "timestampMs": 4000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-9",
+      "file": "🎞️frame-09.png",
+      "index": 9,
+      "timestampMs": 4500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-10",
+      "file": "🎞️frame-10.png",
+      "index": 10,
+      "timestampMs": 5000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-11",
+      "file": "🎞️frame-11.png",
+      "index": 11,
+      "timestampMs": 5500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-12",
+      "file": "🎞️frame-12.png",
+      "index": 12,
+      "timestampMs": 6000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-13",
+      "file": "🎞️frame-13.png",
+      "index": 13,
+      "timestampMs": 6500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-14",
+      "file": "🎞️frame-14.png",
+      "index": 14,
+      "timestampMs": 7000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-15",
+      "file": "🎞️frame-15.png",
+      "index": 15,
+      "timestampMs": 7500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-16",
+      "file": "🎞️frame-16.png",
+      "index": 16,
+      "timestampMs": 8000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-17",
+      "file": "🎞️frame-17.png",
+      "index": 17,
+      "timestampMs": 8500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-18",
+      "file": "🎞️frame-18.png",
+      "index": 18,
+      "timestampMs": 9000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-19",
+      "file": "🎞️frame-19.png",
+      "index": 19,
+      "timestampMs": 9500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-20",
+      "file": "🎞️frame-20.png",
+      "index": 20,
+      "timestampMs": 10000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-21",
+      "file": "🎞️frame-21.png",
+      "index": 21,
+      "timestampMs": 10500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-22",
+      "file": "🎞️frame-22.png",
+      "index": 22,
+      "timestampMs": 11000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-23",
+      "file": "🎞️frame-23.png",
+      "index": 23,
+      "timestampMs": 11500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-24",
+      "file": "🎞️frame-24.png",
+      "index": 24,
+      "timestampMs": 12000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-25",
+      "file": "🎞️frame-25.png",
+      "index": 25,
+      "timestampMs": 12500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-26",
+      "file": "🎞️frame-26.png",
+      "index": 26,
+      "timestampMs": 13000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-27",
+      "file": "🎞️frame-27.png",
+      "index": 27,
+      "timestampMs": 13500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-28",
+      "file": "🎞️frame-28.png",
+      "index": 28,
+      "timestampMs": 14000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-29",
+      "file": "🎞️frame-29.png",
+      "index": 29,
+      "timestampMs": 14500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-30",
+      "file": "🎞️frame-30.png",
+      "index": 30,
+      "timestampMs": 15000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-31",
+      "file": "🎞️frame-31.png",
+      "index": 31,
+      "timestampMs": 15500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-32",
+      "file": "🎞️frame-32.png",
+      "index": 32,
+      "timestampMs": 16000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-33",
+      "file": "🎞️frame-33.png",
+      "index": 33,
+      "timestampMs": 16500.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-34",
+      "file": "🎞️frame-34.png",
+      "index": 34,
+      "timestampMs": 17000.0
+    },
+    {
+      "assetId": "synthetic-orbit-frame-35",
+      "file": "🎞️frame-35.png",
+      "index": 35,
+      "timestampMs": 17500.0
+    }
+  ],
   "image": {
-    "width": 320,
-    "height": 240
+    "height": 240,
+    "width": 320
   },
   "intrinsics": {
-    "fx": 272.0,
-    "fy": 272.0,
     "cx": 160.0,
     "cy": 120.0,
-    "skew": 0.0,
-    "model": "brownConrady",
     "distortion": [
       -0.02,
       0.005,
       0.0,
       0.0,
       0.0
-    ]
+    ],
+    "fx": 272.0,
+    "fy": 272.0,
+    "model": "brownConrady",
+    "skew": 0.0
   },
-  "scene": {
-    "kind": "textured-cube",
-    "halfExtentM": 1.0,
-    "orbitRadiusM": 2.6,
-    "orbitElevationM": 2.2
-  },
-  "streamId": "synthetic-orbit",
-  "cameraId": "synthetic-cam",
-  "fpsHint": 2.0,
-  "frames": [
-    {
-      "index": 0,
-      "timestampMs": 0.0,
-      "assetId": "synthetic-orbit-frame-0",
-      "file": "🎞️frame-00.png"
-    },
-    {
-      "index": 1,
-      "timestampMs": 500.0,
-      "assetId": "synthetic-orbit-frame-1",
-      "file": "🎞️frame-01.png"
-    },
-    {
-      "index": 2,
-      "timestampMs": 1000.0,
-      "assetId": "synthetic-orbit-frame-2",
-      "file": "🎞️frame-02.png"
-    },
-    {
-      "index": 3,
-      "timestampMs": 1500.0,
-      "assetId": "synthetic-orbit-frame-3",
-      "file": "🎞️frame-03.png"
-    },
-    {
-      "index": 4,
-      "timestampMs": 2000.0,
-      "assetId": "synthetic-orbit-frame-4",
-      "file": "🎞️frame-04.png"
-    },
-    {
-      "index": 5,
-      "timestampMs": 2500.0,
-      "assetId": "synthetic-orbit-frame-5",
-      "file": "🎞️frame-05.png"
-    },
-    {
-      "index": 6,
-      "timestampMs": 3000.0,
-      "assetId": "synthetic-orbit-frame-6",
-      "file": "🎞️frame-06.png"
-    },
-    {
-      "index": 7,
-      "timestampMs": 3500.0,
-      "assetId": "synthetic-orbit-frame-7",
-      "file": "🎞️frame-07.png"
-    },
-    {
-      "index": 8,
-      "timestampMs": 4000.0,
-      "assetId": "synthetic-orbit-frame-8",
-      "file": "🎞️frame-08.png"
-    },
-    {
-      "index": 9,
-      "timestampMs": 4500.0,
-      "assetId": "synthetic-orbit-frame-9",
-      "file": "🎞️frame-09.png"
-    }
-  ],
-  "extrinsics": [
-    {
-      "frameIndex": 0,
-      "cameraCenterM": [
-        2.4429437948597585,
-        2.235184139427819,
-        0.9544005386688238
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.5292095805198155,
-        -0.19491326028095862,
-        0.7749118477932189,
-        -0.2854078993342464
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.5292095805198155,
-        0.19491326028095862,
-        -0.7749118477932189,
-        0.2854078993342464
-      ],
-      "translationWorldToCameraM": [
-        1.1102230246251565e-16,
-        2.7755575615628914e-17,
-        3.4459981007256544
-      ]
-    },
-    {
-      "frameIndex": 1,
-      "cameraCenterM": [
-        1.608149143324758,
-        2.1410707906328565,
-        2.009475825702573
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.3113609134655048,
-        -0.11257821884725663,
-        0.8873767846968912,
-        -0.3208472661378199
-      ],
-      "rotationWxyzCameraToWorld": [
-        -0.3113609134655048,
-        -0.11257821884725663,
-        0.8873767846968912,
-        -0.3208472661378199
-      ],
-      "translationWorldToCameraM": [
-        -0.0,
-        -2.220446049250313e-16,
-        3.3478830463085774
-      ]
-    },
-    {
-      "frameIndex": 2,
-      "cameraCenterM": [
-        0.042950357842482495,
-        2.267038449160382,
-        2.5602788496670534
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.007842412774577017,
-        -0.0029727724617588528,
-        0.9350411554683183,
-        -0.354439976253012
-      ],
-      "rotationWxyzCameraToWorld": [
-        -0.007842412774577017,
-        -0.0029727724617588528,
-        0.9350411554683183,
-        -0.354439976253012
-      ],
-      "translationWorldToCameraM": [
-        -0.0,
-        -0.0,
-        3.4199906215167837
-      ]
-    },
-    {
-      "frameIndex": 3,
-      "cameraCenterM": [
-        -1.6497908858446535,
-        2.1119621365232737,
-        2.018697419225178
-      ],
-      "rotationWxyzWorldToCamera": [
-        -0.31664671262233396,
-        0.11216256931949856,
-        0.8878351025312439,
-        -0.31448886807398035
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.31664671262233396,
-        0.11216256931949856,
-        0.8878351025312439,
-        -0.31448886807398035
-      ],
-      "translationWorldToCameraM": [
-        2.220446049250313e-16,
-        -1.1102230246251565e-16,
-        3.3551949725031527
-      ]
-    },
-    {
-      "frameIndex": 4,
-      "cameraCenterM": [
-        -2.4477940662822872,
-        2.207809259160051,
-        0.9155652397299393
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.5352444831718001,
-        -0.1958242099479081,
-        -0.7716617285708491,
-        0.28231967464468216
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.5352444831718001,
-        0.1958242099479081,
-        0.7716617285708491,
-        -0.28231967464468216
-      ],
-      "translationWorldToCameraM": [
-        -1.1102230246251565e-16,
-        1.1102230246251565e-16,
-        3.421166062026421
-      ]
-    },
-    {
-      "frameIndex": 5,
-      "cameraCenterM": [
-        -2.437091611158036,
-        2.137359558595988,
-        -0.8438014150212002
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.7663298409539631,
-        -0.2762738348213099,
-        -0.5456341900374001,
-        0.1967096177588468
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.7663298409539631,
-        0.2762738348213099,
-        0.5456341900374001,
-        -0.1967096177588468
-      ],
-      "translationWorldToCameraM": [
-        -1.1102230246251565e-16,
-        1.942890293094024e-16,
-        3.349585382086907
-      ]
-    },
-    {
-      "frameIndex": 6,
-      "cameraCenterM": [
-        -1.4821945235094782,
-        2.20896972879064,
-        -2.1426463271891727
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.8961627893698749,
-        -0.32877643801908496,
-        -0.2797576657762644,
-        0.1026350680406255
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.8961627893698749,
-        0.32877643801908496,
-        0.2797576657762644,
-        -0.1026350680406255
-      ],
-      "translationWorldToCameraM": [
-        -2.220446049250313e-16,
-        -0.0,
-        3.4157548436110186
-      ]
-    },
-    {
-      "frameIndex": 7,
-      "cameraCenterM": [
-        -0.0019780813583731897,
-        2.2497165142820927,
-        -2.591142571249568
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.9367772157010742,
-        -0.3499261385607787,
-        -0.00035756837503095773,
-        0.00013356699826691987
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.9367772157010742,
-        0.3499261385607787,
-        0.00035756837503095773,
-        -0.00013356699826691987
-      ],
-      "translationWorldToCameraM": [
-        4.336808689942018e-19,
-        -2.220446049250313e-16,
-        3.4315081424908858
-      ]
-    },
-    {
-      "frameIndex": 8,
-      "cameraCenterM": [
-        1.5656854109190472,
-        2.2977741231010462,
-        -2.120048340161467
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.889451345680579,
-        -0.33329094033407564,
-        0.2928357527263476,
-        -0.10973000812643811
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.889451345680579,
-        0.33329094033407564,
-        -0.2928357527263476,
-        0.10973000812643811
-      ],
-      "translationWorldToCameraM": [
-        -2.220446049250313e-16,
-        -2.220446049250313e-16,
-        3.496532809996056
-      ]
-    },
-    {
-      "frameIndex": 9,
-      "cameraCenterM": [
-        2.4867052638821665,
-        2.1655785793073794,
-        -0.7880951305098228
-      ],
-      "rotationWxyzWorldToCamera": [
-        0.7589439156646894,
-        -0.2739729996352444,
-        0.5556193397894137,
-        -0.20057436924590155
-      ],
-      "rotationWxyzCameraToWorld": [
-        0.7589439156646894,
-        0.2739729996352444,
-        -0.5556193397894137,
-        0.20057436924590155
-      ],
-      "translationWorldToCameraM": [
-        -1.1102230246251565e-16,
-        4.718447854656915e-16,
-        3.3903580323186424
-      ]
-    }
-  ],
   "pointsWorldM": [
     [
       1.0,
@@ -1044,5 +1841,14 @@
       1.0,
       1.0
     ]
-  ]
+  ],
+  "scene": {
+    "halfExtentM": 1.0,
+    "kind": "textured-cube",
+    "orbitElevationM": 2.2,
+    "orbitRadiusM": 2.6
+  },
+  "schema": "semio.remodeling.synthetic-orbit-ground-truth/1",
+  "seed": 6840135604016635904,
+  "streamId": "synthetic-orbit"
 }

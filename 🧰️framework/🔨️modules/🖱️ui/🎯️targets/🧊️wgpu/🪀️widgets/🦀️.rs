@@ -17,6 +17,30 @@ pub struct InputMeta<E> {
     pub on_change: E,
     pub commit: Option<String>,
     pub value: String,
+    /// 🔢️ `InputProps`' own constraints, carried through to the host that commits this field —
+    /// the canvas twin of the `min`/`max`/`step` attributes React hands a `<input type="number">`
+    /// (`🗣️Interpreter/🟦️.tsx`'s `InputView`), which the browser enforces for it and an
+    /// immediate-mode canvas has to enforce itself. See [`InputMeta::commit_value`].
+    pub input_kind: String,
+    pub min: Option<f64>,
+    pub max: Option<f64>,
+    pub step: Option<f64>,
+    /// 📎️ The `accept` filter a `file` input's picker is opened with — React passes it straight to
+    /// `<input type="file" accept>`; a host picker must apply it itself.
+    pub accept: Option<String>,
+}
+
+impl<E> InputMeta<E> {
+    /// 🔢️ `raw` as this field commits it: a `number` kind is parsed and constrained by its own
+    /// `min`/`max`/`step` (React's DOM input refuses out-of-range values outright), everything else
+    /// commits its text verbatim. `None` when a `number` field's buffer does not parse at all — the
+    /// guest sees no commit rather than an invented number.
+    pub fn commit_value(&self, raw: &str) -> Option<dsl::DslValue> {
+        if self.input_kind != "number" {
+            return Some(dsl::DslValue::String(raw.to_string()));
+        }
+        raw.parse::<f64>().ok().map(|value| dsl::DslValue::float(crate::wgpu::events::constrain_number_input(value, self.min, self.max, self.step)))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -107,6 +131,11 @@ pub struct WidgetContext<'a, E> {
     pub open_selects: &'a mut HashMap<String, bool>,
     pub interaction_maps: Option<&'a mut WidgetInteractionMaps<E>>,
     pub pick_clip: Option<Rect>,
+    /// 📐️ The measured surface height this immediate-mode pass draws into, in logical pixels — the
+    /// kit's twin of React's `{ width: window.innerWidth, height: window.innerHeight }` argument to
+    /// `resolveSelectPlacement` (`🧱️elements/🔽️Select/🟦️.tsx:514`). `0.0` means "unmeasured": a
+    /// popup then places below at its natural height instead of guessing a flip or a clamp.
+    pub viewport_height: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -168,7 +197,7 @@ pub struct TreeSection<E> {
 #[derive(Clone, Debug)]
 pub enum ControlNode<E> {
     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
-    Input { id: String, input_kind: String, value: String, placeholder: Option<String>, commit: Option<String>, on_change: Option<E> },
+    Input { id: String, input_kind: String, value: String, placeholder: Option<String>, commit: Option<String>, min: Option<f64>, max: Option<f64>, step: Option<f64>, accept: Option<String>, on_change: Option<E> },
     Select { id: String, value: String, items: Vec<SelectItem>, placeholder: Option<String>, on_change: Option<E> },
     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
@@ -184,7 +213,7 @@ pub enum WidgetNode<E> {
     Text { value: String, emphasize: bool },
     Separator,
     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
-    Input { id: String, input_kind: String, value: String, placeholder: Option<String>, commit: Option<String>, on_change: Option<E> },
+    Input { id: String, input_kind: String, value: String, placeholder: Option<String>, commit: Option<String>, min: Option<f64>, max: Option<f64>, step: Option<f64>, accept: Option<String>, on_change: Option<E> },
     Select { id: String, value: String, items: Vec<SelectItem>, placeholder: Option<String>, on_change: Option<E> },
     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
@@ -197,14 +226,14 @@ pub enum WidgetNode<E> {
     Tree { sections: Vec<TreeSection<E>>, selected_ids: Vec<String>, highlighted_ids: Vec<String>, selection_change: Option<E> },
 }
 
-const PANEL_HEADER: f32 = 24.0;
+const PANEL_HEADER: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::PANEL_HEADER_HEIGHT_UI_SPACING) as f32;
 /// 🌳️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — the token React's `Tree` rows
 /// carry as `h-workbench`, and the same number `Theme::tree_row_height` hands the retained
 /// layout/paint/hit path (`layout::TreeRowMetrics`).
 pub(crate) const TREE_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;
 pub(crate) const TREE_INDENT_PER_LEVEL: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING) as f32;
 pub(crate) const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING) as f32;
-pub(crate) const TREE_ICON_SIZE: f32 = 14.0;
+pub(crate) const TREE_ICON_SIZE: f32 = crate::wgpu::chrome::ICON_TREE_ROW;
 pub(crate) const TREE_SECTION_GAP: f32 = 8.0;
 
 pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
@@ -322,8 +351,8 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
         WidgetNode::Button { id, icon_id, label, event } => {
             render_button(id.as_ref(), *icon_id, label, event.clone(), bounds, ctx);
         }
-        WidgetNode::Input { id, value, placeholder, commit, on_change, .. } => {
-            register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
+        WidgetNode::Input { id, input_kind, value, placeholder, commit, min, max, step, accept, on_change } => {
+            register_input_meta(ctx, id, input_kind, value, commit.clone(), (*min, *max, *step, accept.clone()), on_change.clone());
             render_input(id, value, placeholder.as_deref(), bounds, ctx);
         }
         WidgetNode::Select { id, value, items, placeholder, on_change } => {
@@ -364,7 +393,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
                 let header = Rect::new(bounds.x, bounds.y, bounds.w, PANEL_HEADER);
                 let chevron_rect = Rect::new(bounds.x, bounds.y, TREE_TOGGLE_WIDTH, PANEL_HEADER);
                 let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
-                tree_draw_chevron(ctx, chevron, chevron_rect);
+                tree_draw_chevron(ctx, chevron, chevron_rect, crate::wgpu::chrome::ICON_TINY);
                 if let Some(label) = label {
                     draw_text(ctx, label, bounds.x + TREE_TOGGLE_WIDTH + ctx.theme.gap_standard, bounds.y + (PANEL_HEADER + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
                 }
@@ -398,8 +427,8 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
         ControlNode::Button { id, icon_id, label, event } => {
             render_button(id.as_ref(), *icon_id, label, event.clone(), bounds, ctx);
         }
-        ControlNode::Input { id, value, placeholder, commit, on_change, .. } => {
-            register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
+        ControlNode::Input { id, input_kind, value, placeholder, commit, min, max, step, accept, on_change } => {
+            register_input_meta(ctx, id, input_kind, value, commit.clone(), (*min, *max, *step, accept.clone()), on_change.clone());
             render_input(id, value, placeholder.as_deref(), bounds, ctx);
         }
         ControlNode::Select { id, value, items, placeholder, on_change } => {
@@ -424,9 +453,14 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
     }
 }
 
-pub(crate) fn register_input_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, value: &str, commit: Option<String>, on_change: Option<E>) {
+/// ✍️ Registers one input's commit contract for the host: the action it fires, its `commit` moment,
+/// its current text, and the `(min, max, step, accept)` constraints `InputProps` carries — dropped on
+/// the floor here until this pass, so a chrome number field committed whatever was typed while
+/// React's own `<input min max step>` refused it.
+pub(crate) fn register_input_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, input_kind: &str, value: &str, commit: Option<String>, constraints: (Option<f64>, Option<f64>, Option<f64>, Option<String>), on_change: Option<E>) {
     if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
-        maps.input_metas.insert(id.to_string(), InputMeta { on_change, commit, value: value.to_string() });
+        let (min, max, step, accept) = constraints;
+        maps.input_metas.insert(id.to_string(), InputMeta { on_change, commit, value: value.to_string(), input_kind: input_kind.to_string(), min, max, step, accept });
     }
 }
 
@@ -465,9 +499,13 @@ pub(crate) fn tree_row_collapsed(collapsed: &HashMap<String, bool>, key: &str, d
     collapsed.get(key).copied().unwrap_or(!default_open)
 }
 
-pub(crate) fn tree_draw_chevron<E>(ctx: &mut WidgetContext<'_, E>, icon_id: &str, rect: Rect) {
+/// 🔽️ One fold chevron centred in `rect`. `size` is the caller's, because React draws a `Tree`
+/// ROW's toggle at `size-tiny` — 9.6 px, [`crate::wgpu::chrome::SIZE_TINY`] (`🌳️Tree/🟦️.tsx:4576`) —
+/// and a SECTION header's at `size-small`, 16 px, [`crate::wgpu::chrome::ICON_TINY`]
+/// (`treeSectionChevronClassName`, `🌳️Tree/🟦️.tsx:251`).
+pub(crate) fn tree_draw_chevron<E>(ctx: &mut WidgetContext<'_, E>, icon_id: &str, rect: Rect, size: f32) {
     if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
-        draw_icon(ctx, uv, rect.x + (rect.w - TREE_ICON_SIZE) * 0.5, rect.y + (rect.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, ctx.theme.text_muted);
+        draw_icon(ctx, uv, rect.x + (rect.w - size) * 0.5, rect.y + (rect.h - size) * 0.5, size, ctx.theme.text_muted);
     }
 }
 
@@ -541,14 +579,25 @@ pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -
     lines
 }
 
+/// 🅰️ [`draw_text_on`] at a chosen weight. A [`crate::wgpu::text::TextWeight::Semibold`] run is
+/// struck twice, the second time offset by `text::faux_bold_offset`, because no bold Latin face
+/// ships. The advances are unchanged, so the run occupies exactly the regular face's line box — which
+/// is why this is a weight swap and not the SIZE swap the `Text` node used to make.
+pub fn draw_text_weighted(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba, weight: crate::wgpu::text::TextWeight) {
+    draw_text_on(draw, atlas, text, x, y, size, color);
+    if matches!(weight, crate::wgpu::text::TextWeight::Semibold) {
+        draw_text_on(draw, atlas, text, x + crate::wgpu::text::faux_bold_offset(size), y, size, color);
+    }
+}
+
 pub fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
         let glyph = atlas.ensure_glyph(ch, size);
-        let gw = glyph.width as f32;
-        let gh = glyph.height as f32;
+        let gw = glyph.logical_width();
+        let gh = glyph.logical_height();
         let gx = cursor_x + glyph.bearing_x;
         let gy = y - gh - glyph.bearing_y;
         let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
@@ -563,8 +612,8 @@ pub fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &s
     let mut cursor_x = x;
     for ch in text.chars() {
         let glyph = atlas.ensure_glyph(ch, size);
-        let gw = glyph.width as f32;
-        let gh = glyph.height as f32;
+        let gw = glyph.logical_width();
+        let gh = glyph.logical_height();
         let gx = cursor_x + glyph.bearing_x;
         let gy = y - gh - glyph.bearing_y;
         let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
@@ -579,8 +628,8 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
     let mut cursor_x = x;
     for ch in text.chars() {
         let glyph = ctx.atlas.ensure_glyph(ch, size);
-        let gw = glyph.width as f32;
-        let gh = glyph.height as f32;
+        let gw = glyph.logical_width();
+        let gh = glyph.logical_height();
         let gx = cursor_x + glyph.bearing_x;
         let gy = y - gh - glyph.bearing_y;
         let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
@@ -644,4 +693,8 @@ pub mod gizmo {
     }
 }
 //#endregion 🔖️Gizmo
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️targets-wgpu-widget-metrics/🦀️.rs"]
+mod metrics_tests;
 // #endregion widgets

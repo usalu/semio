@@ -1001,6 +1001,88 @@ impl RasterHost {
 }
 // #endregion 🔖️Picking
 
+// #region 🔖️Retirement
+/** 🧹️ The bounded owner a released [`RasterHost`] becomes — the raster twin of
+ * `MapHostRetirement`/`EditorHostRetirement`. A composite document's layer tree, decoded-image cache
+ * and per-layer pixel scratch are each drained ONE entry per [`Self::close_step`], so a surface
+ * holding hundreds of megabytes of paint buffers never frees them inside one frame turn. */
+pub struct RasterHostRetirement {
+    layers: Vec<LayerNode>,
+    images: raster::RasterImageCache,
+    paint: HashMap<String, Vec<u8>>,
+    mask: HashMap<String, Vec<u8>>,
+    active_utility: String,
+    hovered_id: Option<String>,
+    selected_ids: Vec<String>,
+    released: bool,
+}
+
+impl RasterHostRetirement {
+    pub fn new(host: RasterHost) -> Self {
+        let RasterHost {
+            camera: _,
+            viewport: _,
+            document: RasterDocument { layers },
+            images,
+            buffers: RasterLayerBuffers { paint, mask },
+            active_utility,
+            brush_size: _,
+            brush_opacity: _,
+            hovered_id,
+            selected_ids,
+            panning: _,
+            painting: _,
+            last_paint: _,
+            pan_last: _,
+            show_selection_chrome: _,
+            theme_clear: _,
+            checkerboard_light_cell: _,
+            checkerboard_dark_cell: _,
+        } = host;
+        Self { layers, images, paint, mask, active_utility, hovered_id, selected_ids, released: false }
+    }
+
+    fn close_layer_step(&mut self) -> bool {
+        let Some(layer) = self.layers.pop() else { return true };
+        if let LayerNode::Group { children, .. } = layer {
+            self.layers.extend(children);
+        }
+        false
+    }
+
+    fn close_map_step(map: &mut HashMap<String, Vec<u8>>) -> bool {
+        let Some(key) = map.keys().next().cloned() else { return true };
+        map.remove(&key);
+        false
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.released {
+            return true;
+        }
+        if !self.close_layer_step() || !self.images.close_step() || !Self::close_map_step(&mut self.paint) || !Self::close_map_step(&mut self.mask) || self.selected_ids.pop().is_some() {
+            return false;
+        }
+        if self.active_utility.pop().is_some() || self.hovered_id.as_mut().is_some_and(|id| id.pop().is_some()) {
+            return false;
+        }
+        self.hovered_id = None;
+        self.released = true;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.released && self.layers.is_empty() && self.images.is_empty() && self.paint.is_empty() && self.mask.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none()
+    }
+}
+
+impl Drop for RasterHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "RasterHostRetirement must reach terminal-empty before release");
+    }
+}
+// #endregion 🔖️Retirement
+
 // #region 🔖️WasmSession
 // 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is
 // browser-only (attaches an `HtmlCanvasElement`), so it is narrowed to exclude the WASI

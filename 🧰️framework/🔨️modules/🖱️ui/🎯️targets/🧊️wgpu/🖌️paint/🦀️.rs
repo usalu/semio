@@ -18,7 +18,7 @@
 use crate::wgpu::arena::NodeId;
 #[cfg(test)]
 use crate::wgpu::chrome::chrome_item_bg;
-use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
+use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
 use crate::wgpu::component::ui::{
     UiControlNode, UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -26,23 +26,31 @@ use crate::wgpu::component::ui::{
 use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{tree_row_control_rect, tree_section_header_height, TreeRowMetrics};
+use crate::wgpu::layout::{tree_row_control_rect, TreeRowMetrics};
+#[cfg(test)]
+use crate::wgpu::layout::tree_section_header_height;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
 #[cfg(test)]
 use crate::wgpu::tree::EditState;
 use crate::wgpu::tree::{NodeFlags, NodeKey, UiTree};
+use crate::wgpu::widgets::draw_text_on;
 #[cfg(test)]
-use crate::wgpu::widgets::{draw_text_on, wrap_text};
+use crate::wgpu::widgets::wrap_text;
 #[cfg(test)]
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
 use crate::wgpu::UiTreeActionPlacement;
 
-const PANEL_HEADER: f32 = 24.0;
-const TREE_INDENT_PER_LEVEL: f32 = 10.0;
-const TREE_TOGGLE_WIDTH: f32 = 14.0;
-const TREE_ICON_SIZE: f32 = 14.0;
+/// 📐️ Every retained chrome metric below is the generated token's px value, never a hand-typed one
+/// — `PANEL_HEADER` is `--size-medium` (`chrome.panelHeaderHeightUiSpacing`, 22.4px, what React's
+/// section/group headers get), the tree metrics are `dom.tree*UiSpacing`, and the row icon is the
+/// literal `12` the Interpreter passes (`chrome::ICON_TREE_ROW`).
+#[cfg(test)]
+const PANEL_HEADER: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::PANEL_HEADER_HEIGHT_UI_SPACING) as f32;
+const TREE_INDENT_PER_LEVEL: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING) as f32;
+const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING) as f32;
+const TREE_ICON_SIZE: f32 = crate::wgpu::chrome::ICON_TREE_ROW;
 pub const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
 const RETAINED_NODE_COLLECTION_ITEMS: usize = 256;
 const RETAINED_NODE_FIXED_OUTPUT_ITEMS: usize = 8;
@@ -62,6 +70,20 @@ pub enum RetainedGlyphStep {
     Pending,
     Complete,
     Fault,
+}
+
+/// ✂️ How a retained run treats a scalar that does not fit `bounds.w`. `Wrap` is CSS's default
+/// `white-space: normal` — the run drops to the next line box, which is what a document `Text`
+/// node does. `Clip` is React's chrome pairing of `whitespace-nowrap` + `truncate`
+/// (`🎛️chrome-control-presentation/🟦️.ts`, and every chip label in `🏛️ShellHost/🟦️.tsx`): a chip
+/// label stays on ONE line and whatever overflows its box is simply not painted. Chrome must never
+/// wrap — a two-line chip label is the visible symptom of a measure/paint disagreement, not a
+/// layout the reference ever produces.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum RetainedTextFlow {
+    #[default]
+    Wrap,
+    Clip,
 }
 
 impl RetainedGlyphCursor {
@@ -88,8 +110,23 @@ impl RetainedGlyphCursor {
     }
 }
 
-/// ✒️ Advances one UTF-8 scalar and at most one exactly admitted glyph.
+/// 📏️ The sub-pixel slack a run's last glyph is allowed to exceed its box by before the run counts
+/// as overflowing — one 64th of a logical pixel, the same `LayoutUnit` grain a browser resolves
+/// fractional layout on. A box sized from `FontAtlas::measure_text` is the SUM of the very advances
+/// this painter then re-accumulates, and f32 addition does not have to land on the same last bit:
+/// without the slack a perfectly measured chip label loses its final glyph (`Chat` → `Cha`) or, in
+/// [`RetainedTextFlow::Wrap`], drops that glyph onto a second line.
+const RETAINED_TEXT_FIT_EPSILON: f32 = 1.0 / 64.0;
+
+/// ✒️ Advances one UTF-8 scalar and at most one exactly admitted glyph, wrapping at `bounds.w`.
 pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+    paint_retained_glyph_step_flowed(value, bounds, size, color, RetainedTextFlow::Wrap, atlas, draw, cursor)
+}
+
+/// ✒️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
+/// takes so a chip label can never break onto a second line.
+#[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
+pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
         return RetainedGlyphStep::Fault;
     }
@@ -99,6 +136,10 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
     let Some(ch) = value[cursor.byte..].chars().next() else { return RetainedGlyphStep::Fault };
     let Some(next_byte) = cursor.byte.checked_add(ch.len_utf8()) else { return RetainedGlyphStep::Fault };
     if ch == '\n' {
+        if matches!(flow, RetainedTextFlow::Clip) {
+            cursor.byte = next_byte;
+            return RetainedGlyphStep::Pending;
+        }
         let Some(next_line) = cursor.line.checked_add(1) else { return RetainedGlyphStep::Fault };
         cursor.byte = next_byte;
         cursor.line = next_line;
@@ -112,7 +153,17 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
     let atlas_h = atlas.height as f32;
     let glyph = atlas.ensure_glyph(ch, size);
     let (atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y) = (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.bearing_x, glyph.bearing_y);
-    if cursor.pen_x > 0.0 && cursor.pen_x + advance > bounds.w.max(1.0) {
+    let (logical_w, logical_h) = (glyph.logical_width(), glyph.logical_height());
+    let overflows = cursor.pen_x > 0.0 && cursor.pen_x + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
+    if overflows && matches!(flow, RetainedTextFlow::Clip) {
+        if draw.finish_retained_output().is_err() {
+            return RetainedGlyphStep::Fault;
+        }
+        cursor.byte = next_byte;
+        cursor.pen_x += advance;
+        return RetainedGlyphStep::Pending;
+    }
+    if overflows {
         let Some(next_line) = cursor.line.checked_add(1) else {
             let _ = draw.finish_retained_output();
             return RetainedGlyphStep::Fault;
@@ -120,11 +171,11 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
         cursor.line = next_line;
         cursor.pen_x = 0.0;
     }
-    let baseline = bounds.y + size + size * 1.35 * cursor.line as f32;
+    let baseline = bounds.y + size + crate::wgpu::text::line_height(size) * cursor.line as f32;
     let x = bounds.x + cursor.pen_x + bearing_x;
-    let y = baseline - height as f32 - bearing_y;
+    let y = baseline - logical_h - bearing_y;
     let uv = [atlas_x as f32 / atlas_w, atlas_y as f32 / atlas_h, (atlas_x + width) as f32 / atlas_w, (atlas_y + height) as f32 / atlas_h];
-    draw.push_glyph([x, y, (width as f32).max(1.0), (height as f32).max(1.0)], color, uv);
+    draw.push_glyph([x, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
     if draw.finish_retained_output().is_err() {
         return RetainedGlyphStep::Fault;
     }
@@ -392,13 +443,17 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                     UiStatus::Idle => {}
                 }
                 if matches!(item.presence.state, UiState::Introducing | UiState::Celebrating) {
-                    draw.push_introducing_border([row.x, row.y, row.w, row.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+                    let celebrating = item.presence.state == UiState::Celebrating;
+                    let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
+                    let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
+                    let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
+                    draw.push_introducing_border([row.x, row.y, row.w, row.h], ring, theme.border_radius, stroke);
                 }
                 let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                     if let Some(icons) = icons {
                         let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
-                        push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                        push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, theme.text_element);
                     }
                 }
                 if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
@@ -594,12 +649,29 @@ pub(crate) fn paint_node_step(
     if presence.state != UiState::Disabled {
         flags.set(NodeFlags::HOVERED, flags.contains(NodeFlags::HOVERED) || presence.hover);
     }
+    // 🦴️ Busy elements draw their skeleton INSTEAD of their content, exactly like React's
+    // `interpretUiNodeBusyShell` swaps the component for `elementSkeleton` — see 🦴️Skeleton.
+    if skeleton_replaces_content(&node.spec.0, presence) {
+        if cursor.phase == 0 {
+            let step = retained_skeleton_step(&node.spec.0, bounds, theme, draw);
+            cursor.advance(1);
+            return step;
+        }
+        return match retained_presence_step(draw, bounds, theme, presence) {
+            RetainedNodePaintStep::Complete => cursor.finish(),
+            step => step,
+        };
+    }
     let step = match &node.spec.0 {
         UiNode::Text(text) => {
             if cursor.phase == 0 {
                 let emphasize = text.emphasize.unwrap_or(false);
+                // 🅰️ React's `TextView` is `text-foreground` in BOTH states and only swaps
+                // `text-sm` for `font-semibold` (`🗣️Interpreter/🟦️.tsx:1168`), so plain body text is
+                // never muted here either; the weight swap becomes a size swap until a bold face
+                // ships (no `.ttf` on disk carries one — see `text`'s module doc).
                 let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
-                let color = if emphasize { theme.text } else { theme.text_muted };
+                let color = theme.text;
                 match retained_text_node_step(text.value.as_str(), bounds, size, color, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(1);
@@ -641,7 +713,7 @@ pub(crate) fn paint_node_step(
             0 => {
                 let hovered = flags.contains(NodeFlags::HOVERED);
                 let result = retained_fixed_output(draw, |draw| {
-                    push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, item_bg(theme, false, hovered));
+                    push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered));
                     if let Some(icons) = icons {
                         push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
                     }
@@ -673,7 +745,7 @@ pub(crate) fn paint_node_step(
             match cursor.phase {
                 0 => {
                     let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, theme.input_bg);
+                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
                     });
                     cursor.advance(1);
                     if result.is_err() {
@@ -700,7 +772,7 @@ pub(crate) fn paint_node_step(
                 0 => {
                     let hovered = flags.contains(NodeFlags::HOVERED);
                     let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
+                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
                         if let Some(icons) = icons {
                             push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
                         }
@@ -734,7 +806,8 @@ pub(crate) fn paint_node_step(
                     }
                 }
                 3 => {
-                    let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, select.items.len() as f32 * theme.control_height + 4.0);
+                    let menu_top = select_menu_top_for(tree, id, bounds.h, select.items.len(), theme);
+                    let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, crate::wgpu::select::select_menu_height(select.items.len(), theme));
                     let result = retained_fixed_output(draw, |draw| {
                         draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
                     });
@@ -746,11 +819,14 @@ pub(crate) fn paint_node_step(
                     }
                 }
                 4 if cursor.item < select.items.len() => {
-                    let relative = select_popup_row_rect(bounds.w, bounds.h, cursor.item, theme);
+                    let relative = select_popup_row_rect(bounds.w, cursor.item, select_menu_top_for(tree, id, bounds.h, select.items.len(), theme), theme);
                     let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
                     let item = &select.items[cursor.item];
+                    // ⌨️ The keyboard-highlighted row reads like a hovered one, as React's
+                    // `data-highlighted` styling does — see `tree::WidgetState::highlighted`.
+                    let highlighted = node.state.highlighted == Some(cursor.item);
                     let result = retained_fixed_output(draw, |draw| {
-                        if item.value == select.value {
+                        if highlighted || item.value == select.value {
                             draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
                         }
                     });
@@ -768,7 +844,7 @@ pub(crate) fn paint_node_step(
                 }
                 5 => {
                     let Some(item) = select.items.get(cursor.item) else { return RetainedNodePaintStep::Fault };
-                    let relative = select_popup_row_rect(bounds.w, bounds.h, cursor.item, theme);
+                    let relative = select_popup_row_rect(bounds.w, cursor.item, select_menu_top_for(tree, id, bounds.h, select.items.len(), theme), theme);
                     let row = Rect::new(bounds.x + relative.x + 8.0, bounds.y + relative.y, relative.w - 8.0, relative.h);
                     match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, theme.text, atlas, draw, cursor) {
                         RetainedNodePaintStep::Complete => {
@@ -788,7 +864,7 @@ pub(crate) fn paint_node_step(
                 let pressed = toggle.presence.selected;
                 let hovered = flags.contains(NodeFlags::HOVERED);
                 let result = retained_fixed_output(draw, |draw| {
-                    push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, item_bg(theme, pressed, hovered));
+                    push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered));
                     if let Some(icons) = icons {
                         push_icon(draw, icons, toggle.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
                     }
@@ -883,7 +959,7 @@ pub(crate) fn paint_node_step(
             match cursor.phase {
                 0 => {
                     let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, if flags.contains(NodeFlags::HOVERED) { theme.button_hover } else { theme.input_bg });
+                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if flags.contains(NodeFlags::HOVERED) { theme.button_hover } else { theme.input_bg });
                         push_control_border(draw, value_segment, theme, theme.border_normal, theme.input_bg);
                     });
                     cursor.advance(1);
@@ -1063,9 +1139,37 @@ pub(crate) fn paint_node_step(
             }
         }
         UiNode::Tree(tree_node) => retained_tree_node_step(tree_node, bounds, theme, atlas, icons, draw, cursor),
+        // 🖼️ No `SceneHost` this tick: decode what this process can (a `data:` PNG) and draw the real
+        // bitmap as a `KIND_RASTER` quad at React's `object-contain` rect — see 🖼️UiImageSources. A
+        // source only the host can fetch still falls back to the placeholder + `alt` chrome below,
+        // which is what React shows for a broken/pending `<img>` too.
         UiNode::Image(image) => {
+            // 🖼️ Admission is the production caller of `admit_ui_image` — without this line the
+            // ledger stayed empty forever, `ui_image_natural_size` always answered `None`, and EVERY
+            // `UiNode::Image` painted the `alt` placeholder however decodable its `src` was. Safe per
+            // frame: an already-decoded source is a ledger lookup, never a second decode, and a
+            // source only a host can fetch answers `Deferred`/`Unsupported` and falls through to the
+            // same placeholder chrome React shows for a pending/broken `<img>`.
+            let decoded = if has_scene_host {
+                None
+            } else {
+                matches!(admit_ui_image(image.src.as_str()), UiImageAdmission::Ready).then(|| ui_image_natural_size(image.src.as_str())).flatten()
+            };
             if has_scene_host {
                 retained_presence_step(draw, bounds, theme, presence)
+            } else if let Some((natural_w, natural_h)) = decoded {
+                if cursor.phase == 0 {
+                    let content = ui_image_content_rect(bounds, natural_w, natural_h);
+                    let result = retained_fixed_output(draw, |draw| draw.push_raster_quad(image.src.as_str(), [content.x, content.y, content.w, content.h], [0.0, 0.0, 1.0, 1.0], 1.0));
+                    cursor.advance(2);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
             } else if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
                 cursor.advance(1);
@@ -1256,6 +1360,9 @@ pub(crate) struct RetainedInteractiveSyncCursor {
     matched: Option<NodeId>,
     select_width: f32,
     select_height: f32,
+    /// 🔽️ The open popup's collision-resolved top offset, captured once per `Select` bind so every
+    /// row this sync pass writes lands on the same side of the trigger paint chose.
+    select_menu_top: f32,
     tree_section: usize,
     tree_depth: usize,
     tree_frames: [Option<RetainedSyncTreeFrame>; RETAINED_SYNC_DEPTH],
@@ -1279,6 +1386,7 @@ impl Default for RetainedInteractiveSyncCursor {
             matched: None,
             select_width: 0.0,
             select_height: 0.0,
+            select_menu_top: 0.0,
             tree_section: 0,
             tree_depth: 0,
             tree_frames: [None; RETAINED_SYNC_DEPTH],
@@ -1307,6 +1415,7 @@ impl RetainedInteractiveSyncCursor {
         self.matched = None;
         self.select_width = 0.0;
         self.select_height = 0.0;
+        self.select_menu_top = 0.0;
         self.tree_section = 0;
         self.tree_depth = 0;
         self.tree_item_count = 0;
@@ -1411,6 +1520,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                     let Some(layout) = tree.accepted_layout(id) else { return retained_sync_fault(cursor, line!()) };
                     cursor.select_width = layout.width;
                     cursor.select_height = layout.height;
+                    cursor.select_menu_top = select_menu_top_for(tree, id, layout.height, select.items.len(), theme);
                     cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
                     RetainedInteractiveSyncStep::Pending
                 }
@@ -1462,7 +1572,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
         }
         RetainedInteractiveSyncPhase::SelectWrite => {
             let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
-            let rect = select_popup_row_rect(cursor.select_width, cursor.select_height, cursor.item, theme);
+            let rect = select_popup_row_rect(cursor.select_width, cursor.item, cursor.select_menu_top, theme);
             let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
             node.layout.x = rect.x;
             node.layout.y = rect.y;
@@ -1612,21 +1722,30 @@ pub(crate) fn sync_interactive_state_node(tree: &mut UiTree, id: NodeId, theme: 
 }
 
 /// 📐️ One popup row's `(x, y, w, h)` **relative to the `Select`'s own top-left** — shared by
-/// `sync_select_popup_rows` (writes it into the row's retained `LayoutBucket`) and `paint_select`
-/// (paints it), so the two can never drift apart. Mirrors `widgets::render_select_menu`'s literal
-/// geometry: the popup sits `select_h + 2.0` below the trigger, each row inset `2.0`,
-/// `theme.control_height` tall.
-fn select_popup_row_rect(select_w: f32, select_h: f32, index: usize, theme: &Theme) -> Rect {
-    let item_h = theme.control_height;
-    let menu_y = select_h + 2.0;
-    Rect::new(2.0, menu_y + 2.0 + index as f32 * item_h, (select_w - 4.0).max(0.0), item_h)
+/// `sync_select_popup_rows` (writes it into the row's retained `LayoutBucket`), `paint_select` and
+/// the retained paint steps (paint it), so none of them can drift apart. The geometry itself lives
+/// with the element (`crate::wgpu::select::🔖️Geometry`), which is also where the immediate-mode kit
+/// and React's own `resolveSelectPlacement`-derived rules are reconciled; `menu_top` is that
+/// module's collision-aware answer (see `select_menu_top_for`).
+fn select_popup_row_rect(select_w: f32, index: usize, menu_top: f32, theme: &Theme) -> Rect {
+    crate::wgpu::select::select_row_rect(select_w, index, menu_top, theme)
+}
+
+/// 📐️ `select_menu_top` for a retained `Select`, resolving its two viewport inputs from the tree:
+/// the node's own absolute top and the root's laid-out height. A popup with no room below its
+/// trigger flips above it, exactly as React's `SelectContent` does.
+fn select_menu_top_for(tree: &UiTree, id: NodeId, select_h: f32, items: usize, theme: &Theme) -> f32 {
+    let menu_h = crate::wgpu::select::select_menu_height(items, theme);
+    let absolute_y = crate::wgpu::events::node_abs_rect(tree, id).map_or(0.0, |rect| rect.y);
+    let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
+    crate::wgpu::select::select_menu_top(absolute_y, select_h, menu_h, viewport_h)
 }
 
 #[cfg(test)]
 fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
     for (index, item) in items.iter().enumerate() {
         let Some(row_id) = find_child_by_key(tree, select_id, &NodeKey::Explicit(item.value.clone())) else { continue };
-        let rect = select_popup_row_rect(select_w, select_h, index, theme);
+        let rect = select_popup_row_rect(select_w, index, select_h + crate::wgpu::select::SELECT_SIDE_OFFSET, theme);
         if let Some(node) = tree.node_mut(row_id) {
             node.layout.x = rect.x;
             node.layout.y = rect.y;
@@ -1705,11 +1824,9 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
     if presence.state == UiState::Introducing {
         draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
     }
-    // 🎉️ `Celebrating` reuses the introducing breathing-pulse ring — `Theme` has no primary/secondary/
-    // tertiary triad to cycle through, so `theme.accent` is the honest static reduction of the CSS
-    // spinning tri-color ring for this shader-less renderer; a true conic tri-color ring is out of scope.
     if presence.state == UiState::Celebrating {
-        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+        let turns = celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds);
+        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], celebrate_color(theme, turns), theme.border_radius, celebrate_stroke(theme, turns));
     }
 }
 
@@ -1811,8 +1928,10 @@ pub(crate) const PROGRESS_INDETERMINATE_SHARE: f32 = 1.0 / 3.0;
 /// 📶️ Track and fill rects of one retained progress bar inside `bounds`: a track `padding_standard`
 /// tall, centred vertically, filled from the left to `ui_contract::progress_fraction` while determinate,
 /// or carrying the centred [`PROGRESS_INDETERMINATE_SHARE`] sweep while `total` is `None`.
-pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, theme: &Theme) -> ([f32; 4], [f32; 4]) {
-    let height = theme.padding_standard.min(bounds.h).max(0.0);
+pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, _theme: &Theme) -> ([f32; 4], [f32; 4]) {
+    // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx:2114`) — `--size-tiny`, not the
+    // one-spacing-unit sliver this used to draw.
+    let height = SIZE_TINY.min(bounds.h).max(0.0);
     let track = [bounds.x, bounds.y + (bounds.h - height) * 0.5, bounds.w.max(0.0), height];
     let fill = match ui_contract::progress_fraction(node.completed, node.total) {
         Some(fraction) => [track[0], track[1], track[2] * fraction as f32, height],
@@ -1824,13 +1943,65 @@ pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, theme: &Th
     (track, fill)
 }
 
-/// 📶️ Paints a progress bar from theme tokens only: `separator` track, `progress` fill.
+//#region 🎉️Celebrate
+// 🎉️ React celebrates an element with TWO infinite keyframes over one `--celebrate-border-duration`
+// (1.2 s): `celebrate-border-spin` drives a conic-gradient angle 0→360° linearly, and
+// `celebrate-border-burst` drives the ring's thickness `--stroke-hairline` → `--stroke-focus` →
+// hairline on an ease-in-out (`🎨️styling/🖌️ui/🎨️.css:1218-1231, 1249-1268`). Both are pure functions
+// of the frame clock, so they port exactly; what does NOT port is the conic gradient itself, which a
+// shader-less ring cannot express — see the packet report's gap list.
+
+/// 🎉️ Where in the celebrate cycle `seconds` sits, as turns in `[0, 1)`. `duration <= 0` freezes at
+/// the start rather than dividing by zero.
+pub(crate) fn celebrate_turns(seconds: f32, duration: f32) -> f32 {
+    if !(duration > 0.0) || !seconds.is_finite() {
+        return 0.0;
+    }
+    let turns = seconds / duration;
+    turns - turns.floor()
+}
+
+/// 🎉️ The ring thickness at `turns` — React's `celebrate-border-burst`: hairline at 0 % and 100 %,
+/// `--stroke-focus` at 50 %, eased in and out (the raised cosine `ease-in-out` traces).
+pub(crate) fn celebrate_stroke(theme: &Theme, turns: f32) -> f32 {
+    let eased = 0.5 - 0.5 * (turns * std::f32::consts::TAU).cos();
+    theme.stroke_hairline + (theme.stroke_focus - theme.stroke_hairline) * eased
+}
+
+/// 🎉️ The conic gradient sampled at `turns` — React's `--celebrate-conic` cycles
+/// primary → secondary → tertiary → primary, so three equal thirds with a wrap back to the first.
+pub(crate) fn celebrate_color(theme: &Theme, turns: f32) -> Rgba {
+    let stops = theme.celebrate;
+    let scaled = turns.clamp(0.0, 1.0) * stops.len() as f32;
+    let index = (scaled.floor() as usize).min(stops.len() - 1);
+    let next = stops[(index + 1) % stops.len()];
+    let from = stops[index];
+    let t = scaled - index as f32;
+    Rgba::new(from.r + (next.r - from.r) * t, from.g + (next.g - from.g) * t, from.b + (next.b - from.b) * t, from.a + (next.a - from.a) * t)
+}
+//#endregion 🎉️Celebrate
+
+/// ⌨️ Whether a focus ring paints on this node — React's `focus-visible:border-accent`
+/// (`🔨️modules/📝️form-control-presentation/🟦️.ts:14`), which is a `:focus-visible` selector and so
+/// never fires for a pointer-focused control. `NodeFlags::FOCUS_VISIBLE` is the bit `EventRouter`
+/// stamps beside `FOCUSED` only when a KEY moved focus, so this is the whole distinction: the ring
+/// is keyboard-only on both renderers. `FOCUSED` alone still drives caret/edit state and hit
+/// routing, which are modality-independent.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn focus_ring_visible(flags: NodeFlags) -> bool {
+    flags.contains(NodeFlags::FOCUSED) && flags.contains(NodeFlags::FOCUS_VISIBLE)
+}
+
+/// 📶️ Paints a progress bar from theme tokens only: `muted` track, `accent` fill at the theme's own
+/// corner radius — React's `ProgressView` is `bg-muted` + `bg-accent` (`🗣️Interpreter/🟦️.tsx:
+/// 2114-2116`), and its `rounded-full` resolves to `--radius-full`, which this design system pins to
+/// `0` like every other radius, so a hardcoded pill shape was wgpu-only. The track stood in with
+/// `separator` until `Theme` gained a real `--muted` field (ticket 26/09/17 packet W2k).
 fn paint_progress(node: &UiProgressNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let (track, fill) = progress_bar_rects(node, bounds, theme);
-    let radius = track[3] * 0.5;
-    draw.push_rounded(track, theme.separator, radius);
+    draw.push_rounded(track, theme.muted, theme.border_radius);
     if fill[2] > 0.0 {
-        draw.push_rounded(fill, theme.progress, radius);
+        draw.push_rounded(fill, theme.accent, theme.border_radius);
     }
 }
 //#endregion 📶️Progress
@@ -1898,17 +2069,19 @@ fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme,
 fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let emphasize = node.emphasize.unwrap_or(false);
     let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
-    let color = if emphasize { theme.text } else { theme.text_muted };
+    let color = theme.text;
     let lines = wrap_text(atlas, node.value.as_str(), bounds.w.max(1.0), size);
-    let line_h = size * 1.35;
+    let line_h = crate::wgpu::text::line_height(size);
     for (index, line) in lines.iter().enumerate() {
         draw_text_on(draw, atlas, line, bounds.x, bounds.y + line_h * index as f32 + size, size, color);
     }
 }
 
+/// ➖️ A `Separator`'s rule — one `--stroke-hairline` across the node's middle, the same weight
+/// React's `<hr>` border carries (`strokes.chromeBorderHairline`), never a hardcoded pixel.
 fn paint_separator(bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let y = bounds.y + bounds.h * 0.5;
-    draw.push_line(bounds.x, y, bounds.x + bounds.w, y, theme.separator, 1.0);
+    draw.push_line(bounds.x, y, bounds.x + bounds.w, y, theme.separator, theme.stroke_hairline);
 }
 
 #[cfg(test)]
@@ -1925,10 +2098,10 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     // applied to every form-control primitive including `Button`) — `widgets::render_button` never
     // implemented a focus ring either (only `render_input` did), so this is another independent
     // React-sourced fix, mirroring `paint_input`'s own established border-swap convention.
-    let focused = !disabled && flags.contains(NodeFlags::FOCUSED);
+    let focused = !disabled && focus_ring_visible(flags);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
-    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, dim(border), bg);
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
@@ -1958,12 +2131,16 @@ fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 /// string they were computed from. Neither `widgets::render_input` nor React's native `<input>`
 /// (whose caret/selection are rendered by the browser itself, not by application code — there is no
 /// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
-/// (`theme.accent`) is this pass's own independent choice, kept consistent with `paint_input`'s own
-/// pre-existing `border_emphasized`-on-focus convention.
+/// (`theme.accent`) is this pass's own independent choice, kept consistent with every control's
+/// focus border, which is `theme.accent` because React's shared `formControlFocusBorderClass`
+/// (`🔨️modules/📝️form-control-presentation/🟦️.ts:14`) is `focus-visible:border-accent`. wgpu has no
+/// `focus-visible` distinction of its own, so a pointer-focused control shows the ring React would
+/// only show for keyboard focus — a bounded, documented divergence (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1o).
 #[cfg(test)]
 fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
-    let focused = flags.contains(NodeFlags::FOCUSED);
-    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let focused = focus_ring_visible(flags);
+    let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, theme.input_bg);
     let text_x = bounds.x + 8.0;
     let text_baseline_y = bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0;
@@ -2007,9 +2184,9 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
     // 🎯️ `SelectTrigger`'s own `formControlFocusBorderClass` (`ui/js/react/index.tsx`) swaps its
     // border to `border-accent` on `focus-visible` — mirrored via the same border-swap convention
     // `paint_input`/`paint_button` already use, since `widgets::render_select` never implemented one.
-    let focused = flags.contains(NodeFlags::FOCUSED);
+    let focused = focus_ring_visible(flags);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
-    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, bg);
     let label = node.items.iter().find(|item| item.value == node.value).map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or("Select…"), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
@@ -2020,18 +2197,19 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
         return;
     }
     let row_children: Vec<NodeId> = retained.map(|(tree, id)| tree.children(id).collect()).unwrap_or_default();
-    let item_h = theme.control_height;
-    let menu_h = node.items.len() as f32 * item_h + 4.0;
-    let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
+    let menu_h = crate::wgpu::select::select_menu_height(node.items.len(), theme);
+    let menu_top = retained.map_or(bounds.h + crate::wgpu::select::SELECT_SIDE_OFFSET, |(tree, id)| select_menu_top_for(tree, id, bounds.h, node.items.len(), theme));
+    let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, menu_h);
     draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
     for (index, item) in node.items.iter().enumerate() {
-        let relative = select_popup_row_rect(bounds.w, bounds.h, index, theme);
+        let relative = select_popup_row_rect(bounds.w, index, menu_top, theme);
         let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
         let row_hovered = retained.zip(row_children.get(index)).is_some_and(|((tree, _), &row_id)| tree.node(row_id).is_some_and(|n| n.flags.contains(NodeFlags::HOVERED)));
-        if row_hovered || item.value == node.value {
+        let highlighted = retained.is_some_and(|(tree, id)| tree.node(id).is_some_and(|select| select.state.highlighted == Some(index)));
+        if row_hovered || highlighted || item.value == node.value {
             draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
         }
-        draw_text_on(draw, atlas, item.label.as_str(), row.x + 8.0, row.y + 18.0, theme.font_size_body, theme.text);
+        draw_text_on(draw, atlas, item.label.as_str(), row.x + theme.padding_standard, row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     }
 }
 
@@ -2041,9 +2219,9 @@ fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &The
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ Same `formControlFocusBorderClass` border-swap as `paint_button`/`paint_select` — the icon-
     // button variant `Toggle` renders through (`ui/js/react/index.tsx`) carries it too.
-    let focused = flags.contains(NodeFlags::FOCUSED);
+    let focused = focus_ring_visible(flags);
     let bg = item_bg(theme, pressed, hovered);
-    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, bg);
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
@@ -2103,9 +2281,9 @@ fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFla
     // which the nested center-segment border below then repaints back to `input_bg`/`border_normal`
     // (the center "value" segment isn't a button — it never carries React's own hover/focus fill).
     let hovered = flags.contains(NodeFlags::HOVERED);
-    let focused = flags.contains(NodeFlags::FOCUSED);
+    let focused = focus_ring_visible(flags);
     let outer_bg = if hovered { theme.button_hover } else { theme.input_bg };
-    let outer_border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let outer_border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, outer_border, outer_bg);
     draw.push_solid([bounds.x + seg, bounds.y, hair, bounds.h], theme.border_normal);
     draw.push_solid([bounds.x + seg * 2.0, bounds.y, hair, bounds.h], theme.border_normal);
@@ -2154,8 +2332,8 @@ fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, th
     // 🎯️ Same border-swap-on-focus convention as `paint_button`/`paint_select`/`paint_toggle` — the
     // real `IconSelector` (`ui/js/react/index.tsx`) nests a `Select` for its mode picker, which
     // inherits `formControlFocusBorderClass` the same way.
-    let focused = flags.contains(NodeFlags::FOCUSED);
-    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    let focused = focus_ring_visible(flags);
+    let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered));
     let content_x = bounds.x + theme.padding_standard;
     let has_icon = icons.and_then(|icons| icons.icon_uv(&node.value)).is_some();
@@ -2282,7 +2460,11 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
         UiStatus::Idle => {}
     }
     if item.presence.state == UiState::Introducing || item.presence.state == UiState::Celebrating {
-        draw.push_introducing_border([row.x, row.y, row.w, row.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+        let celebrating = item.presence.state == UiState::Celebrating;
+        let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
+        let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
+        let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
+        draw.push_introducing_border([row.x, row.y, row.w, row.h], ring, theme.border_radius, stroke);
     }
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
@@ -2290,7 +2472,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     if expandable {
         if let Some(icons) = icons {
             let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
-            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, theme.text_element);
         }
     }
     // 🎨️ `widgets::render_tree_item`'s `text_color`: selected/previewed rows use `active_foreground`
@@ -2415,6 +2597,379 @@ fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, a
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
     draw_text_on(draw, atlas, &node.body_key, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
 }
+
+//#region 🖼️UiImageSources
+// 🖼️ React's `ImageView` is a real `<img src>` (`🗣️Interpreter/🟦️.tsx:1972-1975`) — the browser owns
+// fetch, decode, cache and `object-fit`. A GPU canvas owns all four itself. The split here mirrors
+// what the os renderer already does for the SceneHost path (`🗣️Interpreter/🎯️targets/🧊️wgpu`'s
+// `UiImageLoading` region): a `src` the process can decode *without I/O* — a `data:` URL — is decoded
+// here, in first-party code (`semio-framework-pixels`, the owned PNG codec), published as a natural
+// size plus one pending RGBA8 upload keyed by `src`, and drawn as a `KIND_RASTER` quad. Any other
+// `src` is a fetch, which this crate has no authority to perform: it stays the host asset pipeline's
+// job (`WorldAssetRequestKind::UiImage`), and until that host resolves it the placeholder chrome
+// below is what shows — unchanged from before this region existed.
+//
+// 🚫️ JPEG is deliberately NOT decoded here. `semio-framework-pixels` is PNG-only, and AGENTS.md
+// forbids a third-party runtime codec; a `data:image/jpeg` source therefore stays on the host path
+// exactly like a URL does, and answers [`UiImageAdmission::Unsupported`] so a caller can say so.
+
+/// 🖼️ The largest encoded `src` payload this registry will even look at — the same ceiling the os
+/// renderer's own `RETAINED_UI_IMAGE_SOURCE_BYTES` carries for a retained image source.
+pub const UI_IMAGE_SOURCE_MAX_BYTES: usize = 4 * 1024 * 1024;
+/// 🖼️ Largest decoded edge admitted, so one hostile source cannot claim an unbounded texture.
+pub const UI_IMAGE_MAX_DIMENSION: u32 = 4096;
+/// 🖼️ How many decoded sources the registry retains before refusing new ones — a fixed ledger, not
+/// an evicting cache, so a frame's draw never races a retirement it did not ask for.
+pub const UI_IMAGE_LEDGER_ENTRIES: usize = 64;
+/// 🖼️ React's `max-h-64` on the `<img>` (`🗣️Interpreter/🟦️.tsx:1974`): 16rem at the 16px root size.
+pub const UI_IMAGE_MAX_BOX_HEIGHT: f32 = 256.0;
+
+/// 🖼️ What admitting one `src` did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiImageAdmission {
+    /// ✅️ Already decoded (this call or an earlier one) — `ui_image_natural_size` answers its size.
+    Ready,
+    /// 🌐️ Not decodable in-process (a URL, or a `data:` payload in a codec this crate does not own):
+    /// the host asset pipeline owns it.
+    Deferred,
+    /// 🚫️ A `data:` URL this crate recognises the shape of but cannot decode — `image/jpeg` today.
+    Unsupported,
+    /// ⚠️ Malformed source, over-large payload, or a full ledger.
+    Refused,
+}
+
+/// 🖼️ One decoded source waiting for the host to hand it to `RasterTextureTable` — drained through
+/// [`take_ui_image_upload`] and pushed as a `prepared::PreparedRasterProducer` under the same `key`
+/// the draw list's `KIND_RASTER` instance carries.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UiImageUpload {
+    pub key: String,
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u8>,
+}
+
+#[derive(Default)]
+struct UiImageLedger {
+    entries: Vec<(String, u32, u32)>,
+    pending: Vec<UiImageUpload>,
+    unsupported: Vec<String>,
+}
+
+static UI_IMAGE_LEDGER: std::sync::LazyLock<std::sync::Mutex<UiImageLedger>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(UiImageLedger::default()));
+
+fn ui_image_ledger<R>(read: impl FnOnce(&mut UiImageLedger) -> R) -> Option<R> {
+    UI_IMAGE_LEDGER.lock().ok().map(|mut ledger| read(&mut ledger))
+}
+
+/// 🖼️ Decodes `src` if this process can, and publishes its natural size + one pending upload. Safe to
+/// call every frame: an already-admitted `src` is a map lookup.
+pub fn admit_ui_image(src: &str) -> UiImageAdmission {
+    if src.is_empty() || src.len() > UI_IMAGE_SOURCE_MAX_BYTES {
+        return UiImageAdmission::Refused;
+    }
+    let known = ui_image_ledger(|ledger| (ledger.entries.iter().any(|(key, _, _)| key == src), ledger.unsupported.iter().any(|key| key == src), ledger.entries.len()));
+    let Some((ready, unsupported, admitted)) = known else { return UiImageAdmission::Refused };
+    if ready {
+        return UiImageAdmission::Ready;
+    }
+    if unsupported {
+        return UiImageAdmission::Unsupported;
+    }
+    let Some((media, payload)) = split_data_url(src) else { return UiImageAdmission::Deferred };
+    if !media.starts_with("image/png") {
+        ui_image_ledger(|ledger| ledger.unsupported.push(src.to_string()));
+        return UiImageAdmission::Unsupported;
+    }
+    if admitted >= UI_IMAGE_LEDGER_ENTRIES {
+        return UiImageAdmission::Refused;
+    }
+    let Some(bytes) = payload else { return UiImageAdmission::Refused };
+    let Ok(image) = semio_framework_pixels::decode_png(&bytes) else { return UiImageAdmission::Refused };
+    if image.width == 0 || image.height == 0 || image.width > UI_IMAGE_MAX_DIMENSION || image.height > UI_IMAGE_MAX_DIMENSION {
+        return UiImageAdmission::Refused;
+    }
+    let admitted = ui_image_ledger(|ledger| {
+        if ledger.entries.len() >= UI_IMAGE_LEDGER_ENTRIES {
+            return false;
+        }
+        ledger.entries.push((src.to_string(), image.width, image.height));
+        ledger.pending.push(UiImageUpload { key: src.to_string(), width: image.width, height: image.height, pixels: image.pixels });
+        true
+    });
+    if admitted == Some(true) {
+        UiImageAdmission::Ready
+    } else {
+        UiImageAdmission::Refused
+    }
+}
+
+/// 🖼️ The decoded pixel size of an admitted `src`, or `None` while the host still owns it.
+pub fn ui_image_natural_size(src: &str) -> Option<(u32, u32)> {
+    ui_image_ledger(|ledger| ledger.entries.iter().find(|(key, _, _)| key == src).map(|(_, width, height)| (*width, *height)))?
+}
+
+/// 🖼️ Takes one decoded source off the upload queue — the host's per-frame drain.
+pub fn take_ui_image_upload() -> Option<UiImageUpload> {
+    ui_image_ledger(|ledger| if ledger.pending.is_empty() { None } else { Some(ledger.pending.remove(0)) })?
+}
+
+/// 🧹️ Retires one ledger item per call; answers `true` once the whole registry is terminal-empty.
+pub fn close_ui_image_ledger_step() -> bool {
+    ui_image_ledger(|ledger| {
+        if ledger.pending.pop().is_some() || ledger.entries.pop().is_some() || ledger.unsupported.pop().is_some() {
+            return false;
+        }
+        true
+    })
+    .unwrap_or(false)
+}
+
+/// 🔗️ Splits `data:[<mediatype>][;base64],<payload>` into its media type and decoded bytes. A
+/// non-`data:` `src` answers `None` (the host owns it); a `data:` URL whose payload is malformed
+/// answers the media type with `None` bytes so the caller can refuse rather than defer.
+fn split_data_url(src: &str) -> Option<(&str, Option<Vec<u8>>)> {
+    let rest = src.strip_prefix("data:")?;
+    let comma = rest.find(',')?;
+    let header = &rest[..comma];
+    let payload = &rest[comma + 1..];
+    let base64 = header.ends_with(";base64");
+    let media = header.strip_suffix(";base64").unwrap_or(header);
+    let bytes = if base64 { decode_base64(payload) } else { Some(percent_decode(payload)) };
+    Some((media, bytes))
+}
+
+/// 🔤️ RFC 4648 standard base64 (with `-`/`_` accepted for the URL alphabet), whitespace-tolerant —
+/// hand-written because a runtime dependency on a third-party codec is forbidden (AGENTS.md).
+fn decode_base64(value: &str) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(value.len() / 4 * 3);
+    let mut accumulator: u32 = 0;
+    let mut bits = 0u32;
+    for byte in value.bytes() {
+        let sextet = match byte {
+            b'A'..=b'Z' => u32::from(byte - b'A'),
+            b'a'..=b'z' => u32::from(byte - b'a') + 26,
+            b'0'..=b'9' => u32::from(byte - b'0') + 52,
+            b'+' | b'-' => 62,
+            b'/' | b'_' => 63,
+            b'=' => break,
+            b'\n' | b'\r' | b'\t' | b' ' => continue,
+            _ => return None,
+        };
+        accumulator = (accumulator << 6) | sextet;
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push(((accumulator >> bits) & 0xFF) as u8);
+        }
+    }
+    Some(out)
+}
+
+/// 🔤️ Percent-decoding for a non-base64 `data:` payload, `+` meaning space.
+fn percent_decode(value: &str) -> Vec<u8> {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            if let Some(byte) = std::str::from_utf8(&bytes[index + 1..index + 3]).ok().and_then(|hex| u8::from_str_radix(hex, 16).ok()) {
+                out.push(byte);
+                index += 3;
+                continue;
+            }
+        }
+        out.push(if bytes[index] == b'+' { b' ' } else { bytes[index] });
+        index += 1;
+    }
+    out
+}
+
+/// 📐️ Where the decoded bitmap actually lands inside the node's laid-out rect: React's
+/// `max-h-64 max-w-full object-contain` (`🗣️Interpreter/🟦️.tsx:1974`) — the element's box is the
+/// intrinsic size clamped independently on each axis, and `object-contain` then letterboxes the
+/// natural aspect ratio inside that box, centred.
+pub fn ui_image_content_rect(bounds: Rect, natural_w: u32, natural_h: u32) -> Rect {
+    let natural_w = natural_w as f32;
+    let natural_h = natural_h as f32;
+    if natural_w <= 0.0 || natural_h <= 0.0 || bounds.w <= 0.0 || bounds.h <= 0.0 {
+        return bounds;
+    }
+    let box_w = natural_w.min(bounds.w);
+    let box_h = natural_h.min(bounds.h.min(UI_IMAGE_MAX_BOX_HEIGHT));
+    let scale = (box_w / natural_w).min(box_h / natural_h);
+    let width = natural_w * scale;
+    let height = natural_h * scale;
+    Rect::new(bounds.x + (box_w - width) * 0.5, bounds.y + (box_h - height) * 0.5, width, height)
+}
+//#endregion 🖼️UiImageSources
+
+//#region 🦴️Skeleton
+// 🦴️ React never paints a half-built element: `interpretUiNodeBusyShell` (`🗣️Interpreter/🟦️.tsx:2147-2154`)
+// swaps the whole component for `elementSkeleton(record.component.type)` (`🧱️elements/🦴️Skeletons/🟦️.tsx:54-115`)
+// for as long as its `activity` is `loading`/`waiting` — a shaped, element-kind-keyed placeholder,
+// not just the border tint this target used to be limited to. `Progress` is the one exemption there
+// (a progress bar IS the busy affordance) and is exempt here too.
+//
+// Shapes are the same *ratios* React's utility classes encode, resolved against this target's own
+// theme tokens rather than re-deriving a rem scale: `h-medium` → `Theme::control_height`,
+// `h-4`/`h-3` → the body/small font sizes, `gap-single`/`p-single` → `gap_standard`/`padding_standard`.
+
+/// 🦴️ How many blocks the widest skeleton draws — `group`/`section`'s three, plus the header line.
+pub const SKELETON_MAX_BLOCKS: usize = 4;
+
+/// 🦴️ The element-kind axis React's `ElementSkeletonKind` names, reduced to the shapes that differ.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SkeletonKind {
+    Line,
+    Control,
+    Separator,
+    Image,
+    Rows,
+    Ring,
+    Field,
+    Panel,
+    Fill,
+}
+
+/// 🦴️ `UiNode` → the skeleton React's `elementSkeleton` would pick for the same `Component::type`.
+pub fn skeleton_kind(node: &UiNode) -> SkeletonKind {
+    match node {
+        UiNode::Text(_) => SkeletonKind::Line,
+        UiNode::Separator(_) => SkeletonKind::Separator,
+        UiNode::Image(_) => SkeletonKind::Image,
+        UiNode::Ring(_) => SkeletonKind::Ring,
+        UiNode::Field(_) => SkeletonKind::Field,
+        UiNode::Section(_) | UiNode::Group(_) => SkeletonKind::Panel,
+        UiNode::KeyValue(_) | UiNode::Tree(_) => SkeletonKind::Rows,
+        UiNode::Stack(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) => SkeletonKind::Fill,
+        UiNode::Slider(_) => SkeletonKind::Line,
+        UiNode::Button(_) | UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::NumberStepper(_) | UiNode::IconSelect(_) => SkeletonKind::Control,
+        UiNode::Progress(_) => SkeletonKind::Line,
+    }
+}
+
+/// 🦴️ The placeholder blocks one skeleton draws inside `bounds`, in paint order. Fixed-capacity: the
+/// retained pass admits `SKELETON_MAX_BLOCKS` items up front and never allocates mid-frame.
+pub fn skeleton_blocks(kind: SkeletonKind, bounds: Rect, theme: &Theme) -> ([Rect; SKELETON_MAX_BLOCKS], usize) {
+    let mut blocks = [Rect::new(0.0, 0.0, 0.0, 0.0); SKELETON_MAX_BLOCKS];
+    let line = theme.font_size_body;
+    let small = theme.font_size_small;
+    let control = theme.control_height.min(bounds.h.max(0.0));
+    let gap = theme.gap_standard;
+    let pad = theme.padding_standard;
+    let width = bounds.w.max(0.0);
+    let count = match kind {
+        SkeletonKind::Line => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width * 0.6, line);
+            1
+        }
+        SkeletonKind::Control => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width, control);
+            1
+        }
+        SkeletonKind::Separator => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width, theme.stroke_hairline);
+            1
+        }
+        SkeletonKind::Image => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width, bounds.h.min(UI_IMAGE_MAX_BOX_HEIGHT * 0.5).max(0.0));
+            1
+        }
+        SkeletonKind::Rows => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width, line);
+            blocks[1] = Rect::new(bounds.x, bounds.y + line + gap, width * 0.8, line);
+            2
+        }
+        SkeletonKind::Ring => {
+            let size = control.min(width);
+            blocks[0] = Rect::new(bounds.x, bounds.y, size, size);
+            1
+        }
+        SkeletonKind::Field => {
+            blocks[0] = Rect::new(bounds.x, bounds.y, width * 0.4, small);
+            blocks[1] = Rect::new(bounds.x, bounds.y + small + gap, width, control);
+            2
+        }
+        SkeletonKind::Panel => {
+            let inner = (width - pad * 2.0).max(0.0);
+            blocks[0] = Rect::new(bounds.x + pad, bounds.y + pad, inner * 0.5, line);
+            blocks[1] = Rect::new(bounds.x + pad, bounds.y + pad + line + gap * 2.0, inner, control);
+            blocks[2] = Rect::new(bounds.x + pad, bounds.y + pad + line + control + gap * 4.0, inner, control);
+            3
+        }
+        SkeletonKind::Fill => {
+            let inner = (width - pad * 2.0).max(0.0);
+            blocks[0] = Rect::new(bounds.x + pad, bounds.y + pad, inner * 0.6, line);
+            blocks[1] = Rect::new(bounds.x + pad, bounds.y + pad + line + gap, inner, (bounds.h - pad * 2.0 - line - gap).max(0.0));
+            2
+        }
+    };
+    (blocks, count)
+}
+
+/// 🦴️ Whether this node's presence says React would have replaced it with a skeleton this frame —
+/// `interpretUiNodeBusyShell`'s own predicate, `Progress` exemption included.
+pub fn skeleton_replaces_content(node: &UiNode, presence: &UiPresence) -> bool {
+    !matches!(node, UiNode::Progress(_)) && matches!(presence.status, UiStatus::Loading | UiStatus::Waiting)
+}
+
+/// 🦴️ Draws the pulse blocks. Motionless (no animation clock in this pass), which is also the
+/// `motion-reduce:animate-none` rendering React falls back to.
+fn retained_skeleton_step(node: &UiNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) -> RetainedNodePaintStep {
+    let (blocks, count) = skeleton_blocks(skeleton_kind(node), bounds, theme);
+    let fill = theme.text_muted.with_alpha(0.2);
+    let result = retained_fixed_output(draw, |draw| {
+        for block in blocks.iter().take(count) {
+            draw.push_rounded([block.x, block.y, block.w, block.h], fill, theme.border_radius);
+        }
+    });
+    if result.is_err() {
+        RetainedNodePaintStep::Fault
+    } else {
+        RetainedNodePaintStep::Pending
+    }
+}
+//#endregion 🦴️Skeleton
+
+//#region 🪟️OverlayChrome
+// 🪟️ `events` decides WHERE an overlay goes (`resolve_overlay_placement_side`); this is the other
+// half — the chrome React's portalled surfaces carry that a hit-test flag alone does not draw: the
+// modal scrim behind a `Dialog`/`CommandPalette` (`🧱️elements/💬️Dialog/🟦️.tsx`'s overlay) and the
+// glass panel + hairline every floating surface sits on. `engine::Ui` paints these into the overlay
+// layer AFTER the document pass, which is what actually puts an overlay above panel content.
+
+/// 🌫️ React's modal scrim alpha (`--veil-alpha` over the dialog level's own surface).
+pub const OVERLAY_BACKDROP_ALPHA: f32 = 0.55;
+
+/// 🌫️ Fills the whole viewport behind a modal overlay.
+pub fn paint_overlay_backdrop(draw: &mut DrawList, viewport: Rect, theme: &Theme) {
+    draw.push_solid_overlay([viewport.x, viewport.y, viewport.w, viewport.h], theme.background.with_alpha(OVERLAY_BACKDROP_ALPHA));
+}
+
+/// 🪟️ The floating surface itself: a `Level::Menu` fill, hairline border and drop shade, drawn into
+/// the overlay layer so it composites over every panel painted this frame.
+pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme) {
+    draw.push_solid_overlay([bounds.x + 1.0, bounds.y + 2.0, bounds.w, bounds.h], theme.overlay_shadow);
+    draw.push_solid_overlay([bounds.x, bounds.y, bounds.w, bounds.h], theme.surface(Level::Menu));
+    push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true);
+}
+
+/// 💡️ A hover tooltip's own surface size for `label`, measured the way the popup will draw it —
+/// `🧱️elements/💡️ChromeControlHint/🟦️.tsx`'s `p-single text-xs` glass surface.
+pub fn tooltip_surface_size(label: &str, theme: &Theme, atlas: &mut FontAtlas) -> (f32, f32) {
+    let advance = label.chars().map(|ch| atlas.ensure_glyph(ch, theme.font_size_small).advance).sum::<f32>();
+    (advance + theme.padding_standard * 2.0, theme.font_size_small + theme.padding_standard * 2.0)
+}
+
+/// 💡️ Draws one hover tooltip at an already-resolved origin.
+pub fn paint_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, label: &str, origin: (f32, f32), theme: &Theme) {
+    let (width, height) = tooltip_surface_size(label, theme, atlas);
+    let bounds = Rect::new(origin.0, origin.1, width, height);
+    paint_overlay_surface(draw, bounds, theme);
+    draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + theme.padding_standard + theme.font_size_small, theme.font_size_small, theme.text);
+}
+//#endregion 🪟️OverlayChrome
 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-paint-unit/🦀️.rs"]

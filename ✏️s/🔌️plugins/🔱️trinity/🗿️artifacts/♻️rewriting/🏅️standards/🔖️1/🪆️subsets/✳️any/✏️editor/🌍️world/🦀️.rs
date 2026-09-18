@@ -179,7 +179,7 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> pack::JsonValue {
 /// 🖥️ Retained trinity graph host on the directed port board engine.
 pub struct TrinityBridge {
     pub graph: Graph,
-    store: semio_s_artifact_trinity_jack::TrinityGraphStore,
+    store: semio_s_artifact_trinity_jack::OwnedTrinityGraphStore,
     pub engine: TrinityBoardEngine,
     board: BoardHost,
     pub canvas_theme: CanvasPalette,
@@ -197,7 +197,7 @@ pub struct TrinityBridge {
 impl TrinityBridge {
     pub async fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_snapshot();
-        let store = semio_s_artifact_trinity_jack::TrinityGraphStore::new(semio_s_artifact_trinity_jack::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
+        let store = semio_s_artifact_trinity_jack::new_trinity_graph_store(semio_s_artifact_trinity_jack::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
         let graph = Graph::from_snapshot(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,

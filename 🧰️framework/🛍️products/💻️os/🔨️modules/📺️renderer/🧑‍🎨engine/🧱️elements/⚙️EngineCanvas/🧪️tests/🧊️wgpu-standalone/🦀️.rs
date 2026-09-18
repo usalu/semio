@@ -259,16 +259,7 @@ pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescr
 
 #[cfg(test)]
 pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &MapHost) -> Vec<ActionDescriptor> {
-    let selection = json!({
-        "positions": host.selected_positions_json(),
-        "routes": host.selected_routes_json(),
-    });
-    let hover = if let (Some(kind), Some(id)) = (host.hovered_kind(), host.hovered_id()) { json!({ "kind": kind, "id": id }) } else { Value::Null };
-    vec![
-        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) })),
-        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION, json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] })),
-        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover })),
-    ]
+    vec![map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }))]
 }
 
 #[cfg(test)]
@@ -286,7 +277,7 @@ fn saturated_map_action_queue_preserves_host_revision_and_camera() {
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).unwrap().map_host = Some(MapHost::new()));
     let before = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut input = ui_wgpu::wgpu::InputState::default();
-    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 2 {
+    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
         input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
     }
     assert_eq!(tiled_map_wheel_into(surface_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));

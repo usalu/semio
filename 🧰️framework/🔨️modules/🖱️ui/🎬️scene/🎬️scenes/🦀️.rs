@@ -28,10 +28,9 @@ use serde::{Deserialize, Serialize};
 /// [`crate::pack::decode`], which refuses to decode bytes stamped with any other schema.
 pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
     /// 🏷️ `"<surface-kind-wire-tag>@<version>"` — the wire tag half agrees verbatim with the
-    /// matching [`ui_contract::SurfaceKind`] variant's own `#[serde(rename = ...)]` (including the
-    /// one deliberate inconsistency, `virtualFileSystem`, preserved for the same reason
-    /// `ui_contract`'s own `SurfaceKind` doc gives: a rename is a breaking wire change for a later
-    /// packet to make on purpose, not a silent side effect of this move).
+    /// matching [`ui_contract::SurfaceKind`] variant's own `#[serde(rename = ...)]`, every kind
+    /// kebab-case: the last camelCase holdout, `virtualFileSystem`, is now `virtual-file-system`
+    /// in the contract, in this crate's schemas AND in the wgpu target's own `SurfaceKind`.
     const SCHEMA: &'static str;
 
     /// 🧳️ Encodes the stable opaque scene payload independently of its human-readable JSON shape.
@@ -1630,10 +1629,122 @@ pub struct Paint2dScene {
     pub view_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composite_viewport_json: Option<String>,
+    /// 🚚️ The spine's lane manifest — see [`Paint2dSceneLane`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
 }
 
 impl SceneDoc for Paint2dScene {
     const SCHEMA: &'static str = "paint-2d@1";
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in Paint2dSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(SceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let Some(lane) = Paint2dSceneLane::from_body_key(key) else { return false };
+        lane.put(self, payload);
+        true
+    }
+}
+
+/// 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the raster twin
+/// of [`Canvas2dSceneLane`]/[`Board2dSceneLane`], pinned against
+/// `🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json` on both sides.
+///
+/// Both lanes scale with the DOCUMENT, not with the frame: `document_sync_json` is the whole
+/// `RasterSession` sync channel (layers, strokes, masks) and `assets_json` carries one entry per
+/// imported bitmap. Either outgrows `UI_FIXED_BYTES` (32 KiB) on a real painting, and a surface doc
+/// cannot page — `scene_surface.encode` refuses the whole surface outright, which is why a
+/// paint-2d window silently stopped updating past that size while Canvas2d and Board2d did not.
+/// Everything else (camera, selection, hover, active utility, brush size/opacity, view mode,
+/// composite viewport) is a bounded per-frame descriptor and stays in the spine.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Paint2dSceneLane {
+    DocumentSync,
+    Assets,
+}
+
+/// 🚚️ Reserved carrier-key namespace of the paint-2d lanes.
+pub const PAINT2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.paint2d.";
+
+/// 🚚️ Wire name of each [`Paint2dSceneLane`], in `Paint2dSceneLane::ALL` order.
+pub const PAINT2D_SCENE_LANE_NAMES: [&str; 2] = ["documentSync", "assets"];
+
+/// 🚚️ [`Paint2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+pub const PAINT2D_SCENE_LANE_FIELDS: [&str; 2] = ["documentSyncJson", "assetsJson"];
+
+/// 🚚️ Reserved carrier key of each lane.
+pub const PAINT2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.paint2d.documentSync", "framework.scene.paint2d.assets"];
+
+/// 🚚️ Whether each lane's [`Paint2dScene`] field is an `Option<String>`.
+pub const PAINT2D_SCENE_LANE_OPTIONAL: [bool; 2] = [false, false];
+
+impl Paint2dSceneLane {
+    pub const ALL: [Self; 2] = [Self::DocumentSync, Self::Assets];
+
+    /// 🏷️ See [`PAINT2D_SCENE_LANE_NAMES`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn name(self) -> &'static str {
+        PAINT2D_SCENE_LANE_NAMES[self as usize]
+    }
+
+    /// 🏷️ See [`PAINT2D_SCENE_LANE_FIELDS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn field(self) -> &'static str {
+        PAINT2D_SCENE_LANE_FIELDS[self as usize]
+    }
+
+    /// 🪧️ See [`PAINT2D_SCENE_LANE_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        PAINT2D_SCENE_LANE_BODY_KEYS[self as usize]
+    }
+
+    /// 🏷️ See [`PAINT2D_SCENE_LANE_OPTIONAL`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn optional(self) -> bool {
+        PAINT2D_SCENE_LANE_OPTIONAL[self as usize]
+    }
+
+    /// 🔎️ Resolves a carrier root key back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
+    }
+
+    /// 🔎️ Resolves a lane wire name back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.name() == name)
+    }
+
+    /// 📤️ Removes this lane's payload from `scene`.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn take(self, scene: &mut Paint2dScene) -> Option<String> {
+        match self {
+            Self::DocumentSync => Some(std::mem::take(&mut scene.document_sync_json)),
+            Self::Assets => Some(std::mem::take(&mut scene.assets_json)),
+        }
+    }
+
+    /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`Paint2dSceneLane::take`].
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn put(self, scene: &mut Paint2dScene, payload: String) {
+        match self {
+            Self::DocumentSync => scene.document_sync_json = payload,
+            Self::Assets => scene.assets_json = payload,
+        }
+    }
 }
 
 impl ToValue for Paint2dScene {
@@ -1649,6 +1760,7 @@ impl ToValue for Paint2dScene {
         value_push(&mut entries, "brushOpacity", &self.brush_opacity);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push_option(&mut entries, "compositeViewportJson", &self.composite_viewport_json);
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
     }
 }
@@ -1667,6 +1779,7 @@ impl FromValue for Paint2dScene {
             brush_opacity: value_decode(&entries, "brushOpacity")?,
             view_mode: value_decode(&entries, "viewMode")?,
             composite_viewport_json: value_decode_option(&entries, "compositeViewportJson")?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })
     }
 }
@@ -1727,9 +1840,8 @@ pub struct VirtualFileSystemScene {
 }
 
 impl SceneDoc for VirtualFileSystemScene {
-    // 🧭️ `ui_contract`'s `SurfaceKind::VirtualFileSystem` wire tag was renamed `"virtualFileSystem"`
-    // (camelCase) → `"virtual-file-system"` (kebab-case, matching every sibling) by packet
-    // `ui-w4-core` — see that crate's own `🦀️surface.rs` header. This schema string tracks the rename.
+    // 🧭️ Kebab-case like every sibling tag — see `ui_contract::SurfaceKind`'s own header for the
+    // rename that retired the last camelCase spelling from the contract, this crate and the wgpu target.
     const SCHEMA: &'static str = "virtual-file-system@1";
 }
 
@@ -2280,7 +2392,7 @@ impl InkCanvasScene {
 impl ToValue for InkCanvasScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
-        value_push(&mut entries, "snapshotJson", &self.document_json);
+        value_push(&mut entries, "documentJson", &self.document_json);
         value_push(&mut entries, "selectionJson", &self.selection_json);
         value_push_option(&mut entries, "hoveredId", &self.hovered_id);
         value_push(&mut entries, "activeUtility", &self.active_utility);
@@ -2294,7 +2406,7 @@ impl FromValue for InkCanvasScene {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self {
-            document_json: value_decode(&entries, "snapshotJson")?,
+            document_json: value_decode(&entries, "documentJson")?,
             selection_json: value_decode_default(&entries, "selectionJson", ink_canvas_default_selection_json)?,
             hovered_id: value_decode_option(&entries, "hoveredId")?,
             active_utility: value_decode(&entries, "activeUtility")?,

@@ -52,6 +52,21 @@ export const TURN_SAMPLE_CAPACITY = 64;
  * the answer to {@link setTurnDiagnostics}. */
 export const TURN_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 
+/** @emoji 🩺️ The query parameter a stamped worker url carries the resolved preference on. 🪞️ The same
+ * name `🎭️actor/🩺️diagnostics/🟦️.ts`'s `SHARD_WORKER_DIAGNOSTICS_PARAM` stamps shard workers with
+ * (`🔬️engine-contract/🟦️.ts` asserts the two spell it the same); restated here because that module
+ * reads `localStorage` and this one is bundled into the frame worker, which reads none. It is the only
+ * channel that exists before the worker's first message, and the frame worker needs it that early: the
+ * per-frame `[DEBUG]` dumps inside the renderer wasm are armed before the first frame is built. */
+export const TURN_DIAGNOSTICS_PARAM = "diagnostics";
+
+/** @emoji 🩺️ Whether THIS worker realm's own url carries the diagnostics stamp. `undefined` when the
+ * url names nothing, which leaves the build-time switch in charge. */
+export function stampedTurnDiagnostics(search: string): boolean | undefined {
+  const stamped = new URLSearchParams(search).get(TURN_DIAGNOSTICS_PARAM);
+  return stamped === null ? undefined : diagnosticsArmed(stamped);
+}
+
 /** @emoji ⚖️ What one measured UI turn means for the surface that produced it.
  * `admitted` — inside the ceiling. `recorded-overrun` — one breach, counted, work continues.
  * `sustained-overrun` — {@link SUSTAINED_TURN_OVERRUN_TURNS} breaches in a row, so the cost is the

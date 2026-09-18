@@ -1,0 +1,238 @@
+//! ✅️ wgpu twin of the `🤖️AgentApprovals` element (`🟦️.tsx`, 160 lines) — the `os.agent.approvals`
+//! human-in-the-loop modal. It lists every parked approval request delivered by `🔗️AgentBridge`'s
+//! `approvalRequested` frames (capability, change summary, requested-by, risk) and offers the three
+//! decisions that go back as an `Approval` frame.
+//!
+//! 🪟️ The React original is a Radix `Dialog` that opens purely from `approvals.length > 0` and can
+//! be dismissed without deciding (a newly arrived approval re-opens it). This file owns the same
+//! open/dismiss rule plus the layout math; the paint and hit registration live in the shell's own
+//! immediate-mode chrome (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`, `render_agent_approvals_step`), the way
+//! every other wgpu overlay in that shell is drawn.
+//!
+//! 🎯️ `parse_approval_summary` is a straight port of the React file's own parser, including its
+//! documented reason for existing: the wire's `ApprovalRequested.summary` is ONE string (SSOT tag 3),
+//! so a richer producer JSON-encodes `{capabilityId, diffSummary, risk, requestedBy}` into it and a
+//! plain-text producer still renders as the diff summary rather than a blank dialog.
+
+use crate::agent_bridge::{agent_label, ApprovalDecision, PendingAgentApproval};
+use ui_wgpu::wgpu::{Locale, Rect, Rgba, Theme};
+
+//#region 🔖️ParseSummary
+/// ⚠️ How dangerous the requested capability is, as the producer declared it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ApprovalRisk {
+    Low,
+    Medium,
+    High,
+}
+
+impl ApprovalRisk {
+    fn from_wire(value: &str) -> Option<Self> {
+        match value {
+            "low" => Some(ApprovalRisk::Low),
+            "medium" => Some(ApprovalRisk::Medium),
+            "high" => Some(ApprovalRisk::High),
+            _ => None,
+        }
+    }
+
+    /// 🏷️ The `data-semio-agent-approval-risk` value the React twin stamps.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ApprovalRisk::Low => "low",
+            ApprovalRisk::Medium => "medium",
+            ApprovalRisk::High => "high",
+        }
+    }
+
+    /// 🎨️ Badge tint from shared theme tokens — the React twin's `sky`/`amber`/`red` classes are the
+    /// palette spellings of these three.
+    pub fn color(self, theme: &Theme) -> Rgba {
+        match self {
+            ApprovalRisk::Low => theme.accent,
+            ApprovalRisk::Medium => theme.warning,
+            ApprovalRisk::High => theme.error,
+        }
+    }
+
+    pub fn label(self, locale: Locale) -> String {
+        match self {
+            ApprovalRisk::Low => agent_label("Low", "Niedrig", locale),
+            ApprovalRisk::Medium => agent_label("Medium", "Mittel", locale),
+            ApprovalRisk::High => agent_label("High", "Hoch", locale),
+        }
+    }
+}
+
+/// 📄️ The four display fields a summary can carry.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ParsedApprovalSummary {
+    pub capability_id: Option<String>,
+    pub diff_summary: String,
+    pub risk: Option<ApprovalRisk>,
+    pub requested_by: Option<String>,
+}
+
+/// 🔍️ Parses the single wire `summary` string: a JSON object carrying at least one of
+/// `capabilityId`/`risk`/`requestedBy` yields the rich shape, anything else (including malformed
+/// JSON, an array, or a bare string) falls back to treating the whole value as the diff summary.
+pub fn parse_approval_summary(summary: &str) -> ParsedApprovalSummary {
+    let fallback = || ParsedApprovalSummary { capability_id: None, diff_summary: summary.to_string(), risk: None, requested_by: None };
+    let Ok(serde_json::Value::Object(value)) = serde_json::from_str::<serde_json::Value>(summary) else {
+        return fallback();
+    };
+    let capability_id = value.get("capabilityId").and_then(|value| value.as_str()).map(str::to_string);
+    let risk = value.get("risk").and_then(|value| value.as_str()).and_then(ApprovalRisk::from_wire);
+    let requested_by = value.get("requestedBy").and_then(|value| value.as_str()).map(str::to_string);
+    if capability_id.is_none() && risk.is_none() && requested_by.is_none() {
+        return fallback();
+    }
+    let diff_summary = value.get("diffSummary").and_then(|value| value.as_str()).map_or_else(|| summary.to_string(), str::to_string);
+    ParsedApprovalSummary { capability_id, diff_summary, risk, requested_by }
+}
+//#endregion 🔖️ParseSummary
+
+//#region 🌐️Labels
+pub fn approvals_title(locale: Locale) -> String {
+    agent_label("Agent Approvals", "Agent-Freigaben", locale)
+}
+
+pub fn approvals_description(locale: Locale) -> String {
+    agent_label("Review what the agent wants to do before it runs.", "Prüfe, was der Agent tun möchte, bevor es ausgeführt wird.", locale)
+}
+
+pub fn approvals_empty(locale: Locale) -> String {
+    agent_label("No pending approvals", "Keine ausstehenden Freigaben", locale)
+}
+
+pub fn approvals_capability_label(locale: Locale) -> String {
+    agent_label("Capability", "Fähigkeit", locale)
+}
+
+pub fn approvals_diff_label(locale: Locale) -> String {
+    agent_label("Change summary", "Änderungszusammenfassung", locale)
+}
+
+pub fn approvals_requested_by_label(locale: Locale) -> String {
+    agent_label("Requested by", "Angefragt von", locale)
+}
+
+pub fn approvals_risk_label(locale: Locale) -> String {
+    agent_label("Risk", "Risiko", locale)
+}
+
+/// 🔘️ Button copy per decision — `Deny` / `Approve Once` / `Approve for Session`.
+pub fn approvals_decision_label(decision: ApprovalDecision, locale: Locale) -> String {
+    match decision {
+        ApprovalDecision::Deny => agent_label("Deny", "Ablehnen", locale),
+        ApprovalDecision::Once => agent_label("Approve Once", "Einmal genehmigen", locale),
+        ApprovalDecision::Session => agent_label("Approve for Session", "Für Sitzung genehmigen", locale),
+    }
+}
+//#endregion 🌐️Labels
+
+//#region 🔖️Layout
+/// 📐️ `max-w-lg` — the React dialog's own width cap.
+pub const APPROVALS_MODAL_WIDTH: f32 = 512.0;
+
+/// 📐️ `max-h-96` — the React list's own scroll cap.
+pub const APPROVALS_LIST_MAX_HEIGHT: f32 = 384.0;
+
+/// 📐️ Decision-button width; three of them sit on one row under each request.
+pub const APPROVALS_DECISION_WIDTH: f32 = 150.0;
+
+/// 🆔️ Control-id prefix every approval control registers under.
+pub const APPROVALS_CONTROL_PREFIX: &str = "shell.agent.approval";
+
+/// 🆔️ The dialog's own dismiss control (`showCloseButton` on the React dialog).
+pub const APPROVALS_CLOSE_CONTROL_ID: &str = "shell.agent.approvals.close";
+
+/// 🆔️ The control id one decision button on one request registers under — the id the shell's hit
+/// handler parses back into `(approval_id, decision)`.
+pub fn approval_decision_control_id(approval_id: &str, decision: ApprovalDecision) -> String {
+    format!("{APPROVALS_CONTROL_PREFIX}.{approval_id}.{}", decision.control_suffix())
+}
+
+/// 🔎️ The inverse of [`approval_decision_control_id`] — `None` for any id that is not one of this
+/// modal's decision buttons.
+pub fn parse_approval_decision_control_id(control_id: &str) -> Option<(String, ApprovalDecision)> {
+    let rest = control_id.strip_prefix(APPROVALS_CONTROL_PREFIX)?.strip_prefix('.')?;
+    let (approval_id, suffix) = rest.rsplit_once('.')?;
+    let decision = ApprovalDecision::ALL.into_iter().find(|decision| decision.control_suffix() == suffix)?;
+    (!approval_id.is_empty()).then(|| (approval_id.to_string(), decision))
+}
+
+/// 📏️ How many text lines one request occupies: the change summary always, plus capability,
+/// requested-by and risk when the producer supplied them.
+pub fn approval_row_line_count(parsed: &ParsedApprovalSummary) -> usize {
+    1 + usize::from(parsed.capability_id.is_some()) + usize::from(parsed.requested_by.is_some()) + usize::from(parsed.risk.is_some())
+}
+
+/// 📏️ One request's total height: its text lines, the decision-button row, and the `py-3` gutter
+/// the React `<li>` carries.
+pub fn approval_row_height(parsed: &ParsedApprovalSummary, theme: &Theme) -> f32 {
+    let lines = approval_row_line_count(parsed) as f32 * (theme.font_size_small * 1.6);
+    lines + theme.gap_standard + theme.control_height + theme.padding_standard
+}
+
+/// 📐️ The modal itself, centred, sized to its content and clamped so it never exceeds the
+/// viewport — header, list (capped at [`APPROVALS_LIST_MAX_HEIGHT`]) and footer gutter.
+pub fn approvals_modal_rect(width: f32, height: f32, row_heights: &[f32], theme: &Theme) -> Rect {
+    let header = theme.padding_standard + theme.font_size_body * 1.6 + theme.font_size_small * 1.6;
+    let list: f32 = row_heights.iter().sum::<f32>().max(theme.font_size_small * 2.0).min(APPROVALS_LIST_MAX_HEIGHT);
+    let modal_h = (header + list + theme.padding_standard * 2.0).min((height - theme.padding_standard * 2.0).max(1.0));
+    let modal_w = APPROVALS_MODAL_WIDTH.min((width - theme.padding_standard * 2.0).max(1.0));
+    Rect::new((width - modal_w) * 0.5, (height - modal_h) * 0.5, modal_w, modal_h)
+}
+
+/// 📐️ Where the scrollable request list starts inside the modal.
+pub fn approvals_list_rect(modal: Rect, theme: &Theme) -> Rect {
+    let header = theme.padding_standard + theme.font_size_body * 1.6 + theme.font_size_small * 1.6;
+    Rect::new(modal.x + theme.padding_standard, modal.y + header, (modal.w - theme.padding_standard * 2.0).max(1.0), (modal.h - header - theme.padding_standard).max(1.0))
+}
+
+/// 📐️ The three decision buttons on one request row, left to right: deny, once, session.
+pub fn approval_decision_rects(row: Rect, theme: &Theme) -> [(ApprovalDecision, Rect); 3] {
+    let y = row.y + row.h - theme.padding_standard * 0.5 - theme.control_height;
+    let step = APPROVALS_DECISION_WIDTH + theme.gap_standard;
+    [
+        (ApprovalDecision::Deny, Rect::new(row.x, y, APPROVALS_DECISION_WIDTH, theme.control_height)),
+        (ApprovalDecision::Once, Rect::new(row.x + step, y, APPROVALS_DECISION_WIDTH, theme.control_height)),
+        (ApprovalDecision::Session, Rect::new(row.x + step * 2.0, y, APPROVALS_DECISION_WIDTH, theme.control_height)),
+    ]
+}
+//#endregion 🔖️Layout
+
+//#region 🔖️Model
+/// 🪟️ The dialog's open/dismiss state — the wgpu half of React's `useState(dismissed)` plus the
+/// `useEffect` that clears it whenever a new request arrives.
+#[derive(Clone, Debug, Default)]
+pub struct AgentApprovalsModel {
+    dismissed: bool,
+    last_seen_count: usize,
+}
+
+impl AgentApprovalsModel {
+    /// 🔔️ Call once per frame with the live queue: a request count that grew since the last frame
+    /// re-opens a dismissed dialog, exactly as the React `useEffect` on `approvals.length` does.
+    pub fn observe(&mut self, approvals: &[PendingAgentApproval]) {
+        if approvals.len() > self.last_seen_count {
+            self.dismissed = false;
+        }
+        self.last_seen_count = approvals.len();
+    }
+
+    /// 👁️ Open purely when something is pending and the human has not dismissed it.
+    pub fn is_open(&self, approvals: &[PendingAgentApproval]) -> bool {
+        !approvals.is_empty() && !self.dismissed
+    }
+
+    pub fn dismiss(&mut self) {
+        self.dismissed = true;
+    }
+}
+//#endregion 🔖️Model
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
+mod tests;

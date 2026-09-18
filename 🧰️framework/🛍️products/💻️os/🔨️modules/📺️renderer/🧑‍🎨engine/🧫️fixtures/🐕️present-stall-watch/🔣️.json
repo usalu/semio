@@ -1,5 +1,5 @@
 {
-  "why": "When the wgpu host's presentation ladder is declared STALLED, and what it does about it. `AppPresenter::admit_next_frame` refuses to build a frame while `has_pending_presentation()`, so a presentation cursor that stops advancing stops the whole host: no frame transaction, no runtime mailbox pump, no world snapshot apply, no retained document ingress, no accessibility projection. Measured on 6118 as `os_host frame gate blocked=true pending=true phase=Some(Engine)` held from t≈85 s to t≈200 s and as `phase=Some(Aborted) retained-fault=true` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4, `📓️wgpu-host-settle-pump-2026-09-14.md` §7). The watchdog counts CONSECUTIVE non-advancing `Pending` answers over the cursor's own progress signature — phase, engine packet index, upload page index, and whether a GPU cursor is held — so a legitimately long presentation resets on every index it moves and only a frozen cursor accumulates. On the ceiling step it names the holder once and aborts the presentation, which is the one action that reopens the gate without touching a GPU owner. The signature also carries the GPU present cursor's OWN (phase, command, glass command, blur mip): `AppPresentPhase::Render` holds one `gpu_cursor` for a whole composite pass, so without the inner four the outer shape is frozen for as many steps as the scene has commands and the watchdog aborts a healthy present — measured on 6118 as `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY example boot.",
+  "why": "When the wgpu host's presentation ladder is declared STALLED, and what it does about it. `AppPresenter::admit_next_frame` refuses to build a frame while `has_pending_presentation()`, so a presentation cursor that stops advancing stops the whole host: no frame transaction, no runtime mailbox pump, no world snapshot apply, no retained document ingress, no accessibility projection. Measured on 6118 as `os_host frame gate blocked=true pending=true phase=Some(Engine)` held from t≈85 s to t≈200 s and as `phase=Some(Aborted) retained-fault=true` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4, `📓️wgpu-host-settle-pump-2026-09-14.md` §7). The watchdog counts CONSECUTIVE non-advancing `Pending` answers over the cursor's own progress signature — phase, engine packet index, upload page index, and whether a GPU cursor is held — so a legitimately long presentation resets on every index it moves and only a frozen cursor accumulates. On the ceiling step it names the holder once and aborts the presentation, which is the one action that reopens the gate without touching a GPU owner. The signature also carries the GPU present cursor's OWN (phase, command, glass command, glass-foreground command, blur mip): `AppPresentPhase::Render` holds one `gpu_cursor` for a whole composite pass, so without the inner five the outer shape is frozen for as many steps as the scene has commands and the watchdog aborts a healthy present — measured on 6118 as `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY example boot. EVERY cursor the ladder walks has to be in there: the `ForegroundCommands` walk was added without its index and quarantined the surface 13 770 pages into a perfectly healthy present (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).",
   "ceilingSteps": 4096,
   "cases": [
     {
@@ -56,6 +56,7 @@
             2,
             0,
             0,
+            0,
             1
           ]
         ],
@@ -67,6 +68,7 @@
             2,
             1,
             0,
+            0,
             1
           ]
         ],
@@ -78,6 +80,7 @@
             2,
             2,
             0,
+            0,
             1
           ]
         ],
@@ -88,6 +91,7 @@
           [
             2,
             3,
+            0,
             0,
             1
           ]
@@ -121,13 +125,14 @@
             10,
             7,
             2,
+            0,
             1
           ]
         ]
       ],
       "repeatEachFor": 4097,
       "expectReports": 1,
-      "expectShape": "phase=Aborted engine=3 upload=0 gpu-cursor=Some((10, 7, 2, 1))"
+      "expectShape": "phase=Aborted engine=3 upload=0 gpu-cursor=Some((10, 7, 2, 0, 1))"
     },
     {
       "why": "A GPU cursor that itself freezes mid-composite IS a stall, and the inner four are what name it.",
@@ -140,13 +145,69 @@
             2,
             9,
             0,
+            0,
             1
           ]
         ]
       ],
       "repeatEachFor": 4097,
       "expectReports": 1,
-      "expectShape": "phase=Render engine=1 upload=1 gpu-cursor=Some((2, 9, 0, 1))"
+      "expectShape": "phase=Render engine=1 upload=1 gpu-cursor=Some((2, 9, 0, 0, 1))"
+    },
+    {
+      "why": "The glass-foreground walk: `ForegroundCommands` (phase 6) re-walks every measured command page to re-encode the content a glass region carries on its face, and moves ONLY its own index. Without that index in the signature this healthy walk is reported as a stall and the surface is quarantined — measured on 6213 as `worker-present-failed: presentation stalled: phase=Render engine=0 upload=1 gpu-cursor=Some((6, 13770, 13770, 5))` on every boot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).",
+      "signatures": [
+        [
+          "Render",
+          0,
+          1,
+          [
+            6,
+            13770,
+            13770,
+            0,
+            5
+          ]
+        ],
+        [
+          "Render",
+          0,
+          1,
+          [
+            6,
+            13770,
+            13770,
+            1,
+            5
+          ]
+        ],
+        [
+          "Render",
+          0,
+          1,
+          [
+            6,
+            13770,
+            13770,
+            2,
+            5
+          ]
+        ],
+        [
+          "Render",
+          0,
+          1,
+          [
+            6,
+            13770,
+            13770,
+            3,
+            5
+          ]
+        ]
+      ],
+      "repeatEachFor": 4095,
+      "expectReports": 0
     }
   ]
 }

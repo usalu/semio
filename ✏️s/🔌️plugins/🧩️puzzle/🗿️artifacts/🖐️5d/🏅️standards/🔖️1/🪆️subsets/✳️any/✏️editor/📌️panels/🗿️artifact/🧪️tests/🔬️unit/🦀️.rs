@@ -99,6 +99,13 @@ fn windows_for(requests: Vec<semio_framework_plugin::TreeWindowRequest>) -> semi
     semio_framework_plugin::ViewModel { tree_windows: requests, ..Default::default() }
 }
 
+/// 🔑️ The window PATH of a container nested inside a section — enclosing container keys, outermost
+/// first, then its own key, joined by `TREE_WINDOW_PATH_SEPARATOR`. A nested container is addressed by
+/// this, never by its bare node key.
+fn nested_key(section: &str, node_key: &str) -> String {
+    format!("{section}{}{node_key}", ui::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 /// 🪟️ (a) An oversized document: every container stamps its FULL extent and materialises no more
 /// than its slice, and the body carries neither a `.more` key nor a `+N` label.
 #[test]
@@ -147,7 +154,7 @@ fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_PARTS, SCALE_GRIPS, SCALE_FASTENERS);
     let (offset, rows) = (50u32, 6u32);
-    let view = windows_for(vec![request(PARTS_SECTION, Some(true), offset, rows), request("part-52", Some(true), 10, 4), request(FASTENERS_SECTION, Some(true), 3, 2)]);
+    let view = windows_for(vec![request(PARTS_SECTION, Some(true), offset, rows), request(&nested_key(PARTS_SECTION, "part-52"), Some(true), 10, 4), request(FASTENERS_SECTION, Some(true), 3, 2)]);
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a windowed outliner must be admitted");
     let parts = child_of(&tree, PARTS_SECTION);
@@ -170,7 +177,7 @@ fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
 fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
     drain_retired_ui_owners();
     let scene = scaled_scene(8, 4, 3);
-    let view = windows_for(vec![request(PARTS_SECTION, Some(true), 0, 8), request("part-0", Some(true), 0, 4), request(FASTENERS_SECTION, Some(true), 0, 3)]);
+    let view = windows_for(vec![request(PARTS_SECTION, Some(true), 0, 8), request(&nested_key(PARTS_SECTION, "part-0"), Some(true), 0, 4), request(FASTENERS_SECTION, Some(true), 0, 3)]);
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a domain-bound outliner must be admitted");
     assert_eq!(tree.bindings.len(), 1, "the tree root carries exactly one interactionSelect binding");
@@ -220,7 +227,7 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     let scene = scaled_scene(parts_len, grips_len, fasteners_len);
     let mut requests = vec![request(PARTS_SECTION, Some(true), 0, 512), request(FASTENERS_SECTION, Some(true), 0, 512)];
     // 🔑️ A nested container is addressed by its window PATH: the parts section, then the part row.
-    requests.extend((0..24).map(|index| request(&format!("{PARTS_SECTION}{}part-{index}", ui::TREE_WINDOW_PATH_SEPARATOR), Some(true), 0, 512)));
+    requests.extend((0..24).map(|index| request(&nested_key(PARTS_SECTION, &format!("part-{index}")), Some(true), 0, 512)));
     let view = windows_for(requests);
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a fully open oversized outliner must be admitted");

@@ -120,12 +120,20 @@ fn resolve_ui_image_decodes_plain_utf8_svg_data_url() {
     assert_eq!(size, Some((40, 20)));
 }
 
+/// 🧯️ Saturates the raster ledger FROM WHEREVER IT IS rather than demanding all 256 slots: the
+/// producer ledger is process-wide, so every neighbouring test that resolved a ui image still holds
+/// one. Demanding the full capacity made this law `expect`-panic mid-loop, and the panic then leaked
+/// the reservations it had already taken — which is why the whole inline-svg family failed in-suite
+/// and passed alone (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn inline_svg_saturation_rejects_before_parse_or_source_copy() {
     let mut reservations = Vec::with_capacity(256);
     for index in 0..256 {
-        reservations.push(ui_wgpu::wgpu::PreparedRasterReservation::try_reserve(format!("svg-held-{index}")).expect("fixed process raster slot"));
+        let Ok(reservation) = ui_wgpu::wgpu::PreparedRasterReservation::try_reserve(format!("svg-held-{index}")) else { break };
+        reservations.push(reservation);
     }
+    assert!(!reservations.is_empty(), "the fixed raster ledger admitted nothing at all — the saturation law would pass vacuously");
+    assert!(ui_wgpu::wgpu::PreparedRasterReservation::try_reserve("svg-held-plus-one".to_string()).is_err(), "the ledger is saturated once it refuses one more");
     INLINE_SVG_PARSE_CALLS.with(|calls| calls.set(0));
     let src = format!("data:image/svg+xml,{TEST_SVG}");
     assert_eq!(resolve_ui_image("svg-saturated", &src), (None, None));
@@ -194,3 +202,38 @@ fn object_contain_rect_letterboxes_and_centers_narrower_content() {
     assert!(fit.x > 0.0, "narrower-than-bounds content should be horizontally centered");
 }
 //#endregion UiImageLoadingTests
+
+/// ⚖️ Law: the PRODUCTION paint path renders an inline `data:` image. `render_ui_image_step`'s
+/// phase 2 answered `ScenePaintStep::Fault` for every `src` starting with `data:`, and
+/// `resolve_ui_image`/`resolve_ui_image_svg`/`resolve_ui_image_url` were ALL `#[cfg(test)]` — so
+/// `Component::Image` with an inline bitmap faulted the whole paint step on browser and native
+/// alike, while React's `ImageView` is a plain `<img src>` the browser decodes natively.
+#[test]
+fn render_ui_image_step_paints_an_inline_data_url_instead_of_faulting() {
+    use base64::Engine;
+    let src = format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(tiny_png_bytes(3, 2, 1)));
+    let image = ui_wgpu::wgpu::UiImageNode { id: "inline-data-image".into(), src, alt: None, presence: ui_wgpu::wgpu::UiPresence::default(), menu: None };
+    let bounds = Rect::new(0.0, 0.0, 80.0, 40.0);
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut scroll = std::collections::HashMap::new();
+    let mut collapsed = std::collections::HashMap::new();
+    let mut selects = std::collections::HashMap::new();
+    let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        for _ in 0..4096 {
+            match render_ui_image_step(&image, bounds, &mut ctx, &mut cursor) {
+                ui_wgpu::wgpu::ScenePaintStep::Pending => {}
+                ui_wgpu::wgpu::ScenePaintStep::Complete => break,
+                ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("an inline data:image/png source must paint, not fault"),
+            }
+        }
+    }
+    let rasters: Vec<String> = draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).map(|(key, _)| key.clone()).collect();
+    assert!(rasters.iter().any(|key| key.contains("inline-data-image")), "the decoded inline bitmap must be drawn as a raster quad keyed by its node id, got {rasters:?}");
+    let size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get("inline-data-image").copied());
+    assert_eq!(size, Some((4, 2)), "the natural pixel size comes from the decoded bitmap, so object-contain matches React's intrinsic aspect ratio");
+}

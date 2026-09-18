@@ -3,16 +3,11 @@ use super::*;
 use crate::editor::space_index::config::SpaceIndexMember;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
+/// 🧾️ A windowed container's children are `BuiltChildren`, which refuses a direct `serde` walk
+/// ("requires retained page transport"), so the body is projected node by node the way every other
+/// window law in this fleet reads it — `project_and_retire_fixture_tree` also retires the tree.
 fn wire_and_retire(node: semio_framework_plugin::BuiltNode) -> String {
-    let wire = serde_json::to_string(&node);
-    let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
-    while !retirement.terminal_is_empty() {
-        let step = retirement.close_step(1, 4096).expect("members fixture tree remains valid");
-        if !step.progressed {
-            std::thread::yield_now();
-        }
-    }
-    wire.expect("members fixture wire")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("members fixture wire")
 }
 
 #[semio_framework_async_macros::async_test]

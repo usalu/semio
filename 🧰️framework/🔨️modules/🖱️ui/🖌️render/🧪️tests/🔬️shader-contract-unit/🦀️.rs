@@ -151,3 +151,57 @@ fn vertex_attribute_offsets_fit_declared_stride() {
         }
     }
 }
+
+//#region ⚖️WgpuTargetShaderAgreement
+/// 📄️ The wgpu target's own `🎨️shaders/🦀️.rs` verbatim. `ui_render` must NOT depend on
+/// `semio-framework-ui` (the dependency runs the other way for every other seam), so the law below
+/// reads that crate's source text instead of its constants — the only way to tie two copies of the
+/// same WGSL together without inverting the crate graph.
+const WGPU_TARGET_SHADERS_SOURCE: &str = include_str!("../../../🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+
+/// ✂️ Lifts `pub const <name>: &str = r#"…"#;` out of Rust source text.
+fn raw_string_const(source: &str, name: &str) -> Option<String> {
+    let head = format!("pub const {name}: &str = r#\"");
+    let start = source.find(&head)? + head.len();
+    let rest = &source[start..];
+    let end = rest.find("\"#;")?;
+    Some(rest[..end].to_string())
+}
+
+/// ⚖️ Law: the WGSL for the world-3d mesh family exists TWICE — `ui_wgpu::wgpu::shaders`
+/// (what the wgpu/vello renderer compiles) and this crate's `shader_contract` (what the webgpu,
+/// d3d12, metal and vulkan backends compile, plus the HLSL/MSL mirrors that transcribe it). The two
+/// must be byte-identical: W1f added per-vertex colour to the wgpu copy alone, and terrain rendered
+/// untinted on all four other backends with nothing failing. Whoever edits one edits both.
+#[test]
+fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
+    let target = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_SHADER").expect("wgpu target declares WORLD3D_SHADER as a raw string const");
+    assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    let target_lines = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
+    assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+}
+
+/// ⚖️ Law: every per-vertex channel the world-3d WGSL declares has a matching vertex attribute in
+/// both world-3d pipelines, so a shader that gains a `@location` cannot ship without the layout
+/// that feeds it (the exact shape of the W1f divergence: `@location(2) color` present, stride 24).
+#[test]
+fn world3d_vertex_locations_are_all_fed_by_the_declared_vertex_buffers() {
+    let declared: Vec<u32> = WORLD3D_SHADER
+        .lines()
+        .skip_while(|line| !line.starts_with("struct VertexInput"))
+        .skip(1)
+        .take_while(|line| !line.starts_with('}'))
+        .filter_map(|line| line.trim().strip_prefix("@location(")?.split(')').next()?.parse().ok())
+        .collect();
+    assert_eq!(declared, vec![0, 1, 2], "world-3d VertexInput channels changed — update the vertex buffers and both mirrors");
+    for pipeline in [&WORLD3D_OPAQUE_PIPELINE, &WORLD3D_TRANSLUCENT_PIPELINE] {
+        for location in &declared {
+            assert!(
+                pipeline.vertex_buffers.iter().any(|buffer| matches!(buffer.step_mode, VertexStepMode::Vertex) && buffer.attributes.iter().any(|attribute| attribute.shader_location == *location)),
+                "pipeline '{}' declares no per-vertex attribute for @location({location})",
+                pipeline.label
+            );
+        }
+    }
+}
+//#endregion ⚖️WgpuTargetShaderAgreement

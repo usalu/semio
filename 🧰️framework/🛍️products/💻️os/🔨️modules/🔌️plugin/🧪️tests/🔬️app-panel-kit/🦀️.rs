@@ -265,11 +265,7 @@ mod panel_kit_tests {
         let spelling = format!("TREE_WINDOW_BODY_NODE_BUDGET = {TREE_WINDOW_BODY_NODE_BUDGET};");
         assert!(source.contains(&spelling), "{} must declare `{spelling}` on one line — the host's request cap and this ledger are one budget", tsx.display());
         let separator = format!("TREE_WINDOW_PATH_SEPARATOR = \"{TREE_WINDOW_PATH_SEPARATOR}\";");
-        assert!(
-            source.contains(&separator) || source.contains("TREE_WINDOW_PATH_SEPARATOR = \"\\u001f\";"),
-            "{} must declare TREE_WINDOW_PATH_SEPARATOR as U+001F on one line — a path the host joins is the string the guest addresses containers by",
-            tsx.display()
-        );
+        assert!(source.contains(&separator), "{} must declare `{separator}` on one line — a path the host joins is the string the guest addresses containers by", tsx.display());
     }
 
     /// 🧾️ The cost model, exactly: a body costs `1 + rows` per windowed container, every node charged
@@ -415,6 +411,38 @@ mod panel_kit_tests {
         assert!(un_ledgered <= TREE_WINDOW_FIXED_NODE_HEADROOM, "{un_ledgered} > {TREE_WINDOW_FIXED_NODE_HEADROOM}");
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "a fully spent ledger beside the fattest fixed block still reconciles: {} > {UI_DOCUMENT_NODES}", body_nodes(&body));
         assert_eq!(windows.nodes_remaining(), 0, "the windowed list took the whole ledger and not one record more");
+    }
+
+    /// 🔑️ A window path crosses the process boundary as a view-context identifier, so the separator
+    /// must be PRINTABLE: a C0 control made every refresh, action and pick carrying a nested path throw
+    /// `view context: invalid identifier`. And a key that already contains the separator would make its
+    /// own path ambiguous, so it is refused at assembly.
+    #[semio_framework_async_macros::async_test]
+    async fn a_window_path_is_a_printable_view_context_identifier() {
+        assert_eq!(TREE_WINDOW_PATH_SEPARATOR, "\u{241f}", "U+241F SYMBOL FOR UNIT SEPARATOR, not the C0 control it depicts");
+        assert!(!TREE_WINDOW_PATH_SEPARATOR.chars().any(|glyph| glyph.is_control()), "a view context refuses any identifier carrying a control code point");
+        let entries = window_entries(4);
+        let windows = TreeWindows::unhosted();
+        let bad = format!("ns{TREE_WINDOW_PATH_SEPARATOR}rows");
+        let error = tree_window_section(&windows, &bad, window_label(), true, &entries, window_row).expect_err("a key carrying the separator is refused");
+        assert_eq!(error.code, "ui.tree-window.separator-in-key");
+        let Ok(item) = ui::tree_item(window_label()).try_id("ns.item") else { panic!("bounded fixture") };
+        assert_eq!(tree_window_item(&windows, item, &bad, true, &entries, window_row).expect_err("nested containers too").code, "ui.tree-window.separator-in-key");
+    }
+
+    /// 🔑️ A path over the view context's 256-code-point identifier ceiling is one the host never files,
+    /// so that container renders as UNREQUESTED — author default plus the shared first-paint budget —
+    /// rather than losing its window or faulting.
+    #[semio_framework_async_macros::async_test]
+    async fn a_path_the_host_cannot_send_renders_as_an_unrequested_container() {
+        let entries = window_entries(30);
+        let long = "d".repeat(300);
+        let view = ViewModel { tree_viewport_rows: Some(12), ..ViewModel::default() };
+        let windows = TreeWindows::for_body(&view, "body");
+        let section = tree_window_section(&windows, &long, window_label(), true, &entries, window_row).expect("an unsendable path still assembles");
+        assert!(long.chars().count() > 256, "the fixture is past the view-context identifier ceiling");
+        assert_eq!(section.children.len(), 12, "it takes the shared first-paint budget, exactly as a container the host has never seen");
+        assert_eq!(section_window(&section), Some(TreeWindow { total: 30, offset: 0 }), "and still publishes its full extent");
     }
 
     /// 🔑️ The host keys open state, geometry and windows by the container's window PATH, so a body

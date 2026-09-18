@@ -95,6 +95,20 @@ pub fn resolve_mesh_asset(url: &str) -> Result<&'static MeshAsset, String> {
     catalog.as_ref().map_err(Clone::clone)?.iter().find(|entry| entry.url == url).ok_or_else(|| format!("Unknown mesh asset: {url}"))
 }
 
+/// 🌐️ Rewrites only the mesh namespace at the transport boundary; other asset domains retain
+/// ownership — the Rust twin of `meshAssetTransportUrl` in `🥽️mesh/🟦️.ts`, which every host applies
+/// before handing a `/mesh/…` public id to a loader. An unknown id is returned unchanged so the
+/// loader reports the miss instead of this resolver silently inventing a filename.
+pub fn mesh_asset_transport_url(url: &str) -> String {
+    if !url.starts_with("/mesh/") {
+        return url.to_string();
+    }
+    match resolve_mesh_asset(url) {
+        Ok(asset) => format!("/mesh/{}", asset.path),
+        Err(_) => url.to_string(),
+    }
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

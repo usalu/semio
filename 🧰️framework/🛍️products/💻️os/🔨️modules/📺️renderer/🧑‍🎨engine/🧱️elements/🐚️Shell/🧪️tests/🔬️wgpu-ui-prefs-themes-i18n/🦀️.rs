@@ -182,7 +182,11 @@ fn resolve_theme_for_ids_semio_and_mono_differ() {
     assert_eq!(semio_dark.background, plain_dark.background);
     let mono_dark = resolve_theme_for_ids("mono", "dark");
     assert_ne!(mono_dark.background, semio_dark.background);
-    assert_eq!(mono_dark.background, Rgba::from_srgb8(25, 25, 25, 255));
+    // ⚫️ Since ticket 26/09/17 packet W2k mono is the ui target's own `Theme::mono`, resolved from the
+    // GENERATED `CHROME_MONO_*` palettes instead of 20 hand-written `Rgba::from_srgb8` literals in
+    // this crate — so its floor is mono's `chrome.base`, not the authored `canvas` the hand-port read.
+    assert_eq!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(true).background);
+    assert_ne!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(false).background, "both appearances resolve");
     // Metrics are shared with the base theme (mono only recolors chrome paints).
     assert_eq!(mono_dark.navbar_height, semio_dark.navbar_height);
 }

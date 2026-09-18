@@ -297,7 +297,9 @@ impl GpuResources {
     }
 
     /// 🧊️ Interleaves `positions`/`normals` into `World3dVertex`; a short `normals` (or none) pads
-    /// with `[0,1,0]`, matching `MeshGpuTable::ensure_mesh`'s own `unwrap_or` fallback.
+    /// with `[0,1,0]`, matching `MeshGpuTable::ensure_mesh`'s own `unwrap_or` fallback. Per-vertex
+    /// colour has no source on this path, so every vertex carries the identity white the shader
+    /// multiplies the instance tint by.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_mesh(&mut self, device: &wgpu::Device, id: MeshId, positions: &[f32], normals: &[f32], indices: &[u32]) {
         let vertex_count = positions.len() / 3;
@@ -305,7 +307,7 @@ impl GpuResources {
         for index in 0..vertex_count {
             let position = [positions[index * 3], positions[index * 3 + 1], positions[index * 3 + 2]];
             let normal = [normals.get(index * 3).copied().unwrap_or(0.0), normals.get(index * 3 + 1).copied().unwrap_or(1.0), normals.get(index * 3 + 2).copied().unwrap_or(0.0)];
-            vertices.push(World3dVertex { position, normal });
+            vertices.push(World3dVertex { position, normal, color: [1.0, 1.0, 1.0, 1.0] });
         }
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_vertices"), contents: bytemuck::cast_slice(&vertices), usage: wgpu::BufferUsages::VERTEX });
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_indices"), contents: bytemuck::cast_slice(indices), usage: wgpu::BufferUsages::INDEX });
@@ -313,13 +315,16 @@ impl GpuResources {
     }
 }
 
-/// 🧊️ Mirrors `WORLD3D_SHADER`'s per-vertex `VertexInput { position, normal }` — the GPU-side vertex
-/// layout `crate::pipelines`'s `WORLD3D_OPAQUE_PIPELINE`/`WORLD3D_TRANSLUCENT_PIPELINE` declare.
+/// 🧊️ Mirrors `WORLD3D_SHADER`'s per-vertex `VertexInput { position, normal, color }` — the
+/// GPU-side vertex layout `crate::pipelines`'s `WORLD3D_OPAQUE_PIPELINE`/
+/// `WORLD3D_TRANSLUCENT_PIPELINE` declare, and the same 40-byte record
+/// `ui_wgpu::wgpu::draw::World3dVertex` uploads, so terrain tints identically on both stacks.
 #[repr(C)]
 #[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct World3dVertex {
     position: [f32; 3],
     normal: [f32; 3],
+    color: [f32; 4],
 }
 
 //#endregion 🗄️GpuResources

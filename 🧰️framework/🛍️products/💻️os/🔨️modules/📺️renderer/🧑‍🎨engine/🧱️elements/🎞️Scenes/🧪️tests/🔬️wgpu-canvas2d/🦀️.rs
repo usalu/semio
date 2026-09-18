@@ -43,7 +43,7 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     let vertex_colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).map(|v| v.color).collect();
@@ -52,6 +52,26 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     assert!(vertex_colors.contains(&[ring.r, ring.g, ring.b, ring.a]), "expected the crisp amber ring color among vertices, got {vertex_colors:?}");
     assert!(vertex_colors.contains(&[glow.r, glow.g, glow.b, glow.a]), "expected the soft amber glow color among vertices, got {vertex_colors:?}");
     assert!(!vertex_colors.contains(&[theme.accent.r, theme.accent.g, theme.accent.b, theme.accent.a]), "the selection ring must no longer use theme.accent (the app's red/crimson token), got {vertex_colors:?}");
+}
+
+/// 🫙️ An empty layer list paints `"Empty canvas"`, the literal `canvas-2d-host.tsx`'s `renderFrame`
+/// fills when `layers.length === 0` — the grid/checkerboard chrome pushes no glyphs, so the glyph
+/// instance count IS the label.
+#[test]
+fn empty_layer_list_paints_the_react_empty_canvas_label() {
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = Theme::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_canvas_2d(&canvas_scene("empty-canvas-label", "[]".to_string()), Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+    }
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
+    assert_eq!(glyphs, CANVAS_2D_EMPTY_LABEL.chars().count(), "an empty canvas paints exactly the label React paints, got {glyphs} glyphs");
 }
 
 /// 🕒️ `scene_camera_action`'s exact key names — `{surfaceId, camera: {x, y, zoom}}`, matching
@@ -89,8 +109,13 @@ fn canvas2d_wheel_schedules_a_settled_camera_dispatch_without_firing_immediately
 
 /// 🕒️ A Canvas2d pan-drag (`SceneDragMode::PanViewport`) gets the identical settle-then-dispatch
 /// treatment as wheel-zoom — same deadline map, same sweep.
+///
+/// 🧹️ The settle map is process-wide and the sweep drains EVERY surface's deadline, so this law
+/// clears it first; otherwise a neighbouring scene's armed camera is counted here
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn canvas2d_pan_drag_schedules_a_settled_camera_dispatch() {
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
     let surface_id = "pan-settle-canvas2d";
     let node = canvas_scene(surface_id, "[]".to_string());
     mutate_scene_state(surface_id, |state| {

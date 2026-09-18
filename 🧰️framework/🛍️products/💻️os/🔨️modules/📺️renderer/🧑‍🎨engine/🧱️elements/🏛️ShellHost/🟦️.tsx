@@ -2671,28 +2671,21 @@ function FrameworkOsShellInner({
       const owner = `cold:${crypto.randomUUID()}`;
       const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
       let loaded = false;
-      console.log("[DEBUG] loadDocumentArchive cold", owner, unbound());
-      try { await lane.replace(owner, unbound, async () => { console.log("[DEBUG] loadDocumentArchive cold lane entered", unbound()); if (unbound()) { await load(instanceId, archive); loaded = unbound(); console.log("[DEBUG] loadDocumentArchive cold guest loaded", loaded); } }); }
+      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive); loaded = unbound(); } }); }
       finally { await lane.close(owner); }
       return loaded;
     }
     const [runtimeKey, entry] = owned;
-    console.log("[DEBUG] loadDocumentArchive owned", runtimeKey, entry.port !== null);
     const retirement = entry.port?.retire();
     void retirement?.catch(() => {});
     entry.port = null;
     return entry.replacements.replace(archive, async (candidate, latest) => {
       const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
-      console.log("[DEBUG] loadDocumentArchive replacement turn", exact());
       await lane.replace(entry.clientInstanceId, exact, async () => {
-        console.log("[DEBUG] loadDocumentArchive lane entered");
         await retirement;
-        console.log("[DEBUG] loadDocumentArchive port retired", exact());
         if (!exact()) return;
         await load(instanceId, candidate);
-        console.log("[DEBUG] loadDocumentArchive guest loaded", exact());
         if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
-        console.log("[DEBUG] loadDocumentArchive backbone bound");
       });
     });
   }, [bindDocumentBackbone, documentAttachmentLane]);
@@ -4221,7 +4214,7 @@ function FrameworkOsShellInner({
   /** ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`). */
   useEffect(() => {
     if (!tutorialRecorderAvailable) return;
-    Object.defineProperty(globalThis, "__semioInputLedger", { configurable: true, get: () => inputLedgerRef.current.census(), set: () => {} });
+    Object.defineProperty(globalThis, "__semioInputLedger", { configurable: true, get: () => ({ ...inputLedgerRef.current.census(), recent: inputLedgerRef.current.recent() }), set: () => {} });
     return () => {
       delete (globalThis as { __semioInputLedger?: unknown }).__semioInputLedger;
     };
@@ -5565,9 +5558,7 @@ function FrameworkOsShellInner({
           if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
-            console.log("[DEBUG] loadDocument effect", baseSession.pluginId, baseSession.instanceId, packBytes.length, sprBytes.length, isCurrentEffectOwner(effectOwner));
-            const loadedDebug = await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner)).catch((error) => { console.log("[DEBUG] loadDocument threw", String(error)); throw error; });
-            console.log("[DEBUG] loadDocument loaded", loadedDebug);
+            await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner));
           } else {
             // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
             // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`

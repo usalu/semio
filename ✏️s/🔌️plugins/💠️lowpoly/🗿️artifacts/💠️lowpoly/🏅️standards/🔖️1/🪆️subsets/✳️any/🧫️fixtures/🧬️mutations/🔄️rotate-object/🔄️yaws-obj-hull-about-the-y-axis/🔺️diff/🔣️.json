@@ -1,37 +1,38 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "obj-hull",
+        "paintLayers": null,
         "patch": {
+          "mesh": null,
+          "meshContent": null,
           "name": null,
           "smoothShading": null,
           "transform": {
             "position": [
-              0,
-              0,
-              0
+              0.0,
+              0.0,
+              0.0
             ],
             "rotation": [
-              0,
+              0.0,
               1.5,
-              0
+              0.0
             ],
             "scale": [
-              1,
-              1,
-              1
+              1.0,
+              1.0,
+              1.0
             ]
-          },
-          "mesh": null
-        },
-        "paintLayers": null
+          }
+        }
       }
     ],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null
 }

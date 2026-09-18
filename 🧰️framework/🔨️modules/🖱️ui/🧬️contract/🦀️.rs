@@ -41,6 +41,8 @@ mod document;
 mod layout;
 #[path = "🛡️limits/🦀️.rs"]
 mod limits;
+#[path = "🪟️overlay/🦀️.rs"]
+mod overlay;
 #[path = "👥️presence/🦀️.rs"]
 mod presence;
 #[path = "🎨️style/🦀️.rs"]
@@ -57,6 +59,7 @@ pub use component::*;
 pub use document::*;
 pub use layout::*;
 pub use limits::*;
+pub use overlay::*;
 pub use presence::*;
 pub use style::*;
 pub use surface::*;

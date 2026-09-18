@@ -34,3 +34,24 @@ fn hostile_mesh_catalog_is_rejected_without_alias_or_path_fallback() {
     assert!(parse_mesh_delivery_catalog(&input.to_string(), |path| Ok(fixture["catalogs"][path].to_string())).is_err());
     assert!(parse_mesh_delivery_catalog(&fixture["delivery"].to_string(), |_| Err("Unknown source".into())).is_err());
 }
+
+/// 🌐️ The transport boundary law both renderers apply before handing a mesh id to a loader: a
+/// `/mesh/…` PUBLIC id is rewritten to its catalog delivery path, everything else is passed through
+/// untouched, and an id the catalog does not name is returned unchanged so the loader reports the
+/// miss instead of this resolver inventing a filename.
+///
+/// React's `World3dHost` calls `meshAssetTransportUrl` inside every `useLoader(GLTFLoader, …)`; the
+/// wgpu renderer applies the same rewrite on both of its fetch lanes — the browser frame Worker
+/// (`🎞️frame-worker/🟦️.ts`, `fetch(meshAssetTransportUrl(request.url))`) and the native reader
+/// (`🧊️renderer/🦀️.rs`, `native_renderer_asset_path` → `resolve_mesh_asset(url).source`). Without it
+/// a url-declared world mesh 404s and the whole scene stays empty (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3d-world3d-glb-url-lane.md`).
+#[test]
+fn public_mesh_ids_reach_their_loader_through_the_catalog_transport_path() {
+    let left = mesh_asset_transport_url("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb");
+    assert_eq!(left, format!("/mesh/{}", resolve_mesh_asset("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb").unwrap().path));
+    assert_ne!(left, "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb", "a public id is not its own delivery path");
+    assert_eq!(mesh_asset_transport_url("https://external.test/model.glb"), "https://external.test/model.glb", "other asset domains keep ownership of their urls");
+    assert_eq!(mesh_asset_transport_url("/infinite-assets/🖼️.jpg"), "/infinite-assets/🖼️.jpg");
+    assert_eq!(mesh_asset_transport_url("/mesh/🧊️ellipsoid-🧊️capsule_J.glb"), "/mesh/🧊️ellipsoid-🧊️capsule_J.glb", "an unknown public id is never resolved to an invented filename");
+}

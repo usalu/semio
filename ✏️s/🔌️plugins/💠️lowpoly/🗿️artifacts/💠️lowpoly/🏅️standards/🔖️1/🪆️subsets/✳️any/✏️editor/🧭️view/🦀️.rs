@@ -49,8 +49,14 @@ pub fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
 /// (see `🔖️MeshDomain` below) — render call sites never populate it, which is harmless: geometry/
 /// texture rendering never reads `LowpolyDocument::selection()`.
 pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
+    try_build_doc(snapshot, config, ctx).ok()
+}
+
+/// 🔊️ `build_doc` with the engine's own refusal (`StaleMeshWorkspace`, an unparsable mesh) kept, for the
+/// command path that must report WHY a compute session could not be built.
+pub fn try_build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Result<LowpolyDocument, String> {
     let active = ctx.selection_object_id().filter(|id| snapshot.objects.iter().any(|object| object.id == *id)).map_or_else(|| resolve_active_object_id(snapshot, config), str::to_string);
-    LowpolyDocument::with_context(snapshot.clone(), active, ctx.current_selection().clone(), ctx.mesh_workspace_map()).ok()
+    LowpolyDocument::with_context(snapshot.clone(), active, ctx.current_selection().clone(), ctx.mesh_workspace_map()).map_err(|error| error.to_string())
 }
 
 pub fn document_target_row_id(object_id: &str, mode: &str, id: u32) -> String {

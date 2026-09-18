@@ -108,3 +108,41 @@ fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
     assert_eq!(cursor, SemioCursor::NsResize);
 }
 //#endregion 🔖️RetainedTreeCursorTests
+
+//#region 🚫️DisabledCursorTests
+/// 🚫️ W1n: React's `disabled:cursor-not-allowed` beats every other affordance the same element
+/// would offer — a disabled `Input` is not a text cursor, a disabled drag source is not a grab.
+#[test]
+fn a_disabled_node_uses_the_not_allowed_cursor_before_any_other_affordance() {
+    let (tree, input) = leaf(UiNode::Input(UiInputNode {
+        id: "field".into(),
+        input_kind: "text".into(),
+        value: String::new(),
+        placeholder: None,
+        commit: None,
+        min: None,
+        max: None,
+        step: None,
+        accept: None,
+        on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
+        presence: UiPresence::disabled_if(true),
+        menu: None,
+    }));
+    assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(input), None), SemioCursor::NotAllowed);
+
+    let (mut tree, stack) = leaf(UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: None,
+        padding: None,
+        id: None,
+        presence: UiPresence::disabled_if(true),
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        children: Vec::new(),
+        menu: None,
+    }));
+    tree.node_mut(stack).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
+    assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(stack), None), SemioCursor::NotAllowed);
+}
+//#endregion 🚫️DisabledCursorTests

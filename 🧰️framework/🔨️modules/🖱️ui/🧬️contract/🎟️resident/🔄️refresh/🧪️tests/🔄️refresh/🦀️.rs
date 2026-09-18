@@ -12,9 +12,7 @@ fn surfaces(data: &serde_json::Value) -> Vec<(String, usize)> {
 /// 📐️ The exact reservation one published document asks the aggregate for — the arithmetic
 /// `🌉️ProgramBridge/🎯️targets/🧊️wgpu`'s `assemble_browser_document` runs before it opens a root.
 fn surface_limits(nodes: usize) -> UiResidentLimits {
-    let items = nodes.saturating_add(2).min(UI_RESIDENT_SURFACE_ITEMS);
-    let bytes = nodes.saturating_add(2).saturating_mul(size_of::<UiNodeRecord>()).saturating_add(UiDocumentAssembly::required_open_bytes()).min(UI_RESIDENT_SURFACE_BYTES);
-    UiResidentLimits { items, bytes }
+    crate::ui_document_resident_limits(nodes)
 }
 
 fn open_surface(surface: &str, generation: u64, nodes: usize) -> Result<UiDocumentLease, UiResidentFault> {
@@ -185,6 +183,46 @@ fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() 
     assert!(count < UI_RESIDENT_SLOTS, "the ceiling is a maximum, never a price: {count} ceiling-sized roots against {UI_RESIDENT_SLOTS} slots");
     assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate funds every slot at one full document each");
     assert_eq!(refusal, Some(UiResidentFault::Capacity));
+    assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
+}
+
+/// 🎟️ A COLD document — one that names no census before it opens — prices itself as an EMPTY document and
+/// climbs one record at a time, so every one of the [`UI_RESIDENT_SLOTS`] slots the slot ledger offers is
+/// reachable. Reserving the per-surface ceiling instead capped the item ledger at
+/// `UI_RESIDENT_AGGREGATE_ITEMS / UI_RESIDENT_SURFACE_ITEMS` = 31 concurrent roots, and the hostile
+/// fixtures that walk all sixty-four slots refused at the thirty-second with `ArenaFull`, leaked their
+/// reservations on the panic and starved every later test sharing the process ledger
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
+#[test]
+fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
+    let before = UiResidentPermit::snapshot().unwrap();
+    let empty = crate::ui_document_resident_limits(0);
+    assert!(empty.items < UI_RESIDENT_SURFACE_ITEMS && empty.bytes < UI_RESIDENT_SURFACE_BYTES, "an empty document never costs the per-surface ceiling: {empty:?}");
+    assert!(UI_RESIDENT_SLOTS * empty.items <= UI_RESIDENT_AGGREGATE_ITEMS, "every slot is reachable on the item ledger");
+    let mut builders: Vec<crate::UiDocumentBuilder> = Vec::new();
+    for generation in 1..=UI_DOCUMENT_LEASE_SLOTS as u64 {
+        let surface = SurfaceId::try_from(format!("cold.census.{generation}").as_str()).unwrap();
+        let mut builder = crate::UiDocumentBuilder::try_new(generation, surface, UiRevision(generation), Some(UiNodeId(1)), generation).expect("every slot admits a cold root");
+        builder.try_push(tests::leaf_record(1, "node")).expect("the cold root climbs to its first record");
+        builders.push(builder);
+    }
+    let held = UiResidentPermit::snapshot().unwrap();
+    assert_eq!(held.used_slots - before.used_slots, UI_DOCUMENT_LEASE_SLOTS);
+    let refused = crate::UiDocumentBuilder::try_new(99, SurfaceId::try_from("cold.census.max-plus-one").unwrap(), UiRevision(99), Some(UiNodeId(1)), 99).expect_err("max plus one is refused by the SLOT ledger, never by a ceiling price");
+    assert_eq!(refused.0, crate::UiDocumentBuildError::ArenaFull);
+    let one_record = crate::ui_document_resident_limits(1);
+    assert_eq!(held.bytes - before.bytes, UI_DOCUMENT_LEASE_SLOTS * one_record.bytes);
+    assert_eq!(held.items - before.items, UI_DOCUMENT_LEASE_SLOTS * one_record.items);
+    eprintln!("[DEBUG] cold-document-census slots={UI_DOCUMENT_LEASE_SLOTS} empty={empty:?} one-record={one_record:?} ceiling-items={UI_RESIDENT_SURFACE_ITEMS}");
+    for mut builder in builders {
+        for _ in 0..1 << 16 {
+            if builder.close_step() {
+                break;
+            }
+        }
+        assert!(builder.terminal_is_empty(), "a cold root retires within its bounded budget");
+    }
+    drain_pages();
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }
 //#endregion 🔄️RefreshCycle

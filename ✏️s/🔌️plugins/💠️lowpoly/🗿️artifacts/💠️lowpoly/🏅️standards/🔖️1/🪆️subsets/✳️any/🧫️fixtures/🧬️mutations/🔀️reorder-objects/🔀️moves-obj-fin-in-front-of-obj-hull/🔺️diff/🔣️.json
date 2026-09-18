@@ -1,13 +1,13 @@
 {
   "artifact": null,
-  "schema": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": [
       "obj-fin",
       "obj-hull"
     ]
-  }
+  },
+  "schema": null
 }

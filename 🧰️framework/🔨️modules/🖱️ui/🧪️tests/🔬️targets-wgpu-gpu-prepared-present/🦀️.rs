@@ -98,3 +98,64 @@ fn the_terminal_glass_command_page_addresses_no_region_and_is_not_stale() {
         }
     }
 }
+
+/// 🐕️ LAW: every cursor the present ladder walks moves the watchdog signature.
+///
+/// 🩸️ `progress()` is the ONLY thing `AppPresentStallWatch` can see inside one `AppPresentPhase::Render`,
+/// and a ladder index missing from it is indistinguishable from a frozen cursor. `ForegroundCommands`
+/// was added without its index and the host quarantined the surface on every boot —
+/// `presentation stalled: phase=Render engine=0 upload=1 gpu-cursor=Some((6, 13770, 13770, 5))`
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+#[test]
+fn every_ladder_index_moves_the_watchdog_signature() {
+    let _guard = guard();
+    drain();
+    let mut cursor = PreparedGpuPresentCursor::begin(7, 3).expect("fixed present cursor admission");
+    let mut seen = cursor.progress();
+    cursor.command += 1;
+    assert_ne!(cursor.progress(), seen, "the draw command index is visible");
+    seen = cursor.progress();
+    cursor.glass_command += 1;
+    assert_ne!(cursor.progress(), seen, "the glass command index is visible");
+    seen = cursor.progress();
+    cursor.foreground_command += 1;
+    assert_ne!(cursor.progress(), seen, "the glass-foreground command index is visible");
+    seen = cursor.progress();
+    cursor.blur_mip += 1;
+    assert_ne!(cursor.progress(), seen, "the blur mip is visible");
+    seen = cursor.progress();
+    cursor.phase = PreparedGpuPresentPhase::Present;
+    assert_ne!(cursor.progress(), seen, "and so is the ladder phase");
+    cursor.begin_close();
+    while !cursor.close_step() {}
+    assert!(cursor.terminal_is_empty(), "a closed cursor zeroes every index it walked");
+}
+
+/// 🫧 LAW: only a layer opened by `begin_glass_content` is split off the scene target.
+///
+/// A glass region samples the scene and paints over it, so content measured into the scene inside a
+/// glass rect is blurred away by the very region that carries it — the window cap's `Puzzle 3D`
+/// title was painted and then erased on every frame (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+#[test]
+fn only_a_glass_content_layer_is_split_off_the_scene_target() {
+    let theme = crate::wgpu::theme::Theme::default();
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
+    let region = draw.push_glass([0.0, 0.0, 100.0, 40.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
+    draw.begin_glass_content(region);
+    draw.push_rounded([4.0, 4.0, 40.0, 16.0], theme.accent, 0.0);
+    draw.end_glass_content();
+    draw.push_rounded([0.0, 60.0, 100.0, 40.0], theme.accent, 0.0);
+
+    let foreground_layers: Vec<usize> = draw.layers.iter().enumerate().filter(|(_, layer)| layer.foreground_of.is_some()).map(|(index, _)| index).collect();
+    assert_eq!(foreground_layers.len(), 1, "exactly one layer is glass content");
+    let glass_layer = foreground_layers[0];
+
+    for (index, _) in draw.layers.iter().enumerate() {
+        let cursor = DrawMeasureCursor::LayerUi { layer: index, item: 0, overlay: false };
+        assert_eq!(prepared_draw_scalar_is_glass_foreground(&draw, cursor), index == glass_layer, "layer {index} classification");
+    }
+    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::LayerUi { layer: draw.layers.len(), item: 0, overlay: false }), "a stale layer index is never a foreground scalar");
+    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::Glass(0)), "a glass region itself is not its own foreground");
+    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassInstance { pass: 0, draw: 0, instance: 0, translucent: false }), "a scene pass with no layer is never a foreground scalar");
+}

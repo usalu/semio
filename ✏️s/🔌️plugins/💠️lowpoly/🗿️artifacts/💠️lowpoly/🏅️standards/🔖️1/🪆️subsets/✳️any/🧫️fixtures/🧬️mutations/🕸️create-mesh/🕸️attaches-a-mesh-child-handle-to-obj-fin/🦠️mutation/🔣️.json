@@ -1,7 +1,8 @@
 {
   "CreateMesh": {
-    "id": "obj-fin",
     "childId": "mesh-fin-01",
+    "id": "obj-fin",
+    "meshWorkspace": "{\"vertices\":[],\"faces\":[]}",
     "target": {
       "artifactId": "obj-fin-mesh",
       "dialect": {
@@ -9,7 +10,6 @@
         "standard": "v1",
         "subset": "mesh"
       }
-    },
-    "meshWorkspace": "{\"vertices\":[],\"faces\":[]}"
+    }
   }
 }

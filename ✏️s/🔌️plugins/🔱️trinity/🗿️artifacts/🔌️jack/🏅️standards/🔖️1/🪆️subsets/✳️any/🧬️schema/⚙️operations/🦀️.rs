@@ -18,6 +18,54 @@ pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 pub fn create_trinity_graph_envelope(id: &str, snapshot: JackSnapshot) -> TrinityGraphEnvelope {
     create_document_envelope(TRINITY_GRAPH_SCHEMA, id, snapshot, None)
 }
+
+/// 🔐️ Opens a Jack store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
+/// catalog, and `reserve_edit_history_slot` refuses every `Apply` without one (`edit history
+/// insertion requires its exact mutation retirement factory`) — so a bare `TrinityGraphStore::new`
+/// can be read but never mutated, undone or closed. The editor app installs the same catalog
+/// through `build_document_store_owners`; every standalone store (tests, the rewriting bridge)
+/// goes through here instead.
+pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope) -> Result<OwnedTrinityGraphStore, store::VcsError> {
+    let mut store = TrinityGraphStore::new(envelope).await?;
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::schema::mutations::binary::jack_document_store_owners());
+    Ok(OwnedTrinityGraphStore(store))
+}
+
+/// 🔚 A standalone Jack store that retires itself: `ArtifactStore::drop` panics `artifact store
+/// reached Drop without its exact terminal-empty shallow-shell witness` unless the store walked its
+/// bounded close loop first, so the guard runs that loop on drop (skipped while unwinding, where the
+/// original panic is the report worth keeping). Derefs to the bare store for every read and dispatch.
+pub struct OwnedTrinityGraphStore(TrinityGraphStore);
+
+impl OwnedTrinityGraphStore {
+    /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
+    pub fn close(&mut self) {
+        while !self.0.close_owned_terminal_is_empty() {
+            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Jack document store closes through its exact bounded owners");
+        }
+    }
+}
+
+impl std::ops::Deref for OwnedTrinityGraphStore {
+    type Target = TrinityGraphStore;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for OwnedTrinityGraphStore {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for OwnedTrinityGraphStore {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            self.close();
+        }
+    }
+}
 //#endregion 🔖️Store
 
 //#region 🔖️Validation

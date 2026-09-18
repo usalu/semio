@@ -171,7 +171,7 @@ pub(crate) fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bou
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
     let content = Rect::new(row.x + gutter_w, row.y, row.w - gutter_w, row.h);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
-    tree_draw_chevron(ctx, chevron, gutter);
+    tree_draw_chevron(ctx, chevron, gutter, crate::wgpu::chrome::ICON_TINY);
     ctx.input.register_hit(HitTarget { rect: gutter, event: None, control_id: Some(format!("section.chevron.{}", section.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     if let Some(label) = &section.label {
         let text_color = if collapsed { ctx.theme.text_muted } else { ctx.theme.text_element };
@@ -204,7 +204,7 @@ pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: 
     if expandable {
         let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
         let chevron_rect = Rect::new(gutter.x + depth as f32 * TREE_INDENT_PER_LEVEL, gutter.y, TREE_TOGGLE_WIDTH, gutter.h);
-        tree_draw_chevron(ctx, chevron, chevron_rect);
+        tree_draw_chevron(ctx, chevron, chevron_rect, crate::wgpu::chrome::SIZE_TINY);
         ctx.input.register_hit(HitTarget { rect: chevron_rect, event: None, control_id: Some(format!("tree.chevron.{}", item.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     }
     if selected {

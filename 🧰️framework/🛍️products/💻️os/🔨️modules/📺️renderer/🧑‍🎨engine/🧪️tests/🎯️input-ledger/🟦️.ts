@@ -166,6 +166,36 @@ describe("input ledger", () => {
     expect(ledger.outcome(seqs[1])).not.toBeNull();
     expect(ledger.outcome(seqs[2])).not.toBeNull();
   });
+
+  /** 🎬️ `recent()` is the shape a behavioural-parity probe reads on BOTH renderers (the wgpu target's own
+   * `dumpChrome` action ledger is its twin): issue order, an open entry visible as itself, bounded by the
+   * same history slots (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W5b). */
+  it("recent() answers the last entries in issue order, open ones included, bounded by historySlots", () => {
+    const ledger = createInputLedgerV1({ historySlots: 3 });
+    const first = ledger.issue({ controllerId: "c", action: "one", provenance: { windowId: "w1", origin: "user", causedBy: null } });
+    ledger.settle(inputAppliedV1(first.provenance.inputSeq));
+    const second = ledger.issue({ controllerId: "c", action: "two", provenance: { windowId: "w1", origin: "guest", causedBy: first.provenance.inputSeq } });
+    ledger.settle(inputRefusedV1(second.provenance.inputSeq, "undeclared-action"));
+    ledger.issue({ controllerId: "c", action: "three", provenance: { windowId: null, origin: "gesture", causedBy: null } });
+
+    const rows = ledger.recent();
+    expect(rows.map((row) => row.action)).toEqual(["one", "two", "three"]);
+    expect(rows.map((row) => row.inputSeq)).toEqual([1, 2, 3]);
+    expect(rows[0].outcome).toEqual(inputAppliedV1(1));
+    expect(rows.map((row) => row.controllerId)).toEqual(["c", "c", "c"]);
+    expect(rows[1].origin).toBe("guest");
+    expect(rows[1].causedBy).toBe(1);
+    expect(rows[2].outcome).toBeNull();
+    expect(rows[2].windowId).toBeNull();
+    expect(ledger.recent(2).map((row) => row.action)).toEqual(["two", "three"]);
+
+    for (const action of ["four", "five", "six"]) {
+      const later = ledger.issue({ controllerId: "c", action });
+      ledger.settle(inputAppliedV1(later.provenance.inputSeq));
+    }
+    expect(ledger.entry(1)).toBeNull();
+    expect(ledger.recent().map((row) => row.action)).toEqual(["four", "five", "six"]);
+  });
 });
 //#endregion 📒️L1 ledger
 

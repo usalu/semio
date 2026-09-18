@@ -9,10 +9,10 @@
 //! why it cannot live in `🧬️schema/` (artifacts must never depend on apps) and instead lives beside the
 //! topic modules it bridges.
 
-use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
+use crate::editor::remodeling::engine::{camera as remodeling_camera, feature as remodeling_feature, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 #[cfg(test)]
 use crate::ImageAsset;
-use crate::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
+use crate::{CalibrationState, CameraPosePreview, DenseResolution, FeatureDetector, QcReportSnapshot, ReconstructionParams, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 
 //#region 🔖️EngineMapping
 /// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`
@@ -32,17 +32,27 @@ pub fn assumed_focal_ratio(calibration: &CalibrationState) -> Option<f64> {
 /// ⚙️ Builds `remodeling_engine::EngineParams` from the document's 8 param sub-structs plus its
 /// `CalibrationState`. Fields with no engine-side counterpart (`SfmParams::ransac_iterations` — the
 /// LO-RANSAC solver doesn't expose an iteration cap; `GeoParams::origin_*` — no georeferencing-origin
-/// knob exists on the engine side; `CameraCalibration::distortion`/`skew` — `EngineParams` carries no
-/// distortion slot at all, `default_intrinsics` hard-codes `Distortion::None`) are documented
+/// knob exists on the engine side; `CameraCalibration::skew`, and the fisheye model — the engine's
+/// intrinsics take the first camera's Brown–Conrady coefficients and nothing else) are documented
 /// simplifications, not oversights.
 pub fn build_engine_params(params: &ReconstructionParams, calibration: &CalibrationState) -> remodeling_engine::EngineParams {
     let mut engine_params = remodeling_engine::EngineParams::default();
     if let Some(ratio) = assumed_focal_ratio(calibration) {
         engine_params.assumed_focal_ratio = ratio;
     }
+    if let Some(camera) = calibration.cameras.first() {
+        let [k1, k2, k3, p1, p2] = camera.distortion.map(f64::from);
+        if [k1, k2, k3, p1, p2].iter().any(|coefficient| *coefficient != 0.0) {
+            engine_params.distortion = remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 };
+        }
+    }
     engine_params.ingest.stride = params.ingest.frame_sample_stride.max(1);
     engine_params.ingest.max_frames = params.ingest.max_frames;
     engine_params.ingest.min_sharpness = params.ingest.min_sharpness;
+    engine_params.detector = match params.feature.detector {
+        FeatureDetector::Harris => remodeling_feature::BoundedDetector::Harris,
+        FeatureDetector::Akaze | FeatureDetector::Orb => remodeling_feature::BoundedDetector::Orb,
+    };
     engine_params.target_feature_count = params.feature.target_count as usize;
     engine_params.match_ratio = params.matching.ratio_test;
     engine_params.match_mutual = params.matching.cross_check;

@@ -2,7 +2,10 @@
 use super::*;
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
-use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{
+    UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode,
+};
 use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 
 fn action() -> ActionDescriptor {
@@ -159,11 +162,11 @@ fn set_focus_flips_the_focused_flag_in_both_directions() {
     let b = leaf(&mut tree, Some(root), 2, button_ui("b"), (0.0, 20.0, 50.0, 20.0));
     let mut focus = FocusState::new();
 
-    focus.set_focus(&mut tree, Some(a));
+    focus.set_focus(&mut tree, Some(a), true);
     assert!(tree.node(a).unwrap().flags.contains(NodeFlags::FOCUSED));
     assert!(!tree.node(b).unwrap().flags.contains(NodeFlags::FOCUSED));
 
-    focus.set_focus(&mut tree, Some(b));
+    focus.set_focus(&mut tree, Some(b), true);
     assert!(!tree.node(a).unwrap().flags.contains(NodeFlags::FOCUSED), "moving focus away must clear the old node's flag");
     assert!(tree.node(b).unwrap().flags.contains(NodeFlags::FOCUSED));
 
@@ -182,7 +185,7 @@ fn clicking_a_button_emits_its_action_descriptor_as_a_ui_command() {
     let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
 
     let expected = action();
-    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { window_id, action } if window_id == "main" && *action == expected)));
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { window_id, intent } if window_id == "main" && intent.descriptor() == expected)));
     let _ = button;
 }
 
@@ -228,7 +231,7 @@ fn enter_and_space_activate_the_focused_button_like_a_click() {
     leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 50.0, 40.0));
     let mut router = EventRouter::new("main");
     let expected = action();
-    let fired = |commands: &[UiCommand]| commands.iter().filter(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)).count();
+    let fired = |commands: &[UiCommand]| commands.iter().filter(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == expected)).count();
 
     assert_eq!(fired(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() })), 0, "Enter with nothing focused activates nothing");
     router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() });
@@ -615,7 +618,7 @@ fn picking_a_selects_item_row_fires_its_action_and_closes_the_popup() {
     let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 40.0, button: PointerButton::Primary });
 
     let expected = action();
-    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)), "picking a row should fire its (merged) action");
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor().action == expected.action)), "picking a row should fire its (merged) action");
     assert!(!tree.node(select).unwrap().state.open, "picking an item should close the popup, per toggle_select_popup's dismissal-paths doc comment");
     let _ = row_b;
 }
@@ -635,7 +638,7 @@ fn clicking_an_activatable_stack_fires_its_activate_action() {
     let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
 
     let expected = action();
-    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)), "clicking an activatable Stack should fire its `activate` action");
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == expected)), "clicking an activatable Stack should fire its `activate` action");
 }
 
 #[test]
@@ -815,3 +818,388 @@ fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
     assert_eq!(rect, Some(Rect::new(25.0, 35.0, 100.0, 100.0)), "a nested scene's rect should accumulate every ancestor's own layout offset");
 }
 //#endregion 🔖️W4SceneCommandTests
+
+//#region 🔖️AnchoredPlacementTests
+// 📍️ W1n: `resolve_anchored_placement` is a field-for-field port of React's `resolvePopoverPlacement`
+// (`🧱️elements/🗨️Popover/🟦️.tsx:215-258`). These pin the four behaviours that positioner actually has:
+// side placement, cross-axis alignment, main-axis collision flip, and the viewport clamp.
+
+fn viewport() -> (f32, f32) {
+    (400.0, 300.0)
+}
+
+#[test]
+fn an_anchored_overlay_sits_on_its_requested_side_with_the_declared_offset() {
+    let anchor = Rect::new(100.0, 100.0, 40.0, 20.0);
+    let below = resolve_anchored_placement(anchor, (60.0, 30.0), viewport(), AnchoredPlacement::POPOVER, FlowInline::Ltr);
+    assert_eq!(below.side, OverlaySide::Bottom);
+    assert_eq!(below.y, 120.0 + 4.0, "sideOffset: 4");
+    assert_eq!(below.x, 100.0 + (40.0 - 60.0) / 2.0, "align: center");
+
+    let above = resolve_anchored_placement(anchor, (60.0, 30.0), viewport(), AnchoredPlacement::TOOLTIP, FlowInline::Ltr);
+    assert_eq!(above.side, OverlaySide::Top);
+    assert_eq!(above.y, 100.0 - 30.0 - 8.0, "the tooltip's own sideOffset: 8");
+}
+
+#[test]
+fn an_anchored_overlay_flips_to_the_opposite_side_when_the_main_axis_overflows() {
+    let low = Rect::new(100.0, 250.0, 40.0, 20.0);
+    let flipped = resolve_anchored_placement(low, (60.0, 60.0), viewport(), AnchoredPlacement::POPOVER, FlowInline::Ltr);
+    assert_eq!(flipped.side, OverlaySide::Top, "no room below inside the collision padding, so it flips above");
+    assert_eq!(flipped.y, 250.0 - 60.0 - 4.0);
+
+    let high = Rect::new(100.0, 4.0, 40.0, 20.0);
+    let unflipped = resolve_anchored_placement(high, (60.0, 30.0), viewport(), AnchoredPlacement::TOOLTIP, FlowInline::Ltr);
+    assert_eq!(unflipped.side, OverlaySide::Bottom, "a tooltip with no room above flips below");
+}
+
+#[test]
+fn an_anchored_overlay_never_flips_into_a_side_that_also_overflows() {
+    let squeezed = Rect::new(100.0, 140.0, 40.0, 20.0);
+    let resolved = resolve_anchored_placement(squeezed, (60.0, 280.0), viewport(), AnchoredPlacement::POPOVER, FlowInline::Ltr);
+    assert_eq!(resolved.side, OverlaySide::Bottom, "React keeps the requested side when the flip would overflow too");
+}
+
+#[test]
+fn an_anchored_overlay_is_clamped_inside_the_collision_padding() {
+    let edge = Rect::new(390.0, 10.0, 8.0, 8.0);
+    let resolved = resolve_anchored_placement(edge, (100.0, 40.0), viewport(), AnchoredPlacement::POPOVER, FlowInline::Ltr);
+    assert_eq!(resolved.x, 400.0 - 8.0 - 100.0, "clamped to viewport width minus collisionPadding minus content width");
+    assert!(resolved.y >= 8.0);
+}
+
+#[test]
+fn a_centered_overlay_ignores_its_anchor() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 400.0, 300.0));
+    let (x, y) = resolve_overlay_placement(&tree, OverlayAnchor::Node(root), (100.0, 80.0), viewport(), OverlayKind::Dialog.default_placement(), FlowInline::Ltr);
+    assert_eq!((x, y), (150.0, 110.0));
+    assert!(OverlayKind::Dialog.has_backdrop(), "a modal draws React's scrim; a popover does not");
+    assert!(!OverlayKind::Popover.has_backdrop());
+}
+//#endregion 🔖️AnchoredPlacementTests
+
+//#region 🔖️TooltipDwellTests
+// 💡️ W1n: React arms a 400 ms `setTimeout` on pointer-enter (`🧱️elements/💡️ChromeControlHint/🟦️.tsx:21,51`).
+// `advance_clock` is this target's equivalent, and it also debounces the hover-out delay that
+// `DismissPolicy` had only ever *documented*.
+
+#[test]
+fn a_hover_reveals_a_tooltip_only_after_the_react_dwell_elapses() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let control = leaf(&mut tree, Some(root), 1, button_ui("save"), (10.0, 10.0, 60.0, 20.0));
+    let mut router = EventRouter::new("main");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 20.0, y: 15.0 });
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS - 0.01).0, TooltipStep::Idle, "nothing reveals before the dwell");
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(control));
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 1.0).0, TooltipStep::Idle, "one reveal per hover, not one per frame");
+}
+
+#[test]
+fn moving_to_another_control_restarts_the_dwell() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let first = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+    let second = leaf(&mut tree, Some(root), 2, button_ui("b"), (60.0, 0.0, 50.0, 20.0));
+    let mut router = EventRouter::new("main");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(first));
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 10.0 });
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 0.1).0, TooltipStep::Idle, "the second control's own dwell restarts from the move");
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS * 2.0).0, TooltipStep::Reveal(second));
+}
+
+#[test]
+fn an_open_tooltip_dismisses_only_after_the_hover_out_delay() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let control = leaf(&mut tree, Some(root), 1, button_ui("save"), (0.0, 0.0, 50.0, 20.0));
+    let tip = leaf(&mut tree, Some(root), 2, text_ui("Save"), (0.0, 30.0, 50.0, 16.0));
+    let mut router = EventRouter::new("main");
+    router.open_overlay(&mut tree, tip, OverlayKind::Tooltip, OverlayAnchor::Node(control));
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0 });
+    assert!(router.topmost_overlay().is_some(), "hover-out arms the countdown instead of closing immediately");
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS - 0.05).0, TooltipStep::Idle);
+    let (step, commands) = router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS);
+    assert_eq!(step, TooltipStep::Dismissed);
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { kind: OverlayKind::Tooltip, .. })));
+    assert!(router.topmost_overlay().is_none());
+}
+
+#[test]
+fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let control = leaf(&mut tree, Some(root), 1, button_ui("save"), (0.0, 0.0, 50.0, 20.0));
+    let tip = leaf(&mut tree, Some(root), 2, text_ui("Save"), (0.0, 30.0, 50.0, 16.0));
+    let mut router = EventRouter::new("main");
+    router.open_overlay(&mut tree, tip, OverlayKind::Tooltip, OverlayAnchor::Node(control));
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS * 4.0).0, TooltipStep::Idle);
+    assert!(router.topmost_overlay().is_some(), "the pointer came back, so the tooltip stays open");
+}
+//#endregion 🔖️TooltipDwellTests
+
+//#region ⌨️WidgetKeyboardTests
+// ⌨️ Keyboard parity for the controls a plain `<button>`'s Enter/Space does not cover — ticket
+// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1o. The per-key decision tables themselves are unit
+// tested with the element (`🧱️elements/🔽️Select/🧪️tests/🔬️wgpu-select-keyboard`); these assert the
+// ROUTING: that a focused control claims the key, mutates the retained state, and emits (or
+// withholds) a command.
+
+fn slider_ui(id: &str, value: f64) -> UiNode {
+    UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, on_change: action(), presence: UiPresence::default(), menu: None })
+}
+
+fn toggle_ui(id: &str, on: bool) -> UiNode {
+    let mut presence = UiPresence::default();
+    presence.selected = on;
+    UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence, menu: None })
+}
+
+fn key(key: &str) -> UiEvent {
+    UiEvent::KeyDown { key: key.into(), modifiers: EventModifiers::default() }
+}
+
+/// ⬇️ `ArrowDown` on a closed, focused `Select` opens the popup highlighting the SELECTED row, the
+/// way React's `SelectTrigger` opens with intent `"selected"`.
+#[test]
+fn arrow_down_opens_a_focused_select_on_its_selected_row() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "b"), (0.0, 0.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+
+    assert!(tree.node(select).unwrap().state.open, "ArrowDown opens the popup");
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(1), "the highlight starts on the selected row");
+}
+
+/// ⬆️ `ArrowUp` opens on the LAST row; arrowing then wraps, and `Escape` clears both bits.
+#[test]
+fn arrow_up_opens_on_the_last_row_and_arrowing_wraps() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+
+    router.dispatch(&mut tree, root, &key("ArrowUp"));
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(1), "ArrowUp opens on the last row");
+
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(0), "the highlight wraps past the last row");
+
+    router.dispatch(&mut tree, root, &key("Escape"));
+    assert!(!tree.node(select).unwrap().state.open);
+    assert_eq!(tree.node(select).unwrap().state.highlighted, None, "a dismissed popup keeps no stale highlight");
+}
+
+/// ⏎️ `Enter` over the open popup commits the highlighted row's value and closes it.
+#[test]
+fn enter_commits_the_highlighted_row_and_closes_the_popup() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(1));
+
+    let commands = router.dispatch(&mut tree, root, &key("Enter"));
+
+    assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { .. })), "committing a row dispatches the select's own change action");
+    assert!(!tree.node(select).unwrap().state.open, "committing closes the popup");
+}
+
+/// 🔤️ A printable key opens the popup on the first matching row, and a second key extends the same
+/// query rather than restarting it.
+#[test]
+fn typing_jumps_to_the_matching_row_and_extends_the_query() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+
+    router.dispatch(&mut tree, root, &key("b"));
+    assert!(tree.node(select).unwrap().state.open, "typing opens a closed select");
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(1), "the query lands on the row whose label starts with it");
+
+    router.dispatch(&mut tree, root, &key("a"));
+    assert_eq!(tree.node(select).unwrap().state.highlighted, Some(1), "\"ba\" matches nothing, so the highlight holds instead of jumping to \"A\"");
+}
+
+/// ↹️ `Tab` closes the popup AND still moves focus — React's `SelectContent` closes without
+/// restoring focus so the browser's own tab move lands.
+#[test]
+fn tab_closes_an_open_select_and_still_moves_focus() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+    let next = leaf(&mut tree, Some(root), 2, button_ui("after"), (0.0, 40.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+
+    router.dispatch(&mut tree, root, &key("Tab"));
+
+    assert!(!tree.node(select).unwrap().state.open, "Tab dismisses the popup");
+    assert_eq!(router.focus.focused, Some(next), "and the focus move still happens");
+}
+
+/// 🚫️ A disabled `Select` ignores every key, exactly as a `disabled` trigger does in the DOM.
+#[test]
+fn a_disabled_select_ignores_keyboard_input() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let mut disabled = select_ui("sel", "a");
+    if let UiNode::Select(node) = &mut disabled {
+        node.presence.state = UiState::Disabled;
+    }
+    let select = leaf(&mut tree, Some(root), 1, disabled, (0.0, 0.0, 100.0, 30.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(select), true);
+
+    router.dispatch(&mut tree, root, &key("ArrowDown"));
+
+    assert!(!tree.node(select).unwrap().state.open);
+}
+
+/// 🎚️ A focused `Slider` steps on the arrow keys, jumps to its ends on `Home`/`End`, moves ten
+/// steps on `PageUp`/`PageDown`, and clamps — React's own `Slider` key handler.
+#[test]
+fn a_focused_slider_steps_jumps_and_clamps_on_the_arrow_keys() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let slider = leaf(&mut tree, Some(root), 1, slider_ui("s", 5.0), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(slider), true);
+
+    for pressed in ["ArrowRight", "ArrowUp", "ArrowLeft", "ArrowDown", "Home", "End", "PageUp", "PageDown"] {
+        let commands = router.dispatch(&mut tree, root, &key(pressed));
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { .. })), "{pressed} must commit a slider value");
+    }
+    let ignored = router.dispatch(&mut tree, root, &key("F5"));
+    assert!(ignored.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "an unrelated key must not move the slider");
+}
+
+/// 🎚️ The values themselves: one step per arrow, ten per page key, clamped to the track's ends.
+#[test]
+fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
+    let UiNode::Slider(slider) = slider_ui("s", 5.0) else { panic!("slider") };
+    assert_eq!(slider_key_value(&slider, "ArrowRight", false), Some(6.0));
+    assert_eq!(slider_key_value(&slider, "ArrowLeft", false), Some(4.0));
+    assert_eq!(slider_key_value(&slider, "ArrowUp", false), Some(6.0));
+    assert_eq!(slider_key_value(&slider, "ArrowDown", false), Some(4.0));
+    assert_eq!(slider_key_value(&slider, "Home", false), Some(0.0));
+    assert_eq!(slider_key_value(&slider, "End", false), Some(10.0));
+    assert_eq!(slider_key_value(&slider, "PageUp", false), Some(10.0), "ten steps from 5 clamps at the max");
+    assert_eq!(slider_key_value(&slider, "PageDown", false), Some(0.0));
+    assert_eq!(slider_key_value(&slider, "ArrowRight", true), Some(10.0), "a Shift chord moves ten steps too");
+    assert_eq!(slider_key_value(&slider, "Enter", false), None, "a key the slider does not own is never swallowed");
+}
+
+/// 🔀️ A focused `Toggle` flips on `Enter`/`Space` — React renders it as a `<button>`, so both keys
+/// click it; wgpu used to answer neither.
+#[test]
+fn a_focused_toggle_flips_on_enter_and_space() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let toggle = leaf(&mut tree, Some(root), 1, toggle_ui("t", false), (0.0, 0.0, 40.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(toggle), true);
+
+    for pressed in ["Enter", " "] {
+        let commands = router.dispatch(&mut tree, root, &key(pressed));
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { .. })), "{pressed} must fire the toggle's change action");
+    }
+}
+//#endregion ⌨️WidgetKeyboardTests
+
+//#region 🧭️FlowDirectionTests
+// 🧭️ W2k: this target had ZERO flow-direction support — `events`' own positioner docstring said so.
+// React takes `rtl` from `useFlow().inline` (`🧱️elements/🗨️Popover/🟦️.tsx:311, :326`) and inverts the
+// horizontal arrow pair per control (`🎚️Slider/🟦️.tsx:383-384`, `📑️Tabs/🟦️.tsx:164-165`).
+
+#[semio_framework_async_macros::async_test]
+async fn a_menu_mirrors_its_inline_edge_once_the_window_carries_an_rtl_flow() {
+    let anchor = Rect::new(100.0, 40.0, 60.0, 20.0);
+    let ltr = resolve_anchored_placement(anchor, (30.0, 40.0), viewport(), AnchoredPlacement::MENU, FlowInline::Ltr);
+    let rtl = resolve_anchored_placement(anchor, (30.0, 40.0), viewport(), AnchoredPlacement::MENU, FlowInline::Rtl);
+    assert_eq!(ltr.x, 100.0);
+    assert_eq!(rtl.x, 130.0);
+    assert_eq!(ltr.y, rtl.y, "only the inline axis mirrors");
+    assert_eq!(ltr.side, rtl.side, "React never mirrors `side`, only `align`");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_routers_flow_defaults_to_ltr_down_and_only_changes_once() {
+    let mut router = EventRouter::new("w");
+    assert_eq!(router.flow(), UiFlow::DEFAULT);
+    assert_eq!(router.flow_inline(), FlowInline::Ltr);
+    let mirrored = UiFlow { inline: FlowInline::Rtl, block: ui_contract::FlowBlock::Up };
+    assert!(router.set_flow(mirrored), "a real change reports true so the caller can invalidate layout");
+    assert!(!router.set_flow(mirrored), "re-setting the same flow is a no-op");
+    assert_eq!(router.flow_inline(), FlowInline::Rtl);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn an_rtl_window_swaps_the_horizontal_arrow_pair_and_leaves_every_other_key_alone() {
+    let mut router = EventRouter::new("w");
+    assert_eq!(router.mirrored_inline_key("ArrowLeft"), "ArrowLeft");
+    router.set_flow(UiFlow { inline: FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
+    assert_eq!(router.mirrored_inline_key("ArrowLeft"), "ArrowRight");
+    assert_eq!(router.mirrored_inline_key("ArrowRight"), "ArrowLeft");
+    for invariant in ["ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Enter", " "] {
+        assert_eq!(router.mirrored_inline_key(invariant), invariant, "{invariant} carries no flow direction");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn an_rtl_slider_moves_the_other_way_for_the_same_arrow_key() {
+    let slider = UiSliderNode { id: "s".into(), value: 5.0, min: 0.0, max: 10.0, step: 1.0, unit: None, on_change: action(), presence: UiPresence::default(), menu: None };
+    let mut router = EventRouter::new("w");
+    let ltr_right = slider_key_value(&slider, router.mirrored_inline_key("ArrowRight"), false);
+    router.set_flow(UiFlow { inline: FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
+    let rtl_right = slider_key_value(&slider, router.mirrored_inline_key("ArrowRight"), false);
+    assert_eq!(ltr_right, Some(6.0));
+    assert_eq!(rtl_right, Some(4.0), "React's `positiveHorizontal` is ArrowLeft under rtl (🎚️Slider/🟦️.tsx:383)");
+}
+//#endregion 🧭️FlowDirectionTests
+
+//#region ⌨️FocusVisibleTests
+// ⌨️ W2k: `focus-visible:border-accent` is a `:focus-visible` selector, so a CLICKED control must not
+// paint the accent ring. `EventRouter` carries the modality latch and stamps `NodeFlags::FOCUS_VISIBLE`.
+
+#[semio_framework_async_macros::async_test]
+async fn a_pointer_press_focuses_without_the_keyboard_ring_and_a_tab_move_restores_it() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+    let pressed = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+    leaf(&mut tree, Some(root), 2, button_ui("b"), (0.0, 20.0, 50.0, 20.0));
+    let mut router = EventRouter::new("w");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+    assert!(!router.focus_visible(), "a press clears the modality latch");
+    let flags = tree.node(pressed).expect("focused node is live").flags;
+    assert!(flags.contains(NodeFlags::FOCUSED), "the press still focuses the control");
+    assert!(!flags.contains(NodeFlags::FOCUS_VISIBLE), "a pointer-focused control paints no focus ring");
+
+    router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() });
+    assert!(router.focus_visible(), "a key sets the modality latch");
+    let tabbed = router.focus.focused.expect("Tab moved focus");
+    let tabbed_flags = tree.node(tabbed).expect("tabbed node is live").flags;
+    assert!(tabbed_flags.contains(NodeFlags::FOCUSED) && tabbed_flags.contains(NodeFlags::FOCUS_VISIBLE), "a keyboard-focused control paints the ring");
+    assert!(!tree.node(pressed).expect("blurred node is live").flags.contains(NodeFlags::FOCUS_VISIBLE), "blurring clears the bit");
+}
+//#endregion ⌨️FocusVisibleTests

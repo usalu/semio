@@ -88,7 +88,7 @@ fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_event_feed(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
     }
     (draw, theme)
@@ -112,3 +112,82 @@ fn error_tone_title_is_tinted_theme_error() {
     assert!(colors.contains(&theme.error), "an error-tone title must be tinted theme.error, got {colors:?}");
 }
 //#endregion EventFeedPaintTests
+
+//#region EventFeedPointerTests
+/// 📡️ `📡️EventFeedHost/🟦️.tsx:117-126` sends `{ surfaceId, id }` on row activation. This renderer
+/// used to send `{ entryId }` — a key no host reads, so every feed row activation was inert.
+#[test]
+fn row_activation_sends_surface_id_and_id_like_react() {
+    let entries = json!([{ "id": "e1", "title": "Built" }, { "id": "e2", "title": "Failed" }]).to_string();
+    let scene = UiComponentSceneNode {
+        surface_id: "feed-press-test".into(),
+        controller_id: "controller".into(),
+        component_kind: SurfaceKind::EventFeed,
+        pane_id: None,
+        binding_id: None,
+        presence: UiPresence::default(),
+        canvas_2d: None,
+        world_3d: None,
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        paint_2d: None,
+        virtual_file_system: None,
+        tiled_map: None,
+        board2d: None,
+        icon_render: None,
+        ink_canvas: None,
+        graph_timeline: None,
+        diff_view: None,
+        event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: entries, follow: None, activate_action: Some("openEntry".into()), domain_id: None }),
+        block_list: None,
+        menu: None,
+    };
+    let theme = Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 200.0);
+    let hit = event_feed_hit(&scene, bounds, theme.control_height * 1.5, &theme).expect("second entry hit");
+    assert_eq!(hit.control_id, "feed-press-test.feed.e2");
+    let action = hit.action.expect("activate action");
+    assert_eq!(action.action, "openEntry");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("surfaceId").and_then(semio_framework::DslValue::as_str), Some("feed-press-test"));
+    assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), Some("e2"));
+    assert!(args.get("entryId").is_none(), "the legacy entryId key must be gone");
+}
+
+/// 🪶️ A feed with no `activateAction` still resolves a hover target, but dispatches nothing.
+#[test]
+fn rows_without_an_activate_action_resolve_hover_only() {
+    let (_, _) = render_feed_entry(None);
+    let entries = json!([{ "id": "e1", "title": "Built" }]).to_string();
+    let mut scene = UiComponentSceneNode {
+        surface_id: "feed-press-inert".into(),
+        controller_id: "controller".into(),
+        component_kind: SurfaceKind::EventFeed,
+        pane_id: None,
+        binding_id: None,
+        presence: UiPresence::default(),
+        canvas_2d: None,
+        world_3d: None,
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        paint_2d: None,
+        virtual_file_system: None,
+        tiled_map: None,
+        board2d: None,
+        icon_render: None,
+        ink_canvas: None,
+        graph_timeline: None,
+        diff_view: None,
+        event_feed: None,
+        block_list: None,
+        menu: None,
+    };
+    scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene { entries_json: entries, follow: None, activate_action: None, domain_id: None });
+    let theme = Theme::default();
+    let hit = event_feed_hit(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), theme.control_height * 0.5, &theme).expect("entry hit");
+    assert_eq!(hit.control_id, "feed-press-inert.feed.e1");
+    assert!(hit.action.is_none());
+}
+//#endregion EventFeedPointerTests
