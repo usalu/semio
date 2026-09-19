@@ -101,8 +101,13 @@ fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
     loop {
         let mut context = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
         match job.step(&mut context) {
-            StepOutcome::Complete(commit) => return retained_bytes(commit.output),
-            StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
+            StepOutcome::Complete(commit) => {
+                drop(retained_bytes(commit.state));
+                return retained_bytes(commit.output);
+            }
+            // 🧹️ A published checkpoint owns retained pages; the driver closes it exactly.
+            StepOutcome::CheckpointReady(checkpoint) => drop(retained_bytes(checkpoint.state)),
+            StepOutcome::Yield => {}
             outcome => panic!("unexpected DEFLATE job outcome: {outcome:?}"),
         }
     }

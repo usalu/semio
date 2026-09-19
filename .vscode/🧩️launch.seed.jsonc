@@ -984,6 +984,48 @@
         "order": 213.2
       }
     },
+    {
+      "name": "🛠️dev🏢️semio-tech🎡️play",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/semio-tech-play:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TECH_PLAY_PORT": "6033",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.3
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6033)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "♻️activate🏢️semio-tech🎡️play",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/semio-tech-play:activate-dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.4
+      }
+    },
+    {
+      "name": "🖥️serve🏢️semio-tech🎡️play",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/semio-tech-play:serve",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.5
+      }
+    },
     "@generated:generator:react",
     "@generated:koordinator:react",
     "@generated:aussuchen:react",
@@ -2097,6 +2139,28 @@
       "presentation": {
         "group": "4_build",
         "order": 10
+      }
+    },
+    {
+      "name": "📦️build🏢️semio-tech🎡️play",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/semio-tech-play:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11
+      }
+    },
+    {
+      "name": "⚖️gate🏢️semio-tech🎡️play🎭️e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/semio-tech-play:test-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11
       }
     },
     {

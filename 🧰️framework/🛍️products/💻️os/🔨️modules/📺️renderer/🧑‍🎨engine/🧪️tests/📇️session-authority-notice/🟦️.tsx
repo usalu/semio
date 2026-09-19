@@ -4,7 +4,7 @@ import equal from "fast-deep-equal";
 import { afterEach, describe, expect, it } from "vitest";
 import fixture from "../../../../📇️directory/🪪️session-refresh/🔣️.json";
 import schema from "../../../../📇️directory/🪪️session-refresh/🧬️.schema.json";
-import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1, parseDirectorySessionAuthorityLocaleV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 
 afterEach(cleanup);
@@ -13,12 +13,12 @@ describe("session authority progress and cancellation", () => {
   it("validates the neutral bilingual presentation with independent schema and equality oracles", () => {
     expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     expect(equal(DIRECTORY_SESSION_AUTHORITY_TEXT_V1, fixture.presentation.text)).toBe(true);
-    for (const locale of fixture.presentation.locales) expect(equal(directorySessionAuthorityTextV1(locale), fixture.presentation.text[locale])).toBe(true);
+    for (const locale of fixture.presentation.locales.map(parseDirectorySessionAuthorityLocaleV1)) expect(equal(directorySessionAuthorityTextV1(locale), fixture.presentation.text[locale])).toBe(true);
     expect(() => directorySessionAuthorityTextV1("fr")).toThrow("directory.session-authority.locale-unsupported");
   });
 
   it("announces pending work with one cancellation and terminal unavailability without invented counts", () => {
-    for (const locale of fixture.presentation.locales) {
+    for (const locale of fixture.presentation.locales.map(parseDirectorySessionAuthorityLocaleV1)) {
       let cancellations = 0;
       const view = render(<SessionAuthorityNotice state="pending" locale={locale} onCancel={() => { cancellations += 1; }} />);
       const pending = screen.getByRole("status");

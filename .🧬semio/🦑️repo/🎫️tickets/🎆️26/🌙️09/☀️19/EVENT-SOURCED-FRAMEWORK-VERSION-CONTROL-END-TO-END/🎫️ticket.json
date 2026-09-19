@@ -1,10 +1,13 @@
 {
   "title": "Event-Sourced Framework Version Control End to End",
   "emoji": "🌿️",
-  "status": "open",
+  "status": "closed",
   "description": "Get the framework version control running end to end with event sourcing: no retrospective snapshot merging; artifacts are materialized by projecting all mutations; persistence stores only an initial snapshot plus the history of semantic changes. Symptom: two_instances_converge_disjoint_edits_via_backbone fails (ignored in lowpoly/remodel) because the store's merge_remote_snapshot always refuses and structural commands broadcast full snapshots.",
-  "summary": "",
+  "summary": "Framework version control is event sourced end to end. A document is its genesis snapshot plus one HLC-ordered causal log of semantic events: edit operations and history transitions (Revert/Reinstate/Commit/Branch/Checkout/Repin, content-addressed `semio.history.transition` envelopes, 📡️replication/🔗️causal/🔀️transition). The pure `fold_history` projects applied/redo/checkpoint/alternative plus change/checkpoint/alternative facts. Every store command authors events and materializes through the same `reproject` path remote events take. Replicas exchange only Genesis (identity) plus Mutations batches, so there is no snapshot merge: merge_remote_snapshot, the resolution-candidate machinery, snapshot ledger remapping and replay_suffix are deleted. `.ops`/`.spr` persist only edits plus transitions (REC_TRANSITION); positions are derived on load. The sync actor persists genesis and events. The TS codec carries genesis. Retained batch publications stamp replica-unique edit ids. Remote ingest cold-retires every scratch projection/diff/edit/inverse, and derive(Mutations) gains `retire_cold = fn`. The language-agnostic transition payload corpus plus JSON Schema is checked by an independent Python encoder, the Rust codec, and a TS encoder with Ajv. Verified: replication 14/14, replication TS 8/8, os TS 79/79, derive 15/15, plugin tool-run 36/36, store 367 pass / 51 pre-existing fails (no new failures, per-test diff incl. sync). Convergence and idempotence are green through real backbones for lowpoly, remodel, generation2d, gismap, puzzle-2d, puzzle-3d, reasoning-wires, note, fem-2d, forms, dag; imperative converges but fails in its own snapshot close. Open, owned elsewhere: plugin debt (animate missing-factory, playbook presence retirement factory, raster/sequence/shooting/space registryless test contexts, flow needs window view; composed children replicate as their own documents). Peer compile breaks: cad, generation3d, equation. The `verify interactivity tool-jobs` gate stops on an unrelated wgpu check and its store predicates reference test names moved into split test files.",
   "goal": "🎯️r2602/🎯️runningsketchpad",
-  "sessions": [],
-  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open returned 'invalid tool params' on 2026-09-19."
+  "sessions": [
+    "⚪️a33929ded4b64750a6b1f228f53dffe6"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open returned 'invalid tool params' on 2026-09-19. Reports: 📓️status.md, 📋️design.md, 📓️spr-history-transitions.md.",
+  "closedAt": "2026-09-19"
 }

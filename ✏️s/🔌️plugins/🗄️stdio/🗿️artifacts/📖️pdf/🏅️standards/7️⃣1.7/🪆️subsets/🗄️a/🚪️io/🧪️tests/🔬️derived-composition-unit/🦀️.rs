@@ -72,9 +72,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine() {
-        // 🔒 `⚙️engine::decode_pdf` already refuses any file whose trailer declares /Encrypt
-        // (`PdfEngineError::Unsupported`) -- composing through the 🧱️base delegate surfaces that as
-        // a real ComposeError before this subset's own conformance check even runs.
+        // 🔒 `decode_pdf` runs the standard security handler on any /Encrypt trailer and refuses a
+        // document the (empty) user password does not open (`PdfEngineError::Unsupported`) --
+        // composing through the 🧱️base delegate surfaces that as a real ComposeError before this
+        // subset's own conformance check even runs.
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
         let o1 = body.len();
@@ -89,7 +90,7 @@ mod tests {
         let hex = hex_encode(&body);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
         let err = PdfAComposerComposition::compose(&sources).expect_err("an /Encrypt trailer must never compose, at a or any other dialect");
-        assert!(err.diagnostics.iter().any(|d| d.message.contains("Encrypt")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
+        assert!(err.diagnostics.iter().any(|d| d.message.contains("encrypted document")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
     }
 
     #[semio_framework_async_macros::async_test]

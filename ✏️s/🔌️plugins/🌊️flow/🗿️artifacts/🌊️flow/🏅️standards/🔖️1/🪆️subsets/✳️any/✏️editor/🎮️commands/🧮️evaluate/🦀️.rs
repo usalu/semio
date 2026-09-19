@@ -22,10 +22,13 @@ pub fn eval_tick_effect() -> Effect {
 
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
-/// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
+/// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`. The probe host is retired,
+/// never dropped: its layout `OrderedMap` aborts the guest on a bare drop.
 pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let host = host_from_snapshot(snapshot, config, session);
-    if session.sync(&host) {
+    let armed = session.sync(&host);
+    host.retire_cold();
+    if armed {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
     } else {
         Emit::default()

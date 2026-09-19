@@ -52,7 +52,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     App { definition: create_cad_app(), examples: Vec::new() }
                 }
 
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>>) -> Result<usize, String> {
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Result<usize, String> {
                     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
                     let mut window_config_pages = 0;
                     while app.has_pending_typed_operations() {
@@ -79,7 +79,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(window_config_pages)
                 }
 
-                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>>, view: &ViewModel, command: CadCommand) -> Result<(), String> {
+                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, command: CadCommand) -> Result<(), String> {
                     app.dispatch_typed(command, &ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("cad-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
                     if drain(app).await? != 1 {
                         return Err("CAD command did not publish exactly one exact-window config result".into());
@@ -87,7 +87,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(())
                 }
 
-                async fn scene(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::World3dScene, String> {
+                async fn scene(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel) -> Result<semio_framework_plugin::World3dScene, String> {
                     let tree = app.render(shape::BODY_KEY, None, view).await.map_err(|error| format!("{error:?}"))?;
                     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
                     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
@@ -119,7 +119,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     None
                 }
 
-                async fn assert_exact_state(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>>, left: &ViewModel, right: &ViewModel, expected: &serde_json::Value) -> Result<(), String> {
+                async fn assert_exact_state(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, left: &ViewModel, right: &ViewModel, expected: &serde_json::Value) -> Result<(), String> {
                     let left_scene = scene(app, left).await?;
                     let right_scene = scene(app, right).await?;
                     let left_camera: serde_json::Value = serde_json::from_str(&left_scene.camera_json).map_err(|error| error.to_string())?;
@@ -171,7 +171,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 };
                 let left = view.for_window_instance(left_id).expect("left window");
                 let right = view.for_window_instance(right_id).expect("right window");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<CadPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                 app.bind_instance_id(91).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -218,7 +218,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     }
                     app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected).await?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<CadPlayApp>>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                     reopened.bind_instance_id(92).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;

@@ -21,16 +21,7 @@ pub fn eval_tick_effect() -> Effect {
 //#endregion 🔖️Constants
 
 //#region 🔖️Arm
-/// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
-/// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
-    let host = host_from_snapshot(snapshot, config, session);
-    if session.sync(&host) {
-        Emit { effects: vec![eval_tick_effect()], ..Default::default() }
-    } else {
-        Emit::default()
-    }
-}
+// 🧵️ The arm probe is owned by `commands::evaluate::evaluate_result`.
 //#endregion 🔖️Arm
 
 //#region 🔖️Evaluate
@@ -49,11 +40,14 @@ pub struct FlowEvalTick {}
 pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick(&mut host, None);
+    let parked = host.take_pending_extension_evals();
+    // 🧹️ The tick host owns a layout `OrderedMap` root that aborts the guest on a bare drop.
+    host.retire_cold();
     let effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
     let mut extension_invocations = Vec::new();
     // 🌊️ ONE WAVE, ONE HOP — every request the walk parked is independent of the others by
     // construction, so the whole dependency level crosses to its plugin on this one tick.
-    for pending in host.take_pending_extension_evals() {
+    for pending in parked {
         let request_json = serde_json::json!({
             "operatorId": pending.operator_id,
             "inputJson": pending.input_json,

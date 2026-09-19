@@ -41,6 +41,33 @@ async fn the_inspector_detail_section_follows_the_features_selection() {
     assert!(feature_json.contains("position"), "a feature pick must report the document kind it resolves to: {feature_json}");
 }
 
+/// 🪞️ B3a2: the "panel reflects state" half of the interaction bar. Before this, NO gis2d panel
+/// projected the document — the artifact tree lists the eleven fixed layer ids and the inspector
+/// summarised schema + layer visibility + selection size only, so `addFeature`/`deleteFeature` moved
+/// the ledger and the edit count while every panel stayed byte-identical. The summary now carries
+/// each collection's own extent, so a per-feature verb is visible in the UI it dispatched from.
+#[semio_framework_async_macros::async_test]
+async fn the_inspector_summary_projects_each_document_collection_extent() {
+    let cfg = MapWindowConfig::default();
+    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::default());
+    let json = |document: &GisMapSnapshot| -> String {
+        let tree = semio_framework_plugin::built_to_component_tree(render(document, &cfg, &Gis2dInteractionSnapshot::default(), labels).expect("inspector"));
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
+    };
+
+    let mut document = crate::schema::default_document();
+    let before = json(&document);
+    for row in ["gis2d-play-inspector.positions-count", "gis2d-play-inspector.routes-count", "gis2d-play-inspector.regions-count"] {
+        assert!(before.contains(row), "the summary must carry {row}: {before}");
+    }
+    assert!(before.contains(&document.positions.len().to_string()), "the positions row must print the document's own extent: {before}");
+
+    document.positions.push(crate::MapFeature { id: "position-probe".into(), data: dsl::DslValue::Null });
+    let after = json(&document);
+    assert_ne!(before, after, "appending one position must move the inspector projection");
+    assert!(after.contains(&document.positions.len().to_string()), "the positions row must follow the document: {after}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn the_definition_binds_the_framework_inspection_tab_to_this_body() {
     let definition = definition();

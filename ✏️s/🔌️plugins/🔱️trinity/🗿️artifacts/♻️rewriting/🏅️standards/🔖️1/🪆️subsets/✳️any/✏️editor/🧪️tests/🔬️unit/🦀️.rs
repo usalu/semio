@@ -339,7 +339,7 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
-    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "changes": history.changes.len(), "checkpoints": history.checkpoints.len(), "alternatives": history.alternatives.len(), "conflicts": history.conflicts.len() });
+    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "transitions": history.transitions.len(), "conflicts": history.conflicts.len() });
     assert_eq!(actual, expected);
     println!("[DEBUG] rewriting reset preserves its source and pack and emits neutral edit-free history without an envelope owner");
 }

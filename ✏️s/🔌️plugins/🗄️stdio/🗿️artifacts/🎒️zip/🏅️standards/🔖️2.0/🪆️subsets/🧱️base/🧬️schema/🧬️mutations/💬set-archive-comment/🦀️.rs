@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-archive-comment")]
 pub struct SetArchiveComment {
     pub(crate) comment: String,
 }

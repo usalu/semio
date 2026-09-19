@@ -1026,7 +1026,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         if let FlowCommand::FocusSelection(_) = command {
             let (nodes, _) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
             let mut next = config.clone();
-            if let Some(camera) = focus_selection_camera(snapshot, &config, &FlowEvalSession::new(), &nodes) {
+            let session = FlowEvalSession::new();
+            let camera = focus_selection_camera(snapshot, &config, &session, &nodes);
+            session.retire_cold();
+            if let Some(camera) = camera {
                 next.camera = camera;
             }
             self.completed = true;
@@ -2376,13 +2379,16 @@ impl ArtifactEditor for FlowPlayApp {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.legacy-dispatch"), "Flow retained routes execute only through their exact app-owned job factory"));
         }
         let mut session = FlowEvalSession::new();
-        match command {
+        let emitted = match command {
             FlowCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, &mut session, interaction),
             FlowCommand::FocusSelection(payload) => focus_selection::apply(payload, doc, cfg, &mut session, interaction),
             FlowCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, &mut session, interaction),
             FlowCommand::SpotlightCommit(payload) => spotlight_commit::apply(payload, doc, cfg, &mut session, interaction),
             _ => command.dispatch(doc, cfg, &mut session),
-        }
+        };
+        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
+        session.retire_cold();
+        emitted
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology`: every widget/synapse is registered at its own
@@ -2408,7 +2414,11 @@ impl ArtifactEditor for FlowPlayApp {
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the snapshot and the driver's persisted baseline each call.
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        evaluate::evaluate_result(doc.snapshot, &main::config::current(cfg), &mut FlowEvalSession::new()).effects
+        let mut session = FlowEvalSession::new();
+        let effects = evaluate::evaluate_result(doc.snapshot, &main::config::current(cfg), &mut session).effects;
+        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
+        session.retire_cold();
+        effects
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -2417,7 +2427,7 @@ impl ArtifactEditor for FlowPlayApp {
         let transient = main::transient::FlowWindowTransient::default();
         let labels = flow_play_labels(view_state);
         let mut session = FlowEvalSession::new();
-        match body_key {
+        let rendered = match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_COMPILED => compiled::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
@@ -2428,7 +2438,10 @@ impl ArtifactEditor for FlowPlayApp {
             FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(snapshot, &config, &mut session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        };
+        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
+        session.retire_cold();
+        rendered
     }
 
     fn render_with_request_context(
@@ -2516,6 +2529,26 @@ pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
     host
 }
 
+/// 🏠️ Runs `body` against a host rebuilt by [`host_from_snapshot`], then retires that host — the ONE
+/// shape every render, probe and evaluation step that only needs a host for the length of a call must
+/// use. A `FlowHost` owns a `FlowHostSnapshot` whose `layout: OrderedMap<WidgetLayout>` aborts the
+/// guest on a bare drop, so a host is closed, never dropped (the twin of `FlowHost::with_host_snapshot`).
+pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    let mut host = host_from_snapshot(snapshot, config, session);
+    let result = body(&mut host);
+    host.retire_cold();
+    result
+}
+
+/// 📸️ Runs `body` against the live host projection of `snapshot`, then retires that projection — a
+/// `FlowHostSnapshot` owns an `OrderedMap` layout root and widget payloads that refuse a bare drop.
+pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&semio_framework_artifact_flow_flow::FlowHostSnapshot) -> R) -> R {
+    let live = snapshot.to_host_snapshot();
+    let result = body(&live);
+    live.retire_cold();
+    result
+}
+
 /// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
 /// returns an empty vec when `mutate` reports "nothing changed".
 pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
@@ -2553,10 +2586,11 @@ pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowCo
     if selected_node_ids.is_empty() {
         return None;
     }
-    let mut host = host_from_snapshot(snapshot, config, session);
-    host.dag.set_viewport(1280, 800, 1.0);
-    host.dag.set_selection(selected_node_ids);
-    host.focus_selection_camera(1.2)
+    with_host_from_snapshot(snapshot, config, session, |host| {
+        host.dag.set_viewport(1280, 800, 1.0);
+        host.dag.set_selection(selected_node_ids);
+        host.focus_selection_camera(1.2)
+    })
 }
 //#endregion 🔖️Selection
 

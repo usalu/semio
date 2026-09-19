@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "host": "play.semio-tech.com",
+  "hostVariant": "s",
+  "excludedBrandPrefix": "entwerfen-mit-bestand-",
+  "groups": [
+    {
+      "id": "design",
+      "label": "Design",
+      "panes": [
+        { "variant": "cad", "label": "CAD", "tagline": "Model shapes and buildings", "description": "Model solids, spaces and building elements side by side in coordinated CAD windows.", "icon": "cad-shape" },
+        { "variant": "generation3d", "label": "Procedural 3D", "tagline": "Generate 3D geometry", "description": "Build parametric 3D geometry from flows of operations and preview every step live.", "icon": "shapes" },
+        { "variant": "generation2d", "label": "Procedural 2D", "tagline": "Generate 2D geometry", "description": "Compose parametric 2D profiles from flows of operations and inspect the result.", "icon": "procedural2d" },
+        { "variant": "flow", "label": "Flow", "tagline": "Visual dataflow programming", "description": "Wire nodes into dataflow graphs that compute values, geometry and building data.", "icon": "flow" },
+        { "variant": "lowpoly", "label": "Low Poly", "tagline": "Model low-poly meshes", "description": "Shape faceted meshes vertex by vertex and review them in a live 3D view.", "icon": "lowpoly-model" },
+        { "variant": "remodel", "label": "Remodel", "tagline": "Reconstruct from captures", "description": "Reconstruct surfaces from camera captures and compare the model against the scan.", "icon": "remodel-app" },
+        { "variant": "draw", "label": "Draw", "tagline": "Vector drawing", "description": "Sketch vector drawings with pens, shapes and layers and export them as documents.", "icon": "draw" },
+        { "variant": "raster", "label": "Raster", "tagline": "Paint pixels", "description": "Paint and edit raster images with brushes, fills and layers.", "icon": "raster" },
+        { "variant": "layout", "label": "Layout", "tagline": "Arrange pages", "description": "Arrange text, images and frames into page layouts.", "icon": "layout" },
+        { "variant": "shooting", "label": "Shooting", "tagline": "Stage cameras and shots", "description": "Place cameras and lights in a scene and frame the shots you want to render.", "icon": "shooting-scene" }
+      ]
+    },
+    {
+      "id": "assembly",
+      "label": "Assembly",
+      "panes": [
+        { "variant": "puzzle2d", "label": "Puzzle 2D", "tagline": "Assemble on a plan", "description": "Assemble designs from components connected by ports on a 2D board.", "icon": "puzzle" },
+        { "variant": "puzzle3d", "label": "Puzzle 3D", "tagline": "Assemble in space", "description": "Assemble designs from components in 3D, suggest matching parts and fill structures automatically.", "icon": "puzzle" },
+        { "variant": "puzzle5d", "label": "Puzzle 5D", "tagline": "Assemble across time and variants", "description": "Explore assemblies across time and design alternatives in one spatial view.", "icon": "puzzle5d-3d" },
+        { "variant": "block2d", "label": "Block 2D", "tagline": "Stack blocks on a plan", "description": "Lay out block-based designs on a 2D grid.", "icon": "square" },
+        { "variant": "block3d", "label": "Block 3D", "tagline": "Stack blocks in space", "description": "Stack blocks into volumetric designs and inspect them in 3D.", "icon": "box" },
+        { "variant": "block5d", "label": "Block 5D", "tagline": "Blocks across time and variants", "description": "Follow block designs through time and alternatives.", "icon": "layers" }
+      ]
+    },
+    {
+      "id": "generative",
+      "label": "Generative",
+      "panes": [
+        { "variant": "wfc2d", "label": "WFC 2D", "tagline": "Wave function collapse in 2D", "description": "Generate 2D patterns from tile rules with wave function collapse.", "icon": "grid-3x3" },
+        { "variant": "wfc3d", "label": "WFC 3D", "tagline": "Wave function collapse in 3D", "description": "Generate 3D structures from module rules with wave function collapse.", "icon": "scene-3d" },
+        { "variant": "grid2d", "label": "Grid 2D", "tagline": "Author 2D tile grids", "description": "Paint and constrain 2D tile grids that feed the generators.", "icon": "layout-grid" },
+        { "variant": "grid3d", "label": "Grid 3D", "tagline": "Author 3D module grids", "description": "Place and constrain modules in 3D grids that feed the generators.", "icon": "hexagon" },
+        { "variant": "bitmap", "label": "Bitmap", "tagline": "Learn from sample images", "description": "Generate new images that follow the local patterns of a sample bitmap.", "icon": "image" }
+      ]
+    },
+    {
+      "id": "engineering",
+      "label": "Engineering",
+      "panes": [
+        { "variant": "fem2d", "label": "FEM 2D", "tagline": "Analyse plane frames", "description": "Model plane frames with nodes, supports and loads and read the structural response.", "icon": "fem-app" },
+        { "variant": "fem3d", "label": "FEM 3D", "tagline": "Analyse spatial frames", "description": "Model spatial frames, solve them and inspect deformations and internal forces.", "icon": "fem-model" },
+        { "variant": "energy", "label": "Energy", "tagline": "Simulate building energy", "description": "Model zones, envelopes and boundary conditions and simulate the thermal behaviour of a building.", "icon": "sun" },
+        { "variant": "process3d", "label": "Process 3D", "tagline": "Plan fabrication steps", "description": "Plan the machining and fabrication steps for a workpiece and preview them in 3D.", "icon": "process-workpiece" },
+        { "variant": "sourcing", "label": "Sourcing", "tagline": "Curate components", "description": "Browse a pool of available components, filter it and curate a selection for a project.", "icon": "library" },
+        { "variant": "gis2d", "label": "Map", "tagline": "Explore places on a map", "description": "Explore locations and their relations on an interactive 2D map.", "icon": "gis2d" },
+        { "variant": "gis3d", "label": "Terrain", "tagline": "Explore terrain in 3D", "description": "Fly over elevation data and inspect sites on a 3D terrain.", "icon": "gis3d" },
+        { "variant": "architect", "label": "Architect", "tagline": "Program buildings", "description": "Define architectural programs with stakeholders, requirements and adjacencies.", "icon": "architect" }
+      ]
+    },
+    {
+      "id": "standards",
+      "label": "Standards",
+      "panes": [
+        { "variant": "din4108", "label": "DIN 4108", "tagline": "Thermal protection", "description": "Check thermal insulation and moisture protection of building components.", "icon": "award" },
+        { "variant": "din16798", "label": "DIN EN 16798", "tagline": "Indoor environment", "description": "Evaluate indoor environmental input parameters and ventilation of buildings.", "icon": "award" },
+        { "variant": "din18599", "label": "DIN V 18599", "tagline": "Energy efficiency", "description": "Assess the overall energy efficiency of buildings.", "icon": "award" },
+        { "variant": "en1990", "label": "Eurocode 0", "tagline": "Basis of structural design", "description": "Combine actions and verify limit states with the basis of structural design.", "icon": "landmark" },
+        { "variant": "en1991", "label": "Eurocode 1", "tagline": "Actions on structures", "description": "Determine dead, imposed, snow, wind and thermal actions on structures.", "icon": "landmark" },
+        { "variant": "en1992", "label": "Eurocode 2", "tagline": "Concrete structures", "description": "Design reinforced and prestressed concrete members.", "icon": "landmark" },
+        { "variant": "en1993", "label": "Eurocode 3", "tagline": "Steel structures", "description": "Design steel members and connections.", "icon": "landmark" },
+        { "variant": "en1994", "label": "Eurocode 4", "tagline": "Composite structures", "description": "Design composite steel and concrete members.", "icon": "landmark" },
+        { "variant": "en1995", "label": "Eurocode 5", "tagline": "Timber structures", "description": "Design timber members and connections.", "icon": "landmark" },
+        { "variant": "en1996", "label": "Eurocode 6", "tagline": "Masonry structures", "description": "Design masonry walls and members.", "icon": "landmark" },
+        { "variant": "en1997", "label": "Eurocode 7", "tagline": "Geotechnical design", "description": "Verify foundations, retaining structures and ground.", "icon": "landmark" },
+        { "variant": "en1998", "label": "Eurocode 8", "tagline": "Earthquake resistance", "description": "Design structures for earthquake resistance.", "icon": "landmark" },
+        { "variant": "en1999", "label": "Eurocode 9", "tagline": "Aluminium structures", "description": "Design aluminium members and connections.", "icon": "landmark" },
+        { "variant": "iso16757", "label": "ISO 16757", "tagline": "Building services product data", "description": "Describe building services products with standardised data structures.", "icon": "clipboard-list" },
+        { "variant": "vdi3805", "label": "VDI 3805", "tagline": "Product data exchange", "description": "Exchange building services product data between manufacturers and planners.", "icon": "clipboard-list" }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "label": "Knowledge",
+      "panes": [
+        { "variant": "note", "label": "Note", "tagline": "Take notes", "description": "Write notes with text, ink and math on an infinite page.", "icon": "note" },
+        { "variant": "writer", "label": "Writer", "tagline": "Write documents", "description": "Write structured documents with headings, lists and references.", "icon": "writer" },
+        { "variant": "forms", "label": "Forms", "tagline": "Build forms", "description": "Design forms with fields and validation and fill them in.", "icon": "forms" },
+        { "variant": "mathematical", "label": "Math", "tagline": "Write equations", "description": "Write and evaluate mathematical equations.", "icon": "math-app" },
+        { "variant": "reasoning-wires", "label": "Wires", "tagline": "Map ideas", "description": "Connect ideas into mind maps and follow the wires between them.", "icon": "reasoning-wires" },
+        { "variant": "dag", "label": "DAG", "tagline": "Directed graphs", "description": "Build directed acyclic graphs with typed ports.", "icon": "dag" },
+        { "variant": "imperative", "label": "Procedure", "tagline": "Write procedures", "description": "Write step-by-step procedures that run against documents.", "icon": "imperative" },
+        { "variant": "playbook", "label": "Playbook", "tagline": "Guided plays", "description": "Author playbooks that guide through a sequence of plays.", "icon": "book-open" },
+        { "variant": "trinity-jack", "label": "Jack", "tagline": "Compose trinity documents", "description": "Compose left-hand and right-hand sides of trinity documents.", "icon": "trinity" },
+        { "variant": "trinity-rewriting", "label": "Rewriting", "tagline": "Rewrite with rules", "description": "Apply rewriting rules to trinity documents and inspect each step.", "icon": "trinity-rewriting" }
+      ]
+    },
+    {
+      "id": "media",
+      "label": "Media",
+      "panes": [
+        { "variant": "animate", "label": "Animate", "tagline": "Animate presentations", "description": "Compose animated scenes on a timeline and present them.", "icon": "animate" },
+        { "variant": "sequence", "label": "Sequence", "tagline": "Sequence clips", "description": "Arrange clips and events into sequences.", "icon": "sequence" },
+        { "variant": "vcs", "label": "Versions", "tagline": "Track changes", "description": "Browse the history of a document, its checkpoints and alternatives.", "icon": "git-branch" },
+        { "variant": "demonstrator", "label": "Demonstrator", "tagline": "Composed playground", "description": "Explore one document composed from several apps working together.", "icon": "play" }
+      ]
+    }
+  ]
+}

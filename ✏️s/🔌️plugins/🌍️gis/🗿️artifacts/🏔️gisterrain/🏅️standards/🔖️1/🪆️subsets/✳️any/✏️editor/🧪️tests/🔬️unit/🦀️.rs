@@ -22,8 +22,11 @@ pub(crate) mod context {
     /// 🪟️ Targets the real Terrain window instance for render and command authority.
     pub fn main_window_view() -> ViewModel {
         ViewModel {
-            window_id: Some(modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()),
-            window_instances: vec![ViewWindowInstance { id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(), window_kind_id: modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into() }],
+            window_id: Some(crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()),
+            window_instances: vec![ViewWindowInstance {
+                id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
+                window_kind_id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
+            }],
             ..Default::default()
         }
     }

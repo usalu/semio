@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the architect editor and viewer.
     pub enum ArchitectApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::architect::ArchitectPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::architect::ArchitectViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::architect::ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::architect::ArchitectViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

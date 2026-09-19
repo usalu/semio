@@ -1,0 +1,14 @@
+@import "../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎨️.css";
+@source ".";
+
+/* 🃏️ Pane card stacks are silhouette hosts — same transparent stack rule as introduction/context menu. */
+[data-slot="play-pane-card-stack"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* 🃏️ Overview cards mirror introduction step hover: emphasized silhouette stroke. */
+[data-play-pane-card]:hover [data-window-silhouette-border][data-kind="normal"]:not([data-pending]) path {
+  stroke: var(--border-emphasized-color);
+  transition: stroke 120ms ease;
+}

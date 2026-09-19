@@ -1000,10 +1000,7 @@ pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
-    if index >= base.vlrs.len() {
-        return LasDiff::default();
-    }
-    LasDiff { number_of_vlrs: Some((base.vlrs.len() - 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
+    LasDiff { number_of_vlrs: Some(base.vlrs.len().saturating_sub(1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
@@ -1017,24 +1014,15 @@ pub fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> L
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
-    if index >= base.points.len() {
-        return LasDiff::default();
-    }
-    LasDiff { number_of_point_records: Some((base.points.len() - 1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
+    LasDiff { number_of_point_records: Some(base.points.len().saturating_sub(1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_point(base: &LasSnapshot, index: usize, point: &LasPoint) -> LasDiff {
-    match base.points.get(index) {
-        Some(existing) => {
-            let d = point_between(existing, point);
-            if d == LasPointDiff::default() {
-                LasDiff::default()
-            } else {
-                LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d }], added: vec![] }), ..Default::default() }
-            }
-        }
-        None => LasDiff::default(),
+    let d = point_between(base.points.get(index).unwrap_or(&LasPoint::default()), point);
+    if base.points.get(index).is_some() && d == LasPointDiff::default() {
+        return LasDiff::default();
     }
+    LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d }], added: vec![] }), ..Default::default() }
 }
 //#endregion 🔖️Diff
 

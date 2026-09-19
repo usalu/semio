@@ -8,7 +8,7 @@
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 31,
+    "proofRows": 32,
     "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
@@ -52,6 +52,7 @@
     "setSunElevation",
     "setSunIntensity",
     "setContributions",
+    "setActiveExample",
     "loadRawRequest"
   ],
   "routes": [
@@ -173,10 +174,11 @@
     {
       "id": "setActiveExample",
       "intendedLanes": [
-        "artifact"
+        "config",
+        "hostEffect"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "persistentDecodeJobMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "worldPointerDown",

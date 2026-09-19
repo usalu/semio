@@ -1,16 +1,16 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app as sdk_new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{App, EditorApp, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `ArchitectPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<ArchitectPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
-    pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
+    pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     pub async fn new_app() -> ArchitectApp {
-        sdk_new_app::<EditorApp<ArchitectPlayApp>>().await
+        VcsArtifactApp::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::new(EditorApp::default()).await
     }
     
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
@@ -23,7 +23,7 @@ pub(crate) mod context {
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> ArchitectApp {
-        new_app_with_registry::<EditorApp<ArchitectPlayApp>>(architect_app_manifest_for_tests).await
+        new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(architect_app_manifest_for_tests).await
     }
     
     pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
@@ -387,3 +387,57 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
     assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
 }
 //#endregion 🔖️Behavior
+
+//#region 🔖️ExampleArchiveLoad
+/// 🚪️ The browser host answers the boot `setActiveExample`'s `Effect::LoadDocument` by handing the
+/// pack/spr pair back through the document archive door with an empty member roster (`ShellHost`
+/// `loadDocumentPair`); every composed `#[child]` slot must then be derived through
+/// `genesis_child_pack`, or the closure completes `Incomplete` and the load is refused
+/// (`document-archive-replacement.closure-rejected`).
+#[semio_framework_async_macros::async_test]
+async fn demo_example_load_settles_through_the_host_document_archive_door() {
+    use semio_framework_plugin::{artifact_app_laws, PluginApp};
+    let mut app = context::app_with_registry().await;
+    let instance = 7;
+    app.bind_instance_id(instance).await;
+    let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
+    app.dispatch_typed(ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta).await.expect("example dispatch");
+    let mut loaded = None;
+    for _ in 0..100_000 {
+        app.maintenance_step(1, 4_096).unwrap();
+        app.advance_typed_operation_publication().await.unwrap();
+        if let Some(page) = app.take_typed_operation_result_page(instance) {
+            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+        }
+        if let Some(semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+            loaded = Some((pack, spr));
+        }
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+        if !app.has_pending_typed_operations() {
+            break;
+        }
+        std::thread::yield_now();
+    }
+    let (parent_pack, parent_spr) = loaded.expect("the demo example publishes a document load");
+    PluginApp::begin_document_archive_load(&mut app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    let mut status = None;
+    for _ in 0..1_000_000 {
+        let polled = PluginApp::poll_document_archive_load(&mut app, 91).await.expect("archive status");
+        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+            status = Some(polled);
+            break;
+        }
+        let _ = PluginApp::maintenance_step(&mut app, 1, 4_096).expect("archive maintenance step");
+        std::thread::yield_now();
+    }
+    let status = status.expect("archive load reaches a terminal state");
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    PluginApp::acknowledge_document_archive_load(&mut app, 91).expect("archive acknowledgement");
+    let snapshot = app.snapshot().expect("loaded snapshot");
+    for (slot, child_id) in [("knowledge", snapshot.knowledge.child_id.clone()), ("benchmarks", snapshot.benchmarks.child_id.clone())] {
+        assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");
+    }
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🔖️ExampleArchiveLoad

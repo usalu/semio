@@ -725,6 +725,57 @@ pub enum ExecutionClass {
     Job,
 }
 
+/// @emoji 🎯️ WHO a declared action/command is addressed to. Orthogonal to [`ActionKind`] (which says
+/// how a verb relates to VCS history) and to `in_palette` (which says whether a human sees it in the
+/// command palette): an agent driving the artifact through the semio MCP needs to tell an
+/// intent-level document verb (`addLayer`, `patchLayer`, `exportDocument`) apart from the raw
+/// pointer/keyboard/engagement events a live surface feeds the same app (`canvasPointerMove`,
+/// `engagementInput`, `canvasEscape`) and from window/view chrome that only means something inside a
+/// running shell (`setCamera`, `setActiveUtility`). Publishing all three as one flat capability list
+/// is what made `capabilities_search "draw rectangle"` unusable (ticket 26/09/18 slice M5a).
+///
+/// Left undeclared, [`resolve_audience`] derives it from facts the manifest already carries; a
+/// declaration overrides the derivation and is the only way to mark a `Mutation`-kind gesture route
+/// (a pointer handler that really does commit an operation) as [`CapabilityAudience::Input`].
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum CapabilityAudience {
+    /// 🤖️ An intent-level verb: a human or an agent can pick it to accomplish a goal on the artifact.
+    Agent,
+    /// 🖱️ A raw pointer/keyboard/engagement input event — meaningful only to a live UI surface that
+    /// owns a cursor, a gesture and a draft. Reachable to the shell, never published to agents.
+    Input,
+    /// 🪟️ Window/view/session chrome — camera poses, active utility, panel filters. Reachable to the
+    /// shell, never published to agents.
+    Chrome,
+}
+
+/// @emoji 🧭️ The derivation [`resolve_audience`] applies when an action/command declares no
+/// [`CapabilityAudience`], stated once so the catalog compiler, the descriptor emitter and the shell
+/// all agree: framework-injected hover/selection is `Input`; ephemeral view state that is not a
+/// palette command is `Chrome`; everything else — every mutation, every history/clipboard/shell verb,
+/// and every palette-visible view verb such as `exportDocument` — is `Agent`.
+pub fn derive_audience(kind: ActionKind, in_palette: bool) -> CapabilityAudience {
+    match kind {
+        ActionKind::Interaction => CapabilityAudience::Input,
+        ActionKind::View if !in_palette => CapabilityAudience::Chrome,
+        _ => CapabilityAudience::Agent,
+    }
+}
+
+/// @emoji 🧭️ This action's audience — its own declaration when it has one, otherwise
+/// [`derive_audience`] over `kind`/`in_palette`.
+pub fn resolve_audience(action: &ActionDefinition) -> CapabilityAudience {
+    action.semantics.audience.unwrap_or_else(|| derive_audience(action.kind, action.in_palette))
+}
+
+/// @emoji 🧭️ This command's audience — see [`resolve_audience`].
+pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudience {
+    command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
+}
+
 /// @emoji 🧵️ Phase-8 migration disposition for every action and command declaration. The
 /// default is deliberately not executable: manifests decoded without an explicit disposition remain
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
@@ -795,6 +846,13 @@ pub struct ActionSemantics {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<LocalizedLabel>,
+    /// 🎯️ Declared audience — see [`CapabilityAudience`]. `None` means "derive it", which
+    /// [`resolve_audience`] does from `kind`/`in_palette`; only a verb the derivation would get wrong
+    /// (a pointer gesture that commits a real operation, a palette verb that is pure chrome) declares
+    /// one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub audience: Option<CapabilityAudience>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub use_when: Vec<String>,
@@ -978,6 +1036,38 @@ impl ActionDefinition {
         self
     }
 
+    /// @emoji 💬️ Sets the localized one-or-two-sentence description an agent reads to decide whether
+    /// this is the verb it wants (`ActionSemantics.description`) — `LocalizedLabel::native(en, de)`,
+    /// English first and German second per `AGENTS.md`, never a default language.
+    pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
+        self.semantics.description = Some(description.into());
+        self
+    }
+
+    /// @emoji 🎯️ Declares this action's [`CapabilityAudience`] explicitly, overriding
+    /// [`derive_audience`].
+    pub fn audience(mut self, audience: CapabilityAudience) -> Self {
+        self.semantics.audience = Some(audience);
+        self
+    }
+
+    /// @emoji 🖱️ Marks this action a raw input event ([`CapabilityAudience::Input`]) and takes it out
+    /// of the palette — the declaration a `Mutation`-kind pointer/gesture route needs, since
+    /// [`derive_audience`] reads every mutation as agent-addressable.
+    pub fn input_event(mut self) -> Self {
+        self.in_palette = false;
+        self.semantics.audience = Some(CapabilityAudience::Input);
+        self
+    }
+
+    /// @emoji 🪟️ Marks this action window/view/session chrome ([`CapabilityAudience::Chrome`]) and
+    /// takes it out of the palette.
+    pub fn chrome(mut self) -> Self {
+        self.in_palette = false;
+        self.semantics.audience = Some(CapabilityAudience::Chrome);
+        self
+    }
+
     /// @emoji 📖️ Appends one natural-language usage example (`ActionSemantics.examples`).
     pub async fn example(mut self, example: impl Into<String>) -> Self {
         self.semantics.examples.push(example.into());
@@ -993,13 +1083,26 @@ pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") },
-        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::resumable_framework("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History, "redo-2") },
-        ActionDefinition::resumable_framework("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History, "git-commit"),
-        ActionDefinition::resumable_framework("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History, "git-branch"),
-        ActionDefinition::resumable_framework("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch"),
-        ActionDefinition::resumable_framework("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History, "git-branch"),
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") }
+            .describe(LocalizedLabel::native("Reverts the most recent edit on the open artifact and moves its head back one revision.", "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."))
+            .use_when(["undo the last change", "take that back", "revert my last edit"]),
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::resumable_framework("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History, "redo-2") }
+            .describe(LocalizedLabel::native("Re-applies the edit that was last undone and moves the artifact head forward one revision.", "Wendet die zuletzt rückgängig gemachte Änderung erneut an und setzt den Kopf eine Revision vor."))
+            .use_when(["redo", "re-apply what I undid"]),
+        ActionDefinition::resumable_framework("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History, "git-commit")
+            .describe(LocalizedLabel::native("Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.", "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."))
+            .use_when(["save a checkpoint", "mark this state"]),
+        ActionDefinition::resumable_framework("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History, "git-branch")
+            .describe(LocalizedLabel::native("Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.", "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."))
+            .use_when(["try a variant", "branch this design"]),
+        ActionDefinition::resumable_framework("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch")
+            .describe(LocalizedLabel::native("Moves the artifact head onto another existing alternative branch.", "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."))
+            .use_when(["switch to the other variant"]),
+        ActionDefinition::resumable_framework("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History, "git-branch")
+            .describe(LocalizedLabel::native("Restores the artifact to a previously committed checkpoint by id.", "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."))
+            .use_when(["go back to that checkpoint"]),
         ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History, "clock") }
+            .describe(LocalizedLabel::native("Rewinds the artifact to the state it had just after one numbered entry of the session command log.", "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."))
             .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
     ]
 }
@@ -1035,9 +1138,12 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// @emoji 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
 /// shell-kind effect that already happened into the session command log, for effects dispatched
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
-/// optional free-text elaboration shown in the history panel.
+/// optional free-text elaboration shown in the history panel. A note is an UNDO TARGET only when the
+/// shell also declares `inverseCommandId` (plus optional `inverseArgs`): chrome whose prior state the
+/// shell never captured has no computable inverse, so it stays a log row the document undo ledger
+/// steps straight over — see `VcsArtifactApp::dispatch_chrome_history_action`.
 pub fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell, "book-open") }.with_args([
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell, "book-open") }.chrome().with_args([
         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
         ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
@@ -1059,9 +1165,13 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
     ];
     vec![
-        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard, "copy") },
-        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard, "scissors") },
-        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard, "clipboard") }.with_args([
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard, "copy") }
+            .describe(LocalizedLabel::native("Copies the current selection of the focused window onto the workspace clipboard.", "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage.")),
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard, "scissors") }
+            .describe(LocalizedLabel::native("Removes the current selection from the artifact and puts it on the workspace clipboard.", "Entfernt die aktuelle Auswahl aus dem Artefakt und legt sie in der Zwischenablage ab.")),
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard, "clipboard") }
+            .describe(LocalizedLabel::native("Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.", "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."))
+            .with_args([
             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(&"original"),
             ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
@@ -1578,6 +1688,18 @@ impl CommandDefinition {
     /// @emoji 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
     pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// @emoji 💬️ Sets `ActionSemantics.description` — see `ActionDefinition::describe`.
+    pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
+        self.semantics.description = Some(description.into());
+        self
+    }
+
+    /// @emoji 🎯️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
+    pub fn audience(mut self, audience: CapabilityAudience) -> Self {
+        self.semantics.audience = Some(audience);
         self
     }
 

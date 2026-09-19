@@ -37,10 +37,22 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
         edit_ids.push(id);
     }
     if with_checkpoint_and_alternative && !edit_ids.is_empty() {
-        appender.append_change(&crate::os_spr::HistoryChange { id: "c0".to_string(), saved_at: "2026-07-27T00:01:00Z".to_string(), edit_ids: edit_ids.clone(), description: None }).await.unwrap();
-        appender.append_checkpoint(&crate::os_spr::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None }).await.unwrap();
-        appender.append_alternative(&crate::os_spr::HistoryAlternative { id: "alt-main".to_string(), name: "main".to_string(), checkpoint_ids: vec!["cp0".to_string()] }).await.unwrap();
-        appender.set_active(Some("alt-main")).await.unwrap();
+        let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+            checkpoint_id: "cp0".to_string(),
+            parent_id: None,
+            change_id: "c0".to_string(),
+            mutation_ids: edit_ids.iter().map(|id| crate::os_spr::MutationId(format!("{id}#0"))).collect(),
+            description: None,
+            saved_at: "2026-07-27T00:01:00Z".to_string(),
+            authors: Vec::new(),
+            message: None,
+            timestamp: "2026-07-27T00:02:00Z".to_string(),
+        });
+        let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-main".to_string(), name: "main".to_string(), checkpoint_id: "cp0".to_string() };
+        for (logical, transition) in [commit, branch].iter().enumerate() {
+            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("actor-a".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
+            appender.append_transition(&crate::os_spr::HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
+        }
         appender.commit().await.unwrap();
     }
     let bytes = appender.into_sink().await;
@@ -109,10 +121,6 @@ async fn kind_name_covers_every_frozen_kind_byte() {
         (REC_ACTOR_DICT, "actor_dict"),
         (REC_STR_DICT, "str_dict"),
         (REC_EDIT, "edit"),
-        (REC_CHANGE, "change"),
-        (REC_CHECKPOINT, "checkpoint"),
-        (REC_ALTERNATIVE, "alternative"),
-        (REC_ACTIVE, "active"),
         (REC_FRONTIER, "frontier"),
         (REC_PROJECTION, "snapshot"),
         (REC_INDEX, "index"),
@@ -124,6 +132,7 @@ async fn kind_name_covers_every_frozen_kind_byte() {
         (REC_SEALED, "sealed"),
         (REC_COMPACTION, "compaction"),
         (REC_PADDING, "padding"),
+        (crate::os_spr::REC_TRANSITION, "transition"),
     ] {
         assert_eq!(kind_name(kind), name);
     }

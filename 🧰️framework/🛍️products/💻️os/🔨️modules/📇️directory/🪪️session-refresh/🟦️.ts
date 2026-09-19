@@ -8,10 +8,15 @@ export const DIRECTORY_SESSION_AUTHORITY_TEXT_V1 = {
 
 export type DirectorySessionAuthorityLocaleV1 = keyof typeof DIRECTORY_SESSION_AUTHORITY_TEXT_V1;
 
+/** 🔡️ Narrows an untyped locale tag to an owned one, refusing instead of selecting a default language. */
+export function parseDirectorySessionAuthorityLocaleV1(locale: string): DirectorySessionAuthorityLocaleV1 {
+  if (locale !== "en" && locale !== "de") throw new Error("directory.session-authority.locale-unsupported");
+  return locale;
+}
+
 /** 🔡️ Refuses unowned locales instead of silently selecting a default language. */
 export function directorySessionAuthorityTextV1(locale: string): (typeof DIRECTORY_SESSION_AUTHORITY_TEXT_V1)[DirectorySessionAuthorityLocaleV1] {
-  if (locale !== "en" && locale !== "de") throw new Error("directory.session-authority.locale-unsupported");
-  return DIRECTORY_SESSION_AUTHORITY_TEXT_V1[locale];
+  return DIRECTORY_SESSION_AUTHORITY_TEXT_V1[parseDirectorySessionAuthorityLocaleV1(locale)];
 }
 
 export interface DirectorySessionRefreshV1 {

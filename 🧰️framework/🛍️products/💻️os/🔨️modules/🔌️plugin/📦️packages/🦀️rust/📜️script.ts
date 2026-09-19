@@ -190,7 +190,7 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert(segments.every((segment) => segment === "--native"), "document-backbone-binding-check accepts only --native");
     const rows = documentBackboneBindingOracle(this.repoRoot);
-    console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB snapshot=4MiB pending=64/1MiB`);
+    console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB genesis=4MiB pending=64/1MiB`);
     if (!segments.includes("--native")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,

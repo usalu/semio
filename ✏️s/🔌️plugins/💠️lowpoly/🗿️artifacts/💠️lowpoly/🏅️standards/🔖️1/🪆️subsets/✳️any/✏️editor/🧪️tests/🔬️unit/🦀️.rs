@@ -539,11 +539,7 @@ async fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window(
 //#region 🔖️CrossCutting
 /// 🧹️ The REGISTERED pair: lowpoly publishes bounded tool proofs, so a registry-less `paired_apps`
 /// instance faults in the `interactive-job.catalog-authority` proof join before any edit lands.
-/// Ignored, not deleted: `paired_registered_apps` refuses `attach_backbone` outright ("remote snapshot
-/// merge is fail-closed until the app-owned streaming envelope decoder …"), a framework gap every
-/// tool-proof app shares (raster, fem2d, remodel measured the same on 2026-09-16/18).
 #[semio_framework_async_macros::async_test]
-#[ignore = "framework gap: paired_registered_apps refuses attach_backbone (remote snapshot merge is fail-closed)"]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
     artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<LowpolyPlayApp>, _, _, _>(
         "mem://lowpoly-convergence",

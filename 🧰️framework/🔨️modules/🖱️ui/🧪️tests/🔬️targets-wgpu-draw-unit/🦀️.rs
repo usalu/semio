@@ -413,6 +413,21 @@ fn overlay_layers_collected_separately_from_backdrop_ui() {
 }
 
 #[test]
+fn overlay_rasters_are_collected_separately_without_changing_the_texture_identity() {
+    let mut draw = DrawList::default();
+    draw.push_raster_quad("plain", [1.0, 2.0, 3.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.begin_overlay_route();
+    draw.push_raster_quad("dialog", [5.0, 6.0, 7.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.end_overlay_route();
+
+    assert_eq!(draw.layers[0].raster_instances.len(), 1, "an in-flow image remains in the scene raster lane");
+    assert_eq!(draw.layers[0].overlay_raster_instances.len(), 1, "a dialog/popover image follows its overlay route");
+    assert_eq!(draw.layers[0].raster_instances[0].0, "plain");
+    assert_eq!(draw.layers[0].overlay_raster_instances[0].0, "dialog", "routing changes only ordering, never the upload key");
+    assert_eq!(draw.layers[0].overlay_raster_instances[0].1.rect, [5.0, 6.0, 7.0, 8.0]);
+}
+
+#[test]
 fn glass_content_layers_tagged_with_foreground_of() {
     use super::Theme;
     use crate::wgpu::theme::Level;

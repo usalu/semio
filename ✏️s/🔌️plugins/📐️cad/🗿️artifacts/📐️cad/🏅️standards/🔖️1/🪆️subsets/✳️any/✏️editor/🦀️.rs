@@ -695,8 +695,10 @@ pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<Cad
 /// `schema`/`id` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(&scene.schema, &scene.id, scene.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
+    // 🪪️ An edit-free history log, never a throwaway `create_document_envelope`: an envelope dropped
+    // without its bounded retirement authority traps (`terminal shell reached Drop …`). The host
+    // re-stamps the log's identity with the live store's before archive hydration.
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -1354,6 +1356,7 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setSunElevation",
     "setSunIntensity",
     "setContributions",
+    "setActiveExample",
 ];
 const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
@@ -1386,6 +1389,7 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "setSunElevation",
     "setSunIntensity",
     "setContributions",
+    "setActiveExample",
     "loadRawRequest",
 ];
 const CAD_RETAINED_COMMAND_SCHEMA: &str = "cad.scene.tool-command.v1";
@@ -1429,6 +1433,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+    // 🗃️ An example switch records the active example id in the session config and hands the host
+    // ONE whole-document `LoadDocument` effect, which the store admits through
+    // `build_document_store_initialization_job` — never an in-history artifact edit.
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
@@ -2020,6 +2028,17 @@ impl ArtifactEditor for CadPlayApp {
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = CadCommand;
+    /// 🧩️ Every pane's model (and the forward-declared drawing) child is an `s.stdio.semio` member.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::cad_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ See [`crate::cad_genesis_child_pack`].
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::cad_genesis_child_pack(snapshot, slot, child_id)
+    }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
@@ -2036,6 +2055,17 @@ impl ArtifactEditor for CadPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🏗️ Admits the whole-document replacement `reset_document_effect` emits for every example switch
+    /// and document import. The trait default refuses the envelope, so the host would answer every
+    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load door.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, CAD_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -2129,6 +2159,7 @@ impl ArtifactEditor for CadPlayApp {
             "setSunElevation",
             "setSunIntensity",
             "setContributions",
+            "setActiveExample",
             "loadRawRequest"
         ]
     }
@@ -2491,7 +2522,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setProjection", InteractiveJobClassification::Migrated)

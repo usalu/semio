@@ -15,12 +15,22 @@ pub use crate::standards::v1::subsets::any::schema::operations::*;
 /// 🧮️ Semantic Imperative document mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = ProcedureSnapshot, diff = ProcedureDiff, schema = "imperative.imperative")]
+#[mutations(snapshot = ProcedureSnapshot, diff = ProcedureDiff, schema = "imperative.imperative", retire_cold = retire_procedure_mutation)]
 pub enum ProcedureMutation {
     CreateStep(CreateStep),
     DeleteStep(DeleteStep),
     ReorderSteps(ReorderSteps),
     EditStepParams(EditStepParams),
+}
+
+/// 🧊️ Cold disposal of one operation: created steps and edited params own neural dictionaries.
+fn retire_procedure_mutation(mutation: ProcedureMutation) {
+    use neural_engine::ColdRetire;
+    match mutation {
+        ProcedureMutation::CreateStep(value) => value.step.retire_cold(),
+        ProcedureMutation::EditStepParams(value) => value.new_params.retire_cold(),
+        ProcedureMutation::DeleteStep(_) | ProcedureMutation::ReorderSteps(_) => {}
+    }
 }
 //#endregion 🔖️Aggregate
 

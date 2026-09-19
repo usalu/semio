@@ -32,10 +32,6 @@ fn record_kind_constants_match_contract() {
     assert_eq!(REC_ACTOR_DICT, 0x02);
     assert_eq!(REC_STR_DICT, 0x03);
     assert_eq!(REC_EDIT, 0x04);
-    assert_eq!(REC_CHANGE, 0x05);
-    assert_eq!(REC_CHECKPOINT, 0x06);
-    assert_eq!(REC_ALTERNATIVE, 0x07);
-    assert_eq!(REC_ACTIVE, 0x08);
     assert_eq!(REC_FRONTIER, 0x09);
     assert_eq!(REC_PROJECTION, 0x0A);
     assert_eq!(REC_INDEX, 0x0B);
@@ -51,7 +47,7 @@ fn record_kind_constants_match_contract() {
 
 #[test]
 fn is_critical_kind_matches_contract_set() {
-    for kind in [REC_DOC, REC_EDIT, REC_CHANGE, REC_CHECKPOINT, REC_ALTERNATIVE, REC_ACTIVE, REC_COMMIT, REC_ACTOR_DICT, REC_STR_DICT] {
+    for kind in [REC_DOC, REC_EDIT, REC_COMMIT, REC_ACTOR_DICT, REC_STR_DICT] {
         assert!(is_critical_kind(kind), "{kind:#x} should be critical");
     }
     for kind in [REC_END, REC_FRONTIER, REC_PROJECTION, REC_INDEX, REC_SIGNATURE, REC_REDACTION, REC_UPCAST, REC_EPHEMERAL, REC_SEALED, REC_COMPACTION, REC_PADDING, 0x50] {

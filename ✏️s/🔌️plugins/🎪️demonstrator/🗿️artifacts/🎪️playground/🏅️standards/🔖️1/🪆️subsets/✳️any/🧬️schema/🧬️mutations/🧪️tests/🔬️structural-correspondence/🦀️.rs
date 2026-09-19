@@ -10,7 +10,7 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     let descriptor = dsl::os_pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
     let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema");
     let payload_schema = dsl::os_pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
-    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral oracle catalog");
+    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog = dsl::os_pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
     let descriptors = PlaygroundMutation::kinds();
 

@@ -191,3 +191,35 @@ fn the_batch_handle_fallback_is_closed_for_every_declared_route() {
     }
     eprintln!("[DEBUG] flow batch handle fallback is unreachable for all {} declared routes", FlowCommand::TOOL_JOB_IDS.len());
 }
+
+/// ⚖️ LAW (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the live boot of the flow editor —
+/// render every host-backed body (main, compiled, catalogue, document panel), arm the boot evaluation
+/// and run its first tick — never drops a live `FlowHost`/`FlowHostSnapshot`/`FlowEvalSession`. Each
+/// of those owns an `OrderedMap` layout root (or a close-witnessed session) that aborts the guest on a
+/// bare drop ("ordered-map root must be explicitly retired before drop"); in the browser that abort
+/// happened inside the instance owner's `with_mut`, so every later call answered "runtime instance
+/// authority is busy". Driven below the app so the law is independent of the app's close ladder.
+#[test]
+fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
+    use semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree;
+    let snapshot = FlowSnapshot::default();
+    let config = main::config::FlowMainWindowConfig::default();
+    let mut session = FlowEvalSession::new();
+    let view_state = semio_framework_plugin::ViewModel::default();
+    let labels = flow_play_labels(&view_state);
+    let bodies = [
+        main::render(&snapshot, &config, &session),
+        compiled::render(&snapshot, &config, &session),
+        catalogue_panel::render(&snapshot, &config, &session, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_CATALOGUE)),
+        document_panel::render(&snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_ARTIFACT)),
+    ];
+    for body in bodies {
+        let tree = project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
+        assert!(!tree.is_empty());
+    }
+    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session);
+    assert_eq!(armed.effects.len(), 1, "the starter graph arms the boot evaluation chain");
+    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session);
+    session.retire_cold();
+    eprintln!("[DEBUG] flow boot renders + evaluation chain retired every live flow owner");
+}

@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "add-entry")]
 pub struct AddEntry {
     #[dsl(block)]
     pub(crate) entry: ZipEntry,

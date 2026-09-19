@@ -177,6 +177,23 @@ pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Knowledge
+
+//#region 🔖️Genesis
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the program's composed `knowledge` and
+/// `benchmarks` tables — pure functions of the parent's child owners. The react shell's
+/// `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
+/// `Effect::LoadDocument`) derives both slots here; without it the archive closure completes
+/// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
+pub fn genesis_program_child_pack(snapshot: &ProgramSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+    use store::ArtifactPack;
+    match slot {
+        "knowledge" if child_id == snapshot.knowledge.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&knowledge_table_from_records(&program_knowledge(snapshot)))),
+        "benchmarks" if child_id == snapshot.benchmarks.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&benchmark_table_from_records(&program_benchmarks(snapshot)))),
+        _ => None,
+    }
+}
+//#endregion 🔖️Genesis
 //#endregion 🔖️Composition
 
 #[cfg(test)]

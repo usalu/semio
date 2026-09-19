@@ -49,8 +49,7 @@
             "replace-composition",
             "replace-doc",
             "dictionary-limit",
-            "dictionary-byte-limit",
-            "pin-limit"
+            "dictionary-byte-limit"
           ]
         },
         "index": {
@@ -176,27 +175,6 @@
           "if": {
             "properties": {
               "operation": {
-                "const": "pin-limit"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "value",
-              "hex"
-            ],
-            "properties": {
-              "value": true,
-              "hex": true,
-              "index": false,
-              "text": false
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "operation": {
                 "enum": [
                   "unchanged",
                   "unowned",
@@ -245,9 +223,7 @@
           "required": [
             "dictionaryEntries",
             "dictionaryBytes",
-            "identityBytes",
-            "pinGroups",
-            "pins"
+            "identityBytes"
           ],
           "properties": {
             "dictionaryEntries": {
@@ -258,12 +234,6 @@
             },
             "identityBytes": {
               "const": 256
-            },
-            "pinGroups": {
-              "const": 1024
-            },
-            "pins": {
-              "const": 8192
             }
           }
         },

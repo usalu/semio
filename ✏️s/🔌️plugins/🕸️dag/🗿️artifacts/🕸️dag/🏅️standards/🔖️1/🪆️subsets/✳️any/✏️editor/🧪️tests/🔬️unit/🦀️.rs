@@ -247,24 +247,81 @@ async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
 
 /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
 /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
+/// `artifact_app_laws::assert_two_registered_instances_converge` replayed over THIS crate's harness: the
+/// registry-less law faults `interactive-job.catalog-authority` at construction, and the registered twin
+/// builds member-less apps, whose genesis refuses dag's derived `s.stdio.semio@v1/graph` child ("not
+/// declared by this app's member roster"). Same law, same shape: settle each edit, fold both ways, commit
+/// a checkpoint on A, fold it on B, and the probe must agree after each exchange.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<DagPlayApp>, (bool, bool)>(
-        "mem://dag-convergence",
-        DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
-        DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
-        |app| {
-            let projection = app.snapshot().expect("projection");
-            let nodes = projection.nodes();
-            (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
-        },
-    )
-    .await;
+    use crate::editor::dag::unit_tests::context::{new_app, DagApp};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+    use store::MemoryBackbone;
+    fn probe(app: &DagApp) -> (bool, bool) {
+        let projection = app.snapshot().expect("projection");
+        let nodes = projection.nodes();
+        (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
+    }
+    let mut instance_a = new_app().await;
+    let mut instance_b = new_app().await;
+    let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://dag-convergence", "mem://dag-convergence").await;
+    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let genesis = probe(&instance_a);
+    let receiver = meta("actor-a").instance_id;
+    instance_a.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a")).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &meta("actor-b")).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
+    assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
+    assert_eq!(probe(&instance_a), (true, true), "each instance holds both disjoint edits");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    assert_eq!(probe(&instance_a), probe(&instance_b), "a replicated checkpoint keeps both instances converged");
+    assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
+    close_registered_fixture_app(&mut instance_a);
+    close_registered_fixture_app(&mut instance_b);
 }
 
+/// 🔁️ `artifact_app_laws::assert_ingest_idempotent` over THIS crate's registered, bound harness: the
+/// registry-less law faults `interactive-job.catalog-authority`, and the registered twin binds no live
+/// instance (`interactive-job.live-instance`). Same law, same shape — a sender on a memory backbone, its
+/// envelopes replayed twice onto a fresh receiver.
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_dag() {
-    semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len()).await;
+    use crate::editor::dag::unit_tests::context::new_app;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    let mut sender = new_app().await;
+    let (near, mut far) = MemoryBackbone::pair("mem://dag-idempotent", "mem://dag-idempotent").await;
+    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    let genesis = sender.snapshot().expect("projection").nodes().len();
+    sender.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local")).await.expect("apply command");
+    settle_registered_typed_operation(&mut sender, meta("local").instance_id).await.expect("the add publishes");
+    assert_eq!(sender.snapshot().expect("projection").nodes().len(), genesis + 1, "the sender applied its edit");
+    let mut envelopes = Vec::new();
+    for message in far.receive().await.expect("receive") {
+        if let BackboneMessage::Mutations { envelopes: operations } = message {
+            envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
+        }
+    }
+    assert!(!envelopes.is_empty(), "the add reached the backbone");
+    let operations = protocol::encode_envelopes(&envelopes);
+    let mut receiver = new_app().await;
+    receiver.ingest_operations(&operations).await.expect("ingest once");
+    let once = receiver.snapshot().expect("projection").nodes().len();
+    assert_eq!(once, genesis + 1, "the replayed add applies");
+    receiver.ingest_operations(&operations).await.expect("ingest twice");
+    assert_eq!(receiver.snapshot().expect("projection").nodes().len(), once, "feeding the same operation twice must not double-apply");
+    sender.detach_backbone().await.expect("sender releases its backbone");
+    close_registered_fixture_app(&mut sender);
+    close_registered_fixture_app(&mut receiver);
 }
 //#endregion 🔖️CrossCutting
 

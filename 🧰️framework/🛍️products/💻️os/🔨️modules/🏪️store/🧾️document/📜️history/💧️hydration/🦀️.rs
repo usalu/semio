@@ -50,6 +50,7 @@ enum Phase {
     DecodeInverse,
     DecodeMetadata,
     FinishEdit,
+    HydrateTransitions,
     HydrateChanges,
     HydrateCheckpoints,
     HydrateAlternatives,
@@ -77,6 +78,7 @@ where
     initial: ManuallyDrop<Option<P>>,
     validation: ManuallyDrop<Option<P>>,
     history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
+    fold: ManuallyDrop<Option<crate::os_spr::HistoryFold>>,
     expected: ManuallyDrop<Option<ArtifactRef>>,
     owner: ManuallyDrop<Option<OwnerRef>>,
     schema: ManuallyDrop<Option<String>>,
@@ -155,6 +157,7 @@ where
             initial: ManuallyDrop::new(initial),
             validation: ManuallyDrop::new(None),
             history: ManuallyDrop::new(Some(history)),
+            fold: ManuallyDrop::new(None),
             expected: ManuallyDrop::new(Some(expected)),
             owner: ManuallyDrop::new(owner),
             schema: ManuallyDrop::new(Some(schema)),
@@ -208,15 +211,7 @@ where
     }
 
     fn progress(&self) -> PersistedDocumentHydrationProgress {
-        let total = self.history.as_ref().map_or(1, |history| {
-            history.edits.len()
-                + history.changes.len()
-                + history.checkpoints.len()
-                + history.alternatives.len()
-                + history.conflicts.len()
-                + history.composition.as_ref().map_or(0, |composition| composition.checkpoint_pins.len())
-                + 1
-        });
+        let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.transitions.len() + history.conflicts.len() + 1);
         PersistedDocumentHydrationProgress { completed: self.record_index as u64, total: total as u64 }
     }
 
@@ -301,9 +296,13 @@ where
                     },
                     None => None,
                 };
-                if history.doc_id != expected.artifact_id || history.schema != *schema || history.cursor.is_none() || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
+                if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
                     return self.reject(MemberOpenDiagnostic::Identity);
                 }
+                let fold = match history.fold() {
+                    Ok(fold) => fold,
+                    Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
+                };
                 let initial = self.initial.take().expect("typed initial snapshot remains retained");
                 let validation = initial.clone();
                 let initial_digest = *semio_framework_hash::hash(&initial.encode_pack()).as_bytes();
@@ -313,9 +312,10 @@ where
                 envelope.dialect = Some(expected.dialect);
                 self.owner.take();
                 envelope.owner = history_owner;
-                envelope.active_alternative_id = history.active_alternative_id.clone();
-                envelope.cursor = history.cursor.as_ref().map(|cursor| crate::os_store::ArtifactCursor::new(cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone(), cursor.checkpoint_id.clone()));
-                if envelope.conflicts.try_reserve_exact(history.conflicts.len()).is_err() {
+                envelope.active_alternative_id = fold.alternative.clone();
+                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied.clone(), fold.redo.clone(), fold.checkpoint.clone()));
+                *self.fold = Some(fold);
+                if envelope.conflicts.try_reserve_exact(history.conflicts.len()).is_err() || envelope.transitions.try_reserve_exact(history.transitions.len()).is_err() {
                     *self.validation = Some(validation);
                     *self.envelope = Some(envelope);
                     return self.reject(MemberOpenDiagnostic::Capacity);
@@ -332,7 +332,7 @@ where
                 let history = self.history.as_ref().expect("decoded history remains retained");
                 let Some(source) = history.edits.get(self.edit_index) else {
                     self.operation_index = 0;
-                    self.phase = Phase::HydrateChanges;
+                    self.phase = Phase::HydrateTransitions;
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 };
@@ -439,16 +439,29 @@ where
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
-            Phase::HydrateChanges => {
+            Phase::HydrateTransitions => {
                 let history = self.history.as_ref().expect("decoded history remains retained");
-                if let Some(change) = history.changes.get(self.operation_index) {
+                if let Some(transition) = history.transitions.get(self.operation_index) {
+                    let transition = transition.to_envelope(&history.doc_id);
+                    self.envelope.as_mut().expect("hydrated envelope remains retained").transitions.push(transition);
+                    self.operation_index += 1;
+                    self.record_index += 1;
+                } else {
+                    self.operation_index = 0;
+                    self.phase = Phase::HydrateChanges;
+                }
+                cx.consume_fuel(1);
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::HydrateChanges => {
+                let fold = self.fold.as_ref().expect("history fold remains retained");
+                if let Some(change) = fold.changes.get(self.operation_index) {
                     let change = crate::os_store::Change { id: change.id.clone(), edit_ids: change.edit_ids.clone(), description: change.description.clone(), saved_at: change.saved_at.clone() };
                     if let Err(change) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.changes.try_push(change) {
                         *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::change(change)));
                         return self.reject(MemberOpenDiagnostic::Capacity);
                     }
                     self.operation_index += 1;
-                    self.record_index += 1;
                 } else {
                     self.operation_index = 0;
                     self.phase = Phase::HydrateCheckpoints;
@@ -457,13 +470,13 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::HydrateCheckpoints => {
-                let history = self.history.as_ref().expect("decoded history remains retained");
-                if let Some(checkpoint) = history.checkpoints.get(self.operation_index) {
+                let fold = self.fold.as_ref().expect("history fold remains retained");
+                if let Some(checkpoint) = fold.checkpoints.get(self.operation_index) {
                     let checkpoint = crate::os_store::Checkpoint {
                         id: checkpoint.id.clone(),
                         change_ids: checkpoint.change_ids.clone(),
                         parent_id: checkpoint.parent_id.clone(),
-                        authors: checkpoint.authors.iter().map(|author| crate::os_store::Author { id: author.id.clone(), name: author.name.clone(), avatar: None }).collect(),
+                        authors: checkpoint.authors.iter().map(|author| crate::os_store::Author { id: author.id.clone(), name: author.name.clone(), avatar: author.avatar.clone() }).collect(),
                         message: checkpoint.message.clone(),
                         timestamp: checkpoint.timestamp.clone(),
                         composition_pins: Vec::new(),
@@ -473,7 +486,6 @@ where
                         return self.reject(MemberOpenDiagnostic::Capacity);
                     }
                     self.operation_index += 1;
-                    self.record_index += 1;
                 } else {
                     self.operation_index = 0;
                     self.phase = Phase::HydrateAlternatives;
@@ -482,15 +494,14 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::HydrateAlternatives => {
-                let history = self.history.as_ref().expect("decoded history remains retained");
-                if let Some(alternative) = history.alternatives.get(self.operation_index) {
+                let fold = self.fold.as_ref().expect("history fold remains retained");
+                if let Some(alternative) = fold.alternatives.get(self.operation_index) {
                     let alternative = crate::os_store::Alternative { id: alternative.id.clone(), name: alternative.name.clone(), checkpoint_ids: alternative.checkpoint_ids.clone() };
                     if let Err(alternative) = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.alternatives.try_push(alternative) {
                         *self.active = Some(Box::new(super::ArtifactStoreHistoryMetadataRetirement::alternative(alternative)));
                         return self.reject(MemberOpenDiagnostic::Capacity);
                     }
                     self.operation_index += 1;
-                    self.record_index += 1;
                 } else {
                     self.operation_index = 0;
                     self.phase = Phase::HydrateConflicts;
@@ -516,14 +527,7 @@ where
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::HydratePins => {
-                let Some(composition) = self.history.as_ref().expect("decoded history remains retained").composition.as_ref() else {
-                    self.record_index = 0;
-                    self.operation_index = 0;
-                    self.phase = Phase::ValidateReplay;
-                    cx.consume_fuel(1);
-                    return PersistedDocumentHydrationStep::Pending(self.progress());
-                };
-                let Some((checkpoint_id, pins)) = composition.checkpoint_pins.get(self.pin_group_index) else {
+                let Some(source) = self.fold.as_ref().expect("history fold remains retained").checkpoints.get(self.pin_group_index) else {
                     self.record_index = 0;
                     self.operation_index = 0;
                     self.phase = Phase::ValidateReplay;
@@ -531,21 +535,21 @@ where
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 };
                 let envelope = self.envelope.as_mut().expect("hydrated envelope remains retained");
-                let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id) else {
+                let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == source.id) else {
                     return self.reject(MemberOpenDiagnostic::Replay);
                 };
-                if self.pin_index == 0 && checkpoint.composition_pins.try_reserve_exact(pins.len()).is_err() {
+                if self.pin_index == 0 && checkpoint.composition_pins.try_reserve_exact(source.pins.len()).is_err() {
                     return self.reject(MemberOpenDiagnostic::Capacity);
                 }
-                if let Some((child_uri, checkpoint_id)) = pins.get(self.pin_index) {
-                    let child_ref = match ArtifactRef::parse_uri(child_uri) {
+                if let Some(pin) = source.pins.get(self.pin_index) {
+                    let child_ref = match ArtifactRef::parse_uri(&pin.child_uri) {
                         Ok(reference) => reference,
                         Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
                     };
                     if checkpoint.composition_pins.iter().any(|pin| pin.child_ref == child_ref) {
                         return self.reject(MemberOpenDiagnostic::Replay);
                     }
-                    checkpoint.composition_pins.push(CompositionPin { child_ref, checkpoint_id: checkpoint_id.clone() });
+                    checkpoint.composition_pins.push(CompositionPin { child_ref, checkpoint_id: pin.checkpoint_id.clone() });
                     self.pin_index += 1;
                 } else {
                     self.pin_group_index += 1;
@@ -636,6 +640,11 @@ where
             Phase::RetireHistory => {
                 if let Some(history) = self.history.take() {
                     *self.active = Some(crate::os_store::retirement::owned_retirement(history));
+                    cx.consume_fuel(1);
+                    return PersistedDocumentHydrationStep::Pending(self.progress());
+                }
+                if let Some(fold) = self.fold.take() {
+                    *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
@@ -775,6 +784,10 @@ where
             *self.active = Some(crate::os_store::retirement::owned_retirement(history));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if let Some(fold) = self.fold.take() {
+            *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         if let Some(pack) = self.pack.as_mut() {
             if pack.is_empty() {
                 self.pack.take();
@@ -817,6 +830,7 @@ where
             && self.initial.is_none()
             && self.validation.is_none()
             && self.history.is_none()
+            && self.fold.is_none()
             && self.expected.is_none()
             && self.owner.is_none()
             && self.schema.is_none()
@@ -850,6 +864,7 @@ where
             && self.initial.is_none()
             && self.validation.is_none()
             && self.history.is_none()
+            && self.fold.is_none()
             && self.expected.is_none()
             && self.owner.is_none()
             && self.schema.is_none()

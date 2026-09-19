@@ -86,7 +86,7 @@
           "const": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 }
         },
         "dataLimits": {
-          "const": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "snapshotTransport": "cold-pair" }
+          "const": { "hotMessageBytes": 262144, "genesisMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "genesisTransport": "cold-pair" }
         },
         "cases": {
           "type": "array",
@@ -108,7 +108,7 @@
                 "additionalProperties": false,
                 "required": ["id", "value", "hex", "hotPort"],
                 "properties": {
-                  "id": { "enum": ["snapshot", "mutations", "ack-empty", "ack-one"] },
+                  "id": { "enum": ["genesis", "mutations", "ack-empty", "ack-one"] },
                   "value": { "type": "object" },
                   "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
                   "hotPort": { "type": "boolean" }

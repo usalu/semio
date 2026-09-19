@@ -306,3 +306,50 @@ plus additive `#[path]` mount blocks in 103 plugin wiring modules.
 the full gate's 4.5 min), `🐍️v3a-freeze-fixture.ts`; captures `v3a-check-before.txt`,
 `v3a-check-after.txt`, `v3a-perplugin-before.txt`, `v3a-perplugin-after.txt`, `v3a-stdio-dryrun.txt`,
 `v3a-all-dryrun.txt`, `v3a-all-run.txt`, `v3a-lane-census.txt`, `v3a-cargo-raster.txt`.
+
+---
+
+# Session 4 (2026-09-19 evening) — re-measured, gaps closed
+
+Sessions 1–3 died at ~11:36; §§0–7 above stop there, and §6 gaps 1 and 2 were already **stale when
+written** (the worker landed the fixes at 11:17–11:26 but never edited the report). Everything below
+is re-measured tonight against the tree as committed, nothing inherited on trust.
+
+## 8. What is actually in the tree (verified, not claimed)
+
+`git log` shows the whole slice is already **committed** by the repo's auto-commit — `git diff --stat`
+on my paths is empty because there is nothing *un*committed, not because nothing landed. Verified by
+existence + `git log --oneline -- <path>`:
+
+| artifact | state |
+|---|---|
+| `…/📇️registry/🧬️surface-schema/🟦️.ts` | present, 33 355 bytes, last written 11:24 |
+| `…/📇️registry/🧪️tests/🧬️surface-schema/🟦️.ts` | present, 7 899 bytes |
+| `…/📇️registry/🧫️fixtures/🧬️surface-schema/🔣️.json` | present, 8 143 bytes |
+| `…/📇️registry/📜️script.ts:9,11` | `import { SurfaceSchemaScript }` + `.register("surface-schema", SurfaceSchemaScript)` — **confirmed in the live file** |
+| `…/📇️registry/📋️project.json:91-108` | `surface-schema` (`cache: false`) + `surface-schema-check` (`cache: true`) targets |
+| `.vscode/launch.json:4449,4460` + `.vscode/🧩️launch.seed.jsonc:2530,2541` | `📦️generate🧬️surface-schema` / `📦️check🧬️surface-schema` rows, both present in seed **and** generated file |
+| `✏️s/🔌️plugins` working tree | 199 paths still unstaged/staged at session start — the projection's leaves and mount blocks |
+
+## 9. Termination, progress, cancellation, idempotence — measured tonight
+
+```
+$ bun ./📜️script.ts surface-schema --check          # capture v3a-s4-check-mode.txt
+[surface-schema] 25/574 🌀️procedural surface "✳️any/👁️viewer" config
+… 23 progress lines …
+[surface-schema] 574/574 🪵️sourcing surface "✳️any/✏️editor" presence
+[surface-schema] 574 lane(s): 0 written, 522 current, 48 authored, 4 blocked, 0 drifted
+EXIT=0                                               real 2m19s
+```
+
+* **Terminates repo-wide**: yes, 574/574, exit 0. (§2.7's non-termination is dead; the three indexes
+  hold. 2 m 19 s tonight vs the 39 s of §2.7 is fleet load, not regression — this run had the full
+  `check` gate and peer slices competing for 10 cores.)
+* **Progress**: one line per 25 lanes plus a forced final line, naming plugin + surface + lane.
+* **Cancellation**: `SIGINT`/`SIGTERM` are wired to an `AbortController` whose signal is polled at the
+  top of every lane and throws `surface-schema-projection: cancelled after N/574 lane(s)`
+  (`🧬️surface-schema/🟦️.ts:477`). Reviewed in source; not exercised by a live signal tonight — the
+  honest wording is "implemented and code-read", see §13.
+* **Idempotent**: `0 written, 0 drifted` on a second independent run, exit 0. This is the real
+  idempotence proof — the run re-derives all 574 lanes from the Rust and finds every byte already
+  equal.

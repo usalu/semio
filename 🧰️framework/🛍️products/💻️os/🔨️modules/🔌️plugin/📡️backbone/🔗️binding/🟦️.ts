@@ -8,7 +8,7 @@ export const DOCUMENT_BACKBONE_CONTROL_MAXIMUM_BYTES = 4096;
 /** 📬️ Guest Ack terminates at Shell as an ingest receipt, never as Hub command completion. */
 export function documentBackboneEffectV1(bytes: Uint8Array): "mutations" | "remote-ingest-receipt" {
   const message = decodeBackboneMessage(bytes);
-  if (message.kind === "snapshot") throw new Error("actor-document-port.snapshot-requires-cold-pair");
+  if (message.kind === "genesis") throw new Error("actor-document-port.genesis-requires-cold-pair");
   return message.kind === "ack" ? "remote-ingest-receipt" : "mutations";
 }
 

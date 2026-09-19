@@ -325,17 +325,21 @@ async fn remove_step_command_is_exact_inverse_of_add() {
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,
 /// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and exchanging
 /// operations over a `MemoryBackbone` converges both sides onto an identical projection — impossible
-/// under whole-document `setDocument` snapshots, which would clobber one side's write.
+/// under whole-document `setDocument` snapshots, which would clobber one side's write. The REGISTERED
+/// pair: imperative publishes tool proofs, so a registry-less instance faults in the
+/// `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
     let mut params = BTreeMap::new();
     params.insert("key".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-    let (mut instance_a, mut instance_b) = semio_framework_plugin::artifact_app_laws::paired_apps::<EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
-    instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
-    instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
-    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-    assert_eq!(instance_a.snapshot().expect("a projection"), instance_b.snapshot().expect("b projection"));
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<ImperativePlayApp>, _, _, _>(
+        "mem://imperative-convergence",
+        || async { context::imperative_app_manifest_for_tests() },
+        ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }),
+        ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }),
+        |app| app.snapshot().expect("projection"),
+    )
+    .await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -343,7 +347,7 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     let mut sender = imperative_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://imperative-idempotent", "mem://imperative-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
-    sender.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("local")).await.expect("apply command");
+    dispatch(&mut sender, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -356,7 +360,9 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     let once = receiver.snapshot().expect("projection");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("projection"), once);
+    sender.detach_backbone().await.expect("sender releases its backbone");
     context::close(&mut sender);
+    context::close(&mut receiver);
 }
 
 #[semio_framework_async_macros::async_test]

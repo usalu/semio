@@ -119,6 +119,16 @@ pub fn document_child_handle_with_text(id: &str, text: &str, language_id: &str) 
 pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
     WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), document: document_child_handle_with_text(id, text, language_id) }
 }
+
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `document` child — the
+/// block tree [`document_snapshot_from_text`] derives from the handle's own text owner. The react
+/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
+/// `Effect::LoadDocument`) derives the slot here; without it the archive closure completes
+/// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
+pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&writer_text(snapshot), &snapshot.language_id)))
+}
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️ArtifactKind
@@ -205,15 +215,15 @@ pub fn artifact<A: WriterApplication>() -> semio_framework_plugin::app::declarat
 /// ✒️ Application variants required to assemble the Writer artifact.
 pub trait WriterApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::writer::WriterPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::writer::WriterViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> WriterApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::writer::WriterPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::writer::WriterViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 //#endregion 🔖️Declaration

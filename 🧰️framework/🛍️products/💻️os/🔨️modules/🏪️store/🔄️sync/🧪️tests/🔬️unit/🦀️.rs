@@ -503,7 +503,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
     actor.inject_hub_frame(welcome(bootstrap.clone())).await;
     let first = channel.receive().await.expect("baseline queue");
     assert_eq!(first.len(), 1, "failed replay queues only the committed baseline");
-    assert!(matches!(&first[0], BackboneMessage::Snapshot { pack, spr } if pack == &pair.pack && spr == &pair.spr));
+    assert!(matches!(&first[0], BackboneMessage::Genesis { pack } if pack == &pair.pack), "the baseline is the hub document's genesis followed by its (here: no) events");
     let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox) = actor.bootstrap_test_state();
     assert_eq!(pack.as_deref(), Some(pair.pack.as_slice()));
     assert_eq!(spr.as_deref(), Some(pair.spr.as_slice()));
@@ -519,7 +519,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
     assert!(!matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "presence cannot bypass authenticated catch-up");
     actor.inject_hub_frame(welcome(bootstrap)).await;
     let restarted = channel.receive().await.expect("restart queue");
-    assert_eq!(restarted.iter().filter(|message| matches!(message, BackboneMessage::Snapshot { .. })).count(), 1);
+    assert_eq!(restarted.iter().filter(|message| matches!(message, BackboneMessage::Genesis { .. })).count(), 1);
     let replayed: Vec<MutationEnvelope> = restarted
         .iter()
         .filter_map(|message| match message {
@@ -576,7 +576,7 @@ async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_c
     let (mut inline_actor, mut inline_channel) = actor_pair("native-bootstrap-inline").await;
     inline_actor.inject_hub_frame(welcome(inline_bootstrap)).await;
     let inline_messages = inline_channel.receive().await.expect("inline messages");
-    assert!(matches!(&inline_messages[..], [BackboneMessage::Snapshot { pack, spr }] if pack == &pair.pack && spr == &pair.spr));
+    assert!(matches!(&inline_messages[..], [BackboneMessage::Genesis { pack }] if pack == &pair.pack));
 
     let mut combined = pair.pack.clone();
     combined.extend_from_slice(&pair.spr);
@@ -723,17 +723,18 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
 #[semio_framework_async_macros::async_test]
 async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
     let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-    let store = ArtifactStore::new(envelope).await.expect("valid receive fixture");
+    let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     session.receive(sample_operation_envelope("edit-1", 5).await).await.expect("receive");
     assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
     assert_eq!(session.store.envelope().vcs.edits.len(), 1);
+    crate::os_store::test_support::close_plain_test_store(&mut session.store);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
     let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-    let store = ArtifactStore::new(envelope).await.expect("valid out-of-order fixture");
+    let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     let first = sample_operation_envelope("edit-1", 5).await;
     let mut second = sample_operation_envelope("edit-2", 9).await;
@@ -743,6 +744,7 @@ async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
     session.receive(first).await.expect("receive first");
     assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
     assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
+    crate::os_store::test_support::close_plain_test_store(&mut session.store);
 }
 //#endregion 🧪️SyncSession
 
@@ -1282,7 +1284,7 @@ mod actor_tests {
         let host = ArtifactHost::new(test_pool());
         let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe("doc-a").await;
-        let mut store = ArtifactStore::new(demo_envelope("doc-a").await).await.expect("valid actor fixture");
+        let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
         // A local apply establishes a persisted edit on disk.
@@ -1315,7 +1317,7 @@ mod actor_tests {
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None,
         };
-        archive.parent_spr = crate::os_store::append_history_edits_to_spr(&archive.parent_spr, &[external_edit]).await.expect("append external edit");
+        archive.parent_spr = crate::os_store::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
         let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
         storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
 
@@ -1336,6 +1338,7 @@ mod actor_tests {
         assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
         assert_eq!(store.snapshot().expect("snapshot").n, 42);
         host.close("doc-a");
+        crate::os_store::test_support::close_plain_test_store(&mut store);
     }
 
     //#region 🔖️MockHub
@@ -1603,52 +1606,60 @@ mod actor_tests {
     }
     //#endregion 🔖️MockHub
 
-    // 🔬️ Two ArtifactHosts converge through a semio_hub: A's operation fans out to B, whose store materializes it.
+    /// 🔬️ Two stores, each behind its own ArtifactHost, converge through a semio_hub on edits AND
+    /// structural history: every step A authors (apply, undo, checkpoint, redo) reaches B only as
+    /// events relayed by the hub, and B's fold lands on exactly A's position after each one.
     #[tokio::test]
     async fn two_hosts_converge_through_hub() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
         let base_url = format!("ws://{addr}");
-
+        let config = |actor: &str| ArtifactActorConfig {
+            document_id: "shared".into(),
+            schema: "demo/v1".into(),
+            bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+            watch_external: false,
+            actor: actor.into(),
+        };
         let host_a = ArtifactHost::new(test_pool());
-        let channels_a = host_a
-            .open(ArtifactActorConfig {
-                document_id: "shared".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
-                watch_external: false,
-                actor: "A".into(),
-            })
-            .await;
-        let mut store_a = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor A fixture");
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a = host_a.open(config("A")).await;
         let key_a = channels_a.document_key.clone();
-        store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
-
+        let mut events_a = host_a.subscribe_key(&key_a).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
         let host_b = ArtifactHost::new(test_pool());
-        let channels_b = host_b
-            .open(ArtifactActorConfig {
-                document_id: "shared".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
-                watch_external: false,
-                actor: "B".into(),
-            })
-            .await;
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b.open(config("B")).await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        let mut store_b = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor B fixture");
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("shared").await).await;
+        store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
+        let mut store_b = crate::os_store::test_support::plain_test_store(demo_envelope("shared").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        let position = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.snapshot().expect("snapshot"), store.applied_edit_ids().len(), store.redo_edit_ids().len(), store.current_checkpoint_id().map(str::to_string));
 
-        // Give both actors time to connect + Hello.
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        let steps: Vec<ArtifactCommand<DemoMutation>> = vec![
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None },
+            ArtifactCommand::Undo,
+            ArtifactCommand::CommitCheckpoint { message: Some("hub checkpoint".into()), authors: Vec::new() },
+            ArtifactCommand::Redo,
+        ];
+        for command in steps {
+            store_a.dispatch(command).await.expect("a authors the step");
+            channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
+            wait_for_mock_hub_event("B DocumentBackbone", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+            store_b.tick().await.expect("b folds the relayed events");
+            assert_eq!(position(&store_b), position(&store_a), "B sits exactly where A sits after every hub-relayed step");
+        }
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 9, "the redo reinstated A's second edit on B too");
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("apply on a");
-        channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
-
-        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
-        assert_eq!(document_backbone_event_envelopes(&event).expect("exact document backbone event").len(), 1);
-        store_b.tick().await.expect("tick b");
-        assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
-
+        crate::os_store::test_support::close_plain_test_store(&mut store_a);
+        crate::os_store::test_support::close_plain_test_store(&mut store_b);
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
     }
@@ -1724,7 +1735,7 @@ mod actor_tests {
                 actor: "A".into(),
             })
             .await;
-        let mut store_a = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor A fixture");
+        let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("catchup").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         tokio::time::sleep(Duration::from_millis(300)).await;
@@ -1743,7 +1754,7 @@ mod actor_tests {
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        let mut store_b = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor B fixture");
+        let mut store_b = crate::os_store::test_support::plain_test_store(demo_envelope("catchup").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
@@ -1754,6 +1765,8 @@ mod actor_tests {
 
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
+        crate::os_store::test_support::close_plain_test_store(&mut store_a);
+        crate::os_store::test_support::close_plain_test_store(&mut store_b);
     }
 
     // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
@@ -1775,13 +1788,13 @@ mod actor_tests {
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        let mut store_b = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor B fixture");
+        let mut store_b = crate::os_store::test_support::plain_test_store(demo_envelope("drain").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
         let host_a = ArtifactHost::new(test_pool());
         let channels_a =
             host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
-        let mut store_a = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor A fixture");
+        let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("drain").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         tokio::time::sleep(Duration::from_millis(300)).await;
@@ -1795,6 +1808,8 @@ mod actor_tests {
         store_b.tick().await.expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
         host_b.close_key(&key_b);
+        crate::os_store::test_support::close_plain_test_store(&mut store_b);
+        crate::os_store::test_support::close_plain_test_store(&mut store_a);
     }
 
     // 🔬️ The mock semio_hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
@@ -1808,7 +1823,7 @@ mod actor_tests {
             host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let key = channels.document_key.clone();
         let mut events = host.subscribe_key(&key).await;
-        let mut store = ArtifactStore::new(demo_envelope("outcome").await).await.expect("valid outcome actor fixture");
+        let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("outcome").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -1821,6 +1836,7 @@ mod actor_tests {
             other => panic!("expected CommandOutcome, got {other:?}"),
         }
         host.close_key(&key);
+        crate::os_store::test_support::close_plain_test_store(&mut store);
     }
 
     // 🔬️ `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock semio_hub's
@@ -1885,7 +1901,7 @@ mod actor_tests {
         let channels =
             host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe(&fixture.document_id).await;
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await.expect("valid fixture store");
+        let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
@@ -1910,7 +1926,7 @@ mod actor_tests {
                         }
                         new_edits.push(crate::os_spr::HistoryEdit { ops, meta: None, ..edit });
                     }
-                    archive.parent_spr = crate::os_store::append_history_edits_to_spr(&archive.parent_spr, &new_edits).await.expect("append fixture edits");
+                    archive.parent_spr = crate::os_store::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
                     let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
                     storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("write archive");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
@@ -1936,6 +1952,7 @@ mod actor_tests {
             assert!(timeline_ids.contains(expected_id), "fixture {} expected edit id {expected_id} in timeline {timeline_ids:?}", fixture.name);
         }
         host.close(&fixture.document_id);
+        crate::os_store::test_support::close_plain_test_store(&mut store);
     }
 
     // 🚫️async: E1-adjacent — pure match with no suspension point, consumed by
@@ -2097,7 +2114,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await.expect("valid folder store");
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
@@ -2110,11 +2127,13 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
     let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
-    let mut reloaded = ArtifactStore::new(parsed.envelope).await.expect("valid reloaded history");
+    let mut reloaded = crate::os_store::test_support::plain_test_store(parsed.envelope).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
     reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after folder reload");
     assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
+    crate::os_store::test_support::close_plain_test_store(&mut store);
+    crate::os_store::test_support::close_plain_test_store(&mut reloaded);
 }
 
 /// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
@@ -2130,11 +2149,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-    let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid zero-edit text fixture");
+    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
     let files = print_document_text(seed.envelope()).await.expect("print document text");
     storage.write("demo", "demo", &files).await.expect("write");
 
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid text fixture");
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2148,6 +2167,8 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
 
     assert_eq!(storage.document_ids("demo").await.expect("document ids"), vec!["demo".to_string()]);
+    crate::os_store::test_support::close_plain_test_store(&mut seed);
+    crate::os_store::test_support::close_plain_test_store(&mut store);
 }
 
 /// @emoji 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
@@ -2166,12 +2187,12 @@ async fn folder_text_storage_round_trips_pack() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-    let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid pack fixture");
+    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
     let files = print_document_pack(seed.envelope()).await.expect("print document pack");
     let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid pack append fixture");
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2203,6 +2224,8 @@ async fn folder_text_storage_round_trips_pack() {
     // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
     let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").await.with_extension("")).expect("dsl mirror on disk");
     assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
+    crate::os_store::test_support::close_plain_test_store(&mut seed);
+    crate::os_store::test_support::close_plain_test_store(&mut store);
 }
 
 #[cfg(not(target_arch = "wasm32"))]

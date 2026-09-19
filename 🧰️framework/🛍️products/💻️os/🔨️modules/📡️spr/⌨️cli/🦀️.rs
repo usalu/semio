@@ -33,10 +33,6 @@ const REC_DOC: u8 = 0x01;
 const REC_ACTOR_DICT: u8 = 0x02;
 const REC_STR_DICT: u8 = 0x03;
 const REC_EDIT: u8 = 0x04;
-const REC_CHANGE: u8 = 0x05;
-const REC_CHECKPOINT: u8 = 0x06;
-const REC_ALTERNATIVE: u8 = 0x07;
-const REC_ACTIVE: u8 = 0x08;
 const REC_FRONTIER: u8 = 0x09;
 const REC_PROJECTION: u8 = 0x0A;
 const REC_INDEX: u8 = 0x0B;
@@ -59,10 +55,6 @@ fn kind_name(kind: u8) -> &'static str {
         REC_ACTOR_DICT => "actor_dict",
         REC_STR_DICT => "str_dict",
         REC_EDIT => "edit",
-        REC_CHANGE => "change",
-        REC_CHECKPOINT => "checkpoint",
-        REC_ALTERNATIVE => "alternative",
-        REC_ACTIVE => "active",
         REC_FRONTIER => "frontier",
         REC_PROJECTION => "snapshot",
         REC_INDEX => "index",
@@ -74,6 +66,7 @@ fn kind_name(kind: u8) -> &'static str {
         REC_SEALED => "sealed",
         REC_COMPACTION => "compaction",
         REC_PADDING => "padding",
+        crate::os_spr::REC_TRANSITION => "transition",
         _ => "extension",
     }
 }
@@ -328,8 +321,7 @@ async fn cmd_verify(rest: &[String]) -> i32 {
             println!("OK");
             println!("  doc_id: {}", log.doc_id);
             println!("  edits: {}", log.edits.len());
-            println!("  changes: {}", log.changes.len());
-            println!("  checkpoints: {}", log.checkpoints.len());
+            println!("  transitions: {}", log.transitions.len());
             0
         }
         Err(error) => {
@@ -408,19 +400,26 @@ async fn cmd_log(rest: &[String]) -> i32 {
             return 1;
         }
     };
+    let fold = match log.fold() {
+        Ok(fold) => fold,
+        Err(error) => {
+            eprintln!("protocol: {error}");
+            return 1;
+        }
+    };
 
     let allowed_ids: Option<HashSet<String>> = match alternative_filter {
         None => None,
         Some(alternative_id) => {
-            let Some(alternative) = log.alternatives.iter().find(|a| &a.id == alternative_id) else {
+            let Some(alternative) = fold.alternatives.iter().find(|a| &a.id == alternative_id) else {
                 eprintln!("protocol: unknown --alternative '{alternative_id}'");
                 return 2;
             };
             let mut ids = HashSet::new();
             for checkpoint_id in &alternative.checkpoint_ids {
-                if let Some(checkpoint) = log.checkpoints.iter().find(|c| &c.id == checkpoint_id) {
+                if let Some(checkpoint) = fold.checkpoints.iter().find(|c| &c.id == checkpoint_id) {
                     for change_id in &checkpoint.change_ids {
-                        if let Some(change) = log.changes.iter().find(|c| &c.id == change_id) {
+                        if let Some(change) = fold.changes.iter().find(|c| &c.id == change_id) {
                             ids.extend(change.edit_ids.iter().cloned());
                         }
                     }
@@ -432,8 +431,8 @@ async fn cmd_log(rest: &[String]) -> i32 {
 
     let ordinal_of: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
     let mut checkpoint_lane_at: HashMap<u64, Vec<String>> = HashMap::new();
-    for checkpoint in &log.checkpoints {
-        let landing_ordinal = checkpoint.change_ids.iter().filter_map(|change_id| log.changes.iter().find(|c| &c.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max();
+    for checkpoint in &fold.checkpoints {
+        let landing_ordinal = checkpoint.change_ids.iter().filter_map(|change_id| fold.changes.iter().find(|c| &c.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max();
         if let Some(ordinal) = landing_ordinal {
             checkpoint_lane_at.entry(ordinal).or_default().push(checkpoint.id.clone());
         }

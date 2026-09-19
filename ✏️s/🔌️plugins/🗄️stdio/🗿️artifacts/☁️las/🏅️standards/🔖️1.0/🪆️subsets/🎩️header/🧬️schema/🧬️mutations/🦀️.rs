@@ -536,12 +536,16 @@ pub(crate) fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
     LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
 }
 
+/// 📍️ A point as the decoder yields it under the default header (`scale 0.01`, `offset 0`):
+/// every coordinate is `record * scale + offset` of an integer record, so a scale/offset edit
+/// re-reads the same records and its inverse lands on the identical `f64`s.
 #[cfg(test)]
 pub(crate) fn point(seed: u8) -> LasPoint {
+    let step = i32::from(seed);
     LasPoint {
-        x: 100.0 + seed as f64,
-        y: -50.0 + seed as f64 * 0.5,
-        z: 10.0 + seed as f64 * 0.1,
+        x: (10_000 + step * 100) as f64 * 0.01 + 0.0,
+        y: (-5_000 + step * 50) as f64 * 0.01 + 0.0,
+        z: (1_000 + step * 10) as f64 * 0.01 + 0.0,
         intensity: 100 + seed as u16,
         return_number: (seed % 5) + 1,
         number_of_returns: ((seed + 1) % 5) + 1,

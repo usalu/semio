@@ -8,10 +8,10 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-/// 🧩️ One page of the shell's `contributionsJson` — the exact twin of generation3d's row. The
-/// payload cannot cross whole: every string in a public command invocation is capped at
-/// `semio_framework::PUBLIC_INVOCATION_STRING_BYTES` by `validate_public_json_envelope`, which runs
-/// before the addressed tool's own wire contract.
+/// 🧩️ One page of the shell's `contributionsJson` — the exact twin of generation3d's row. The shell
+/// pushes the scoped pack whole as page 0 of 1 over the pack-encoded command ingress (bounded by
+/// `COMMAND_MAXIMUM_BYTES`, see `GENERATION2D_CONTRIBUTIONS_RAW_BYTES`); `page`/`page_count` keep
+/// the registry's page-run addressing so a multi-page run assembles the same closure.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-contributions")]
 pub struct SetContributions {

@@ -9,16 +9,22 @@
     {
       "commandId": "shell.windowResize",
       "label": "Resize Window"
+    },
+    {
+      "commandId": "shell.windowActivate",
+      "label": "Activate Window",
+      "detail": { "windowId": "trinity-jack-graph" }
     }
   ],
   "undo": {
-    "replayActionId": "shell.windowResize",
-    "canUndo": true,
+    "replayActionId": "setActiveExample",
+    "replayArgs": { "exampleId": "forest" },
+    "canUndo": false,
     "canRedo": true,
-    "poppedActionId": "shell.windowResize"
+    "skippedActionIds": ["shell.windowActivate", "shell.windowResize"]
   },
   "redo": {
-    "replayActionId": "shell.windowResize"
+    "replayActionId": "setActiveExample"
   },
   "wire": {
     "actionId": "os.resizeWindow",

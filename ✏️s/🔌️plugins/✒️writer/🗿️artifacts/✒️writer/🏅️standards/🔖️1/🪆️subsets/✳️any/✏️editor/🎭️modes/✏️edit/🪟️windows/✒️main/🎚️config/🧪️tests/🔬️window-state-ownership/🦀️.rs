@@ -30,7 +30,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 fn manifest() -> App {
                     App { definition: create_writer_app(), examples: Vec::new() }
                 }
-                async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
+                async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
                     let tree = app.render(WRITER_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
                     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
                     artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
@@ -39,7 +39,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     let text = text.ok_or_else(|| format!("missing Writer scene field {field}"))?;
                     serde_json::from_str(text).map_err(|error| error.to_string())
                 }
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>>) -> Result<(usize, usize), String> {
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Result<(usize, usize), String> {
                     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
                     let (mut config_receipts, mut transient_receipts) = (0, 0);
                     while app.has_pending_typed_operations() {
@@ -73,8 +73,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<WriterPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {

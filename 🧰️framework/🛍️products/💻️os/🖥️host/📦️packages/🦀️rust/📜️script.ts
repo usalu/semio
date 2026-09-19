@@ -295,13 +295,11 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
       const input = reader(Buffer.from(hex, "hex")); if (input.byte() !== 1) fail("malformed");
       const result = [id(input, dict), id(input, dict)]; input.end(); return result;
     };
-    const composition = (hex: string, dict: string[], pinLimit = fixture.limits.pins) => {
+    const composition = (hex: string, dict: string[]) => {
       const input = reader(Buffer.from(hex, "hex")); if (input.byte() !== 1) fail("malformed");
       const presence = input.byte(); if (presence & ~3) fail("malformed");
       const triple = (): string[] => [id(input, dict), id(input, dict), id(input, dict)];
       const owner = presence & 1 ? triple() : null; const dialect = presence & 2 ? triple() : null;
-      const groups = input.uint(); if (groups > fixture.limits.pinGroups) fail("capacity"); let pins = 0;
-      for (let group = 0; group < groups; group++) { id(input, dict); const count = input.uint(); pins += count; if (pins > pinLimit) fail("capacity"); for (let pin = 0; pin < count; pin++) { id(input, dict); id(input, dict); } }
       input.end(); return { owner, dialect };
     };
     let accepted = 0; const ids = new Set<string>();
@@ -312,7 +310,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
       try {
         if (row.operation === "dictionary-replace") entries[row.index] = row.text;
         if (row.operation === "unowned") { expected.owner = row.expectedOwner; overlayHex = fixture.unownedCompositionHex; }
-        if (row.operation === "replace-composition" || row.operation === "pin-limit") overlayHex = row.hex;
+        if (row.operation === "replace-composition") overlayHex = row.hex;
         if (row.operation === "replace-doc") docHex = row.hex;
         if (row.operation === "missing-composition") overlayHex = null;
         if (row.operation === "raw-document-id") docHex = Buffer.concat([Buffer.from([1, 0]), Buffer.from(leb.encodeU32(Buffer.byteLength(expected.artifactId))), Buffer.from(expected.artifactId), Buffer.from([1, 1])]).toString("hex");
@@ -323,9 +321,9 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
           const decoded = doc(payload, dict); if (document !== null) fail("malformed"); document = decoded;
         }
         let overlay: ReturnType<typeof composition> | null = null;
-        if (row.operation === "earlier-foreign-composition") overlay = composition("010301020106010001040105010600", dict);
+        if (row.operation === "earlier-foreign-composition") overlay = composition("0103010201060100010401050106", dict);
         if (row.operation === "earlier-malformed-composition") overlay = composition(row.hex, dict);
-        if (overlayHex !== null) overlay = composition(overlayHex, dict, row.operation === "pin-limit" ? row.value : fixture.limits.pins);
+        if (overlayHex !== null) overlay = composition(overlayHex, dict);
         if (JSON.stringify(document) !== JSON.stringify([expected.artifactId, expected.schema]) || JSON.stringify(overlay?.dialect) !== JSON.stringify(expected.dialect)
           || JSON.stringify(overlay?.owner) !== JSON.stringify(expected.owner)) fail("identity");
       } catch (failure) { error = failure instanceof Error ? failure.message : "unknown"; }
@@ -664,7 +662,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
       if (row.operation === "wrong-dialect") composition[13] = 3;
       if (row.operation === "earlier-foreign") { const foreign = Buffer.from(composition); foreign[5] = 6; records.push(frame(65, foreign)); }
       if (row.operation === "earlier-malformed") records.push(frame(65, Buffer.from([1, 7])));
-      if (row.operation === "aggregate-pin-limit" || row.operation === "aggregate-group-limit") records.push(frame(65, composition));
+      if (row.operation === "noncritical-transition") records.push(frame(67, Buffer.from([1]), false));
       if (row.operation !== "missing-composition") records.push(frame(65, composition, row.operation === "critical-composition"));
       const header = Buffer.alloc(32); Buffer.from([137, 83, 80, 82, 13, 10, 26, 10]).copy(header); header.writeUInt16LE(1, 8);
       header.writeUInt32LE(1, 12); header.writeUInt32LE(1, 16); header.writeUInt32LE(checksum(header.subarray(0, 20)), 20);
@@ -683,8 +681,6 @@ class MemberHistoryDictionaryScript extends BundleScript {
       const limits = { ...fixture.limits };
       if (row.operation === "entry-limit") limits.dictionaryEntries = row.value;
       if (row.operation === "byte-limit") limits.dictionaryBytes = row.value;
-      if (row.operation === "pin-limit" || row.operation === "aggregate-pin-limit") limits.pins = row.value;
-      if (row.operation === "aggregate-group-limit") limits.pinGroups = row.value;
       const requestIdentity = [...fixture.requestIdentity];
       if (row.operation === "request-field") {
         assert.equal(Buffer.byteLength(row.text!), Buffer.byteLength(requestIdentity[row.index!])); requestIdentity[row.index!] = row.text;
@@ -693,7 +689,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
       assert.equal(requestIdentity[0], requestIdentity[9], "retained requests were admitted with exact child identity");
       const expected = authorityOf(requestIdentity);
       const utf8 = dictionaryUtf8Neutral();
-      const state = { entries: [] as Range[], provisional: [] as Range[], pages: 0, dictionaryBytes: 0, pinGroups: 0, pins: 0, ready: false, error: null as string | null, holder: "owner", handoffs: 0, copies: 0, parses: 0, units: 0 };
+      const state = { entries: [] as Range[], provisional: [] as Range[], pages: 0, dictionaryBytes: 0, ready: false, error: null as string | null, holder: "owner", handoffs: 0, copies: 0, parses: 0, units: 0 };
       const scratch = { pending: [] as number[], lookup: [] as number[], id: [] as number[] };
       const ownerEvents: [string, number, number][] = [];
       const ownerEvent = (stage: string) => ownerEvents.push([stage, state.entries.length, state.pages]);
@@ -753,7 +749,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
           if (++records > limits.records) fail("capacity"); const framing = reader(at, span.end); const size = yield* framing.number();
           const bodyStart = framing.position(); const end = bodyStart + size; if (end + 8 > span.end) fail("malformed");
           const input = reader(bodyStart, end); const kind = yield* input.byte(); const flags = yield* input.byte();
-          if (((kind === 1 || kind === 3) && flags !== 2) || (kind === 65 && flags !== 0)) fail("malformed");
+          if (((kind === 1 || kind === 3 || kind === 67) && flags !== 2) || (kind === 65 && flags !== 0)) fail("malformed");
           if (kind === 3) {
             if ((yield* input.byte()) !== 1 || (yield* input.number()) !== state.entries.length) fail("malformed");
             const count = yield* input.number(); if (count > limits.dictionaryEntries - state.entries.length) fail("capacity"); state.provisional = []; ownerEvent("delta-begin");
@@ -774,11 +770,6 @@ class MemberHistoryDictionaryScript extends BundleScript {
             if ((yield* input.byte()) !== 1) fail("malformed"); const presence = yield* input.byte(); if (presence & ~3) fail("malformed");
             const owner = presence & 1 ? [yield* id(input), yield* id(input), yield* id(input)] : null;
             const dialect = presence & 2 ? [yield* id(input), yield* id(input), yield* id(input)] : null;
-            const groups = yield* input.number(); if (groups > limits.pinGroups - state.pinGroups) fail("capacity"); state.pinGroups += groups;
-            for (let group = 0; group < groups; group++) {
-              yield* id(input); const count = yield* input.number(); if (count > limits.pins - state.pins) fail("capacity"); state.pins += count;
-              for (let pin = 0; pin < count; pin++) { yield* id(input); yield* id(input); }
-            }
             input.end(); overlay = { owner, dialect }; yield event("composition");
           }
           at = end + 8;
@@ -822,8 +813,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
         const run = model(build(row), row); let terminal = false;
         try { while (!terminal) { for (let fuel = grant; fuel && !terminal; fuel--) terminal = Boolean(run.next().done); } }
         catch (error) { run.state.error = error instanceof Error ? error.message : "unknown"; }
-        assert.equal(run.state.error, row.error, row.id); assert.equal(run.state.entries.length, row.entries, row.id); assert.equal(run.state.pages, row.pages, row.id); assert.equal(run.state.pins, row.pins, row.id);
-        assert.equal(run.state.pinGroups, row.groups, row.id);
+        assert.equal(run.state.error, row.error, row.id); assert.equal(run.state.entries.length, row.entries, row.id); assert.equal(run.state.pages, row.pages, row.id);
         if (row.operation === "unchanged") { assert.deepEqual(run.ownerEvents, fixture.ownerEvents); assert.deepEqual(run.state.entries.map(range => [range.offset, range.length]), fixture.dictionaryRanges); }
         if (row.error === null) { assert.equal(run.take(), null); assert.equal(run.take(), "stale"); } else assert.equal(run.take(), row.error);
         const closed = run.close(grant); assert.equal(closed.inputBytes, row.inputBytes, row.id); assert.equal(closed.retired, row.retiredBytes, row.id); maxRetired = Math.max(maxRetired, closed.retired);

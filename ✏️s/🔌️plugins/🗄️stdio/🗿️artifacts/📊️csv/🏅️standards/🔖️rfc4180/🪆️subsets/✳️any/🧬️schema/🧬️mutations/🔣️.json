@@ -2,67 +2,97 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutations.json",
   "title": "CsvMutation",
-  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "InsertRecord"
-      ],
-      "properties": {
-        "InsertRecord": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/insert-record/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertRecord"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "RemoveRecord"
-      ],
-      "properties": {
-        "RemoveRecord": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/remove-record/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeRecord"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetField"
-      ],
-      "properties": {
-        "SetField": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/set-field/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setField"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetHasHeader"
-      ],
-      "properties": {
-        "SetHasHeader": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/set-has-header/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setHasHeader"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/set-snapshot/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

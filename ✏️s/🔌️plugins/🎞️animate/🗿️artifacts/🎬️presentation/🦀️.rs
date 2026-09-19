@@ -241,6 +241,25 @@ pub fn presentation_child_handle_and_cache(source: &FigureTileSource, tiles: &[F
 pub fn presentation_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationSnapshot {
     PresentationSnapshot { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), presentation: presentation_child_handle_and_cache(source, tiles), animation: animation_child_handle() }
 }
+
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `presentation` deck
+/// (projected from the handle's working `(source, tiles)`) and the empty `animation` set. The react
+/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
+/// `Effect::LoadDocument`) derives both slots here; without it the archive closure completes
+/// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
+pub fn genesis_presentation_child_pack(snapshot: &PresentationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+    use store::ArtifactPack;
+    match slot {
+        "presentation" if child_id == snapshot.presentation.child_id => {
+            let (source, tiles) = presentation_working_scene(snapshot);
+            Some(<SemioPresentationSnapshot as ArtifactPack>::encode_pack(&presentation_snapshot_from_source_tiles(&source, &tiles)))
+        }
+        "animation" if child_id == snapshot.animation.child_id => Some(<SemioAnimationSnapshot as ArtifactPack>::encode_pack(&SemioAnimationSnapshot::default())),
+        _ => None,
+    }
+}
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️ArtifactKind
@@ -378,8 +397,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>
 where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::animate::AnimatePresentationPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::animate::AnimatePresentationViewer>>>,
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;

@@ -251,6 +251,81 @@ async fn production_action_bridge_loads_the_declared_example() {
     assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None).is_err());
 }
 
+/// 🚪️ The React shell announces the first example by dispatching `setActiveExample` through the
+/// retained typed-operation lane. It used to be classified `BatchOnlyPendingRewrite`, which the host
+/// refuses outright (`dispatch-failed … interactive-job classification BatchOnlyPendingRewrite`), and
+/// the whole-document load it publishes then met the trait-default initializer refusal
+/// (`artifact-store.persisted-initializer-refused`). Every offered example must be admitted, publish
+/// ONE `LoadDocument`, settle `Ready` through the host's archive door and become the live document.
+#[semio_framework_async_macros::async_test]
+async fn every_example_load_is_admitted_and_settles_through_the_host_document_archive_door() {
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    let definition = create_cad_app();
+    let declared = definition.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| action.id == "setActiveExample").map(|action| action.semantics.execution.interactive_job).chain(definition.commands.iter().filter(|command| command.id == "setActiveExample").map(|command| command.semantics.execution.interactive_job)).collect::<Vec<_>>();
+    assert!(!declared.is_empty() && declared.iter().all(|classification| *classification == InteractiveJobClassification::Migrated), "setActiveExample must be a live interactive job: {declared:?}");
+    const INSTANCE: u32 = 7;
+    for (archive_id, example_id) in [(91_u64, CAD_EXAMPLE_FOREST_LEFT), (92, crate::examples::demo::ID), (93, "")] {
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await;
+        app.bind_instance_id(INSTANCE).await;
+        app.dispatch_typed(CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }).await.expect("setActiveExample is admitted");
+        let mut loaded = None;
+        let mut terminal = false;
+        for _ in 0..100_000 {
+            PluginApp::maintenance_step(&mut app, 1, 4_096).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("publication");
+            if let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
+                assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                terminal |= page.lane == TypedOperationResultLane::Terminal;
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge"));
+            }
+            if let Some(semio_framework::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+                assert!(loaded.is_none(), "one example switch is one whole-document load");
+                loaded = Some((pack, spr));
+            }
+            app.take_typed_operation_event();
+            app.take_typed_operation_ui_scope();
+            if !app.has_pending_typed_operations() {
+                break;
+            }
+            std::thread::yield_now();
+        }
+        assert!(terminal, "{example_id:?}: the retained operation reaches its terminal page");
+        let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
+        let expected = <CadSnapshot as store::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a CAD document");
+        PluginApp::begin_document_archive_load(&mut app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+        let mut status = None;
+        for _ in 0..1_000_000 {
+            let polled = PluginApp::poll_document_archive_load(&mut app, archive_id).await.expect("archive status");
+            if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+                status = Some(polled);
+                break;
+            }
+            PluginApp::maintenance_step(&mut app, 1, 4_096).expect("archive maintenance step");
+            std::thread::yield_now();
+        }
+        let status = status.expect("archive load reaches a terminal state");
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{example_id:?}: {}", String::from_utf8_lossy(&status.fault));
+        PluginApp::acknowledge_document_archive_load(&mut app, archive_id).expect("archive acknowledgement");
+        let live = app.snapshot().expect("loaded snapshot");
+        assert_eq!(live, expected, "{example_id:?} became the live document");
+        for pane in CadPaneId::all() {
+            let Some(child) = crate::cad_pane_model(&live, pane) else { continue };
+            assert!(app.child_store(crate::cad_pane_model_slot(pane), &child.child_id).await.is_some(), "{example_id:?}: the genesis-derived {pane:?} model member is live after the load");
+            let scene = crate::cad_pane_local_scene(&live, pane).unwrap_or_else(|| panic!("{example_id:?}: the loaded {pane:?} pane resolves its materialization"));
+            assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{example_id:?}: the loaded {pane:?} pane renders real objects");
+        }
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    }
+}
+
+/// 🛂️ An example id the app does not ship is refused by name — never a silent no-op that leaves the
+/// previous document standing while the shell's picker claims the switch happened.
+#[test]
+fn an_unknown_example_is_refused_by_name() {
+    let Err(fault) = drive_with_operation(&CadPlayApp, &forest_play_scene(), "setActiveExample", Some(json!({ "exampleId": "not-an-example" })), &CadConfig::default(), None) else { panic!("an unknown example must be refused") };
+    assert!(fault.message.starts_with("cad.example.unknown"), "{fault:?}");
+}
+
 #[test]
 fn host_contributions_resolve_to_the_event_sourced_config_lane() {
     let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&json::to_dsl_value(&json!({ "json": "[{\"id\":\"cad\"}]" })))).expect("host configuration").expect("CAD contribution mutation");
@@ -306,7 +381,7 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
     let host_command = definition.commands.iter().find(|command| command.id == host_route["id"].as_str().unwrap()).expect("host command declaration");
     assert_eq!(host_command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone()).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone()).await;
     assert_eq!(app.app_id().await, controller);
     assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);
     let mut admitted = std::collections::BTreeSet::new();

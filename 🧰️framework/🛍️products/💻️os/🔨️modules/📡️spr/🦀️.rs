@@ -14,8 +14,8 @@
 pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprIdentityRecord, SprWriter, VerificationLevel, WriteOptions};
 pub use crate::os_spr::format::retained::RetainedSprLimits;
 pub use crate::os_spr::history::{
-    decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
-    HistoryCheckpoint, HistoryComposition, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, RetainedHistoryDecode, RetainedHistoryDecodeStep, REC_COMPOSITION, REC_CURSOR,
+    decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAppender, HistoryComposition, HistoryEdit, HistoryLog, HistoryOpMeta,
+    HistoryReader, HistoryTransitionRecord, OpPayload, RetainedHistoryDecode, RetainedHistoryDecodeStep, REC_COMPOSITION, REC_TRANSITION,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
@@ -27,6 +27,10 @@ pub use crate::os_spr::causal::{
     frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
     InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES,
     DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
+};
+pub use crate::os_spr::causal::transition::{
+    decode_history_transition, encode_history_transition, fold_history, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
+    TransitionAuthor, TransitionCheckpoint, TransitionPin, HISTORY_TRANSITION_SCHEMA,
 };
 pub use crate::os_spr::channel::{
     decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
@@ -145,20 +149,18 @@ async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     Ok(hasher.hash(&concat))
 }
 
-/// 🧭️ Decodes just enough of a `.spr` file (trusted prefix + a full `HistoryLog` decode) to report
-/// its current sync-relevant frontier: document identity, the latest edit, every alternative's
-/// head, and the commit chain's current tip.
+/// 🧭️ Decodes just enough of a `.spr` file (trusted prefix + a full `HistoryLog` decode and fold) to
+/// report its current sync-relevant frontier: document identity, the latest edit, every folded
+/// alternative's head, and the commit chain's current tip.
 ///
-/// 🎯️ Design choice: `AlternativeHead.checkpoint_id` picks the LAST id in
-/// `HistoryAlternative::checkpoint_ids` (append-only list, so its tail is the most recent
-/// checkpoint); `head_edit_ordinal` for that alternative is the highest edit ordinal transitively
-/// reachable through that checkpoint's `change_ids -> HistoryChange::edit_ids`. An alternative with
-/// no checkpoints yet, or a document with no edits yet, reports ordinal `0` / an empty edit id —
-/// the contract does not specify empty-history behavior, so this crate picks the least-surprising
-/// default (matching a fresh `HistoryAppender::begin` which has written zero edits).
+/// 🎯️ Design choice: `AlternativeHead.checkpoint_id` is the LAST id of the folded alternative's
+/// checkpoint chain; its `head_edit_ordinal` is the highest edit ordinal reachable through that
+/// checkpoint's changes. An alternative with no checkpoints, or a document with no edits, reports
+/// ordinal `0` / an empty edit id (matching a fresh `HistoryAppender::begin`).
 pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, ProtocolError> {
     let decode_options = DecodeOptions::default();
     let log = decode_history(protocol_bytes, &decode_options).await?;
+    let fold = log.fold()?;
     let recovery = crate::os_spr::format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit).await?;
 
     let (head_edit_ordinal, head_edit_id) = match log.edits.last() {
@@ -174,25 +176,23 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
         crate::os_spr::format::parse_commit_payload(frame.payload().await)?.chain_hash
     };
 
-    let alternatives = log.alternatives.iter().map(|alternative| build_alternative_head(&log, alternative)).collect();
+    let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
+    let alternatives = fold.alternatives.iter().map(|alternative| alternative_head(&fold, &ordinal_of, alternative)).collect();
 
     Ok(FrontierSummary { document_id: log.doc_id, head_edit_ordinal, head_edit_id, alternatives, last_commit_seq: recovery.last_commit_seq, chain_hash })
 }
 
 /// 🧭️ See `content_frontier`'s design-choice note for the derivation this implements.
-// 🚫️async: R9 pure accessor — I/O-free lookup over already-decoded in-memory data, whose only
-// consumer is `Iterator::map`'s sync closure above.
-fn build_alternative_head(log: &HistoryLog, alternative: &HistoryAlternative) -> AlternativeHead {
+fn alternative_head(fold: &HistoryFold, ordinal_of: &std::collections::HashMap<&str, u64>, alternative: &FoldAlternative) -> AlternativeHead {
     let checkpoint_id = alternative.checkpoint_ids.last().cloned().unwrap_or_default();
-    let head_edit_ordinal = log.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map_or(0, |checkpoint| checkpoint_head_edit_ordinal(log, checkpoint));
+    let head_edit_ordinal = fold
+        .checkpoints
+        .iter()
+        .find(|checkpoint| checkpoint.id == checkpoint_id)
+        .map_or(0, |checkpoint| {
+            checkpoint.change_ids.iter().filter_map(|change_id| fold.changes.iter().find(|change| &change.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max().unwrap_or(0)
+        });
     AlternativeHead { alternative_id: alternative.id.clone(), checkpoint_id, head_edit_ordinal }
-}
-
-/// 🧭️ Highest edit ordinal transitively reachable through `checkpoint.change_ids -> edit_ids`.
-// 🚫️async: R9 pure accessor — I/O-free, only consumer is `Option::map_or`'s sync closure above.
-fn checkpoint_head_edit_ordinal(log: &HistoryLog, checkpoint: &HistoryCheckpoint) -> u64 {
-    let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
-    checkpoint.change_ids.iter().filter_map(|change_id| log.changes.iter().find(|change| &change.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max().unwrap_or(0)
 }
 //#endregion 🔖️Sync
 

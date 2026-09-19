@@ -584,6 +584,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Examples are an integral part of artifacts. The code for it shouldnt be
+e.g. violations
+In semio-tech play and mit-bestand demonstrator and the dev servers, all
+✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs
+
+---
+
 The subsets of artifacts are independant implementations. they have their own viewer, editor, etc
 A subset must be meaningful
 violations e.g.
@@ -611,7 +618,6 @@ violations e.g.
 ---
 
 Make sure that versioned code appears through folder taxonomy design. it must not appear in the naming of symbols.
-
 
 violations e.g.
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx
@@ -650,12 +656,12 @@ max wave reiterations (optional) - amount of reiterations after a wave was passe
 
 All tools must be declarative extended finite state machines.
 The state machine holds global variables.
-The transitions are guarded by 
-The config holds global variables and 
+The transitions are guarded by
+The config holds global variables and
 
 ---
 
-puzzle 3d fill: The fill should be wrapped inside a transaction an 
+puzzle 3d fill: The fill should be wrapped inside a transaction an
 
 ---
 

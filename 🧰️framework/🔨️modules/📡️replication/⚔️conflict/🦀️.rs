@@ -312,7 +312,7 @@ impl crate::value::FromValue for DispatchReport {
     }
 }
 
-/// @emoji 🔀️ The report one `ingest_remote`/`merge_remote_snapshot`/`resolve_conflict` merge
+/// @emoji 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
 /// produces: whether the incoming batch was accepted, where it landed (`insertion_index` — the
 /// position in `applied_edit_ids` the batch's first edit was inserted at, meaningful only when
 /// `accepted`), every replayed edit's messages, the worst level across the whole replayed suffix,

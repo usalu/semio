@@ -18,49 +18,51 @@ use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
-// Every field of crate::os_store::OpsHeaderLine (Doc/Edit/Change/Checkpoint/Alternative/Active) has exactly
-// one slot below. Op lines are opaque exact `print_op` strings (one per line, no '\n' inside).
-// Derived data (inverse, sequence_number, unless explicitly captured via `meta`) is excluded.
+// Persisted history is the semantic event log only: edits (opaque `print_op` lines / `OpBinary`
+// payloads) and structural transitions. Change/checkpoint/alternative facts, the active alternative,
+// checkpoint pins and the undo/redo cursor are derived by [`HistoryLog::fold`], never stored.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryLog {
     pub doc_id: String,
     pub schema: String,
     pub edits: Vec<HistoryEdit>,
-    pub changes: Vec<HistoryChange>,
-    pub checkpoints: Vec<HistoryCheckpoint>,
-    pub alternatives: Vec<HistoryAlternative>,
-    pub active_alternative_id: Option<String>,
-    /// @emoji 🎯️ Undo/redo/checkout position, present only when the caller explicitly persisted
-    /// it (`REC_CURSOR`) — absent for text-compiled/imported logs and for any log predating this
-    /// field, in which case undo/redo position is runtime-only, exactly as before.
-    pub cursor: Option<HistoryCursor>,
-    /// @emoji 🧩️ Composition overlay (`REC_COMPOSITION`): who owns this document, which dialect it
-    /// materializes as, and each checkpoint's child pins. Absent for every non-composed document
-    /// (the overwhelming majority) and for logs predating the record.
+    /// @emoji 🔀️ Structural history steps (`REC_TRANSITION`) — undo/redo, commits, branches,
+    /// checkouts and repins — in persisted order; the fold orders them by `(hlt, id)`.
+    pub transitions: Vec<HistoryTransitionRecord>,
+    /// @emoji 🧩️ Composition overlay (`REC_COMPOSITION`): who owns this document and which dialect
+    /// it materializes as. Absent for every non-composed document.
     pub composition: Option<HistoryComposition>,
     /// @emoji ⚔️ First-class merge conflicts (`REC_CONFLICT`), durable per
     /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
     /// 📋️contract-freeze.md` §C7: a `Quarantined` batch rejected outright, or a `Degraded`
     /// accepted-but-messy merge — see `crate::os_spr::conflict::ConflictKind`. Empty for the
-    /// overwhelming majority of documents and for logs predating the record; no record is written
-    /// when empty.
+    /// overwhelming majority of documents; no record is written when empty.
     pub conflicts: Vec<HistoryConflict>,
 }
 
+/// @emoji 🔀️ One persisted history transition: the [`crate::os_spr::MutationEnvelope`] minus its
+/// document id and schema (implied by `REC_DOC` and [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]).
+/// `hlt` is `(actor, physical_ms, logical)` like [`HistoryConflict::hlt`]; `payload` is the encoded
+/// [`crate::os_spr::HistoryTransition`], opaque to this codec.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HistoryTransitionRecord {
+    pub id: String,
+    pub actor: String,
+    pub hlt: (u64, u64, u64),
+    pub dependencies: Vec<String>,
+    pub payload: Vec<u8>,
+}
+
 /// @emoji 🧩️ The durable form of a document's composition facts, carried as ONE extension record
-/// rather than as new fields on `REC_DOC`/`REC_CHECKPOINT`: those two are format-frozen critical
-/// records, and a composition overlay is precisely the kind of thing an older/foreign reader must
-/// be able to skip without failing the whole file. Before this record existed all three of these
-/// were in-memory only, so a reloaded child forgot both that it was owned and what dialect it
-/// materialized as — which made "children with their own version history" unpersistable.
+/// rather than as new fields on the format-frozen critical `REC_DOC`: an older/foreign reader must
+/// be able to skip it without failing the whole file. Checkpoint pins are not stored here — they
+/// are facts of `Repin` transitions, derived by [`HistoryLog::fold`].
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct HistoryComposition {
     /// 🏠️ `(parent_artifact_uri, slot, child_id)` — the child-side ownership stamp.
     pub owner: Option<(String, String, String)>,
     /// 🎯️ `(artifact_kind, standard, subset)` — the dialect this document materializes as.
     pub dialect: Option<(String, String, String)>,
-    /// 📌️ `(checkpoint_id, [(child_artifact_uri, child_checkpoint_id)])` — the cascade pins.
-    pub checkpoint_pins: Vec<(String, Vec<(String, String)>)>,
 }
 
 /// @emoji ⚔️ Durable form of `crate::os_spr::conflict::Conflict` (`REC_CONFLICT`): `kind`/`status`
@@ -132,19 +134,6 @@ pub struct OpPayload {
     pub binary: Option<Vec<u8>>,
 }
 
-/// @emoji 🎯️ Undo/redo/checkout position. Carries the FULL applied-edit list (not just the tail
-/// edit id) because undo-then-apply interleavings are not representable by a single marker: an
-/// edit undone mid-history precedes later-applied edits in file order, and the redo stack can
-/// contain edits in any order relative to `applied`. `checkpoint_id` mirrors
-/// `ArtifactStore::current_checkpoint_id`; the active alternative stays on the existing
-/// `HistoryLog::active_alternative_id` (unrelated lifecycle — churns far less often).
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct HistoryCursor {
-    pub applied_edit_ids: Vec<String>,
-    pub redo_edit_ids: Vec<String>,
-    pub checkpoint_id: Option<String>,
-}
-
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryOpMeta {
     pub op_id: Option<String>,
@@ -175,38 +164,82 @@ pub struct HistoryOpMeta {
     /// this field.
     pub messages: Vec<HistoryMessage>,
 }
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HistoryChange {
-    pub id: String,
-    pub saved_at: String,
-    pub edit_ids: Vec<String>,
-    pub description: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HistoryCheckpoint {
-    pub id: String,
-    pub timestamp: String,
-    pub change_ids: Vec<String>,
-    pub parent_id: Option<String>,
-    pub authors: Vec<HistoryAuthor>,
-    pub message: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HistoryAuthor {
-    pub id: String,
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HistoryAlternative {
-    pub id: String,
-    pub name: String,
-    pub checkpoint_ids: Vec<String>,
-}
 //#endregion 🔖️Model
+
+//#region 🔖️Fold
+impl HistoryTransitionRecord {
+    /// @emoji 📥️ Strips `envelope`'s document id and schema, keeping every other transition fact.
+    pub fn from_envelope(envelope: &crate::os_spr::MutationEnvelope) -> Self {
+        Self {
+            id: envelope.mutation_id.0.clone(),
+            actor: envelope.actor.0.clone(),
+            hlt: (envelope.timestamp.actor, envelope.timestamp.physical_ms, envelope.timestamp.logical),
+            dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
+            payload: envelope.diff.payload.clone(),
+        }
+    }
+
+    /// @emoji 📤️ The transition envelope of `document_id`: [`crate::os_spr::HISTORY_TRANSITION_SCHEMA`]
+    /// diff carrying `payload`, empty inverse under the same schema.
+    pub fn to_envelope(&self, document_id: &str) -> crate::os_spr::MutationEnvelope {
+        let schema = crate::os_spr::SchemaId(crate::os_spr::HISTORY_TRANSITION_SCHEMA.to_string());
+        crate::os_spr::MutationEnvelope {
+            mutation_id: crate::os_spr::MutationId(self.id.clone()),
+            document_id: crate::os_spr::ArtifactId(document_id.to_string()),
+            actor: crate::os_spr::ActorId(self.actor.clone()),
+            dependencies: self.dependencies.iter().cloned().map(crate::os_spr::MutationId).collect(),
+            diff: crate::os_spr::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
+            inverse: crate::os_spr::InverseMutation { schema, payload: Vec::new() },
+            timestamp: crate::os_spr::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },
+        }
+    }
+}
+
+impl HistoryLog {
+    /// @emoji 🧮️ Folds this log's edits and transitions ([`crate::os_spr::fold_history`]) into every
+    /// derived history fact and position. An edit's clock is its first operation's `hlt` (zero when
+    /// absent); its mutation ids are each operation's `op_id`, else `{edit.id}#{index}` (the
+    /// [`crate::os_spr::mutation_ids_for_edit`] fallback). Edits owning an operation of a
+    /// non-accepted quarantined conflict are excluded.
+    pub fn fold(&self) -> Result<crate::os_spr::HistoryFold, ProtocolError> {
+        let mut edits = Vec::with_capacity(self.edits.len());
+        let mut owners: HashMap<String, &str> = HashMap::new();
+        for edit in &self.edits {
+            let meta = edit.meta.as_deref().unwrap_or_default();
+            let timestamp = match meta.first().and_then(|meta| meta.hlt) {
+                Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp {
+                    actor,
+                    physical_ms: u64::try_from(physical_ms).map_err(|_| ProtocolError::Malformed { what: "history fold", offset: 0, detail: format!("edit {} has a negative hybrid-clock time", edit.id) })?,
+                    logical,
+                },
+                None => crate::os_spr::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
+            };
+            let mutation_ids: Vec<crate::os_spr::MutationId> = (0..edit.ops.len())
+                .map(|index| crate::os_spr::MutationId(meta.get(index).and_then(|meta| meta.op_id.clone()).unwrap_or_else(|| format!("{}#{index}", edit.id))))
+                .collect();
+            for mutation_id in &mutation_ids {
+                owners.insert(mutation_id.0.clone(), edit.id.as_str());
+            }
+            edits.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp, mutation_ids });
+        }
+        let mut excluded = HashSet::new();
+        for conflict in self.conflicts.iter().filter(|conflict| conflict.kind == 0 && conflict.status != 1) {
+            for bytes in &conflict.envelopes {
+                let mut position = 0;
+                let envelope = crate::os_spr::decode_envelope(bytes, &mut position)?;
+                if position != bytes.len() {
+                    return Err(ProtocolError::Malformed { what: "history fold", offset: position as u64, detail: format!("quarantined conflict {} envelope has trailing bytes", conflict.id) });
+                }
+                if let Some(owner) = owners.get(&envelope.mutation_id.0) {
+                    excluded.insert((*owner).to_string());
+                }
+            }
+        }
+        let transitions: Vec<crate::os_spr::MutationEnvelope> = self.transitions.iter().map(|transition| transition.to_envelope(&self.doc_id)).collect();
+        crate::os_spr::fold_history(&edits, &transitions, &excluded)
+    }
+}
+//#endregion 🔖️Fold
 
 //#region 🔖️TextGrammar
 // Own twin of crate::os_store::OpsHeaderLine's grammar, built directly against `dsl_schema` (never `vcs`,
@@ -223,40 +256,11 @@ const F_EDIT_ACTOR: u16 = 2;
 const F_EDIT_FINISHED: u16 = 3;
 const F_EDIT_KEY: u16 = 4;
 const F_EDIT_DESCRIPTION: u16 = 5;
-const F_CHANGE_ID: u16 = 0;
-const F_CHANGE_SAVED: u16 = 1;
-const F_CHANGE_EDITS: u16 = 2;
-const F_CHANGE_DESCRIPTION: u16 = 3;
-const F_CHECKPOINT_ID: u16 = 0;
-const F_CHECKPOINT_AT: u16 = 1;
-const F_CHECKPOINT_CHANGES: u16 = 2;
-const F_CHECKPOINT_PARENT: u16 = 3;
-const F_CHECKPOINT_BY: u16 = 4;
-const F_CHECKPOINT_MESSAGE: u16 = 5;
-const F_ALTERNATIVE_ID: u16 = 0;
-const F_ALTERNATIVE_NAME: u16 = 1;
-const F_ALTERNATIVE_CHECKPOINTS: u16 = 2;
-const F_ACTIVE_ID: u16 = 0;
-const F_AUTHOR_ID: u16 = 0;
-const F_AUTHOR_NAME: u16 = 1;
-const F_CURSOR_APPLIED: u16 = 0;
-const F_CURSOR_REDO: u16 = 1;
-const F_CURSOR_CHECKPOINT: u16 = 2;
-
-/// @emoji 🖋️ `by=[...]` list entry twin of vcs's `OpsAuthor`: two positional fields, no keyword.
-// 🚫️async: E4 fn-pointer slot — stored bare as `Shape::Record(fn() -> RecordSpec)` (🗣️dsl schema),
-// so this item's pointer type must stay nameable. Builds `RecordSpec`/`FieldSpec` via their `pub`
-// fields directly rather than the async `::new`/`positional` builders, which a sync fn cannot call.
-fn author_spec() -> RecordSpec {
-    RecordSpec {
-        keyword: None,
-        layout: RecordLayout::Inline,
-        fields: vec![
-            FieldSpec { id: F_AUTHOR_ID, key: String::new(), position: Some(0), shape: Shape::Text, optional: false, flatten: false, defines: None, is_call_name: false },
-            FieldSpec { id: F_AUTHOR_NAME, key: String::new(), position: Some(1), shape: Shape::Text, optional: false, flatten: false, defines: None, is_call_name: false },
-        ],
-    }
-}
+const F_TRANSITION_ID: u16 = 0;
+const F_TRANSITION_ACTOR: u16 = 1;
+const F_TRANSITION_HLC: u16 = 2;
+const F_TRANSITION_DEPENDENCIES: u16 = 3;
+const F_TRANSITION_PAYLOAD: u16 = 4;
 
 fn doc_spec() -> RecordSpec {
     RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
@@ -277,53 +281,19 @@ fn edit_spec() -> RecordSpec {
     )
 }
 
-fn change_spec() -> RecordSpec {
+/// @emoji 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
+/// payload=<base64>` — one [`HistoryTransitionRecord`].
+fn transition_spec() -> RecordSpec {
     RecordSpec::new(
-        Some("change"),
+        Some("transition"),
         RecordLayout::Inline,
         vec![
-            FieldSpec::new(F_CHANGE_ID, "", Shape::Text).positional(0),
-            FieldSpec::new(F_CHANGE_SAVED, "saved", Shape::Text),
-            FieldSpec::new(F_CHANGE_EDITS, "edits", Shape::List(Box::new(Shape::Text))),
-            FieldSpec::new(F_CHANGE_DESCRIPTION, "description", Shape::Text).optional(),
+            FieldSpec::new(F_TRANSITION_ID, "", Shape::Text).positional(0),
+            FieldSpec::new(F_TRANSITION_ACTOR, "actor", Shape::Text),
+            FieldSpec::new(F_TRANSITION_HLC, "hlc", Shape::Tuple(Box::new(Shape::UInt), Some(3))),
+            FieldSpec::new(F_TRANSITION_DEPENDENCIES, "dependencies", Shape::List(Box::new(Shape::Text))),
+            FieldSpec::new(F_TRANSITION_PAYLOAD, "payload", Shape::Bytes64),
         ],
-    )
-}
-
-fn checkpoint_spec() -> RecordSpec {
-    RecordSpec::new(
-        Some("checkpoint"),
-        RecordLayout::Inline,
-        vec![
-            FieldSpec::new(F_CHECKPOINT_ID, "", Shape::Text).positional(0),
-            FieldSpec::new(F_CHECKPOINT_AT, "at", Shape::Text),
-            FieldSpec::new(F_CHECKPOINT_CHANGES, "changes", Shape::List(Box::new(Shape::Text))),
-            FieldSpec::new(F_CHECKPOINT_PARENT, "parent", Shape::Text).optional(),
-            FieldSpec::new(F_CHECKPOINT_BY, "by", Shape::List(Box::new(Shape::Record(author_spec)))),
-            FieldSpec::new(F_CHECKPOINT_MESSAGE, "message", Shape::Text).optional(),
-        ],
-    )
-}
-
-fn alternative_spec() -> RecordSpec {
-    RecordSpec::new(
-        Some("alternative"),
-        RecordLayout::Inline,
-        vec![FieldSpec::new(F_ALTERNATIVE_ID, "", Shape::Text).positional(0), FieldSpec::new(F_ALTERNATIVE_NAME, "name", Shape::Text), FieldSpec::new(F_ALTERNATIVE_CHECKPOINTS, "checkpoints", Shape::List(Box::new(Shape::Text)))],
-    )
-}
-
-fn active_spec() -> RecordSpec {
-    RecordSpec::new(Some("active"), RecordLayout::Inline, vec![FieldSpec::new(F_ACTIVE_ID, "", Shape::Text).positional(0)])
-}
-
-/// @emoji 🎯️ `cursor applied=[...] redo=[...] checkpoint=<id>` — carries the FULL applied/redo
-/// edit-id lists (see `HistoryCursor`'s doc for why a single marker id is insufficient).
-fn cursor_spec() -> RecordSpec {
-    RecordSpec::new(
-        Some("cursor"),
-        RecordLayout::Inline,
-        vec![FieldSpec::new(F_CURSOR_APPLIED, "applied", Shape::List(Box::new(Shape::Text))), FieldSpec::new(F_CURSOR_REDO, "redo", Shape::List(Box::new(Shape::Text))), FieldSpec::new(F_CURSOR_CHECKPOINT, "checkpoint", Shape::Text).optional()],
     )
 }
 
@@ -349,20 +319,20 @@ fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
     }
 }
 
-fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
+fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolError> {
     match record.get(id) {
-        Some(FieldValue::List(items)) => {
-            // 🚫️async: R10 shape 1 — `field_text` is async now, but `filter_map`'s closure is sync;
-            // hoisted into a plain loop so the two lookups can be awaited.
-            let mut out = Vec::new();
-            for v in items.iter() {
-                let FieldValue::Record(rec) = v else { continue };
-                let (Some(id), Some(name)) = (field_text(rec, F_AUTHOR_ID), field_text(rec, F_AUTHOR_NAME)) else { continue };
-                out.push(HistoryAuthor { id, name });
-            }
-            out
-        }
-        _ => Vec::new(),
+        Some(FieldValue::Tuple(items)) => match items.as_slice() {
+            [FieldValue::UInt(actor), FieldValue::UInt(physical_ms), FieldValue::UInt(logical)] => Ok((*actor, *physical_ms, *logical)),
+            _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "expected three unsigned integers".to_string() }),
+        },
+        _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "missing required field in ops text".to_string() }),
+    }
+}
+
+fn field_bytes(record: &RecordValue, id: u16, what: &'static str) -> Result<Vec<u8>, ProtocolError> {
+    match record.get(id) {
+        Some(FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
+        _ => Err(ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() }),
     }
 }
 
@@ -437,41 +407,15 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 });
                 forwards = Vec::new();
             }
-            "change" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &change_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.changes.push(HistoryChange {
-                    id: required_text(&record, F_CHANGE_ID, "change id")?,
-                    saved_at: required_text(&record, F_CHANGE_SAVED, "change saved")?,
-                    edit_ids: field_text_list(&record, F_CHANGE_EDITS),
-                    description: field_text(&record, F_CHANGE_DESCRIPTION),
+            "transition" => {
+                let record = crate::os_dsl::schema::parse(trimmed, &transition_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.transitions.push(HistoryTransitionRecord {
+                    id: required_text(&record, F_TRANSITION_ID, "transition id")?,
+                    actor: required_text(&record, F_TRANSITION_ACTOR, "transition actor")?,
+                    hlt: field_hlc(&record, F_TRANSITION_HLC)?,
+                    dependencies: field_text_list(&record, F_TRANSITION_DEPENDENCIES),
+                    payload: field_bytes(&record, F_TRANSITION_PAYLOAD, "transition payload")?,
                 });
-            }
-            "checkpoint" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &checkpoint_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.checkpoints.push(HistoryCheckpoint {
-                    id: required_text(&record, F_CHECKPOINT_ID, "checkpoint id")?,
-                    timestamp: required_text(&record, F_CHECKPOINT_AT, "checkpoint at")?,
-                    change_ids: field_text_list(&record, F_CHECKPOINT_CHANGES),
-                    parent_id: field_text(&record, F_CHECKPOINT_PARENT),
-                    authors: field_authors(&record, F_CHECKPOINT_BY),
-                    message: field_text(&record, F_CHECKPOINT_MESSAGE),
-                });
-            }
-            "alternative" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &alternative_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.alternatives.push(HistoryAlternative {
-                    id: required_text(&record, F_ALTERNATIVE_ID, "alternative id")?,
-                    name: required_text(&record, F_ALTERNATIVE_NAME, "alternative name")?,
-                    checkpoint_ids: field_text_list(&record, F_ALTERNATIVE_CHECKPOINTS),
-                });
-            }
-            "active" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &active_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id")?);
-            }
-            "cursor" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &cursor_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED), redo_edit_ids: field_text_list(&record, F_CURSOR_REDO), checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT) });
             }
             other => return Err(ProtocolError::Malformed { what: "ops text line", offset: 0, detail: format!("unknown line keyword '{other}'") }),
         }
@@ -481,8 +425,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 }
 
 /// @emoji 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space
-/// indented forward op lines), then `change`/`checkpoint`/`alternative`/`active` records — the
-/// same section order `crate::os_store::print_ops_log` uses. Errors if any op payload carries no text
+/// indented forward op lines), then one `transition` line per [`HistoryTransitionRecord`]. Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
 /// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
@@ -519,60 +462,15 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         }
     }
 
-    for change in &log.changes {
-        let mut fields = vec![(F_CHANGE_ID, FieldValue::Text(change.id.clone())), (F_CHANGE_SAVED, FieldValue::Text(change.saved_at.clone())), (F_CHANGE_EDITS, FieldValue::List(change.edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect()))];
-        if let Some(description) = &change.description {
-            fields.push((F_CHANGE_DESCRIPTION, FieldValue::Text(description.clone())));
-        }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &change_spec(), JoinMode::Inline));
-        out.push('\n');
-    }
-
-    for checkpoint in &log.checkpoints {
-        let mut fields = vec![
-            (F_CHECKPOINT_ID, FieldValue::Text(checkpoint.id.clone())),
-            (F_CHECKPOINT_AT, FieldValue::Text(checkpoint.timestamp.clone())),
-            (F_CHECKPOINT_CHANGES, FieldValue::List(checkpoint.change_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
-        ];
-        if let Some(parent) = &checkpoint.parent_id {
-            fields.push((F_CHECKPOINT_PARENT, FieldValue::Text(parent.clone())));
-        }
-        // 🚫️async: R10 shape 1 — `record_with` is async now, but `Iterator::map`'s closure is sync;
-        // hoisted into a plain loop so each author record can be awaited.
-        let mut author_records = Vec::with_capacity(checkpoint.authors.len());
-        for a in &checkpoint.authors {
-            author_records.push(FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))])));
-        }
-        fields.push((F_CHECKPOINT_BY, FieldValue::List(author_records)));
-        if let Some(message) = &checkpoint.message {
-            fields.push((F_CHECKPOINT_MESSAGE, FieldValue::Text(message.clone())));
-        }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &checkpoint_spec(), JoinMode::Inline));
-        out.push('\n');
-    }
-
-    for alternative in &log.alternatives {
+    for transition in &log.transitions {
         let fields = vec![
-            (F_ALTERNATIVE_ID, FieldValue::Text(alternative.id.clone())),
-            (F_ALTERNATIVE_NAME, FieldValue::Text(alternative.name.clone())),
-            (F_ALTERNATIVE_CHECKPOINTS, FieldValue::List(alternative.checkpoint_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
+            (F_TRANSITION_ID, FieldValue::Text(transition.id.clone())),
+            (F_TRANSITION_ACTOR, FieldValue::Text(transition.actor.clone())),
+            (F_TRANSITION_HLC, FieldValue::Tuple(vec![FieldValue::UInt(transition.hlt.0), FieldValue::UInt(transition.hlt.1), FieldValue::UInt(transition.hlt.2)])),
+            (F_TRANSITION_DEPENDENCIES, FieldValue::List(transition.dependencies.iter().map(|s| FieldValue::Text(s.clone())).collect())),
+            (F_TRANSITION_PAYLOAD, FieldValue::Bytes64(transition.payload.clone())),
         ];
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &alternative_spec(), JoinMode::Inline));
-        out.push('\n');
-    }
-
-    if let Some(active_id) = &log.active_alternative_id {
-        out.push_str(&crate::os_dsl::schema::print(&record_with(vec![(F_ACTIVE_ID, FieldValue::Text(active_id.clone()))]), &active_spec(), JoinMode::Inline));
-        out.push('\n');
-    }
-
-    if let Some(cursor) = &log.cursor {
-        let mut fields =
-            vec![(F_CURSOR_APPLIED, FieldValue::List(cursor.applied_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())), (F_CURSOR_REDO, FieldValue::List(cursor.redo_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect()))];
-        if let Some(checkpoint_id) = &cursor.checkpoint_id {
-            fields.push((F_CURSOR_CHECKPOINT, FieldValue::Text(checkpoint_id.clone())));
-        }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &cursor_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &transition_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
@@ -591,9 +489,8 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
 //   encode_doc/encode_edit signatures, which only expose one `dict` parameter each) — this crate
 //   backs `REC_STR_DICT` only; `REC_ACTOR_DICT` stays defined in `protocol_core` but is never
 //   emitted by this crate's writer (a no-op skip on read, for forward compatibility).
-// - `encode_change`'s `edit_ordinal_of` is the only place besides `encode_edit` that genuinely
-//   references edit ids (`HistoryChange::edit_ids`); `encode_checkpoint`/`encode_alternative`/
-//   `encode_active` take no `edit_ordinal_of` since they never reference an edit.
+// - `encode_edit`/`encode_conflicts` are the only encoders that reference edit ids (edit-ordinal
+//   eligible); transitions reference operations by mutation id, never by edit ordinal.
 // - `encode_edit` itself is data-driven: it writes presence bit5 + the inverse section iff
 //   `edit.inverse` is non-empty — real op payloads, using the same op-payload wire shape as
 //   `edit.ops` (op_tag bit1 flags a binary payload; both tags are per-payload, not per-edit, so
@@ -802,9 +699,7 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     }
     // 🎯️ Appended past the pre-existing tail (bit4 of the same presence byte) — a decoder reading
     // a byte-log written before this field existed sees bit4 unset (that bit never existed in the
-    // old presence byte, so it always tests as 0) and recovers `group_id: None`, exactly the
-    // "absent for logs predating this field" contract `HistoryLog.cursor` documents for its own
-    // additive field.
+    // old presence byte, so it always tests as 0) and recovers `group_id: None`.
     if let Some(group_id) = &meta.group_id {
         write_id_field(out, group_id, dict, edit_ordinal_of).await?;
     }
@@ -986,238 +881,67 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
 }
 //#endregion 🔖️Edit
 
-//#region 🔖️Change
-pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
+//#region 🔖️Transition
+/// @emoji 🔀️ Caller-defined extension record (the 0x40..=0x7E range, next to `REC_COMPOSITION`/
+/// `REC_CONFLICT`) carrying one history transition. Written CRITICAL: a reader that skipped it
+/// would fold a different history, so it must refuse the file instead. One frame per transition,
+/// appended exactly like `REC_EDIT`.
+pub const REC_TRANSITION: u8 = 0x43;
+
+/// @emoji 🎯️ `format u8 (=1) | id(idfield) | actor(idfield) | hlt(actor varint, physical_ms
+/// varint, logical varint) | dependency_count varint + dependency(idfield)* | payload_len varint +
+/// payload`. Ids, actor and dependencies are dict-interned like every other identifier here.
+pub async fn encode_transition(transition: &HistoryTransitionRecord, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
     let mut out = ByteWriter::new();
     out.write_u8(1);
-    let mut presence = 0u8;
-    if change.description.is_some() {
-        presence |= 1 << 0;
+    write_id_field(&mut out, &transition.id, dict, &|_: &str| None).await?;
+    write_id_field(&mut out, &transition.actor, dict, &|_: &str| None).await?;
+    out.write_varint_u64(transition.hlt.0);
+    out.write_varint_u64(transition.hlt.1);
+    out.write_varint_u64(transition.hlt.2);
+    out.write_varint_u64(transition.dependencies.len() as u64);
+    for dependency in &transition.dependencies {
+        write_id_field(&mut out, dependency, dict, &|_: &str| None).await?;
     }
-    out.write_u8(presence);
-    write_id_field(&mut out, &change.id, dict, &|_: &str| None).await?;
-    crate::os_spr::scalar::write_timestamp(&mut out, &change.saved_at, None);
-    out.write_varint_u64(change.edit_ids.len() as u64);
-    for edit_id in &change.edit_ids {
-        write_id_field(&mut out, edit_id, dict, edit_ordinal_of).await?;
-    }
-    if let Some(description) = &change.description {
-        write_str_field(&mut out, description).await;
-    }
+    out.write_varint_u64(transition.payload.len() as u64);
+    out.write_bytes(&transition.payload);
     Ok(out.into_bytes())
 }
 
-pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<HistoryChange, ProtocolError> {
-    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
+/// @emoji 🎯️ Inverse of [`encode_transition`]; refuses trailing payload bytes.
+pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<HistoryTransitionRecord, ProtocolError> {
+    let miss = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {
-        return Err(malformed_fmt("change", format).await);
+        return Err(malformed_fmt("transition", format).await);
     }
-    let presence = input.read_u8()?;
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (saved_at, _) = crate::os_spr::scalar::read_timestamp(&mut input, None)?;
-    let edit_count = input.read_varint_u64()?;
-    let mut edit_ids = Vec::with_capacity(edit_count as usize);
-    for _ in 0..edit_count {
-        edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+    let id = read_id_field(&mut input, dict, miss)?;
+    let actor = read_id_field(&mut input, dict, miss)?;
+    let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
+    let dependency_count = input.read_varint_u64()?;
+    let mut dependencies = Vec::with_capacity(dependency_count.min(input.remaining() as u64) as usize);
+    for _ in 0..dependency_count {
+        dependencies.push(read_id_field(&mut input, dict, miss)?);
     }
-    let description = if presence & (1 << 0) != 0 { Some(read_str_field(&mut input).await?) } else { None };
-    Ok(HistoryChange { id, saved_at, edit_ids, description })
-}
-//#endregion 🔖️Change
-
-//#region 🔖️Checkpoint
-pub async fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    let mut presence = 0u8;
-    if checkpoint.parent_id.is_some() {
-        presence |= 1 << 0;
-    }
-    if checkpoint.message.is_some() {
-        presence |= 1 << 1;
-    }
-    out.write_u8(presence);
-    write_id_field(&mut out, &checkpoint.id, dict, &|_: &str| None).await?;
-    crate::os_spr::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None);
-    out.write_varint_u64(checkpoint.change_ids.len() as u64);
-    for change_id in &checkpoint.change_ids {
-        write_id_field(&mut out, change_id, dict, &|_: &str| None).await?;
-    }
-    if let Some(parent) = &checkpoint.parent_id {
-        write_id_field(&mut out, parent, dict, &|_: &str| None).await?;
-    }
-    out.write_varint_u64(checkpoint.authors.len() as u64);
-    for author in &checkpoint.authors {
-        write_id_field(&mut out, &author.id, dict, &|_: &str| None).await?;
-        write_str_field(&mut out, &author.name).await;
-    }
-    if let Some(message) = &checkpoint.message {
-        write_str_field(&mut out, message).await;
-    }
-    Ok(out.into_bytes())
-}
-
-pub async fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<HistoryCheckpoint, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
-    if format > 1 {
-        return Err(malformed_fmt("checkpoint", format).await);
-    }
-    let presence = input.read_u8()?;
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (timestamp, _) = crate::os_spr::scalar::read_timestamp(&mut input, None)?;
-    let change_count = input.read_varint_u64()?;
-    let mut change_ids = Vec::with_capacity(change_count as usize);
-    for _ in 0..change_count {
-        change_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
-    }
-    let parent_id = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
-    let author_count = input.read_varint_u64()?;
-    let mut authors = Vec::with_capacity(author_count as usize);
-    for _ in 0..author_count {
-        let author_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-        let name = read_str_field(&mut input).await?;
-        authors.push(HistoryAuthor { id: author_id, name });
-    }
-    let message = if presence & (1 << 1) != 0 { Some(read_str_field(&mut input).await?) } else { None };
-    Ok(HistoryCheckpoint { id, timestamp, change_ids, parent_id, authors, message })
-}
-//#endregion 🔖️Checkpoint
-
-//#region 🔖️Alternative
-pub async fn encode_alternative(alternative: &HistoryAlternative, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    write_id_field(&mut out, &alternative.id, dict, &|_: &str| None).await?;
-    write_str_field(&mut out, &alternative.name).await;
-    out.write_varint_u64(alternative.checkpoint_ids.len() as u64);
-    for checkpoint_id in &alternative.checkpoint_ids {
-        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
-    }
-    Ok(out.into_bytes())
-}
-
-pub async fn decode_alternative(payload: &[u8], dict: &DictReader) -> Result<HistoryAlternative, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
-    if format > 1 {
-        return Err(malformed_fmt("alternative", format).await);
-    }
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let name = read_str_field(&mut input).await?;
-    let checkpoint_count = input.read_varint_u64()?;
-    let mut checkpoint_ids = Vec::with_capacity(checkpoint_count as usize);
-    for _ in 0..checkpoint_count {
-        checkpoint_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
-    }
-    Ok(HistoryAlternative { id, name, checkpoint_ids })
-}
-//#endregion 🔖️Alternative
-
-//#region 🔖️Active
-pub async fn encode_active(alternative_id: Option<&str>, dict: &mut DictBuilder) -> Vec<u8> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    match alternative_id {
-        Some(id) => {
-            out.write_u8(1);
-            write_id_field(&mut out, id, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
-        }
-        None => out.write_u8(0),
-    }
-    out.into_bytes()
-}
-
-pub async fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
-    if format > 1 {
-        return Err(malformed_fmt("active", format).await);
-    }
-    let presence = input.read_u8()?;
-    if presence & 1 != 0 {
-        Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?))
-    } else {
-        Ok(None)
-    }
-}
-//#endregion 🔖️Active
-
-//#region 🔖️Cursor
-// Extension-range record (protocol_core's frozen kind table stays 0x00..0x12 + 0x7F; the
-// 0x40..=0x7E range is caller-defined per its `is_critical_kind` doc). Written with the critical
-// bit UNSET — a foreign/older reader skips it via the standard skip-unknown rule, exactly like
-// `REC_ACTOR_DICT` today. Last-wins: a later REC_CURSOR frame in the same file supersedes an
-// earlier one, mirroring REC_ACTIVE.
-pub const REC_CURSOR: u8 = 0x40;
-
-/// @emoji 🎯️ `format u8 (=1) | presence u8 (bit0 checkpoint) | applied_count varint + id* |
-/// redo_count varint + id* | [checkpoint id]`. Edit ids go through `write_id_field` (dict +
-/// edit-ordinal refs), same as every other edit-id reference in this crate.
-pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 });
-    out.write_varint_u64(cursor.applied_edit_ids.len() as u64);
-    for id in &cursor.applied_edit_ids {
-        write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
-    }
-    out.write_varint_u64(cursor.redo_edit_ids.len() as u64);
-    for id in &cursor.redo_edit_ids {
-        write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
-    }
-    if let Some(checkpoint_id) = &cursor.checkpoint_id {
-        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
-    }
-    Ok(out.into_bytes())
-}
-
-/// @emoji 🎯️ Inverse of [`encode_cursor`].
-pub async fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<HistoryCursor, ProtocolError> {
-    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
-    if format > 1 {
-        return Err(malformed_fmt("cursor", format).await);
-    }
-    let presence = input.read_u8()?;
-    if presence & !1 != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position() as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
-    }
-    let applied_count = input.read_varint_u64()?;
-    let mut applied_edit_ids = Vec::with_capacity(applied_count as usize);
-    for _ in 0..applied_count {
-        applied_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
-    }
-    let redo_count = input.read_varint_u64()?;
-    let mut redo_edit_ids = Vec::with_capacity(redo_count as usize);
-    for _ in 0..redo_count {
-        redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
-    }
-    let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
+    let len = input.read_varint_u64()? as usize;
+    let transition_payload = input.read_bytes(len)?.to_vec();
     if input.remaining() != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+        return Err(ProtocolError::Malformed { what: "transition", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
     }
-    Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
+    Ok(HistoryTransitionRecord { id, actor, hlt, dependencies, payload: transition_payload })
 }
-//#endregion 🔖️Cursor
+//#endregion 🔖️Transition
 
 //#region 🔖️Composition
-/// @emoji 🧩️ Second caller-defined extension record (`REC_CURSOR`'s neighbour in the 0x40..=0x7E
-/// range), written NON-critical for the same reason: a reader that does not know about composition
-/// skips it under the standard skip-unknown rule and still reads a fully valid document. Last-wins,
-/// mirroring `REC_ACTIVE`/`REC_CURSOR`.
+/// @emoji 🧩️ Caller-defined extension record in the 0x40..=0x7E range, written NON-critical: a
+/// reader that does not know about composition skips it under the standard skip-unknown rule and
+/// still reads a fully valid document. Last-wins.
 pub const REC_COMPOSITION: u8 = 0x41;
 
 /// @emoji 🧩️ `format u8 (=1) | presence u8 (bit0 owner, bit1 dialect) | [owner triple] |
-/// [dialect triple] | pin_group_count varint + (checkpoint_id, pin_count, (child_uri, child_ck)*)*`.
-/// Every string goes through the shared dictionary via `write_id_field`, same as every other
-/// identifier in this crate — composition ids repeat heavily across checkpoints, so dictionary
-/// coding is what keeps the overlay small on a document with a long pinned history.
+/// [dialect triple]`. Every string goes through the shared dictionary via `write_id_field`, same
+/// as every other identifier in this crate.
 pub async fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
     let plain: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &|_: &str| None;
     let mut out = ByteWriter::new();
@@ -1232,15 +956,6 @@ pub async fn encode_composition(composition: &HistoryComposition, dict: &mut Dic
     if let Some((kind, standard, subset)) = &composition.dialect {
         for field in [kind, standard, subset] {
             write_id_field(&mut out, field, dict, plain).await?;
-        }
-    }
-    out.write_varint_u64(composition.checkpoint_pins.len() as u64);
-    for (checkpoint_id, pins) in &composition.checkpoint_pins {
-        write_id_field(&mut out, checkpoint_id, dict, plain).await?;
-        out.write_varint_u64(pins.len() as u64);
-        for (child_uri, child_checkpoint_id) in pins {
-            write_id_field(&mut out, child_uri, dict, plain).await?;
-            write_id_field(&mut out, child_checkpoint_id, dict, plain).await?;
         }
     }
     Ok(out.into_bytes())
@@ -1262,31 +977,19 @@ pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Res
     }
     let owner = if presence & 1 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
     let dialect = if presence & 2 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
-    let group_count = input.read_varint_u64()?;
-    let mut checkpoint_pins = Vec::with_capacity(group_count as usize);
-    for _ in 0..group_count {
-        let checkpoint_id = read_id_field(&mut input, dict, miss)?;
-        let pin_count = input.read_varint_u64()?;
-        let mut pins = Vec::with_capacity(pin_count as usize);
-        for _ in 0..pin_count {
-            pins.push((read_id_field(&mut input, dict, miss)?, read_id_field(&mut input, dict, miss)?));
-        }
-        checkpoint_pins.push((checkpoint_id, pins));
-    }
-    Ok(HistoryComposition { owner, dialect, checkpoint_pins })
+    Ok(HistoryComposition { owner, dialect })
 }
 //#endregion 🔖️Composition
 
 //#region 🔖️Conflict
-/// @emoji ⚔️ Third caller-defined extension record (`REC_CURSOR`'s/`REC_COMPOSITION`'s neighbour in
-/// the 0x40..=0x7E range), written NON-critical for the same reason: a reader that doesn't know
+/// @emoji ⚔️ Caller-defined extension record (`REC_COMPOSITION`'s neighbour in the 0x40..=0x7E
+/// range), written NON-critical for the same reason: a reader that doesn't know
 /// about first-class conflicts (`📋️contract-freeze.md` §C5/§C7) skips the whole record and still
 /// reads a fully valid document. Unlike `REC_EDIT` (one frame per edit, the hot streaming path),
 /// the whole `HistoryLog.conflicts` list is written as ONE frame — conflicts are not append-only
 /// hot data, an authority's open/resolved set is small and always persisted together, so a single
-/// frame keeps the shape symmetric with `encode_cursor`'s own single-payload framing while still
-/// carrying a list. Absent for every log with no open or historical conflicts (the overwhelming
-/// majority) and for logs predating the record — no frame is written when `conflicts` is empty.
+/// frame carries the whole list. Absent for every log with no open or historical conflicts (the
+/// overwhelming majority) — no frame is written when `conflicts` is empty.
 pub const REC_CONFLICT: u8 = 0x42;
 
 async fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(), ProtocolError> {
@@ -1357,9 +1060,8 @@ async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
     Ok(HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages })
 }
 
-/// @emoji 🎯️ `format u8 (=1) | count varint + count x conflict entry` — mirrors [`encode_cursor`]'s
-/// shape (single top-level format byte, then the payload) with the payload being a length-prefixed
-/// list instead of one struct: each entry is `id(idfield) | kind u8 | status u8 | actor_count
+/// @emoji 🎯️ `format u8 (=1) | count varint + count x conflict entry` — single top-level format
+/// byte, then a length-prefixed list: each entry is `id(idfield) | kind u8 | status u8 | actor_count
 /// varint + actor(idfield)* | hlt(actor varint, physical_ms varint, logical varint) |
 /// edit_id_count varint + edit_id(idfield, edit-ordinal-eligible)* | envelope_count varint +
 /// (len varint + raw bytes)* | message_count varint + message*` (see [`write_history_message`] for
@@ -1624,16 +1326,14 @@ impl RetainedHistoryDecode {
                 self.validation_index = 0;
                 Ok(false)
             }
-            1 if self.validation_index < log.changes.len() => {
+            1 if self.validation_index < log.transitions.len() => {
                 let index = self.validation_index;
-                let change = &log.changes[index];
-                if change.id.trim().is_empty() || log.changes[..index].iter().any(|prior| prior.id == change.id) {
-                    return Err(format!("SPR history repeats or omits authoritative change {}", change.id));
+                let transition = &log.transitions[index];
+                if transition.id.trim().is_empty() || transition.actor.trim().is_empty() || log.transitions[..index].iter().any(|prior| prior.id == transition.id) {
+                    return Err(format!("SPR history repeats or omits authoritative transition {}", transition.id));
                 }
-                for (reference_index, edit_id) in change.edit_ids.iter().enumerate() {
-                    if change.edit_ids[..reference_index].contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
-                        return Err(format!("SPR history change {} has an invalid edit reference {edit_id}", change.id));
-                    }
+                if crate::os_spr::decode_history_transition(&transition.payload).is_err() {
+                    return Err(format!("SPR history transition {} has a malformed payload", transition.id));
                 }
                 self.validation_index += 1;
                 Ok(false)
@@ -1641,91 +1341,6 @@ impl RetainedHistoryDecode {
             1 => {
                 self.validation_stage = 2;
                 self.validation_index = 0;
-                Ok(false)
-            }
-            2 if self.validation_index < log.checkpoints.len() => {
-                let index = self.validation_index;
-                let checkpoint = &log.checkpoints[index];
-                if checkpoint.id.trim().is_empty() || log.checkpoints[..index].iter().any(|prior| prior.id == checkpoint.id) {
-                    return Err(format!("SPR history repeats or omits authoritative checkpoint {}", checkpoint.id));
-                }
-                self.validation_index += 1;
-                Ok(false)
-            }
-            2 => {
-                self.validation_stage = 3;
-                self.validation_index = 0;
-                Ok(false)
-            }
-            3 if self.validation_index < log.checkpoints.len() => {
-                let checkpoint = &log.checkpoints[self.validation_index];
-                for (reference_index, change_id) in checkpoint.change_ids.iter().enumerate() {
-                    if checkpoint.change_ids[..reference_index].contains(change_id) || !log.changes.iter().any(|change| change.id == *change_id) {
-                        return Err(format!("SPR history checkpoint {} has an invalid change reference {change_id}", checkpoint.id));
-                    }
-                }
-                if checkpoint.parent_id.as_ref().is_some_and(|parent| parent == &checkpoint.id || !log.checkpoints.iter().any(|candidate| candidate.id == *parent)) {
-                    return Err(format!("SPR history checkpoint {} has an invalid parent", checkpoint.id));
-                }
-                self.validation_index += 1;
-                Ok(false)
-            }
-            3 => {
-                self.validation_stage = 4;
-                self.validation_index = 0;
-                Ok(false)
-            }
-            4 if self.validation_index < log.alternatives.len() => {
-                let index = self.validation_index;
-                let alternative = &log.alternatives[index];
-                if alternative.id.trim().is_empty() || log.alternatives[..index].iter().any(|prior| prior.id == alternative.id) {
-                    return Err(format!("SPR history repeats or omits authoritative alternative {}", alternative.id));
-                }
-                for (reference_index, checkpoint_id) in alternative.checkpoint_ids.iter().enumerate() {
-                    if alternative.checkpoint_ids[..reference_index].contains(checkpoint_id) || !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
-                        return Err(format!("SPR history alternative {} has an invalid checkpoint reference {checkpoint_id}", alternative.id));
-                    }
-                }
-                self.validation_index += 1;
-                Ok(false)
-            }
-            4 => {
-                self.validation_stage = 5;
-                self.validation_index = 0;
-                Ok(false)
-            }
-            5 => {
-                if log.active_alternative_id.as_ref().is_some_and(|id| !log.alternatives.iter().any(|alternative| alternative.id == *id)) {
-                    return Err("SPR history names an unknown active alternative".into());
-                }
-                if self.require_persisted_document && log.cursor.is_none() {
-                    return Err("SPR history has no explicit cursor".into());
-                }
-                if let Some(cursor) = &log.cursor {
-                    for (index, edit_id) in cursor.applied_edit_ids.iter().enumerate() {
-                        if cursor.applied_edit_ids[..index].contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
-                            return Err(format!("SPR history cursor has an invalid applied edit {edit_id}"));
-                        }
-                    }
-                    for (index, edit_id) in cursor.redo_edit_ids.iter().enumerate() {
-                        if cursor.redo_edit_ids[..index].contains(edit_id) || cursor.applied_edit_ids.contains(edit_id) || !log.edits.iter().any(|edit| edit.id == *edit_id) {
-                            return Err(format!("SPR history cursor has an invalid redo edit {edit_id}"));
-                        }
-                    }
-                    if cursor.checkpoint_id.as_ref().is_some_and(|id| !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *id)) {
-                        return Err("SPR history cursor names an unknown checkpoint".into());
-                    }
-                }
-                if let Some(composition) = &log.composition {
-                    for (checkpoint_id, pins) in &composition.checkpoint_pins {
-                        if !log.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id)
-                            || pins.iter().any(|(child, checkpoint)| child.trim().is_empty() || checkpoint.trim().is_empty())
-                        {
-                            return Err(format!("SPR history composition has an invalid checkpoint pin owner {checkpoint_id}"));
-                        }
-                    }
-                }
-                self.validation_stage = 6;
                 Ok(false)
             }
             _ => Ok(true),
@@ -1750,17 +1365,7 @@ impl RetainedHistoryDecode {
                 self.edit_ids.push(edit.id.clone());
                 log.edits.push(edit);
             }
-            crate::os_spr::REC_CHANGE => {
-                let edit_ids = &self.edit_ids;
-                log.changes.push(crate::os_io::resolve_ready(decode_change(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32)))).map_err(|error| error.to_string())?);
-            }
-            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(crate::os_io::resolve_ready(decode_checkpoint(payload, &self.dict)).map_err(|error| error.to_string())?),
-            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(crate::os_io::resolve_ready(decode_alternative(payload, &self.dict)).map_err(|error| error.to_string())?),
-            crate::os_spr::REC_ACTIVE => log.active_alternative_id = crate::os_io::resolve_ready(decode_active(payload, &self.dict)).map_err(|error| error.to_string())?,
-            REC_CURSOR => {
-                let edit_ids = &self.edit_ids;
-                log.cursor = Some(crate::os_io::resolve_ready(decode_cursor(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32)))).map_err(|error| error.to_string())?);
-            }
+            REC_TRANSITION => log.transitions.push(crate::os_io::resolve_ready(decode_transition(payload, &self.dict)).map_err(|error| error.to_string())?),
             REC_COMPOSITION => log.composition = Some(crate::os_io::resolve_ready(decode_composition(payload, &self.dict)).map_err(|error| error.to_string())?),
             REC_CONFLICT => {
                 if self.saw_conflicts {
@@ -1885,29 +1490,10 @@ pub async fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result
         writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
         ordinals.insert(edit.id.as_str(), index as u64);
     }
-    for change in &log.changes {
-        let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied()).await?;
+    for transition in &log.transitions {
+        let payload = encode_transition(transition, &mut dict).await?;
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
-        writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await?;
-    }
-    for checkpoint in &log.checkpoints {
-        let payload = encode_checkpoint(checkpoint, &mut dict).await?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
-        writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await?;
-    }
-    for alternative in &log.alternatives {
-        let payload = encode_alternative(alternative, &mut dict).await?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
-        writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await?;
-    }
-    let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict).await;
-    flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
-    writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0)).await?;
-
-    if let Some(cursor) = &log.cursor {
-        let cursor_payload = encode_cursor(cursor, &mut dict, |id| ordinals.get(id).copied()).await?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
-        writer.write_record(REC_CURSOR, false, &cursor_payload, CodecId(0)).await?;
+        writer.write_record(REC_TRANSITION, true, &payload, CodecId(0)).await?;
     }
 
     if let Some(composition) = &log.composition {
@@ -1956,18 +1542,7 @@ async fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<
                 edit_ids.push(edit.id.clone());
                 log.edits.push(edit);
             }
-            crate::os_spr::REC_CHANGE => {
-                let edit_ids_ref = &edit_ids;
-                let change = decode_change(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
-                log.changes.push(change);
-            }
-            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload().await, &dict).await?),
-            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload().await, &dict).await?),
-            crate::os_spr::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload().await, &dict).await?,
-            REC_CURSOR => {
-                let edit_ids_ref = &edit_ids;
-                log.cursor = Some(decode_cursor(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?);
-            }
+            REC_TRANSITION => log.transitions.push(decode_transition(frame.payload().await, &dict).await?),
             REC_COMPOSITION => log.composition = Some(decode_composition(frame.payload().await, &dict).await?),
             REC_CONFLICT => {
                 if saw_conflicts {
@@ -2036,36 +1611,27 @@ impl<S: PackSink> HistoryAppender<S> {
         Ok(offset)
     }
 
-    pub async fn append_change(&mut self, change: &HistoryChange) -> Result<u64, ProtocolError> {
+    /// @emoji 🔀️ Appends one `REC_TRANSITION` frame (critical); returns its offset.
+    pub async fn append_transition(&mut self, transition: &HistoryTransitionRecord) -> Result<u64, ProtocolError> {
+        let payload = encode_transition(transition, &mut self.dict).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(REC_TRANSITION, true, &payload, CodecId(0)).await
+    }
+
+    /// @emoji 🧩️ Appends the composition overlay record (skippable extension); returns its offset.
+    pub async fn append_composition(&mut self, composition: &HistoryComposition) -> Result<u64, ProtocolError> {
+        let payload = encode_composition(composition, &mut self.dict).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(REC_COMPOSITION, false, &payload, CodecId(0)).await
+    }
+
+    /// @emoji ⚔️ Appends the log's one conflict record, resolving `Degraded` edit references against
+    /// the edits appended so far; a file carries at most one such record.
+    pub async fn append_conflicts(&mut self, conflicts: &[HistoryConflict]) -> Result<u64, ProtocolError> {
         let ordinals = &self.edit_ordinals;
-        let payload = encode_change(change, &mut self.dict, |id| ordinals.get(id).copied()).await?;
+        let payload = encode_conflicts(conflicts, &mut self.dict, |id| ordinals.get(id).copied()).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await
-    }
-
-    pub async fn append_checkpoint(&mut self, checkpoint: &HistoryCheckpoint) -> Result<u64, ProtocolError> {
-        let payload = encode_checkpoint(checkpoint, &mut self.dict).await?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await
-    }
-
-    pub async fn append_alternative(&mut self, alternative: &HistoryAlternative) -> Result<u64, ProtocolError> {
-        let payload = encode_alternative(alternative, &mut self.dict).await?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await
-    }
-
-    pub async fn set_active(&mut self, alternative_id: Option<&str>) -> Result<u64, ProtocolError> {
-        let payload = encode_active(alternative_id, &mut self.dict).await;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(crate::os_spr::REC_ACTIVE, true, &payload, CodecId(0)).await
-    }
-
-    pub async fn append_cursor(&mut self, cursor: &HistoryCursor) -> Result<u64, ProtocolError> {
-        let ordinals = &self.edit_ordinals;
-        let payload = encode_cursor(cursor, &mut self.dict, |id| ordinals.get(id).copied()).await?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(REC_CURSOR, false, &payload, CodecId(0)).await
+        self.writer.write_record(REC_CONFLICT, false, &payload, CodecId(0)).await
     }
 
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {

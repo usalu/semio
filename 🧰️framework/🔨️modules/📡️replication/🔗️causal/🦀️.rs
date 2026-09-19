@@ -9,6 +9,10 @@
 //! This crate's `FrontierSummary`/`frontier_delta` are the runtime/wire twin of
 //! `protocol_history`'s durable-log-derived pair — deliberately kept separate, see `🔖️Frontier`.
 
+#[path = "🔀️transition/🦀️.rs"]
+pub mod transition;
+pub use transition::*;
+
 //#region 🔖️Envelope
 // Moved from framework/core L6246 (MutationEnvelope), L6121 (ArtifactDiff), L6137
 // (InverseMutation). The frozen contract's field shapes are simpler than the framework-core

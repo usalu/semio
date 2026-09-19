@@ -1,7 +1,7 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current snapshot.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::host_from_snapshot;
+use crate::editor::flow::with_host_from_snapshot;
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -37,8 +37,8 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
-    let host = host_from_snapshot(snapshot, config, session);
-    let scene = TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None);
+    let wire = with_host_from_snapshot(snapshot, config, session, |host| host.compiled_wire_literal());
+    let scene = TextEditorScene::base(wire, Some("wire".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)
 }
 //#endregion 🔖️Render

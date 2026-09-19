@@ -1,0 +1,206 @@
+{
+  "schema": "semio.history.transition.v1",
+  "diffSchema": "semio.history.transition",
+  "cases": [
+    {
+      "id": "revert-one",
+      "payloadHex": "0001066f702d612d31",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "revert",
+          "mutationIds": [
+            "op-a-1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "revert-many",
+      "payloadHex": "0003066f702d612d31066f702d612d32066f702d612d33",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "revert",
+          "mutationIds": [
+            "op-a-1",
+            "op-a-2",
+            "op-a-3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "reinstate-long-id",
+      "payloadHex": "01018f016f702d7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "reinstate",
+          "mutationIds": [
+            "op-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          ]
+        }
+      }
+    },
+    {
+      "id": "commit-full",
+      "payloadHex": "020c636865636b706f696e742d32010c636865636b706f696e742d31086368616e67652d3202066f702d612d31066f702d622d31011054696c657320616e6420736f7572636514323032362d30392d31395431323a30303a30305a02076163746f722d6103416461011c68747470733a2f2f6578616d706c652e746573742f6164612e706e67076163746f722d620842c3a920f09fa7aa0001136d6572676520626f7468207265706c696361730d31373839383139323030303030",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "commit",
+          "checkpointId": "checkpoint-2",
+          "parentId": "checkpoint-1",
+          "changeId": "change-2",
+          "mutationIds": [
+            "op-a-1",
+            "op-b-1"
+          ],
+          "description": "Tiles and source",
+          "savedAt": "2026-09-19T12:00:00Z",
+          "authors": [
+            {
+              "id": "actor-a",
+              "name": "Ada",
+              "avatar": "https://example.test/ada.png"
+            },
+            {
+              "id": "actor-b",
+              "name": "Bé 🧪",
+              "avatar": null
+            }
+          ],
+          "message": "merge both replicas",
+          "timestamp": "1789819200000"
+        }
+      }
+    },
+    {
+      "id": "commit-minimal",
+      "payloadHex": "020c636865636b706f696e742d3100086368616e67652d31000000000000",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "commit",
+          "checkpointId": "checkpoint-1",
+          "parentId": null,
+          "changeId": "change-1",
+          "mutationIds": [],
+          "description": null,
+          "savedAt": "",
+          "authors": [],
+          "message": null,
+          "timestamp": ""
+        }
+      }
+    },
+    {
+      "id": "branch",
+      "payloadHex": "030d616c7465726e61746976652d320956617269616e7420420c636865636b706f696e742d31",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "branch",
+          "alternativeId": "alternative-2",
+          "name": "Variant B",
+          "checkpointId": "checkpoint-1"
+        }
+      }
+    },
+    {
+      "id": "checkout-alternative",
+      "payloadHex": "040c636865636b706f696e742d31010d616c7465726e61746976652d32",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "checkout",
+          "checkpointId": "checkpoint-1",
+          "alternativeId": "alternative-2"
+        }
+      }
+    },
+    {
+      "id": "checkout-plain",
+      "payloadHex": "040c636865636b706f696e742d3200",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "checkout",
+          "checkpointId": "checkpoint-2",
+          "alternativeId": null
+        }
+      }
+    },
+    {
+      "id": "repin",
+      "payloadHex": "050c636865636b706f696e742d3213636865636b706f696e742d322d70696e6e6564020f73656d696f3a2f2f6368696c642f61126368696c642d636865636b706f696e742d340f73656d696f3a2f2f6368696c642f62126368696c642d636865636b706f696e742d31",
+      "expect": {
+        "outcome": "accepted",
+        "transition": {
+          "kind": "repin",
+          "checkpointId": "checkpoint-2",
+          "pinnedCheckpointId": "checkpoint-2-pinned",
+          "pins": [
+            {
+              "childUri": "semio://child/a",
+              "checkpointId": "child-checkpoint-4"
+            },
+            {
+              "childUri": "semio://child/b",
+              "checkpointId": "child-checkpoint-1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "empty",
+      "payloadHex": "",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "truncated"
+      }
+    },
+    {
+      "id": "unknown-tag",
+      "payloadHex": "06",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "unknown transition tag 6"
+      }
+    },
+    {
+      "id": "trailing-bytes",
+      "payloadHex": "0001066f702d612d3100",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "trailing bytes"
+      }
+    },
+    {
+      "id": "truncated-id",
+      "payloadHex": "0001066f702d612d",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "truncated"
+      }
+    },
+    {
+      "id": "invalid-option-tag",
+      "payloadHex": "040c636865636b706f696e742d3102",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "invalid option tag 2"
+      }
+    },
+    {
+      "id": "id-count-exceeds-payload",
+      "payloadHex": "00e807",
+      "expect": {
+        "outcome": "malformed",
+        "detail": "id count exceeds payload"
+      }
+    }
+  ]
+}

@@ -359,7 +359,13 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
 
     let (initial_pack, spr) = store::decode_document_pack_bytes(&envelope).await.expect("real envelope framing");
     let mut persisted_history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.expect("real history decodes");
-    persisted_history.changes.push(store::os_spr::HistoryChange { id: "persisted-change".into(), saved_at: "2026-09-04T00:00:00Z".into(), edit_ids: Vec::new(), description: None });
+    persisted_history.transitions.push(store::os_spr::HistoryTransitionRecord {
+        id: "persisted-transition".into(),
+        actor: "persisted-actor".into(),
+        hlt: (1, 1, 0),
+        dependencies: Vec::new(),
+        payload: store::os_spr::encode_history_transition(&store::os_spr::HistoryTransition::Revert { mutation_ids: vec![store::os_spr::MutationId("persisted-missing-operation".into())] }),
+    });
     let replay_spr = store::os_spr::encode_history(&persisted_history, &store::os_spr::EncodeOptions::default()).await.expect("non-initial history encodes");
     let replay_envelope = store::encode_document_pack_bytes(&initial_pack, &replay_spr).await;
     let (request, retained) = retained_request(&replay_envelope, expected.clone(), Some(owner.clone()));
@@ -393,17 +399,37 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
                 cancel.cancel_now();
             }
             let mut sequence = 0;
-            let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);
             let diagnostic = if cancelled { MemberOpenDiagnostic::Cancelled } else { MemberOpenDiagnostic::Decode };
-            match denied_open.step(&mut cx) {
-                MemberOpenStep::Rejected(found) => assert_eq!(found, diagnostic, "{}", declaration.subset),
-                MemberOpenStep::Pending(_) => panic!("unsupported decoder cannot consume input"),
-                MemberOpenStep::Ready(mut member) => {
-                    close_member(&mut member);
-                    panic!("unsupported decoder cannot publish a member");
+            // Every non-Flow arm now opens through the framework's bounded pack decoder: it may consume
+            // the retained input under budget, but a Flow envelope can never publish as another subset.
+            let mut rejected = None;
+            for _ in 0..100_000 {
+                let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999), cancel.clone(), || Some(1), &mut sequence);
+                match denied_open.step(&mut cx) {
+                    MemberOpenStep::Rejected(found) => {
+                        rejected = Some(found);
+                        break;
+                    }
+                    MemberOpenStep::Pending(_) if cancelled => {
+                        close_open(&mut denied_open, &[1, 7, 4096]);
+                        panic!("cancelled {} open must fail closed immediately", declaration.subset);
+                    }
+                    MemberOpenStep::Pending(_) => {}
+                    MemberOpenStep::Ready(mut member) => {
+                        close_member(&mut member);
+                        close_open(&mut denied_open, &[1, 7, 4096]);
+                        panic!("a Flow envelope cannot publish as {}", declaration.subset);
+                    }
                 }
             }
-            assert_eq!(close_open(&mut denied_open, &[1, 7, 4096]), exact_retired, "{}", declaration.subset);
+            if rejected != Some(diagnostic) {
+                close_open(&mut denied_open, &[1, 7, 4096]);
+                panic!("{}: expected {diagnostic:?}, found {rejected:?}", declaration.subset);
+            }
+            // A decode rejection happens only after the bounded decoder copied the whole framed snapshot,
+            // so its exact retirement is the request plus that copy; a cancelled open copied nothing.
+            let copied = if cancelled { 0 } else { initial_pack.len() };
+            assert_eq!(close_open(&mut denied_open, &[1, 7, 4096]), exact_retired + copied, "{}", declaration.subset);
         }
     }
 
@@ -412,8 +438,8 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         ("member-open.history.verify", "cancel", MemberOpenDiagnostic::Cancelled),
         ("member-open.factory.select", "operation", MemberOpenDiagnostic::Stale),
         ("member-open.history.dictionary", "generation", MemberOpenDiagnostic::Stale),
-        ("member-open.history.initial", "expired", MemberOpenDiagnostic::Expired),
-        ("member-open.initialize", "close", MemberOpenDiagnostic::Cancelled),
+        ("member-open.history.copy", "expired", MemberOpenDiagnostic::Expired),
+        ("member-open.history.decode", "close", MemberOpenDiagnostic::Cancelled),
     ] {
         let expected = store::io::ArtifactRef { artifact_id: owner.child_id.clone(), dialect: dialect.clone() };
         let (request, retained) = retained_request(&envelope, expected, Some(owner.clone()));
@@ -427,7 +453,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
                 MemberOpenStep::Pending(_) => {}
                 MemberOpenStep::Rejected(found) => {
                     close_open(&mut lifecycle_open, &[1, 7, 4096]);
-                    panic!("lifecycle stage rejected early: {found:?}");
+                    panic!("lifecycle stage {stage} rejected early: {found:?} at {}", cx.stage());
                 }
                 MemberOpenStep::Ready(mut member) => {
                     close_member(&mut member);
@@ -462,6 +488,6 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         assert!(close_open(&mut lifecycle_open, &[1, 7, 4096]) >= retained);
     }
     eprintln!(
-        "[DEBUG] public request-owned Semio member open: Flow handoffs1; one genuine persisted-history Replay denial; unsupported arms17 x decode+cancel; six real lifecycle authority fences; publications0; every retained operation terminal-empty"
+        "[DEBUG] public request-owned Semio member open: Flow handoffs1; one genuine persisted-history Replay denial; non-Flow arms17 x decode+cancel; six real lifecycle authority fences; publications0; every retained operation terminal-empty"
     );
 }

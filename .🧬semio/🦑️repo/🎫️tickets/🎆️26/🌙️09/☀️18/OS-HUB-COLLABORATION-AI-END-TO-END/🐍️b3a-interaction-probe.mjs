@@ -21,7 +21,10 @@ import { join } from "node:path";
 const TICKET = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END";
 const OUT = join(TICKET, "🗑️generated");
 const FAULT = /unreachable|trapped|\btrap\b|panicked|fault|refused|dropped action|not-ui-safe|missing-owned|invalid-args|unsupported|pageerror|Uncaught|dispatch-failed/i;
-const NOISE = /staged plugin module\(s\) are behind their source|\[stale\]|Failed to load resource: the server responded with a status of 404|Download the (React|Vue) DevTools|typed-operation slots/;
+// 🔇️ `ws://…/bridge … ERR_CONNECTION_REFUSED` is the shell dialling the MCP agent bridge (slice M7)
+// on a run where no bridge process is listening — environmental, not a plugin fault. Narrow on
+// purpose: any other refusal, including a bridge error that is not a connection refusal, still counts.
+const NOISE = /staged plugin module\(s\) are behind their source|\[stale\]|Failed to load resource: the server responded with a status of 404|Download the (React|Vue) DevTools|typed-operation slots|WebSocket connection to 'ws:\/\/[^']*\/bridge' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED/;
 
 /** 🧾️ The whole shell surface one page evaluation, including the ledger witness. */
 const readShell = (page) => page.evaluate(() => {
@@ -42,6 +45,10 @@ const readShell = (page) => page.evaluate(() => {
     actions: [...new Set([...document.querySelectorAll('[id^="action."]')].map((el) => el.id))].filter((id) => !id.startsWith("action.category.") && !/\.arg\./.test(id)),
     tabs: [...document.querySelectorAll('[role="tab"]')].map((el) => text(el)),
     documentRows: [...document.querySelectorAll('[role="treeitem"]')].filter((el) => !el.closest('[id$=".engagement"]') && !el.closest('[data-slot="panel"]')).map((el) => text(el).slice(0, 80)),
+    // 🪞️ The app's OWN panel tabs (artifact / inspector / catalogue …), which is where a
+    // canvas-painting plugin publishes the only textual projection of its document. The framework's
+    // history panel is excluded so the ledger cannot masquerade as the document reflecting state.
+    panelRows: [...document.querySelectorAll('[data-slot="panel"]')].filter((el) => visible(el) && !el.id.startsWith("framework.panelTab.framework.panel.")).flatMap((panel) => [...panel.querySelectorAll('[role="treeitem"]')].map((el) => `${panel.id}|${text(el).slice(0, 80)}`)),
     combobox: [...document.querySelectorAll('[role="combobox"]')].map((el) => text(el)),
     openPanels: [...document.querySelectorAll('[data-slot="panel"]')].filter(visible).map((el) => el.id.replace(/^framework\.panelTab\./, "")),
     ledger: entries,
@@ -61,7 +68,7 @@ const editCount = (shell) => {
 const witness = (shell) => ({
   ledger: shell.ledger.map((entry) => `${entry.id}${entry.dimmed ? "~" : ""}:${entry.label}`),
   edits: editCount(shell),
-  render: JSON.stringify({ panes: shell.panes.map((pane) => `${pane.id}:${pane.chars}:${pane.svg}:${pane.canvases}`), rows: shell.documentRows }),
+  render: JSON.stringify({ panes: shell.panes.map((pane) => `${pane.id}:${pane.chars}:${pane.svg}:${pane.canvases}`), rows: shell.documentRows, panelRows: shell.panelRows }),
 });
 
 const sameWitness = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -123,6 +130,20 @@ export async function runInteractionProbe(config) {
     note("open-history", { opened, openPanels: shell.openPanels, ledger: shell.ledger.length, checkin: shell.checkin }, from);
   }
 
+  // 🪞️ The app's own panel tabs, opened BEFORE the witness so "the panel reflects state" is measured
+  // on a projection that is actually mounted. `framework.panel.inspection`/`.artifact` are the two
+  // every artifact editor declares; a plugin that names others passes them as `config.panels`.
+  {
+    const from = lines.length;
+    const opened = [];
+    for (const tab of config.panels ?? ["framework.panel.inspection", "framework.panel.artifact"]) {
+      opened.push(`${tab}=${await click(`[data-slot="panel-tab-button"][id="${tab}"], [id="${tab}"]`)}`);
+      await page.waitForTimeout(1200);
+    }
+    shell = await readShell(page);
+    note("open-app-panels", { opened, openPanels: shell.openPanels, panelRows: shell.panelRows.length, sample: shell.panelRows.slice(0, 8) }, from);
+  }
+
   {
     const from = lines.length;
     for (const toggle of shell.toggles) {
@@ -139,9 +160,13 @@ export async function runInteractionProbe(config) {
   for (const step of config.setup ?? []) {
     const from = lines.length;
     const clicked = await click(`[id="action.${step}"]`);
+    await page.waitForTimeout(1200);
+    // 🧷️ Same two-stage trigger as the measured verb: a row that carries staged arguments only folds
+    // its form open on the first click, so the `…​.action.<id>.execute` control is what dispatches it.
+    const submitted = await click(`[id$=".action.${step}.execute"]`);
     await page.waitForTimeout(2500);
     shell = await readShell(page);
-    note(`setup:${step}`, { clicked, ledger: shell.ledger.length, checkin: shell.checkin }, from);
+    note(`setup:${step}`, { clicked, submitted, ledger: shell.ledger.length, checkin: shell.checkin }, from);
   }
 
   let mutated = false;
@@ -205,6 +230,26 @@ export async function runInteractionProbe(config) {
     note("undo", { clicked, undone, before, afterInvoke, after }, from);
   }
 
+  let redone = false;
+  let panelRoundTrip = false;
+  {
+    const from = lines.length;
+    const afterInvoke = report.steps.find((s) => s.step === "invoke-action")?.detail.after ?? before;
+    const afterUndo = witness(shell);
+    let clicked = await click('[id="action.redo"]');
+    if (clicked !== "ok") clicked = await click('[id="framework.history.redo"] button, [id="framework.history.redo"]');
+    const settled = await until((next) => witness(next).edits > afterUndo.edits, 25_000);
+    shell = settled.shell;
+    const after = witness(shell);
+    redone = after.edits > afterUndo.edits && after.edits === afterInvoke.edits;
+    // 🪞️ "the panel reflects state": the rendered document/panel projection has to come BACK to the
+    // post-mutation projection and have differed from it while undone, so a ledger-only replay over a
+    // frozen panel cannot be scored as a round trip. Reported separately from `redone` because a
+    // canvas-only surface publishes no text witness to move.
+    panelRoundTrip = after.render === afterInvoke.render && afterUndo.render !== afterInvoke.render;
+    note("redo", { clicked, redone, panelRoundTrip, afterInvoke, afterUndo, after }, from);
+  }
+
   await page.screenshot({ path: join(OUT, `b3a-${config.plugin}.png`) });
   const faults = faultsSince(0);
   report.summary = {
@@ -214,8 +259,10 @@ export async function runInteractionProbe(config) {
     actionCount: shell.actions.length,
     mutated,
     undone,
+    redone,
+    panelRoundTrip,
     faultLines: faults.length,
-    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && faults.length === 0 && !shell.error,
+    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && redone && faults.length === 0 && !shell.error,
   };
   writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
   writeFileSync(join(OUT, `b3a-${config.plugin}-console.txt`), [

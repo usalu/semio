@@ -1208,6 +1208,8 @@ impl ArtifactOwnedToolJobFactory for ArchitectWindowCommandJobFactory {
 pub struct ArchitectPlayApp;
 
 impl ArtifactEditor for ArchitectPlayApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/table` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = ProgramSnapshot;
     type Mutation = ProgramMutation;
     type Config = ArchitectConfig;
@@ -1223,6 +1225,10 @@ impl ArtifactEditor for ArchitectPlayApp {
 
     const DIALECT: Dialect = crate::ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_program_child_pack(snapshot, slot, child_id)
+    }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())

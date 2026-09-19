@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned writer surfaces.
     pub enum WriterApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::writer::WriterPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::writer::WriterViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

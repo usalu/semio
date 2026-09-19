@@ -1,0 +1,15 @@
+{
+  "schema": "semio.spr.history-transition-record/v1",
+  "kind": 67,
+  "critical": true,
+  "record": {
+    "id": "transition-1",
+    "actor": "alice",
+    "hlt": [1, 300, 2],
+    "dependencies": ["op-a", "transition-0"],
+    "transition": { "revert": ["op-b"] },
+    "payloadHex": "0001046f702d62"
+  },
+  "dictionary": ["transition-1", "alice", "op-a", "transition-0"],
+  "recordHex": "010100010101ac02020201020103070001046f702d62"
+}

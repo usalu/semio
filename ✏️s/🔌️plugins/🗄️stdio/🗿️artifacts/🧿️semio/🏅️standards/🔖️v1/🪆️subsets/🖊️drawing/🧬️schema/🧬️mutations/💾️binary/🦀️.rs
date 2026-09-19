@@ -13,10 +13,30 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 //#region 🔖️OpBinary
-/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
-/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
-/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️.rs`).
-const OP_KEYWORDS: &[&str] = super::KINDS;
+/// 🧾️ Text-op keyword table + variant ordinal, 0-indexed in enum declaration order — the binary
+/// frame's `tag` byte selects the keyword `decode_op` re-prefixes onto the argument tail before
+/// handing the line to `parse_op`, so these are the TEXT grammar's own keywords
+/// (`../📝️text/📖️.grammar.semio`'s `op` alternatives: `rotate`, `group`, …), never the kebab-case
+/// catalog names in [`super::KINDS`]. `op_binary_roundtrip_law` keeps the two tables aligned.
+const OP_KEYWORDS: [&str; 17] = [
+    "createLayer",
+    "deleteLayer",
+    "createNode",
+    "deleteNode",
+    "moveNode",
+    "dragNodes",
+    "rotate",
+    "scale",
+    "reorderNodes",
+    "group",
+    "ungroup",
+    "flatten",
+    "unflatten",
+    "replacePath",
+    "replaceFill",
+    "changeStrokeColor",
+    "changeStrokeWidth",
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {

@@ -769,6 +769,8 @@ async fn two_instances_converge_disjoint_node_edits_via_backbone() {
 
     assert_eq!(fixture_nodes(&fixture_of(&instance_a)).len(), 2, "instance A must contain both nodes");
     assert_eq!(fixture_nodes(&fixture_of(&instance_b)).len(), 2, "instance B must contain both nodes");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
     close_app(&mut instance_a);
     close_app(&mut instance_b);
 }
@@ -793,6 +795,7 @@ async fn ingest_operations_is_idempotent() {
     receiver.ingest_operations(&operations).await.expect("ingest once");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
     assert_eq!(fixture_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
+    sender.detach_backbone().await.expect("sender releases its backbone");
     close_app(&mut receiver);
     close_app(&mut sender);
 }

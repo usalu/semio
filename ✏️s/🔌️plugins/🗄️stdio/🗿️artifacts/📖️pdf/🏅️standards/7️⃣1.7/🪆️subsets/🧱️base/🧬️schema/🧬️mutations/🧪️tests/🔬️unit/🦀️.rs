@@ -1,5 +1,6 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::io::text_document;
+use crate::standards::v1_7::subsets::base::schema::mutations::{binary, text};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{OpBinary, OpText, SemanticMutation};
 
@@ -15,7 +16,7 @@ fn samples() -> Vec<PdfMutation> {
         PdfMutation::SetOutlines(set_outlines::SetOutlines { outlines: vec![PdfOutlineItem::to_page("Start", 0)] }),
         PdfMutation::SetLanguage(set_language::SetLanguage { language: Some("de-CH".into()) }),
         PdfMutation::SetEncryption(set_encryption::SetEncryption { encryption: None }),
-        PdfMutation::SetCatalogEntry(set_catalog_entry::SetCatalogEntry { key: "Marker".into(), value: PdfObject::Integer(7) }),
+        PdfMutation::SetCatalogEntry(set_catalog_entry::SetCatalogEntry { key: "Marker".into(), value: PdfObject::Int(7) }),
         PdfMutation::SetTrailerEntry(SetTrailerEntry { key: "Marker".into(), value: PdfObject::Bool(true) }),
     ]
 }

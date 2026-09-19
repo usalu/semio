@@ -21,14 +21,12 @@ use std::mem::ManuallyDrop;
 pub(crate) struct MemberHistoryDictionaryLimits {
     pub dictionary_entries: usize,
     pub dictionary_bytes: u64,
-    pub pin_groups: u64,
-    pub pins: u64,
     pub records: u64,
 }
 
 impl Default for MemberHistoryDictionaryLimits {
     fn default() -> Self {
-        Self { dictionary_entries: 8192, dictionary_bytes: 1048576, pin_groups: 1024, pins: 8192, records: 8192 }
+        Self { dictionary_entries: 8192, dictionary_bytes: 1048576, records: 8192 }
     }
 }
 
@@ -118,18 +116,12 @@ pub(crate) struct MemberHistoryDictionaryOwner {
     lookup_byte: Option<u8>,
     pending: Option<PendingByte>,
     schema: &'static str,
-    limits: MemberHistoryDictionaryLimits,
     end: u64,
-    groups: u64,
-    pins: u64,
     document_seen: bool,
     document_matches: bool,
     composition_matches: bool,
-    active_seen: bool,
-    cursor_seen: bool,
     composition_seen: bool,
     initial_history_exact: bool,
-    initial_payload_bytes: u8,
     payload_done: bool,
     record_matches: bool,
     id_retiring: bool,
@@ -141,7 +133,7 @@ pub(crate) struct MemberHistoryDictionaryOwner {
 
 impl MemberHistoryDictionaryOwner {
     pub(super) fn begin(input: VerifiedMemberHistoryInput, schema: &'static str, limits: MemberHistoryDictionaryLimits, cx: &StepContext<'_>) -> Result<Self, MemberHistoryDictionaryAdmissionError> {
-        let valid_limits = limits.dictionary_entries <= 8192 && limits.dictionary_bytes <= 1048576 && limits.pin_groups <= 1024 && limits.pins <= 8192 && limits.records > 0 && limits.records <= 8192;
+        let valid_limits = limits.dictionary_entries <= 8192 && limits.dictionary_bytes <= 1048576 && limits.records > 0 && limits.records <= 8192;
         let admitted = input.diagnostic.map_or(Ok(()), Err).and_then(|_| input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx));
         let error = admitted.err().or_else(|| (!valid_limits).then_some(MemberOpenDiagnostic::Capacity)).or_else(|| (schema.is_empty() || schema.len() > 256 || schema.chars().any(char::is_control)).then_some(MemberOpenDiagnostic::Identity));
         if let Some(diagnostic) = error {
@@ -167,18 +159,12 @@ impl MemberHistoryDictionaryOwner {
             lookup_byte: None,
             pending: None,
             schema,
-            limits,
             end,
-            groups: 0,
-            pins: 0,
             document_seen: false,
             document_matches: false,
             composition_matches: false,
-            active_seen: false,
-            cursor_seen: false,
             composition_seen: false,
             initial_history_exact: true,
-            initial_payload_bytes: 0,
             payload_done: false,
             record_matches: false,
             id_retiring: false,
@@ -318,7 +304,7 @@ impl MemberHistoryDictionaryOwner {
                     cx.consume_fuel(1);
                     self.transition = "record";
                     self.pending = None;
-                    if (matches!(record.kind(), 1 | 3 | 8) && record.flags() != 2) || (matches!(record.kind(), 64 | 65) && record.flags() != 0) {
+                    if (matches!(record.kind(), crate::os_spr::REC_DOC | crate::os_spr::REC_STR_DICT | crate::os_spr::REC_TRANSITION) && record.flags() != 2) || (record.kind() == crate::os_spr::REC_COMPOSITION && record.flags() != 0) {
                         return Err(MemberOpenDiagnostic::Malformed);
                     }
                     if record.kind() == 1 && self.document_seen {
@@ -327,14 +313,8 @@ impl MemberHistoryDictionaryOwner {
                     if record.kind() == 3 {
                         self.delta = Some(RetainedDictionaryDelta::new(record.payload_start(), record.payload_end()).map_err(delta_error)?);
                     }
-                    self.initial_history_exact &= matches!(record.kind(), 1 | 3 | 8 | 64 | 65 | crate::os_spr::REC_COMMIT);
-                    self.initial_history_exact &= match record.kind() {
-                        8 => !self.active_seen,
-                        64 => !self.cursor_seen,
-                        65 => !self.composition_seen,
-                        _ => true,
-                    };
-                    self.initial_payload_bytes = 0;
+                    self.initial_history_exact &= matches!(record.kind(), 1 | 3 | 65 | crate::os_spr::REC_COMMIT);
+                    self.initial_history_exact &= record.kind() != 65 || !self.composition_seen;
                     if matches!(record.kind(), 1 | 65) {
                         self.semantic = Some(SemanticRecord::new(record.kind()));
                     }
@@ -354,17 +334,12 @@ impl MemberHistoryDictionaryOwner {
             self.transition = if payload { "payload" } else { "framing-release" };
             let pending = self.pending.take().unwrap();
             let result = if payload {
-                if matches!(self.record.as_ref().map(RetainedSprRecordObservation::kind), Some(8) | Some(64)) {
-                    let expected: &[u8] = if self.record.as_ref().unwrap().kind() == 8 { &[1, 0] } else { &[1, 0, 0, 0] };
-                    self.initial_history_exact &= expected.get(self.initial_payload_bytes as usize) == Some(&pending.value);
-                    self.initial_payload_bytes = self.initial_payload_bytes.saturating_add(1);
-                }
                 if let Some(delta) = self.delta.as_mut() {
                     delta.push(pending.value, &mut 1).map(|_| ()).map_err(delta_error)
                 } else if let Some(id) = self.id.as_mut() {
                     id.push_wire(pending.value, &mut 1).map(|_| ()).map_err(id_error)
                 } else if let Some(semantic) = self.semantic.as_mut() {
-                    semantic.push(pending.value, owners.request()?, self.limits, &mut self.groups, &mut self.pins)
+                    semantic.push(pending.value, owners.request()?)
                 } else {
                     Ok(())
                 }
@@ -390,11 +365,6 @@ impl MemberHistoryDictionaryOwner {
                 if let Some(semantic) = self.semantic.as_ref() {
                     self.record_matches = semantic.finish()?;
                 }
-                self.initial_history_exact &= match self.record.as_ref().map(RetainedSprRecordObservation::kind) {
-                    Some(8) => self.initial_payload_bytes == 2,
-                    Some(64) => self.initial_payload_bytes == 4,
-                    _ => true,
-                };
                 self.semantic = None;
                 self.payload_done = true;
                 return Ok(());
@@ -420,8 +390,6 @@ impl MemberHistoryDictionaryOwner {
                         self.composition_seen = true;
                         self.transition = "composition";
                     }
-                    8 => self.active_seen = true,
-                    64 => self.cursor_seen = true,
                     _ => {}
                 }
                 self.record = None;
@@ -464,7 +432,7 @@ impl MemberHistoryDictionaryOwner {
         }
         self.scanner = None;
         self.ready = false;
-        let initial_history_exact = self.initial_history_exact && self.active_seen && self.cursor_seen && self.composition_seen;
+        let initial_history_exact = self.initial_history_exact && self.composition_seen;
         Ok(Some(VerifiedMemberHistoryDictionary { owners: ManuallyDrop::new(self.owners.take()), schema: self.schema, initial_history_exact, closing: false, diagnostic: None }))
     }
 }

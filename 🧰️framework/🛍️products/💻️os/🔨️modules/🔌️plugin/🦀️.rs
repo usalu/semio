@@ -7297,6 +7297,8 @@ pub mod app {
         {
             let mut a = new_registered_app::<A, _>(manifest()).await;
             let mut b = new_registered_app::<A, _>(manifest()).await;
+            a.bind_instance_id(meta("local").instance_id).await;
+            b.bind_instance_id(meta("local").instance_id).await;
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
             a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
             b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
@@ -7387,24 +7389,26 @@ pub mod app {
             }
         }
 
-        /// 🧪️ `command_a`/`command_b` are applied to two `paired_apps` instances, a neutral history action
-        /// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
-        /// two-instance-convergence test body (see `playbook-plugin`'s
-        /// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
+        /// 🧪️ `command_a`/`command_b` are applied to two `paired_apps` instances; each side then folds the
+        /// other's events, one side commits a checkpoint (a structural history event) and the other folds
+        /// it too — `probe` must agree after every exchange. The repeated two-instance-convergence test body
+        /// (see `playbook-plugin`'s `two_instances_converge_disjoint_edits_via_backbone` for the original,
+        /// app-specific version).
         pub async fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
             P: PartialEq + std::fmt::Debug,
         {
             let (mut instance_a, mut instance_b) = paired_apps::<A>(channel).await;
+            let genesis = probe(&instance_a);
             instance_a.dispatch_typed(command_a, &meta("actor-a")).await.expect("a applies its edit");
             instance_b.dispatch_typed(command_b, &meta("actor-b")).await.expect("b applies its edit");
-            instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-            instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
+            exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe).await;
+            assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
         }
 
-        /// 🧬️ Registered twin of [`assert_two_instances_converge`].
+        /// 🧬️ Registered twin of [`assert_two_instances_converge`]: every typed command is settled until its
+        /// retained publication retires, so both edits really land before the replicas exchange events.
         pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
@@ -7413,13 +7417,37 @@ pub mod app {
             Build: Fn() -> Manifest,
         {
             let (mut instance_a, mut instance_b) = paired_registered_apps::<A, Manifest, Build>(channel, manifest).await;
+            let genesis = probe(&instance_a);
+            let receiver = meta("actor-a").instance_id;
             instance_a.dispatch_typed(command_a, &meta("actor-a")).await.expect("a applies its edit");
+            settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
             instance_b.dispatch_typed(command_b, &meta("actor-b")).await.expect("b applies its edit");
-            instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-            instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
+            settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+            exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe).await;
+            assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
+            instance_a.detach_backbone().await.expect("a releases its backbone");
+            instance_b.detach_backbone().await.expect("b releases its backbone");
             close_registered_fixture_app(&mut instance_a);
             close_registered_fixture_app(&mut instance_b);
+        }
+
+        /// 🔀️ Both replicas fold each other's events, `a` commits a checkpoint over everything it holds, `b`
+        /// folds that commit — `probe` must agree after each exchange: edits and structural history alike
+        /// converge by projection of the shared event log.
+        async fn exchange_and_assert_convergence<A, P>(instance_a: &mut VcsArtifactApp<A>, instance_b: &mut VcsArtifactApp<A>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A>) -> P)
+        where
+            A: ArtifactApp,
+            P: PartialEq + std::fmt::Debug,
+        {
+            instance_a.tick_backbone().await.expect("a folds b's events");
+            instance_b.tick_backbone().await.expect("b folds a's events");
+            assert_eq!(probe(instance_a), probe(instance_b), "both instances must converge on the same snapshot");
+            let receiver = meta(actor_a).instance_id;
+            let admitted = instance_a.handle_action("commitCheckpoint", None, &meta(actor_a)).await.expect("a commits a checkpoint");
+            super::settle_framework_reserved_admission(instance_a, admitted).await.expect("a's checkpoint commit settles");
+            settle_registered_typed_operation(instance_a, receiver).await.expect("a's checkpoint publication settles");
+            instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+            assert_eq!(probe(instance_a), probe(instance_b), "a replicated checkpoint keeps both instances converged");
         }
 
         // 🪦️ `assert_graph_merge_preserves_referential_integrity` DELETED
@@ -7468,21 +7496,28 @@ pub mod app {
             Build: Fn() -> Manifest,
         {
             let mut sender = new_registered_app::<A, _>(manifest()).await;
+            sender.bind_instance_id(meta("local").instance_id).await;
             let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
             sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
             sender.dispatch_typed(command, &meta("local")).await.expect("apply command");
+            settle_registered_typed_operation(&mut sender, meta("local").instance_id).await.expect("the edit publishes");
             let mut envelopes = Vec::new();
             for message in far.receive().await.expect("receive") {
                 if let BackboneMessage::Mutations { envelopes: operations } = message {
                     envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                 }
             }
+            assert!(!envelopes.is_empty(), "the applied edit must reach the channel as events");
             let operations = protocol::encode_envelopes(&envelopes);
             let mut receiver = new_registered_app::<A, _>(manifest()).await;
+            receiver.bind_instance_id(meta("local").instance_id).await;
+            let genesis = probe(&receiver);
             receiver.ingest_operations(&operations).await.expect("ingest once");
             let once = probe(&receiver);
+            assert_ne!(once, genesis, "ingesting the events must materialize the edit");
             receiver.ingest_operations(&operations).await.expect("ingest twice");
             assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
+            sender.detach_backbone().await.expect("sender releases its backbone");
             close_registered_fixture_app(&mut sender);
             close_registered_fixture_app(&mut receiver);
         }
@@ -10361,7 +10396,10 @@ pub mod app {
         pub count: u32,
         /// @emoji ⏪️ A real inverse for a `🐚️Shell`-kind row with neither `edit_id` nor `config_edit_ids`
         /// (`noteShellCommand`-authored — shell-owned state this plugin cannot touch itself) — see
-        /// `InverseAction`. `None` means this row has no working inverse (not just unauthored/foreign).
+        /// `InverseAction`. `None` means this row has no working inverse (not just unauthored/foreign),
+        /// which is the normal case for chrome the shell notes without declaring `inverseCommandId`
+        /// (window activation/resize/move): such a row is logged but is never an undo target, so `undo`
+        /// reaches the user's own document edit instead of replaying chrome into the guest.
         pub inverse: Option<InverseAction>,
     }
 
@@ -26519,11 +26557,10 @@ pub mod app {
                     Some(DslValue::String(detail)) => format!("{label} - {detail}"),
                     _ => label.to_string(),
                 };
-                let inverse_args = args.and_then(|value| value.get("inverseArgs")).cloned().or(detail);
-                let inverse = Some(InverseAction {
-                    action_id: args.and_then(|value| value.get("inverseCommandId")).and_then(DslValue::as_str).unwrap_or(command_id).to_string(),
-                    args: inverse_args,
-                });
+                let inverse = args
+                    .and_then(|value| value.get("inverseCommandId"))
+                    .and_then(DslValue::as_str)
+                    .map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned().or(detail) });
                 self.validate_framework_reserved_commit(action, permit).await?;
                 self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse).await;
                 return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
@@ -30065,11 +30102,7 @@ pub mod app {
                 return Ok(());
             }
             let parsed: store::ParsedDocumentText<A::Draft, A::DraftMutation> = store::parse_document_pack(pack, spr).await.map_err(|error| error.into_fault())?;
-            let (applied, redo) = match &parsed.envelope.cursor {
-                Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
-            };
-            self.draft_store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
+            self.draft_store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
             Ok(())
         }
 
@@ -30322,11 +30355,7 @@ pub mod app {
 
         async fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Config, A::ConfigMutation> = store::parse_document_pack(&files.pack, &files.spr).await.map_err(|error| error.into_fault())?;
-            let (applied, redo) = match &parsed.envelope.cursor {
-                Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
-            };
-            self.config_store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
+            self.config_store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -30366,9 +30395,8 @@ pub mod app {
 
         async fn load_document_text(&mut self, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_text(&files.dsl, &files.ops).await.map_err(|error| error.into_fault())?;
-            let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             let window_reset = self.prepare_document_window_reset()?;
-            self.store.reset(parsed.into_envelope(), applied, Vec::new()).await.map_err(|error| error.into_fault())?;
+            self.store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
             Ok(())
@@ -30380,15 +30408,8 @@ pub mod app {
 
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).await.map_err(|error| error.into_fault())?;
-            // 🎯️ W4: honor a persisted cursor (undo/redo position) when present — falling back to
-            // "every edit applied" for a pack predating this field, matching `ArtifactStore::new`'s
-            // own cursor-aware seeding.
-            let (applied, redo) = match &parsed.envelope.cursor {
-                Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
-            };
             let window_reset = self.prepare_document_window_reset()?;
-            self.store.reset(parsed.into_envelope(), applied, redo).await.map_err(|error| error.into_fault())?;
+            self.store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
             Ok(())

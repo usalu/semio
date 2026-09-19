@@ -1,7 +1,7 @@
 use super::*;
 use crate::os_pack::CodecId;
 use crate::os_spr::format::{SprWriter, WriteOptions};
-use crate::os_spr::history::{HistoryChange, HistoryCheckpoint, HistoryEdit, HistoryLog, OpPayload};
+use crate::os_spr::history::{HistoryEdit, HistoryLog, HistoryTransitionRecord, OpPayload};
 use crate::os_spr::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
 
 //#region 🔖️Snapshot
@@ -171,8 +171,19 @@ async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index()
     let mut log = HistoryLog { doc_id: "doc-2".to_string(), schema: "schema-2".to_string(), ..Default::default() };
     log.edits.push(sample_edit("edit-0", "op-0"));
     log.edits.push(sample_edit("edit-1", "op-1"));
-    log.changes.push(HistoryChange { id: "change-1".to_string(), saved_at: "t-change-1".to_string(), edit_ids: vec!["edit-0".to_string(), "edit-1".to_string()], description: None });
-    log.checkpoints.push(HistoryCheckpoint { id: "cp-1".to_string(), timestamp: "t-cp-1".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: Vec::new(), message: None });
+    let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+        checkpoint_id: "cp-1".to_string(),
+        parent_id: None,
+        change_id: "change-1".to_string(),
+        mutation_ids: vec![crate::os_spr::MutationId("edit-0#0".to_string()), crate::os_spr::MutationId("edit-1#0".to_string())],
+        description: None,
+        saved_at: "t-change-1".to_string(),
+        authors: Vec::new(),
+        message: None,
+        timestamp: "t-cp-1".to_string(),
+    });
+    let envelope = crate::os_spr::history_transition_envelope(&commit, &crate::os_spr::ArtifactId("doc-2".to_string()), &crate::os_spr::ActorId("alice".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });
+    log.transitions.push(HistoryTransitionRecord::from_envelope(&envelope));
 
     let bytes = crate::os_spr::history::encode_history(&log, &crate::os_spr::history::EncodeOptions::default()).await.unwrap();
     let initial_pack = b"BASE";

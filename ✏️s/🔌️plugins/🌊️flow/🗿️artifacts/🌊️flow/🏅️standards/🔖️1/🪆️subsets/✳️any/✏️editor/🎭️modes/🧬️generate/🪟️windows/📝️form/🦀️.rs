@@ -120,7 +120,7 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 }
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let spec = flow_host_snapshot_to_form_spec(&snapshot.to_host_snapshot());
+    let spec = crate::editor::flow::with_live_host_snapshot(snapshot, flow_host_snapshot_to_form_spec);
     let generation = transient.generation();
     let Some(active) = selected_generation(&generation) else {
         return ui::text(ui_label(labels.generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));

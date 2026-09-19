@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin,
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the CAD editor and viewer.
     pub enum CadApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::cad::CadPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::cad::CadViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::cad::CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::cad::CadViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

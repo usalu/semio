@@ -423,3 +423,34 @@ Ticket-folder artefacts: `📜️h1-dev-boot.sh` (the real-route boot + restart 
 `🐍️h1-hub-boot-probe.ts` and `📜️h1-dev-boot-attempt.sh`. Captures: `🗑️generated/h1-*.txt`.
 
 <!--H1-FILES-->
+
+---
+
+# H1b — session 4 (2026-09-19 ~23:30 →)
+
+Continuation slice. Everything below is measured on the tree as of this session; §1–§8 above are
+H1's session-2/3 record and are not re-litigated. Captures: `🗑️generated/h1b-*.txt`.
+
+## 9. Re-measurement of the hub test surface
+
+(filling)
+
+## 10. `os-hub:test` level budget
+
+(filling)
+
+## 11. G2 stub list — what is still stub on this tree
+
+(filling)
+
+## 12. Observability minimal bar
+
+(filling)
+
+## 13. Open gaps after H1b
+
+(filling)
+
+## 14. Files changed by H1b
+
+(filling)

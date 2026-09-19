@@ -403,6 +403,30 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     );
 }
 
+/// 📏️ The raw wire the host's `setContributions` push really carried into this app on 2026-09-19,
+/// measured by the refusal it drew (`tool factory 's.procedural.generation2d@1/*#editor/setContributions'
+/// rejected 62090 raw bytes before decoding; maximum is 12288`, ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP) — the size a declared ceiling has to admit.
+const GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES: usize = 62_090;
+
+/// ⚖️ LAW: the contributions route's declared wire ceiling ADMITS the pack the host really pushes —
+/// whole, as page 0 of 1 — and is the transport's own assembled-command authority, not the JSON entry
+/// point's 4 KiB string page. The factory's pre-decode gate and the served route read the same
+/// constant, so admitting it here is admitting it at boot.
+#[test]
+fn contributions_route_declares_a_reachable_wire_ceiling() {
+    assert_eq!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES, semio_framework::kernel::COMMAND_MAXIMUM_BYTES, "the contributions route is bound by what the paged command ingress can assemble, not by the JSON entry point's string page");
+    assert!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES >= GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES, "the measured {GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES}-byte push must be admitted, the contract declares {GENERATION2D_CONTRIBUTIONS_RAW_BYTES}");
+    let pack: String = std::iter::repeat_n('x', GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES).collect();
+    let wire = protocol::json::to_json_string(&("setContributions", Some(dsl::DslValue::object([
+        ("json".to_string(), dsl::DslValue::String(pack)),
+        ("page".to_string(), dsl::DslValue::uint(0)),
+        ("pageCount".to_string(), dsl::DslValue::uint(1)),
+    ]))));
+    assert!(wire.len() <= GENERATION2D_CONTRIBUTIONS_RAW_BYTES, "a whole page-0-of-1 push encodes to {} bytes but the contract declares {GENERATION2D_CONTRIBUTIONS_RAW_BYTES}", wire.len());
+    assert_eq!(generation2d_contributions_contract().max_raw_wire_bytes, GENERATION2D_CONTRIBUTIONS_RAW_BYTES);
+}
+
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
     use semio_framework_plugin::app::TypedOperationResultLane;
     let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;

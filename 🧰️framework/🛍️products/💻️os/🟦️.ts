@@ -351,19 +351,19 @@ export function wrapArtifactEnvelope(_document: unknown, _documentId: string, _u
   throw new Error("wrapArtifactEnvelope removed — use encodeDocumentPackBundle");
 }
 
-//#region 🔀️ApplyBackboneMessage
+//#region 🔀️BackboneMessage
 export type BinaryBackboneMessage =
-  | { readonly kind: "snapshot"; readonly pack: Uint8Array; readonly spr: Uint8Array }
+  | { readonly kind: "genesis"; readonly pack: Uint8Array }
   | { readonly kind: "mutations"; readonly envelopes: Uint8Array }
   | { readonly kind: "ack"; readonly opIds: readonly string[] };
 
 export const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES = 262_144;
-export const BACKBONE_SNAPSHOT_MAXIMUM_BYTES = 4 * 1024 * 1024;
-export const DOCUMENT_ARCHIVE_MAXIMUM_BYTES = BACKBONE_SNAPSHOT_MAXIMUM_BYTES;
+export const BACKBONE_GENESIS_MAXIMUM_BYTES = 4 * 1024 * 1024;
+export const DOCUMENT_ARCHIVE_MAXIMUM_BYTES = BACKBONE_GENESIS_MAXIMUM_BYTES;
 
 /** 📤️ Canonical Store OpBinary: version, variant, symbol table and exact record fields. */
 export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Array {
-  const maximum = message.kind === "snapshot" ? BACKBONE_SNAPSHOT_MAXIMUM_BYTES : BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES;
+  const maximum = message.kind === "genesis" ? BACKBONE_GENESIS_MAXIMUM_BYTES : BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES;
   const encoder = new TextEncoder();
   const checkedBytes = (value: Uint8Array) => {
     if (!(value instanceof Uint8Array) || value.length > maximum) throw new Error("backbone message: byte limit");
@@ -374,13 +374,12 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     for (const value of message.opIds) {
       if (typeof value !== "string" || value.length > maximum || encoder.encode(value).length > maximum || new TextDecoder("utf-8", { fatal: true }).decode(encoder.encode(value)) !== value) throw new Error("backbone message: invalid string");
     }
-  } else if (message.kind === "snapshot") {
-    if (checkedBytes(message.pack).length + checkedBytes(message.spr).length > maximum) throw new Error("backbone message: byte limit");
-  } else if (message.kind === "mutations") checkedBytes(message.envelopes);
+  } else if (message.kind === "genesis") checkedBytes(message.pack);
+  else if (message.kind === "mutations") checkedBytes(message.envelopes);
   else throw new Error("backbone message: unknown kind");
   const symbols = message.kind === "ack" ? packBuildSymbols(message.opIds) : [];
   const symbolIndex = new Map(symbols.map((value, index) => [value, index] as const));
-  const out: number[] = [1, message.kind === "snapshot" ? 0 : message.kind === "mutations" ? 1 : 2];
+  const out: number[] = [1, message.kind === "genesis" ? 0 : message.kind === "mutations" ? 1 : 2];
   const bounded = () => { if (out.length > maximum) throw new Error("backbone message: byte limit"); };
   writeVarintU64(out, symbols.length);
   for (const symbol of symbols) {
@@ -389,7 +388,7 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     packPushBytes(out, bytes);
     bounded();
   }
-  writeVarintU64(out, message.kind === "snapshot" ? 2 : 1);
+  writeVarintU64(out, 1);
   const byteField = (id: number, bytes: Uint8Array) => {
     writeVarintU64(out, id);
     out.push(0x08);
@@ -397,9 +396,8 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     packPushBytes(out, bytes);
     bounded();
   };
-  if (message.kind === "snapshot") {
+  if (message.kind === "genesis") {
     byteField(0, message.pack);
-    byteField(1, message.spr);
   } else if (message.kind === "mutations") {
     byteField(0, message.envelopes);
   } else {
@@ -413,7 +411,7 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
 
 /** 📥️ Bounded exact record decoding, with canonical bytes checked before admission. */
 export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage {
-  if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) throw new Error("backbone message: byte limit");
+  if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > BACKBONE_GENESIS_MAXIMUM_BYTES) throw new Error("backbone message: byte limit");
   if (bytes[0] !== 1) throw new Error("backbone message: invalid format");
   const pos: [number] = [1];
   const natural = (maximum: number) => {
@@ -437,7 +435,7 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
   const symbols: string[] = [];
   const symbolCount = natural(bytes.length - pos[0]);
   for (let index = 0; index < symbolCount; index++) symbols.push(text());
-  if (natural(2) !== (tag === 0 ? 2 : 1)) throw new Error("backbone message: field count");
+  if (natural(1) !== 1) throw new Error("backbone message: field count");
   const byteField = (id: number) => {
     if (natural(1) !== id) throw new Error("backbone message: field id");
     expectTag(0x08);
@@ -445,7 +443,7 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
   };
   let message: BinaryBackboneMessage;
   if (tag === 0) {
-    message = { kind: "snapshot", pack: byteField(0), spr: byteField(1) };
+    message = { kind: "genesis", pack: byteField(0) };
   } else if (tag === 1) {
     message = { kind: "mutations", envelopes: byteField(0) };
   } else {
@@ -481,20 +479,7 @@ export function parseDocumentBackboneMessage(message: Uint8Array): DocumentBackb
   return { message: message.slice(), envelopes };
 }
 
-/**
- * 🔀️ Applies an incoming {@link encodeBackboneMessage} payload onto a stored document bundle.
- * Snapshot overwrites; operations require the native store (not implemented in this TS twin).
- */
-export function applyBackboneMessage(storedBundle: Uint8Array | null, messageBytes: Uint8Array): Uint8Array {
-  const message = decodeBackboneMessage(messageBytes);
-  if (message.kind === "snapshot") return encodeDocumentPackBytes(message.pack, message.spr);
-  if (message.kind === "mutations") {
-    if (storedBundle == null) throw new Error("cannot append operations before a snapshot exists");
-    throw new Error("backbone operations apply requires native store — ingest envelopes through the sync actor");
-  }
-  throw new Error(`unsupported backbone message kind: ${(message as { kind: string }).kind}`);
-}
-//#endregion 🔀️ApplyBackboneMessage
+//#endregion 🔀️BackboneMessage
 
 /** 🍃️ Sync-controller-scoped toggle leaf — narrows the canonical {@link UtilityLeaf} `"toggle"` variant instead of duplicating its fields. */
 export type FrameworkSyncUtilityLeaf = Extract<UtilityLeaf, { readonly kind: "toggle" }> & {
@@ -3445,7 +3430,7 @@ export function faultMessages(reportBytes: readonly number[], decodePackValue: (
 }
 
 /** @emoji 📥️ Decodes a pack-encoded {@link MergeReport} from an `AppFrame::MergeReport.report`
- * blob — pushed unsolicited after every `ingest_remote`/`merge_remote_snapshot`/`resolve_conflict`,
+ * blob — pushed unsolicited after every `ingest_remote`/`resolve_conflict`,
  * alongside `DocumentChanged`. */
 export function decodeMergeReportFromWire(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): MergeReport | null {
   if (reportBytes.length === 0) return null;
@@ -4148,7 +4133,7 @@ export class AppChannelClient {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 
@@ -4360,13 +4345,18 @@ export type SocketGrantReceiptV1 = Readonly<{
   expiresAtMs: number;
 }>;
 
-export type BrowserBrokerPortRequestV1 =
-  | Readonly<{ kind: "initialize"; proof: string }>
+/** 🎫️ The exact session capability `POST /auth/sessions` mints
+ * (`📇️directory/🔐️sign-in/🟦️.ts`'s `HUB_SESSION_TOKEN`). Pinned here too, so a proxy's error page can
+ * never be installed into the credential-owning worker as a session. */
+export const HUB_SESSION_CAPABILITY_PATTERN_V1 = /^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/u;
+
+export type HubSessionPortRequestV1 =
+  | Readonly<{ kind: "initialize"; capability: string }>
   | Readonly<{ kind: "request"; requestId: string; operation: "me" }>
   | Readonly<{ kind: "cancel"; requestId: string }>
   | Readonly<{ kind: "close" }>;
 
-export type BrowserBrokerPortResponseV1 =
+export type HubSessionPortResponseV1 =
   | Readonly<{ kind: "initialized"; ok: boolean }>
   | Readonly<{ kind: "response"; requestId: string; status: number; body: string }>;
 
@@ -4487,22 +4477,22 @@ export function parseDirectorySpaceListEntryV1(value: unknown): DirectorySpaceLi
   throw new Error("directory: invalid space list projection");
 }
 
-export function parseBrowserBrokerPortRequestV1(value: unknown): BrowserBrokerPortRequestV1 | undefined {
+export function parseHubSessionPortRequestV1(value: unknown): HubSessionPortRequestV1 | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Readonly<Record<string, unknown>>;
-  if (record.kind === "initialize" && exactRecordKeys(record, ["kind", "proof"]) && typeof record.proof === "string" && /^[0-9a-f]{64}$/u.test(record.proof)) return record as BrowserBrokerPortRequestV1;
-  if (record.kind === "request" && exactRecordKeys(record, ["kind", "operation", "requestId"]) && record.operation === "me" && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
-  if (record.kind === "cancel" && exactRecordKeys(record, ["kind", "requestId"]) && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
-  if (record.kind === "close" && exactRecordKeys(record, ["kind"])) return record as BrowserBrokerPortRequestV1;
+  if (record.kind === "initialize" && exactRecordKeys(record, ["kind", "capability"]) && typeof record.capability === "string" && HUB_SESSION_CAPABILITY_PATTERN_V1.test(record.capability)) return record as HubSessionPortRequestV1;
+  if (record.kind === "request" && exactRecordKeys(record, ["kind", "operation", "requestId"]) && record.operation === "me" && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as HubSessionPortRequestV1;
+  if (record.kind === "cancel" && exactRecordKeys(record, ["kind", "requestId"]) && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as HubSessionPortRequestV1;
+  if (record.kind === "close" && exactRecordKeys(record, ["kind"])) return record as HubSessionPortRequestV1;
   return undefined;
 }
 
-export function parseBrowserBrokerPortResponseV1(value: unknown): BrowserBrokerPortResponseV1 | undefined {
+export function parseHubSessionPortResponseV1(value: unknown): HubSessionPortResponseV1 | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Readonly<Record<string, unknown>>;
-  if (record.kind === "initialized" && exactRecordKeys(record, ["kind", "ok"]) && typeof record.ok === "boolean") return record as BrowserBrokerPortResponseV1;
+  if (record.kind === "initialized" && exactRecordKeys(record, ["kind", "ok"]) && typeof record.ok === "boolean") return record as HubSessionPortResponseV1;
   if (record.kind !== "response" || !exactRecordKeys(record, ["body", "kind", "requestId", "status"]) || typeof record.requestId !== "string" || !/^[0-9a-f-]{36}$/u.test(record.requestId) || typeof record.status !== "number" || !Number.isSafeInteger(record.status) || record.status < 100 || record.status > 599 || typeof record.body !== "string" || new TextEncoder().encode(record.body).byteLength > 1024 * 1024) return undefined;
-  return record as BrowserBrokerPortResponseV1;
+  return record as HubSessionPortResponseV1;
 }
 
 /** 🔐 Narrow authority boundary that alone may retain an upstream session/share credential. */

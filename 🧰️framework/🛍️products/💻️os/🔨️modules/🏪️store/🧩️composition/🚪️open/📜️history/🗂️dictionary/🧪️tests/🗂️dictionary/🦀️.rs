@@ -75,8 +75,8 @@ async fn history(fixture: &Value, row: &Value) -> Vec<u8> {
     if operation == "earlier-malformed" {
         records.push((65, vec![1, 7]));
     }
-    if matches!(operation, "aggregate-pin-limit" | "aggregate-group-limit") {
-        records.push((65, composition.clone()));
+    if operation == "noncritical-transition" {
+        records.push((crate::os_spr::REC_TRANSITION, vec![1]));
     }
     if operation != "missing-composition" {
         records.push((65, composition));
@@ -85,7 +85,7 @@ async fn history(fixture: &Value, row: &Value) -> Vec<u8> {
     let mut writer = crate::os_spr::SprWriter::begin(Vec::new(), &options).await.unwrap();
     for (kind, payload) in records {
         let critical = match (operation, kind) {
-            ("noncritical-dictionary", 3) | ("noncritical-document", 1) => false,
+            ("noncritical-dictionary", 3) | ("noncritical-document", 1) | ("noncritical-transition", crate::os_spr::REC_TRANSITION) => false,
             ("critical-composition", 65) => true,
             (_, 65) => false,
             _ => true,
@@ -147,8 +147,6 @@ fn new_owner(fixture: &Value, row: &Value, history: &[u8]) -> MemberHistoryDicti
     match row["operation"].as_str().unwrap_or("unchanged") {
         "entry-limit" => limits.dictionary_entries = row["value"].as_u64().unwrap() as usize,
         "byte-limit" => limits.dictionary_bytes = row["value"].as_u64().unwrap(),
-        "pin-limit" | "aggregate-pin-limit" => limits.pins = row["value"].as_u64().unwrap(),
-        "aggregate-group-limit" => limits.pin_groups = row["value"].as_u64().unwrap(),
         _ => {}
     }
     let mut sequence = 0;
@@ -233,7 +231,7 @@ async fn member_history_dictionary_is_atomic_and_bounded_by_neutral_records() {
             }
             assert!(terminal, "{}", row["id"]);
             let index = owner.owners.as_ref().unwrap().index.as_ref().unwrap();
-            let facts = (index.visible_entries(), index.allocated_pages(), owner.groups, owner.pins, owner.owners.as_ref().unwrap().input.as_ref().unwrap().retained_input_bytes());
+            let facts = (index.visible_entries(), index.allocated_pages(), owner.owners.as_ref().unwrap().input.as_ref().unwrap().retained_input_bytes());
             let ranges = if row["operation"] == "unchanged" {
                 (0..index.visible_entries())
                     .map(|entry| {
@@ -256,7 +254,7 @@ async fn member_history_dictionary_is_atomic_and_bounded_by_neutral_records() {
                 retire(&mut owner, grant as usize)
             };
             assert_eq!(error, expected_error(row), "{}", row["id"]);
-            assert_eq!(facts, (row["entries"].as_u64().unwrap() as usize, row["pages"].as_u64().unwrap() as usize, row["groups"].as_u64().unwrap(), row["pins"].as_u64().unwrap(), row["inputBytes"].as_u64().unwrap() as usize), "{}", row["id"]);
+            assert_eq!(facts, (row["entries"].as_u64().unwrap() as usize, row["pages"].as_u64().unwrap() as usize, row["inputBytes"].as_u64().unwrap() as usize), "{}", row["id"]);
             assert_eq!(retired, row["retiredBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
             if row["operation"] == "unchanged" {
                 assert_eq!(ranges, *fixture["dictionaryRanges"].as_array().unwrap());
@@ -267,7 +265,7 @@ async fn member_history_dictionary_is_atomic_and_bounded_by_neutral_records() {
         }
     }
     println!(
-        "[DEBUG] retained dictionary owner:36 exact production-writer histories x3 grants; canonical critical flags, atomic deltas, full request identity, cumulative caps, one private handoff and literal complete retirement; no typed publication"
+        "[DEBUG] retained dictionary owner:34 exact production-writer histories x3 grants; canonical critical flags, atomic deltas, full request identity, cumulative caps, one private handoff and literal complete retirement; no typed publication"
     );
 }
 

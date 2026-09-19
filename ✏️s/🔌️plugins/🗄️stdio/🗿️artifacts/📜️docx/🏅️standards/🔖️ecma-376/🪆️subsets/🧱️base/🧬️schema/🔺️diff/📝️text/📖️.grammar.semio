@@ -26,10 +26,15 @@ document-tok = "document" "=" document-diff
 # ── `DocxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` ────────────────────────
 opc-diff = "[" opt-content-types-diff "," opt-parts-diff "," opt-relationships-diff "]"
 
+# Every name-keyed collection body (`enc_named_triple`) is `[removed];[modified];[added];[order]` --
+# the fourth section is `NamedTripleDiff::order`, the complete post-apply key sequence (empty when the
+# diff leaves member order untouched).
+key-order-list = hex {"," hex}*
+
 opt-content-types-diff = "[" "0" "]" | "[" "1" "," content-types-diff "]"
 content-types-diff = "[" opt-ct-entries-diff "," opt-ct-entries-diff "]"
 opt-ct-entries-diff = "[" "0" "]" | "[" "1" "," ct-entries-diff-body "]"
-ct-entries-diff-body = "[" ct-removed-list? "]" ";" "[" ct-modified-list? "]" ";" "[" ct-added-list? "]"
+ct-entries-diff-body = "[" ct-removed-list? "]" ";" "[" ct-modified-list? "]" ";" "[" ct-added-list? "]" ";" "[" key-order-list? "]"
 ct-removed-list = hex {"," hex}*
 ct-modified-list = ct-modified-item {"," ct-modified-item}*
 ct-modified-item = hex ":" hex
@@ -37,7 +42,7 @@ ct-added-list = ct-entry {"," ct-entry}*
 ct-entry = "[" hex "," hex "]"
 
 opt-parts-diff = "[" "0" "]" | "[" "1" "," parts-diff-body "]"
-parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
+parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]" ";" "[" key-order-list? "]"
 parts-removed-list = hex {"," hex}*
 parts-modified-list = parts-modified-item {"," parts-modified-item}*
 parts-modified-item = hex ":" opc-part-diff
@@ -46,7 +51,7 @@ parts-added-list = opc-part {"," opc-part}*
 opc-part = "[" hex "," hex "," hex "]"
 
 opt-relationships-diff = "[" "0" "]" | "[" "1" "," relationships-diff-body "]"
-relationships-diff-body = "[" rel-owner-removed-list? "]" ";" "[" rel-owner-modified-list? "]" ";" "[" rel-owner-added-list? "]"
+relationships-diff-body = "[" rel-owner-removed-list? "]" ";" "[" rel-owner-modified-list? "]" ";" "[" rel-owner-added-list? "]" ";" "[" key-order-list? "]"
 rel-owner-removed-list = hex {"," hex}*
 rel-owner-modified-list = rel-owner-modified-item {"," rel-owner-modified-item}*
 rel-owner-modified-item = hex ":" rel-list-diff-body
@@ -56,7 +61,7 @@ rel-list = rel {"," rel}*
 rel = "[" hex "," hex "," hex "," target-mode "]"
 target-mode = "0" | "1"
 
-rel-list-diff-body = "[" rel-removed-list? "]" ";" "[" rel-modified-list? "]" ";" "[" rel-added-list? "]"
+rel-list-diff-body = "[" rel-removed-list? "]" ";" "[" rel-modified-list? "]" ";" "[" rel-added-list? "]" ";" "[" key-order-list? "]"
 rel-removed-list = hex {"," hex}*
 rel-modified-list = rel-modified-item {"," rel-modified-item}*
 rel-modified-item = hex ":" rel-diff
@@ -116,7 +121,7 @@ cells-added-item = INT ":" cell
 table-cell-diff = "[" opt-blocks-diff "]"
 
 opt-styles-diff = "[" "0" "]" | "[" "1" "," styles-diff-body "]"
-styles-diff-body = "[" styles-removed-list? "]" ";" "[" styles-modified-list? "]" ";" "[" styles-added-list? "]"
+styles-diff-body = "[" styles-removed-list? "]" ";" "[" styles-modified-list? "]" ";" "[" styles-added-list? "]" ";" "[" key-order-list? "]"
 styles-removed-list = hex {"," hex}*
 styles-modified-list = styles-modified-item {"," styles-modified-item}*
 styles-modified-item = hex ":" style-diff

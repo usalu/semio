@@ -39,20 +39,28 @@ async fn deletes_the_vertex_and_both_incident_edges() {
     assert_eq!(produced.edges.len(), base.edges.len() - 2, "exactly the two incident edges are severed");
 }
 
-/// ↩️ The undo re-creates the vertex FIRST and then every severed edge, in base order.
+/// ↩️ The undo re-creates the vertex and then every severed edge, in base order. `create-*` only
+/// appends, so to put `v2` back at its OWN index the inverse lifts the vertex tail (`v2..`) and the
+/// edge tail above the first incident edge off and re-declares both in base order
+/// (`../../↩️inverse/🦀️.rs`); every re-created entity carries its base tolerance.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_recreates_the_vertex_then_both_severed_edges() {
     let base = before();
     let mutation = mutation();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo.len(), 3, "one create-vertex plus one create-edge per severed edge");
-    assert!(matches!(undo[0], SemioBrepMutation::CreateVertex(_)), "the vertex must come back first — an edge without its endpoint would be dangling");
-    assert!(matches!(undo[1], SemioBrepMutation::CreateEdge(_)) && matches!(undo[2], SemioBrepMutation::CreateEdge(_)), "both severed edges are re-created afterwards");
-    let SemioBrepMutation::CreateVertex(vertex) = &undo[0] else { unreachable!() };
-    assert_eq!(vertex.tol, base.vertices[1].tol, "the inverse must restore the deleted vertex tolerance");
-    for operation in &undo[1..] {
-        let SemioBrepMutation::CreateEdge(edge) = operation else { unreachable!() };
-        assert_eq!(edge.tol, base.edges.iter().find(|candidate| candidate.id == edge.id).expect("recreated edge existed in base").tol, "the inverse must restore every cascaded edge tolerance");
+    let deleted = &base.vertices[1];
+    let recreated_vertex = undo.iter().position(|operation| matches!(operation, SemioBrepMutation::CreateVertex(vertex) if vertex.id == deleted.id)).expect("the undo re-creates the deleted vertex");
+    for severed in base.edges.iter().filter(|edge| edge.start_vertex == deleted.id || edge.end_vertex == deleted.id) {
+        let recreated_edge = undo.iter().position(|operation| matches!(operation, SemioBrepMutation::CreateEdge(edge) if edge.id == severed.id)).expect("the undo re-creates every severed edge");
+        assert!(recreated_vertex < recreated_edge, "the vertex must come back first — an edge without its endpoint would be dangling");
+    }
+    for operation in &undo {
+        match operation {
+            SemioBrepMutation::CreateVertex(vertex) => assert_eq!(vertex.tol, base.vertices.iter().find(|candidate| candidate.id == vertex.id).expect("recreated vertex existed in base").tol, "the inverse must restore every re-created vertex tolerance"),
+            SemioBrepMutation::CreateEdge(edge) => assert_eq!(edge.tol, base.edges.iter().find(|candidate| candidate.id == edge.id).expect("recreated edge existed in base").tol, "the inverse must restore every cascaded edge tolerance"),
+            SemioBrepMutation::DeleteVertex(_) | SemioBrepMutation::DeleteEdge(_) => {}
+            other => panic!("delete-vertex's undo only lifts and re-declares vertices and edges, found {other:?}"),
+        }
     }
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-vertex applies");
     for step in &undo {

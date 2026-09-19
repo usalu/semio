@@ -67,6 +67,8 @@ class TypecheckScript extends BundleScript {
 export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
   "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
+  "🏢️semio-tech/🎡️play/⚛️play-card.tsx",
+  "🏢️semio-tech/🎡️play/🟦️.tsx",
 ] as const;
 
 const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);
@@ -185,13 +187,14 @@ class CheckUiPrimitivesScript extends BundleScript {
 export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
 
 /** 🌳️ Every chrome-bearing surface: this bundle itself, the OS renderer engine, the demonstrator brand
- * shell — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
+ * shell, the play grid — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
  * walker) rather than a fixed file list, so a file rename or new chrome file can't silently drop out of
  * the scan the way the old hardcoded two-file list did. */
 const CHROME_I18N_SCANNED_ROOTS = [
   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react",
   "♻️mit-bestand/🧺️demonstrator",
+  "🏢️semio-tech/🎡️play",
 ] as const;
 
 const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);

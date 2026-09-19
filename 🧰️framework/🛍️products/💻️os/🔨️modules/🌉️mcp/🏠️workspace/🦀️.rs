@@ -1100,7 +1100,18 @@ impl PluginArtifactChannel {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 turn
             }
-            Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => return Err(Self::budget_fault("AppCommand")),
+            // ⏳️ A slice yield ENDS the turn; it does not end the command. The suspension window is
+            // "while this guest turn runs, nobody touches the driver" — so it is closed here too,
+            // exactly as on the `Ok` arm. Leaving the driver `Suspended` (and linked for close) made
+            // the very next slice read `!is_active`, tear the whole command down and re-send it under
+            // a BRAND NEW `seq`. A cold guest yields hundreds of 8 ms slices per command, so one
+            // `PureCommand` walked its owner from 1 to 554 while the guest was still retaining the
+            // owner of the FIRST attempt — which is the whole of `plugin.command-cursor-mismatch:
+            // owner is 1, the retained owner's is 554` (ticket 26/09/18 slice A2 §6.1).
+            Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => {
+                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
+                return Err(Self::budget_fault("AppCommand"));
+            }
             Err(error) => {
                 return Err(Self::not_wired("execute_turn", error));
             }
@@ -1109,7 +1120,7 @@ impl PluginArtifactChannel {
             .pending_command_closes
             .with_driver_mut(u64::from(instance), seq, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
             .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
-            .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {}", fault.code.0, fault.message)))?;
+            .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {} — the guest answered {:?} while this gateway drives instance {instance} seq {seq}", fault.code.0, fault.message, turn.command_ingress)))?;
         for effect in turn.effects {
             if let semio_framework::kernel::Effect::Respond { req, result } = effect {
                 if req.0 != seq {

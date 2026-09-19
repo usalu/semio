@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-replication",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/**/*"]
   },
   "targets": {
     "test": {

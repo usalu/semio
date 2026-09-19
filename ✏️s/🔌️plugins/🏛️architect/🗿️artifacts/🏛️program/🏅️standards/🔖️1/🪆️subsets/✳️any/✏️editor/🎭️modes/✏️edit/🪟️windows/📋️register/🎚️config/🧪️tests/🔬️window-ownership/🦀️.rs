@@ -184,7 +184,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
 
                 eprintln!("[DEBUG] Architect window ownership runtime began its heap-pinned future");
 
-                type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
+                type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
                 async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>) -> Result<TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 93, view_state: view.cloned(), ..artifact_app_laws::meta("architect-window-ownership") };
@@ -251,7 +251,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
                 eprintln!("[DEBUG] Architect window ownership runtime is constructing the first registered app");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<ArchitectPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                 eprintln!("[DEBUG] Architect window ownership runtime constructed the first registered app");
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
@@ -302,7 +302,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     }
 
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<ArchitectPlayApp>>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                     reopened.bind_instance_id(94).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;

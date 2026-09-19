@@ -9,6 +9,7 @@ use crate::schema::snapshot::*;
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertPaletteEntryMutation {
     pub index: usize,
+    #[dsl(block)]
     pub entry: BmpPaletteEntry,
 }
 //#endregion Payload

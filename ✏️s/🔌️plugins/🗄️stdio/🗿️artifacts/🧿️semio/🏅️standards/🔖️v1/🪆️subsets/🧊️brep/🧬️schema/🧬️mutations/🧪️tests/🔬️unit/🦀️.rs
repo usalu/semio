@@ -71,12 +71,15 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
     assert!(!after.edges.iter().any(|e| e.id == "e1"), "e1 (dependent on v1) must be cascade-deleted");
 
     let undo = delete.inverse(&base);
-    assert_eq!(undo.len(), 2, "inverse must reconstruct the vertex AND the one cascade-deleted edge");
+    assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateVertex(v) if v.id == "v1")), "inverse must reconstruct the deleted vertex");
+    assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateEdge(e) if e.id == "e1")), "inverse must reconstruct the one cascade-deleted edge");
     let mut restored = after;
     for back in &undo {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
     }
-    assert_eq!(sorted_by_id(restored), sorted_by_id(base), "cascade delete-vertex must be exactly undoable (as a SET)");
+    // `delete-vertex`'s inverse lifts the vertex and edge tails off and re-declares them in base order
+    // (`🗑️delete-vertex/↩️inverse`), so the undo restores the document exactly, order included.
+    assert_eq!(restored, base, "cascade delete-vertex must be exactly undoable");
 }
 
 #[semio_framework_async_macros::async_test]

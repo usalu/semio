@@ -161,7 +161,7 @@ where
     }
 
     fn progress(&self) -> ConfigStoreHydrationProgress {
-        let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.changes.len() + history.checkpoints.len() + history.alternatives.len() + history.conflicts.len() + 1);
+        let total = self.history.as_ref().map_or(1, |history| history.edits.len() + history.transitions.len() + history.conflicts.len() + 1);
         ConfigStoreHydrationProgress { completed: self.record_index as u64, total: total as u64 }
     }
 
@@ -219,16 +219,15 @@ where
                 let history = self.history.as_mut().expect("config history remains retained");
                 let expected_id = self.expected_id.as_ref().expect("config identity remains retained");
                 let schema = self.schema.as_ref().expect("config schema remains retained");
-                if history.doc_id != *expected_id
-                    || history.schema != *schema
-                    || history.cursor.is_none()
-                    || history.composition.is_some()
-                    || !history.changes.is_empty()
-                    || !history.checkpoints.is_empty()
-                    || !history.alternatives.is_empty()
-                    || history.active_alternative_id.is_some()
-                    || !history.conflicts.is_empty()
-                {
+                if history.doc_id != *expected_id || history.schema != *schema || history.composition.is_some() || !history.conflicts.is_empty() {
+                    return self.reject(ConfigStoreHydrationDiagnostic::Identity);
+                }
+                let fold = match history.fold() {
+                    Ok(fold) => fold,
+                    Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
+                };
+                if !fold.changes.is_empty() || !fold.checkpoints.is_empty() || !fold.alternatives.is_empty() || fold.alternative.is_some() {
+                    *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
                     return self.reject(ConfigStoreHydrationDiagnostic::Identity);
                 }
                 let initial = self.initial.take().expect("typed config initial snapshot remains retained");
@@ -236,8 +235,8 @@ where
                 let expected_id = self.expected_id.take().expect("config identity remains retained");
                 let schema = self.schema.take().expect("config schema remains retained");
                 let mut envelope = crate::os_store::create_document_envelope::<P, M>(&schema, &expected_id, initial, None);
-                let cursor = history.cursor.take().expect("validated persisted config cursor remains retained");
-                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(cursor.applied_edit_ids, cursor.redo_edit_ids, cursor.checkpoint_id));
+                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied, fold.redo, fold.checkpoint));
+                envelope.transitions = history.transitions.iter().map(|transition| transition.to_envelope(&history.doc_id)).collect();
                 *self.source_edits = Some(std::mem::take(&mut history.edits).into_iter());
                 *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, self.initial_digest));
                 *self.envelope = Some(envelope);

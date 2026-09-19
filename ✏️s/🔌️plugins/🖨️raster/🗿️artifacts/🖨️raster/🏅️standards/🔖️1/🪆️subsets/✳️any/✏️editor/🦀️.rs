@@ -59,19 +59,57 @@ pub fn mask_row_id(target_id: &str) -> String {
     format!("{RASTER_TREE_PREFIX}.mask.{target_id}")
 }
 
-/// 📡️ Document JSON for the WASM compositor, omitting embedded assets/utility/brush — mirrors
-/// premigration `rasterDocumentToSyncJson`. Takes `&RasterConfig` nowhere directly (assets live on the
-/// document), but stays app-level next to {@link raster_scene}, its only caller.
+/// 📡️ Document JSON for the WASM compositor, omitting embedded assets — mirrors premigration
+/// `rasterDocumentToSyncJson`. Stays app-level next to {@link raster_scene}, its only caller.
+///
+/// 🛡️ Never materializes the snapshot wholesale: `RasterOwnedMap`'s `ToValue` refuses a populated
+/// map (the `assets` pool, an adjustment's `params`), so the projection walks the layer forest and
+/// reads each owned map through its borrowed entry iterator instead — the demo's `brighten`
+/// adjustment and `semio-emblem` asset used to trap the guest on the first composite render.
 fn document_sync_json(document: &RasterSnapshot) -> String {
-    let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(document));
-    let value = match value {
-        Value::Object(object) => {
-            let filtered: dsl::os_pack::json::Object = object.iter().filter(|(key, _)| *key != "assets" && *key != "brushSize" && *key != "brushOpacity").map(|(key, value)| (key.to_string(), value.clone())).collect();
-            Value::Object(filtered)
+    let mut fields = vec![("schema".to_string(), dsl::DslValue::String(document.schema.clone())), ("id".to_string(), dsl::DslValue::String(document.id.clone()))];
+    if let Some(title) = &document.title {
+        fields.push(("title".to_string(), dsl::DslValue::String(title.clone())));
+    }
+    fields.push(("layers".to_string(), dsl::DslValue::Array(document.layers.iter().map(layer_sync_value).collect())));
+    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::Object(fields)).to_string()
+}
+
+/// 🌳️ One layer's sync value. Owned-map-free leaves reuse the derived codec as-is; a group or an
+/// adjustment is materialized as a map-free shell (children/params emptied) and the owned subtree is
+/// then written in place — children recursively, params entry by entry.
+fn layer_sync_value(layer: &RasterLayerNode) -> dsl::DslValue {
+    match layer {
+        RasterLayerNode::Pixel { .. } => dsl::ToValue::to_value(layer),
+        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
+            let shell = RasterLayerNode::Group { id: id.clone(), name: name.clone(), visible: *visible, opacity: *opacity, blend_mode: blend_mode.clone(), transform: transform.clone(), mask: mask.clone(), children: Vec::new() };
+            with_sync_field(dsl::ToValue::to_value(&shell), "children", dsl::DslValue::Array(children.iter().map(layer_sync_value).collect()))
         }
-        other => other,
-    };
-    value.to_string()
+        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
+            let shell = RasterLayerNode::Adjustment {
+                id: id.clone(),
+                name: name.clone(),
+                visible: *visible,
+                opacity: *opacity,
+                blend_mode: blend_mode.clone(),
+                transform: transform.clone(),
+                adjustment_kind: adjustment_kind.clone(),
+                params: crate::RasterOwnedMap::new(),
+            };
+            let params = dsl::DslValue::Object(params.iter().map(|(key, value)| (key.clone(), value.clone())).collect());
+            with_sync_field(dsl::ToValue::to_value(&shell), "params", params)
+        }
+    }
+}
+
+/// ✍️ Replaces (or appends) one field of a derived layer object.
+fn with_sync_field(value: dsl::DslValue, key: &str, field: dsl::DslValue) -> dsl::DslValue {
+    let dsl::DslValue::Object(mut entries) = value else { return value };
+    match entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
+        Some((_, slot)) => *slot = field,
+        None => entries.push((key.to_string(), field)),
+    }
+    dsl::DslValue::Object(entries)
 }
 
 /// 🧩️ Resolves every asset handle on `document.assets` back to its real `RasterImageAsset` bytes

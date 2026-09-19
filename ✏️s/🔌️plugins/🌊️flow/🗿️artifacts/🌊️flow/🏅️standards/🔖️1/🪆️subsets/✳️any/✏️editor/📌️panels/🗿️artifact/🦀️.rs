@@ -1,7 +1,7 @@
 //! 📄️ Flow play app panel — the document tree: widgets and synapses of the current snapshot.
 
 use crate::editor::flow::terminology::FlowPlayLabels;
-use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
+use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, with_live_host_snapshot, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
 use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::FlowSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
@@ -38,7 +38,11 @@ pub fn definition() -> PanelTabDefinition {
 /// 🪟️ Both sections are windowed: the host's `TreeWindows` decide which slice of an unbounded widget
 /// or synapse list this render materialises, and every section stamps its full `total`.
 pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let live = snapshot.to_host_snapshot();
+    // 🧹️ The live projection owns a layout `OrderedMap` root and widget payloads that refuse a bare drop.
+    with_live_host_snapshot(snapshot, |live| render_live(live, labels, windows))
+}
+
+fn render_live(live: &semio_framework_artifact_flow_flow::FlowHostSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     PanelTreeBuilder::new("flow-play-document")?
         .window_section_or_placeholder(
             windows,

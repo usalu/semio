@@ -651,39 +651,53 @@ fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
 
 /// ➕️ Name/id-keyed absorb, generic over the key type `K` (`String` for `Map`, [`ValueId`] for
 /// `nodes`) via an explicit `key_of` extractor — resolution of WHICH entry a `d2` op refers to
-/// is exact (key/id identity), but a surviving `d1`-added entry's relative position among OTHER
-/// entries is not renegotiated by unrelated `d2` removals elsewhere (name/id identity carries no
-/// positional information base-free, unlike list indices) — exact for every realistic mutation
-/// pattern (new entries always appended, see `SetMapEntry`/`SetNode`'s own diff construction)
-/// and every canonical `absorb_law` case tested below, same documented shape `json`'s own
-/// `absorb_value_diff` carries.
+/// is exact (key/id identity). Every `added` entry carries its FINAL-state `index`, so composing
+/// `d1` (base→mid) with `d2` (mid→after) re-derives each surviving `d1`-added entry's position in
+/// `after`:
+/// 1. a `d2` removal of a `d1`-added entry drops it and closes its slot (later `d1` adds move up);
+/// 2. a `d2` removal of a BASE entry closes one slot before a surviving `d1`-added entry whenever a
+///    base entry precedes it — base-free, the count of base entries before an added entry is known
+///    (`index − rank`) but not WHICH ones, so each such removal is taken to precede it, capped at
+///    that count. Exact for the realistic pattern (new entries appended, see `SetMapEntry`/
+///    `SetNode`) and always yields distinct, in-range positions;
+/// 3. `d2`'s own adds (already `after` positions) are inserted ascending, shifting every surviving
+///    `d1`-added entry at or past each insert point.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K: Clone + PartialEq, D, T: Clone>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: &impl Fn(&T) -> K,
+fn absorb_named<K: Clone + PartialEq, D, X: Clone>(
+    d1: NamedTripleDiff<K, D, NamedAdded<X>>,
+    d2: NamedTripleDiff<K, D, NamedAdded<X>>,
+    key_of: &impl Fn(&NamedAdded<X>) -> K,
     absorb_d: &impl Fn(D, D) -> D,
-    apply_d_to_t: &impl Fn(&D, &T) -> T,
+    apply_d_to_t: &impl Fn(&D, &NamedAdded<X>) -> NamedAdded<X>,
     is_d_empty: &impl Fn(&D) -> bool,
-) -> NamedTripleDiff<K, D, T> {
+) -> NamedTripleDiff<K, D, NamedAdded<X>> {
     let mut removed: Vec<K> = d1.removed;
     let mut modified: Vec<NamedModified<K, D>> = d1.modified;
-    let mut added: Vec<T> = d1.added;
+    let mut added: Vec<NamedAdded<X>> = d1.added;
+    added.sort_by_key(|a| a.index);
     let mut merged_removed: Vec<K> = Vec::new();
+    let mut removed_base = 0usize;
 
     for key in d2.removed {
         if let Some(pos) = added.iter().position(|t| key_of(t) == key) {
-            added.remove(pos);
-        } else if let Some(pos) = modified.iter().position(|m| m.key == key) {
-            modified.remove(pos);
+            let closed = added.remove(pos).index;
+            for later in added.iter_mut().filter(|a| a.index > closed) {
+                later.index -= 1;
+            }
+        } else {
+            if let Some(pos) = modified.iter().position(|m| m.key == key) {
+                modified.remove(pos);
+            }
             if !merged_removed.contains(&key) {
                 merged_removed.push(key.clone());
                 removed.push(key);
+                removed_base += 1;
             }
-        } else if !merged_removed.contains(&key) {
-            merged_removed.push(key.clone());
-            removed.push(key);
         }
+    }
+    for (rank, entry) in added.iter_mut().enumerate() {
+        let base_before = entry.index.saturating_sub(rank);
+        entry.index -= removed_base.min(base_before);
     }
     for m in d2.modified {
         if let Some(t) = added.iter_mut().find(|t| key_of(t) == m.key) {
@@ -699,9 +713,15 @@ fn absorb_named<K: Clone + PartialEq, D, T: Clone>(
             modified.push(NamedModified { key: m.key, diff: m.diff });
         }
     }
-    for a in d2.added {
+    let mut incoming = d2.added;
+    incoming.sort_by_key(|a| a.index);
+    for a in incoming {
+        for existing in added.iter_mut().filter(|existing| existing.index >= a.index) {
+            existing.index += 1;
+        }
         added.push(a);
     }
+    added.sort_by_key(|a| a.index);
     NamedTripleDiff { removed, modified, added }
 }
 //#endregion 🔖️Absorb

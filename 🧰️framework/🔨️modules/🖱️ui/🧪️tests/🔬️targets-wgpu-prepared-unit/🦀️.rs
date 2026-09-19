@@ -839,3 +839,26 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     while !packet.retire_step() {}
     while !job.close_step() {}
 }
+
+#[test]
+fn prepared_measurement_retains_scene_and_overlay_raster_cursors() {
+    let mut draw = DrawList::default();
+    draw.push_raster_quad("scene", [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.begin_overlay_route();
+    draw.push_raster_quad("overlay", [4.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.end_overlay_route();
+    let mut cursor = DrawMeasureCursor::LayerHeader(0);
+    let mut measured = Vec::new();
+    for _ in 0..64 {
+        let current = cursor;
+        if PreparedRenderJob::next_draw_usage(&draw, &mut cursor).is_none() {
+            break;
+        }
+        measured.push(current);
+        if cursor == DrawMeasureCursor::Complete {
+            break;
+        }
+    }
+    assert!(measured.contains(&DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: false }));
+    assert!(measured.contains(&DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: true }));
+}

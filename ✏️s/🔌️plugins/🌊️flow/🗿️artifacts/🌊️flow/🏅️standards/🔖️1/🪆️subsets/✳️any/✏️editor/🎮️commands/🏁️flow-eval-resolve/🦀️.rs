@@ -1,9 +1,7 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-resolve`.
 
-use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::host_from_snapshot;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
@@ -21,16 +19,7 @@ pub fn eval_tick_effect() -> Effect {
 //#endregion 🔖️Constants
 
 //#region 🔖️Arm
-/// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
-/// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
-    let host = host_from_snapshot(snapshot, config, session);
-    if session.sync(&host) {
-        Emit { effects: vec![eval_tick_effect()], ..Default::default() }
-    } else {
-        Emit::default()
-    }
-}
+// 🧵️ The arm probe is owned by `commands::evaluate::evaluate_result`.
 //#endregion 🔖️Arm
 
 //#region 🔖️Evaluate

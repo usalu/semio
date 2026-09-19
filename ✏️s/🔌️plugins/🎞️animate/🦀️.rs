@@ -9,8 +9,8 @@ use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, Plugin
 // 🗃️ Closed runtime app fleet for the declaration-owned animate surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum AnimateApps: PluginApp {
-        PresentationEditor(VcsArtifactApp<EditorApp<crate::editor::animate::AnimatePresentationPlayApp>>),
-        PresentationViewer(VcsArtifactApp<ViewerApp<crate::viewer::animate::AnimatePresentationViewer>>),
+        PresentationEditor(VcsArtifactApp<EditorApp<crate::editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        PresentationViewer(VcsArtifactApp<ViewerApp<crate::viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

@@ -17,6 +17,9 @@ fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
     PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
 }
 
+/// 🧫️ The regression base. Its text chunk sits before `IDAT`, where `chunk_order_insert_pos`
+/// places every text marker a mutation creates, so `insert-text-chunk` as the inverse of
+/// `remove-text-chunk` lands the marker back on the same position.
 #[cfg(test)]
 pub(crate) fn demo_base_snapshot() -> PngSnapshot {
     use crate::schema::snapshot::PngChunkMarker;
@@ -37,7 +40,7 @@ pub(crate) fn demo_base_snapshot() -> PngSnapshot {
         bkgd: None,
         text_chunks: vec![demo_text_chunk("Title", "demo")],
         pixels: vec![0u8; 4 * 4 * 4],
-        chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Iend],
+        chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Idat, PngChunkMarker::Iend],
         unknown_chunks: vec![],
     }
 }

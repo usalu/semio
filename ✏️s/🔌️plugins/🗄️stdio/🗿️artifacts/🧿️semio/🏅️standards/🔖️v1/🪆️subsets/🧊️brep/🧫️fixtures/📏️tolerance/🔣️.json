@@ -308,6 +308,11 @@
       },
       "expectedInverse": [
         {
+          "DeleteVertex": {
+            "id": "v-keep"
+          }
+        },
+        {
           "CreateVertex": {
             "id": "v-delete",
             "point": {
@@ -316,6 +321,17 @@
               "z": 3
             },
             "tol": 2.1e-7
+          }
+        },
+        {
+          "CreateVertex": {
+            "id": "v-keep",
+            "point": {
+              "x": 4,
+              "y": 5,
+              "z": 6
+            },
+            "tol": 2.2e-7
           }
         },
         {

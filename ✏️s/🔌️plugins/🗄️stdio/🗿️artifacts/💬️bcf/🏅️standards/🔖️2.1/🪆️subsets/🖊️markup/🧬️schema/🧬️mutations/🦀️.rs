@@ -75,6 +75,7 @@ pub mod set_viewpoint_snapshot;
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = BcfSnapshot, diff = BcfDiff, schema = "BcfMutation")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum BcfMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetVersion(set_version::SetVersion),

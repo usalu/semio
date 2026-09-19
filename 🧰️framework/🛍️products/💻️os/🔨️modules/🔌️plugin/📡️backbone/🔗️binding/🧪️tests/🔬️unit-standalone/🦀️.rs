@@ -8,7 +8,7 @@ fn hex(bytes: &[u8]) -> String {
 #[test]
 fn document_backbone_op_binary_is_exact_canonical_and_bounded() {
     let rows = [
-        (BackboneMessage::Snapshot { pack: vec![0xaa], spr: vec![0xbb, 0xcc] }, "01000002000801aa010802bbcc", false),
+        (BackboneMessage::Genesis { pack: vec![0xaa] }, "01000001000801aa", false),
         (BackboneMessage::Mutations { envelopes: vec![0xdd] }, "01010001000801dd", true),
         (BackboneMessage::Ack { op_ids: Vec::new() }, "01020001000c00", true),
         (BackboneMessage::Ack { op_ids: vec!["a".into()] }, "010201016101000c010600", true),

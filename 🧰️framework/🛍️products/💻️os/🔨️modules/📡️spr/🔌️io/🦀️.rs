@@ -14,7 +14,7 @@ mod native {
 
     use crate::os_pack::{CodecId, PackSource};
     use crate::os_spr::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
-    use crate::os_spr::history::{decode_history, encode_active, encode_alternative, encode_change, encode_checkpoint, encode_doc, encode_edit, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
+    use crate::os_spr::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
     use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
@@ -92,8 +92,8 @@ mod native {
         /// not add one (out of scope: another crate's file). The only correctness-preserving way to
         /// produce a live `HistoryAppender` that continues coherently from existing content is
         /// therefore: recover the trusted prefix, fully decode it to a `HistoryLog`, discard the
-        /// physical file (`crate::os_pack::io::FilePackSink::create` truncates), and replay every edit/change/
-        /// checkpoint/alternative/active back through a freshly-begun appender's own public methods
+        /// physical file (`crate::os_pack::io::FilePackSink::create` truncates), and replay every edit and
+        /// transition back through a freshly-begun appender's own public methods
         /// (which is what correctly rebuilds its internal dictionary/edit-ordinal bookkeeping) before
         /// handing it back for further live appends. This is O(file size) on every resume rather than
         /// O(torn tail) — a real cost worth revisiting if/when `protocol_format`/`protocol_history`
@@ -101,7 +101,7 @@ mod native {
         /// corrupts the file. Caveat: `HistoryLog` (protocol_history's model) has no slot for
         /// `REC_PROJECTION`/`REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` records, so a resume drops any
         /// of those (this crate deliberately has no `protocol_materialize` dependency to decode
-        /// snapshot bodies with). The op log itself — every edit/change/checkpoint/alternative — is
+        /// snapshot bodies with). The op log itself — every edit and transition — is
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
         /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
         /// genesis when a snapshot is missing/corrupt).
@@ -122,16 +122,15 @@ mod native {
             for edit in &log.edits {
                 appender.append_edit(edit).await?;
             }
-            for change in &log.changes {
-                appender.append_change(change).await?;
+            for transition in &log.transitions {
+                appender.append_transition(transition).await?;
             }
-            for checkpoint in &log.checkpoints {
-                appender.append_checkpoint(checkpoint).await?;
+            if let Some(composition) = &log.composition {
+                appender.append_composition(composition).await?;
             }
-            for alternative in &log.alternatives {
-                appender.append_alternative(alternative).await?;
+            if !log.conflicts.is_empty() {
+                appender.append_conflicts(&log.conflicts).await?;
             }
-            appender.set_active(log.active_alternative_id.as_deref()).await?;
             appender.commit().await?;
 
             let resume = resume_state_for(path, limits).await?;
@@ -333,24 +332,21 @@ mod native {
             flush_dict(&mut writer, &dict, &mut dict_base).await?;
             writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
         }
-        for change in &log.changes {
-            let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied()).await?;
+        for transition in &log.transitions {
+            let payload = encode_transition(transition, &mut dict).await?;
             flush_dict(&mut writer, &dict, &mut dict_base).await?;
-            writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await?;
+            writer.write_record(crate::os_spr::REC_TRANSITION, true, &payload, CodecId(0)).await?;
         }
-        for checkpoint in &log.checkpoints {
-            let payload = encode_checkpoint(checkpoint, &mut dict).await?;
+        if let Some(composition) = &log.composition {
+            let payload = encode_composition(composition, &mut dict).await?;
             flush_dict(&mut writer, &dict, &mut dict_base).await?;
-            writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await?;
+            writer.write_record(crate::os_spr::history::REC_COMPOSITION, false, &payload, CodecId(0)).await?;
         }
-        for alternative in &log.alternatives {
-            let payload = encode_alternative(alternative, &mut dict).await?;
+        if !log.conflicts.is_empty() {
+            let payload = encode_conflicts(&log.conflicts, &mut dict, |id| ordinals.get(id).copied()).await?;
             flush_dict(&mut writer, &dict, &mut dict_base).await?;
-            writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await?;
+            writer.write_record(crate::os_spr::history::REC_CONFLICT, false, &payload, CodecId(0)).await?;
         }
-        let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict).await;
-        flush_dict(&mut writer, &dict, &mut dict_base).await?;
-        writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0)).await?;
 
         writer.commit().await?;
         crate::os_pack::io::write_atomic(path, &writer.into_sink().await)?;

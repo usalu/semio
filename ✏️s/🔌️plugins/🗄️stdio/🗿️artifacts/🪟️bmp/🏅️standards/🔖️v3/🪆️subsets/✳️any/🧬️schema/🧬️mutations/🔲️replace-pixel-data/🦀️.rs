@@ -8,6 +8,7 @@ use crate::schema::snapshot::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReplacePixelDataMutation {
+    #[dsl(base64)]
     pub pixels: Vec<u8>,
 }
 //#endregion Payload

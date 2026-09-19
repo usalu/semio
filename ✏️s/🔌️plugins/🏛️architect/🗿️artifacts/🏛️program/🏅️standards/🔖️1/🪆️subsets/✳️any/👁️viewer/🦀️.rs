@@ -40,6 +40,8 @@ impl protocol::OpBinary for ArchitectViewCommand {
 pub struct ArchitectViewer;
 
 impl ArtifactViewer for ArchitectViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/table` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = ProgramSnapshot;
     type Mutation = ProgramMutation;
     type Config = NoConfig;
@@ -55,6 +57,10 @@ impl ArtifactViewer for ArchitectViewer {
 
     fn initial_snapshot() -> ProgramSnapshot {
         sample_plugin()
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_program_child_pack(snapshot, slot, child_id)
     }
 
     /// 👁️ Structurally read-only: the sole `ArchitectViewCommand::Noop` variant never carries a config

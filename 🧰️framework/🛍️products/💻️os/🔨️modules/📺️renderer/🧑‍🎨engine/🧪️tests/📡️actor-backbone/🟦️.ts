@@ -133,15 +133,15 @@ describe("actor-owned document backbone", () => {
     const fromHex = (value: string) => Uint8Array.from(value.match(/../g) ?? [], byte => Number.parseInt(byte, 16));
     for (const row of bindingFixture.codec.golden) {
       const value = row.value;
-      const message: BinaryBackboneMessage = value.Snapshot
-        ? { kind: "snapshot", pack: Uint8Array.from(value.Snapshot.pack), spr: Uint8Array.from(value.Snapshot.spr) }
+      const message: BinaryBackboneMessage = value.Genesis
+        ? { kind: "genesis", pack: Uint8Array.from(value.Genesis.pack) }
         : value.Mutations
           ? { kind: "mutations", envelopes: Uint8Array.from(value.Mutations.envelopes) }
           : { kind: "ack", opIds: value.Ack!.opIds };
       const encoded = Array.from(encodeBackboneMessage(message));
       const expected = Array.from(fromHex(row.hex));
       expect(encoded, row.id).toEqual(expected);
-      if (value.Snapshot) expect(() => documentBackboneEffectV1(fromHex(row.hex))).toThrow("actor-document-port.snapshot-requires-cold-pair");
+      if (value.Genesis) expect(() => documentBackboneEffectV1(fromHex(row.hex))).toThrow("actor-document-port.genesis-requires-cold-pair");
       else expect(documentBackboneEffectV1(fromHex(row.hex))).toBe(value.Ack ? "remote-ingest-receipt" : "mutations");
       expect(deepEqual(encoded, expected), row.id).toBe(true);
       expect(deepEqual(comparable(decodeBackboneMessage(fromHex(row.hex))), comparable(message)), row.id).toBe(true);

@@ -324,15 +324,10 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
 /// `ArtifactChild::local_owner` (the same in-process materialization seam `flow`/`dag`/`jack`/
 /// `wires`/`sequence` already rely on) carries the `CadWorkingScene` a document builder such as
 /// `forest_play_document` attached when it minted the handle. `pane`'s objects/geometry come from
-/// there; a handle with no local owner (or none at all) renders an empty pane, never a fabricated one.
+/// there (through [`crate::cad_pane_local_scene`], which also resolves a wire-decoded bundled-example
+/// handle); an unresolvable handle (or none at all) renders an empty pane, never a fabricated one.
 pub(crate) fn cad_pane_working_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
-    let child = match pane {
-        CadPaneId::Shape => document.shape_model.as_ref(),
-        CadPaneId::Building => document.building_model.as_ref(),
-        CadPaneId::Energy => document.energy_model.as_ref(),
-        CadPaneId::StructureClassic => document.structure_classic_model.as_ref(),
-    }?;
-    child.local_owner::<CadWorkingScene>()
+    crate::cad_pane_local_scene(document, pane)
 }
 
 pub(crate) fn cad_pane_working_objects(scene: &CadWorkingScene, pane: CadPaneId) -> (&[CadObject], Option<&CadGeometry>) {

@@ -350,7 +350,7 @@ async fn find_best_snapshot<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) 
 }
 
 /// @emoji 🧮️ Resolves a checkpoint id to the 0-based edit ordinal of the last edit it covers, via
-/// the advisory index when available, else a full decode-and-walk fallback (checkpoint ->
+/// the advisory index when available, else a full decode-and-fold fallback (folded checkpoint ->
 /// change_ids -> each change's edit_ids -> max ordinal by position in `log.edits`, matching
 /// `crate::os_spr::history::encode_history`'s own ordinal assignment).
 async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
@@ -361,11 +361,12 @@ async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, li
     }
     let options = crate::os_spr::history::DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
     let log = crate::os_spr::history::decode_history(trusted, &options).await?;
-    let checkpoint = log.checkpoints.iter().find(|c| c.id == checkpoint_id).ok_or_else(|| malformed("checkpoint", format!("checkpoint '{checkpoint_id}' not found")))?;
+    let fold = log.fold()?;
+    let checkpoint = fold.checkpoints.iter().find(|c| c.id == checkpoint_id).ok_or_else(|| malformed("checkpoint", format!("checkpoint '{checkpoint_id}' not found")))?;
     let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
     let mut max_ordinal: Option<u64> = None;
     for change_id in &checkpoint.change_ids {
-        let Some(change) = log.changes.iter().find(|c| &c.id == change_id) else { continue };
+        let Some(change) = fold.changes.iter().find(|c| &c.id == change_id) else { continue };
         for edit_id in &change.edit_ids {
             if let Some(&ordinal) = ordinals.get(edit_id.as_str()) {
                 max_ordinal = Some(max_ordinal.map_or(ordinal, |m| m.max(ordinal)));

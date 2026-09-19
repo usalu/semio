@@ -1,6 +1,6 @@
 //! 🛂️ Semantic record sequencing delegates every identifier byte to the retained tagged-ID cursor.
 
-use super::{MemberHistoryDictionaryLimits, MemberOpenDiagnostic, MemberOpenRequest};
+use super::{MemberOpenDiagnostic, MemberOpenRequest};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Field {
@@ -12,9 +12,6 @@ enum Field {
     Kind,
     Standard,
     Subset,
-    Checkpoint,
-    PinArtifact,
-    PinCheckpoint,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,8 +19,6 @@ enum Stage {
     Format,
     Presence,
     Id(Field),
-    Groups,
-    Pins,
     Done,
 }
 
@@ -31,22 +26,18 @@ pub(super) struct SemanticRecord {
     kind: u8,
     stage: Stage,
     presence: u8,
-    number: u64,
-    digits: u8,
-    groups: u64,
-    pins: u64,
     matched: bool,
 }
 
 impl SemanticRecord {
     pub(super) fn new(kind: u8) -> Self {
-        Self { kind, stage: Stage::Format, presence: 0, number: 0, digits: 0, groups: 0, pins: 0, matched: true }
+        Self { kind, stage: Stage::Format, presence: 0, matched: true }
     }
     pub(super) fn needs_id(&self) -> bool {
         matches!(self.stage, Stage::Id(_))
     }
 
-    pub(super) fn push(&mut self, byte: u8, request: &MemberOpenRequest, limits: MemberHistoryDictionaryLimits, groups: &mut u64, pins: &mut u64) -> Result<(), MemberOpenDiagnostic> {
+    pub(super) fn push(&mut self, byte: u8, request: &MemberOpenRequest) -> Result<(), MemberOpenDiagnostic> {
         match self.stage {
             Stage::Format => {
                 if byte != 1 {
@@ -67,40 +58,6 @@ impl SemanticRecord {
                 }
                 self.stage = if byte & 1 != 0 { Stage::Id(Field::Parent) } else { self.dialect_stage() };
             }
-            Stage::Groups | Stage::Pins => {
-                if self.digits == 9 && byte > 1 {
-                    return Err(MemberOpenDiagnostic::Malformed);
-                }
-                self.number |= u64::from(byte & 127) << (u32::from(self.digits) * 7);
-                self.digits += 1;
-                if byte < 128 {
-                    if self.digits > 1 && byte == 0 {
-                        return Err(MemberOpenDiagnostic::Malformed);
-                    }
-                    let value = self.number;
-                    self.number = 0;
-                    self.digits = 0;
-                    if self.stage == Stage::Groups {
-                        if value > limits.pin_groups - *groups {
-                            return Err(MemberOpenDiagnostic::Capacity);
-                        }
-                        *groups += value;
-                        self.groups = value;
-                        self.stage = if value == 0 { Stage::Done } else { Stage::Id(Field::Checkpoint) };
-                    } else {
-                        if value > limits.pins - *pins {
-                            return Err(MemberOpenDiagnostic::Capacity);
-                        }
-                        *pins += value;
-                        self.pins = value;
-                        if value == 0 {
-                            self.finish_group();
-                        } else {
-                            self.stage = Stage::Id(Field::PinArtifact);
-                        }
-                    }
-                }
-            }
             Stage::Id(_) | Stage::Done => return Err(MemberOpenDiagnostic::Malformed),
         }
         Ok(())
@@ -110,12 +67,8 @@ impl SemanticRecord {
         if self.presence & 2 != 0 {
             Stage::Id(Field::Kind)
         } else {
-            Stage::Groups
+            Stage::Done
         }
-    }
-    fn finish_group(&mut self) {
-        self.groups -= 1;
-        self.stage = if self.groups == 0 { Stage::Done } else { Stage::Id(Field::Checkpoint) };
     }
 
     pub(super) fn accept_id(&mut self, value: &str, request: &MemberOpenRequest, schema: &str) -> Result<(), MemberOpenDiagnostic> {
@@ -143,7 +96,6 @@ impl SemanticRecord {
             Field::Kind => value == expected.dialect.artifact_kind,
             Field::Standard => value == expected.dialect.standard,
             Field::Subset => value == expected.dialect.subset,
-            Field::Checkpoint | Field::PinArtifact | Field::PinCheckpoint => true,
         };
         self.stage = match field {
             Field::Document => Stage::Id(Field::Schema),
@@ -153,18 +105,7 @@ impl SemanticRecord {
             Field::Child => self.dialect_stage(),
             Field::Kind => Stage::Id(Field::Standard),
             Field::Standard => Stage::Id(Field::Subset),
-            Field::Subset => Stage::Groups,
-            Field::Checkpoint => Stage::Pins,
-            Field::PinArtifact => Stage::Id(Field::PinCheckpoint),
-            Field::PinCheckpoint => {
-                self.pins -= 1;
-                if self.pins == 0 {
-                    self.finish_group();
-                    self.stage
-                } else {
-                    Stage::Id(Field::PinArtifact)
-                }
-            }
+            Field::Subset => Stage::Done,
         };
         Ok(())
     }

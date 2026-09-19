@@ -1,6 +1,6 @@
 {
   "limits": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 },
-  "dataLimits": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "snapshotTransport": "cold-pair" },
+  "dataLimits": { "hotMessageBytes": 262144, "genesisMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "genesisTransport": "cold-pair" },
   "cases": [
     {
       "id": "instance-zero-first-bind",
@@ -61,7 +61,7 @@
   ],
   "codec": {
     "golden": [
-      { "id": "snapshot", "value": { "Snapshot": { "pack": [170], "spr": [187, 204] } }, "hex": "01000002000801aa010802bbcc", "hotPort": false },
+      { "id": "genesis", "value": { "Genesis": { "pack": [170] } }, "hex": "01000001000801aa", "hotPort": false },
       { "id": "mutations", "value": { "Mutations": { "envelopes": [221] } }, "hex": "01010001000801dd", "hotPort": true },
       { "id": "ack-empty", "value": { "Ack": { "opIds": [] } }, "hex": "01020001000c00", "hotPort": true },
       { "id": "ack-one", "value": { "Ack": { "opIds": ["a"] } }, "hex": "010201016101000c010600", "hotPort": true }

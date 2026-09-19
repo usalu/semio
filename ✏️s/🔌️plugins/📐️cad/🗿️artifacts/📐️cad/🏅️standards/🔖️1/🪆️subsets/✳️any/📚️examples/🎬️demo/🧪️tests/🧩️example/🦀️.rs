@@ -4,6 +4,20 @@ async fn primary_asset_is_nonempty() {
     assert!(text.len() > 8);
 }
 
+/// 🌲️ The registered `demo` example (the one the shell's picker offers and announces at boot) is the
+/// Concrete Forest document, and every pane handle its asset spells resolves the bundled content its
+/// content-addressed `child_id` names — a stale asset (fixture or conversion drift re-hashes the
+/// children) would otherwise load four silently empty panes.
+#[test]
+fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
+    let snapshot = <crate::CadSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../🖼️assets/🗣️.dsl.semio")).expect("demo asset parses");
+    assert_eq!(snapshot, crate::standards::v1::subsets::any::schema::inferences::forest_play_scene());
+    for pane in crate::CadPaneId::all() {
+        let scene = crate::cad_pane_local_scene(&snapshot, pane).unwrap_or_else(|| panic!("{pane:?} pane resolves its bundled materialization"));
+        assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{pane:?} pane carries objects");
+    }
+}
+
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {

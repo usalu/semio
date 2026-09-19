@@ -462,6 +462,7 @@ import {
   buildActiveUtilityByWindowId,
   buildCommandCategoryTabs,
   buildNoteShellCommandAction,
+  isShellOwnedCommandId,
   buildOsCommands,
   OPEN_HUB_COMMAND_ID,
   buildSpacePanelState,
@@ -559,6 +560,7 @@ import {
   resolveManifestLabel,
   resolvePanelTabLabel,
   undeclaredActionDiagnostic,
+  appSwitchesExamples,
   historyPatchShouldApplyV1,
   historyRefreshNeededV1,
   shellHistoryCursorDomV1,
@@ -2500,6 +2502,11 @@ function FrameworkOsShellInner({
    * effect reached `wireEffectToFriendly` and was dropped, so a refusal looked exactly like nothing
    * happening. Assigned right after `showTransientNotice` itself is defined. */
   const showTransientNoticeRef = useRef<(message: string, kind?: Severity, code?: string) => void>(() => {});
+  /** 🐚️ Same ref-forwarding idiom — `applyHostEffects`'s `replayShellCommand` branch replays a
+   * SHELL-owned command id against shell-owned state (`dispatchOsCommand`, declared far below), never
+   * into the guest, which has no window kind for chrome and refuses it `undeclared-action`. Answers
+   * whether the id was actually routed; an unroutable one is a warning, never a guest dispatch. */
+  const replayShellOwnedCommandRef = useRef<(commandId: string, args?: Record<string, unknown>) => boolean>(() => false);
   /** 📇️ `applyHostEffects`'s new `replayShellCommand` branch (below) needs `openDocument`/
    * `openArtifactWithAppRef`, both declared LATER in this same component (after `applyHostEffects`
    * itself) — a direct reference in `applyHostEffects`'s own dependency array would be a `const`
@@ -5829,6 +5836,12 @@ function FrameworkOsShellInner({
               }
             } catch (openingError) {
               console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
+            }
+          } else if (isShellOwnedCommandId(actionId)) {
+            // 🐚️ Chrome replays against shell-owned state. Routing one into the guest is what the
+            // window-kind gate refused as `undeclared-action` after every undo (ticket 26/09/18 §3.2).
+            if (!replayShellOwnedCommandRef.current(actionId, argsRecord)) {
+              console.warn("[os-shell] replayShellCommand: no shell route for chrome command", actionId);
             }
           } else {
             if (actionId === SET_ACTIVE_EXAMPLE_ACTION_ID) {
@@ -9320,7 +9333,7 @@ function FrameworkOsShellInner({
   // `manifest::examples_for_app` is its twin, both pinned by `📚️example-picker.json`.
   const exampleOptions = useMemo(() => {
     const app = session?.app;
-    if (!app) return [];
+    if (!app || !appSwitchesExamples(app.id, app.windowKinds)) return [];
     return examplesForApp(activePluginManifest?.examples ?? [], app).map((example) => ({
       id: example.id,
       label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
@@ -9574,6 +9587,8 @@ function FrameworkOsShellInner({
     },
     [applyHostEffects, applyHistoryPatch, applyLeftoverInteractionView, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, directBrowserActorForSession, dispatchDirectBrowserActorCommand, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
+
+  replayShellOwnedCommandRef.current = (commandId, args) => dispatchOsCommand(commandId, args, commitUiPreference, dispatch, dockLayoutStore, dockUiStateStore, locks);
 
   const handleCommandKeydown = useCallback(
     (event: globalThis.KeyboardEvent) => {

@@ -37,6 +37,8 @@ impl protocol::OpBinary for WriterViewCommand {
 pub struct WriterViewer;
 
 impl ArtifactViewer for WriterViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = WriterSnapshot;
     type Mutation = crate::op::WriterMutation;
     type Config = NoConfig;
@@ -49,6 +51,10 @@ impl ArtifactViewer for WriterViewer {
 
     const DIALECT: Dialect = WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_writer_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> WriterSnapshot {
         schema::empty_writer_snapshot()

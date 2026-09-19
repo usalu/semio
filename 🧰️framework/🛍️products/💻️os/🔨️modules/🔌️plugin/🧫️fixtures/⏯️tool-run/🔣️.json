@@ -75,7 +75,7 @@
     "commandRowsAdded": 1,
     "storeGenerationAdded": 1,
     "mutationsMessages": 1,
-    "snapshotMessages": 0,
+    "genesisMessages": 0,
     "groupId": "toolRun:1",
     "countAfterFinalize": 5,
     "labelAfterFinalize": "unit-5",

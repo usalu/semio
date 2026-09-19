@@ -614,3 +614,40 @@ Ticket folder (not product code): `🐍️c1b-prebuild.ts`, `📜️c1b-warm-cat
 `📜️c1b-collab-run.sh`, captures `🗑️generated/c1b-*.txt`.
 
 No file owned by `🌎️hub/**` was edited.
+
+# C1c — two real users over the hub, observed at runtime
+
+Slice C1c (Opus 5 execution worker), 2026-09-19 session 4. Continues C1b above. Captures under
+`🗑️generated/c1c-*.txt`.
+
+## 14. Inherited state and the decision taken
+
+_(filling)_
+
+## 15. Identity — one path for the React shell
+
+_(filling)_
+
+## 16. Hub readiness configuration actually used
+
+_(filling)_
+
+## 17. Per-step observed results
+
+_(filling)_
+
+## 18. The three behaviours the brief requires and the scenario lacked
+
+_(filling)_
+
+## 19. Permanent target wiring
+
+_(filling)_
+
+## 20. Honest gaps
+
+_(filling)_
+
+## 21. Files changed by C1c
+
+_(filling)_

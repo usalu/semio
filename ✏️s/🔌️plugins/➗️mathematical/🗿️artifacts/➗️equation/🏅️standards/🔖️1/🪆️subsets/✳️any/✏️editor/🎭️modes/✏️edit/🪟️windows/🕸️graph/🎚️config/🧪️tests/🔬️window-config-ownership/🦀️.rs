@@ -131,8 +131,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 if let Err(error) = &outcome {
                     eprintln!("[DEBUG] Equation exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut reopened);
-                artifact_app_laws::close_registered_fixture_app(&mut app);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Equation exact-window config publication and persistence");
                 eprintln!("[DEBUG] two Equation graph windows published, rendered, and reloaded independent persisted camera state");
             })

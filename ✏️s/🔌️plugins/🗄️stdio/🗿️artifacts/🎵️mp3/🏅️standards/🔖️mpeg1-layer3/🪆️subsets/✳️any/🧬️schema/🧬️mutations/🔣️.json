@@ -2,55 +2,79 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutations.json",
   "title": "Mp3Mutation",
-  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetFrames"
-      ],
-      "properties": {
-        "SetFrames": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-frames/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFrames"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetId3v1"
-      ],
-      "properties": {
-        "SetId3v1": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v1/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setId3v1"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetId3v2"
-      ],
-      "properties": {
-        "SetId3v2": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v2/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setId3v2"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
+      "allOf": [
+        {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-snapshot/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

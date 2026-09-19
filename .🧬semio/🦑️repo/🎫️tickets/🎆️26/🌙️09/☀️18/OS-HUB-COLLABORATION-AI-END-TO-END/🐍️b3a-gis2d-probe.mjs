@@ -1,10 +1,17 @@
-/** 🩺️ Slice B3a — `gis2d` (gismap, react :6040) interaction probe.
+/** 🩺️ Slice B3a2 — `gis2d` (gismap, react :6040) interaction probe.
  *
- * Every gis verb the palette can stage with an argument is an `ActionKind::View` (camera, render
- * mode, vector style, LOD, layer visibility/stroke) — by the manifest's own contract those amend
- * window config and never the document, so none of them can clear the interaction bar. The document
- * mutation a user can actually reach from the rail is the framework clipboard verb over a selection:
- * `selectAll` stages the whole demo map, `cut` removes it (a real batched delete with a true
- * inverse), and `undo` restores it. */
+ * B3a measured the rail against the framework clipboard route (`selectAll` → `cut`) because every
+ * argument-carrying gis verb was an `ActionKind::View`. B3a2 §9.2 landed four per-feature document
+ * verbs instead, each fully defaulted so the rail dispatches them one-click: `addFeature` mints the
+ * lowest free `position-N` at the staged `(lon, lat)` and runs through the collection's authored
+ * `create-position` leaf, so its inverse is the leaf's own and undo/redo are structural.
+ *
+ * `SEMIO_PROBE_ACTION` swaps the measured verb (`moveFeature`/`renameFeature`/`deleteFeature` all
+ * address the collection's newest entry when no `featureId` is staged, so they run right after an
+ * `addFeature` with nothing typed).
+ */
 import { runInteractionProbe } from "./🐍️b3a-interaction-probe.mjs";
-await runInteractionProbe({ plugin: "gis2d", variant: "gis2d", port: 6040, setup: ["selectAll"], action: "cut" });
+
+const action = process.env.SEMIO_PROBE_ACTION ?? "addFeature";
+const setup = action === "addFeature" ? [] : ["addFeature"];
+await runInteractionProbe({ plugin: `gis2d-${action}`, variant: "gis2d", port: 6040, setup, action });

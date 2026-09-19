@@ -192,6 +192,42 @@ impl From<manifest::ActionKind> for CapabilityKind {
 }
 //#endregion 🔖️CapabilityKind
 
+//#region 🔖️CapabilityAudience
+/// 🎯️ WHO a compiled capability is addressed to — the gateway's own projection of
+/// `manifest::CapabilityAudience`, mirroring how [`CapabilityKind`] projects `manifest::ActionKind`
+/// (D5: the gateway's wire vocabulary lives HERE, the declaration vocabulary lives in `🛂️manifest`).
+/// [`compile`] publishes `Agent` only: an agent choosing a tool must never have to tell
+/// `patchLayer` apart from `canvasPointerMove` by reading their ids.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum CapabilityAudience {
+    /// 🤖️ An intent-level verb — published to agents and to the UI.
+    Agent,
+    /// 🖱️ A raw pointer/keyboard/engagement input event — the UI dispatches it, agents never see it.
+    Input,
+    /// 🪟️ Window/view/session chrome — the UI dispatches it, agents never see it.
+    Chrome,
+}
+
+impl From<manifest::CapabilityAudience> for CapabilityAudience {
+    fn from(audience: manifest::CapabilityAudience) -> Self {
+        match audience {
+            manifest::CapabilityAudience::Agent => CapabilityAudience::Agent,
+            manifest::CapabilityAudience::Input => CapabilityAudience::Input,
+            manifest::CapabilityAudience::Chrome => CapabilityAudience::Chrome,
+        }
+    }
+}
+
+/// 🎯️ The audience set [`compile`] publishes by default — agent-meaningful verbs only.
+pub const AGENT_AUDIENCES: &[CapabilityAudience] = &[CapabilityAudience::Agent];
+
+/// 🎯️ Every audience, for the callers that want the complete compiled surface (a shell's own
+/// command registry, `🧪️conformance`'s duplicate/label checks) rather than the agent projection.
+pub const ALL_AUDIENCES: &[CapabilityAudience] = &[CapabilityAudience::Agent, CapabilityAudience::Input, CapabilityAudience::Chrome];
+//#endregion 🔖️CapabilityAudience
+
 //#region 🔖️ToolExposure
 /// 🔌️ Whether a capability is invocable only through `action.invoke`/the deterministic catalog
 /// (`CatalogOnly`, the common case) or ALSO published as its own named `tools/list` entry
@@ -287,6 +323,8 @@ pub struct CapabilityDefinition {
     pub version: u32,
     pub owner: CapabilityOwner,
     pub kind: CapabilityKind,
+    /// 🎯️ Who this capability is addressed to — see [`CapabilityAudience`].
+    pub audience: CapabilityAudience,
     pub title: String,
     pub description: String,
     pub artifact_kind: Option<String>,
@@ -419,6 +457,7 @@ fn capability_from_action(id: &str, owner: CapabilityOwner, artifact_kind: Optio
         version: 1,
         owner,
         kind: action.kind.into(),
+        audience: manifest::resolve_audience(action).into(),
         title,
         description,
         artifact_kind,
@@ -452,6 +491,7 @@ fn capability_from_command(id: &str, owner: CapabilityOwner, artifact_kind: Opti
         version: 1,
         owner,
         kind: command.kind.into(),
+        audience: manifest::resolve_command_audience(command).into(),
         title,
         description,
         artifact_kind,
@@ -590,6 +630,7 @@ fn capability_from_contribution<Row: ContributionRow>(plugin_id: &str, category:
         version: 1,
         owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), app_id: None, window_kind_id: None, mode_id: None },
         kind,
+        audience: CapabilityAudience::Agent,
         title: entry.row_title(),
         description: entry.row_description(),
         artifact_kind: entry.row_artifact_kind(),
@@ -643,6 +684,7 @@ fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Ui,
+        audience: CapabilityAudience::Agent,
         title: "Open Dialog".to_string(),
         description: "Opens one of the workspace's declared modal form dialogs by id.".to_string(),
         artifact_kind: None,
@@ -669,6 +711,7 @@ fn artifact_create_capability(template_ids: &[String]) -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Job,
+        audience: CapabilityAudience::Agent,
         title: "Create Artifact".to_string(),
         description: "Creates a new artifact, optionally seeded from a declared playground example/template.".to_string(),
         artifact_kind: None,

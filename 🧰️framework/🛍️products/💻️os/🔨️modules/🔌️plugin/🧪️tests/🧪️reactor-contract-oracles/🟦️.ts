@@ -157,7 +157,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   const component = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   const reactor = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
   for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
-  for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses snapshots"]) assert(store.includes(marker), marker);
+  for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses genesis packs"]) assert(store.includes(marker), marker);
   for (const marker of ["decode_document_backbone_envelopes_exact_with_limits", "nonminimal-varint", "DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES"]) assert(causal.includes(marker), marker);
   for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact", "semio_framework_async::oneshot::channel", "pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job)"]) assert(sync.includes(marker), marker);
   for (const marker of ["tokio::runtime::Handle::try_current()", "self.io_reactor.as_ref().map(tokio::runtime::Handle::enter)"]) assert(sync.includes(marker), marker);
@@ -173,7 +173,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   const retireBranch = component.slice(component.indexOf("DocumentBackboneBindingDecisionV1::Retire(receipt)"), component.indexOf("pub async fn plugin_receive_document_backbone"));
   assert(retireBranch.indexOf("owner.begin_retire()") < retireBranch.indexOf("plugin_detach_backbone(runtime, command.instance_id).await"), "retire must synchronously close ingress before detach awaits");
   assert(!retireBranch.includes("document_backbone_effects"), "retire must discard stale data before emitting its sole receipt");
-  assert.deepEqual(fixture.dataLimits, { hotMessageBytes: 262144, snapshotMessageBytes: 4194304, pendingBytes: 1048576, pendingMessages: 64, snapshotTransport: "cold-pair" });
+  assert.deepEqual(fixture.dataLimits, { hotMessageBytes: 262144, genesisMessageBytes: 4194304, pendingBytes: 1048576, pendingMessages: 64, genesisTransport: "cold-pair" });
   assert.deepEqual(batchFixture.retention, { maximumBytes: 1048576, maximumMessages: 64 });
   return fixture.cases.length + fixture.codec.golden.length + fixture.codec.hostile.length + fixture.hostile.length + batchFixture.cases.length;
 }

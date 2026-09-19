@@ -308,7 +308,7 @@ async fn resolve_space_index_snapshot(space_id: &str) -> Option<SSpaceSnapshot> 
     let index_uri = artifact_backbone_uri(space_id, "index");
     let payload = resolve_backbone_bytes(&index_uri).await?;
     let index_document = decode_backbone_payload::<SSpaceSnapshot, SSpaceMutation>(&payload, S_SPACE_INDEX_DOCUMENT_SCHEMA).ok()?;
-    materialize_backbone_snapshot(&index_document, &index_document.cursor.applied_edit_ids).ok()
+    materialize_backbone_snapshot(&index_document, &index_document.applied_edit_ids().ok()?).ok()
 }
 
 /// 🕸️ "Space session -> active workflow artifact" resolution. Index-first (contract §C4: the space's
@@ -324,12 +324,13 @@ pub async fn resolve_workflow_artifact_document(space_id: &str, space_document: 
             return Some(workflow_snapshot);
         }
     }
-    let projection = materialize_backbone_snapshot(space_document, &space_document.cursor.applied_edit_ids).ok()?;
+    let projection = materialize_backbone_snapshot(space_document, &space_document.applied_edit_ids().ok()?).ok()?;
     for collection_ref in &projection.collections {
         let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
         let Some(collection_payload) = resolve_backbone_bytes(&collection_uri).await else { continue };
         let Ok(collection_document) = decode_backbone_payload::<CollectionSnapshot, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
-        let Ok(collection_projection) = materialize_backbone_snapshot(&collection_document, &collection_document.cursor.applied_edit_ids) else { continue };
+        let Ok(applied_edit_ids) = collection_document.applied_edit_ids() else { continue };
+        let Ok(collection_projection) = materialize_backbone_snapshot(&collection_document, &applied_edit_ids) else { continue };
         if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection).await {
             return Some(workflow_snapshot);
         }

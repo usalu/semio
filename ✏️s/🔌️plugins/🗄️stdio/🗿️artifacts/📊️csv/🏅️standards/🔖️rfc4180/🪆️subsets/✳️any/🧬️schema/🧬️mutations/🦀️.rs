@@ -40,6 +40,7 @@ pub mod set_snapshot;
 /// variant to wrap exactly one leaf payload, and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = CsvSnapshot, diff = CsvDiff, schema = "s.stdio.csv")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum CsvMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetHasHeader(set_has_header::SetHasHeader),

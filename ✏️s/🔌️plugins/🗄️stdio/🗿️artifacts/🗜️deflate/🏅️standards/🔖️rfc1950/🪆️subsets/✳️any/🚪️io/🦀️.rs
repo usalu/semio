@@ -349,6 +349,7 @@ pub struct DeflateEncodeJob {
     checkpoint_interval: usize,
     next_checkpoint: usize,
     complete: bool,
+    publication: Option<DeflatePublication>,
 }
 
 impl DeflateEncodeJob {
@@ -357,7 +358,7 @@ impl DeflateEncodeJob {
         let mut writer = BitWriter::new();
         writer.write_bits(0b011, 3);
         let checkpoint_interval = checkpoint_interval.max(1);
-        Self { input, writer, head: vec![-1; HASH_SIZE], previous: vec![-1; WINDOW], position: 0, pending: None, checkpoint_interval, next_checkpoint: checkpoint_interval, complete: false }
+        Self { input, writer, head: vec![-1; HASH_SIZE], previous: vec![-1; WINDOW], position: 0, pending: None, checkpoint_interval, next_checkpoint: checkpoint_interval, complete: false, publication: None }
     }
 
     /// 📈 Returns applied input bytes and total input bytes.
@@ -421,7 +422,7 @@ impl DeflateEncodeJob {
         if position > input.len() || !reader.is_empty() {
             return Err("invalid DEFLATE job checkpoint cursor".into());
         }
-        Ok(Self { input, writer: BitWriter { out: output, cur, nbits }, head, previous, position, pending, checkpoint_interval, next_checkpoint, complete })
+        Ok(Self { input, writer: BitWriter { out: output, cur, nbits }, head, previous, position, pending, checkpoint_interval, next_checkpoint, complete, publication: None })
     }
 
     fn insert(&mut self, position: usize) {
@@ -498,29 +499,132 @@ impl DeflateEncodeJob {
         self.writer.out
     }
 
-    fn retained_payload(context: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
-        match context.payload_from_bytes(stream, bytes) {
+    /// 📸️ Freezes the checkpoint at the current cursor and starts publishing it page by page.
+    fn begin_checkpoint(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        let state = PagedPayload::new(semio_framework_job::JobPayloadStream::CheckpointState, self.checkpoint_bytes());
+        self.publication = Some(DeflatePublication::Checkpoint { state, applied_progress: self.position as u64 });
+        advance_publication(&mut self.publication, context)
+    }
+
+    /// 🏁️ Freezes the final state and output and starts publishing them page by page.
+    fn begin_commit(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        let state = PagedPayload::new(semio_framework_job::JobPayloadStream::CommitState, self.checkpoint_bytes());
+        let output = PagedPayload::new(semio_framework_job::JobPayloadStream::CommitOutput, self.writer.out.clone());
+        self.publication = Some(DeflatePublication::Commit { state, output });
+        advance_publication(&mut self.publication, context)
+    }
+}
+
+//#region 📄️PagedPublication
+/// 📄️ One retained payload stream published one admitted page per step opportunity. A single
+/// `payload_from_bytes` page caps a stream at `JOB_PAYLOAD_PAGE_BYTES` (16 KiB), which every real
+/// encoder checkpoint (the 32 Ki-entry LZ77 window alone is 128 KiB) and any sizable output
+/// exceeds — so the bytes are frozen once and admitted page by page across steps instead.
+struct PagedPayload {
+    bytes: Vec<u8>,
+    cursor: usize,
+    writer: semio_framework_job::RetainedJobPayloadWriter,
+    complete: bool,
+}
+
+impl PagedPayload {
+    fn new(stream: semio_framework_job::JobPayloadStream, bytes: Vec<u8>) -> Self {
+        Self { bytes, cursor: 0, writer: semio_framework_job::RetainedJobPayloadWriter::new(stream), complete: false }
+    }
+
+    /// ➡️ Admits at most one page; `Ok(true)` once every byte is committed.
+    fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::JobPayloadAdmissionFault> {
+        if !self.complete {
+            self.complete = self.writer.write_slice_page(context, &self.bytes, &mut self.cursor)?;
+        }
+        Ok(self.complete)
+    }
+
+    fn finish(self) -> semio_framework_job::RetainedJobPayload {
+        let Self { bytes, writer, .. } = self;
+        drop(bytes);
+        match writer.finish() {
             Ok(payload) => payload,
-            Err(rejected) => {
-                drop(rejected.into_source());
-                semio_framework_job::RetainedJobPayload::empty(stream)
+            Err(_) => unreachable!("a completed paged payload holds neither a rejected nor a staged page"),
+        }
+    }
+
+    /// 🧹️ Releases the admitted pages, then the frozen bytes; `None` once terminal-empty.
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+        if !self.writer.terminal_is_empty() {
+            return match self.writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Some((released_items, released_bytes)),
+                semio_framework_job::JobPayloadCloseStep::Complete => Some((0, 0)),
+            };
+        }
+        retire_deflate_vec_step(&mut self.bytes, maximum_items, maximum_bytes)
+    }
+}
+
+/// 🗂️ The payload set an encoder is publishing: a checkpoint's state, or a commit's state and output.
+enum DeflatePublication {
+    Checkpoint { state: PagedPayload, applied_progress: u64 },
+    Commit { state: PagedPayload, output: PagedPayload },
+}
+
+impl DeflatePublication {
+    /// ➡️ Advances by at most one admitted page per step; `Ok(true)` once every stream is committed.
+    fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::JobPayloadAdmissionFault> {
+        match self {
+            Self::Checkpoint { state, .. } => state.advance(context),
+            Self::Commit { state, output } => {
+                if !state.complete {
+                    let pages = state.writer.page_count();
+                    // A page admitted for `state` spends this step's one page opportunity.
+                    if !state.advance(context)? || state.writer.page_count() != pages {
+                        return Ok(false);
+                    }
+                }
+                output.advance(context)
             }
         }
     }
 
-    fn checkpoint(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
-        let state = self.checkpoint_bytes();
-        semio_framework_job::Checkpoint { state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &state), applied_progress: self.position as u64 }
+    fn into_outcome(self) -> semio_framework_job::StepOutcome {
+        match self {
+            Self::Checkpoint { state, applied_progress } => semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: state.finish(), applied_progress }),
+            Self::Commit { state, output } => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: state.finish(), output: output.finish() }),
+        }
     }
 
-    fn commit(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::CommitCandidate {
-        let state = self.checkpoint_bytes();
-        semio_framework_job::CommitCandidate {
-            state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &state),
-            output: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &self.writer.out),
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+        match self {
+            Self::Checkpoint { state, .. } => state.close_step(maximum_items, maximum_bytes),
+            Self::Commit { state, output } => state.close_step(maximum_items, maximum_bytes).or_else(|| output.close_step(maximum_items, maximum_bytes)),
         }
     }
 }
+
+/// ➡️ Advances the in-flight publication; yields until every page is admitted, then hands the
+/// finished payloads out exactly once.
+fn advance_publication(publication: &mut Option<DeflatePublication>, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    use semio_framework_job::StepOutcome;
+    context.set_stage("deflate:publish");
+    let Some(active) = publication.as_mut() else {
+        return StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+    };
+    match active.advance(context) {
+        Ok(false) => StepOutcome::Yield,
+        Ok(true) => publication.take().map_or(StepOutcome::Yield, DeflatePublication::into_outcome),
+        Err(_) => StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+    }
+}
+
+/// 🧹️ Retires an in-flight publication; `None` once there is none left.
+fn close_publication_step(publication: &mut Option<DeflatePublication>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+    let active = publication.as_mut()?;
+    if let Some(step) = active.close_step(maximum_items, maximum_bytes) {
+        return Some(step);
+    }
+    *publication = None;
+    Some((0, 0))
+}
+//#endregion 📄️PagedPublication
 
 impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
@@ -528,12 +632,15 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
         }
+        if self.publication.is_some() {
+            return advance_publication(&mut self.publication, context);
+        }
         context.set_stage("deflate:encode");
         let literal_codes = build_codes(&fixed_lit_lengths());
         let distance_codes = build_codes(&fixed_dist_lengths());
         loop {
             if self.complete {
-                return StepOutcome::Complete(self.commit(context));
+                return self.begin_commit(context);
             }
             let work = self.process_transition(&literal_codes, &distance_codes);
             context.consume_fuel(work as u64);
@@ -541,13 +648,13 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
                 return StepOutcome::Cancelled;
             }
             if self.complete {
-                return StepOutcome::Complete(self.commit(context));
+                return self.begin_commit(context);
             }
             if self.position >= self.next_checkpoint {
                 while self.next_checkpoint <= self.position {
                     self.next_checkpoint = self.next_checkpoint.saturating_add(self.checkpoint_interval);
                 }
-                return StepOutcome::CheckpointReady(self.checkpoint(context));
+                return self.begin_checkpoint(context);
             }
             if context.should_yield() {
                 return StepOutcome::Yield;
@@ -558,6 +665,9 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     fn begin_close(&mut self) {}
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some((released_items, released_bytes)) = close_publication_step(&mut self.publication, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
         if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.input, maximum_items, maximum_bytes) {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
         }
@@ -575,7 +685,7 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.input.capacity() == 0 && self.writer.out.capacity() == 0 && self.head.capacity() == 0 && self.previous.capacity() == 0 && self.pending.is_none()
+        self.publication.is_none() && self.input.capacity() == 0 && self.writer.out.capacity() == 0 && self.head.capacity() == 0 && self.previous.capacity() == 0 && self.pending.is_none()
     }
 }
 
@@ -678,11 +788,14 @@ enum TunedFrame {
 pub struct TunedDeflateEncodeJob {
     engine: dynamic::Job,
     frame: TunedFrame,
+    /// 📄️ The commit being published page by page — transient, never part of a checkpoint.
+    #[value(skip)]
+    publication: Option<DeflatePublication>,
 }
 
 impl TunedDeflateEncodeJob {
     fn classic(input: Vec<u8>, policy: dynamic::Policy, frame: TunedFrame) -> Self {
-        Self { engine: dynamic::Job::classic(input, policy), frame }
+        Self { engine: dynamic::Job::classic(input, policy), frame, publication: None }
     }
 
     /// 🗜️ Creates the deterministic Office-compatible raw encoder.
@@ -709,7 +822,7 @@ impl TunedDeflateEncodeJob {
     /// 🏁 Creates the deterministic miniz-compatible level-nine RFC 1950 encoder.
     pub fn level_nine(input: Vec<u8>) -> Self {
         let frame = TunedFrame::Zlib { header: 0x78da, adler: adler32(&input) };
-        Self { engine: dynamic::Job::miniz(input), frame }
+        Self { engine: dynamic::Job::miniz(input), frame, publication: None }
     }
 
     /// 📈 Returns applied transition progress and its deterministic upper bound.
@@ -752,14 +865,16 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
         }
+        if self.publication.is_some() {
+            return advance_publication(&mut self.publication, context);
+        }
         context.set_stage("deflate:tuned-encode");
         loop {
             if self.engine.step() {
-                let output = self.output();
-                return StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: DeflateEncodeJob::retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &[]),
-                    output: DeflateEncodeJob::retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &output),
-                });
+                let state = PagedPayload::new(semio_framework_job::JobPayloadStream::CommitState, Vec::new());
+                let output = PagedPayload::new(semio_framework_job::JobPayloadStream::CommitOutput, self.output());
+                self.publication = Some(DeflatePublication::Commit { state, output });
+                return advance_publication(&mut self.publication, context);
             }
             context.consume_fuel(1);
             if context.is_cancelled() {
@@ -774,6 +889,9 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
     fn begin_close(&mut self) {}
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some((released_items, released_bytes)) = close_publication_step(&mut self.publication, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
         let (complete, released_items, released_bytes) = self.engine.close_step(maximum_items, maximum_bytes);
         if complete {
             semio_framework_job::InteractiveJobCloseStep::Complete
@@ -783,7 +901,7 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.engine.terminal_is_empty()
+        self.publication.is_none() && self.engine.terminal_is_empty()
     }
 }
 //#endregion 🧵️TunedEncode

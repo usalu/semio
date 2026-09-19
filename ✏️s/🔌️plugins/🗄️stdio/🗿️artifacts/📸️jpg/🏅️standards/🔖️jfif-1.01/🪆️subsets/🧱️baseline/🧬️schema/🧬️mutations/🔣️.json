@@ -2,16 +2,20 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutations.json",
   "title": "JpgBaselineMutation",
-  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "InsertFrameComponent"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "InsertFrameComponent": {
+        "mutation": {
+          "const": "insert-frame-component"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/insert-frame-component/schema.json"
         }
       }
@@ -20,10 +24,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "InsertHuffmanTable"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "InsertHuffmanTable": {
+        "mutation": {
+          "const": "insert-huffman-table"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/insert-huffman-table/schema.json"
         }
       }
@@ -32,10 +40,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveFrameComponent"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "RemoveFrameComponent": {
+        "mutation": {
+          "const": "remove-frame-component"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/remove-frame-component/schema.json"
         }
       }
@@ -44,10 +56,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveHuffmanTable"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "RemoveHuffmanTable": {
+        "mutation": {
+          "const": "remove-huffman-table"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/remove-huffman-table/schema.json"
         }
       }
@@ -56,10 +72,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetArithmetic"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetArithmetic": {
+        "mutation": {
+          "const": "set-arithmetic"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/set-arithmetic/schema.json"
         }
       }
@@ -68,10 +88,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetComponentSampling"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetComponentSampling": {
+        "mutation": {
+          "const": "set-component-sampling"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/set-component-sampling/schema.json"
         }
       }
@@ -80,10 +104,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSamplePrecision"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetSamplePrecision": {
+        "mutation": {
+          "const": "set-sample-precision"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sample-precision/schema.json"
         }
       }
@@ -92,10 +120,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetSnapshot": {
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/set-snapshot/schema.json"
         }
       }
@@ -104,10 +136,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSofMarker"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetSofMarker": {
+        "mutation": {
+          "const": "set-sof-marker"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sof-marker/schema.json"
         }
       }

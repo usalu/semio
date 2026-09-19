@@ -105,6 +105,7 @@ pub mod set_sof_marker;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = JpgSnapshot, diff = JpgDiff, schema = "JpgBaselineMutation")]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 pub enum JpgBaselineMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetSofMarker(set_sof_marker::SetSofMarker),
@@ -118,11 +119,11 @@ pub enum JpgBaselineMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `JpgBaselineMutation` variant, in declaration order — the
-/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🔣️oracle.json`)
+/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🔮️oracles/🔣️.json`)
 /// declares and `🟣️mutate-jpg-jfif-1-01-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest against the
 /// enum, and `kinds_match_the_committed_catalog` against the manifest.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
 
 crate::impl_serde_op_codec!(JpgBaselineMutation, "jpg-baseline-mutation");
 

@@ -199,6 +199,7 @@ async fn renders_navigator_scene() {
 async fn parses_semio_example_document() {
     let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     assert!(!document.layers.is_empty());
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -267,6 +268,35 @@ async fn composite_scene_syncs_document_and_assets() {
     let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
     assert!(layers.iter().any(|layer| layer.get("kind").and_then(Value::as_str) == Some("adjustment") && layer.get("params").is_some()));
     assert!(document.assets.contains_key("semio-emblem"));
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+}
+
+/// 🛡️ Play-grid boot regression (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the composite
+/// and navigator windows build their `Paint2dScene` through `raster_scene` on every render, and the
+/// demo document carries a populated asset pool plus a populated adjustment `params` map. The sync
+/// projection used to serialize the whole snapshot through `RasterOwnedMap`'s `ToValue`, whose
+/// populated-map guard trapped the wasm guest right after boot.
+#[semio_framework_async_macros::async_test]
+async fn raster_scene_projects_populated_owned_maps_without_wholesale_serialization() {
+    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+    assert!(!document.assets.is_empty(), "the regression needs a populated asset pool");
+    let scene = raster_scene(&document, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite");
+    let sync_value: Value = dsl::os_pack::json::parse(&scene.document_sync_json).expect("sync json");
+    assert!(sync_value.get("assets").is_none(), "sync json must omit assets");
+    assert_eq!(sync_value.get("id").and_then(Value::as_str), Some("semio-demo"));
+    assert_eq!(sync_value.get("title").and_then(Value::as_str), Some("Semio Raster Demo"));
+    let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
+    assert_eq!(layers.len(), 2);
+    assert_eq!(layers[0].get("kind").and_then(Value::as_str), Some("pixel"));
+    assert_eq!(layers[0].get("imageKey").and_then(Value::as_str), Some("semio-emblem"));
+    let brighten = &layers[1];
+    assert_eq!(brighten.get("kind").and_then(Value::as_str), Some("adjustment"));
+    assert_eq!(brighten.get("adjustmentKind").and_then(Value::as_str), Some("brightnessContrast"));
+    let params = brighten.get("params").expect("adjustment params");
+    assert_eq!(params.get("brightness").and_then(Value::as_f64), Some(0.12));
+    assert_eq!(params.get("contrast").and_then(Value::as_f64), Some(0.08));
+    assert!(matches!(dsl::os_pack::json::parse(&scene.assets_json), Ok(Value::Object(_))), "assets json stays a well-formed object");
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -278,6 +308,7 @@ async fn semio_example_preserves_adjustment_params() {
     assert_eq!(adjustment_kind, "brightnessContrast");
     assert!(params.contains_key("brightness"), "fixture brightness must roundtrip");
     assert!(params.contains_key("contrast"), "fixture contrast must roundtrip");
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: layer hover/selection dispatch
@@ -731,6 +762,21 @@ pub(crate) mod mounted {
     }
 }
 
+/// 🔡️ The composite scene is a packed record (`"bytes":[…]` arrays in the projected tree) — decodes
+/// every byte array lossily and returns the flattened text.
+fn packed_scene_text(json: &str) -> String {
+    let mut text = String::new();
+    let mut rest = json;
+    while let Some(start) = rest.find("\"bytes\":[") {
+        let body = &rest[start + 9..];
+        let end = body.find(']').unwrap_or(body.len());
+        let bytes: Vec<u8> = body[..end].split(',').filter_map(|token| token.trim().parse::<u8>().ok()).collect();
+        text.push_str(&String::from_utf8_lossy(&bytes));
+        rest = &body[end..];
+    }
+    text
+}
+
 /// 🚀️ The react shell's boot sequence: the store boots on the empty shell and the shell replays
 /// `setActiveExample demo`, which must plant the Semio-logo carrier (two root layers) through the
 /// retained route without any owned-map clone or un-retired drop (react boots of 2026-09-16).
@@ -740,11 +786,15 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     assert!(app.snapshot().expect("snapshot").layers.is_empty(), "the store boots on the empty shell");
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
     // 🔁️ The boot replay over an already-demo document is a no-op (no second history patch). Emblem
-    // pixels and layer structure are covered by `example_media_operations` and `boot_document` tests;
-    // `snapshot()`/`render()` cannot materialize populated asset maps on this harness path yet.
+    // pixels and layer structure are covered by `example_media_operations` and `boot_document` tests.
     let second = mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
     assert!(second.requested_effects.is_empty(), "re-selecting the boot example must not rewrite the document");
+    // 🖼️ The shell's first publication after the boot replay renders the composite window over the
+    // demo document, whose asset pool now holds the planted emblem: the scene projection must read
+    // the populated owned map through its entries (play-grid boot trap, 2026-09-19).
+    let composite = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
     std::mem::forget(app);
+    assert!(composite.contains("composite") && composite.contains("documentSync"), "the composite window publishes its document-sync lane: {composite}");
 }
 
 //#endregion 🔖️MountedBoot
@@ -758,18 +808,7 @@ async fn mounted_config_lane_publishes_viewport_and_camera() {
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 1024.0, height: 807.0 })).await;
     mounted::dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 12.0, y: -4.0, zoom: 2.0 } })).await;
-    // 🔡️ The composite scene is a packed record (`"bytes":[…]` arrays in the projected tree) — decode
-    // every byte array lossily and search the flattened text.
-    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    let mut text = String::new();
-    let mut rest = json.as_str();
-    while let Some(start) = rest.find("\"bytes\":[") {
-        let body = &rest[start + 9..];
-        let end = body.find(']').unwrap_or(body.len());
-        let bytes: Vec<u8> = body[..end].split(',').filter_map(|token| token.trim().parse::<u8>().ok()).collect();
-        text.push_str(&String::from_utf8_lossy(&bytes));
-        rest = &body[end..];
-    }
+    let text = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
     assert!(text.contains("\"zoom\":2") || text.contains("zoom=2"), "the wheel camera must land in the config store and reach the composite scene: {text}");
     assert!(text.contains("1024"), "the boot viewport must land in the config store: {text}");
 }

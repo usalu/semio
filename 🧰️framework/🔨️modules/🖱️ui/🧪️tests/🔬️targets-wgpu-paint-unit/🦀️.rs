@@ -3,6 +3,7 @@ use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
 use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_SOLID, KIND_WAITING_BORDER};
+use crate::wgpu::select::{select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
 use crate::wgpu::tree::EditState;
 
 fn action() -> ActionDescriptor {
@@ -424,6 +425,76 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
         .flat_map(|layer| layer.ui_instances.iter())
         .any(|instance| (instance.color[0] - theme.row_hover.r).abs() < 0.001 && (instance.color[1] - theme.row_hover.g).abs() < 0.001 && (instance.color[2] - theme.row_hover.b).abs() < 0.001);
     assert!(has_selected_highlight, "the popup row matching the Select's current value should paint a row_hover highlight");
+}
+
+#[test]
+fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
+    let authored = UiNode::Select(UiSelectNode {
+        id: "long-select".into(),
+        value: "0".into(),
+        items: (0..20).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect(),
+        placeholder: None,
+        on_change: action(),
+        presence: UiPresence::default(),
+        menu: None,
+    });
+    let mut tree = UiTree::new();
+    tree.apply_tree(&stack(vec![authored]));
+    let document = tree.root.expect("document root");
+    let root = tree.node(document).and_then(|node| node.first_child).expect("select root");
+    let theme = Theme::default();
+    {
+        let node = tree.node_mut(document).expect("document node");
+        node.layout.x = 0.0;
+        node.layout.y = 0.0;
+        node.layout.width = 160.0;
+        node.layout.height = 100.0;
+    }
+    {
+        let node = tree.node_mut(root).expect("select node");
+        node.layout.x = 8.0;
+        node.layout.y = 62.0;
+        node.layout.width = 120.0;
+        node.layout.height = theme.control_height;
+        node.state.open = true;
+    }
+    let mut sync = RetainedInteractiveSyncCursor::default();
+    for _ in 0..4_096 {
+        if sync_interactive_state_node_step(&mut tree, root, &theme, &mut sync) == RetainedInteractiveSyncStep::Complete {
+            break;
+        }
+    }
+    let popup = tree.node(root).and_then(|node| node.state.select_popup).expect("open Select popup geometry");
+    assert!(popup.menu.y >= SELECT_COLLISION_PADDING);
+    assert!(popup.menu.y + popup.menu.h <= 100.0 - SELECT_COLLISION_PADDING + 0.001, "the painted popup remains inside the viewport");
+    assert!(popup.last_row - popup.first_row < 20, "only a viewport-sized row window is retained for paint and hit testing");
+
+    let mut atlas = FontAtlas::builtin();
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..4_096 {
+        match paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) {
+            RetainedNodePaintStep::Pending => {}
+            RetainedNodePaintStep::Complete => break,
+            RetainedNodePaintStep::Fault => panic!("retained Select paint fault"),
+        }
+    }
+    assert_eq!(draw.glass_regions.len(), 1);
+    assert!(draw.layers.iter().any(|layer| layer.foreground_of == Some(0) && !layer.ui_instances.is_empty()), "popup rows are encoded after their own glass");
+    assert!(!draw.layers.iter().filter(|layer| layer.foreground_of.is_none()).flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.rect[1] >= popup.menu.y && instance.rect[1] < popup.menu.y + popup.menu.h && (instance.params[2] - KIND_GLYPH).abs() < 0.01), "popup row glyphs never remain beneath the glass");
+
+    let before = popup.first_row;
+    let down = popup.down.expect("a long popup has a down chevron");
+    assert!(arm_retained_select_scroll_at(&mut tree, root, down.x + down.w * 0.5, down.y + down.h * 0.5));
+    let mut sync = RetainedInteractiveSyncCursor::default();
+    for _ in 0..4_096 {
+        if sync_interactive_state_node_step(&mut tree, root, &theme, &mut sync) == RetainedInteractiveSyncStep::Complete {
+            break;
+        }
+    }
+    let scrolled = tree.node(root).and_then(|node| node.state.select_popup).expect("scrolled geometry");
+    assert!(scrolled.first_row > before, "one down-chevron press advances the retained row window");
+    assert!((scrolled.scroll - select_scroll_step(select_scroll_viewport_height(&theme, scrolled.menu.h))).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
 }
 
 /// 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
@@ -1142,6 +1213,28 @@ fn a_decoded_image_paints_a_raster_quad_instead_of_the_placeholder() {
     let expected = ui_image_content_rect(Rect::new(layout.x, layout.y, layout.width, layout.height), 4, 2);
     assert_eq!(rasters[0].1.rect, [expected.x, expected.y, expected.w, expected.h]);
     assert_eq!(draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count(), 0, "no alt-text fallback once the bitmap is real");
+}
+
+#[test]
+fn a_decoded_overlay_image_keeps_its_upload_identity_in_the_overlay_raster_lane() {
+    let src = png_data_url(4, 2);
+    assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready);
+    let (tree, root, theme, mut atlas) = setup(&image_node("dialog-picture", &src));
+    let mut draw = DrawList::default();
+    let mut cursor = RetainedNodePaintCursor::default();
+    for _ in 0..8 {
+        draw.begin_overlay_route();
+        let step = paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor);
+        draw.end_overlay_route();
+        if step == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
+    assert_eq!(draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).count(), 0);
+    let overlays: Vec<_> = draw.layers.iter().flat_map(|layer| layer.overlay_raster_instances.iter()).collect();
+    assert_eq!(overlays.len(), 1);
+    assert_eq!(overlays[0].0, src);
+    assert_eq!(ui_image_natural_size(&src), Some((4, 2)), "routing does not alter decoded dimensions");
 }
 
 /// ⚖️ Law: the paint arm ADMITS the source itself. `admit_ui_image` had only test callers, so in

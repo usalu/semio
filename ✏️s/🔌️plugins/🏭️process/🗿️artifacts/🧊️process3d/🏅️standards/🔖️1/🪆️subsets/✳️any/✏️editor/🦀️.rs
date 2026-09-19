@@ -322,6 +322,20 @@ const PROCESS3D_CONFIG_FILTER_STORE_BYTES: usize = 16_384;
 /// exactly those entries before anything is retained, so the app never stores the whole closure.
 pub(crate) const PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES: usize = 24_576;
 const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = PROCESS3D_CONFIG_FILTER_STORE_BYTES + PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES;
+/// 📏️ What op-encoding one config mutation adds around its string field: the `OpBinary` format
+/// byte, the variant-ordinal varint and the record body's field framing/length prefix.
+const PROCESS3D_CONFIG_MUTATION_ENVELOPE_BYTES: usize = 64;
+/// 📏️ The exact output cap of the resumable (config-lane) routes. Their largest output is ONE
+/// `Process3dConfigMutation::SetContributions` whose `json` [`installable_contributions`] bounds to
+/// [`PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES`], so the cap is that lane plus the op envelope.
+///
+/// 🏁️ It used to be the 16 KiB gesture output every bounded route shares, while the contributions
+/// lane beside it admits 24 KiB: the real four-extension roster (19 823 B) distilled fine, fit the
+/// config store, and was then refused at the host-configuration gate with `host configuration
+/// command 'setContributions' exceeds its exact output cap` — so the app never installed its
+/// machine catalogs (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). The input cap already
+/// named the pack's own bound; the output cap now names the lane's.
+pub(crate) const PROCESS3D_RESUMABLE_OUTPUT_BYTES: usize = PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES + PROCESS3D_CONFIG_MUTATION_ENVELOPE_BYTES;
 
 /// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
 /// retained command whose wire is a host pack, not a gesture — it carries the whole capability
@@ -367,9 +381,10 @@ fn process3d_bounded_contract() -> ToolExecutionContract {
 /// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
 /// every tool it serves, which the proof catalogue must join exactly. Widening the ADMISSION does
 /// not widen what a sun or engagement gesture may send: [`process3d_retained_raw_bytes`] is what
-/// `process3d_resumable_extent` and the payload both bound, per tool id.
+/// `process3d_resumable_extent` and the payload both bound, per tool id. Its output cap is
+/// [`PROCESS3D_RESUMABLE_OUTPUT_BYTES`] for the same reason: the one config mutation that route emits.
 fn process3d_resumable_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+    ToolExecutionContract::resumable(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, PROCESS3D_RESUMABLE_OUTPUT_BYTES, 7_500, 1, 1)
 }
 
 fn process3d_string_units(value: &str) -> usize {

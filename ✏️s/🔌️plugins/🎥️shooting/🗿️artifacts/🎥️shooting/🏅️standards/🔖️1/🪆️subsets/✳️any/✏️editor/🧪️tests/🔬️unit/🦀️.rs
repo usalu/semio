@@ -587,3 +587,53 @@ async fn export_import_and_download_operations() {
     }
 }
 //#endregion 🔖️Export
+
+//#region 🔖️ExampleLoad
+/// 🚪️ The browser host answers `setActiveExample` by handing the published `LoadDocument` back through
+/// the document archive door. Without a retained initialization job the store refused the envelope with
+/// `artifact-store.persisted-initializer-refused`; every offered example must settle `Ready` and become
+/// the live document.
+#[semio_framework_async_macros::async_test]
+async fn every_example_load_settles_through_the_host_document_archive_door() {
+    use set_active_example::{SetActiveExample, SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};
+    for (archive_id, example_id) in [(91_u64, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT), (92, SHOOTING_EXAMPLE_DEFAULT_ID)] {
+        let mut app = shooting_app().await;
+        app.dispatch_typed(ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local")).await.expect("setActiveExample is admitted");
+        let mut loaded = None;
+        for _ in 0..100_000 {
+            PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("publication");
+            if let Some(page) = app.take_typed_operation_result_page(context::SHOOTING_TEST_INSTANCE) {
+                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge"));
+            }
+            if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+                loaded = Some((pack, spr));
+            }
+            app.take_typed_operation_event();
+            app.take_typed_operation_ui_scope();
+            if !app.has_pending_typed_operations() {
+                break;
+            }
+            std::thread::yield_now();
+        }
+        let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
+        let expected = <ShootingSnapshot as store::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
+        PluginApp::begin_document_archive_load(&mut *app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+        let mut status = None;
+        for _ in 0..1_000_000 {
+            let polled = PluginApp::poll_document_archive_load(&mut *app, archive_id).await.expect("archive status");
+            if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+                status = Some(polled);
+                break;
+            }
+            PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+            std::thread::yield_now();
+        }
+        let status = status.expect("archive load reaches a terminal state");
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{example_id}: {}", String::from_utf8_lossy(&status.fault));
+        PluginApp::acknowledge_document_archive_load(&mut *app, archive_id).expect("archive acknowledgement");
+        assert_eq!(app.snapshot().expect("loaded snapshot"), expected, "{example_id} became the live document");
+    }
+}
+//#endregion 🔖️ExampleLoad

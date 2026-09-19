@@ -8,17 +8,29 @@ use crate::schema::snapshot::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangeHeaderFieldsMutation {
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub header_size: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub row_order: Option<BmpRowOrder>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub planes: Option<u16>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bits_per_pixel: Option<u16>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub compression: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub image_size: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub x_pixels_per_meter: Option<i32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub y_pixels_per_meter: Option<i32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub colors_used: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub colors_important: Option<u32>,
 }
 //#endregion Payload

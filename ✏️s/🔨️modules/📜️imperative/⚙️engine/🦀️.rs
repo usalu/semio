@@ -1,6 +1,6 @@
 //! ⚙️ Path/Step data model and the sequential executor that runs a `Path` against a `neural_engine::Registry`.
 
-use neural_engine::{Atom, Dictionary, Registry, Value, SCHEMA_KEY};
+use neural_engine::{Atom, ColdRetire, Dictionary, Registry, Value, SCHEMA_KEY};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,21 @@ pub struct Step {
 #[value(rename_all = "camelCase")]
 pub struct Path {
     pub steps: Vec<Step>,
+}
+
+/// 🧊️ A step owns its params dictionary and every body path — all fail-closed roots.
+impl neural_engine::ColdRetire for Step {
+    fn retire_cold(self) {
+        self.params.retire_cold();
+        self.bodies.retire_cold();
+    }
+}
+
+/// 🧊️ Retires every step of the path.
+impl neural_engine::ColdRetire for Path {
+    fn retire_cold(self) {
+        self.steps.retire_cold();
+    }
 }
 
 impl Path {

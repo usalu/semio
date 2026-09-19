@@ -284,8 +284,9 @@ async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
     use crate::standards::v1::subsets::object::schema::mutations::create_brep;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Object(Default::default()) };
+    // A Semio child's slot id IS its target artifact id (`validate_semio_child_identity`).
     let target = store::os_io::ArtifactRef { artifact_id: "brep-x".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
-    let m = SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "b1".into(), target }) });
+    let m = SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brep-x".into(), target }) });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Object(_)));
     assert!(!diff.diff().is_empty());

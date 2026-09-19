@@ -90,14 +90,6 @@ pub const REC_ACTOR_DICT: u8 = 0x02;
 pub const REC_STR_DICT: u8 = 0x03;
 /// @emoji ✏️ One edit (a batch of forward ops, optionally inverse ops + explicit meta).
 pub const REC_EDIT: u8 = 0x04;
-/// @emoji 💾️ One named change (a save point referencing edits).
-pub const REC_CHANGE: u8 = 0x05;
-/// @emoji 🚩️ One checkpoint (a durable milestone referencing changes).
-pub const REC_CHECKPOINT: u8 = 0x06;
-/// @emoji 🌿️ One named alternative (branch) referencing checkpoints.
-pub const REC_ALTERNATIVE: u8 = 0x07;
-/// @emoji 🎯️ Marks the currently-active alternative.
-pub const REC_ACTIVE: u8 = 0x08;
 /// @emoji 🏔️ A frontier summary snapshot.
 pub const REC_FRONTIER: u8 = 0x09;
 /// @emoji 📸️ A materialized snapshot body (opaque to this crate family).
@@ -125,7 +117,7 @@ pub const REC_PADDING: u8 = 0x7F;
 /// @emoji ❗️ True iff an unrecognized `kind` byte with this value must abort the reader rather
 /// than being skipped (see `protocol_format`'s skip-unknown rule).
 pub fn is_critical_kind(kind: u8) -> bool {
-    matches!(kind, REC_DOC | REC_EDIT | REC_CHANGE | REC_CHECKPOINT | REC_ALTERNATIVE | REC_ACTIVE | REC_COMMIT | REC_ACTOR_DICT | REC_STR_DICT)
+    matches!(kind, REC_DOC | REC_EDIT | REC_COMMIT | REC_ACTOR_DICT | REC_STR_DICT)
 }
 //#endregion 🔖️RecordKinds
 

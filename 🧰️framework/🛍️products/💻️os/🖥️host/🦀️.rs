@@ -353,13 +353,13 @@ pub mod host {
 
     //#region 🔖️BackboneDocument
     /// 🧬️ Generic backbone-document envelope — mirrors the dissolved `OsDocument`'s exact shape
-    /// (schema/id/name/vcs/cursor/outcomes/conflicts/backbone), parametrized over any `<P, Op>` pair
+    /// (schema/id/name/vcs/transitions/outcomes/conflicts/backbone), parametrized over any `<P, Op>` pair
     /// `store::create_document_envelope`/`materialize_document_snapshot`/`print_document_pack`/
     /// `parse_document_pack` already support generically — nothing OS-specific left to hardcode. See
     /// `## The inversion` in the plan: `OsSnapshot`/`OsMutation`/`OsDocument` dissolve into the three
     /// type aliases below instead of one bespoke studio-only document type.
     /// 🌱️ `Serialize`/`Deserialize` dropped outright (not dual-derived): every field already
-    /// carries `ToValue`/`FromValue` (`ArtifactVcs`, `store::ArtifactCursor`, `protocol::
+    /// carries `ToValue`/`FromValue` (`ArtifactVcs`, `protocol::MutationEnvelope`, `protocol::
     /// EditMessages`/`Conflict`, `ArtifactBackboneRef`), and no caller anywhere in this crate
     /// requires `BackboneDocument: Serialize` as a trait bound or calls `serde_json` on one directly
     /// — confirmed by reading every `serde_json::to_*`/`from_*` call site in this file before
@@ -372,7 +372,9 @@ pub mod host {
         pub id: String,
         pub name: String,
         pub vcs: ArtifactVcs<P, Op>,
-        pub cursor: store::ArtifactCursor,
+        /// @emoji 🔀️ The document's history transitions; with `vcs.edits` the complete event log
+        /// every position (applied/redo/checkpoint/alternative) is folded from.
+        pub transitions: Vec<protocol::MutationEnvelope>,
         pub edit_messages: Vec<protocol::EditMessages>,
         pub conflicts: Vec<protocol::Conflict>,
         pub backbone: Option<ArtifactBackboneRef>,
@@ -388,7 +390,7 @@ pub mod host {
                 ("id".to_string(), self.id.to_value()),
                 ("name".to_string(), self.name.to_value()),
                 ("vcs".to_string(), self.vcs.to_value()),
-                ("cursor".to_string(), self.cursor.to_value()),
+                ("transitions".to_string(), self.transitions.to_value()),
                 ("editMessages".to_string(), self.edit_messages.to_value()),
                 ("conflicts".to_string(), self.conflicts.to_value()),
             ];
@@ -412,7 +414,7 @@ pub mod host {
             let mut id = None;
             let mut name = None;
             let mut vcs = None;
-            let mut cursor = None;
+            let mut transitions = None;
             let mut edit_messages = None;
             let mut conflicts = None;
             let mut backbone = None;
@@ -422,7 +424,7 @@ pub mod host {
                     "id" => id = Some(String::from_value(entry).map_err(|e| e.under("id"))?),
                     "name" => name = Some(String::from_value(entry).map_err(|e| e.under("name"))?),
                     "vcs" => vcs = Some(ArtifactVcs::from_value(entry).map_err(|e| e.under("vcs"))?),
-                    "cursor" => cursor = Some(store::ArtifactCursor::from_value(entry).map_err(|e| e.under("cursor"))?),
+                    "transitions" => transitions = Some(Vec::from_value(entry).map_err(|e| e.under("transitions"))?),
                     "editMessages" => edit_messages = Some(Vec::from_value(entry).map_err(|e| e.under("editMessages"))?),
                     "conflicts" => conflicts = Some(Vec::from_value(entry).map_err(|e| e.under("conflicts"))?),
                     "backbone" => backbone = Some(ArtifactBackboneRef::from_value(entry).map_err(|e| e.under("backbone"))?),
@@ -434,11 +436,18 @@ pub mod host {
                 id: id.ok_or_else(|| ValueError::new("BackboneDocument missing id"))?,
                 name: name.ok_or_else(|| ValueError::new("BackboneDocument missing name"))?,
                 vcs: vcs.ok_or_else(|| ValueError::new("BackboneDocument missing vcs"))?,
-                cursor: cursor.ok_or_else(|| ValueError::new("BackboneDocument missing cursor"))?,
+                transitions: transitions.unwrap_or_default(),
                 edit_messages: edit_messages.unwrap_or_default(),
                 conflicts: conflicts.unwrap_or_default(),
                 backbone,
             })
+        }
+    }
+
+    impl<P, Op: Mutation<P>> BackboneDocument<P, Op> {
+        /// @emoji 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
+        pub fn applied_edit_ids(&self) -> Result<Vec<String>, VcsError> {
+            store::fold_event_log::<P, Op>(&self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts).map(|fold| fold.applied)
         }
     }
 
@@ -468,7 +477,7 @@ pub mod host {
             id: id.into(),
             name: name.into(),
             vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).into_owners().vcs,
-            cursor: store::ArtifactCursor::default(),
+            transitions: Vec::new(),
             edit_messages: Vec::new(),
             conflicts: Vec::new(),
             backbone: None,
@@ -476,7 +485,7 @@ pub mod host {
     }
 
     /// @emoji 🌉️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
-    /// the app-level `name` and preserving its complete persisted cursor.
+    /// the app-level `name` and preserving its complete event log.
     fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> ArtifactEnvelope<P, Op>
     where
         P: Clone,
@@ -488,13 +497,14 @@ pub mod host {
             vcs: document.vcs.clone(),
             backbone: document.backbone.clone(),
             active_alternative_id: None,
-            cursor: Some(document.cursor.clone()),
+            cursor: None,
             dialect: None,
             migrated_from: None,
             owner: None,
             lanes: std::collections::BTreeMap::new(),
             edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
+            transitions: document.transitions.clone(),
         })
     }
 
@@ -539,10 +549,10 @@ pub mod host {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
 
-    /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + applied-edit cursor +
-    /// vcs) — the persisted/synced form. `name` rides as a `store::encode_document_pack_bytes`-framed
-    /// blob wrapping a nested `pack`+`spr` pair, and the complete cursor rides through the envelope
-    /// so `spr` restores the exact undo/redo/checkpoint position.
+    /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + genesis + event log)
+    /// — the persisted/synced form. `name` rides as a `store::encode_document_pack_bytes`-framed blob
+    /// wrapping a nested `pack`+`spr` pair; `spr` carries the events, whose fold restores the exact
+    /// undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
         P: Clone + store::ArtifactPack,
@@ -571,8 +581,7 @@ pub mod host {
         // and letting it fall out of scope aborts the guest at runtime.
         let owners = parsed.envelope.into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
-        let cursor = owners.cursor.ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
-        Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, cursor, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
+        Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: owners.transitions, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
     }
     //#endregion 🔖️BackboneDocument
 
@@ -790,20 +799,20 @@ pub mod host {
 
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
-            let cursor = document.cursor.clone();
             let envelope = ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
                 schema: document.schema,
                 id: document.id,
                 vcs: document.vcs,
                 backbone: document.backbone,
                 active_alternative_id: None,
-                cursor: Some(cursor),
+                cursor: None,
                 dialect: None,
                 migrated_from: None,
                 owner: None,
                 lanes: std::collections::BTreeMap::new(),
                 edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
                 conflicts: document.conflicts,
+                transitions: document.transitions,
             });
             let inner = resolve_kernel_future(ArtifactStore::new(envelope))?;
             Ok(Self { inner, name: document.name })
@@ -832,7 +841,7 @@ pub mod host {
                 id: envelope.id.clone(),
                 name: self.name.clone(),
                 vcs: envelope.vcs.clone(),
-                cursor: envelope.cursor.clone().expect("artifact stores persist an explicit cursor"),
+                transitions: envelope.transitions.clone(),
                 edit_messages: envelope.edit_messages.iter().cloned().collect(),
                 conflicts: envelope.conflicts.clone(),
                 backbone: envelope.backbone.clone(),
@@ -1136,7 +1145,7 @@ pub mod host {
                 id: String::new(),
                 name: String::new(),
                 vcs,
-                cursor: store::ArtifactCursor::default(),
+                transitions: Vec::new(),
                 edit_messages: Vec::new(),
                 conflicts: Vec::new(),
                 backbone: None,
@@ -1149,13 +1158,12 @@ pub mod host {
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
         let owners = parsed.envelope.into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
-        let cursor = owners.cursor.ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
         let document = BackboneDocument {
             schema: owners.schema,
             id: owners.id,
             name: String::new(),
             vcs: owners.vcs,
-            cursor,
+            transitions: owners.transitions,
             edit_messages,
             conflicts: owners.conflicts,
             backbone: owners.backbone,

@@ -2011,7 +2011,7 @@ export type DispatchReport = {
   readonly messages: readonly MutationMessage[];
 };
 
-/** @emoji 🔀️ The report one `ingest_remote`/`merge_remote_snapshot`/`resolve_conflict` merge
+/** @emoji 🔀️ The report one `ingest_remote`/`resolve_conflict` merge
  * produces — TS twin of Rust `MergeReport`. Packed onto the wire as `AppFrame::MergeReport.report`,
  * pushed unsolicited after every ingest alongside `DocumentChanged`. */
 export type MergeReport = {

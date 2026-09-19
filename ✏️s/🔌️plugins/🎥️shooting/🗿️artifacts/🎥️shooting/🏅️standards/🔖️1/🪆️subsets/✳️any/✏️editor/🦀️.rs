@@ -727,6 +727,17 @@ impl ArtifactEditor for ShootingPlayApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
+    /// 🏗️ Admits the whole-document replacement `reset_document_effect` emits for every example switch
+    /// and snapshot import. The trait default refuses the envelope, so the host answered every
+    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load door.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::SHOOTING_DOCUMENT_SCHEMA, operation, generation))
+    }
+
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }

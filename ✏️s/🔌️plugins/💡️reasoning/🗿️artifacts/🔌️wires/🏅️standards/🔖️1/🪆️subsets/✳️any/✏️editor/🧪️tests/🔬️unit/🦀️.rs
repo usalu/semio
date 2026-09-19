@@ -250,13 +250,36 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
-        crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len()
-    })
-    .await;
+    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_framework_plugin::PluginApp;
+    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len();
+    let mut sender = new_app().await;
+    let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
+    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    sender.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local")).await.expect("apply command");
+    settle_registered_typed_operation(&mut sender, meta("local").instance_id).await.expect("the edit publishes");
+    let mut envelopes = Vec::new();
+    for message in far.receive().await.expect("receive") {
+        if let BackboneMessage::Mutations { envelopes: operations } = message {
+            envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
+        }
+    }
+    assert!(!envelopes.is_empty(), "the applied edit must reach the channel as events");
+    let operations = protocol::encode_envelopes(&envelopes);
+    let mut receiver = new_app().await;
+    let genesis = nodes(&receiver);
+    receiver.ingest_operations(&operations).await.expect("ingest once");
+    let once = nodes(&receiver);
+    assert_eq!(once, genesis + 1, "ingesting the events must materialize the edit");
+    receiver.ingest_operations(&operations).await.expect("ingest twice");
+    assert_eq!(nodes(&receiver), once, "feeding the same operation twice must not double-apply");
+    sender.detach_backbone().await.expect("sender releases its backbone");
+    crate::editor::wires::unit_tests::context::close(sender);
+    crate::editor::wires::unit_tests::context::close(receiver);
 }
 
-/// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
+/// 🧪️ The definitional merge proof: A adds a node while B relates two others — disjoint edits
 /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
@@ -275,30 +298,35 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
     let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
     let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+    crate::editor::wires::unit_tests::context::retire_envelope(base_envelope);
     instance_a.load_document_pack(&base_files).await.expect("load a");
     instance_b.load_document_pack(&base_files).await.expect("load b");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-    // A adds node-3 (a new node); B moves node-2 (a PatchNode) — disjoint edits on the graph.
+    // A adds node-3; B relates node-1 to node-2 — disjoint edits on the graph.
+    let receiver = meta("local").instance_id;
     instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
-    instance_b.dispatch_typed(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-2".into()), x: 0.0, y: 0.0 }), &meta("actor-b")).await.expect("b down");
-    instance_b.dispatch_typed(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 50.0, y: 60.0, samples: Vec::new() }), &meta("actor-b")).await.expect("b move");
-    instance_b.dispatch_typed(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), &meta("actor-b")).await.expect("b up");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }), &meta("actor-b")).await.expect("b relates node-1 to node-2");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
 
-    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
     // A's added node-3 survives on both.
     assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
     assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
-    // B's move of node-2 survives on both.
-    let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(|node| crate::schema::node_position(&node)).unwrap().0;
-    assert_eq!(x_of(&projection_a), 50.0, "A converges on B's move");
-    assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
+    let edges = |document: &WiresSnapshot| crate::schema::fixture_edges(&crate::wires_working_board(document)).len();
+    assert_eq!(edges(&projection_a), 1, "A converges on B's relationship");
+    assert_eq!(edges(&projection_b), 1, "B keeps its own relationship");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
+    crate::editor::wires::unit_tests::context::close(instance_a);
+    crate::editor::wires::unit_tests::context::close(instance_b);
 }
 //#endregion 🔖️CrossCutting
 
@@ -315,7 +343,7 @@ async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history
     assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
     assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
-    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "changes": history.changes.len(), "checkpoints": history.checkpoints.len(), "alternatives": history.alternatives.len(), "conflicts": history.conflicts.len() });
+    let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "transitions": history.transitions.len(), "conflicts": history.conflicts.len() });
     assert_eq!(actual, expected);
     println!("[DEBUG] wires reset preserves its source and pack and emits neutral edit-free history without an envelope owner");
 }

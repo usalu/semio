@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-entry-data")]
 pub struct SetEntryData {
     pub(crate) name: String,
     #[dsl(base64)]

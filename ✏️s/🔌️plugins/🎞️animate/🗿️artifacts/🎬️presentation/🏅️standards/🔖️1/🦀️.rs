@@ -13,8 +13,8 @@ use semio_framework_plugin::StandardId;
 pub fn standard<PA>() -> StandardDeclaration<PA>
 where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentationPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::animate::AnimatePresentationViewer>>>,
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.animate.presentation"], extensions: &["presentation"] }, subsets: vec![subsets::any::subset::<PA>()] }
 }

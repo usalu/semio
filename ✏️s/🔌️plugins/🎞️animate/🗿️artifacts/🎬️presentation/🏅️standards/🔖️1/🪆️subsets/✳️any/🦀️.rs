@@ -21,8 +21,8 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 pub fn subset<PA>() -> SubsetDeclaration<PA>
 where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::AnimatePresentationPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::AnimatePresentationViewer>>>,
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     SubsetDeclaration {
         dialect: crate::ANIMATE_DIALECT,

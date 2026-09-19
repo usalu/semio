@@ -1186,7 +1186,7 @@ fn recursive_member_history_offset(bytes: &[u8]) -> usize {
     panic!("recursive member envelope lacks its bounded snapshot frame")
 }
 
-async fn append_missing_edit_reference_to_member_history(entry: &mut protocol::OwnedDocumentMemberPackEntry) {
+async fn append_malformed_transition_to_member_history(entry: &mut protocol::OwnedDocumentMemberPackEntry) {
     let history_offset = recursive_member_history_offset(&entry.envelope_pack);
     let mut history = Box::pin(protocol::decode_history(
         &entry.envelope_pack[history_offset..],
@@ -1194,11 +1194,12 @@ async fn append_missing_edit_reference_to_member_history(entry: &mut protocol::O
     ))
     .await
     .expect("decode recursive member history fixture");
-    history.changes.push(protocol::HistoryChange {
+    history.transitions.push(protocol::HistoryTransitionRecord {
         id: "malformed-child-after-valid-prefix".into(),
-        saved_at: "2026-09-12T00:00:00Z".into(),
-        edit_ids: vec!["missing-child-edit-after-valid-prefix".into()],
-        description: Some("must fail after retained member framing and semantic decode".into()),
+        actor: "missing-child-edit-after-valid-prefix".into(),
+        hlt: (1, 1, 0),
+        dependencies: Vec::new(),
+        payload: vec![0xff],
     });
     let encoded = Box::pin(protocol::encode_history(
         &history,
@@ -1611,11 +1612,12 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     ))
         .await
         .expect("decode recursive archive history fixture");
-    history.changes.push(protocol::HistoryChange {
+    history.transitions.push(protocol::HistoryTransitionRecord {
         id: "malformed-after-valid-prefix".into(),
-        saved_at: "2026-09-12T00:00:00Z".into(),
-        edit_ids: vec!["missing-edit-after-valid-prefix".into()],
-        description: Some("must fail after retained framing and semantic decode".into()),
+        actor: "missing-edit-after-valid-prefix".into(),
+        hlt: (1, 1, 0),
+        dependencies: Vec::new(),
+        payload: vec![0xff],
     });
     malformed_history.parent_spr = Box::pin(protocol::encode_history(
         &history,
@@ -1633,7 +1635,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after semantic history refusal"), persisted);
 
     let mut malformed_child_history = persisted.clone();
-    Box::pin(append_missing_edit_reference_to_member_history(&mut malformed_child_history.members[0])).await;
+    Box::pin(append_malformed_transition_to_member_history(&mut malformed_child_history.members[0])).await;
     PluginApp::begin_document_archive_load(app.as_mut(), 86, malformed_child_history).expect("semantic recursive child refusal retains admission owner");
     let malformed_child_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 86)).await;
     assert_eq!(malformed_child_status.state, protocol::DocumentArchiveLoadState::Fault);

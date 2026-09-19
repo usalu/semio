@@ -315,7 +315,7 @@ async fn semantic_history(fixture: &Value, row: &Value) -> Vec<u8> {
     let mut log = HistoryLog {
         doc_id: string(0),
         schema: SemioFixture::OPEN_DECLARATIONS[6].schema.into(),
-        composition: Some(HistoryComposition { owner: Some((format!("{}!{}@{}/{}", string(4), string(5), string(6), string(7)), string(8), string(9))), dialect: Some((string(1), string(2), string(3))), checkpoint_pins: Vec::new() }),
+        composition: Some(HistoryComposition { owner: Some((format!("{}!{}@{}/{}", string(4), string(5), string(6), string(7)), string(8), string(9))), dialect: Some((string(1), string(2), string(3))) }),
         ..HistoryLog::default()
     };
     let value = row["value"].as_str().unwrap();
@@ -530,7 +530,7 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                     limits.dictionary_entries = 8193;
                 }
                 assert!(matches!(selected.begin_dictionary(limits, &mut cx), Err(error) if Some(error) == expected_error(row)));
-                assert_eq!(selected.input.as_ref().unwrap().retained_input_bytes(), 274);
+                assert_eq!(selected.input.as_ref().unwrap().retained_input_bytes(), 260);
                 let mut retry_sequence = 0;
                 let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);
                 assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut retry), Err(error) if Some(error) == expected_error(row)));

@@ -589,7 +589,7 @@ pub enum ArtifactEvent {
 fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
     match decode_hot_backbone_message_exact(message).map_err(|error| error.to_string())? {
         BackboneMessage::Mutations { envelopes } => decode_document_backbone_envelopes_exact(&envelopes).map_err(|error| error.to_string()),
-        BackboneMessage::Snapshot { .. } | BackboneMessage::Ack { .. } => Err("document backbone requires a canonical mutation message".into()),
+        BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => Err("document backbone requires a canonical mutation message".into()),
     }
 }
 
@@ -775,7 +775,6 @@ use crate::os_spr::ArtifactId;
 /// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
 /// and the envelope built from re-reading that same spr always agree, fixing the actor's old
 /// self-re-ingest bug (mixing envelope op ids with raw JSON edit ids) by construction.
-#[cfg(not(target_arch = "wasm32"))]
 async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
     match &edit.meta {
         Some(metas) if metas.len() == edit.ops.len() => metas.iter().enumerate().map(|(index, meta)| meta.op_id.clone().unwrap_or_else(|| format!("{}#{index}", edit.id))).collect(),
@@ -788,18 +787,31 @@ fn document_archive_hash(archive: &[u8]) -> String {
     semio_framework_hash::hash_bytes(archive)
 }
 
-/// @emoji 🆔️ Every op id across every edit in an spr byte log — the actor's dedup/known-ids set,
-/// read directly off the binary history (NEVER via `parse_document_spr`, whose meta-absent branch
-/// mints fresh random ids on every read and would make dedup unstable across reads).
+/// @emoji 🆔️ Every event id in an spr byte log — each edit's op ids and each transition's id — the
+/// actor's dedup/known-ids set, read directly off the binary history (NEVER via
+/// `parse_document_spr`, whose meta-absent branch mints fresh random ids on every read).
 #[cfg(not(target_arch = "wasm32"))]
 async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
-    let reader = crate::os_spr::HistoryReader::open(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut ids = std::collections::HashSet::new();
-    for edit in reader.edits().await {
-        let edit = edit.map_err(|error| error.to_string())?;
-        ids.extend(op_ids_of(&edit).await);
+    for edit in &log.edits {
+        ids.extend(op_ids_of(edit).await);
     }
+    ids.extend(log.transitions.iter().map(|transition| transition.id.clone()));
     Ok(ids)
+}
+
+/// @emoji 📜️ Every event an spr byte log persists, as the causal envelopes a store ingests: each
+/// edit's operations in log order, then every history transition — a persisted document IS its
+/// genesis pack plus exactly these events.
+async fn spr_events(spr: &[u8], document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
+    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+    let mut events = Vec::new();
+    for edit in &log.edits {
+        events.extend(envelopes_from_history_edit(edit, document_id, schema).await?);
+    }
+    events.extend(log.transitions.iter().map(|transition| transition.to_envelope(document_id)));
+    Ok(events)
 }
 
 /// @emoji 📦️ Rebuilds real {@link MutationEnvelope}s (one per forward op, genuine `OpBinary`
@@ -807,7 +819,6 @@ async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, Str
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
-#[cfg(not(target_arch = "wasm32"))]
 async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
     let op_ids = op_ids_of(edit).await;
     let mut envelopes = Vec::with_capacity(edit.ops.len());
@@ -1959,7 +1970,7 @@ mod native_actor {
                     self.persist_operations(&envelopes).await;
                     self.relay_operations_to_hub(&envelopes).await;
                 }
-                BackboneMessage::Snapshot { pack, spr } => self.persist_snapshot(pack, spr).await,
+                BackboneMessage::Genesis { pack } => self.persist_genesis(pack).await,
                 BackboneMessage::Ack { .. } => {}
             }
             Ok(true)
@@ -1990,8 +2001,23 @@ mod native_actor {
             self.current_archive = Some(bytes);
         }
 
-        /// @emoji 📸️ Records a full pack+spr snapshot as the canonical persisted state.
-        async fn persist_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
+        /// @emoji 🧬️ Adopts the store's genesis: an empty binding persists it as the document's
+        /// initial snapshot with an event-free history; a bound document must share it, otherwise
+        /// the store names a different document and the mismatch is reported, never merged.
+        async fn persist_genesis(&mut self, pack: Vec<u8>) {
+            if let Some(current) = self.current_pack.as_ref() {
+                if *current != pack {
+                    self.emit(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new("genesisMismatch"),
+                        message: "the attached store names a different initial snapshot than the persisted document".into(),
+                        target: vec![format!("folder://{}", self.document_id)],
+                        op_index: None,
+                    }));
+                }
+                return;
+            }
+            let spr = crate::os_store::empty_document_spr(&self.document_id, &self.schema).await;
             let archive = crate::os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
             if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
                 self.persist_archive(bytes, archive).await;
@@ -2006,13 +2032,18 @@ mod native_actor {
             }
             let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
             let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
+            let mut new_transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
             for envelope in envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())) {
-                new_edits.push(history_edit_from_envelope(envelope).await);
+                if crate::os_spr::is_history_transition(envelope) {
+                    new_transitions.push(crate::os_spr::HistoryTransitionRecord::from_envelope(envelope));
+                } else {
+                    new_edits.push(history_edit_from_envelope(envelope).await);
+                }
             }
-            if new_edits.is_empty() {
+            if new_edits.is_empty() && new_transitions.is_empty() {
                 return;
             }
-            let Ok(new_spr) = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).await else { return };
+            let Ok(new_spr) = crate::os_store::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else { return };
             let mut archive = match self.current_archive.as_deref() {
                 Some(bytes) => crate::os_spr::decode_document_archive_bytes(bytes).await.ok(),
                 None => None,
@@ -2048,16 +2079,8 @@ mod native_actor {
             let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
 
             if lost.is_empty() && !new_ids.is_empty() {
-                let Ok(reader) = crate::os_spr::HistoryReader::open(&spr, &crate::os_spr::DecodeOptions::default()).await else { return };
-                let mut appended = Vec::new();
-                for edit in reader.edits().await {
-                    let Ok(edit) = edit else { break };
-                    if op_ids_of(&edit).await.iter().any(|id| new_ids.contains(id)) {
-                        if let Ok(mut envelopes) = envelopes_from_history_edit(&edit, &self.document_id, &self.schema).await {
-                            appended.append(&mut envelopes);
-                        }
-                    }
-                }
+                let Ok(events) = spr_events(&spr, &self.document_id, &self.schema).await else { return };
+                let appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
                 self.known_op_ids.extend(new_ids);
                 self.current_pack = Some(pack);
                 self.current_spr = Some(spr);
@@ -2079,7 +2102,7 @@ mod native_actor {
                     self.current_spr = Some(spr.clone());
                     self.current_archive = Some(bytes.clone());
                     self.last_written_hash = Some(hash);
-                    self.deliver_archive(bytes, archive).await;
+                    self.deliver_archive(bytes).await;
                 }
             }
         }
@@ -2355,11 +2378,16 @@ mod native_actor {
             if let Some(folder) = self.folder.as_ref() {
                 folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
             }
-            if let Err(error) = self.remote.push(BackboneMessage::Snapshot { pack: pair.pack.clone(), spr: pair.spr.clone() }).await {
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+            let pushed = match self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await {
+                Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await,
+                result => result,
+            };
+            if let Err(error) = pushed {
                 if let (Some(folder), Some(previous)) = (self.folder.as_ref(), previous) {
                     let _ = folder.write_archive(&previous).await;
                 }
-                return Err(format!("artifact bootstrap store replacement failed: {error}"));
+                return Err(format!("artifact bootstrap event delivery failed: {error}"));
             }
             self.known_op_ids = op_ids;
             self.current_pack = Some(pair.pack.clone());
@@ -2743,9 +2771,10 @@ mod native_actor {
             true
         }
 
-        /// @emoji 🗃️ Pushes a recursive archive's root snapshot into the store queue and publishes the complete closure.
-        async fn deliver_archive(&mut self, bytes: Vec<u8>, archive: crate::os_spr::DocumentArchivePack) {
-            let _ = self.remote.push(BackboneMessage::Snapshot { pack: archive.parent_pack, spr: archive.parent_spr }).await;
+        /// @emoji 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be
+        /// expressed as new events, so it is a document replacement: the host reloads the store from
+        /// the archive by replaying its events — nothing is pushed into (or merged by) the live store.
+        async fn deliver_archive(&mut self, bytes: Vec<u8>) {
             self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: bytes });
         }
 
@@ -3508,7 +3537,7 @@ mod wasm_actor {
                     let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                     self.relay_operations(&envelopes).await;
                 }
-                BackboneMessage::Snapshot { .. } | BackboneMessage::Ack { .. } => {}
+                BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
             }
             Ok(true)
         }
@@ -3669,7 +3698,11 @@ mod wasm_actor {
                 return Err("artifact bootstrap codec changed during transfer".into());
             }
             (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| error.to_string())?;
-            self.remote.push(BackboneMessage::Snapshot { pack: pair.pack.clone(), spr: pair.spr.clone() }).await.map_err(|error| error.to_string())?;
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await?;
+            self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| error.to_string())?;
+            if !events.is_empty() {
+                self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| error.to_string())?;
+            }
             let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
             let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
             let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });

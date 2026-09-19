@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": { "incremental": false, "types": ["bun-types", "vite/client"] },
+  "include": [],
+  "files": [
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️demonstrator-card.tsx",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/📜️script.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts",
+    "../../../../../../../♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts"
+  ]
+}

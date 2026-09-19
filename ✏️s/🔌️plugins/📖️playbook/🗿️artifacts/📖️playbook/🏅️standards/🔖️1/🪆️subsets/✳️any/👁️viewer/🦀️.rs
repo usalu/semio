@@ -39,6 +39,8 @@ impl protocol::OpBinary for PlaybookViewCommand {
 pub struct PlaybookViewer;
 
 impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
+    /// 🧩️ The same member roster the editor declares — see `PlaybookPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = PlaybookSnapshot;
     type Mutation = crate::op::PlaybookMutation;
     type Config = NoConfig;

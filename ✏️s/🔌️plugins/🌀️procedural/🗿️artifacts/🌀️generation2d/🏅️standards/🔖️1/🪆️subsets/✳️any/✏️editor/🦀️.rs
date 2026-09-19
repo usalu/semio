@@ -568,11 +568,20 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
 /// for the 8 KiB gesture quota the other 21 routes share.
 const GENERATION2D_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
 const GENERATION2D_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.2d.contributions-command.v1";
-/// 📐️ The REAL wire ceiling of one contributions page: the framework's own public-invocation string
-/// bound — which no tool contract can widen, because `validate_public_json_envelope` runs first —
-/// at its worst-case escaped width, plus the addressed envelope.
-const GENERATION2D_CONTRIBUTIONS_ENVELOPE_BYTES: usize = 4_096;
-const GENERATION2D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES * semio_framework::PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR + GENERATION2D_CONTRIBUTIONS_ENVELOPE_BYTES;
+/// 📐️ The REAL wire ceiling of one contributions push: what the paged command ingress can deliver
+/// into this guest at all, and nothing narrower — the same bound, for the same reason, as
+/// generation3d's `GENERATION3D_CONTRIBUTIONS_RAW_BYTES`.
+///
+/// 🧊️ The shell sends the scoped pack WHOLE as page 0 of 1, pack-encoded through
+/// `PluginRuntime.performInvocation`, and the shard streams it one 4 KiB page per turn — so the JSON
+/// entry point's `PUBLIC_INVOCATION_STRING_BYTES` page run never applies to it. Declaring that
+/// string bound (×escape factor + a 4 KiB envelope = 12 288 bytes) here refused the real 62 090-byte
+/// push at the tool factory (`tool factory '…/setContributions' rejected 62090 raw bytes before
+/// decoding; maximum is 12288`), so the plugin never received its operators (ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). The one bound that actually binds is
+/// `COMMAND_MAXIMUM_BYTES`, the guest's assembled-command ceiling, and the contract reserves per
+/// DECLARED extent, never per maximum, so naming it costs nothing.
+const GENERATION2D_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::kernel::COMMAND_MAXIMUM_BYTES;
 
 fn generation2d_contributions_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GENERATION2D_CONTRIBUTIONS_RAW_BYTES, GENERATION2D_RETAINED_DECODED_ITEMS, GENERATION2D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)

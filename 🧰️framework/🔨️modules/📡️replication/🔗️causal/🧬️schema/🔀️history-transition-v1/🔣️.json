@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/replication/history-transition-v1.json",
+  "title": "Semio History Transition Payload Cases",
+  "definitions": {
+    "Id": { "type": "string", "minLength": 1 },
+    "OptionalString": { "type": ["string", "null"] },
+    "MutationIds": { "type": "array", "items": { "$ref": "#/definitions/Id" } },
+    "Author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "avatar"],
+      "properties": { "id": { "$ref": "#/definitions/Id" }, "name": { "type": "string" }, "avatar": { "$ref": "#/definitions/OptionalString" } }
+    },
+    "Pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["childUri", "checkpointId"],
+      "properties": { "childUri": { "$ref": "#/definitions/Id" }, "checkpointId": { "$ref": "#/definitions/Id" } }
+    },
+    "Transition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "mutationIds"],
+          "properties": { "kind": { "enum": ["revert", "reinstate"] }, "mutationIds": { "$ref": "#/definitions/MutationIds" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "checkpointId", "parentId", "changeId", "mutationIds", "description", "savedAt", "authors", "message", "timestamp"],
+          "properties": {
+            "kind": { "const": "commit" },
+            "checkpointId": { "$ref": "#/definitions/Id" },
+            "parentId": { "$ref": "#/definitions/OptionalString" },
+            "changeId": { "$ref": "#/definitions/Id" },
+            "mutationIds": { "$ref": "#/definitions/MutationIds" },
+            "description": { "$ref": "#/definitions/OptionalString" },
+            "savedAt": { "type": "string" },
+            "authors": { "type": "array", "items": { "$ref": "#/definitions/Author" } },
+            "message": { "$ref": "#/definitions/OptionalString" },
+            "timestamp": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "alternativeId", "name", "checkpointId"],
+          "properties": { "kind": { "const": "branch" }, "alternativeId": { "$ref": "#/definitions/Id" }, "name": { "type": "string" }, "checkpointId": { "$ref": "#/definitions/Id" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "checkpointId", "alternativeId"],
+          "properties": { "kind": { "const": "checkout" }, "checkpointId": { "$ref": "#/definitions/Id" }, "alternativeId": { "$ref": "#/definitions/OptionalString" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "checkpointId", "pinnedCheckpointId", "pins"],
+          "properties": { "kind": { "const": "repin" }, "checkpointId": { "$ref": "#/definitions/Id" }, "pinnedCheckpointId": { "$ref": "#/definitions/Id" }, "pins": { "type": "array", "items": { "$ref": "#/definitions/Pin" } } }
+        }
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "payloadHex", "expect"],
+      "properties": {
+        "id": { "$ref": "#/definitions/Id" },
+        "payloadHex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" },
+        "expect": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["outcome", "transition"], "properties": { "outcome": { "const": "accepted" }, "transition": { "$ref": "#/definitions/Transition" } } },
+            { "type": "object", "additionalProperties": false, "required": ["outcome", "detail"], "properties": { "outcome": { "const": "malformed" }, "detail": { "type": "string", "minLength": 1 } } }
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "diffSchema", "cases"],
+  "properties": {
+    "schema": { "const": "semio.history.transition.v1" },
+    "diffSchema": { "const": "semio.history.transition" },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } }
+  }
+}

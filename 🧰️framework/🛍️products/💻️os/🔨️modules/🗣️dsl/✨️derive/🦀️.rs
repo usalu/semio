@@ -1563,13 +1563,15 @@ pub fn expand_dsl_enum(input: TokenStream) -> TokenStream {
 //#endregion 🔖️DslEnum
 
 //#region 🔖️Mutations
-/// @emoji 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "...")]` container attrs for
-/// `#[derive(Mutations)]` — see that macro's doc.
+/// @emoji 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, retire_cold = path])]` container
+/// attrs for `#[derive(Mutations)]` — see that macro's doc. `retire_cold` names a `fn(Self)` that
+/// disposes an operation owning fail-closed roots; the generated `Mutation::retire_cold` calls it.
 #[derive(Default)]
 struct MutationsAttrs {
     snapshot: Option<Type>,
     diff: Option<Type>,
     schema: Option<String>,
+    retire_cold: Option<syn::Path>,
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -1590,6 +1592,9 @@ fn parse_mutations_attrs(input: &DeriveInput) -> syn::Result<MutationsAttrs> {
                 if out.schema.is_some() { return Err(meta.error("duplicate mutations schema")); }
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.schema = Some(value.value());
+            } else if meta.path.is_ident("retire_cold") {
+                if out.retire_cold.is_some() { return Err(meta.error("duplicate mutations retire_cold")); }
+                out.retire_cold = Some(meta.value()?.parse()?);
             } else { return Err(meta.error("unsupported mutations attribute")); }
             Ok(())
         })?;
@@ -1633,6 +1638,11 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         return Err(syn::Error::new_spanned(input, "Mutations does not permit conditional aggregate metadata"));
     }
     let attrs = parse_mutations_attrs(input)?;
+    let retire_cold = attrs.retire_cold.map(|retire| quote! {
+        fn retire_cold(self) {
+            #retire(self)
+        }
+    });
     let (Some(snapshot_ty), Some(diff_ty), Some(schema)) = (attrs.snapshot, attrs.diff, attrs.schema) else {
         return Err(syn::Error::new_spanned(input, "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]"));
     };
@@ -1803,6 +1813,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#foreign_steps_arms),* }
             }
+            #retire_cold
         }
 
         impl #impl_generics ::semio_framework_os_kernel::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {

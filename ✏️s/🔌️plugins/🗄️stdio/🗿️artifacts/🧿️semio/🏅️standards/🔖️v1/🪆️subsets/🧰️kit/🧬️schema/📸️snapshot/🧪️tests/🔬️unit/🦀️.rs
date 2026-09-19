@@ -3,8 +3,10 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn minimal_schema_valid_json_defaults_collection_slots() {
     let schema: serde_json::Value = serde_json::from_str(include_str!("../../../🔣️.json")).expect("committed JSON Schema");
-    assert_eq!(schema["required"], serde_json::json!(["schema"]));
-    let minimal = serde_json::json!({ "schema": STDIO_SEMIOKIT_DOCUMENT_SCHEMA });
+    // Every collection slot is required (the stdio.semio sibling convention); only the single
+    // `properties` child is optional, and it is omitted — never `null` — when absent.
+    assert_eq!(schema["required"], serde_json::json!(["schema", "types", "designs", "objects", "models", "representations"]));
+    let minimal = serde_json::json!({ "schema": STDIO_SEMIOKIT_DOCUMENT_SCHEMA, "types": [], "designs": [], "objects": [], "models": [], "representations": [] });
     let minimal_text = minimal.to_string();
     let snapshot = decode_kit_snapshot_json(&minimal_text).expect("schema-valid minimal Kit snapshot");
     assert!(snapshot.types.is_empty());

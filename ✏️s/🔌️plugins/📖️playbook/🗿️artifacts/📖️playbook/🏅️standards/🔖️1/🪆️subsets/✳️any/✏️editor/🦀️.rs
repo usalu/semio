@@ -9,7 +9,7 @@
 //! `render` → body-key → node, plus `import_media`'s `"chapters:in"` importer (an editor-level override,
 //! not a command).
 
-use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, update_playbook};
+use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_active_example, set_contributions, update_playbook};
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
@@ -53,6 +53,7 @@ semio_framework_plugin::app_commands! {
         "moveBlock" as "move-block" => move_block::MoveBlock,
         "updatePlaybook" as "update-playbook" => update_playbook::UpdatePlaybook,
         "setContributions" as "contributions" => set_contributions::SetContributions,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -92,6 +93,17 @@ fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
 #[derive(Default)]
 pub struct PlaybookPlayApp;
 
+/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::empty_document_spr` (never a
+/// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
+/// before its app-owned bounded retirement authority detached` trap on this path; the framework
+/// re-stamps the log with the live mount's identity before hydration sees it
+/// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
+pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <PlaybookSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
 //#region 🧵️RetainedCommands
 /// 🧵️ Every verb the shell may dispatch is a retained tool. `validate_ui_dispatch_classification`
 /// refuses anything not classified `Migrated`, and `Migrated` only survives the guest's
@@ -102,7 +114,7 @@ pub struct PlaybookPlayApp;
 /// (`UI dispatch rejected action:addStep with interactive-job classification BatchOnlyPendingRewrite`).
 /// `updatePlaybook` stays out: it emits `Emit::amend`, a lane no `ArtifactToolPublicationLane` row
 /// can state truthfully, so claiming `Migrated` for it would trip the guest's own contract check.
-const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"];
+const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
@@ -111,6 +123,7 @@ const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 /// the config store, the six structural verbs emit `artifact_mutations` only.
 const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -126,6 +139,7 @@ fn playbook_retained_contract() -> ToolExecutionContract {
 fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         PlaybookCommand::SetContributions(payload) => payload.json.len(),
+        PlaybookCommand::SetActiveExample(payload) => payload.example_id.len(),
         PlaybookCommand::UpdatePlaybook(_) => return None,
         _ => 0,
     };
@@ -170,6 +184,7 @@ fn playbook_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> R
         })),
         "updatePlaybook" => Ok(PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: text(&["value", "title"], "") })),
         "setContributions" => Ok(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
+        "setActiveExample" => Ok(PlaybookCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("playbook.unhandled-action"),
@@ -429,6 +444,10 @@ where
 //#endregion 📬️OneItemPreparation
 
 impl ArtifactEditor for PlaybookPlayApp {
+    /// 🧩️ The roster both composed `s.stdio.semio` children (`document`, `flow`) open through. A
+    /// `NoMembers` editor cannot materialise the children `genesis_child_pack` derives, so every
+    /// whole-document load fails its archive closure leg before any of them is opened.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = PlaybookSnapshot;
     type Mutation = PlaybookMutation;
     type Config = PlaybookConfig;
@@ -500,7 +519,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setContributions", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"]
+        tools: ["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -546,6 +565,22 @@ impl ArtifactEditor for PlaybookPlayApp {
 
     fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
+    }
+
+    /// 🏗️ Admits the whole-document replacement `reset_playbook_document_effect` emits for every
+    /// example switch. The trait default refuses the envelope, so the host answers every
+    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load
+    /// boundary.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PLAYBOOK_DOCUMENT_SCHEMA, operation, generation))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_playbook_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> PlaybookSnapshot {
@@ -648,6 +683,14 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
         .action_interactive_job("updatePlaybook", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
+        // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
+        // dispatches this at boot and on every navbar pick; with no declaration at all every one of
+        // those was dropped `undeclared-action` before it reached the app.
+        .action_with(
+            semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
+                .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
+        )
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
         .action_args("addBlock", vec![
             ActionArgDef::select(

@@ -290,5 +290,14 @@ mod conformance_laws {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
         std::fs::write(path, native).expect("write 📜️example.docx");
     }
+    // TEMP_REGEN_FIXTURE
+    #[semio_framework_async_macros::async_test]
+    async fn temp_regen_fixture() {
+        let demo = demo_docx_snapshot().await;
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(dir.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).unwrap();
+        std::fs::write(dir.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).unwrap();
+    }
+    // TEMP_REGEN_FIXTURE_END
 }
 //#endregion 🔖️ConformanceLaws

@@ -1242,3 +1242,113 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
     assert_eq!(catalog_machine(&pack, "glass", "glassCutter").expect("the new catalog's machine").catalog_id.as_deref(), Some("glass"));
 }
 //#endregion 🧩️RealContributionsPackAdmission
+
+//#region 🧩️HostContributionsOutputCap
+/// ⚖️ LAW: the host's REAL `setContributions` push crosses this app's host-configuration gate. The
+/// gate prices the op-encoded config mutation against the proof contract's `max_output_bytes`; that
+/// cap used to be the 16 KiB gesture output while the contributions lane beside it admits 24 KiB, so
+/// the distilled four-extension roster was refused with `host configuration command
+/// 'setContributions' exceeds its exact output cap` at every boot (ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Drives the registry-backed action path end to end.
+#[test]
+fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
+    use protocol::OpBinary;
+    let pack = demonstrator_contributions_pack();
+    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    let encoded = Process3dConfigMutation::SetContributions { json: distilled.clone() }.encode_op().expect("encode real roster");
+    println!("[STATS] process3d contributions roster={} encoded={} cap={PROCESS3D_RESUMABLE_OUTPUT_BYTES}", distilled.len(), encoded.len());
+    assert!(encoded.len() > 16_384, "the real roster is past the gesture output — the regression this law guards");
+    assert!(encoded.len() <= process3d_resumable_contract().max_output_bytes, "the real roster must fit the declared output cap");
+    let worst = Process3dConfigMutation::SetContributions { json: "x".repeat(PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES) }.encode_op().expect("encode lane-sized roster");
+    assert!(worst.len() <= PROCESS3D_RESUMABLE_OUTPUT_BYTES, "a lane-filling roster encodes to {} B, past the declared {PROCESS3D_RESUMABLE_OUTPUT_BYTES} B", worst.len());
+
+    // 🚪️ The registry-backed dispatch runs the SAME `admit_host_configuration_json` + output-cap gate
+    // the browser push hits; `action` fails the test on any refusal.
+    use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+    let mut app = context::unseeded_app_with_registry();
+    let invocation = CommandInvocation {
+        address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "process".into(), app_id: "s.process.process3d@1/*#editor".into() }, command_id: "setContributions".into() },
+        arguments: [("json".to_string(), DslValue::String(pack))].into_iter().collect(),
+    };
+    semio_framework_plugin::resolve_ready(PluginApp::handle_command(&mut *app, &invocation, None, &semio_framework_plugin::artifact_app_laws::meta("local"))).expect("the host's setContributions command passes the host-configuration output gate");
+}
+//#endregion 🧩️HostContributionsOutputCap
+
+//#region 🚪️ExampleArchiveDoor
+/// 🚪️ Settles one member-less archive load exactly the way the react shell's `loadDocumentPair` does.
+fn settle_member_less_archive(app: &mut context::Process3dRawApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
+    PluginApp::begin_document_archive_load(app, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    for _ in 0..200_000 {
+        let polled = semio_framework_plugin::resolve_ready(PluginApp::poll_document_archive_load(app, operation)).expect("archive status");
+        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+            PluginApp::acknowledge_document_archive_load(app, operation).expect("archive acknowledgement");
+            return polled;
+        }
+        let _ = PluginApp::maintenance_step(app, 1, 4_096).expect("archive maintenance step");
+    }
+    panic!("archive load never reached a terminal state");
+}
+
+/// 🔁️ Dispatches `setActiveExample` and drives its typed operation to the published
+/// `Effect::LoadDocument`, the way the host's publication ladder does.
+fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> (Vec<u8>, Vec<u8>) {
+    let instance = semio_framework_plugin::artifact_app_laws::meta("local").instance_id;
+    let result = action(app, "setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": example }))));
+    let mut loaded = result.requested_effects.into_iter().find_map(|effect| match effect {
+        Effect::LoadDocument { pack, spr } => Some((pack, spr)),
+        _ => None,
+    });
+    for _ in 0..100_000 {
+        if loaded.is_some() && !app.has_pending_typed_operations() {
+            break;
+        }
+        PluginApp::maintenance_step(app, 1, 4_096).expect("example maintenance step");
+        semio_framework_plugin::resolve_ready(app.advance_typed_operation_publication()).expect("example publication");
+        if let Some(page) = app.take_typed_operation_result_page(instance) {
+            assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
+        }
+        if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+            loaded = Some((pack, spr));
+        }
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+    }
+    loaded.unwrap_or_else(|| panic!("{example}: setActiveExample must publish a LoadDocument effect"))
+}
+
+/// ⚖️ LAW: every registered example loads through the host's document archive door — `setActiveExample`
+/// publishes `Effect::LoadDocument`, the shell hands its pack/spr back with NO members, and the
+/// app's `genesis_child_pack` must complete the composed roster so the ownership closure is not
+/// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
+#[test]
+fn every_example_loads_through_the_member_less_archive_door() {
+    for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
+        let mut app = context::unseeded_app_with_registry();
+        let (pack, spr) = published_example_load(&mut app, example);
+        let expected = <Process3dSnapshot as ArtifactPack>::decode_pack(&pack).expect("example pack decodes");
+        let status = settle_member_less_archive(&mut app, operation, pack, spr);
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{example}: {}", String::from_utf8_lossy(&status.fault));
+        let loaded = app.snapshot().expect("loaded snapshot");
+        assert_eq!(loaded.stock_solid.child_id, expected.stock_solid.child_id, "{example}: the example replaced the boot document");
+        assert_eq!(loaded.step_payloads, expected.step_payloads, "{example}: the example's steps are live");
+    }
+}
+
+/// ⚖️ LAW: every shipped example is CANONICAL — its composed-child handles are exactly the
+/// content-addressed ids `process_working_scene_to_snapshot` mints from its own inline records today.
+/// `genesis_process3d_child_pack` re-derives each `toolSolids` id from the step's solid, so a fixture
+/// minted under an older B-Rep serialization names children genesis can no longer derive: the timber
+/// and plate fixtures had drifted, and the member-less archive load of timber closed `Incomplete`
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Regenerate with `print_dsl` of the remint.
+#[test]
+fn every_example_fixture_carries_its_canonical_child_handles() {
+    for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, crate::schema::default_document()), (PROCESS3D_EXAMPLE_PLATE, crate::schema::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, crate::schema::concrete_forest_document())] {
+        let reminted = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&document), document.workshop.clone(), document.resolved_up_to);
+        assert_eq!(document.stock_solid, reminted.stock_solid, "{example}: stale stockSolid handle");
+        assert_eq!(document.steps, reminted.steps, "{example}: stale steps handle");
+        assert_eq!(document.tool_solids, reminted.tool_solids, "{example}: stale toolSolids handles");
+        assert_eq!(document, reminted, "{example}: the fixture is exactly its own remint");
+    }
+}
+//#endregion 🚪️ExampleArchiveDoor
+

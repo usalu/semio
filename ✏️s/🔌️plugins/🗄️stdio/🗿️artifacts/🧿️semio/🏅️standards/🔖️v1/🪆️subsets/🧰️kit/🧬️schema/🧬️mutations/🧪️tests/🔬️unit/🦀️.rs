@@ -97,9 +97,14 @@ async fn create_delete_model_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_properties_round_trips() {
+    // `properties` is a singleton child and the demo kit already carries one, so the create runs
+    // against the same kit with that slot cleared (an occupied slot is a FATAL duplicate).
     let base = fixture();
+    assert!(base.properties.is_some(), "the demo kit carries a properties child");
     let create = SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "props-99") });
-    let after = round_trip(&base, &create);
+    assert_create_rejected(&base, &create);
+    let empty = SemioKitSnapshot { properties: None, ..base.clone() };
+    let after = round_trip(&empty, &create);
     assert_eq!(after.properties.as_ref().unwrap().child_id, "props-99");
 
     let delete = SemioKitMutation::DeleteProperties(delete_properties::DeleteProperties {});

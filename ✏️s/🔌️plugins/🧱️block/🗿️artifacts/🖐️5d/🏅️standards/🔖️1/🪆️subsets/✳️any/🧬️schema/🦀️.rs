@@ -4,6 +4,9 @@ use crate::{Block5dSnapshot};
 
 use ::semio_framework_schema::ArtifactSchema;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Artifact
 /// 🧬️ block5d document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

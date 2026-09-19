@@ -4,6 +4,14 @@ async fn primary_asset_is_nonempty() {
     assert!(text.len() > 8);
 }
 
+#[semio_framework_async_macros::async_test]
+async fn mesh_child_handle_addresses_its_own_target() {
+    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let snapshot = <crate::GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let mesh = snapshot.mesh.expect("demo fixture carries its composed mesh");
+    assert_eq!(mesh.child_id, mesh.target.artifact_id);
+}
+
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {

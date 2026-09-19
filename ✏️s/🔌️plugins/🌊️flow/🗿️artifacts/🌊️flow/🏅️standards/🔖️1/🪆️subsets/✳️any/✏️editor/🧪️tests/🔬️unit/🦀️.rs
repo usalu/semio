@@ -66,7 +66,7 @@ pub(crate) mod context {
     /// exhaustively tests its own manifest/operator content in its own `#[cfg(test)] mod tests` (e.g.
     /// `flow-extension-math`'s `manifest_lists_math_operators_and_schemas`); this fixture only covers
     /// what flow-core's own tests assert on (`catalogue_lists_module_operators`).
-    fn install_first_party_light_flow_extensions_for_tests() {
+    pub(crate) fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
@@ -550,24 +550,57 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
     assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s1"));
 }
 
+/// 🧬️ `artifact_app_laws::assert_two_registered_instances_converge` replayed over THIS crate's harness:
+/// A adds an input note at (40, 41), B adds one at (300, 301); both replicas must fold each other's
+/// events onto the same `content` child. The framework law cannot host flow: its apps are member-less
+/// and child-less, so `addWidget` (a child-lane tool) and every other document verb falls through to
+/// the parent preparation ("Flow mutation requires its explicit batch-only recipe"), and it dispatches
+/// without a window view, which every retained flow reducer requires (`flow-window-view-required`).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
-    use crate::schema::widget_id;
-    use semio_framework_plugin::artifact_app_laws::paired_apps;
-    let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence").await;
-
-    instance_a.dispatch_typed(FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: "input".into() }), &meta("actor-a")).await.expect("a renames slider");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(10.0), y: Some(10.0) }), &meta("actor-b")).await.expect("b adds a note");
-
-    // A neutral history action always dispatches through the store, which pumps inbound operations first.
-    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-
-    let projection_a = instance_a.snapshot().expect("snapshot a").to_host_snapshot();
-    let projection_b = instance_b.snapshot().expect("snapshot b").to_host_snapshot();
-    assert!(projection_a.widgets.iter().any(|widget| widget_id(widget) == "input"), "A keeps its rename");
-    assert!(projection_a.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { .. })), "A absorbs B's note");
-    assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");
+    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{ArtifactPack, MemoryBackbone, SpaceMember};
+    async fn probe(app: &FlowApp) -> Vec<(String, i64, i64)> {
+        let child_id = app.snapshot().expect("Flow parent snapshot").content.child_id.clone();
+        let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("decode Flow content child");
+        let mut nodes: Vec<(String, i64, i64)> = child.nodes.iter().map(|node| (node.kind.to_string(), node.position.x as i64, node.position.y as i64)).collect();
+        nodes.sort();
+        nodes
+    }
+    fn close(app: &mut FlowApp) {
+        for _ in 0..100_000 {
+            if PluginApp::close_step(app, 1, 16_384).expect("Flow convergence app close") == semio_framework_plugin::PluginCloseStep::Complete {
+                return;
+            }
+        }
+        panic!("Flow convergence app did not reach its close witness");
+    }
+    let mut instance_a = flow_app_with_registry().await;
+    let mut instance_b = flow_app_with_registry().await;
+    let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence").await;
+    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let genesis = probe(&instance_a).await;
+    let receiver = meta("actor-a").instance_id;
+    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0) }), &meta("actor-a")).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &meta("actor-b")).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
+    let converged = probe(&instance_a).await;
+    assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
+    assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
+    close(&mut instance_a);
+    close(&mut instance_b);
 }
 //#endregion 🔖️CrossCutting
 

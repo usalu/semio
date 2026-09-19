@@ -44,7 +44,7 @@
 use std::collections::HashMap;
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{Curve2Id, EdgeId, FaceId, LoopId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::{curve_ops, Curve2, Curve3};
 use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
@@ -216,16 +216,78 @@ pub fn native_curve2_to_brep(c: &Curve2) -> BrepCurve2 {
 /// arc at that point is equally consistent with the two positions), so it is resolved as the
 /// curve's full natural period — matching every full-circle/closed-NURBS seam edge every
 /// primitive constructor (`🔺️diff/🧱️primitives`) emits.
+///
+/// A periodic curve's edge always runs in INCREASING parameter (the sense every constructor
+/// builds it in), and the snapshot keeps only a circle's axis, not its in-plane rotation, so the
+/// rebuilt frame's parameter origin is arbitrary: the range therefore starts at the start
+/// vertex's own parameter and, when the end parameter wraps below it, continues one period on —
+/// otherwise the rebuilt edge would trace the complementary arc (or, for a full period, start
+/// away from its vertex).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn edge_range(curve: &Curve3, start: Pnt3, end: Pnt3, same_vertex: bool) -> (f64, f64) {
     let domain = curve.domain();
+    let search_domain = if domain.0.is_finite() && domain.1.is_finite() { domain } else { (-1e6, 1e6) };
+    let period = curve.period();
     if same_vertex {
+        if let Some(period) = period {
+            let t0 = curve_ops::closest_parameter(curve, search_domain, start, 1e-9).t;
+            return (t0, t0 + period);
+        }
         return if domain.0.is_finite() && domain.1.is_finite() { domain } else { (0.0, 1.0) };
     }
-    let search_domain = if domain.0.is_finite() && domain.1.is_finite() { domain } else { (-1e6, 1e6) };
     let t0 = curve_ops::closest_parameter(curve, search_domain, start, 1e-9).t;
-    let t1 = curve_ops::closest_parameter(curve, search_domain, end, 1e-9).t;
+    let mut t1 = curve_ops::closest_parameter(curve, search_domain, end, 1e-9).t;
+    if let Some(period) = period {
+        if t1 <= t0 {
+            t1 += period;
+        }
+    }
     (t0, t1)
+}
+
+/// 🧭️ Restores an analytic surface's in-plane rotation about its axis, which the snapshot does not
+/// carry (module doc "Known, deliberate lossy corners"): `from_snapshot` rebuilds the frame with
+/// `Frame3::from_normal`'s canonical x/y, but the face's p-curves are expressed in the ORIGINAL
+/// frame's `(u, v)`. The first coedge whose p-curve start and start vertex both sit off the axis
+/// fixes the rotation: turning the frame about `z` by the angle between where the p-curve start
+/// lands and where the vertex actually is makes every p-curve land on its edge again. A surface
+/// whose canonical frame already agrees is left bit-identical.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn align_surface_rotation(body: &mut Body, face_id: FaceId) {
+    let Some(surface_id) = body.faces.get(face_id).map(|face| face.surface) else { return };
+    let Some(surface) = body.surfaces.get(surface_id).cloned() else { return };
+    let frame = match &surface {
+        Surface::Plane { frame } | Surface::Cylinder { frame, .. } | Surface::Cone { frame, .. } | Surface::Sphere { frame, .. } | Surface::Torus { frame, .. } => *frame,
+        Surface::Nurbs { .. } => return,
+    };
+    for loop_id in body.face_loops(face_id) {
+        for coedge_id in body.loop_coedges(loop_id) {
+            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+            let (Some(pcurve), Some(edge)) = (coedge.pcurve.and_then(|id| body.curves2.get(id)), body.edges.get(coedge.edge)) else { continue };
+            let Some(vertex) = body.vertices.get(edge.v0) else { continue };
+            let uv = pcurve.eval(coedge.prange.0);
+            let landed = frame.to_local(surface.eval(uv.x, uv.y));
+            let actual = frame.to_local(vertex.position);
+            let reach = landed.x.hypot(landed.y).min(actual.x.hypot(actual.y));
+            if reach <= 1e-9 * (1.0 + landed.x.hypot(landed.y).max(actual.x.hypot(actual.y))) {
+                continue;
+            }
+            let mut delta = actual.y.atan2(actual.x) - landed.y.atan2(landed.x);
+            delta = (delta + std::f64::consts::PI).rem_euclid(std::f64::consts::TAU) - std::f64::consts::PI;
+            if delta.abs() <= 1e-12 {
+                return;
+            }
+            let (sin, cos) = delta.sin_cos();
+            let rotated = Frame3 { origin: frame.origin, x: frame.x * cos + frame.y * sin, y: frame.y * cos - frame.x * sin, z: frame.z };
+            if let Some(slot) = body.surfaces.get_mut(surface_id) {
+                match slot {
+                    Surface::Plane { frame } | Surface::Cylinder { frame, .. } | Surface::Cone { frame, .. } | Surface::Sphere { frame, .. } | Surface::Torus { frame, .. } => *frame = rotated,
+                    Surface::Nurbs { .. } => {}
+                }
+            }
+            return;
+        }
+    }
 }
 //#endregion 🔖️EdgeRange
 
@@ -455,18 +517,31 @@ impl Body {
                 let face_label = resolver.resolve(&f.id);
                 let Some(&face_id) = face_id_by_label.get(&face_label) else { continue };
                 let native_loop_ids = body.face_loops(face_id);
+                // 🪡️ The two uses of one seam edge on one face share ONE p-curve when their snapshot
+                // p-curves are identical (as every primitive constructor builds them), so the
+                // rebuilt body keeps the original's p-curve count instead of minting a duplicate.
+                let mut shared_pcurves: Vec<(EdgeId, &BrepCurve2, Curve2Id)> = Vec::new();
                 for (native_loop_id, brep_loop_id) in native_loop_ids.iter().zip(ring_ids.iter()) {
                     let native_coedge_ids = body.loop_coedges(*native_loop_id);
                     let brep_coedges: Vec<&BrepCoedge> = snapshot.coedges.iter().filter(|c| &c.loop_id == brep_loop_id).collect();
                     for (native_cid, brep_coedge) in native_coedge_ids.iter().zip(brep_coedges.iter()) {
                         let Some(pcurve) = &brep_coedge.pcurve else { continue };
-                        let curve2_id = body.curves2.insert(brep_curve2_to_native(pcurve));
+                        let Some(edge_id) = body.coedges.get(*native_cid).map(|coedge| coedge.edge) else { continue };
+                        let curve2_id = match shared_pcurves.iter().find(|(edge, shared, _)| *edge == edge_id && *shared == pcurve) {
+                            Some(&(_, _, id)) => id,
+                            None => {
+                                let id = body.curves2.insert(brep_curve2_to_native(pcurve));
+                                shared_pcurves.push((edge_id, pcurve, id));
+                                id
+                            }
+                        };
                         if let Some(coedge) = body.coedges.get_mut(*native_cid) {
                             coedge.pcurve = Some(curve2_id);
                             coedge.prange = brep_coedge.prange;
                         }
                     }
                 }
+                align_surface_rotation(&mut body, face_id);
             }
         }
 

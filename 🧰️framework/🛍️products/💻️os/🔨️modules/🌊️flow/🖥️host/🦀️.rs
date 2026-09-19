@@ -380,7 +380,7 @@ impl FlowHost {
         if reset_history {
             if let Some(store) = self.history_store.as_mut() {
                 let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
-                resolve_ready(store.reset(envelope, Vec::new(), Vec::new())).expect("failed to reset flow history store");
+                resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
                 store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
             }
             if let Some(stale) = self.pending_history_baseline.take() {

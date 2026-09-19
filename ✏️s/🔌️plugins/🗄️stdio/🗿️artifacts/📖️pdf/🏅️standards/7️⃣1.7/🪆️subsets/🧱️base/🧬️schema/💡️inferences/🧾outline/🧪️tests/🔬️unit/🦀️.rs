@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfOp, PdfPage, PdfTextString};
 
 #[semio_framework_async_macros::async_test]
 async fn counts_pages_and_words_and_carries_title() {
@@ -8,12 +8,11 @@ async fn counts_pages_and_words_and_carries_title() {
         declared_version: "1.7".into(),
         pages: vec![PdfPage::new(612.0, 792.0), {
             let mut p = PdfPage::new(612.0, 792.0);
-            p.text = "hello world".into();
+            p.content = vec![PdfOp::ShowText { text: PdfTextString::text("hello world") }];
             p
         }],
         info: PdfInfo { title: Some("My Document".into()), ..Default::default() },
-        objects: vec![],
-        trailer: vec![],
+        ..PdfSnapshot::default()
     };
     let outline = Pdf17Outline::compute(&snapshot);
     assert_eq!(outline.page_count, 2);

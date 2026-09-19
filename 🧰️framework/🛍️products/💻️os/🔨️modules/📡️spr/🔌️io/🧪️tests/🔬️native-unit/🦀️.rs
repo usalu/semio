@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::os_spr::history::{HistoryAlternative, HistoryChange, HistoryCheckpoint};
+    use crate::os_spr::history::HistoryTransitionRecord;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     /// @emoji 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
@@ -219,14 +219,40 @@ mod tests {
         let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
-        file.appender().await.append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }).await.unwrap();
-        file.appender().await.append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None }).await.unwrap();
-        file.appender().await.append_alternative(&HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }).await.unwrap();
-        file.appender().await.set_active(Some("alt-1")).await.unwrap();
+        let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+            checkpoint_id: "ck-1".to_string(),
+            parent_id: None,
+            change_id: "change-1".to_string(),
+            mutation_ids: vec![crate::os_spr::MutationId("edit-1#0".to_string()), crate::os_spr::MutationId("edit-2#0".to_string())],
+            description: None,
+            saved_at: "2026-07-27T00:00:02Z".to_string(),
+            authors: Vec::new(),
+            message: None,
+            timestamp: "2026-07-27T00:00:03Z".to_string(),
+        });
+        let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() };
+        for (logical, transition) in [commit, branch].iter().enumerate() {
+            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("alice".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
+            file.appender().await.append_transition(&HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
+        }
+        file.appender().await.append_composition(&crate::os_spr::HistoryComposition { owner: None, dialect: Some(("kind".to_string(), "1".to_string(), "any".to_string())) }).await.unwrap();
+        let degraded = crate::os_spr::history::HistoryConflict {
+            id: "conflict-1".to_string(),
+            kind: 1,
+            status: 0,
+            actors: vec!["alice".to_string()],
+            hlt: (1, 1, 5),
+            edit_ids: vec!["edit-1".to_string()],
+            envelopes: Vec::new(),
+            messages: vec![crate::os_spr::history::HistoryMessage { level: 1, code: "mutation.partial".to_string(), message: "partial".to_string(), target: Vec::new(), op_index: Some(0) }],
+        };
+        file.appender().await.append_conflicts(std::slice::from_ref(&degraded)).await.unwrap();
         file.appender().await.commit().await.unwrap();
         drop(file);
 
         let before = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).await.unwrap();
+        assert_eq!(before.conflicts.len(), 1, "fixture carries a conflict record");
+        assert!(before.composition.is_some(), "fixture carries a composition overlay");
 
         compact(&path, &CompactOptions { drop_ephemeral: true, keep_snapshots: KeepSnapshots::LatestN(3) }, &ProtocolLimits::default()).await.unwrap();
 

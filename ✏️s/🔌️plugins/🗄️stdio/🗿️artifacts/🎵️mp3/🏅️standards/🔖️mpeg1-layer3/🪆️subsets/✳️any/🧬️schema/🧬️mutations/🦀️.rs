@@ -22,6 +22,7 @@ use protocol::{OpBinary, OpText};
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Mp3Snapshot, diff = Mp3Diff, schema = "Mp3Mutation")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Mp3Mutation {
     /// 🔁️ Full-snapshot replace.
     SetSnapshot(set_snapshot::SetSnapshot),

@@ -872,7 +872,7 @@ fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::Ar
     if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES {
         return Err("Writer EditText exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: payload.text.len() })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(payload.text.len()))
 }
 
 fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> Result<(WriterSnapshot, Vec<WriterMutation>, WriterMutation), String> {
@@ -1018,6 +1018,8 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
 pub struct WriterPlayApp;
 
 impl ArtifactEditor for WriterPlayApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = WriterSnapshot;
     type Mutation = WriterMutation;
     type Config = NoConfig;
@@ -1033,6 +1035,10 @@ impl ArtifactEditor for WriterPlayApp {
 
     const DIALECT: Dialect = crate::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_writer_child_pack(snapshot, slot, child_id)
+    }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(Arc::new(WriterArtifactStorePreparationFactory))

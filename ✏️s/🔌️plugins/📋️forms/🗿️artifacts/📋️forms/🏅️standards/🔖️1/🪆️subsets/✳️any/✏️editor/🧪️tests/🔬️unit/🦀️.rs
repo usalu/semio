@@ -417,10 +417,13 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     assert!(render(&mut app, "forms.play.nope").await.contains("Unknown body"));
 }
 
+/// 🧬️ REGISTERED convergence pair: forms publishes bounded tool proofs, so a registry-less pair faults
+/// `interactive-job.catalog-authority` at construction before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits() {
-    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize)>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize), _, _>(
         "mem://forms-convergence",
+        || async { semio_framework_plugin::App { definition: create_forms_app(), examples: Vec::new() } },
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
         FormsCommand::AddStep(add_step::AddStep {}),
         |app| {

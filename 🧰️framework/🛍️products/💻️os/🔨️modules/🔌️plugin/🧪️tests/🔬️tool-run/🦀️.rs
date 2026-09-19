@@ -634,12 +634,12 @@ async fn attach_probe(app: &mut ToyApp, channel: &str) -> MemoryBackbone {
     probe
 }
 
-/// 📮️ Drains what the app sent: `(mutations batches, full snapshots)`; acks are not document traffic.
+/// 📮️ Drains what the app sent: `(mutations batches, genesis announcements)`; acks are not document traffic.
 async fn drain(probe: &mut MemoryBackbone) -> (usize, usize) {
-    probe.receive().await.expect("probe receive").into_iter().fold((0, 0), |(mutations, snapshots), message| match message {
-        BackboneMessage::Mutations { .. } => (mutations + 1, snapshots),
-        BackboneMessage::Snapshot { .. } => (mutations, snapshots + 1),
-        BackboneMessage::Ack { .. } => (mutations, snapshots),
+    probe.receive().await.expect("probe receive").into_iter().fold((0, 0), |(mutations, genesis), message| match message {
+        BackboneMessage::Mutations { .. } => (mutations + 1, genesis),
+        BackboneMessage::Genesis { .. } => (mutations, genesis + 1),
+        BackboneMessage::Ack { .. } => (mutations, genesis),
     })
 }
 
@@ -758,7 +758,7 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
     assert_eq!(edit.forwards.len(), number(&fixture["overlay"]["provisionalOps"]) as usize, "every provisional op lands in the one edit");
     assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(text(&expected["groupId"]))), "the edit is stamped with the run's group id");
-    assert_eq!(drain(&mut probe).await, (number(&expected["mutationsMessages"]) as usize, number(&expected["snapshotMessages"]) as usize), "one Mutations batch, no snapshot broadcast");
+    assert_eq!(drain(&mut probe).await, (number(&expected["mutationsMessages"]) as usize, number(&expected["genesisMessages"]) as usize), "one Mutations batch, no genesis re-announcement");
     let committed = app.snapshot().expect("committed after finalize");
     assert_eq!((committed.count, committed.label.as_str()), (number(&expected["countAfterFinalize"]) as i32, text(&expected["labelAfterFinalize"])));
     assert!(app.tool_runs.provisional().is_empty());

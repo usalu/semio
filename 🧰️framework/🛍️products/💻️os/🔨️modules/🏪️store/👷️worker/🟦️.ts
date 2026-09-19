@@ -32,7 +32,7 @@ import type {
   BackboneWorkerRequest,
   BackboneWorkerResponse,
   BackboneWorkerWireMessage,
-  BrowserBrokerPortResponseV1,
+  HubSessionPortResponseV1,
   CanonicalDirectoryEventPageV1,
   CommandAckOutcome,
   DirectoryAcknowledgedStream,
@@ -72,7 +72,7 @@ import {
   packWireNatural,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
   DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
-  parseBrowserBrokerPortRequestV1,
+  parseHubSessionPortRequestV1,
   parseDocumentBackboneMessage,
   parseSocketGrantReceiptV1,
   socketGrantProtocolsV1,
@@ -639,41 +639,28 @@ function emitEvent(state: ArtifactState, event: ArtifactEvent): void {
 const SOCKET_GRANT_REQUEST_TIMEOUT_MS = 10_000;
 const SOCKET_GRANT_REQUEST_LIMIT = 256;
 const DOCUMENT_OPEN_RESPONSE_MAX_BYTES = 64 * 1024;
-const BROWSER_BROKER_PROOF_DOMAIN = new TextEncoder().encode("semio/browser-broker-proof/v1\0");
-const BROWSER_BROKER_PROOF_TTL_MS = 15_000;
+/** 🌐️ The shell's own same-origin route to its hub. In development the vite server forwards it to
+ * `S_HUB_URL` verbatim, `Authorization` header included (`🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`); in a
+ * deployment whatever fronts the app mounts the hub here. Same-origin is what keeps the human's
+ * session capability out of a cross-origin preflight and lets one code path serve both. */
+const HUB_REQUEST_ROUTE_PREFIX = "/_semio/hub";
 let socketGrantTestIssue: ((baseUrl: string, path: string, signal?: AbortSignal) => Promise<SocketGrantReceiptV1>) | null = null;
-let localBrowserBrokerProof: Uint8Array | undefined;
-let localBrowserBrokerOwner: object = {};
-let localBrowserBrokerAdmission: object = {};
+/** 🎫️ The signed-in human's own hub session capability — the ONE credential this worker ever holds.
+ * It arrives over the private port from the shell that minted it (`POST /auth/sessions`) and is
+ * dropped the moment the hub refuses it, so the worker can never act as a principal the human is not. */
+let hubSessionCapability: string | undefined;
+let hubSessionOwner: object = {};
+let hubSessionAdmission: object = {};
 let browserSessionAuthority: DirectorySessionAuthorityV1 | null = null;
 let browserSessionOperationFence: object = {};
-let localBrowserBrokerProofExpiresAtMs = 0;
-let localBrowserBrokerQueue: Promise<void> = Promise.resolve();
-let localBrowserBrokerQueued = 0;
-let localBrowserBrokerPort: MessagePort | undefined;
-const localBrowserBrokerRpcControllers = new Map<string, AbortController>();
+let hubSessionQueue: Promise<void> = Promise.resolve();
+let hubSessionQueued = 0;
+let hubSessionPort: MessagePort | undefined;
+const hubSessionRpcControllers = new Map<string, AbortController>();
 
-function hexBytes(value: string): Uint8Array | undefined {
-  if (!/^[0-9a-f]{64}$/u.test(value)) return undefined;
-  return Uint8Array.from({ length: 32 }, (_, index) => Number.parseInt(value.slice(index * 2, index * 2 + 2), 16));
-}
-
-function bytesHex(value: Uint8Array): string {
-  return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-async function browserBrokerProofDigest(value: Uint8Array): Promise<Uint8Array> {
-  const input = new Uint8Array(BROWSER_BROKER_PROOF_DOMAIN.byteLength + value.byteLength);
-  input.set(BROWSER_BROKER_PROOF_DOMAIN);
-  input.set(value, BROWSER_BROKER_PROOF_DOMAIN.byteLength);
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
-  input.fill(0);
-  return digest;
-}
-
-function clearLocalBrowserBrokerProof(): void {
-  localBrowserBrokerAdmission = {};
-  consumeLocalBrowserBrokerProof();
+function clearHubSessionCapability(): void {
+  hubSessionAdmission = {};
+  consumeHubSessionCapability();
   retireBrowserSessionAuthority();
 }
 
@@ -682,7 +669,7 @@ type BrowserSessionOperationFenceV1 = Readonly<{ token: object; sessionBindingSh
 function captureBrowserSessionOperationFence(): BrowserSessionOperationFenceV1 | null {
   const authority = browserSessionAuthority;
   const observedAtMs = Date.now();
-  if (authority === null || localBrowserBrokerProof === undefined || observedAtMs >= localBrowserBrokerProofExpiresAtMs || observedAtMs >= authority.expiresAt) return null;
+  if (authority === null || hubSessionCapability === undefined || observedAtMs >= authority.expiresAt) return null;
   return Object.freeze({ token: browserSessionOperationFence, sessionBindingSha256: authority.sessionBindingSha256, authorizationGeneration: authority.authorizationGeneration });
 }
 
@@ -716,11 +703,11 @@ function retireBrowserSessionAuthority(): void {
   }
 }
 
-/** 🔐️ Installs only the server's canonical authority after the broker has advanced its proof. */
+/** 🔐️ Installs only the hub's own canonical authority for the capability this worker holds. */
 async function acceptBrowserSessionAuthority(response: FetchTimeoutResponse, admission: object, signal?: AbortSignal): Promise<FetchTimeoutResponse> {
   if (response.status !== 200) throw new Error("directory session authority: unexpected response");
   const assertCurrent = (): void => {
-    if (admission !== localBrowserBrokerAdmission) throw new Error("browser broker owner retired");
+    if (admission !== hubSessionAdmission) throw new Error("hub session owner retired");
   };
   const bytes = await readBoundedExecutionTargetBody(response, null, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, { signal: signal ?? new AbortController().signal, deadlineAtMs: Date.now() + 2000, assertCurrent }, () => {});
   assertCurrent();
@@ -835,10 +822,10 @@ function attachLocalBrokerPort(port: MessagePort): void {
   detachLocalBrokerPort();
   localBrowserBrokerPort = port;
   port.onmessage = (event: MessageEvent<unknown>) => {
-    const message = parseBrowserBrokerPortRequestV1(event.data);
+    const message = parseHubSessionPortRequestV1(event.data);
     if (!message) return;
     if (message.kind === "initialize") {
-      const response: BrowserBrokerPortResponseV1 = { kind: "initialized", ok: installLocalBrowserBrokerProof(message.proof) };
+      const response: HubSessionPortResponseV1 = { kind: "initialized", ok: installLocalBrowserBrokerProof(message.proof) };
       port.postMessage(response);
       return;
     }
@@ -852,7 +839,7 @@ function attachLocalBrokerPort(port: MessagePort): void {
     }
     if (message.kind !== "request") return;
     if (localBrowserBrokerRpcControllers.size >= 64) {
-      const response: BrowserBrokerPortResponseV1 = { kind: "response", requestId: message.requestId, status: 503, body: "" };
+      const response: HubSessionPortResponseV1 = { kind: "response", requestId: message.requestId, status: 503, body: "" };
       port.postMessage(response);
       return;
     }
@@ -862,11 +849,11 @@ function attachLocalBrokerPort(port: MessagePort): void {
     void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal, accept: (response, admission) => acceptBrowserSessionAuthority(response, admission, controller.signal) })
       .then(async (response) => {
         const body = await response.text();
-        const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: response.status, body };
+        const result: HubSessionPortResponseV1 = { kind: "response", requestId, status: response.status, body };
         port.postMessage(result);
       })
       .catch((error: unknown) => {
-        const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
+        const result: HubSessionPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
         port.postMessage(result);
       })
       .finally(() => {
@@ -3000,6 +2987,23 @@ function fromWireEnvelope(envelope: WireMutationEnvelope | ExactWireMutationEnve
       dependencies: [],
       undoPolicy: "exactBaseOnly",
     },
+  };
+}
+
+/** 🌉️ Document-backbone twin of {@link fromWireEnvelope}: a Rust store's events carry opaque
+ * `OpBinary` operation or history-transition payloads this worker relays and persists but never
+ * interprets, so they stay exact bytes instead of being decoded as pack values. */
+function opaqueEnvelopeFromWire(envelope: ExactWireMutationEnvelope): MutationEnvelope {
+  const payload = envelope.diff.payload.slice();
+  return {
+    id: envelope.mutation_id,
+    actor: envelope.actor,
+    document: envelope.document_id,
+    schemaVersion: envelope.diff.schema,
+    deps: [...envelope.dependencies],
+    payloadHash: placeholderPayloadHash(payload),
+    diff: { schemaId: envelope.diff.schema, payload },
+    inverse: { targetOperation: envelope.mutation_id, inverseDiff: { schemaId: envelope.inverse.schema, payload: envelope.inverse.payload.slice() }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
   };
 }
 
@@ -6192,7 +6196,7 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
         emitEvent(state, { kind: "commandOutcome", batchId, outcome: { kind: "rejected", reason: "document backbone scope mismatch", messages: [parsed.envelopes.length] } });
         break;
       }
-      admitLocalMutations(state, parsed.envelopes.map(fromWireEnvelope), { kind: "documentBackbone", message: parsed.message }, parsed.envelopes, parsed.message.byteLength);
+      admitLocalMutations(state, parsed.envelopes.map(opaqueEnvelopeFromWire), { kind: "documentBackbone", message: parsed.message }, parsed.envelopes, parsed.message.byteLength);
       break;
     }
     case "localMutations": {

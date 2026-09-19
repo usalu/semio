@@ -37,6 +37,8 @@ impl protocol::OpBinary for AnimateViewCommand {
 pub struct AnimatePresentationViewer;
 
 impl ArtifactViewer for AnimatePresentationViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = PresentationSnapshot;
     type Mutation = crate::PresentationMutation;
     type Config = NoConfig;
@@ -49,6 +51,10 @@ impl ArtifactViewer for AnimatePresentationViewer {
 
     const DIALECT: Dialect = ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_presentation_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> PresentationSnapshot {
         default_presentation_snapshot()

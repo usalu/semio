@@ -363,14 +363,46 @@ export function undeclaredActionDiagnostic(appId: string, action: string, window
   };
 }
 
+/** ⏪️ A chrome command the shell can really put back, as {@link buildNoteShellCommandAction} declares it:
+ * the command id that restores the state this note replaced, plus the arguments that restore it. */
+export interface ShellCommandInverse {
+  readonly commandId: string;
+  readonly args?: Record<string, unknown>;
+}
+
 /** 🧭️ Builds the `noteShellCommand` action descriptor `noteShellCommand` (the component helper) dispatches
- * through the standard `onAction` funnel — pure so it's testable without a session/component. */
-export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>): ActionDescriptor {
-  return { controllerId, action: NOTE_SHELL_COMMAND_ACTION_ID, args: { commandId, label, inverseCommandId: commandId, ...(detail ? { detail, inverseArgs: detail } : {}) } };
+ * through the standard `onAction` funnel — pure so it's testable without a session/component.
+ *
+ * ⏪️ `inverse` is what makes the row an UNDO TARGET, and only a caller holding the state this command
+ * replaced can declare one: `detail` describes where the chrome went, never where it came from, so
+ * inverting a note by re-dispatching its own id and its own arguments (what this builder used to do
+ * unconditionally) is an identity, not an inverse. Without it the guest records the row with no
+ * inverse and `undo` steps over it straight onto the user's document edit — see
+ * `🔌️plugin/🦀️.rs`'s `noteShellCommand` branch and `dispatch_chrome_history_action`. */
+export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>, inverse?: ShellCommandInverse): ActionDescriptor {
+  return {
+    controllerId,
+    action: NOTE_SHELL_COMMAND_ACTION_ID,
+    args: { commandId, label, ...(detail ? { detail } : {}), ...(inverse ? { inverseCommandId: inverse.commandId, ...(inverse.args ? { inverseArgs: inverse.args } : {}) } : {}) },
+  };
+}
+
+/** 🐚️ Whether a replayed command id names SHELL-owned state (dock, panels, windows, appearance) rather
+ * than a plugin action. `Effect::ReplayShellCommand` carries both: a `View`-kind row replays a plugin
+ * action id the guest itself declared, while a `🐚️Shell`-kind row replays chrome the guest has no
+ * window kind for. Dispatching the latter into the guest is what produced the framework-wide
+ * `undeclared-action (guest window=… causedBy=…)` error after every undo (ticket 26/09/18 §3.2). */
+export function isShellOwnedCommandId(commandId: string): boolean {
+  return commandId.startsWith("shell.") || commandId.startsWith("os.");
 }
 
 /** 🎨️ The program action the navbar example picker dispatches. */
 export const SET_ACTIVE_EXAMPLE_ACTION_ID = "setActiveExample";
+
+/** 📚️ Whether an app can switch its document to an example at all — only then may the shell offer its examples or announce a boot example. */
+export function appSwitchesExamples(appId: string, windowKinds: readonly WindowKindActionDeclaration[]): boolean {
+  return undeclaredActionDiagnostic(appId, SET_ACTIVE_EXAMPLE_ACTION_ID, windowKinds) === null;
+}
 
 /** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
  * `onAction` funnel — pure so the dispatched id is testable without a session/component. The picker's own
@@ -4665,7 +4697,9 @@ export function buildOsCommands(
   return commands.filter((command) => !lockedCommandIds.has(command.id));
 }
 
-/** 🎛️ Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}. */
+/** 🎛️ Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}.
+ * Answers whether `commandId` was actually routed, so a replayed chrome command that lands nowhere is
+ * reported instead of silently vanishing (see {@link isShellOwnedCommandId}). */
 export function dispatchOsCommand(
   commandId: string,
   args: Record<string, unknown> | undefined,
@@ -4674,38 +4708,38 @@ export function dispatchOsCommand(
   dockLayoutStore: DockLayoutStore,
   dockUiStateStore: DockUiStateStore,
   locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
-): void {
+): boolean {
   switch (commandId) {
     case "os.introduceApp":
       dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-      return;
+      return true;
     case "os.setAppearance":
-      if (locks.appearance) return;
+      if (locks.appearance) return true;
       commitUiPreference(setAppearance((args?.appearance as ElementsSurfaceAppearance) ?? "system"));
-      return;
+      return true;
     case "os.setThemeId":
-      if (locks.themeId) return;
+      if (locks.themeId) return true;
       if (typeof args?.themeId === "string") commitUiPreference(setTheme(args.themeId));
-      return;
+      return true;
     case "os.setLayout":
       commitUiPreference(setLayout((args?.layout as UiChromeLayout) ?? "desktop"));
-      return;
+      return true;
     case "os.resetDock":
       dispatch({ type: "RESET_DOCK" });
       dockLayoutStore.reset();
       dockUiStateStore.reset();
-      return;
+      return true;
     case "os.setLocale":
-      if (locks.locale) return;
+      if (locks.locale) return true;
       if (typeof args?.locale === "string") commitUiPreference(setLocale(args.locale as UiLocale));
-      return;
+      return true;
     case "os.setTerminology":
-      if (locks.terminology) return;
+      if (locks.terminology) return true;
       if (typeof args?.terminology === "string") commitUiPreference(setTerminology(args.terminology));
-      return;
+      return true;
     case "os.setDriver":
       if (typeof args?.driver === "string") commitUiPreference(setDriver(args.driver));
-      return;
+      return true;
     // 👁️✏️ Neither sends a wire command itself (contract freeze §5) — both just focus the Document
     // panel's "Open with…" section, pre-expanded to the role the palette entry named.
     case OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID:
@@ -4713,9 +4747,9 @@ export function dispatchOsCommand(
       dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: commandId === OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID ? "viewer" : "editor" });
       dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
-      return;
+      return true;
     default:
-      return;
+      return false;
   }
 }
 

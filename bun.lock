@@ -896,6 +896,19 @@
         "vitest": "^4.0.17",
       },
     },
+    "🏢️semio-tech/🎡️play": {
+      "name": "@semio-tech/semio-tech-play",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/puzzle-js": "workspace:*",
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+      },
+    },
     "🧰️framework/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework",
       "version": "0.1.0",
@@ -2337,6 +2350,8 @@
     "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
 
     "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/semio-tech-play": ["@semio-tech/semio-tech-play@workspace:🏢️semio-tech/🎡️play"],
 
     "@semio-tech/sequence-sequence": ["@semio-tech/sequence-sequence@workspace:✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript"],
 

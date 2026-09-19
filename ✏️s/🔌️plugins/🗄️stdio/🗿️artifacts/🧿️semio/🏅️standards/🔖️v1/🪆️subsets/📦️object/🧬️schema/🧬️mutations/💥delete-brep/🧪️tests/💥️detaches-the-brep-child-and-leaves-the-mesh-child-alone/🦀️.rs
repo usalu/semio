@@ -4,13 +4,9 @@
 //! `mutation.target-missing`; otherwise the diff sets `brep = Some(None)` — outer `Some` = "this
 //! diff writes the slot", inner `None` = "clear it".
 //!
-//! ⚠️ KNOWN SERDE LIMITATION, pinned here rather than papered over: `SemioObjectDiff::brep` is
-//! `Option<Option<ArtifactChild<..>>>` with `skip_serializing_if = "Option::is_none"`, so
-//! `Some(None)` encodes as `{"brep": null}` — but JSON `null` deserializes back into the OUTER
-//! `None`, i.e. "untouched". The committed `🔺️diff/🔣️.json` is therefore the correct
-//! ENCODING of what this mutation produces, while a decode of it is NOT the same value. The two
-//! assertions that would otherwise gloss over this are written to state the collapse explicitly and
-//! to exercise the apply law against the in-memory `Some(None)` diff instead.
+//! `Some(None)` encodes as `{"brep": null}`, and the value codec decodes an explicit `null` back
+//! into the INNER `None` (an absent key stays the outer `None`, "untouched"), so the committed
+//! `🔺️diff/🔣️.json` is a decode→encode fixed point that clears the slot when applied.
 
 use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
 use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
@@ -104,34 +100,27 @@ async fn produces_committed_diff() {
     assert!(committed.get("brep").expect("the committed diff names the brep slot").is_null(), "a cleared DIFF slot is an explicit null, never an absent key");
 }
 
-/// 🔣️ The committed diff is NOT a decode→encode fixed point, and this test says so on purpose:
-/// `Option<Option<T>>` collapses `{"brep":null}` back to the outer `None`. Asserting the usual
-/// canonicality law here would assert something false, so what is pinned instead is the exact
-/// shape of the collapse — if serde's behaviour ever changes, this test fails and the fixture gets
-/// revisited.
+/// 🔣️ The committed diff is a decode→encode fixed point that keeps the clear intent: an explicit
+/// `{"brep":null}` decodes to `Some(None)` — write the slot, clear it — never to the outer
+/// "untouched" `None`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_json_pins_the_option_option_collapse() {
+async fn committed_diff_json_decodes_to_the_explicit_clear() {
     let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-brep diff decodes");
-    assert!(decoded.brep.is_none(), "decoding {{\"brep\":null}} yields the OUTER None — the clear intent is lost on the JSON round trip");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("re-encode"), serde_json::json!({}), "so re-encoding the decoded value drops the key entirely");
-    let authored = SemioObjectDiff { brep: Some(None), ..Default::default() };
+    assert!(matches!(decoded.brep, Some(None)), "decoding {{\"brep\":null}} must yield Some(None) — the clear intent survives the JSON round trip");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&authored)).expect("authored diff encodes"),
-        committed,
-        "the committed JSON IS the canonical encoding of the Some(None) diff, even though it cannot be decoded back into one"
-    );
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("re-encode"), committed, "the committed diff is a decode→encode fixed point");
+    let authored = SemioObjectDiff { brep: Some(None), ..Default::default() };
+    assert_eq!(decoded, authored, "the decoded diff is exactly the authored Some(None) diff");
 }
 
-/// 🩹 The diff carries `before` to `after` — exercised against the in-memory `Some(None)` diff,
-/// because the JSON-decoded one collapses to a no-op (see the test above). Both halves are
-/// asserted so the collapse cannot silently start passing for the wrong reason.
+/// 🩹 The diff carries `before` to `after` — both the in-memory `Some(None)` diff and the one decoded
+/// from the committed JSON.
 #[semio_framework_async_macros::async_test]
-async fn authored_diff_applies_to_after_while_the_decoded_one_is_inert() {
+async fn authored_and_decoded_diffs_apply_to_after() {
     let authored = SemioObjectDiff { brep: Some(None), ..Default::default() };
     let produced = authored.apply(&before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-brep/detaches-the-brep-child-and-leaves-the-mesh-child-alone: the Some(None) diff did not carry before to after");
     let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-brep diff decodes");
-    let inert = decoded.apply(&before()).expect("the collapsed diff still applies, it just does nothing");
-    assert_eq!(inert, before(), "the JSON-decoded diff is inert — that is exactly the limitation being pinned");
+    let applied = decoded.apply(&before()).expect("the decoded diff applies to the before-snapshot");
+    assert_eq!(applied, expected_after(), "delete-brep/detaches-the-brep-child-and-leaves-the-mesh-child-alone: the JSON-decoded diff did not carry before to after");
 }

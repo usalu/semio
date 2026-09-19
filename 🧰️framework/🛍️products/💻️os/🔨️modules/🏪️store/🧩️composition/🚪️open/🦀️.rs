@@ -344,18 +344,20 @@ pub struct MemberOpenAdmissionError {
     pub request: MemberOpenRequest,
 }
 
-crate::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor, composition, conflicts });
-crate::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect, checkpoint_pins });
+crate::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition, conflicts });
+crate::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect });
+crate::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, payload });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
 crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta });
 crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
-crate::artifact_retire_struct!(crate::os_spr::HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id });
 crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages });
-crate::artifact_retire_struct!(crate::os_spr::HistoryChange { id, saved_at, edit_ids, description });
-crate::artifact_retire_struct!(crate::os_spr::HistoryCheckpoint { id, timestamp, change_ids, parent_id, authors, message });
-crate::artifact_retire_struct!(crate::os_spr::HistoryAuthor { id, name });
-crate::artifact_retire_struct!(crate::os_spr::HistoryAlternative { id, name, checkpoint_ids });
+crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, changes, checkpoints, alternatives });
+crate::artifact_retire_struct!(crate::os_spr::FoldChange { id, edit_ids, description, saved_at });
+crate::artifact_retire_struct!(crate::os_spr::FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
+crate::artifact_retire_struct!(crate::os_spr::FoldAlternative { id, name, checkpoint_ids });
+crate::artifact_retire_struct!(crate::os_spr::TransitionAuthor { id, name, avatar });
+crate::artifact_retire_struct!(crate::os_spr::TransitionPin { child_uri, checkpoint_id });
 crate::artifact_retire_leaf!(crate::os_dsl::Severity);
 impl super::retirement::RetireOwned for crate::os_dsl::FaultCode {
     fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
@@ -364,14 +366,6 @@ impl super::retirement::RetireOwned for crate::os_dsl::FaultCode {
 }
 crate::artifact_retire_struct!(crate::os_spr::MutationMessage { level, code, message, target, op_index });
 crate::artifact_retire_struct!(crate::os_spr::EditMessages { edit_id, messages });
-
-fn decode_history_mutation_meta(meta: crate::os_spr::HistoryOpMeta) -> Result<(crate::MutationMeta, Vec<crate::MutationMessage>), String> {
-    super::mutation_meta_from_history_op_meta(meta)
-}
-
-fn decode_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
-    super::conflict_from_history_conflict(conflict)
-}
 
 impl super::retirement::RetireOwned for crate::os_spr::MutationOrigin {
     fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {

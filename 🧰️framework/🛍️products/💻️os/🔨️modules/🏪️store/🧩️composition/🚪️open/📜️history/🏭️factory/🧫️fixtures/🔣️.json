@@ -49,22 +49,22 @@
     { "id": "late-control-subset", "mutation": "late-subset-control", "dialect": ["s.stdio.semio", "v1", "flow"], "selected": null, "error": "identity" }
   ],
   "semantic": [
-    { "id": "selected-schema-only", "field": "none", "value": "stdio.semio", "inputBytes": 274, "retiredBytes": 1370, "error": null, "handoffs": 1 },
-    { "id": "foreign-persisted-schema", "field": "schema", "value": "stdio.semio.flow", "inputBytes": 279, "retiredBytes": 1375, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-document", "field": "document", "value": "evil-member", "inputBytes": 286, "retiredBytes": 1382, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-parent", "field": "parent", "value": "evil-parent!s.flow.flow@1/*", "inputBytes": 274, "retiredBytes": 1370, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-slot", "field": "slot", "value": "foreign", "inputBytes": 274, "retiredBytes": 1370, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-child", "field": "child", "value": "evil-member", "inputBytes": 286, "retiredBytes": 1382, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-kind", "field": "kind", "value": "s.other.semio", "inputBytes": 274, "retiredBytes": 1370, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-standard", "field": "standard", "value": "v2", "inputBytes": 274, "retiredBytes": 1370, "error": "identity", "handoffs": 0 },
-    { "id": "foreign-persisted-subset", "field": "subset", "value": "tree", "inputBytes": 274, "retiredBytes": 1370, "error": "identity", "handoffs": 0 }
+    { "id": "selected-schema-only", "field": "none", "value": "stdio.semio", "inputBytes": 260, "retiredBytes": 1356, "error": null, "handoffs": 1 },
+    { "id": "foreign-persisted-schema", "field": "schema", "value": "stdio.semio.flow", "inputBytes": 265, "retiredBytes": 1361, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-document", "field": "document", "value": "evil-member", "inputBytes": 272, "retiredBytes": 1368, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-parent", "field": "parent", "value": "evil-parent!s.flow.flow@1/*", "inputBytes": 260, "retiredBytes": 1356, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-slot", "field": "slot", "value": "foreign", "inputBytes": 260, "retiredBytes": 1356, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-child", "field": "child", "value": "evil-member", "inputBytes": 272, "retiredBytes": 1368, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-kind", "field": "kind", "value": "s.other.semio", "inputBytes": 260, "retiredBytes": 1356, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-standard", "field": "standard", "value": "v2", "inputBytes": 260, "retiredBytes": 1356, "error": "identity", "handoffs": 0 },
+    { "id": "foreign-persisted-subset", "field": "subset", "value": "tree", "inputBytes": 260, "retiredBytes": 1356, "error": "identity", "handoffs": 0 }
   ],
   "semanticLifecycle": [
-    { "id": "cancel-selected-before-dictionary", "at": "selected", "event": "cancel", "error": "cancelled", "retiredBytes": 346 },
-    { "id": "dictionary-admission-retains-input", "at": "selected", "event": "capacity", "error": "capacity", "retiredBytes": 346 },
-    { "id": "cancel-before-semantic-handoff", "at": "ready", "event": "cancel", "error": "cancelled", "retiredBytes": 1370 },
-    { "id": "generation-before-semantic-handoff", "at": "ready", "event": "generation", "error": "stale", "retiredBytes": 1370 },
-    { "id": "operation-before-semantic-handoff", "at": "ready", "event": "operation", "error": "stale", "retiredBytes": 1370 }
+    { "id": "cancel-selected-before-dictionary", "at": "selected", "event": "cancel", "error": "cancelled", "retiredBytes": 332 },
+    { "id": "dictionary-admission-retains-input", "at": "selected", "event": "capacity", "error": "capacity", "retiredBytes": 332 },
+    { "id": "cancel-before-semantic-handoff", "at": "ready", "event": "cancel", "error": "cancelled", "retiredBytes": 1356 },
+    { "id": "generation-before-semantic-handoff", "at": "ready", "event": "generation", "error": "stale", "retiredBytes": 1356 },
+    { "id": "operation-before-semantic-handoff", "at": "ready", "event": "operation", "error": "stale", "retiredBytes": 1356 }
   ],
   "lifecycle": [
     { "id": "one-selected-handoff", "at": "ready", "event": "none", "handoffs": 1, "error": null, "retiredBytes": 329 },

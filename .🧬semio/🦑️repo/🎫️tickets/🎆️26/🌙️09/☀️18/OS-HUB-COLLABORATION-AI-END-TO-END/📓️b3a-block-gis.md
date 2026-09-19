@@ -287,13 +287,14 @@ empty-facet golden, (1) gis real mutations, (2) block boot + bar.
 
 | plugin / variant | compiles | assembles + descriptor | boots + renders | mutation reaches document | undo / redo | console clean |
 |---|---|---|---|---|---|---|
-| 🌍️gis `gis2d` (`s.gis.gismap@1`) | ✅ | ✅ | ✅ | — | — | — |
+| 🌍️gis `gis2d` (`s.gis.gismap@1`) | ✅ | ✅ | ✅ | ✅ **live** (§10) | ✅ **live** (§10) | ✅ (§10.2) |
 | 🌍️gis `gisterrain` (`s.gis.gisterrain@1`) | ✅ | ✅ | — | — | — | — |
 | 🧱️block `block2d` | ✅ | ✅ | — | — | — | — |
 | 🧱️block `block3d` | ✅ | ✅ | — | — | — | — |
 | 🧱️block `block5d` | ✅ | ✅ | — | — | — | — |
 
 Legend: ✅ measured green, ❌ measured red, — not reached yet in this slice. Updated as sections land.
+"live" = observed in a real React shell in headless chromium, not only by a native test.
 
 ## 7. §5.5 — the three `semio-framework-ui-scene` failures (FIXED, 141/141 green)
 
@@ -443,3 +444,84 @@ dies in `maintenance_step` with `plugin.internal: candidate parent child project
 artifact-envelope (archive replacement) path, which is exactly slice **F1**'s live blocker. The test file
 is untouched by this slice (`git status --short` on it is empty) and no feature verb participates in
 envelope ingress.
+
+## 10. 🌍️gis LIVE in a real React shell — the bar is cleared (§5 handoff 1 closed)
+
+### 10.1 What was measured
+
+The `gis2d` react dev serve from 11:36 (`bun vite`, pid 56314, :6040) was still listening and still
+current: the staged `component-dev` wasm (`📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_gis.wasm`)
+is newer than every gis source file, so it carries §9.2's four per-feature verbs. No re-activation was
+needed. Probe: `🐍️b3a-gis2d-probe.mjs` (headless chromium 1600×1000, `--use-angle=metal`), capture
+`🗑️generated/b3a2-gis2d-addfeature.txt` + `🗑️generated/b3a-gis2d-addFeature/report.json`.
+
+```
+SUMMARY {"ready":"gis2d","error":null,"exampleRendered":true,"actionCount":31,
+         "mutated":true,"undone":true,"redone":true,"faultLines":4,...}
+```
+
+`action.addFeature` is **present in the live Actions rail** (`open-actions … "present":true`), so
+§9.3's five-place registration (enum / `GIS2D_RETAINED_TOOL_IDS` / publication contracts /
+`command_from_action` / `bounded_first_step_tool_proofs!`) is confirmed live, not only by the native
+proof test. The ledger row the click produced is the authored leaf, verbatim from the History panel:
+
+```
+framework.history.entry.3: create-position index=152 item { position-1 data={ id="posit…
+```
+
+i.e. the rail verb went through `positions_operations` → the collection's own `🆕create-position`
+leaf, appended at index 152 (the demo document's 152 positions), and the uncommitted-edit count moved
+0 → 1. `undo` → entry 4 "Undo", edits 1 → 0. `redo` → entry 5 "Redo", edits 0 → 1.
+
+**boot → example → real document mutation through the UI → undo → redo: all green, live.**
+
+### 10.2 Console
+
+Four fault lines, all one line repeated:
+`WebSocket connection to 'ws://127.0.0.1:60264/bridge' failed: … net::ERR_CONNECTION_REFUSED`
+— the shell dialling the **MCP agent bridge** (slice M7) with no bridge process listening.
+Environmental, not a plugin fault, and nothing else. Notably **B3a §2.5's `shell.panelTab` refusal is
+gone** from this run, and there is no guest trap, no `dispatch-failed`, no window fault.
+The probe's `NOISE` filter now excludes exactly that one connection-refusal shape (narrow regex, so a
+bridge error that is not a connection refusal still counts as a fault).
+
+### 10.3 The one real defect this surfaced — no gis2d panel projected the document (FIXED)
+
+`panelRoundTrip` came back **false**: the whole rendered witness (`panes:…:0 chars:0 svg:1 canvas`,
+`rows: 0`) was byte-identical before the mutation, after it, after undo and after redo. Reading the
+two panels explains it and it is a genuine gap, not a probe artefact:
+
+- `📌️panels/🗿️artifact/🦀️.rs:41` — the Artifact tree renders `GIS_MAP_LAYER_IDS`, the **eleven fixed
+  layer ids**. It takes `_cfg` and no document at all, so it can never move.
+- `📌️panels/🔍️inspection/🦀️.rs:33` — the inspector summary was `schema` + `layers visible x/11` +
+  `selected n`. It *takes* `document: &GisMapSnapshot` but used it only inside `feature_kind`, to name
+  the kind of an already-selected feature.
+
+So gis2d published **no textual projection of its own document anywhere**: `addFeature` /
+`deleteFeature` moved the ledger and the edit count while every panel stayed frozen, and the map
+itself paints to a canvas with no data attributes. A user could not see the feature they had added.
+
+Fixed at the root — three rows added to the inspector summary, each printing that collection's own
+extent, reusing the existing `layer_positions`/`layer_routes`/`layer_regions` labels so no new
+localisation surface is introduced:
+
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs:34-37`
+  — `gis2d-play-inspector.positions-count` / `.routes-count` / `.regions-count`, from
+  `document.positions|routes|regions .len()`; module docstring updated to match.
+- `…/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs` — new
+  `the_inspector_summary_projects_each_document_collection_extent`: the three rows exist, print the
+  document's own extents, and appending one position changes the projected tree.
+
+### 10.4 Probe improvements (shared with every B3 slice)
+
+`🐍️b3a-interaction-probe.mjs`:
+- **a `redo` step** — the bar was `boot → mutate → undo` only; `interactionBar` now also requires
+  `redone` (edit count back to the post-mutation value) and reports `panelRoundTrip` separately
+  (render returns to the post-mutation projection AND differed from it while undone).
+- **`panelRows`** in the shell read and in the render witness: treeitems inside the app's OWN visible
+  panels (framework panels excluded), which is the only textual document projection a canvas-painting
+  plugin has.
+- **an `open-app-panels` step** that opens `framework.panel.inspection` / `framework.panel.artifact`
+  (override with `config.panels`) before the witness is taken.
+- **`setup` steps now press `…​.action.<id>.execute`** too — an argument-carrying setup verb only
+  folded its form open before, so `setup` silently dispatched nothing.

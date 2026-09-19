@@ -25,6 +25,7 @@ const port = process.env.SEMIO_B1A_PORT ?? "6090";
 const variant = process.env.SEMIO_B1A_VARIANT ?? plugin;
 const seconds = Number(process.env.SEMIO_B1A_SECONDS ?? 120);
 const wanted = (process.env.SEMIO_B1A_ACTIONS ?? "").split(",").map((entry) => entry.trim()).filter(Boolean);
+const prefix = process.env.SEMIO_B1A_PREFIX ?? "b1a";
 const ticketDir = dirname(fileURLToPath(import.meta.url));
 const outDir = join(ticketDir, "🗑️generated");
 mkdirSync(outDir, { recursive: true });
@@ -235,7 +236,7 @@ if (boot?.ready && !boot.shellError) {
 
 const final = boot ? await shell().catch(() => null) : null;
 step("final", final ? { ready: final.ready, shellError: final.shellError, history: final.history, panes: final.panes } : null);
-await page.screenshot({ path: join(outDir, `b1a-${plugin}.png`), fullPage: false }).catch(() => {});
+await page.screenshot({ path: join(outDir, `${prefix}-${plugin}.png`), fullPage: false }).catch(() => {});
 
 const faults = faultsSince(0);
 /** ↩️ Undo counts only when the shell offers a redo of the retired command AND the document witness
@@ -253,7 +254,7 @@ report.summary = {
   consoleLines: lines.length,
 };
 report.summary.bar = report.summary.loadsClean && report.summary.exampleRendered && report.summary.dispatched && report.summary.undoWorks;
-writeFileSync(join(outDir, `b1a-${plugin}-console.txt`), [
+writeFileSync(join(outDir, `${prefix}-${plugin}-console.txt`), [
   `# ${plugin} react playground ${url}`,
   `# summary ${JSON.stringify(report.summary)}`,
   "",
@@ -269,5 +270,5 @@ writeFileSync(join(outDir, `b1a-${plugin}-console.txt`), [
   `## full console (${lines.length})`,
   ...lines,
 ].join("\n"));
-process.stdout.write(`B1A ${plugin} ${JSON.stringify(report.summary)}\n`);
+process.stdout.write(`${prefix.toUpperCase()} ${plugin} ${JSON.stringify(report.summary)}\n`);
 await browser.close();

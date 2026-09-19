@@ -62,6 +62,48 @@ fn retire_command_ingress(state: CommandIngressOwner) -> Option<CommandIngressOw
     }
 }
 
+/// 📥️ Which of the guest's two fixed ingress slots holds the owner the host is DRIVING, and which
+/// holds one it has stopped driving.
+///
+/// The host drives ONE command per instance at a time and keeps a `kernel::CommandBatchDriver` alive
+/// for exactly as long as that command is in flight; there is no message on this wire that tells the
+/// guest a command was abandoned. The only evidence the guest ever gets is a page that names a
+/// DIFFERENT command on the same instance — at which point the retained owner is provably not being
+/// driven any more. It cannot simply be dropped (its pages and its decoder are released one bounded
+/// step at a time, like every other close ladder here), so it moves to the retiring lane, where it
+/// closes on its own budget and is invisible to this turn's ingress status. The live lane is then
+/// free for the command the host IS driving.
+///
+/// Before this, a superseded owner sat in the one used slot forever: every page for the new command
+/// answered `Backpressure` and every turn that carried no page answered `CommandPending` with the
+/// STALE cursor, which the host's `validate_cursor` correctly refused with
+/// `plugin.command-cursor-mismatch` (ticket 26/09/18 slice A2 §6.1, slice R2).
+const COMMAND_INGRESS_LIVE_SLOT: usize = 1;
+const COMMAND_INGRESS_RETIRING_SLOT: usize = 0;
+
+/// 🧹️ One bounded close step for a superseded owner. It owns no ingress status: the host has no
+/// driver left for it, so anything this lane said would name a command the host cannot acknowledge.
+fn step_retiring_command_ingress() {
+    COMMAND_INGRESS.with(|ingress| {
+        let mut ingress = ingress.borrow_mut();
+        if let Some(entry) = ingress[COMMAND_INGRESS_RETIRING_SLOT].take() {
+            let key = entry.key;
+            ingress[COMMAND_INGRESS_RETIRING_SLOT] = retire_command_ingress(entry.state).map(|state| RetainedCommandIngress { key, state });
+        }
+    });
+}
+
+fn retiring_command_ingress_is_free() -> bool {
+    COMMAND_INGRESS.with(|ingress| ingress.borrow()[COMMAND_INGRESS_RETIRING_SLOT].is_none())
+}
+
+/// 🧹️ Moves a superseded owner into the retiring lane and takes its first close step there.
+fn park_retiring_command_ingress(key: instance_lifetime::NativeCloseKey, state: CommandIngressOwner) {
+    COMMAND_INGRESS.with(|ingress| {
+        ingress.borrow_mut()[COMMAND_INGRESS_RETIRING_SLOT] = retire_command_ingress(state).map(|state| RetainedCommandIngress { key, state });
+    });
+}
+
 pub(super) fn close_command_ingress_step(key: instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
     COMMAND_INGRESS.with(|ingress| {
         let mut ingress = ingress.try_borrow_mut().map_err(|_| reactor_close_fault("command ingress close authority busy"))?;
@@ -824,17 +866,10 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
     let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
-    let (mut retained, retained_slot, mut retained_key) = COMMAND_INGRESS.with(|ingress| {
-        let mut ingress = ingress.borrow_mut();
-        if ingress[0].is_some() {
-            let entry = ingress[0].take().expect("retained command");
-            (Some(entry.state), 0, Some(entry.key))
-        } else {
-            match ingress[1].take() {
-                Some(entry) => (Some(entry.state), 1, Some(entry.key)),
-                None => (None, 1, None),
-            }
-        }
+    step_retiring_command_ingress();
+    let (mut retained, mut retained_key) = COMMAND_INGRESS.with(|ingress| match ingress.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].take() {
+        Some(entry) => (Some(entry.state), Some(entry.key)),
+        None => (None, None),
     });
     if let Some(key) = retained_key {
         if native_close_key(runtime, key.instance()).ok() != Some(key) {
@@ -989,14 +1024,16 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                     || (cursor.page_index.checked_add(1).is_some_and(|next| next < cursor.page_count) && page.len() != semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)))
         {
             command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-invalid".to_vec() };
-        } else if retained.as_ref().is_some_and(|owner| match owner {
-            CommandIngressOwner::ReservedPresence { cursor: active, .. }
-            | CommandIngressOwner::Presence { cursor: active, .. }
-            | CommandIngressOwner::PendingPresencePage { cursor: active, .. }
-            | CommandIngressOwner::GenericAssembly { cursor: active, .. }
-            | CommandIngressOwner::ClosingAssembly { cursor: active, .. }
-            | CommandIngressOwner::Generic { cursor: active, .. } => !same_command_cursor(active, &cursor),
-        }) {
+        } else if retained.as_ref().is_some_and(|owner| !same_command_cursor(&command_ingress_owner_cursor(owner), &cursor)) {
+            // 📥️ A page that names a different command on THIS instance is the host saying it has
+            // moved on: it drives one command per instance at a time, so the owner retained here can
+            // no longer have a driver. It is superseded into the retiring lane (see
+            // `COMMAND_INGRESS_RETIRING_SLOT`) and the host is asked for this page once more, which
+            // the now-free live lane admits on the next turn. A page for ANOTHER instance is genuine
+            // backpressure — that owner's host driver is still live — and waits as it always did.
+            if retained.as_ref().is_some_and(|owner| command_ingress_owner_cursor(owner).instance == cursor.instance) && retiring_command_ingress_is_free() {
+                park_retiring_command_ingress(retained_key.expect("a retained owner holds its exact lifetime"), retained.take().expect("the superseded owner was retained"));
+            }
             command_ingress = semio_framework::kernel::CommandIngressStatus::Backpressure(cursor);
         } else if matches!(retained, Some(CommandIngressOwner::ReservedPresence { .. } | CommandIngressOwner::PendingPresencePage { .. })) {
             command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor);
@@ -1126,7 +1163,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     command_ingress = command_ingress_while_owned(command_ingress, retained.as_ref().map(command_ingress_owner_cursor));
     if let Some(retained) = retained {
         COMMAND_INGRESS.with(|ingress| {
-            ingress.borrow_mut()[retained_slot] = Some(RetainedCommandIngress { key: retained_key.expect("admitted command retains its exact lifetime"), state: retained });
+            ingress.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT] = Some(RetainedCommandIngress { key: retained_key.expect("admitted command retains its exact lifetime"), state: retained });
         });
     }
     // 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing

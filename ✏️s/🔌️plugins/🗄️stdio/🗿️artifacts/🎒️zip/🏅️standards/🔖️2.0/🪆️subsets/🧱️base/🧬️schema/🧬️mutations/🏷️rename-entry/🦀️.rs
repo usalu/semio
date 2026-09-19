@@ -8,6 +8,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "rename-entry")]
 pub struct RenameEntry {
     pub(crate) name: String,
     pub(crate) new_name: String,

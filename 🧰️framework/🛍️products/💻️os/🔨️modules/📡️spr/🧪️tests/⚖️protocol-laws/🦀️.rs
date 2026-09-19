@@ -132,6 +132,17 @@ pub struct GenProfile {
     pub adversarial: bool,
 }
 
+/// 🔀️ Appends one generated [`crate::os_spr::HistoryTransitionRecord`] carrying `transition`, causally
+/// chained to the previous one, at a strictly increasing physical clock.
+async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adversarial: bool, index: usize, transition: crate::os_spr::HistoryTransition, transitions: &mut Vec<crate::os_spr::HistoryTransitionRecord>) {
+    *clock += 1;
+    let actor = next_ident(rng, "actor", index, adversarial).await;
+    let hlt = (rng.next_range(4).await, *clock, rng.next_range(2).await);
+    let id = next_ident(rng, "transition", transitions.len(), adversarial).await;
+    let dependencies = transitions.last().map(|prior| vec![prior.id.clone()]).unwrap_or_default();
+    transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, payload: crate::os_spr::encode_history_transition(&transition) });
+}
+
 /// 🎞️ Deterministic seeded `crate::os_spr::HistoryLog` fabricator.
 pub struct HistoryLogGen {
     state: u64,
@@ -143,10 +154,9 @@ impl HistoryLogGen {
     }
 
     /// 🌱️ Fabricates a `HistoryLog` matching `profile`: a doc identity, `edit_count` edits (each
-    /// with 0..=`max_ops_per_edit` opaque op lines), a `HistoryChange` + `HistoryCheckpoint` every
-    /// `checkpoint_every` edits (chained via `parent_id`), 0..=2 alternatives referencing a random
-    /// subset of checkpoints, and an optional active alternative — every field this crate's own
-    /// `assert_history_*` laws round-trip.
+    /// with 0..=`max_ops_per_edit` opaque op lines), a `Commit` transition every `checkpoint_every`
+    /// edits (chained via `parent_id`), then 0..=2 `Branch` transitions at a random checkpoint —
+    /// every field this crate's own `assert_history_*` laws round-trip.
     pub async fn generate(&mut self, profile: &GenProfile) -> crate::os_spr::HistoryLog {
         let mut rng = SplitMix64(self.state);
 
@@ -169,67 +179,47 @@ impl HistoryLogGen {
             edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse: Vec::new(), meta: None });
         }
 
-        let mut changes: Vec<crate::os_spr::HistoryChange> = Vec::new();
-        let mut checkpoints: Vec<crate::os_spr::HistoryCheckpoint> = Vec::new();
+        let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
+        let mut checkpoint_ids: Vec<String> = Vec::new();
+        let mut clock = 0u64;
         if profile.checkpoint_every > 0 {
             let mut boundary = 0usize;
-            let mut prior_checkpoint: Option<String> = None;
             let mut index = 0usize;
             while boundary < edits.len() {
                 let end = (boundary + profile.checkpoint_every).min(edits.len());
-                let change_id = next_ident(&mut rng, "change", index, profile.adversarial).await;
-                let edit_ids: Vec<String> = edits[boundary..end].iter().map(|edit| edit.id.clone()).collect();
-                changes.push(crate::os_spr::HistoryChange {
-                    id: change_id.clone(),
-                    saved_at: next_timestamp(&mut rng, profile.adversarial).await,
-                    edit_ids,
-                    description: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None },
-                });
-
-                let checkpoint_id = next_ident(&mut rng, "checkpoint", index, profile.adversarial).await;
+                let mutation_ids = edits[boundary..end].iter().flat_map(|edit| (0..edit.ops.len()).map(|op| crate::os_spr::MutationId(format!("{}#{op}", edit.id)))).collect();
                 let author_count = rng.next_range(3).await as usize;
                 let mut authors = Vec::with_capacity(author_count);
                 for a in 0..author_count {
-                    authors.push(crate::os_spr::HistoryAuthor { id: next_ident(&mut rng, "author", a, profile.adversarial).await, name: next_text(&mut rng, false).await });
+                    authors.push(crate::os_spr::TransitionAuthor { id: next_ident(&mut rng, "author", a, profile.adversarial).await, name: next_text(&mut rng, false).await, avatar: None });
                 }
-                checkpoints.push(crate::os_spr::HistoryCheckpoint {
-                    id: checkpoint_id.clone(),
-                    timestamp: next_timestamp(&mut rng, profile.adversarial).await,
-                    change_ids: vec![change_id],
-                    parent_id: prior_checkpoint.clone(),
+                let checkpoint = crate::os_spr::TransitionCheckpoint {
+                    checkpoint_id: next_ident(&mut rng, "checkpoint", index, profile.adversarial).await,
+                    parent_id: checkpoint_ids.last().cloned(),
+                    change_id: next_ident(&mut rng, "change", index, profile.adversarial).await,
+                    mutation_ids,
+                    description: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None },
+                    saved_at: next_timestamp(&mut rng, profile.adversarial).await,
                     authors,
                     message: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None },
-                });
-
-                prior_checkpoint = Some(checkpoint_id);
+                    timestamp: next_timestamp(&mut rng, profile.adversarial).await,
+                };
+                checkpoint_ids.push(checkpoint.checkpoint_id.clone());
+                push_transition(&mut rng, &mut clock, profile.adversarial, index, crate::os_spr::HistoryTransition::Commit(checkpoint), &mut transitions).await;
                 index += 1;
                 boundary = end;
             }
         }
-
-        let mut alternatives: Vec<crate::os_spr::HistoryAlternative> = Vec::new();
-        if !checkpoints.is_empty() {
-            let alternative_count = rng.next_range(3).await as usize;
-            for i in 0..alternative_count {
-                let mut checkpoint_ids = Vec::new();
-                for checkpoint in &checkpoints {
-                    if rng.next_bool().await {
-                        checkpoint_ids.push(checkpoint.id.clone());
-                    }
-                }
-                alternatives.push(crate::os_spr::HistoryAlternative { id: next_ident(&mut rng, "alt", i, profile.adversarial).await, name: next_text(&mut rng, false).await, checkpoint_ids });
+        if !checkpoint_ids.is_empty() {
+            for i in 0..rng.next_range(3).await as usize {
+                let checkpoint_id = checkpoint_ids[rng.next_range(checkpoint_ids.len() as u64).await as usize].clone();
+                let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: next_ident(&mut rng, "alt", i, profile.adversarial).await, name: next_text(&mut rng, false).await, checkpoint_id };
+                push_transition(&mut rng, &mut clock, profile.adversarial, i, branch, &mut transitions).await;
             }
         }
 
-        let active_alternative_id = if !alternatives.is_empty() && rng.next_bool().await {
-            let index = rng.next_range(alternatives.len() as u64).await as usize;
-            Some(alternatives[index].id.clone())
-        } else {
-            None
-        };
-
         self.state = rng.0;
-        crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None, composition: None, conflicts: Vec::new() }
+        crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition: None, conflicts: Vec::new() }
     }
 }
 
@@ -300,19 +290,10 @@ async fn write_history_log(log: &crate::os_spr::HistoryLog, commit_after_every_r
         appender.append_edit(edit).await.expect("append_edit must succeed for a testkit-generated edit");
         appender.commit().await.expect("commit after edit");
     }
-    for change in &log.changes {
-        appender.append_change(change).await.expect("append_change must succeed for a testkit-generated change");
-        appender.commit().await.expect("commit after change");
+    for transition in &log.transitions {
+        appender.append_transition(transition).await.expect("append_transition must succeed for a testkit-generated transition");
+        appender.commit().await.expect("commit after transition");
     }
-    for checkpoint in &log.checkpoints {
-        appender.append_checkpoint(checkpoint).await.expect("append_checkpoint must succeed for a testkit-generated checkpoint");
-        appender.commit().await.expect("commit after checkpoint");
-    }
-    for alternative in &log.alternatives {
-        appender.append_alternative(alternative).await.expect("append_alternative must succeed for a testkit-generated alternative");
-        appender.commit().await.expect("commit after alternative");
-    }
-    appender.set_active(log.active_alternative_id.as_deref()).await.expect("set_active must always succeed");
     appender.commit().await.expect("final commit");
     appender.into_sink().await
 }
@@ -468,7 +449,7 @@ pub async fn assert_recovery_truncates_to_commit(bytes: &[u8], level: Corruption
 }
 
 /// 🧮️ The `(kind, payload bytes)` multiset of every structural record (`REC_DOC`/`REC_EDIT`/
-/// `REC_CHANGE`/`REC_CHECKPOINT`/`REC_ALTERNATIVE`/`REC_ACTIVE`) in `bytes`'s trusted prefix —
+/// `REC_TRANSITION`) in `bytes`'s trusted prefix —
 /// deliberately excludes `REC_COMMIT` (chain metadata, expected to differ across a compaction that
 /// restarts the commit chain) and dictionary/index/sealed/compaction/snapshot/ephemeral kinds
 /// (physical layout compaction is explicitly allowed to rewrite).
@@ -479,7 +460,7 @@ async fn structural_records(bytes: &[u8], limits: &crate::os_spr::ProtocolLimits
     let mut counts = std::collections::BTreeMap::new();
     let mut cursor = crate::os_spr::FrameCursor::new(trusted, crate::os_spr::format::HEADER_SIZE as u64).await;
     while let Some(frame) = cursor.next_frame().await.expect("trusted prefix must re-parse cleanly") {
-        if matches!(frame.kind, crate::os_spr::REC_DOC | crate::os_spr::REC_EDIT | crate::os_spr::REC_CHANGE | crate::os_spr::REC_CHECKPOINT | crate::os_spr::REC_ALTERNATIVE | crate::os_spr::REC_ACTIVE) {
+        if matches!(frame.kind, crate::os_spr::REC_DOC | crate::os_spr::REC_EDIT | crate::os_spr::REC_TRANSITION) {
             *counts.entry((frame.kind, frame.payload().await.to_vec())).or_insert(0) += 1;
         }
     }

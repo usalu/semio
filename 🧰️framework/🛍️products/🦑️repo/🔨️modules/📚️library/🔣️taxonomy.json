@@ -6467,6 +6467,11 @@
       "slugPattern": "^mit-bestand$",
       "allowEmojiOnly": false
     },
+    "semio-tech": {
+      "emoji": "🏢️",
+      "slugPattern": "^semio-tech$",
+      "allowEmojiOnly": false
+    },
     "asset-subject": {
       "emoji": "🖼️",
       "slugPattern": "^(?!assets$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$",
@@ -11436,6 +11441,15 @@
         "📋️bericht",
         "🖼️asset",
         "🧺️demonstrator"
+      ],
+      "source": "registry"
+    },
+    "members-of-semio-tech": {
+      "ownerKindIds": [
+        "semio-tech"
+      ],
+      "memberNames": [
+        "🎡️play"
       ],
       "source": "registry"
     },
@@ -29312,7 +29326,8 @@
       "product-module": {
         "pathPatterns": [
           "🧰️framework/🛍️products/*/🔨️modules/**",
-          "♻️mit-bestand/*/🔨️modules/**"
+          "♻️mit-bestand/*/🔨️modules/**",
+          "🏢️semio-tech/*/🔨️modules/**"
         ],
         "reason": "A product module owns the contracts of the product surface it implements."
       },
@@ -30045,6 +30060,7 @@
     "🧰️framework": "clean",
     "🌎️hub": "clean",
     "♻️mit-bestand": "clean",
+    "🏢️semio-tech": "clean",
     "🧰️framework/🛍️products/🦑️repo": "clean",
     ".🧬semio/🦑️repo/🎫️tickets": "exempt"
   },
@@ -30053,7 +30069,8 @@
     "🧰️framework": "framework",
     "✏️s": "implementation",
     "🌎️hub": "implementation",
-    "♻️mit-bestand": "implementation"
+    "♻️mit-bestand": "implementation",
+    "🏢️semio-tech": "implementation"
   },
   "_mutationOwnershipComment": "🧬️ Every concrete 🧬️mutations/<emoji><verb>-<noun>/ directory directly owns one 🦀️.rs holding only its payload and dispatch. This is a PLACEMENT rule, not a completeness one: whenever a mutation's own apply/payload-definition, diff, or inverse behavior exists, it lives in its own facet directory — 🦠️mutation, 🔺️diff, ↩️inverse (mutationBehaviorFacetDirs) — and must never be inlined back into the direct leaf; mutationDirectLeafForbiddenRegionMarkers names the exact region marker whose presence in the direct leaf proves an inlining regression for 🔺️diff/↩️inverse. 🧩️plan, 📝️text, 💾️binary and 🧬️schema remain optional organizational facets (mutationOrganizationalFacetDirs), genuinely absent for many mutations and never a completeness requirement. The 🧬️mutations root is transparent assembly only.",
   "mutationDirectoryPattern": "^.+\\uFE0F[a-z][a-z0-9]*(?:-[a-z0-9]+)+$",

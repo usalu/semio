@@ -35,8 +35,6 @@
             "dictionaryEntries",
             "dictionaryBytes",
             "identityBytes",
-            "pinGroups",
-            "pins",
             "records",
             "pageEntries",
             "pageBytes",
@@ -51,12 +49,6 @@
             },
             "identityBytes": {
               "const": 256
-            },
-            "pinGroups": {
-              "const": 1024
-            },
-            "pins": {
-              "const": 8192
             },
             "records": {
               "const": 8192
@@ -444,8 +436,6 @@
         "operation",
         "entries",
         "pages",
-        "groups",
-        "pins",
         "inputBytes",
         "retiredBytes",
         "error"
@@ -465,6 +455,7 @@
             "critical-composition",
             "noncritical-document",
             "noncritical-dictionary",
+            "noncritical-transition",
             "lookup-missing",
             "duplicate-document",
             "wrong-owner",
@@ -472,12 +463,9 @@
             "missing-composition",
             "earlier-foreign",
             "earlier-malformed",
-            "pin-limit",
-            "aggregate-pin-limit",
             "extra-entries",
             "uncommitted-tail",
             "first-base",
-            "aggregate-group-limit",
             "request-field",
             "unused-empty",
             "empty-identity",
@@ -502,14 +490,6 @@
         },
         "pages": {
           "$ref": "#/$defs/Pages"
-        },
-        "groups": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 1024
-        },
-        "pins": {
-          "$ref": "#/$defs/Entries"
         },
         "inputBytes": {
           "type": "integer",
@@ -539,11 +519,8 @@
                   "entry-limit",
                   "byte-limit",
                   "second-base",
-                  "pin-limit",
-                  "aggregate-pin-limit",
                   "extra-entries",
-                  "first-base",
-                  "aggregate-group-limit"
+                  "first-base"
                 ]
               }
             }

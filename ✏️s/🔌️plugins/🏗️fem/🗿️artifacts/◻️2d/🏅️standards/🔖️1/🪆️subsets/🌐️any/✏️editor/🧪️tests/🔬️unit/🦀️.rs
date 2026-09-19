@@ -443,12 +443,14 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     assert!(render(&mut app, "fem2d.play.nope").contains("Unknown body"));
 }
 
+/// 🧬️ The framework's REGISTERED convergence law: two instances on one `MemoryBackbone` apply disjoint
+/// edits and pump; both must project the same document. fem2d publishes bounded tool proofs, so a
+/// registry-less pair faults `interactive-job.catalog-authority` before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
-    // 🧬️ The framework's own convergence law (the same call every sibling editor makes): two instances
-    // on one `MemoryBackbone` apply disjoint edits and pump; both must project the same document.
-    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<Fem2dPlayApp>, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Fem2dPlayApp>, _, _, _>(
         "mem://fem2d-convergence",
+        || async { semio_framework_plugin::App { definition: create_fem2d_app(), examples: Vec::new() } },
         Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }),
         Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }),
         |app| {

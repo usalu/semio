@@ -4,6 +4,9 @@ use crate::{Block2dSnapshot};
 
 use ::semio_framework_schema::ArtifactSchema;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Artifact
 /// 🧬️ block2d document artifact state.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

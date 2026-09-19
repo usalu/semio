@@ -3054,7 +3054,76 @@ mod plugin_builder_contract_tests {
         }
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     }
-    
+
+    /// ⚖️ LAW: an ingress owner the host has stopped driving never answers for the command it IS
+    /// driving, and never pins the ingress lane against it.
+    ///
+    /// 🧭️ Nothing on this wire tells the guest that a command was abandoned — the host's
+    /// `CommandBatchDriver` simply stops existing when its slice loop gives up, its wall budget runs
+    /// out or its own cleanup tears the command down. The one piece of evidence the guest can read is
+    /// a page naming a DIFFERENT command on the same instance, because the host drives one command
+    /// per instance at a time. So that page must supersede whatever is retained, and from then on
+    /// every status the new command's own driver observes must be one it can acknowledge — including
+    /// on the turns the host carries no page at all, which is exactly when a stale owner used to
+    /// speak.
+    ///
+    /// 🐛️ Before the retiring lane the superseded owner stayed in the single used ingress slot: every
+    /// page of the new command answered `Backpressure` forever, and every page-less turn answered
+    /// `CommandPending` with the STALE cursor, which `validate_cursor` correctly refused as
+    /// `plugin.command-cursor-mismatch: … owner is 1, the retained owner's is 554` — the fault that
+    /// held every semio-MCP mutation verb (ticket 26/09/18,
+    /// `📓️a2-mcp-plugin-host-instance-open.md` §6.1, `📓️r2-reactor-retained-command-owner.md`).
+    #[semio_framework_async_macros::async_test]
+    async fn an_abandoned_ingress_owner_never_answers_the_command_the_host_is_driving() {
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let instance = 4_024;
+        let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "abandoned-ingress-owner".into())]).await.lifecycle_receipt.expect("Captured receipt");
+        let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+        reactor_native_lifecycle_ack(&runtime, captured).await;
+
+        let abandoned_seq = 4_096;
+        let line = "p".repeat(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
+        let mut abandoned = command_page_authority_driver(instance, abandoned_seq, &protocol::AppCommand::CommandText { seq: abandoned_seq, line }).await;
+        let first = abandoned.next_page().expect("the abandoned owner produces its first page").expect("a two-page command has a first page");
+        let opened = crate::reactor::poll_kernel(&runtime, Vec::new(), Some(first), None, command_page_authority_budget()).await.expect("one native ingress turn");
+        assert!(
+            matches!(opened.command_ingress, semio_framework::kernel::CommandIngressStatus::PageAccepted(_)),
+            "the guest accepts the first page of a two-page command: {:?}",
+            opened.command_ingress
+        );
+        assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 1, "a half-assembled command is retained");
+        drop(abandoned);
+
+        let seq = 4_097;
+        let mut driver = command_page_authority_driver(instance, seq, &protocol::AppCommand::CommandText { seq, line: "after the abandoned owner".into() }).await;
+        let mut completed = false;
+        for turn in 0..INGRESS_TURNS_PER_COMMAND {
+            let carried = driver.next_page().expect("the host owner produces its pages");
+            let result = crate::reactor::poll_kernel(&runtime, Vec::new(), carried, None, command_page_authority_budget()).await.expect("one native ingress turn");
+            let progress = driver.observe(&result.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).unwrap_or_else(|fault| {
+                panic!("turn {turn}: the guest answered {:?} for the command this host owns as seq {seq}: {}: {}", result.command_ingress, fault.code.0, fault.message)
+            });
+            match progress {
+                semio_framework::kernel::CommandBatchProgress::Complete => {
+                    completed = true;
+                    break;
+                }
+                semio_framework::kernel::CommandBatchProgress::Faulted => panic!("turn {turn}: the command the host drives faulted: {:?}", result.command_ingress),
+                _ => {}
+            }
+        }
+        assert!(completed, "the command the host drives never completed in {INGRESS_TURNS_PER_COMMAND} turns — the abandoned owner still holds the ingress lane");
+        for _ in 0..INGRESS_TURNS_PER_COMMAND {
+            if crate::reactor::retained_command_ingress_occupancy() == 0 {
+                break;
+            }
+            crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, command_page_authority_budget()).await.expect("one native ingress turn");
+        }
+        assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
+        reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
+    }
+
     /// ⚖️ LAW: a long command stream leaves the guest's retained ingress authority empty. Every command
     /// is dispatched and closed within its own turns; nothing pins a slot for a later command to queue
     /// behind, and the run retains no per-command heap.
@@ -3166,7 +3235,7 @@ mod plugin_builder_contract_tests {
             actors: vec![ActorId("local".into())],
             timestamp,
         });
-        app.test_store_mut().await.reset(envelope, applied_edit_ids, Vec::new()).await.expect("seed valid open degraded conflict");
+        app.test_store_mut().await.reset(envelope).await.expect("seed valid open degraded conflict");
 
         let read = crate::plugin_runtime::read_conflicts_frames(&app, 9).await;
         let [protocol::AppFrame::Conflicts { in_reply_to: Some(9), conflicts }] = read.as_slice() else { panic!("read must yield exactly one correlated conflict projection") };
@@ -4447,16 +4516,25 @@ mod plugin_builder_contract_tests {
     }
 
 
-    /// 🧪 Browser-shaped `noteShellCommand` (no `inverseCommandId`): chrome-order undo pops Resize.
+    /// 🧪 Browser-shaped `noteShellCommand`: a note with NO `inverseCommandId` is logged but is not an
+    /// undo target, so chrome-order undo steps over `shell.windowActivate` and `shell.windowResize`
+    /// and pops the one row that declared a real inverse. A self-inverse (replaying a chrome id with
+    /// its own `detail`) is an identity, not an inverse — and replaying a `shell.*` id into the guest
+    /// is what the window-kind gate refused `undeclared-action` on every undo (ticket 26/09/18 §3.2).
     #[semio_framework_async_macros::async_test]
-    async fn reserved_undo_browser_note_without_inverse_pops_chrome_resize() {
+    async fn reserved_undo_browser_note_without_inverse_is_not_an_undo_target() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
         let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
         for entry in fixture["stack"].as_array().expect("stack") {
             reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone()))).await;
         }
         let before = app.test_history().await;
-        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
+        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
+        for skipped in fixture["undo"]["skippedActionIds"].as_array().expect("skippedActionIds") {
+            let action_id = skipped.as_str().expect("skipped action id");
+            let entry = before.commands.iter().find(|entry| entry.action_id == action_id).expect("undeclared-inverse chrome is still logged");
+            assert!(!entry.revertible, "{action_id} declared no inverse, so it must not be revertible");
+        }
         let admitted = app.handle_action("undo", None, &meta()).await.expect("admit browser-note undo");
         assert!(
             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
@@ -4465,19 +4543,48 @@ mod plugin_builder_contract_tests {
         assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
         let settled = settle_reserved(&mut app, admitted).await;
         let replay_id = fixture["undo"]["replayActionId"].as_str().expect("replayActionId");
-        assert_eq!(settled.requested_effects, vec![Effect::ReplayShellCommand { action_id: replay_id.into(), args: None }], "chrome branch must pop Resize, not fall through to the document group");
+        let replay_args = dv(fixture["undo"]["replayArgs"].clone());
+        assert_eq!(
+            settled.requested_effects,
+            vec![Effect::ReplayShellCommand { action_id: replay_id.into(), args: Some(replay_args) }],
+            "undo must step over every chrome row that declared no inverse"
+        );
         let patch = settled.history_patch.expect("chrome undo publishes history_patch");
-        assert!(patch.can_undo, "Set Active Example must remain reachable");
-        assert!(patch.can_redo);
+        assert_eq!(patch.can_undo, fixture["undo"]["canUndo"].as_bool().expect("canUndo"));
+        assert_eq!(patch.can_redo, fixture["undo"]["canRedo"].as_bool().expect("canRedo"));
         assert!(!patch.upserts.is_empty());
         let after = app.test_history().await;
-        let resize = after.commands.iter().find(|entry| entry.action_id == replay_id).expect("resize stays in the append-only log");
-        assert!(!resize.revertible, "popped chrome-top shell is no longer revertible");
-        assert!(after.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
+        assert!(after.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| !entry.revertible), "popped chrome-top shell is no longer revertible");
         let redo = reserved_action(&mut app, "redo", None).await;
-        assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: replay_id.into(), args: None }]);
+        assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: fixture["redo"]["replayActionId"].as_str().expect("redo replayActionId").into(), args: None }]);
         assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
         assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
+        close_reserved_app(&mut app);
+    }
+
+    /// 🧪 §3.2's user-visible half: clicking a window between two edits noted `shell.windowActivate`,
+    /// which the chrome branch then popped instead of the user's own edit — undo looked like it did
+    /// nothing and the host replayed the chrome id into the guest. A note with no declared inverse is
+    /// not an undo target, so the DOCUMENT edit is what `undo` pops and no replay leaves the guest.
+    #[semio_framework_async_macros::async_test]
+    async fn reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit() {
+        let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
+        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        reserved_action(
+            &mut app,
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&dv(json!({ "commandId": "shell.windowActivate", "label": "Activate Window", "detail": { "windowId": "trinity-jack-graph" } }))),
+        )
+        .await;
+        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "increment").is_some_and(|entry| entry.applied));
+        let undone = reserved_action(&mut app, "undo", None).await;
+        assert!(
+            undone.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })),
+            "undo must not replay a window activation into the guest"
+        );
+        let after = app.test_history().await;
+        assert!(after.commands.iter().find(|entry| entry.action_id == "increment").is_some_and(|entry| !entry.applied), "undo must pop the document edit");
+        assert!(after.commands.iter().any(|entry| entry.action_id == "shell.windowActivate"), "the chrome row stays in the append-only log");
         close_reserved_app(&mut app);
     }
 

@@ -425,13 +425,14 @@ fn op_text_binary_roundtrip_law() {
 //#endregion 🔖️op_text_binary_roundtrip_law
 
 //#region 🔖️KindsConformanceLaw
-/// 🧾️ `KINDS` must list every `LasMutation` variant, in declaration order, AND the sibling
-/// oracle manifest's `mutationCatalogs[].kinds` must declare the exact same list — the first
-/// half is a real `match` with no wildcard arm, so this fails to compile the moment a new
-/// variant is added to `LasMutation` without a matching kebab-case spelling here, which is what
-/// keeps `KINDS` honest against the enum. The second half reads the sibling oracle manifest's
-/// `kinds` array as text (the framework never parses Rust, so this is the only side that can
-/// prove the manifest matches) and asserts the same list, in the same order.
+/// 🧾️ `KINDS` must list every `LasMutation` variant, in declaration order, AND the
+/// `mutationCatalogs[].kinds` of the three subsets that own its regions (`🎩️header`, `📼️vlr`,
+/// `📍️points`, ASPRS LAS 1.0 §2.2–§2.4) must partition that exact list — the first half is a
+/// real `match` with no wildcard arm, so this fails to compile the moment a new variant is added
+/// to `LasMutation` without a matching kebab-case spelling here, which is what keeps `KINDS`
+/// honest against the enum. The second half reads each subset's oracle manifest `kinds` array as
+/// text (the framework never parses Rust, so this is the only side that can prove the manifests
+/// match) and asserts their concatenation is the same list, in the same order.
 #[test]
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &LasMutation) -> &'static str {
@@ -471,12 +472,17 @@ fn kinds_match_enum_and_catalog() {
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every LasMutation variant, in declaration order");
 
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifests = [include_str!("../../../../🔮️oracles/🔣️.json"), include_str!("../../../../../📼️vlr/🔮️oracles/🔣️.json"), include_str!("../../../../../📍️points/🔮️oracles/🔣️.json")];
     let needle = "\"kinds\": [";
-    let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
-    let end = start + manifest[start..].find(']').expect("kinds array is closed");
-    let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
-    assert_eq!(declared, KINDS, "the oracle manifest's kinds must match LasMutation exactly");
+    let declared: Vec<String> = manifests
+        .iter()
+        .flat_map(|manifest| {
+            let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+            let end = start + manifest[start..].find(']').expect("kinds array is closed");
+            manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect::<Vec<_>>()
+        })
+        .collect();
+    assert_eq!(declared, KINDS, "the header, vlr and points subsets' catalogs must partition LasMutation exactly, in declaration order");
 }
 //#endregion 🔖️KindsConformanceLaw
 

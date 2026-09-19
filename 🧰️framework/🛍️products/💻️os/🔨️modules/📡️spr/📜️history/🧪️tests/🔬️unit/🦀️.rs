@@ -1,5 +1,34 @@
 use super::*;
 
+fn hex(value: &str) -> Vec<u8> {
+    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
+}
+
+fn transition_record(doc_id: &str, actor: &str, transition: crate::os_spr::HistoryTransition, timestamp: (u64, u64, u64)) -> HistoryTransitionRecord {
+    let envelope = crate::os_spr::history_transition_envelope(
+        &transition,
+        &crate::os_spr::ArtifactId(doc_id.to_string()),
+        &crate::os_spr::ActorId(actor.to_string()),
+        Vec::new(),
+        crate::os_spr::HybridLogicalTimestamp { actor: timestamp.0, physical_ms: timestamp.1, logical: timestamp.2 },
+    );
+    HistoryTransitionRecord::from_envelope(&envelope)
+}
+
+fn commit(checkpoint_id: &str, parent_id: Option<&str>, change_id: &str, mutation_ids: &[&str]) -> crate::os_spr::HistoryTransition {
+    crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+        checkpoint_id: checkpoint_id.to_string(),
+        parent_id: parent_id.map(str::to_string),
+        change_id: change_id.to_string(),
+        mutation_ids: mutation_ids.iter().map(|id| crate::os_spr::MutationId(id.to_string())).collect(),
+        description: None,
+        saved_at: "2024-01-15T10:31:00Z".to_string(),
+        authors: vec![crate::os_spr::TransitionAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
+        message: Some("first checkpoint".to_string()),
+        timestamp: "2024-01-15T10:32:00Z".to_string(),
+    })
+}
+
 async fn sample_log() -> HistoryLog {
     HistoryLog {
         doc_id: "doc-1".to_string(),
@@ -47,18 +76,10 @@ async fn sample_log() -> HistoryLog {
                 }]),
             },
         ],
-        changes: vec![HistoryChange { id: "change-1".to_string(), saved_at: "2024-01-15T10:31:00Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }],
-        checkpoints: vec![HistoryCheckpoint {
-            id: "ck-1".to_string(),
-            timestamp: "2024-01-15T10:32:00Z".to_string(),
-            change_ids: vec!["change-1".to_string()],
-            parent_id: None,
-            authors: vec![HistoryAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string() }],
-            message: Some("first checkpoint".to_string()),
-        }],
-        alternatives: vec![HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }],
-        active_alternative_id: Some("alt-1".to_string()),
-        cursor: None,
+        transitions: vec![
+            transition_record("doc-1", "alice", commit("ck-1", None, "change-1", &["edit-1#0", "edit-1#1", "op-1"]), (1, 1_700_000_001_000, 0)),
+            transition_record("doc-1", "alice", crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() }, (1, 1_700_000_001_000, 1)),
+        ],
         composition: None,
         conflicts: Vec::new(),
     }
@@ -98,7 +119,6 @@ async fn composition_overlay_round_trips_through_the_binary_log() {
     let composition = HistoryComposition {
         owner: Some(("parent-1!s.stdio.object@1/*".to_string(), "mesh".to_string(), "child-1".to_string())),
         dialect: Some(("s.stdio.mesh".to_string(), "1".to_string(), "*".to_string())),
-        checkpoint_pins: vec![("ck-1".to_string(), vec![("child-1!s.stdio.mesh@1/*".to_string(), "ck-child-7".to_string())])],
     };
     let log = HistoryLog { composition: Some(composition.clone()), ..sample_log().await };
 
@@ -140,27 +160,42 @@ async fn retained_history_decode_yields_across_bytes_and_semantic_records() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn retained_history_decode_rejects_a_crc_valid_reference_after_valid_records() {
+async fn retained_history_decode_rejects_a_crc_valid_malformed_transition_after_valid_records() {
     let mut log = sample_log().await;
-    log.changes.push(HistoryChange {
-        id: "change-after-valid-prefix".to_string(),
-        saved_at: "2026-09-12T00:00:00Z".to_string(),
-        edit_ids: vec!["missing-edit".to_string()],
-        description: None,
-    });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".to_string(), hlt: (1, 2, 0), dependencies: Vec::new(), payload: vec![0xff] });
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
     let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained semantic refusal");
     let error = loop {
         match decode.step(&bytes, 11, 1) {
             Ok(RetainedHistoryDecodeStep::Pending { .. }) => {}
-            Ok(RetainedHistoryDecodeStep::Ready) => panic!("unknown edit reference reached ready"),
+            Ok(RetainedHistoryDecodeStep::Ready) => panic!("malformed transition reached ready"),
             Err(error) => break error,
         }
     };
-    assert!(error.contains("missing-edit"));
+    assert!(error.contains("transition-after-valid-prefix"));
     let partial = decode.take_partial().expect("semantic rejection retains its exact partial history owner");
-    assert_eq!(partial.changes.last().map(|change| change.id.as_str()), Some("change-after-valid-prefix"));
+    assert_eq!(partial.transitions.last().map(|transition| transition.id.as_str()), Some("transition-after-valid-prefix"));
+    let _ = decode.take_auxiliary_owners();
+    assert!(decode.terminal_is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_history_decode_rejects_a_repeated_transition_id() {
+    let mut log = sample_log().await;
+    log.transitions.push(log.transitions[0].clone());
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode repeated transition");
+    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained decode");
+    let error = loop {
+        match decode.step(&bytes, 4096, 4) {
+            Ok(RetainedHistoryDecodeStep::Pending { .. }) => {}
+            Ok(RetainedHistoryDecodeStep::Ready) => panic!("repeated transition reached ready"),
+            Err(error) => break error,
+        }
+    };
+    assert!(error.contains(&log.transitions[0].id));
+    let _ = decode.take_partial();
     let _ = decode.take_auxiliary_owners();
     assert!(decode.terminal_is_empty());
 }
@@ -402,47 +437,37 @@ async fn ops_text_is_a_fixpoint_under_reprint() {
 
 #[semio_framework_async_macros::async_test]
 async fn ops_text_skips_comments_and_blank_lines() {
-    let text = "doc doc-1 schema=s1\n\n# a comment\nactive alt-1\n";
+    let text = "doc doc-1 schema=s1\n\n# a comment\ntransition t-1 actor=alice hlc=1,2,3 dependencies=[] payload=\"AAEEb3AtYg==\"\n";
     let log = parse_ops_text(text).unwrap();
     assert_eq!(log.doc_id, "doc-1");
-    assert_eq!(log.active_alternative_id.as_deref(), Some("alt-1"));
+    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".to_string(), hlt: (1, 2, 3), dependencies: Vec::new(), payload: hex("0001046f702d62") }]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn ops_text_rejects_unknown_line_keyword() {
-    let err = parse_ops_text("doc doc-1 schema=s1\nbogus x\n").unwrap_err();
-    assert!(matches!(err, ProtocolError::Malformed { .. }));
+    for retired in ["bogus x", "active alt-1", "cursor applied=[] redo=[]", "change c saved=t edits=[]", "checkpoint c at=t changes=[] by=[]", "alternative a name=n checkpoints=[]"] {
+        let err = parse_ops_text(&format!("doc doc-1 schema=s1\n{retired}\n")).unwrap_err();
+        assert!(matches!(err, ProtocolError::Malformed { .. }), "{retired}");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn ops_text_edit_without_active_line_leaves_none() {
-    let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), active_alternative_id: None, ..Default::default() };
-    let text = print_ops_text(&log).unwrap();
-    assert!(!text.contains("active"));
-    assert_eq!(parse_ops_text(&text).unwrap().active_alternative_id, None);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn ops_text_round_trips_a_cursor_line_with_undo_then_apply_interleaving() {
+async fn ops_text_round_trips_every_transition_field() {
     let mut log = sample_log().await;
     for edit in &mut log.edits {
         edit.meta = None;
     }
-    // A single tail-edit marker cannot represent this: edit-1 undone (moved to redo), then a
-    // later apply produced edit-2 — edit-1 precedes edit-2 in file order but is NOT applied.
-    log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-2".to_string()], redo_edit_ids: vec!["edit-1".to_string()], checkpoint_id: Some("ck-1".to_string()) });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".to_string(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], payload: Vec::new() });
     let text = print_ops_text(&log).unwrap();
-    assert!(text.contains("cursor"));
-    let parsed = parse_ops_text(&text).unwrap();
-    assert_eq!(parsed, log);
+    assert_eq!(text.lines().filter(|line| line.starts_with("transition ")).count(), 3);
+    assert_eq!(parse_ops_text(&text).unwrap(), log);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn ops_text_without_a_cursor_line_leaves_cursor_none() {
-    let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), ..Default::default() };
-    let text = print_ops_text(&log).unwrap();
-    assert!(!text.contains("cursor"));
-    assert_eq!(parse_ops_text(&text).unwrap().cursor, None);
+async fn ops_text_rejects_a_transition_without_hlc_or_payload() {
+    for line in ["transition t actor=a dependencies=[] payload=\"AA==\"", "transition t actor=a hlc=1,2 dependencies=[] payload=\"AA==\"", "transition t actor=a hlc=1,2,3 dependencies=[]"] {
+        assert!(parse_ops_text(&format!("doc d schema=s\n{line}\n")).is_err(), "{line}");
+    }
 }
 //#endregion 🔖️TextGrammar
 
@@ -484,49 +509,66 @@ async fn edit_payload_round_trips_minimal_edit() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn change_payload_round_trips_and_references_edit_ordinals() {
-    let change = HistoryChange { id: "change-1".to_string(), saved_at: "2024-01-01T00:00:00Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: Some("d".to_string()) };
-    let mut dict = DictBuilder::new();
-    let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-    let payload = encode_change(&change, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
-    let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-    let decoded = decode_change(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
-    assert_eq!(decoded, change);
+async fn transition_payload_round_trips_with_interned_ids() {
+    for transition in sample_log().await.transitions {
+        let mut dict = DictBuilder::new();
+        let payload = encode_transition(&transition, &mut dict).await.unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        assert_eq!(decode_transition(&payload, &reader).await.unwrap(), transition);
+    }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn checkpoint_payload_round_trips_with_authors() {
-    let checkpoint = sample_log().await.checkpoints.remove(0);
+async fn transition_payload_matches_the_language_agnostic_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
+    let record = &fixture["record"];
+    let hlt: Vec<u64> = record["hlt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap()).collect();
+    let revert = crate::os_spr::HistoryTransition::Revert { mutation_ids: record["transition"]["revert"].as_array().unwrap().iter().map(|id| crate::os_spr::MutationId(id.as_str().unwrap().to_string())).collect() };
+    assert_eq!(crate::os_spr::encode_history_transition(&revert), hex(record["payloadHex"].as_str().unwrap()));
+    let transition = HistoryTransitionRecord {
+        id: record["id"].as_str().unwrap().to_string(),
+        actor: record["actor"].as_str().unwrap().to_string(),
+        hlt: (hlt[0], hlt[1], hlt[2]),
+        dependencies: record["dependencies"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect(),
+        payload: hex(record["payloadHex"].as_str().unwrap()),
+    };
     let mut dict = DictBuilder::new();
-    let payload = encode_checkpoint(&checkpoint, &mut dict).await.unwrap();
+    let payload = encode_transition(&transition, &mut dict).await.unwrap();
+    assert_eq!(payload, hex(fixture["recordHex"].as_str().unwrap()));
+    let dictionary: Vec<String> = fixture["dictionary"].as_array().unwrap().iter().map(|entry| entry.as_str().unwrap().to_string()).collect();
+    assert_eq!(dict.entries_since(0).to_vec(), dictionary);
+    assert_eq!(fixture["kind"].as_u64().unwrap(), u64::from(REC_TRANSITION));
     let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    let decoded = decode_checkpoint(&payload, &reader).await.unwrap();
-    assert_eq!(decoded, checkpoint);
+    reader.extend(0, dictionary).unwrap();
+    assert_eq!(decode_transition(&payload, &reader).await.unwrap(), transition);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn alternative_payload_round_trips() {
-    let alternative = sample_log().await.alternatives.remove(0);
-    let mut dict = DictBuilder::new();
-    let payload = encode_alternative(&alternative, &mut dict).await.unwrap();
+async fn transition_decoder_rejects_newer_format_truncation_and_trailing_bytes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
     let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    let decoded = decode_alternative(&payload, &reader).await.unwrap();
-    assert_eq!(decoded, alternative);
+    reader.extend(0, fixture["dictionary"].as_array().unwrap().iter().map(|entry| entry.as_str().unwrap().to_string()).collect::<Vec<_>>()).unwrap();
+    let bytes = hex(fixture["recordHex"].as_str().unwrap());
+    let mut newer = bytes.clone();
+    newer[0] = 2;
+    let mut trailing = bytes.clone();
+    trailing.push(0);
+    assert!(decode_transition(&newer, &reader).await.is_err());
+    assert!(decode_transition(&trailing, &reader).await.is_err());
+    assert!(decode_transition(&bytes[..bytes.len() - 1], &reader).await.is_err());
 }
 
 #[semio_framework_async_macros::async_test]
-async fn active_payload_round_trips_some_and_none() {
-    let mut dict = DictBuilder::new();
-    let payload_some = encode_active(Some("alt-1"), &mut dict).await;
-    let payload_none = encode_active(None, &mut dict).await;
-    let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    assert_eq!(decode_active(&payload_some, &reader).await.unwrap(), Some("alt-1".to_string()));
-    assert_eq!(decode_active(&payload_none, &reader).await.unwrap(), None);
+async fn transition_record_round_trips_its_envelope() {
+    let transition = sample_log().await.transitions.remove(0);
+    let envelope = transition.to_envelope("doc-1");
+    assert!(crate::os_spr::is_history_transition(&envelope));
+    assert_eq!(envelope.inverse.schema.0, crate::os_spr::HISTORY_TRANSITION_SCHEMA);
+    assert!(envelope.inverse.payload.is_empty());
+    assert_eq!(envelope.document_id.0, "doc-1");
+    assert_eq!(HistoryTransitionRecord::from_envelope(&envelope), transition);
+    assert!(matches!(crate::os_spr::history_transition_from_envelope(&envelope).unwrap(), Some(crate::os_spr::HistoryTransition::Commit(_))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -573,37 +615,6 @@ async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty()
     reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
     let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
     assert_eq!(decoded.inverse, Vec::new());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn cursor_payload_round_trips_with_dict_and_ordinal_refs() {
-    let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: vec!["edit-3".to_string()], checkpoint_id: Some("ck-1".to_string()) };
-    let mut dict = DictBuilder::new();
-    let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-    let payload = encode_cursor(&cursor, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
-    let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-    let decoded = decode_cursor(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
-    assert_eq!(decoded, cursor);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn cursor_payload_round_trips_without_a_checkpoint() {
-    let cursor = HistoryCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None };
-    let mut dict = DictBuilder::new();
-    let payload = encode_cursor(&cursor, &mut dict, |_| None).await.unwrap();
-    let mut reader = DictReader::new();
-    reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-    let decoded = decode_cursor(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
-    assert_eq!(decoded, cursor);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn cursor_decoder_rejects_unknown_presence_bits_and_trailing_payload() {
-    let dict = DictReader::new();
-    assert!(matches!(decode_cursor(&[1, 2], &dict, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { .. })));
-    assert!(matches!(decode_cursor(&[1, 0, 0, 0, 0], &dict, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { .. })));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -658,18 +669,33 @@ async fn history_full_verification_detects_tampering() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set() {
+async fn history_round_trips_backwards_binary_payloads_and_transitions_when_write_backwards_section_is_set() {
     let mut log = sample_log().await;
     log.edits[0].inverse = vec![OpPayload { text: Some("unset foo".to_string()), binary: Some(vec![9, 9]) }, OpPayload { text: Some("unset bar".to_string()), binary: None }];
     log.edits[1].ops[0].binary = Some(vec![7]);
-    log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: Some("ck-1".to_string()) });
     let options = EncodeOptions { write_backwards_section: true, ..EncodeOptions::default() };
     let bytes = encode_history(&log, &options).await.unwrap();
     let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
     assert_eq!(decoded, log);
     assert_eq!(decoded.edits[0].inverse[0].binary, Some(vec![9, 9]));
     assert_eq!(decoded.edits[1].ops[0].binary, Some(vec![7]));
-    assert_eq!(decoded.cursor, log.cursor);
+    assert_eq!(decoded.transitions, log.transitions);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn history_writes_every_transition_as_a_critical_record() {
+    let log = sample_log().await;
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+    let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
+    let mut transitions = 0;
+    while let Some(frame) = cursor.next_frame().await.unwrap() {
+        assert!(frame.kind != 0x40, "the undo/redo cursor record is gone");
+        if frame.kind == REC_TRANSITION {
+            assert_ne!(frame.flags & crate::os_spr::FRAME_FLAG_CRITICAL, 0);
+            transitions += 1;
+        }
+    }
+    assert_eq!(transitions, log.transitions.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -691,16 +717,9 @@ async fn streamed_append_equals_buffered_encode() {
     for edit in &log.edits {
         appender.append_edit(edit).await.unwrap();
     }
-    for change in &log.changes {
-        appender.append_change(change).await.unwrap();
+    for transition in &log.transitions {
+        appender.append_transition(transition).await.unwrap();
     }
-    for checkpoint in &log.checkpoints {
-        appender.append_checkpoint(checkpoint).await.unwrap();
-    }
-    for alternative in &log.alternatives {
-        appender.append_alternative(alternative).await.unwrap();
-    }
-    appender.set_active(log.active_alternative_id.as_deref()).await.unwrap();
     appender.commit().await.unwrap();
     let streamed_bytes = appender.into_sink().await;
 
@@ -709,25 +728,114 @@ async fn streamed_append_equals_buffered_encode() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn append_cursor_then_decode_recovers_it() {
-    let mut log = sample_log().await;
-    for edit in &mut log.edits {
-        edit.meta = None;
-    }
-    let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string()], redo_edit_ids: vec!["edit-2".to_string()], checkpoint_id: Some("ck-1".to_string()) };
+async fn appended_transitions_decode_in_append_order_across_commits() {
+    let log = sample_log().await;
     let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
     let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).await.unwrap();
-    for edit in &log.edits {
-        appender.append_edit(edit).await.unwrap();
+    let mut offsets = Vec::new();
+    for transition in log.transitions.iter().rev() {
+        offsets.push(appender.append_transition(transition).await.unwrap());
+        appender.commit().await.unwrap();
     }
-    appender.append_cursor(&cursor).await.unwrap();
-    appender.commit().await.unwrap();
     let bytes = appender.into_sink().await;
-
+    assert!(offsets.windows(2).all(|pair| pair[0] < pair[1]));
     let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
-    assert_eq!(decoded.cursor, Some(cursor));
+    assert_eq!(decoded.transitions, log.transitions.iter().rev().cloned().collect::<Vec<_>>());
 }
 //#endregion 🔖️Append
+
+//#region 🔖️Fold
+fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
+    HistoryEdit {
+        id: id.to_string(),
+        actor: Some("alice".to_string()),
+        started_at: "2024-01-15T10:30:00Z".to_string(),
+        finished_at: None,
+        coalesce_key: None,
+        description: None,
+        ops: vec![OpPayload { text: Some(format!("set {id}=1")), binary: None }],
+        inverse: Vec::new(),
+        meta: Some(vec![HistoryOpMeta { op_id: Some(op_id.to_string()), hlt: Some((1, physical_ms, 0)), ..HistoryOpMeta::default() }]),
+    }
+}
+
+fn fold_log() -> HistoryLog {
+    HistoryLog {
+        doc_id: "doc-f".to_string(),
+        schema: "schema-f".to_string(),
+        edits: vec![fold_edit("edit-a", "op-a", 100), fold_edit("edit-b", "op-b", 200)],
+        transitions: vec![
+            transition_record("doc-f", "alice", crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![crate::os_spr::MutationId("op-b".to_string())] }, (1, 400, 0)),
+            transition_record("doc-f", "alice", commit("ck-1", None, "change-1", &["op-a", "op-b"]), (1, 300, 0)),
+        ],
+        composition: None,
+        conflicts: Vec::new(),
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fold_derives_applied_redo_and_checkpoint_from_edits_commit_and_revert() {
+    let fold = fold_log().fold().unwrap();
+    assert_eq!(fold.applied, vec!["edit-a".to_string()]);
+    assert_eq!(fold.redo, vec!["edit-b".to_string()]);
+    assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
+    assert_eq!(fold.alternative, None);
+    assert_eq!(fold.changes.len(), 1);
+    assert_eq!(fold.changes[0].edit_ids, vec!["edit-a".to_string(), "edit-b".to_string()]);
+    assert_eq!(fold.checkpoints[0].change_ids, vec!["change-1".to_string()]);
+    assert_eq!(fold.checkpoints[0].authors[0].name, "Ueli Saluz");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fold_is_identical_after_a_binary_round_trip() {
+    let log = fold_log();
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+    assert_eq!(decode_history(&bytes, &DecodeOptions::default()).await.unwrap().fold().unwrap(), log.fold().unwrap());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fold_falls_back_to_positional_mutation_ids_and_zero_clock_without_meta() {
+    let log = sample_log().await;
+    let fold = log.fold().unwrap();
+    assert_eq!(fold.changes[0].edit_ids, vec!["edit-1".to_string(), "edit-2".to_string()]);
+    assert_eq!(fold.alternative.as_deref(), Some("alt-1"));
+    assert_eq!(fold.alternatives[0].checkpoint_ids, vec!["ck-1".to_string()]);
+    assert_eq!(fold.applied, vec!["edit-1".to_string(), "edit-2".to_string()]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
+    let mut log = fold_log();
+    log.transitions.clear();
+    let quarantined = crate::os_spr::MutationEnvelope {
+        mutation_id: crate::os_spr::MutationId("op-a".to_string()),
+        document_id: crate::os_spr::ArtifactId("doc-f".to_string()),
+        actor: crate::os_spr::ActorId("bob".to_string()),
+        dependencies: Vec::new(),
+        diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: vec![1] },
+        inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: Vec::new() },
+        timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
+    };
+    let mut envelope = Vec::new();
+    crate::os_spr::encode_envelope(&quarantined, &mut envelope);
+    log.conflicts.push(HistoryConflict { id: "conflict-1".to_string(), kind: 0, status: 0, actors: vec!["bob".to_string()], hlt: (2, 100, 0), edit_ids: Vec::new(), envelopes: vec![envelope], messages: Vec::new() });
+    assert_eq!(log.fold().unwrap().applied, vec!["edit-b".to_string()]);
+    log.conflicts[0].status = 1;
+    assert_eq!(log.fold().unwrap().applied, vec!["edit-a".to_string(), "edit-b".to_string()]);
+    log.conflicts[0].status = 2;
+    assert_eq!(log.fold().unwrap().applied, vec!["edit-b".to_string()]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fold_rejects_a_transition_naming_an_unknown_operation_and_a_negative_clock() {
+    let mut log = fold_log();
+    log.transitions.push(transition_record("doc-f", "alice", crate::os_spr::HistoryTransition::Reinstate { mutation_ids: vec![crate::os_spr::MutationId("op-missing".to_string())] }, (1, 500, 0)));
+    assert!(log.fold().is_err());
+    let mut log = fold_log();
+    log.edits[0].meta.as_mut().unwrap()[0].hlt = Some((1, -1, 0));
+    assert!(log.fold().is_err());
+}
+//#endregion 🔖️Fold
 
 //#region 🔖️Scan
 #[semio_framework_async_macros::async_test]

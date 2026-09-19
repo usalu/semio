@@ -257,6 +257,22 @@ pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title
     let (document, flow) = playbook_content_handles(title.as_deref(), steps);
     PlaybookSnapshot { schema: schema.into(), id: id.into(), version: version.into(), title, document, flow }
 }
+
+/// 🧩️ Materialises the pack of either composed `s.stdio.semio` child from the parent snapshot alone.
+/// A whole-document `Effect::LoadDocument` hands the host a pack whose two child handles name
+/// documents no store has ever seen; the archive's closure leg asks the app for each one's genesis
+/// bytes and refuses the whole replacement when the app returns `None`. `PlaybookSnapshot` owns TWO
+/// children, so both slots must answer — `document` is the narrative projection, `flow` the
+/// procedural graph, both derived from the same live steps.
+pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    let steps = playbook_steps(snapshot);
+    match slot {
+        "document" if child_id == snapshot.document.child_id => Some(<SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_steps(snapshot.title.as_deref(), &steps))),
+        "flow" if child_id == snapshot.flow.child_id => Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_content_snapshot_from_steps(&steps))),
+        _ => None,
+    }
+}
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️Register
@@ -324,15 +340,15 @@ pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declar
 /// 📖️ Application variants required to assemble the Playbook artifact.
 pub trait PlaybookApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> PlaybookApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
@@ -849,6 +865,8 @@ pub mod editor {
             pub mod remove_block;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-step/🦀️.rs"]
             pub mod remove_step;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️update-playbook/🦀️.rs"]

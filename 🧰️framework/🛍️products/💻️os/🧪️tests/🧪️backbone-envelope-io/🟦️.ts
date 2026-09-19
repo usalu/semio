@@ -91,8 +91,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "APP_CHANNEL_VERSION" | "AppChannelClient" | "AppChannelRequestSequence" | "INVOCATION_RESULT_PACK_MAXIMUM_BYTES" | "applyBackboneMessage" | "backboneKindFromUri" | "buildFileBackboneUri" | "buildFolderBackboneUri" | "buildFrameworkSyncUtilities" | "buildRemoteBackboneUri" | "clonePackValue" | "decodeAppCommand" | "decodeAppFrame" | "decodeBackboneMessage" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodeConflictsFromWire" | "decodeDispatchReportFromWire" | "decodeDocumentArchiveBytes" | "decodeDocumentPackBytes" | "decodeDocumentPackSnapshot" | "decodeInvocationResultPacks" | "decodeMergeReportFromWire" | "decodePackValue" | "decodeScenePackValue" | "encodeAppCommand" | "encodeAppFrame" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodeDocumentArchiveBytes" | "encodeDocumentPackBundle" | "encodeDocumentPackBytes" | "encodePackValue" | "faultMessages" | "isPackByteVector" | "isPackInteger" | "packInt" | "packUInt" | "packValueToExactJson" | "parseRemoteBackboneUri" | "planWorkflow"> & Pick<typeof import("@semio-tech/framework"), "createTurnOutcomeBroadcast"> & Pick<typeof import("@semio-tech/framework-replication"), "decodePresencePeer" | "encodePresencePeer">, source: TestSource): Promise<void> {
-  const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "APP_CHANNEL_VERSION" | "AppChannelClient" | "AppChannelRequestSequence" | "INVOCATION_RESULT_PACK_MAXIMUM_BYTES" | "backboneKindFromUri" | "buildFileBackboneUri" | "buildFolderBackboneUri" | "buildFrameworkSyncUtilities" | "buildRemoteBackboneUri" | "clonePackValue" | "decodeAppCommand" | "decodeAppFrame" | "decodeBackboneMessage" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodeConflictsFromWire" | "decodeDispatchReportFromWire" | "decodeDocumentArchiveBytes" | "decodeDocumentPackBytes" | "decodeDocumentPackSnapshot" | "decodeInvocationResultPacks" | "decodeMergeReportFromWire" | "decodePackValue" | "decodeScenePackValue" | "encodeAppCommand" | "encodeAppFrame" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodeDocumentArchiveBytes" | "encodeDocumentPackBundle" | "encodeDocumentPackBytes" | "encodePackValue" | "faultMessages" | "isPackByteVector" | "isPackInteger" | "packInt" | "packUInt" | "packValueToExactJson" | "parseRemoteBackboneUri" | "planWorkflow"> & Pick<typeof import("@semio-tech/framework"), "createTurnOutcomeBroadcast"> & Pick<typeof import("@semio-tech/framework-replication"), "decodePresencePeer" | "encodePresencePeer">, source: TestSource): Promise<void> {
+  const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
   const documentArchive = {
     parent_pack: [1, 2],
     parent_spr: [3],
@@ -154,29 +154,16 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeDocumentPackSnapshot(bundle)).toEqual({ nodes: [] });
     });
 
-    it("round-trips backbone snapshot messages", () => {
-      const message: BinaryBackboneMessage = { kind: "snapshot", pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) };
+    it("round-trips backbone genesis messages", () => {
+      const message: BinaryBackboneMessage = { kind: "genesis", pack: new Uint8Array([1, 2]) };
       const round = decodeBackboneMessage(encodeBackboneMessage(message));
-      expect(round.kind).toBe("snapshot");
-      if (round.kind !== "snapshot") return;
+      expect(round.kind).toBe("genesis");
+      if (round.kind !== "genesis") return;
       expect(Array.from(round.pack)).toEqual([1, 2]);
-      expect(Array.from(round.spr)).toEqual([3]);
     });
 
-    it("applies a snapshot backbone message by overwriting the stored bundle", () => {
-      const snapshot = encodeBackboneMessage({ kind: "snapshot", pack: new Uint8Array([9]), spr: new Uint8Array() });
-      const result = applyBackboneMessage(encodeDocumentPackBytes(new Uint8Array([1]), new Uint8Array()), snapshot);
-      expect(decodeDocumentPackBytes(result).pack).toEqual(new Uint8Array([9]));
-    });
-
-    it("throws when applying operations without native store", () => {
-      const message = encodeBackboneMessage({ kind: "mutations", envelopes: Uint8Array.of(0) });
-      expect(() => applyBackboneMessage(encodeDocumentPackBytes(new Uint8Array(), new Uint8Array()), message)).toThrow("native store");
-    });
-
-    it("throws when applying operations before a snapshot exists", () => {
-      const message = encodeBackboneMessage({ kind: "mutations", envelopes: Uint8Array.of(0) });
-      expect(() => applyBackboneMessage(null, message)).toThrow("cannot append operations before a snapshot exists");
+    it("encodes genesis exactly like the Rust store's OpBinary", () => {
+      expect(Array.from(encodeBackboneMessage({ kind: "genesis", pack: Uint8Array.of(0xaa) }))).toEqual([1, 0, 0, 1, 0, 8, 1, 0xaa]);
     });
 
     it("throws on an unknown backbone message tag", () => {
@@ -2234,10 +2221,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("rejects non-mutation, noncanonical and over-cap actor messages", () => {
-      const snapshot = encodeBackboneMessage({ kind: "snapshot", pack: new Uint8Array(), spr: new Uint8Array() });
+      const genesis = encodeBackboneMessage({ kind: "genesis", pack: new Uint8Array() });
       const ack = encodeBackboneMessage({ kind: "ack", opIds: [] });
       const trailing = encodeBackboneMessage({ kind: "mutations", envelopes: fromHex("0000") });
-      expect(() => parseDocumentBackboneMessage(snapshot)).toThrow("mutations required");
+      expect(() => parseDocumentBackboneMessage(genesis)).toThrow("mutations required");
       expect(() => parseDocumentBackboneMessage(ack)).toThrow("mutations required");
       expect(() => parseDocumentBackboneMessage(trailing)).toThrow("trailing-bytes");
       expect(() => parseDocumentBackboneMessage(new Uint8Array(262_145))).toThrow("hot byte limit");

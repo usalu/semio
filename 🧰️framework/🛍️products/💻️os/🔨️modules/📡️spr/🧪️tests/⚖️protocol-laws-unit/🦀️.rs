@@ -22,8 +22,9 @@ async fn history_log_gen_respects_edit_count_and_checkpoint_cadence() {
     let profile = GenProfile { edit_count: 9, max_ops_per_edit: 2, checkpoint_every: 3, adversarial: false };
     let log = HistoryLogGen::new(7).await.generate(&profile).await;
     assert_eq!(log.edits.len(), 9);
-    assert_eq!(log.changes.len(), 3, "9 edits at checkpoint_every=3 must produce 3 changes");
-    assert_eq!(log.checkpoints.len(), 3);
+    let fold = log.fold().expect("a generated log folds");
+    assert_eq!(fold.changes.len(), 3, "9 edits at checkpoint_every=3 must produce 3 changes");
+    assert_eq!(fold.checkpoints.len(), 3);
     for edit in &log.edits {
         assert!(edit.ops.len() <= 2);
         assert!(edit.meta.is_none(), "this generator never populates the derived-data meta slot");
@@ -34,9 +35,7 @@ async fn history_log_gen_respects_edit_count_and_checkpoint_cadence() {
 async fn history_log_gen_zero_checkpoint_every_produces_no_changes_or_checkpoints() {
     let profile = GenProfile { edit_count: 4, max_ops_per_edit: 2, checkpoint_every: 0, adversarial: false };
     let log = HistoryLogGen::new(3).await.generate(&profile).await;
-    assert!(log.changes.is_empty());
-    assert!(log.checkpoints.is_empty());
-    assert!(log.alternatives.is_empty(), "no checkpoints -> no alternatives to reference them");
+    assert!(log.transitions.is_empty(), "no checkpoints -> no commits and no branches to reference them");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -132,7 +131,7 @@ async fn ops_protocol_bidirectional_on_a_hand_written_sample() {
 
 #[semio_framework_async_macros::async_test]
 async fn ops_protocol_bidirectional_skips_comments_and_blank_lines() {
-    assert_ops_protocol_bidirectional("doc \"doc-2\" schema=\"schema-2\"\n\n# a comment before active\nactive \"alt-1\"\n").await;
+    assert_ops_protocol_bidirectional("doc \"doc-2\" schema=\"schema-2\"\n\n# a comment before a transition\ntransition \"t-1\" actor=\"alice\" hlc=1,2,3 dependencies=[] payload=\"AAEEb3AtYg==\"\n").await;
 }
 
 #[semio_framework_async_macros::async_test]

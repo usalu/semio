@@ -168,10 +168,60 @@ fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
 
 /// 🪆️ The pane's in-process materialization: the `CadWorkingScene` the composed child handle carries
 /// as its `ArtifactChild::local_owner`. Every reader (world scene, document tree, object mutation
-/// diff) goes through this one accessor; an unresolved handle (wire-decoded, owner dropped) reads
-/// `None` rather than a fabricated scene.
+/// diff, archive genesis) goes through this one accessor. A wire-decoded handle carries no owner —
+/// a whole-document load (`setActiveExample` → `Effect::LoadDocument` → the host's archive door)
+/// hands the store pack bytes, never the in-process owner — so such a handle resolves its
+/// content-addressed `child_id` against the bundled example catalogue
+/// ([`cad_bundled_pane_scene`]); a handle neither carries nor names reads `None` rather than a
+/// fabricated scene.
 pub fn cad_pane_local_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
-    cad_pane_model(document, pane)?.local_owner::<CadWorkingScene>()
+    let child = cad_pane_model(document, pane)?;
+    child.local_owner::<CadWorkingScene>().or_else(|| cad_bundled_pane_scene(&child.child_id))
+}
+
+/// 📚️ The immutable, content-addressed catalogue of every bundled example's pane materializations,
+/// keyed by the pane child's `child_id`. A `child_id` is a digest of the pane's exact model content
+/// ([`cad_model_child_handle`]), so a hit is by construction the same content the example minted —
+/// this resolves shipped assets, it never shares one live document's state with another.
+pub fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<CadWorkingScene>> {
+    static CATALOGUE: std::sync::OnceLock<Vec<(String, std::sync::Arc<CadWorkingScene>)>> = std::sync::OnceLock::new();
+    CATALOGUE
+        .get_or_init(|| {
+            let forest = standards::v1::subsets::any::schema::inferences::forest_play_scene();
+            CadPaneId::all().into_iter().filter_map(|pane| cad_pane_model(&forest, pane).and_then(|child| Some((child.child_id.clone(), child.local_owner::<CadWorkingScene>()?)))).collect()
+        })
+        .iter()
+        .find(|(id, _)| id == child_id)
+        .map(|(_, scene)| scene.clone())
+}
+
+/// 🏷️ The composed `#[child]` slot name (camelCase field name) each pane's model child lives under.
+pub fn cad_pane_model_slot(pane: CadPaneId) -> &'static str {
+    match pane {
+        CadPaneId::Shape => "shapeModel",
+        CadPaneId::Building => "buildingModel",
+        CadPaneId::Energy => "energyModel",
+        CadPaneId::StructureClassic => "structureClassicModel",
+    }
+}
+
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack`: the composed `s.stdio.semio.model` pack
+/// each pane child is derived from — the same `semio_model_snapshot_from_objects` projection its
+/// content-addressed handle was minted from. The React shell's `loadDocumentPair` sends
+/// `members: []`, so a whole-document load derives every model slot here; without it the archive
+/// closure completes `Incomplete` (`document-archive-replacement.closure-rejected`).
+pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    let pane = CadPaneId::all().into_iter().find(|pane| cad_pane_model_slot(*pane) == slot)?;
+    cad_pane_model(snapshot, pane).filter(|child| child.child_id == child_id)?;
+    let scene = cad_pane_local_scene(snapshot, pane)?;
+    Some(<SemioModelSnapshot as ArtifactPack>::encode_pack(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&scene, pane))))
+}
+
+/// 🧬️ The bounded projection of this snapshot's composed child handles, as both surfaces hand it to
+/// the framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
+pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("cad child projection failed: {error}")))
 }
 
 /// 🧱️ One pane's slice of a working scene.

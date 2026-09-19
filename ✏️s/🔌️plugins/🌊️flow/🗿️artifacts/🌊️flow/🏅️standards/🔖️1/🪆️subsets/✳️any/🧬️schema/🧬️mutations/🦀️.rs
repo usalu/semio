@@ -122,7 +122,12 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
 /// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
 /// Returns an empty vec when the two fixtures are identical, or when the framework diff itself fails.
 pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
-    semio_framework_artifact_flow_flow::flow_host_snapshot_operations(&before.to_host_snapshot(), &after.to_host_snapshot()).unwrap_or_default().into_iter().filter_map(from_framework_mutation).collect()
+    let (before, after) = (before.to_host_snapshot(), after.to_host_snapshot());
+    let operations = semio_framework_artifact_flow_flow::flow_host_snapshot_operations(&before, &after).unwrap_or_default();
+    // 🧹️ Both projections own a layout `OrderedMap` root that refuses a bare drop.
+    before.retire_cold();
+    after.retire_cold();
+    operations.into_iter().filter_map(from_framework_mutation).collect()
 }
 
 pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::FlowMutation) -> Option<FlowMutation> {

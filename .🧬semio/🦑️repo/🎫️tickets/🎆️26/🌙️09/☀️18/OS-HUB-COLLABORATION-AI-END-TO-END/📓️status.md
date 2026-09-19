@@ -139,3 +139,34 @@ Cut mid-flight (14): H1, C1b, A2, AU3, K2, B2c (had only just started), B3b, T2c
 Done: T2c (repo product 156→0, hub 0; VS Code extension load crash + dead CLI router found); AU3 (LIVE: hub gate `os-hub:live-sign-in-check` 38/0, browser probe 19/0 — two users sign in → space → invite → redeem → sign out; `POST /auth/credentials`, `os-hub credential set` operator verb, pg/neo4j credential paths, `os.openHub` verb, real roster; not yet observed inside the `s` host).
 Launched (Sonnet, read-only): G8 wgpu parity spec, G9 `s` product / 🪐️space audit.
 Running (resumed): H1, C1b, A2, K2, B2c, B3b, B3a2, T4c, V3a, V3b, F1, M7. Load ≈ 50 — no new cargo slices until some land.
+
+## Relaunch 2026-09-19 ~23:20 (coordinator session 4)
+The 11:00 resume died again at ~11:36 (all reports stop there; M7 §5–7 and T4 §26 are `(filling)` stubs; no G9 report). Repo MCP connects now but `ticket_reopen` answers `invalid tool params` for every path spelling → bookkeeping stays on disk. Dev clarified: outcome 4 is the user-facing **semio MCP**, not repo MCP (preamble rule 20). Disk 84 GiB free, load ≈ 10, no cargo alive.
+Critical path measured from the reports: (a) `semio-s-plugin-stdio` descriptor > 4 MiB bound → trusted catalog never publishes → hub never ready under `DevScript` (C1b §10.4); (b) shells have no two-user identity path in the collaboration harness (C1b §12.1; AU3's live sign-in exists but is not what the harness or the `s` host uses); (c) guest reactor answers every later command with a stale retained owner (A2 §6.1) → every MCP mutation verb red; (d) 30 capability-catalog descriptor skips (A1 §3).
+| slice | model | scope | report |
+|---|---|---|---|
+| DS1 | Opus | (a) stdio descriptor over the 4 MiB contract bound: root fix, trusted catalog publishes, `artifactAuthority` ready, hub `/readyz` under `DevScript` | 📓️ds1-stdio-descriptor-bound.md |
+| C1c | Opus | (b) two-user identity in the harness and in the `s` host (AU3 sign-in → session authority, reload re-bootstrap), run the 10 steps + per-user undo + short connection loss + two-writer convergence | 📓️c1-collaboration-e2e.md §14+ |
+| R2 | Opus | (c) reactor retained command owner lifecycle; MCP client-e2e mutation chain green (prepare/invoke → snapshot → undo/redo → rollback → export) | 📓️r2-reactor-retained-command-owner.md |
+| M7 | Opus | finish §5–7: live (a)–(e) agent loop transcript against a running shell, permanent nx e2e target, wgpu parity; ShellState twin drift | 📓️m7-live-agent-bridge-loop.md |
+| H1b | Opus | H1 §7 open gaps, `os-hub:test` budget, hub lib reds | 📓️h1-hub-build-and-boot.md §9+ |
+| F1 | Opus | LoadDocument live proof (architect/animate/writer) + B1a leftovers (writer/mathematical/vcs/animate/sequence/architect full bar) | 📓️f1-load-document-archive-replacement.md |
+| B2c | Opus | norm/imperative/playbook/dag to the full interaction bar | 📓️b2b-dormant-plugin-interactions.md |
+| B3b | Opus | trinity/wfc/puzzle gaps §5 incl. `shell.windowActivate` undo replay (framework-wide) | 📓️b3b-trinity-wfc-puzzle.md |
+| B3a2 | Opus | gis live mutations in browser, block full bar | 📓️b3a-block-gis.md |
+| T4c | Opus | os/renderer TS 318 → 0 | 📓️t4-typescript-os-renderer.md §26+ |
+| K2 | Opus | test infrastructure §3–7 | 📓️k2-test-infrastructure.md |
+| V3a | Opus | surface-schema-projection gaps §6 | 📓️v3a-surface-schema-projection.md |
+| V3b | Opus | unreachable mounts / directory lanes / gates §6 | 📓️v3b-registry-mounts-and-gates.md |
+| G9 | Sonnet | `s` product / 🪐️space audit: what `dev s` actually hosts, per-plugin open path, hub wiring in the host | 📓️g9-s-product-space-audit.md |
+| G10 | Sonnet | goal-gap re-audit after fleet 3: every report's honest gaps folded into one ordered remaining-work list per outcome | 📓️g10-goal-gap-reaudit.md |
+Queued: A3 descriptor regeneration (after DS1, cargo-heavy), W3c (after C1c baseline), B3c, B3d, M5, M6, O3, OB1, WG1, U3, R1, proven-eight + space re-verify.
+
+### Coordinator live smoke of the semio MCP (~23:40, from the Claude Code session itself via `.mcp.json` `semio`)
+`context_resolve` PASS (session minted, principal `agent:local`, catalogHash `ba5a2b6d…`). `capabilities_search "draw rectangle"` PASS but exposes two agent-usability defects nobody owns yet → queued as **M5a**: (1) every capability has `description: ""` — BM25 only ever matches plugin id/title, so "rectangle" scores nothing and all 16 draw verbs tie at 6.9096; (2) raw pointer plumbing (`canvasPointerMove`, `canvasPointerDown`, `engagementInput`, `canvasEscape`) is published as agent capabilities next to document verbs — an agent cannot tell intent-level verbs from input events. Fix at the descriptor source (schema-first: verb descriptions en+de, an `audience`/intent classification that the catalog compiler filters on), not in the search layer.
+| M5a | Opus | semio MCP catalog agent usability: localized verb descriptions, intent vs input-event classification, BM25 over real text, input JSON Schemas | 📓️m5a-mcp-catalog-agent-usability.md |
+
+### Fleet 4 progress (~23:30)
+Done: G9 (📓️g9-s-product-space-audit.md) — `dev s` fans out to all 60 plugins at every layer and lazy cross-plugin install is real, but NOBODY has ever observed `dev s` itself finish a cold boot (stops on 🧱️block's missing staged module); every live hub proof ran in the `animate` playground, never in the `s` host (`/hub` is host-mode-gated); React DOM host still hardcodes activation reason `"manual"` (`🔌️PluginRuntime/🟦️.tsx:3047`); wgpu has no hub sign-in/spaces/workspace target at all.
+Load average 83 at 23:27 (≈12 concurrent cargo waits on the shared build dir) → no further cargo-heavy launch until it falls.
+Queued from G9, in order: **S2** (one patient cold `dev s` to a served page with receipt → live foreign-kind open probe inside the real `s` host → HubWorkspace + `/hub` inside `s` → activation reason fix), **WG6** (wgpu hub sign-in/spaces/workspace + footer pill, G8 WG-6/WG-5, unblocked by AU3), then A3, W3c, B3c, B3d, M5b, M6, O3, OB1, U3, R1.

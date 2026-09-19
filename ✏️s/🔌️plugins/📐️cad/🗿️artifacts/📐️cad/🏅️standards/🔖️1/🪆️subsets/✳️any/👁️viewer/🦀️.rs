@@ -48,9 +48,20 @@ impl ArtifactViewer for CadViewer {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = CadViewCommand;
+    /// 🧩️ Same composed `s.stdio.semio` roster as the editor — a viewer opens the same archives.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
 
     const DIALECT: Dialect = CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::cad_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ See [`crate::cad_genesis_child_pack`].
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::cad_genesis_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> CadSnapshot {
         forest_play_scene()

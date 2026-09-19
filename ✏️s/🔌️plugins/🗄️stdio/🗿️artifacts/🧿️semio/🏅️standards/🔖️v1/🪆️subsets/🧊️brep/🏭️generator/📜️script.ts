@@ -660,11 +660,27 @@ function validateToleranceContract(): number {
     if (mutation === undefined) throw new Error(`${testCase.id}: missing delete mutation`);
     const [kind, deletePayload] = mutation;
     const before = testCase.before as { vertices?: Record<string, unknown>[]; edges?: Record<string, unknown>[]; faces?: Record<string, unknown>[] };
+    // Every `create-` verb APPENDS, so restoring a removed vertex at its own index lifts the whole
+    // vertex tail and the edge tail above the first edge incident to it off, then re-declares both in
+    // base order: edges the cascade did not take are deleted, then the later vertices, then every
+    // tail vertex and tail edge is re-created.
+    const deleteVertexInverse = () => {
+      const vertices = before.vertices ?? [];
+      const edges = before.edges ?? [];
+      const disturbed = vertices.slice(vertices.findIndex((record) => record.id === deletePayload.id));
+      const ids = new Set(disturbed.map((record) => record.id));
+      const touches = (record: Record<string, unknown>) => ids.has(record.startVertex) || ids.has(record.endVertex);
+      const firstEdge = edges.findIndex(touches);
+      const tail = firstEdge < 0 ? [] : edges.slice(firstEdge);
+      return [
+        ...tail.filter((record) => !touches(record)).map((record) => ({ DeleteEdge: { id: record.id } })),
+        ...disturbed.slice(1).map((record) => ({ DeleteVertex: { id: record.id } })),
+        ...disturbed.map((record) => ({ CreateVertex: record })),
+        ...tail.map((record) => ({ CreateEdge: { id: record.id, start_vertex: record.startVertex, end_vertex: record.endVertex, curve: record.curve, tol: record.tol } })),
+      ];
+    };
     const expected = kind === "DeleteVertex"
-      ? [
-          { CreateVertex: before.vertices?.find((record) => record.id === deletePayload.id) },
-          ...(before.edges ?? []).filter((record) => record.startVertex === deletePayload.id || record.endVertex === deletePayload.id).map((record) => ({ CreateEdge: { id: record.id, start_vertex: record.startVertex, end_vertex: record.endVertex, curve: record.curve, tol: record.tol } })),
-        ]
+      ? deleteVertexInverse()
       : kind === "DeleteEdge"
         ? [{ CreateEdge: (() => { const record = before.edges?.find((candidate) => candidate.id === deletePayload.id); return record && { id: record.id, start_vertex: record.startVertex, end_vertex: record.endVertex, curve: record.curve, tol: record.tol }; })() }]
         : [{ CreateFace: (() => { const record = before.faces?.find((candidate) => candidate.id === deletePayload.id); return record && { id: record.id, outer_loop: record.outerLoop, inner_loops: record.innerLoops, surface: record.surface, orientation: record.orientation, tol: record.tol }; })() }];
@@ -675,6 +691,7 @@ function validateToleranceContract(): number {
     }
     for (const operation of testCase.expectedInverse) {
       const [createKind, payload] = Object.entries(operation)[0]!;
+      if (createKind.startsWith("Delete")) continue;
       const schema = createKind === "CreateVertex" ? "create-vertex" : createKind === "CreateEdge" ? "create-edge" : "create-face";
       const result = validator.validate(payload, createSchema(schema));
       const tolerance = payload.tol;
@@ -685,7 +702,7 @@ function validateToleranceContract(): number {
     }
     console.error(`[tolerance-contract] ${testCase.id} inverse=${testCase.expectedInverse.length}`);
   }
-  const inverseCount = fixture.inverseCases.reduce((count, testCase) => count + testCase.expectedInverse.length, 0);
+  const inverseCount = fixture.inverseCases.reduce((count, testCase) => count + testCase.expectedInverse.filter((operation) => !Object.keys(operation)[0]!.startsWith("Delete")).length, 0);
   if (inverseTolerances.size !== inverseCount) {
     failed += 1;
     console.error(`[tolerance-contract] inverse tolerances must be distinct and nonzero expected=${inverseCount} actual=${inverseTolerances.size}`);

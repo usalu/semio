@@ -650,7 +650,8 @@ export function semioPluginHotSwapVitePlugin(options: { readonly moduleRoot: str
     },
   };
 }
-export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string }>;
+/** @emoji 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
+export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string }>;
 
 /** @emoji 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
  * prints one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
@@ -660,7 +661,7 @@ export function reportActivationFreshness(receipt: ActivationReceipt, options: {
   const activated = new Map(receipt.plugins.map((row) => [row.pluginId, row.artifactSha256]));
   const facts = options.components.map((component): StagedModuleFacts => {
     const newest = newestComponentSourceMtime(component.sourceRoot);
-    const installedMeta = join(options.installRoot, component.directoryName, EXTENSION_INSTALL_META);
+    const installedMeta = join(component.installDirectory ?? join(options.installRoot, component.directoryName), EXTENSION_INSTALL_META);
     let installedPackageHash: string | undefined;
     if (existsSync(installedMeta)) {
       try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }

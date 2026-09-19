@@ -27,8 +27,8 @@ use crate::examples::bachelor_thesis::{source, FIXTURE_BYTES};
 use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::inferences::Pdf17Inference;
-use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation};
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfSnapshot, PdfTextString};
 use crate::standards::v1_7::subsets::base::schema::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffCodec, Inference, Mutation, MutationDiff, OpBinary};
@@ -64,7 +64,7 @@ async fn real_decode_has_many_pages_and_real_extracted_text() {
     assert_eq!(snap.pages.len(), 65, "exact page count confirmed by direct inspection (/Count 65 on the root /Pages node)");
     assert!(snap.objects.len() > 1000, "3190-sized xref confirmed by direct inspection, got only {} resolved objects", snap.objects.len());
 
-    let non_empty_pages = snap.pages.iter().filter(|p| !p.text.trim().is_empty()).count();
+    let non_empty_pages = snap.pages.iter().filter(|p| !p.text().trim().is_empty()).count();
     assert!(non_empty_pages > 0, "at least one page must have non-empty extracted text");
 
     // 📏 Non-trivial extracted character volume across the whole document -- proves the
@@ -73,7 +73,7 @@ async fn real_decode_has_many_pages_and_real_extracted_text() {
     // themselves are legitimately mostly U+FFFD for THIS fixture (see the module doc comment:
     // every referenced font is Type3 with synthetic, non-AGL `/Differences` names and there is
     // no `/ToUnicode` anywhere in the file) -- asserting "no U+FFFD" here would be dishonest.
-    let total_chars: usize = snap.pages.iter().map(|p| p.text.chars().count()).sum();
+    let total_chars: usize = snap.pages.iter().map(|p| p.text().chars().count()).sum();
     assert!(total_chars > 10_000, "expected substantial extracted character volume across 65 pages of body text, got {total_chars}");
 }
 //#endregion (a) RealDecodeNonTrivialInvariants
@@ -91,7 +91,7 @@ async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
     for (a, b) in original.pages.iter().zip(redecoded.pages.iter()) {
         assert_eq!(a.media_box, b.media_box);
         assert_eq!(a.rotate, b.rotate);
-        assert_eq!(a.text, b.text);
+        assert_eq!(a.text(), b.text());
     }
 }
 
@@ -117,7 +117,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     assert!(empty.is_empty());
     assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
 
-    let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, text: "dirty".into() });
+    let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }] });
     let mutation_frame = mutation.encode_op().expect("encode structural mutation");
     let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
     assert_eq!(restored_mutation, mutation);
@@ -129,7 +129,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
     assert_ne!(dirty_bytes, canonical);
     let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
-    assert!(dirty_redecoded.pages[0].text.ends_with("dirty"));
+    assert!(dirty_redecoded.pages[0].text().ends_with("dirty"));
 
     let inverse = restored_diff.inverse(&original);
     let inverse_frame = inverse.encode_diff().expect("encode inverse diff");
@@ -161,7 +161,7 @@ async fn decode_encode_decode_is_structurally_equal_at_page_level() {
     for (i, (a, b)) in original.pages.iter().zip(redecoded.pages.iter()).enumerate() {
         assert_eq!(a.media_box, b.media_box, "page {i} media_box must round-trip");
         assert_eq!(a.rotate, b.rotate, "page {i} rotate must round-trip");
-        assert_eq!(a.text, b.text, "page {i} extracted text must round-trip byte-for-byte through our own Identity-H writer");
+        assert_eq!(a.text(), b.text(), "page {i} extracted text must round-trip byte-for-byte through our own Identity-H writer");
     }
     assert_eq!(original.info.title, redecoded.info.title);
     assert_eq!(original.info.author, redecoded.info.author);
@@ -172,13 +172,24 @@ async fn decode_encode_decode_is_structurally_equal_at_page_level() {
 #[semio_framework_async_macros::async_test]
 async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     // 🎯 The project's core acceptance test: walk the real decode's page-tree view, reconstruct
-    // an equivalent document using ONLY typed builder calls (`PdfBuilder::add_page`,
-    // requirement #8), then compare the two documents' *analyzer output* (a fresh real decode of
+    // an equivalent document using ONLY typed builder calls (the resource collections the page
+    // content names through their `Set*` mutations, then `PdfBuilder::add_page`, requirement #8), then compare the two documents' *analyzer output* (a fresh real decode of
     // the rebuilt file), not the in-memory structs -- proving the builder's typed ops are
     // actually sufficient to reconstruct what the analyzer sees, round-tripped through real bytes.
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
 
     let mut builder = PdfBuilder::empty();
+    let resources = original.fonts.iter().map(|font| PdfMutation::SetFont(SetFont { font: font.clone() }))
+        .chain(original.images.iter().map(|image| PdfMutation::SetImage(SetImage { image: image.clone() })))
+        .chain(original.forms.iter().map(|form| PdfMutation::SetForm(SetForm { form: form.clone() })))
+        .chain(original.ext_g_states.iter().map(|state| PdfMutation::SetExtGState(SetExtGState { state: state.clone() })))
+        .chain(original.shadings.iter().map(|shading| PdfMutation::SetShading(SetShading { shading: shading.clone() })))
+        .chain(original.patterns.iter().map(|pattern| PdfMutation::SetPattern(SetPattern { pattern: pattern.clone() })))
+        .chain(original.color_spaces.iter().map(|color_space| PdfMutation::SetColorSpace(SetColorSpace { color_space: color_space.clone() })))
+        .chain(original.properties.iter().map(|properties| PdfMutation::SetProperties(SetProperties { properties: properties.clone() })));
+    for mutation in resources.collect::<Vec<_>>() {
+        builder = builder.mutate(mutation).0;
+    }
     for page in &original.pages {
         builder = builder.add_page(page.clone());
     }
@@ -190,7 +201,7 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     for (i, (a, b)) in original.pages.iter().zip(rebuilt_redecoded.pages.iter()).enumerate() {
         assert_eq!(a.media_box, b.media_box, "page {i} media_box must match after builder round trip");
         assert_eq!(a.rotate, b.rotate, "page {i} rotate must match after builder round trip");
-        assert_eq!(a.text, b.text, "page {i} extracted text must match after builder round trip");
+        assert_eq!(a.text(), b.text(), "page {i} extracted text must match after builder round trip");
     }
 }
 //#endregion (c) AnalyzerBuilderRoundTrip

@@ -23,7 +23,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🕹️ The map-wide summary plus the live `"features"` domain's own detail rows: a `"layer"`
+/// 🕹️ The map-wide summary — schema, the document's own `positions`/`routes`/`regions` extents, the
+/// visible-layer count and the selection size — plus the live `"features"` domain's detail rows: a `"layer"`
 /// selection adds the picked layer's id/label/visibility, a `"feature"` selection adds the picked
 /// feature's id and its document kind (position/route/region). `interaction` is the framework-owned
 /// selection `ArtifactEditor::render_with_request_context` threads in (ticket
@@ -33,6 +34,9 @@ pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gi
     let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
     let items = ui_node_list([
         tree_item_desc("gis2d-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(GIS_MAP_SCHEMA.into())),
+        tree_item_desc("gis2d-play-inspector.positions-count", ui_label(labels.layer_positions.as_str())?, Some(document.positions.len().to_string())),
+        tree_item_desc("gis2d-play-inspector.routes-count", ui_label(labels.layer_routes.as_str())?, Some(document.routes.len().to_string())),
+        tree_item_desc("gis2d-play-inspector.regions-count", ui_label(labels.layer_regions.as_str())?, Some(document.regions.len().to_string())),
         tree_item_desc("gis2d-play-inspector.visible-count", ui_label(labels.layers_visible.as_str())?, Some(format!("{visible_count}/{}", GIS_MAP_LAYER_IDS.len()))),
         tree_item_desc("gis2d-play-inspector.selected-count", ui_label(labels.selected.as_str())?, Some(interaction.ids.len().to_string())),
     ])?;

@@ -1,0 +1,252 @@
+{
+  "name": "@semio-tech/semio-tech-play",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "prepare-dev": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-demonstrator-react-dev",
+        "@semio-tech/framework-os-dev:prepare-playbook-react-dev",
+        "@semio-tech/framework-os-dev:prepare-flow-react-dev",
+        "@semio-tech/framework-os-dev:prepare-lowpoly-react-dev",
+        "@semio-tech/framework-os-dev:prepare-remodel-react-dev",
+        "@semio-tech/framework-os-dev:prepare-draw-react-dev",
+        "@semio-tech/framework-os-dev:prepare-raster-react-dev",
+        "@semio-tech/framework-os-dev:prepare-layout-react-dev",
+        "@semio-tech/framework-os-dev:prepare-shooting-react-dev",
+        "@semio-tech/framework-os-dev:prepare-block2d-react-dev",
+        "@semio-tech/framework-os-dev:prepare-wfc2d-react-dev",
+        "@semio-tech/framework-os-dev:prepare-fem2d-react-dev",
+        "@semio-tech/framework-os-dev:prepare-energy-react-dev",
+        "@semio-tech/framework-os-dev:prepare-architect-react-dev",
+        "@semio-tech/framework-os-dev:prepare-din4108-react-dev",
+        "@semio-tech/framework-os-dev:prepare-note-react-dev",
+        "@semio-tech/framework-os-dev:prepare-writer-react-dev",
+        "@semio-tech/framework-os-dev:prepare-forms-react-dev",
+        "@semio-tech/framework-os-dev:prepare-mathematical-react-dev",
+        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-dev",
+        "@semio-tech/framework-os-dev:prepare-dag-react-dev",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-dev",
+        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-dev",
+        "@semio-tech/framework-os-dev:prepare-animate-react-dev",
+        "@semio-tech/framework-os-dev:prepare-sequence-react-dev",
+        "@semio-tech/framework-os-dev:prepare-vcs-react-dev"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare dev",
+        "forwardAllArgs": false
+      }
+    },
+    "prepare-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-demonstrator-react-release",
+        "@semio-tech/framework-os-dev:prepare-playbook-react-release",
+        "@semio-tech/framework-os-dev:prepare-flow-react-release",
+        "@semio-tech/framework-os-dev:prepare-lowpoly-react-release",
+        "@semio-tech/framework-os-dev:prepare-remodel-react-release",
+        "@semio-tech/framework-os-dev:prepare-draw-react-release",
+        "@semio-tech/framework-os-dev:prepare-raster-react-release",
+        "@semio-tech/framework-os-dev:prepare-layout-react-release",
+        "@semio-tech/framework-os-dev:prepare-shooting-react-release",
+        "@semio-tech/framework-os-dev:prepare-block2d-react-release",
+        "@semio-tech/framework-os-dev:prepare-wfc2d-react-release",
+        "@semio-tech/framework-os-dev:prepare-fem2d-react-release",
+        "@semio-tech/framework-os-dev:prepare-energy-react-release",
+        "@semio-tech/framework-os-dev:prepare-architect-react-release",
+        "@semio-tech/framework-os-dev:prepare-din4108-react-release",
+        "@semio-tech/framework-os-dev:prepare-note-react-release",
+        "@semio-tech/framework-os-dev:prepare-writer-react-release",
+        "@semio-tech/framework-os-dev:prepare-forms-react-release",
+        "@semio-tech/framework-os-dev:prepare-mathematical-react-release",
+        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-release",
+        "@semio-tech/framework-os-dev:prepare-dag-react-release",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-release",
+        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-release",
+        "@semio-tech/framework-os-dev:prepare-animate-react-release",
+        "@semio-tech/framework-os-dev:prepare-sequence-react-release",
+        "@semio-tech/framework-os-dev:prepare-vcs-react-release"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare release",
+        "forwardAllArgs": false
+      }
+    },
+    "activate-dev": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/♻️activation/dev"
+      ],
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "prepare-dev",
+        "@semio-tech/framework-os-dev:activate-demonstrator-react-dev",
+        "@semio-tech/framework-os-dev:activate-playbook-react-dev",
+        "@semio-tech/framework-os-dev:activate-flow-react-dev",
+        "@semio-tech/framework-os-dev:activate-lowpoly-react-dev",
+        "@semio-tech/framework-os-dev:activate-remodel-react-dev",
+        "@semio-tech/framework-os-dev:activate-draw-react-dev",
+        "@semio-tech/framework-os-dev:activate-raster-react-dev",
+        "@semio-tech/framework-os-dev:activate-layout-react-dev",
+        "@semio-tech/framework-os-dev:activate-shooting-react-dev",
+        "@semio-tech/framework-os-dev:activate-block2d-react-dev",
+        "@semio-tech/framework-os-dev:activate-wfc2d-react-dev",
+        "@semio-tech/framework-os-dev:activate-fem2d-react-dev",
+        "@semio-tech/framework-os-dev:activate-energy-react-dev",
+        "@semio-tech/framework-os-dev:activate-architect-react-dev",
+        "@semio-tech/framework-os-dev:activate-din4108-react-dev",
+        "@semio-tech/framework-os-dev:activate-note-react-dev",
+        "@semio-tech/framework-os-dev:activate-writer-react-dev",
+        "@semio-tech/framework-os-dev:activate-forms-react-dev",
+        "@semio-tech/framework-os-dev:activate-mathematical-react-dev",
+        "@semio-tech/framework-os-dev:activate-reasoning-wires-react-dev",
+        "@semio-tech/framework-os-dev:activate-dag-react-dev",
+        "@semio-tech/framework-os-dev:activate-imperative-react-dev",
+        "@semio-tech/framework-os-dev:activate-trinity-jack-react-dev",
+        "@semio-tech/framework-os-dev:activate-animate-react-dev",
+        "@semio-tech/framework-os-dev:activate-sequence-react-dev",
+        "@semio-tech/framework-os-dev:activate-vcs-react-dev"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
+        "forwardAllArgs": false
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "activate-dev"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "env": {
+          "SEMIO_TECH_PLAY_PORT": "6033",
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": []
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "activate-dev"
+      ]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "prepare-release"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+        "forwardAllArgs": false
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/site"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "prepare-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "activate-dev",
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
+        "forwardAllArgs": false
+      }
+    },
+    "serve-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
+        "forwardAllArgs": false
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "continuousSharing": false
+        }
+      }
+    },
+    "test-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

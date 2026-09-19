@@ -22,8 +22,13 @@ pub mod text;
 //#region Semantics
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntryMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "palette-entry", kind: "remove-palette-entry", record: "RemovePaletteEntry" };
-    fn diff(&self, _base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
+    /// An index past the palette's end removes nothing: the diff is empty, so the mutation is a
+    /// graceful no-op rather than a removal the diff algebra must reject.
+    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let Self { index } = self;
+        if *index >= base.palette.len() {
+            return protocol::MutationOutcome::new(BmpDiff::default());
+        }
         protocol::MutationOutcome::new(BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
     }
     fn inverse(&self, base: &BmpSnapshot) -> Vec<BmpMutation> {

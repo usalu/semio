@@ -10,7 +10,7 @@ pub(crate) mod context {
     /// convention — this tiny local wrapper adapts it back into the `App { definition, examples }`
     /// shape that fn still expects (mirrors trinity/jack's `trinity_jack_manifest_for_tests`, the
     /// first real W2 packet to hit this exact gap).
-    fn note_manifest_for_tests() -> App {
+    pub fn note_manifest_for_tests() -> App {
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
@@ -491,11 +491,13 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,
 /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
-/// contain BOTH edits.
+/// contain BOTH edits. The REGISTERED pair: note publishes tool proofs, so a registry-less instance
+/// faults in the `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_instances_converge::<semio_framework_plugin::EditorApp<NotePlayApp>, (usize, Option<bool>)>(
+    artifact_app_laws::assert_two_registered_instances_converge::<semio_framework_plugin::EditorApp<NotePlayApp>, _, _, _>(
         "mem://note-convergence",
+        || async { crate::editor::note::unit_tests::context::note_manifest_for_tests() },
         NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }),
         NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(false) }),
         |app| {
@@ -508,7 +510,11 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_note() {
-    artifact_app_laws::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default())
-        .await;
+    artifact_app_laws::assert_registered_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64, _, _>(
+        || async { crate::editor::note::unit_tests::context::note_manifest_for_tests() },
+        NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }),
+        |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default(),
+    )
+    .await;
 }
 //#endregion 🔖️CrossCutting

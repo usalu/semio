@@ -6,7 +6,40 @@ pub(crate) mod context {
     
     pub type Block2dApp = VcsArtifactApp<EditorApp<Block2dPlayApp>>;
     
-    pub async fn new_app() -> Block2dApp {
+    /// 🧹️ A live app fixture that CLOSES itself: the document store's `Drop` asserts its exact
+    /// terminal-empty witness, so a plainly dropped app panics with "artifact store reached Drop
+    /// without its exact terminal-empty shallow-shell witness". Dereferences to the app and drains the
+    /// same retained close ladder (`PluginApp::close_step`) the runtime uses on the way out.
+    pub struct Block2dAppFixture(Block2dApp);
+    
+    impl std::ops::Deref for Block2dAppFixture {
+        type Target = Block2dApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+    
+    impl std::ops::DerefMut for Block2dAppFixture {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+    
+    impl Drop for Block2dAppFixture {
+        fn drop(&mut self) {
+            for _ in 0..1_000_000 {
+                if self.0.close_terminal_is_empty() {
+                    return;
+                }
+                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
+                    break;
+                }
+            }
+            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Block2d app fixture did not reach its terminal-empty close witness");
+        }
+    }
+    
+    pub async fn new_app() -> Block2dAppFixture {
         app_with_registry().await
     }
     
@@ -19,12 +52,20 @@ pub(crate) mod context {
     }
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> Block2dApp {
-        new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests).await
+    /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
+    /// retained typed command with `interactive-job.live-instance`.
+    pub async fn app_with_registry() -> Block2dAppFixture {
+        let mut app = new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        Block2dAppFixture(app)
     }
     
+    /// 🔁️ Admits one typed command and settles it through the same bounded continuation, maintenance
+    /// and ACK protocol the plugin host drives — a fault in any of those turns fails the dispatch.
     pub async fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle typed operation");
+        result
     }
     
     pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
@@ -144,7 +185,7 @@ async fn declares_the_handle_interaction_domain_scoped_to_the_board_window() {
 /// (`removeHandleKind`/`removeHandle`) and transitive hover from a kind to its handles.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_nests_handles_under_their_handle_kind() {
-    let mut app: Block2dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     context::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {})).await;
     let snapshot = app.snapshot().expect("snapshot");
@@ -186,7 +227,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 //#region 🔖️Behavior
 #[semio_framework_async_macros::async_test]
 async fn add_handle_kind_then_add_handle_then_remove_round_trips() {
-    let mut app: Block2dApp = new_app().await;
+    let mut app = new_app().await;
     let booted = app.snapshot().expect("snapshot");
     let (kinds, handles) = (booted.handle_kinds.len(), booted.handles.len());
     let booted_ids: Vec<String> = booted.handles.iter().map(|handle| handle.id.clone()).collect();
@@ -210,7 +251,7 @@ async fn patch_node_kind_updates_name() {
 /// 📄️ The app boots on a real document, so every window renders content before the first action.
 #[semio_framework_async_macros::async_test]
 async fn boots_on_the_forest_left_example_document() {
-    let mut app: Block2dApp = new_app().await;
+    let mut app = new_app().await;
     let booted = app.snapshot().expect("snapshot");
     assert_eq!(booted.node_kind.id, "Hexagonal Cut Concrete Forest Left");
     assert_eq!(booted.handles.len(), 11);
@@ -234,9 +275,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let kinds = app.snapshot().expect("snapshot").handle_kinds.len();
     context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("undo settles");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds);
-    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    let admitted = app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("redo settles");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
 }
 
@@ -273,7 +316,46 @@ async fn command_from_action_bridges_set_active_example() {
 #[semio_framework_async_macros::async_test]
 async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
     let mut app = context::app_with_registry().await;
-    let result = context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
-    assert!(!result.mutations.is_empty(), "addHandleKind is a mutation and must reach document operations under kind discipline");
+    let before = app.snapshot().expect("snapshot").handle_kinds.len();
+    context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
+    assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), before + 1, "addHandleKind is a mutation and must publish its document operation under kind discipline");
 }
 //#endregion 🔖️Behavior
+
+//#region 🔖️LiveMaintenance
+/// ⚖️ LAW (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the boot `setActiveExample`
+/// announcement the React shell sends right after ready — and every example swap after it — leaves
+/// the runtime's live-cleanup pump healthy. Each `maintenance_step` turn must answer within the exact
+/// one-item / 32 KiB contract `RuntimeLiveCleanupJob` enforces; a fault (or an over-contract
+/// `Pending`) there is sticky and surfaces in the browser only as `plugin.internal.prior-outcome` on
+/// every later typed-operation refresh, never as the original fault.
+#[semio_framework_async_macros::async_test]
+async fn example_announcements_keep_live_maintenance_within_its_contract() {
+    use semio_framework_plugin::PluginCloseStep;
+    const RUNTIME_LIVE_CLEANUP_BYTES: usize = 32 * 1_024;
+    fn drain(app: &mut Block2dApp, phase: &str) -> usize {
+        for turn in 0..100_000 {
+            match PluginApp::maintenance_step(app, 1, RUNTIME_LIVE_CLEANUP_BYTES) {
+                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => {
+                    assert!(released_items <= 1 && released_bytes <= RUNTIME_LIVE_CLEANUP_BYTES, "{phase}: maintenance turn {turn} exceeded its contract: {released_items} items / {released_bytes} bytes");
+                    if released_items == 0 && released_bytes == 0 {
+                        return turn;
+                    }
+                }
+                Ok(PluginCloseStep::Complete) => return turn,
+                Ok(other) => panic!("{phase}: maintenance turn {turn} stalled: {other:?}"),
+                Err(fault) => panic!("{phase}: maintenance turn {turn} faulted: {fault:?}"),
+            }
+        }
+        panic!("{phase}: maintenance never settled");
+    }
+    let mut app = new_app().await;
+    drain(&mut app, "boot");
+    for id in [set_active_example::BLOCK2D_EXAMPLE_LEFT, set_active_example::BLOCK2D_EXAMPLE_RIGHT, set_active_example::BLOCK2D_EXAMPLE_LEFT] {
+        context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: id.into() })).await;
+        let turns = drain(&mut app, id);
+        eprintln!("[DEBUG] block2d {id}: live maintenance settled in {turns} turns");
+    }
+    assert_eq!(app.snapshot().expect("snapshot").node_kind.id, "Hexagonal Cut Concrete Forest Left");
+}
+//#endregion 🔖️LiveMaintenance

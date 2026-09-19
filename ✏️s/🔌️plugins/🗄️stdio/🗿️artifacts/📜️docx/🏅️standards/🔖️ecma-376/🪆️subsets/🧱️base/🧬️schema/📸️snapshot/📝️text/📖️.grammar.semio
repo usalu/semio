@@ -58,7 +58,16 @@ string single raw
 # token, so a colon-bearing name is modeled the SAME way xml's own `name = IDENT ":" IDENT | IDENT`
 # production does -- decomposed into separate literal tokens, never one fused literal string.
 document = part+
-part = content-types-part | relationships-part | document-part | styles-part
+part = declaration? part-body
+part-body = content-types-part | relationships-part | document-part | styles-part
+
+# ── XML declaration ────────────────────────────────────────────────────────────────────────────
+# `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` -- every OPC part `🎒️zip/📦️opc/🦀️.rs`'s
+# `xml_document_to_opc_text` writes carries this Word-compatible prolog; restated verbatim from xml's
+# own `declaration` production (`📰️xml/…/📸️snapshot/📝️text/📖️.grammar.semio`).
+declaration = LT "?" "xml" "version" "=" TEXT decl-encoding? decl-standalone? "?" GT
+decl-encoding = "encoding" "=" TEXT
+decl-standalone = "standalone" "=" TEXT
 
 # ── [Content_Types].xml ────────────────────────────────────────────────────────────────────────
 content-types-part = LT "Types" "xmlns" "=" TEXT GT ct-entry* LT "/" "Types" GT

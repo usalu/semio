@@ -52,14 +52,7 @@ async fn compile_ops_decompile_ops_round_trip() {
             inverse: Vec::new(),
             meta: None,
         }],
-        changes: Vec::new(),
-        checkpoints: Vec::new(),
-        alternatives: Vec::new(),
-        active_alternative_id: None,
-        // 🎯️ W4: cursor is text-representable (unlike inverse, which is `.spr`-only) —
-        // include one here to prove the compile_ops/decompile_ops text-tooling path preserves
-        // it byte-for-byte, same as every other structural line.
-        cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),
+        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], payload: vec![0, 1, 3, 0xff] }],
         composition: None,
         conflicts: Vec::new(),
     };
@@ -69,7 +62,7 @@ async fn compile_ops_decompile_ops_round_trip() {
     let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).await.unwrap();
 
     assert_eq!(parse_ops_text(&decompiled).unwrap(), parse_ops_text(&ops_text).unwrap());
-    assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+    assert_eq!(parse_ops_text(&decompiled).unwrap().transitions, log.transitions);
 }
 
 #[semio_framework_async_macros::async_test]

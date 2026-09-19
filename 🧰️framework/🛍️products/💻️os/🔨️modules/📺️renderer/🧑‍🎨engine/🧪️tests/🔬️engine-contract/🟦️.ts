@@ -26,7 +26,7 @@ import {
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape, windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape, windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
 import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
@@ -1975,6 +1975,7 @@ import {
   dispatchOsCommand,
   classifyWindowLayoutChange,
   buildNoteShellCommandAction,
+  isShellOwnedCommandId,
   encodeEffectActionInvocation,
   encodeEffectCommandInvocation,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
@@ -9025,6 +9026,12 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   // silently could not, because the only writer of the remembered id was `NavbarExampleSelect`'s own
   // `onValueChange` — `navbar example from history {"navbarExample":"concrete-forest","remembered":""}`.
   // Every dispatch of the verb now teaches the memory, so a row redone from anywhere relabels.
+  it("offers examples only to an app that declares setActiveExample on some window kind", () => {
+    expect(appSwitchesExamples("s.cad.cad@1/*#editor", [{ id: "cad-play-shape", actions: [{ id: "select" }] }, { id: "cad-play-energy", actions: [{ id: SET_ACTIVE_EXAMPLE_ACTION_ID }] }])).toBe(true);
+    expect(appSwitchesExamples("s.vcs.vcs@1/*#editor", [{ id: "vcs-editor", actions: [{ id: "commit" }] }, { id: "vcs-history" }])).toBe(false);
+    expect(appSwitchesExamples("s.note.note@1/*#editor", [])).toBe(false);
+  });
+
   it("remembers the example id of every setActiveExample dispatch, so a redone row can relabel the picker", () => {
     const remembered = rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "nakagin-capsule-tower" } }, "");
     expect(remembered).toBe("nakagin-capsule-tower");
@@ -10632,21 +10639,57 @@ describe("classifyWindowLayoutChange", () => {
 });
 
 describe("noteShellCommand", () => {
-  /** ↩️ The descriptor also carries its OWN undo inverse: `🔌️plugin/🦀️.rs` reads `inverseCommandId`
-   * (falling back to `commandId`) and `inverseArgs` when it pushes the reserved note onto the undo
-   * stack, so a shell command a guest never authored is still reversible in chrome order. `detail`
-   * is the only optional half — no detail, no `inverseArgs`. */
-  it("buildNoteShellCommandAction builds a noteShellCommand action descriptor targeting the given controller, carrying detail only when provided", () => {
+  /** ⏪️ A chrome note is an UNDO TARGET only when the caller declares a real inverse. `detail` says
+   * where the chrome WENT, never where it came from, so the old unconditional
+   * `inverseCommandId: commandId` / `inverseArgs: detail` pair was an identity, not an inverse: the
+   * guest pushed every window activation onto the chrome undo stack and the first `undo` after a
+   * click popped it and asked the host to replay `shell.windowActivate` into the app, where the
+   * window-kind gate refused it `undeclared-action` (ticket 26/09/18 §3.2). */
+  it("buildNoteShellCommandAction carries no inverse unless the caller declares one", () => {
     expect(buildNoteShellCommandAction("puzzle3d-play", "shell.windowClose", "Close Window", { windowId: "w1" })).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
-      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" }, inverseCommandId: "shell.windowClose", inverseArgs: { windowId: "w1" } },
+      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" } },
     });
     expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels")).toEqual({
       controllerId: "puzzle3d-play",
       action: "noteShellCommand",
+      args: { commandId: "os.resetDock", label: "Reset Panels" },
+    });
+  });
+
+  it("buildNoteShellCommandAction carries a declared inverse, and its arguments only when the inverse has some", () => {
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.setThemeId", "Set Theme", { themeId: "dark" }, { commandId: "os.setThemeId", args: { themeId: "light" } })).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "noteShellCommand",
+      args: { commandId: "os.setThemeId", label: "Set Theme", detail: { themeId: "dark" }, inverseCommandId: "os.setThemeId", inverseArgs: { themeId: "light" } },
+    });
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels", undefined, { commandId: "os.resetDock" })).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "noteShellCommand",
       args: { commandId: "os.resetDock", label: "Reset Panels", inverseCommandId: "os.resetDock" },
     });
+  });
+
+  /** 🐚️ Every chrome id the React shell notes is shell-owned, so none of them may ever reach the
+   * guest through `Effect::ReplayShellCommand` — a plugin action id (the `View`-kind rows) must. */
+  it("isShellOwnedCommandId separates chrome the shell replays itself from plugin actions the guest replays", () => {
+    for (const commandId of ["shell.windowActivate", "shell.windowResize", "shell.windowMove", "shell.windowClose", "shell.windowSplit", "shell.windowOpenInNewWindow", "shell.panelToggle", "shell.panelTab", "shell.dockMove", "os.setThemeId", "os.resetDock", "os.resizeWindow"]) {
+      expect(isShellOwnedCommandId(commandId)).toBe(true);
+    }
+    for (const actionId of ["setActiveExample", "patchNodes", "change-seed", "addNode"]) {
+      expect(isShellOwnedCommandId(actionId)).toBe(false);
+    }
+  });
+
+  /** 🎛️ …and every shell-owned id the shell notes through `dispatchOsCommand` really is routable
+   * there, so the replay branch's "no shell route" warning means a genuinely missing route. */
+  it("dispatchOsCommand reports whether it routed the command", () => {
+    const noop = (): void => {};
+    const stores = { reset: noop } as unknown as Parameters<typeof dispatchOsCommand>[4];
+    expect(dispatchOsCommand("os.resetDock", undefined, noop, noop, stores, stores as unknown as Parameters<typeof dispatchOsCommand>[5])).toBe(true);
+    expect(dispatchOsCommand("os.setThemeId", { themeId: "light" }, noop, noop, stores, stores as unknown as Parameters<typeof dispatchOsCommand>[5])).toBe(true);
+    expect(dispatchOsCommand("shell.windowActivate", { windowId: "w1" }, noop, noop, stores, stores as unknown as Parameters<typeof dispatchOsCommand>[5])).toBe(false);
   });
 
   it("is excluded from tutorial recording, alongside world-navigation/introduction/tutorial-control action ids", () => {

@@ -525,6 +525,84 @@
         "🔣️.json": "d44b675f1a5943f3ae04a7a91bfc36912955694708b558f777f65ce3132ea48d"
       }
     },
+    "app.demonstrator.playground.config": {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "5dcac5163d5eb1772f85d80cd3863de7266ea6a7301bb70a8071a3fa3705422b",
+        "🛰️.proto": "ba8c9f55559de2f8fafa501cee35d3dfac058bd44a57286e988d2fd23b8c8675",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "fbd902b3df9de7441f2008137e80e1639548a6e87b1572e7ae507f51484cb1fd"
+      }
+    },
+    "app.demonstrator.playground.presence": {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "f81ed63f741c860090f0ff8b713c3fc7e856afeb9bd168a10c13b81f80c2dc71",
+        "🛰️.proto": "962472323474e66ba528349f89b6c28638b37bfd6c7b306672875af1b34603a4",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "9892c7b8eab17b44aa3bd0a85405a0daf88b0e2675e5347673b4c68743bcc5ab"
+      }
+    },
+    "app.draw.drawing.config": {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "672f9181bfc60b41cfb0b19d370ffb103519bf0dd1f4ad6f16c3047045f97131",
+        "🛰️.proto": "d9172398b388e15a9cef73fc014a0e97cbafd3593c4f4959c3f4e55b51a2d857",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "efaca41c851c30f53ca53f42a7e221838c7133e588bfabaf35bf9190bddc7e25"
+      }
+    },
     "app.drawing.drawing.presence": {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
       "level": "surface-state-lane",
@@ -637,6 +715,32 @@
         "🔣️.json": "44040878174c23d2ff8957faf1ab85b97fa9c310d8aa063e8e005120c6ef9f25"
       }
     },
+    "app.energy.model.presence": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "85ac2afd3c329660d21218b26757a00ea1037ddf1a1fd376d324ef3a6adcc6de",
+        "🛰️.proto": "3727e1ae738e7857a63577a6ade232237d8851c76e81b89b8b8cf36fc5426a2d",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "b6bac1569439f068da3f1e602ba08a67a5601f0f47b7ced86e7dc27057750f24"
+      }
+    },
     "app.flow.flow.presence": {
       "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
       "level": "surface-state-lane",
@@ -726,6 +830,32 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "9321c675d2350465296a5cf45298d037f172845d8b31527ca15030bbbc5223b8"
+      }
+    },
+    "app.forms.forms.presence": {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "98a41793492c695533b7f04afff930c58c3ce73ea06eaa486d7669aed5062ed4",
+        "🛰️.proto": "0e1db50c2d811c080916463f3415dae5f86e27cbbae2e94b42dcf0f951423756",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "82cad1b11fef99a2f0806636a5fce9b8227a148199381e36f7c045f87ba5f4e8"
       }
     },
     "app.gis.gis3d.presence": {
@@ -879,6 +1009,58 @@
         "🦀️.rs": "7952d0a7a9ca2b0230045230811c7765504c197ee794e5005d0b0d918b67cd2d"
       }
     },
+    "app.layout.layout.config": {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "cb89a5be144bd9543df353855b5ce74248806752b77c64168c1e1ff0e892a9b2",
+        "🛰️.proto": "0cd5d0a91f604014a1ba1ec4dd9e8af1dc4a11f98542e0372d02aee0021b2342",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "46dba5378512a81755d3ba369a40e25dd23872eff944fe1e9be39941e7c63553"
+      }
+    },
+    "app.layout.layout.presence": {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "5b5e2c2bc89380bee8c7603612f39b58d35a84be378c95b6c9f3d90e7ec59cbd",
+        "🛰️.proto": "34febe09419e02a29bdfa7cfc1136757dd1a331d48b5ecc989b39d42201957e9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "2c883a69f8c6a1df1f0877685d0f38dce6fce977531ccfc2b235f85883e44589"
+      }
+    },
     "app.lowpoly.lowpoly.config": {
       "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
       "level": "surface-state-lane",
@@ -949,6 +1131,734 @@
         "🔣️.json": "1b145107f484e8c646ba4dc157033712e5b5cc129322f25c855be073f8ebe9e0"
       }
     },
+    "app.norm.din16798.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "2b29389faed68e2016e8ae3bf68bfec3be3d74e818a66540c06cc8cb286750b8",
+        "🛰️.proto": "a4d71eb508364cd3518f4c1a05a12e289708bbb28b916b11e8093fcaf2f4518a",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "2a9d168b1548884dc31be6d925e75cd0948b5be472ee9cc72d898da9b55df786"
+      }
+    },
+    "app.norm.din16798.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "b4190ab153b1bcf58bf2169e6797da06024a76c032c8d697f43fdf43ce0b79e9",
+        "🛰️.proto": "d10bfc780ce9bc58b4f2bc2f59861feeb6297f73de770400ab29920b999f121f",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "dddae339758e4a3e66c1173e400563eead5db3610bd7397c1984d3b3ea6f4e7d"
+      }
+    },
+    "app.norm.din18599.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "40e9666922466cfd03e04dac6a1fe5edb5127a9eac962bc42fdddc0cf509c4d3",
+        "🛰️.proto": "2b60196eb2152d6adc2402317a62dae6e825f55654380259bf3abdf90dc56a81",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "447b90df56fd90da97a51e9a6ca406a5fc5820681ae448fdf2e5e79f52aaa801"
+      }
+    },
+    "app.norm.din18599.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "8bd903b4cc15bb0078edc27b24fb3deae185359fe44ae0c5c1477e76476849eb",
+        "🛰️.proto": "0f5a0c2695c3ffc5e1a96b62fda76f6ff9f7a743071ae43eea5029a69bedbd0e",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "78d959c3df13a4a372575b48ab2d7ff8f5356573858ea7e1011bd33041359472"
+      }
+    },
+    "app.norm.din4108.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "a1aea959481b1a2ed85f54f44a8845f642d51c119e471d8a522dd5017443b229",
+        "🛰️.proto": "abe36a5b3eb38f4442d07a6cefc926848212d2723ee8ee4aba1e4667688ac53f",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "8c02ab44ac1070cb499561d35a11ce19742eb6029c1572e528d941eb3a30745a"
+      }
+    },
+    "app.norm.din4108.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "fef3f083a3a6ca50ecd9198c6ae3faff0d6675bbe0a4970d306b5b3ba1e3f500",
+        "🛰️.proto": "69e66e694bdc7a6b74348c9fd17714bdd670ac3ab01b275b99570db5db2f5632",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "f9727dc3e24a8a1d9f83a0b07a1037cc11814a1b5935a752a9b58bdf84f46ac1"
+      }
+    },
+    "app.norm.en1990.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "dca3d1ffe3be37c65e14caaf349b0f46bb9502958a27fe7491b9342b4667fee4",
+        "🛰️.proto": "cc9c3806043e71ac0da09385f7db5ac609060b5c440a1677cbddde4408146025",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "ed659ff356684591572e6301501b67de218d70d90e5f54d33898d585162183ab"
+      }
+    },
+    "app.norm.en1990.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "ef5b0cef6dd2c60a34ef0b87c6f3186d2c9f0aab002180007d2ddbcfdf734523",
+        "🛰️.proto": "1d4641c16a09a1b9e4fcbc11defb021f4a744261bdcd024ffc95602eb241ca09",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "2b0bdeaf7f6a559f1e03cfff950afa33c7d0b96e3adc83476ddcbdab2709f9ca"
+      }
+    },
+    "app.norm.en1991.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "d3e6085a406adfa08408eedaf7fa6663782a54b659814a121114be39bebc2ea4",
+        "🛰️.proto": "b66bda7aeddac3d85cbed4e89129428ea901e085df1a636806c0c3b0520c6c6e",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "78f469ab090885ee0e6d763e7da4840d6153ab04863fc487939a81abd12b072c"
+      }
+    },
+    "app.norm.en1991.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "6fa9db6e1335ff9891d0e9b383849fcafdd284a1af3dbdf1f28a86548562a50f",
+        "🛰️.proto": "0a9678dee1c8c36daf682e1f30823fa251ac9f9dfa495c3d3f78d09140517cf1",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "720155e5da89b71f910fb4c2fce1eb32ec1566387298476b8cc1f9982479e88a"
+      }
+    },
+    "app.norm.en1992.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "106471f4f86942aecb03e567f086109cced1154b8a14f2919d7e9c04a46374ea",
+        "🛰️.proto": "26950eba13c5b99870049d59963dc0a5411072baadb0abd41dcc6ec3c4a4a2be",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "3e947631e4408c6ebbbb5b0fc60c87aaf256d174ebc198eca2027f837c852dfe"
+      }
+    },
+    "app.norm.en1992.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "d9263be1f59bd25a04b6ac0aaf16b349442406bb2220570e70cf0950c94a1caf",
+        "🛰️.proto": "891366811561490fbfb9a53cd95af8ba75f66c3761fb4e09cd750ddf2f4480ae",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "daf0e278e9bc657ee018a9c8eb6f74c5fe43e75a3535e11691f5197e5c6ac697"
+      }
+    },
+    "app.norm.en1993.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "0f75271b7751ed87e5ff69f4db022306e1125382e13c6ce6f129e253c5468800",
+        "🛰️.proto": "8c96d3efd6b01fd1cdc4f9e8c41af481309fc73ae55e8cfc541fbe6424c66532",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "093e74559c006d6024af48127caa7fc27e58ff3c1887d3907b02a586e1e79f0d"
+      }
+    },
+    "app.norm.en1993.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "10a330d4a20718fb306f2ef58fbaa790b0233b0c2d1479d9ab12f085a1802df0",
+        "🛰️.proto": "e66f76790e66c8cb09e37b7ae5d7cf964255fcd1364aba44beb7ee2d6affaf8f",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "5d174a461e4c7a52487e72d567907280cd7f96a8ae2b7f150e617a45a931fc01"
+      }
+    },
+    "app.norm.en1994.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "cae9838e95d5ffa14f8208174e89dc047cd276628c5b774cf53cfa80d2fe0139",
+        "🛰️.proto": "d8c8471996e60b18a96b42e7ae6df85330d82c16ea03ad4dd9ca09a4f79571e7",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "ab77c541c3c287b64a42eee0b21717ff44b4d2aafa2251b134772c13ffd83351"
+      }
+    },
+    "app.norm.en1994.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "abd52b7a0a67ae3280ee31f7fa1cb1429ff685e3d6a98c6f52c1a3d0ba654b00",
+        "🛰️.proto": "8a4701f9ce917d477c1c10488c3014ec4b3e3e57f5b400ddc67082887571b100",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "efcd9fff5143bba1f7f7d7d27c2d15ef96348d08aad4e82a2f74d3812ba2a2e1"
+      }
+    },
+    "app.norm.en1995.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "104a3325df39bac0b06a861a721a6ea3aaf0fa406d6a509085eca5f36af90434",
+        "🛰️.proto": "32dc85f4f39ba9682275e2408faf9d78c9511ae2e4b81ffe3208d58225f66cca",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "b8bcc15e9c0ab5f746b5827b37ad4cae28b3b279718880e74ba913083128bd2f"
+      }
+    },
+    "app.norm.en1995.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "12e1b8fc94a67b3808ac4626724718b1e3a10520fd3399b698567e00129e8822",
+        "🛰️.proto": "e1d51e1face37b928ab75017bfcfd2c559445876b094419d94d41b3e965c4878",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "a2a4ddd56bb30ac39da1a629a99dfef262e759a27dca0eb53434adec368afc0c"
+      }
+    },
+    "app.norm.en1996.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "03efbfd61cd0f979292dce440955643ab1a36f5167ed4ffa9bdf74f16f8da19a",
+        "🛰️.proto": "d78c033835f1fcd2862a66ddf6d3e4bd588a7809d7db48107205136b38450494",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "e459f6ec9128a3de84b233a0277a4a8d44259bbe692560873a6681bc2d9a5ffa"
+      }
+    },
+    "app.norm.en1996.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "ada14d83aa4a6fe45a21f5191cb13f88993b169104918af36848d9cd957e1fc7",
+        "🛰️.proto": "bb9a2c7fcf7aceb76801ca5e7c872ab81c5e7e4db7485bf9b101116ea7238a21",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "4064947aa0f973b500e6db5e9ea24e83b446cbd68ddc4cf8fa7e94f8d5e814cc"
+      }
+    },
+    "app.norm.en1997.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "983145b5a6cb720c0721c9b4866d01044b4255f9ced038d789130f2bb516fe91",
+        "🛰️.proto": "f92ed6dc3e14a58f0782c0161e4dde2cb97303c73ca86898325483d0482321b3",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "91b73a012b959db98892d6a9898fdbe50c9fb24fd37da771b1da31ac5beb913a"
+      }
+    },
+    "app.norm.en1997.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "10e8dad5f5a1fdef04940304ea7a5f99724e2893fe84a25b565f07ed6aa6f4a4",
+        "🛰️.proto": "dee55ed9208a55c6c265be2db2d5b72a9fda258dff8d6d214070c92f56024552",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "d0fd7578e884ab97614bf09d54698f632a98c494e8c648f4a7aa45a7cd368e7e"
+      }
+    },
+    "app.norm.en1998.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "c3b5b56a587257cc36cd7f443dd441916733fee08c1ec7df7d95061f0e59be00",
+        "🛰️.proto": "2aa5b17a0d24e7d1695b3a15c3dde82b02c2a906e4f9ed819f87a106e121aead",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "216a22ff7ea0b270fbbea0eb5fe4b5ee2f106896f67b4a268250e59f01015c84"
+      }
+    },
+    "app.norm.en1998.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "90061bcdeb4df3d9e915ffdb66963a02072c5cc0f9bdde814f11a9e3026e3b19",
+        "🛰️.proto": "7749f595f1b94783c544a356a28700aaa2ea896e497eaf46624949e45621f74d",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "298d0df391bfad9e309a107561ccdea00ad0595b27b6b3acd54e7af6a139c25e"
+      }
+    },
+    "app.norm.en1999.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "3c3c9f3393ea31aad8eaccffd4d015ae54f90c640bbb5c1cc878063c0577a7e6",
+        "🛰️.proto": "054962659a4019d3f95da84d6a6c67ed66ef4e454b2590ce8c45e21ae9f1e36f",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "da6261f2f3d43d4800784bd75f85bf9e283dcfadd2577dfe0e4506579ad07cc9"
+      }
+    },
+    "app.norm.en1999.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "a9e40dabe16c62866a5263126687c919e469f49ce0846a9f1ae1482bc006b682",
+        "🛰️.proto": "7ffde5eee33cccfffe3b84caba13a082fc44cf58996c83ab4abff778c1bb74cb",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "c0e20be3f12fb8db9188b30476a64cf29386de2f3c8f7156e93fd964873431b7"
+      }
+    },
+    "app.norm.iso16757.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "f68d041735892096d37b89a9bc1bae723f68df075c7b4e81f6e263026635cca7",
+        "🛰️.proto": "042d6d7ed39d16c7ed7d995e469c191aea5e22079452bd0eb1aa714344542b2e",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "990522075c5ed9b1fa25a9ec629390f2e1a0bb216fc573763bc81ca546bd29fe"
+      }
+    },
+    "app.norm.iso16757.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "2f2706059b3b811ad0dcac8e1e703e3d56b1b1cef635bf95fe9c11342b487c00",
+        "🛰️.proto": "3bf60b8dea3f252ce6744e12d2a4fbf03fc5e7fed1dec4d6b891be11b88ab817",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "0f126a1e37b72853003cc1072cfc8952358ce7f58b57fb5a63b0ccea24041721"
+      }
+    },
     "app.norm.results.window-config.mutation.change-selected-check-index": {
       "path": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧬️schema/🧬️mutations/☑️change-selected-check-index/🧬️schema",
       "level": "mutation-leaf",
@@ -965,6 +1875,84 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "c7c90d39f44ccf6298fe9233acf0482e551156cc2276bc18df0957b561800b50"
+      }
+    },
+    "app.norm.vdi3805.config": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "5da46785ce92f64a2aeb50abcb9e6cce0da168f3cda03a5d149b8d846e5ad956",
+        "🛰️.proto": "f1d3a7d7daa3628ddd525d6360c4b79293da96c398a3c0e7593d863f8de4e3bf",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "ae4d39c9bee7a882ed56f509d0b1f4be12eb7a01d049dffefaa0b4d0edca5104"
+      }
+    },
+    "app.norm.vdi3805.presence": {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "fd75f51c8d7ab9773da771b2c2f32413945dcb655651ae870c578b6e8a98fd08",
+        "🛰️.proto": "b5f4dd90af5a530bf7af4b5c64b7a7da0a2d43e62e02c8e991096f599ac1efe9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "c4db6a702d4025777f3986a5abc6c2c1475ea6f57c5ea243055ab8b17e292a9b"
+      }
+    },
+    "app.note.note.config": {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "7ce782540fe2ca397591fb295c18ea3a915a749c246ce6c19e4c743ee05041ae",
+        "🛰️.proto": "e2e3c1649ea1bba50d5525d8706469079ab7351aee8997b5a54a54d8b98fb6cf",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "a4987f3097ffcd995618eeba7f3216b80ccc54c01d0ce4aeb480a99ccb351079"
       }
     },
     "app.note.note.presence": {
@@ -1898,6 +2886,58 @@
         "🔣️.json": "9db530b56262efa8b02bcdda8503493f1315e717b6f8683c6301002de997eb42"
       }
     },
+    "app.sequence.sequence.config": {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "89d5666b9fc6156c6ea7225784b6d02b71d7f39a312af233632e640919d0abe3",
+        "🛰️.proto": "ed0ff21c18e0c3aa4a4e6cf60c754004034f9255fd5deb44b8bdf3d7c23472e5",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "af19c9e0ac4b97d96e28439a007a95ef2ebe5c212afade77a7f1232926ccb069"
+      }
+    },
+    "app.sequence.sequence.presence": {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e5e6d09cef829bbe3c3a57b1a6048871e1d8d93cdddb69269821714837b2e77a",
+        "🛰️.proto": "27cd2549939b74c6dbce942f101bc4207ae13471527a07fec6f679bcb0c91f99",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "3bd3261adf2e939d21c98a18810389afbdac73257cda0c3f5149b8f8bf36cde6"
+      }
+    },
     "app.shooting.shooting.config": {
       "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
       "level": "surface-state-lane",
@@ -2238,6 +3278,1930 @@
         "🦀️.rs": "4f190bb87f381fd8e6bb161a7dccbc3f213e59885f7444e16c8305c2da9617dd"
       }
     },
+    "app.space.space.presence": {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "8031e52bd983a2309640383a788ebce264c4101cd3ec6aad735bb8a7bf9d0fed",
+        "🛰️.proto": "ab6d3ceb723e2c6319c08034601750f0fc1e327c921b5e27a061100d7652cfc9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "b24e4ab1f16fec66dd4e20b26812e277a3581a4c3cabed634977a82d9f163659"
+      }
+    },
+    "app.stdio.avi.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "aac3758de5b32e31719eeac061c9c842bd4932dad7a7a9da1dccb5101b7c45e7",
+        "🛰️.proto": "4a0b1c9cdc42f9c810a38bc98b953a09e7657c4f5066654c2f0a9a4f2ceade9b",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "e936077e7a21247725af450b5683f90ad2d4b16f5d0aa59c0a215d0f80325aea"
+      }
+    },
+    "app.stdio.avi.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "dfde8ef8b90a169593baea1da24156b5f51fb3207bd4b618a0583506ad5bb405",
+        "🛰️.proto": "7f7a44b70a09f5d8a33fb65a61f97ed505040f633681274cc2b958d5e9279698",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "97213ca61c31b183d5ea2a2feef6614792e753fc8c373723f618786c07077107"
+      }
+    },
+    "app.stdio.bcf.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "ba911af464dbc272b2d85ae7faf59f9db3212facc8fc4df21146cf8dc5499ff4",
+        "🛰️.proto": "ba44d8fc79cc0b88038fa05230b160ee38f55d5902014f2277e7a3846997151d",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "f2c823704d7154dcb1a4b822fba6fd03ec8d9ccb51663e15459e86b9360b0566"
+      }
+    },
+    "app.stdio.bcf.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "78237154e36a44f83f69297945dbdd0308a500116b24786873b576bd8caa5bb1",
+        "🛰️.proto": "2190cafe925b5bc24bf4252a395fcb18732c963067724d687a06916e1b67e446",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "874be796f04621cc1a16d15229a71bcaeab36d2a147dd6b72741c7aff1aa39bb"
+      }
+    },
+    "app.stdio.binary.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "4267663dd15d18e66c78001e1297f320f3db4d3b7bb17e7fffa8441b41442a19",
+        "🛰️.proto": "7b39e87e302cd9011b370ff2eeae4b6dbc174258c6c0ff014db6eeb81e2b0444",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "c7d9eba6c4796d34bbf2b6277363e68e47890435df93edce0051a8940f6d7507"
+      }
+    },
+    "app.stdio.binary.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "4ec3dc79a987d029635b368035a0acc4d248766b8cf604bdd6a52cf120a10ba8",
+        "🛰️.proto": "4acb496ac28130bbeb954c2fff3dc61a1132d77185ec0ffe7003d4950bbe1cb7",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "2e34a2c8a6fb43f7689d88b190c6adc8a6fe4fd05bfd67e2304f36c99c0ba9d3"
+      }
+    },
+    "app.stdio.bmp.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "6e35634a8eaa5094b21b106bc35c312bc65332ceb012ae71434a7e2dffddacba",
+        "🛰️.proto": "1e568c130c43da74cf31c71ad9dff68ecf67da766d4eefbca35ed206e1cad9b6",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "8dca8a74ffc64ee161a1657be4239ec9d4dc3bffcac293e7dca524e527449cd9"
+      }
+    },
+    "app.stdio.bmp.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e28b4fd8d2911d4fb476b0414669b77eec96f1c0890ff075ee61ebddbca89e0b",
+        "🛰️.proto": "74376d5498941bd80a0fd379f597157a892cd1db72eb48ce6e7da240ac1375fd",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "b2f3f8ebaacf03c87e98e9fe3ae33dd34de59fde5426c425d0f9828179e9300b"
+      }
+    },
+    "app.stdio.csv.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "3b6ef839cd4341d3b74ee4ba76531e3aff41e54bc4966dd5350e074fbd2d214f",
+        "🛰️.proto": "31b38387b49f3880f84c215f488c9f20026cddd19fadb2c61d2f4d906a7fa687",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "5eef6f133c01711b0cb25de2deb5eec7364ae91c7c140242835c2b6907c650e8"
+      }
+    },
+    "app.stdio.csv.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "5bb3d3e6ccf6f53cbcb18aa292c9c39efa2f52c78dee5e1f94b6ee2cecc321e5",
+        "🛰️.proto": "ec2490109106dd9f083e4f772ee7ea17840e99077e69e4f0e28fc6c9890ea5f1",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "f801c3bf024e5574b3f69e9024a86d59b23ab84f3eb629ff84fd91dc13e0d342"
+      }
+    },
+    "app.stdio.deflate.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "f5c452fa3d44600b98a30ae7e96b04805beb182a2536130a9657c6e8f24ed25f",
+        "🛰️.proto": "b587f6637a1f387a8b0b17f708e40fddd1a2d7cf81209b9fe2cb3b547aae6f20",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "d51f302a57644f7995f8c61c83c84618902975f30f9b5a470791740c2b4f2dcf"
+      }
+    },
+    "app.stdio.deflate.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "15383a8e9c564c00c13989c80dbbd191f03851c3878e9b97fd2799564fe7ed5c",
+        "🛰️.proto": "34bcc50dd6bcc4b2fb3f5a3a5108412168b542a98d7969e68ce7f8a3cce8c9cf",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "56e74718ac5225ff8dbaf985af422500c6d6e47a89a31f249c5c3b8c80b90634"
+      }
+    },
+    "app.stdio.docx.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "1ce3c75de7428d96e2911ebf3f032e4deb3828196a3a9139528a36d53ac7f2aa",
+        "🛰️.proto": "4bc551e5a1eb1fbce7ea7c25657411dfb4a1391a1df44bb3ba67b8f9cc6b8b0c",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "169be179807c242ea4e1fdb6ca71ffb1c09b8e640e0c9efa82882c5e041f527d"
+      }
+    },
+    "app.stdio.docx.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "b1a680fad24f44bbee15f9da38f52e490b48c8943e5203eaab64d6b103e7f94c",
+        "🛰️.proto": "0aa2b5667f711d18a4ea632b4e397783cec71e371df7c7341a5f2eea0c2e4207",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "bd98f03d67073842d456a078cd8b20435df93ecd0047277341ce4b6f3e363bb3"
+      }
+    },
+    "app.stdio.dwg.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "2a75a27204c0a28fd23a45658d2ada95783374e8bf4e03f739213c1eff8d4c53",
+        "🛰️.proto": "a91e54649c99a58784c58842b03b2facd7ee07207c95a32a08a4b8660f117694",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "448f4be8ec552fb1da6854094d3c7fe75c88331e479db0314e60e98d21f3a7b9"
+      }
+    },
+    "app.stdio.dwg.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "a8bd7b71e9c6ed4ab85a1044f6d724f5cfd444e14571352995a88c899882c379",
+        "🛰️.proto": "10a50beed23a8febb33e6aab86cd3ee43d96d270d3c7b0fb0d979479f627868a",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "550b47debbd94fdd975a141342bd1bcb612c50585d193e46278781e8bb1251ed"
+      }
+    },
+    "app.stdio.dxf.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "5f9c8f53ad5ed3901caef311f4ed0e9ab0f0d99c1c9b9bc994f9abf730c57ebf",
+        "🛰️.proto": "88a01caf591ad1b433057b1b532fb43d5b1acaa7a19631b7850721f11cef07fa",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "328373dd4a5798136c641aa61728caa3f1605698971681c892fbdfba474dc702"
+      }
+    },
+    "app.stdio.dxf.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "65033bbdf46f1eae7bd9717e736f75181eb226e752c28da916751c7bc8ae6540",
+        "🛰️.proto": "cf36498cbd59da6eb17a63050f0a4b0129d1a6d63c1772cbc289cd3f98019cbf",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "2b2eaa5bc1a107a3024905ede53eef0a983338e01304b355b439f16fe887eb98"
+      }
+    },
+    "app.stdio.epw.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "3227a4af94fb1f962aefe2fabf260fd8b599569d3abb62a803b7e5490e16b17a",
+        "🛰️.proto": "c8f72f30d57d9c84b6e5401420ad12cf6100add130a57157926194e4321c64af",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "e07d849f64863a3c1ec3ee837b410d90a32b77a8d26948cc4798a1e1f3773509"
+      }
+    },
+    "app.stdio.epw.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "b28640e36a7539c9d9bf6ea0362a5aa0b3ceaddb62a5bfafc70603f649e7fd96",
+        "🛰️.proto": "7e87b761978d6cf30c357339eb01aba626e8286c5a4c66aae00dfe25b3ddae4a",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "467ca023009a9e3814eefdefaa8cea5d5ec6c09037d9ba6178e4237afa53df39"
+      }
+    },
+    "app.stdio.gif.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "903811d27d3dbe903750c50e9652399489f89dc082c03b6aacd487d5881d31d6",
+        "🛰️.proto": "43b9cdb12e061f8cb8e9f78460654cde0d6780f4d8abb324f83cd8222a55736a",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "e4830d0d490b033e30c2dd2004496cfb1ce64c0f9582b0112287b54f5bd2344d"
+      }
+    },
+    "app.stdio.gif.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "c30e2c0c03f971866d685eaabdc4f8c93d8783363a93b9a69375af72d525eff5",
+        "🛰️.proto": "baea0919b0c57f48f84ebd97d992b1ebe3a78f8d99ee1c8c0721d8641e18a257",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "37e8977196edc61c1d629793da880ce8d5921fdd849e9cae47491f9d0ddd0db2"
+      }
+    },
+    "app.stdio.gltf.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "f969898a289f5a387e6f0ee03ff2fd0cae62efd1ee470238d8563270620d1742",
+        "🛰️.proto": "1032f861b062cecd388ecc0e1e2f7e985e2061ff06651344c4076eb27691ceba",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "6b152180175d4f2ab87b597a10fd58a8aa76c16df1c44296e4bdb4c209c60118"
+      }
+    },
+    "app.stdio.gltf.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "24ccd16d7d88d26dbabd1b3c17daaada66fd0aafeb7d8ba49c135bf67425febc",
+        "🛰️.proto": "4b95dc5bc0c155ef582f57ce14d5d3fba2476ce42c589e1cbd602174de53d181",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6fb79f4b4a26412a771e95271731ed84925b8291cf2e5ddee4d2df05141c231d"
+      }
+    },
+    "app.stdio.html.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "56905829b0c84279a5b9814fb4c5249f50a6b8c10f03edade818050ce5ba9df5",
+        "🛰️.proto": "b642abf8d92d074bdc7cfa805dd92ff147771d8d987ff6870217122e0b5a78f8",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "0a25f65ece113655e5926e3a2f4818c1fcd8c348c71bac0ef70f029c77a6dbc9"
+      }
+    },
+    "app.stdio.html.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "949e549c34154957c32fffdf458ed96b3c2eed1e2344e7990a713627759f708b",
+        "🛰️.proto": "29cd32b584b3bab59f811504bb75516358027c21414468df03d88e519159aff3",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "7f942dd8efc4d3911a608b7cd7ca129092e3edbd056c7d68366849447c82b547"
+      }
+    },
+    "app.stdio.ifc.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "75830c420b1aabc8770728972538e7c42b905f8484458f6c505054fc301bca7b",
+        "🛰️.proto": "53e4cbd2694f9610c31f08db30ef502723cd975d20d93c239ab7db2db5941d51",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "7956375590b1e534ff6db20d30e1696e6ebfb3102e55ce94534c4577dbb315dd"
+      }
+    },
+    "app.stdio.ifc.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "0939ede33cdd58f8ee5afd3acc4196213b4cae1d6936bb8c0276c21710bc3c81",
+        "🛰️.proto": "39c290f5beb4a5d5d0fbca090f88bf48f4716bb1c0d9ec4867aa5671487937f6",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "84ec7ca170b52beb8bd465e5b7fd71c772d80ed49ad69b419a5ae7e8d96f87cb"
+      }
+    },
+    "app.stdio.jpg.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "99479f10acf962574f291b7ad1c02ef453142933195b4d63b152b08fe25b7a8d",
+        "🛰️.proto": "e5f5029c4378070d376a166de6dd7cf2b5682f8d272633c2a1871714e4ce7b4e",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "0fd026f4e07d3179197a1ba3b1f311ef038e5761b5975a7b13db278e8fffe0b1"
+      }
+    },
+    "app.stdio.jpg.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "5cc0267756cce1d7cb5e35dd2caaed46a882914fb906b334b0312cddd75be966",
+        "🛰️.proto": "32d86ad5093e7c0e373e220862c1e3416b258d7e1244f5f8bd8a13c7bcc02f03",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "26781031ebcdae26ff5b7a31de7655fb5c34b470f262af0312a809788715634c"
+      }
+    },
+    "app.stdio.json.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "523667c053dad10887f9fd0dd29560513878f0bb88b6b79996a366db36caac5f",
+        "🛰️.proto": "9dd1d5bc61b2c91ae5738fa1b3449aefc4868e75438a0a3aade74bf93b8580a7",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "6575f468fb95dbbcbb7f1fa935c85bb38ab4504e73d362bedfa88ee28d340090"
+      }
+    },
+    "app.stdio.json.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "eaf34e05e0fc60ef05110d5586c7010ce8de4b668186f659c6fab47602a52830",
+        "🛰️.proto": "046a9e01a898062a36b9634a606cd7716f582c6a4ecc5cad623dd5e11bb3dea0",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "07d85ec95d3d01d47335775e68b74b7f6a934fa47a5f5da7889c452b5aabbfa0"
+      }
+    },
+    "app.stdio.las.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "6c3cf759830bb9438bffb10c79f7bfaedccf66b2100b853284db11cd3ad5d8e7",
+        "🛰️.proto": "ebad2a4e762a46759b0e38a8794dc6072ce48da68dee34201108fa3d77671d1b",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "a0819252aa3e74e9b3d97bac1718dfe01667e54a660331fdf22c9052874eda46"
+      }
+    },
+    "app.stdio.las.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "416085b8003cfb5e14cde69fcca786c64943221de02d5bbe9476c4b6b5807ad1",
+        "🛰️.proto": "baa8bf44f656b720974dfd5ef016d841ad67bcfeb64c2d385d14c098285c085e",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6b7730ca3835962c1e2f55b133e6aad9fc607441f693d74321af8ce2f150b5e8"
+      }
+    },
+    "app.stdio.md.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "914eb84da70b2fd085fa608602ecb37d96b81846bc06602865964d308c9ffb4f",
+        "🛰️.proto": "b34b9d843df7bf272d8b3d4563554cc3924244f2b7216bb61f4d160444f21f51",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "fad181f9b0f3e757247141f8d62c85187610a548249b21d85e3bc0630dabd7b6"
+      }
+    },
+    "app.stdio.md.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "a8be97f6dea87d228bb79c64c32b3e143ef2df4caebf0b32e8be330eb94efa59",
+        "🛰️.proto": "e1e13883c9f5263c68d43607768d10980a733fb2d5d079a9f2c7c23a432627ab",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "d83c661857aab23feba32d17c9e79f3fc6b4401b7adca178df1166730dc72917"
+      }
+    },
+    "app.stdio.mp3.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "f4bbeeb2f873c2f76a8ff360d7999df8094c93ecbb3664ee55b2d26db3a0a731",
+        "🛰️.proto": "5563fa925f9c4fed9f06f6f05a84bcfd13d39d561bf585d5d73b1b2cf07f7e4b",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "574072a077d8b1bb1ef8dd69423a56a5680bca85077ed0f209c970b56c217f32"
+      }
+    },
+    "app.stdio.mp3.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "b79fa1f64132826722c1ea1e120712f28f7c5fefd0b077c433c28ab4073f1c8e",
+        "🛰️.proto": "c5021ef8c84af48a8b57aa9721aa4acfd5bf1b398e6bbae0393ff4f0c181e305",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "a7501b9c996f7a9850ae784db65d031ed7a47a0a3c4ce0cfede94ab47c61ca9e"
+      }
+    },
+    "app.stdio.mp4.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "6db56f8240dc4e0330289d8fc632eeee412d3d982fb302794dce7c1aab73c718",
+        "🛰️.proto": "6473a24520d431e9d710c40317bfc2ffbbb28b51d3121dbfc5193b739fee2649",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "8605c43386bfacb9274e6875a7e5701593e5f8d767c2582c4905c431fe8cb9e9"
+      }
+    },
+    "app.stdio.mp4.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "57876e51d98a31f0547b6f4a3bfed7bf411559de504d7cc78dea3e9504116f1c",
+        "🛰️.proto": "2d8f3b95db7bdf3747797d2147b8f6051081f83c3b21cb76dded1d4198d68327",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6de70450dc9424cd7ae2f3e22ae7ab80b4750405be07ff12f7e84db2ae8fdb9e"
+      }
+    },
+    "app.stdio.obj.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "b62567e5cc9ff72f1ff5d7b8e9b40a0fd3c5b000703ff4998d7bb887c1527c25",
+        "🛰️.proto": "410430afdb35830602f6670a4349c50e24f3b76dcb263b57b489d43b512bfd6f",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "cc7051f46d265c6bd8ceec93fa5e1e443f1569ef7d9aa1ae8e3438fbaa3d4d95"
+      }
+    },
+    "app.stdio.obj.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "5418ffd7f941771c55614a66f313bb92ea49d8da205e44427407e3ed29cac973",
+        "🛰️.proto": "aa5daa0ca6aa63fe30a76ea5c0d93f23538a64da0b0357a0dbe642272f343245",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "0d05ab5d16a145dfafe4f9f837ac09aa5529e8e97effff07e067ee86f6d933ba"
+      }
+    },
+    "app.stdio.pdf.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+        "🛰️.proto": "cc23ee67fa92838c856d8663a6a0fcc186d75c42818fecefe0da6a2a48a6114b",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "f4b9673e035da14bf2ac3a25c9b039993b43ab4da45f767978040696328dcbf4"
+      }
+    },
+    "app.stdio.pdf.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+        "🛰️.proto": "0a5b2bd95b262d1e3a17e7a98775c4c200d6116c0805ca8a2d537fe55b3fe1e8",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "2c7b0f786d60fb67adf0537169145be97fe856a38bb4aeaf064ac89f1e02bf4b"
+      }
+    },
+    "app.stdio.ply.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "97174b1d356be06b97eff8f9cfaec2fa4f1efe84f95e5468e5b17ea7632b96eb",
+        "🛰️.proto": "efb477140e3e192154bbc3ef6f66b2f57403fe9b6a4f5b70f2003bdbbfeee336",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "63f638dce0f47475db7408b24d03c0db8d26f720ccae565d07514b5e613910ab"
+      }
+    },
+    "app.stdio.ply.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "63fda96f9cb5832f5fde58c957f10420a2182b6bec0412542f17483dd4b539fb",
+        "🛰️.proto": "08078fcbf5e05f22e57d3a5a1a0b2773fb46ad4c30f55e2faabe1ea93a7d80de",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "843027b4837745be11def0f1c3ea13b23db43e6f517f5da8713f2ed6062e153c"
+      }
+    },
+    "app.stdio.png.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "ea18c985d9231cf9f6715261ebca55c5f6bf60a83cdbdc5c2e6ebdd072aaf860",
+        "🛰️.proto": "f4c7e9745b307159118640aa93eec7cc56a86744e156ae94dd6c9be7c62e5623",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "3b07e727e365d49d418e5e658765ca820734296e939045074147e4eda8072c96"
+      }
+    },
+    "app.stdio.png.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "45dde9a69d4f0f0393367280e2a9ba8b35aec862e26cf089b7cd2a4fa611259d",
+        "🛰️.proto": "af37e9e350c3caf97748e6a8e83ab3e5657f26034d99a6b674af2758951cd7f9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "540250b5935497d583f21e12ed2f64b6bb383a32ec8edd2b288effd0137943e9"
+      }
+    },
+    "app.stdio.pptx.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "b29fdc99da94d95800443de790b1bac522ee3f6b7a9f9eba47b0fd527dd395de",
+        "🛰️.proto": "3ceba6fdd1f3a17ffa94daef7574b5af5b26fc6c67300aad2dc4f1832b633740",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "9e9f58edfd57ea8d7f590b620e27c3af58a1b40cce9bae79ffe5ecfebd57b64c"
+      }
+    },
+    "app.stdio.pptx.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "ae4f448f2d3461b1b69eca16e9e2d191548b7e5d72cad05dfc862c4371cf4bbc",
+        "🛰️.proto": "c5c80ac816067f212e9fe3bac7832074181783236b363ddd4017787303f8e36e",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "79d4c035ff3d00e210c1d1a8505476d3a398e105b44b2a95c79a3b643bf406e0"
+      }
+    },
+    "app.stdio.semio.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "0492f8510e03f32f3fddd78d0a1ae057e03e1f2e6c512dda6b6ecd09dc5c6dbe",
+        "🛰️.proto": "a9b33f06f0a4714a1f8c7c975e3dbc27eb6941f22e3e42331044224b2911bb9a",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "1981c833ff7e1d653399e2c2c623f4fc12cf89a96794979995afcb0b432e0623"
+      }
+    },
+    "app.stdio.semio.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "6e5f907dbac9c383bfac126d34e1ec0e393dff62c8306631a98b63dedaa97b13",
+        "🛰️.proto": "430df73e14b364c7cf200460020b89cd40456170e498bd293dd2ece8c279d096",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "dd7afc75dd13938b296d22ff5a9111e7288db08f84e0d1ea4a165284b987ab05"
+      }
+    },
+    "app.stdio.step.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "41379c1dca04bb41f85584b9aac0c98b2a4c7e7479e5f3202405a985f2741a2c",
+        "🛰️.proto": "c5d8ac665e08475e315a259e8f58cc7b80b5ad8e9876418913537247b6ad62b4",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "a533de6b30ab0e1f36243783134c4b29fe97dfa7768e114bdd2aed37b8401387"
+      }
+    },
+    "app.stdio.step.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "cfa2f5a618abef0db93cfed3b860ec59a8ace3f2211a1e0f4f8d5a4eb46c6066",
+        "🛰️.proto": "9b85f6c333f4439d26afb3a41b796775f24ce2f0283646823a939e85f3de9070",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "0845414dd909705f43a081667cc673d6f3a7fe7feecaa3a7daced8870c4a8456"
+      }
+    },
+    "app.stdio.stl.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "3eddb84eda3b88261d0bc8e5b4a1abdfe9ab9e6caa2e12b77c6780d2f1c641cc",
+        "🛰️.proto": "245eb388a16d874859399542a0bbfba615536113b77ebda75147a91bd718ae95",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "0333972ad8a453171a071a1c9789b6ee95994ad05f3f7ee90d95359d072dde34"
+      }
+    },
+    "app.stdio.stl.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "aa78bc40ad791c54541cec94edbd5df862c462f10c3e6669d997be358f56cd5e",
+        "🛰️.proto": "e5378caa093ab205cb117f3e9ff10c50a5b1bfeff9d8e74f9e7d54c21e8b7b68",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "e281bca1d3f408f19edbe71236c0418341e095d16997299fdf8f0ee5c0d4ade8"
+      }
+    },
+    "app.stdio.svg.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "19cdba6d0088f7f679aac8fbe03d5d82b5bc6bc6f3a091e829b56f85ac4dcd68",
+        "🛰️.proto": "14b9cb670013a79b2939b8b15f67b25938047455bc0f83d3c78074b0c188870f",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "ce3f12f6f5bf22264696bda263de6e680c53e401d558d109d923f481f199cedc"
+      }
+    },
+    "app.stdio.svg.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "edccf828601aa2f3948cc0733b21537fc3c7596108dc408d2e8c292df2ea14f2",
+        "🛰️.proto": "cae42a32f1cba59553dd5d0138d97fdb0000e7fe49caacf7dbe8af88a3502ad9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6809d2e8ffdd3678f55cea246bce98dc8c05789872ecf32554d80b6fa2bf9fcc"
+      }
+    },
+    "app.stdio.tiff.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "14e09748a45676ec5bab386ec2ab696948a9ca06078fe5cf53e91c0c07ef0b2f",
+        "🛰️.proto": "44ec53ea461921177473e8c6720406763bd6875a4b9ebeb0169b8f8566d0bfe5",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "f0ed9b6e45e46071d69f38afa4f4f7275bddd6a029a908f4b7c3b9ddabb51064"
+      }
+    },
+    "app.stdio.tiff.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "cad06e1e2b2f21c505723027506479dcd70dff772984be32f403467b3147b6ab",
+        "🛰️.proto": "7fce71b164db45cbab380251f6c63d085de7f7005e514d97a82d09abd1af62a5",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "e092856763d68f4384ffe653a6d68df4438b09f005e1e9236d67f13f1a03c1d9"
+      }
+    },
+    "app.stdio.tsv.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "94098242e8efdf50d07228b5c1d1f3583b496f1810701f845ece7b4578674028",
+        "🛰️.proto": "94d8ee658be853fcd8f3337afd80b4f2f7cd2258a35b36c11373b76ce81fb13b",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "c824dcc909f1e053919cffa8fb11130fc8d93abadcd44b15a22c5c76df84a421"
+      }
+    },
+    "app.stdio.tsv.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "a1fa9d54c85d97fa1bbed84ec281000fef7a73a8ab1722a519162c803489e11b",
+        "🛰️.proto": "28603bb6e5a5b89962b20f4527de6f2347f810c496dd451db1c1a4badaa35469",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "a73672564c3dfdf2b21cd5d1e0b917d0e3fea92da9cb5c32594574665499d805"
+      }
+    },
+    "app.stdio.txt.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "d582e5a41036e58e09f5956152b008a808eaaf1b4dce71a6b27875fc1e50d4e2",
+        "🛰️.proto": "00295f1209a8a6c01eb42b0d395bc9d27b9f887110e7c6592d14309d39f7bfb8",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "c7a45f71004a0c4ea635b0f5c41a6f07578dc02b4412d54b9fee826db346e30a"
+      }
+    },
+    "app.stdio.txt.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "aa642c9c67dd5a7b041c5bba5455363c71c55367141d674a4224f6bb89a3349b",
+        "🛰️.proto": "7d97089311247f5997399934b2bc0b3e150b9a8422370cdd1dd2bcaa88191121",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "69bd0cc09047e1e132afee456c971a72c852f97ba26c9770e05f0d1c6515f7bb"
+      }
+    },
+    "app.stdio.wav.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "29c5c9acbdb2b632b2407e737c72eec25cd860c60b7421bf7ee5a9c0ae728f4e",
+        "🛰️.proto": "c59a49a5f39cdff00f4fda89bb2dfd508e5d93c663d2aae78335ecaf4cd45169",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "470e3b6fe638779e4d6e1e19e958b6f35318ecbcabf0fa1594e2a65d4a7b16c0"
+      }
+    },
+    "app.stdio.wav.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e2e81b7927fc323f7f7d88f88da9d48d5c09b7adf95f8796f293e7cfd35baa61",
+        "🛰️.proto": "4fa25b78ba608deb94114dc81a43391f68f36d3bfcf6606f7d5a85fdaf9be458",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "691f434485cbf8c14c6a5c5de4eb8e5ab5418ff63216ae7e036ba87f2df26c30"
+      }
+    },
+    "app.stdio.xlsx.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "04d3d4bbac189d787ac76686a6d9ae8d572ff7f15c691d181f55c578a2a84fdb",
+        "🛰️.proto": "11d09b30473fcd044a0d02bbaa9fd71e7de0c193241cecf82243fe95cb6c23b8",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "e7dea4184bf21e16204fa8b6181e42b7121ac2e3a5eb84d5bb80a687ac05af8a"
+      }
+    },
+    "app.stdio.xlsx.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "2f4b17277bc8fd0159e85ec41fdc56e021b89ab0c0f419202bc8b8af805dfac1",
+        "🛰️.proto": "c07fc4b66ccda169c54836bbc0cda6889819363f0eb9c5a0522782a727e10c09",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "15b84486f53fac669269fcb75a8735847781592d2d003a6bf719abef1a8291c7"
+      }
+    },
+    "app.stdio.xml.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "a19704a887d1f8eab8080fba52c3cee1427d88f27310fa8d1dbd3b2804e04466",
+        "🛰️.proto": "3337c052ce9c4caae06c43e461171df4e790f6729d0dc12ccf8fa3f8841a6f47",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "8249bd2015d3a9cf0af4f76da5ae0a97d45d55e4c955271e39777f2a5af5573b"
+      }
+    },
+    "app.stdio.xml.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "71c5e4f501f949a84cde2b0913e6cc76d400eb641e480a4d19efaf53728644f8",
+        "🛰️.proto": "f39cf7675d81e0035a2c05539095b98b4aa954d737bdc2430dd1414930440f04",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "b5b6c2f764274c572c5d19462cdee97650cdfba38493874ce6bc4e4750e0d08f"
+      }
+    },
+    "app.stdio.zip.config": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "8bcfd6286246042d59864ec09336eb93313ce3deafddb02ebbf738b327e74007",
+        "🛰️.proto": "6895e48123d26e29eb98e38e956e269285e9b50d7bfcbad8d50a3ef7b8f685bc",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "f2543d6822d23d2abd35eb83826793fd92086394ec667d4d21e204e6354c759b"
+      }
+    },
+    "app.stdio.zip.presence": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "a5bf9de8e918d8d6a0360184d9fd522b1a43439b506e8f1d8d988738a6923d84",
+        "🛰️.proto": "cd9958df27be7041312276ccbc78be6216e6a9557a1b96ad6a0ea75a8cda1bc7",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "29b6560964180cd421931be6d329679c6b43505c85142f2465808355ed29ede5"
+      }
+    },
+    "app.trinity.jack.config": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "e11c75fd6ded79b68813d7af20e11bd2700e33099ec7b3d65ed8ac4e6421a8fc",
+        "🛰️.proto": "63b04a5048199a294206680b61919bd9afa8109be7f14b9d849789346171d8a7",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "b72f3d706ffaec4b6c143df30b6176afe31afd98b640e5f2f4c5723cb9f04787"
+      }
+    },
     "app.trinity.jack.editor-window.transient.mutation.set-editor-selection": {
       "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧬️schema/🧬️mutations/🔤️set-editor-selection/🧬️schema",
       "level": "mutation-leaf",
@@ -2254,6 +5218,32 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "0b9b47bbc3e47b7fc6bc5967acc5eba80883d28b53f29d0464974f95bb77f911"
+      }
+    },
+    "app.trinity.jack.presence": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "32be5fef8ea70063b585e6edb2aeae8aa97d9d222fa0cf9b3b20487c2bcdf40d",
+        "🛰️.proto": "a43379bab69a56dc833c6dffac85d052e37aab10671d04369163db635b2e022b",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6b691e9cb8aac1395c2561248b3294fb7ea6fb51efa0b7e7d178558db9f3341b"
       }
     },
     "app.vcs.vcs.config": {
@@ -2306,6 +5296,268 @@
         "🛰️.proto": "430350bb557224839efa10f641a1d3f84cea2f97986d18174ed37e2b01e1142e",
         "🟦️.ts": "f34c7bef065ea138cf7a29d6066bc739749ef6b12e694b8a022b00ab1dd2341a",
         "🦀️.rs": "53159453939a383b5fadeb79f66c190a555eb34bbb1dc8a78b46eeadd3e721f6"
+      }
+    },
+    "app.wfc.2d.config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Wfc2dConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "d361c5550caf9273a3759b0c5024f812e734055ba530c33d668ac4aaacb25ced",
+        "🔣️.json": "e853c3278c9723cc8b0c4d0d73d7196f3901ad8f95c5c719f61e33869e547897",
+        "🛰️.proto": "a06d3806d60ba8613f429a7ac5c2a662936139d1fc48301080473e96852a81dd",
+        "🟦️.ts": "911f0c001fbf891c1fef2820a659c933f7eaa477fadfd0ea0a7da8d56f0be598",
+        "🦀️.rs": "8bc00ddf536504f3e8b74213449bbcb44826d4969037815696c6bdc00c21691d",
+        "🧬️mutations/🦀️.rs": "fcb99dc8f074b19203e31de0a7c818234c02bdb087989644e1c5a42f14e56c3c"
+      }
+    },
+    "app.wfc.2d.presence": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "28781654bc216133ca484a9debb153b73620c8833436b0c1476ff39bf9149d5e",
+        "🛰️.proto": "b9a3d93c6158b43c9d9897aee308f55584fbeaba5df7c0e1c51e6db42c0ec124",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "29cdf89faeb7be229fff7f3df17dc5ae4c23c3baa04e95dbbdca013e0df8ca25"
+      }
+    },
+    "app.wfc.3d.config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Wfc3dConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "d08bc26ceba59c2369497a9cace934688ba7a22eea46295ef6a0dfddd235f4cb",
+        "🔣️.json": "de08daf442f59d427f40bb15fbdbc0db234fc144c88a272860e8cedf4bf4254d",
+        "🛰️.proto": "b49902ed9bf22cac291da516dcf4817a1c2994a8b8211475b7f80313cb0ed0e2",
+        "🟦️.ts": "49284a19c1bee90c8a9f63685a6297182b1b2803ebf99057c504639558612a47",
+        "🦀️.rs": "18790b009e1b572f73e37a216d94aed54669c3be3063b2e1b8411b5615e85009",
+        "🧬️mutations/🦀️.rs": "77320a25518c6d680cd1f8fbac0eb6965f8592a9ee62bc5529491c52fd9f1712"
+      }
+    },
+    "app.wfc.3d.presence": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "41ca59fc866ce40c8421386e70618ff2c8abb2135bf0feaeed98ce02dc1815a9",
+        "🛰️.proto": "fb4404398852f91cbc5e2eefac106895e1b0d8d1cb5cb5d8f7ade645f1f325ee",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "6885465e8eacc9deb1698b3c601a30f1100b8c116e2ece14cdc3bd1c8cc722cd"
+      }
+    },
+    "app.wfc.bitmap.config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "f0d44cd27db418fad6f3203a2daaf1181ab7d73ed2bd65ded60a4ae3c0c28bca",
+        "🛰️.proto": "a3f71ed64b1b87aca08b7f8fe972973c6eb5707be782c9e6afeeb9f71214e312",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "8bad319f96eb9fe5da68e6ad6796d917ec5469a02fb534bf478196ac05c40a26"
+      }
+    },
+    "app.wfc.bitmap.presence": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "0ec099fc214e4de39b1158bb3349de38ff3eaa5e8b3eaf49f59060fcdfd02d0a",
+        "🛰️.proto": "8d629df9bd00007daccfed75f2ba2048f8b5734b74e7b0ab7cb30a655fa4fc1b",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "e3ac70e179a1aabeb5cc750e395bf626ba461622b1fb07711eae7512befc56a5"
+      }
+    },
+    "app.wfc.grid2d.config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "9bf5e956a366f5a009e77ebf9e557456b82a6375590ecc784c428696478c0353",
+        "🛰️.proto": "debdef13cf9cee256102e9b18fcd17f2697b46662e411926f541b26e0afef43e",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "0c7b1b96334367245850410135b77e81ee3e0ff5291dfcd82dc4a6971f2adac9"
+      }
+    },
+    "app.wfc.grid2d.presence": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "46e41e3aecb3e260fec99f0172100b51df1e96afce59062f0b49f5e663986a02",
+        "🛰️.proto": "00d49a6bd2ae95ac1f9d86e8e7725363333b7867208e4c5c7876bd86ec3e19b9",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "f3239e3da44586d536a6f9930fd4de9fcdb37bfdaa3a90b34705bc32951d9aca"
+      }
+    },
+    "app.wfc.grid3d.config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "1caea15d99292f3a566b42a240c4cb3f2eb749d9e23a72efc65c49bf602dfba4",
+        "🛰️.proto": "b6bc81cd9ba27ed712d7759f24e3f813f2567da6d3a965fc5b7b8b2e07a4af05",
+        "🟦️.ts": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+        "🦀️.rs": "feba81356c59d883c1dd72258159d29c5e1753dec6b4d6f2c871a1a3336b866b"
+      }
+    },
+    "app.wfc.grid3d.presence": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "ae320f2aa50201a0cd707ae8fe3669aa6f3f2492ba71540cbf4329d66d18dd1d",
+        "🛰️.proto": "cc6e8cc31b5a8d2b7ed4d69f70875e94fea14d66f1a8f193b7d0dd102b3ca22a",
+        "🟦️.ts": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+        "🦀️.rs": "54fe528a0925385aa00db74df476d4c650afadf53ec3f654faa1805cbcecb41b"
       }
     },
     "app.writer.writer.window.main.config.mutation.set-camera": {
@@ -2665,7 +5917,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "723c30be88d49fdb3ed84bacfba46e34a4194af0ee886966cb8317ccee905f0d"
+        "🔣️.json": "3e365d723385e305897252368288e1b61ee39ab1696cfd4b4f8dadbe1025b7d7"
       }
     },
     "framework.actor.composition": {
@@ -6418,7 +9670,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "bbdb05f78008f783b7350f4190195e505a2b7c671b01ea1f6877360507dc77ca"
+        "🔣️.json": "9ea310823444bb0160dbe727200248301f179c3fdb2fb25fcc300fccd35023c9"
       }
     },
     "mit-bestand.bericht.documents": {
@@ -9366,7 +12618,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d33c5df1fb85c50dc38db8520906d4ba427ae22f5b99e0b681d95e71fdbd5a4d"
+        "🔣️.json": "5f66328598f5627e144e5e13b28689cb321a2f4f5670fe70b949143a4846c598"
       }
     },
     "os.plugin.browser-bundle": {
@@ -10812,7 +14064,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "ed6a59d58d1da87ebeb2f9ce18a351fb322427894f38b09550bc3f111fbd4146"
+        "🔣️.json": "76cee4e4ff4c6b19f6a44087407e6ba92f4bbed0e3d8ac099fb27a89b922d4bb"
       }
     },
     "os.spr.history.identity.id": {
@@ -11299,7 +14551,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "fa9ebe3538f2003542316e421271715b1b3ccc097671b9dbbf46ebebe2b747fa"
+        "🔣️.json": "b731605c5d5b6bf1ecf1076daa4e5cc8055c89841d26415be293daece1bea04f"
       }
     },
     "os.store.composition.open.history.dictionary.record": {
@@ -11363,7 +14615,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "7506d8c755019cf1d02e4799de2073730a65b3a75e546bfbd12fb37586350817"
+        "🔣️.json": "104d3b1299423f3dfe94472bb204285b0c1d14c6770213abd51d702ed071cf99"
       }
     },
     "os.store.mutation.commit-space-checkpoint": {
@@ -32794,7 +36046,7 @@
         "🧬️mutations/🔣️.json": "be81acea4fdf194eb2f376b7cdab3999dba0c710d97e66e6004f2594f277d4a2",
         "🧬️mutations/🛰️.proto": "09c067a6eebc587bc417a1ce4aa58bfb7912aa8cda243d0a70faecd73efe4a37",
         "🧬️mutations/🟦️.ts": "8b5af251bac826b7ea687efd7af4f628b1b82604646e091b9fe18d088e81060b",
-        "🧬️mutations/🦀️.rs": "05b826f7de5cf86f376aebea89f3fdc0f7fcb22d3bb308bb6a7b492c4138fe5e"
+        "🧬️mutations/🦀️.rs": "5b4fc9df053988c2cd2253c8cdecae70ddbe03052064427404abbc9841f5dc58"
       }
     },
     "s.layout.layout": {
@@ -102218,6 +105470,36 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "b9c197e1ede649b9832b18054d5a7f633b4ab5187267a3457d670c87b23e54b8"
+      }
+    },
+    "semio-tech.play.runtime": {
+      "path": "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "PlayGroup": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PlayPane": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PlayRuntimeCatalog": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PlayVariant": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6144cdcf1b595cc963a206345b8cbf46c0006b2000c042f7657490cc576becb5"
       }
     },
     "window.gis.map.config.mutation.set-camera": {

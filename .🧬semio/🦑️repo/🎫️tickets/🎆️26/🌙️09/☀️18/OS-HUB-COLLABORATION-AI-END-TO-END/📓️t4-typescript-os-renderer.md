@@ -899,4 +899,22 @@ does not narrow `row` and every field read after it is `TS18048: possibly 'undef
 One `[DEBUG]` console line left behind by a predecessor was removed on the way
 (`🆕️fresh-component/🟦️.ts:104`, whose two sibling evidence lines never had the prefix).
 
-## 26. (in progress)
+## 26. Session 5 re-measure (T4c resumed 2026-09-19 ~23:30)
+
+The previous T4c worker died at 11:36 after landing §24 and §25. Its last capture
+`🗑️generated/t4c-os-full3.txt` (11:34) read **242** owned. Re-measured now, whole program,
+`🗑️generated/t4c-os-full4.txt` (7 m 21 s wall — 13 % CPU, the fleet is loaded; the scoped loop is the
+only workable iteration tool):
+
+| owner | §23 t4c start | §25 end (11:34) | **now** |
+|---|---:|---:|---:|
+| T4 — `💻️os` | 298 | 219 | **221** |
+| T4 — `✏️s` | 23 | 23 | **23** |
+| T4 — root `📜️script.ts` | 0 | 0 | **0** |
+| **T4 owned total** | **321** | **242** | **244** |
+| T2 — `🦑️repo` product | 9 | 9 | 9 |
+| legacy `♻️mit-bestand` | 3 | 1 | 1 |
+
+Drift of +2 against §25's capture is peer churn in `🏛️ShellHost` / `🔗️AgentBridge` (C1c and M7).
+
+## 27. (filling)

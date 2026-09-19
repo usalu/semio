@@ -178,11 +178,14 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// 🧪️ The definitional proof: two independent instances start from the same document, apply
 /// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging operations
 /// over a backbone converges both sides onto the same projection — impossible under whole-document
-/// `setDocument` snapshots, where one side's write would clobber the other's.
+/// `setDocument` snapshots, where one side's write would clobber the other's. The REGISTERED pair:
+/// playbook publishes tool proofs, so a registry-less instance faults in the
+/// `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_instances_converge::<EditorApp<PlaybookPlayApp>, (usize, usize)>(
+    artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<PlaybookPlayApp>, _, _, _>(
         "mem://playbook-convergence",
+        || async { crate::editor::playbook::unit_tests::context::playbook_manifest_for_tests() },
         PlaybookCommand::AddStep(add_step::AddStep {}),
         PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }),
         |app| {

@@ -3,7 +3,7 @@
 //! aggregate value and delegates, so the semantics are preserved by construction rather than
 //! re-derived.
 //!
-//! ➖️ Removes the VLR at `index` (no-op if out of range).
+//! ➖️ Removes the VLR at `index` — an out-of-range index is rejected by apply with the snapshot untouched.
 use super::*;
 
 //#region 🔖️Payload

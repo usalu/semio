@@ -2216,17 +2216,17 @@ function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
   );
 }
 
-function toolJobArtifactResolutionCandidateExact(store: string): boolean {
+/** 🔀️ Remote ingest is event sourced: replicas fold operation and transition envelopes into one causal log,
+ * a refusal retires its candidate causal graph, a quarantine Accept re-folds the log — never a snapshot merge. */
+function toolJobArtifactEventSourcedMergeExact(store: string): boolean {
   return (
-    store.includes("struct ArtifactStoreResolutionCandidateAuthority<P, Mutation>") &&
-    store.includes("struct ArtifactStoreResolutionCandidateRetirement<P, Mutation>") &&
-    store.includes("reserve_resolution_candidate(&mut self)") &&
-    store.includes("retire_resolution_candidate_reserved(&mut self, generation: u64") &&
-    store.includes("fn retire_resolution_candidate(&mut self, authority: ArtifactStoreResolutionCandidateAuthority<P, Mutation>)") &&
-    store.includes("resolution candidate authority reached Drop before exact adoption or retained retirement handoff") &&
-    store.includes("resolution candidate retirement reached Drop before its exact store and child owners were terminal-empty") &&
-    store.includes("candidate.candidate_mut().ingest_remote(envelope).await") &&
-    !store.includes("let mut candidate = self.resolution_candidate().await;")
+    store.includes("pub fn fold_event_log<P, Mutation>(") &&
+    store.includes("async fn admit_remote_transitions(") &&
+    store.includes("fn refuse_with_candidate_dag<T>(&mut self, candidate_dag: crate::os_spr::MutationDag, error: VcsError)") &&
+    store.includes("async fn accept_quarantined_events(") &&
+    store.includes("Genesis {") &&
+    !store.includes("merge_remote_snapshot") &&
+    !store.includes("ResolutionCandidate")
   );
 }
 
@@ -3358,7 +3358,7 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     !store.includes("self.redo_edit_ids.remove(") &&
     !store.includes("self.redo_edit_ids.clear(") &&
     store.includes("fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<Vec<String>>, position: usize) -> String") &&
-    toolJobArtifactResolutionCandidateExact(store) &&
+    toolJobArtifactEventSourcedMergeExact(store) &&
     semio.includes("SemioStoreClosePhase::CausalIndex") &&
     semio.includes("SemioStoreClosePhase::DisplacedOwners") &&
     (semio.match(/impl RetireOwned for [a-z_]+_mutation::Semio[A-Za-z]+Mutation/g) ?? []).length === 18 &&
@@ -25891,7 +25891,7 @@ export {
   toolJobMemberStoreOwnerExact,
   toolJobArtifactStoreStructuralOwnersExact,
   toolJobHistoryLedgerAdmissionExact,
-  toolJobArtifactResolutionCandidateExact,
+  toolJobArtifactEventSourcedMergeExact,
   toolJobArtifactEditMessageLedgerExact,
   toolJobArtifactEnvelopeOwnedCodecExact,
   toolJobPresentationEnvelopeCallerRetainedExact,

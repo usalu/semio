@@ -17,7 +17,7 @@
 //! `SpatialSelectionMode`.
 
 use crate::editor::cad::engine::typology::{default_model_definition_id, is_shape_model_definition, load_typology, model_definition_selection_entity_kinds, model_definition_typology_ids, model_definition_uses_geometry_picking, resolve_typology_style, spatial_typology_toggle_label, ModelEntityKind, ResolvedTypologyStyle, PRIMITIVE_MODEL_ENTITY_KINDS};
-use crate::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadFace, CadGeometry, CadObject, CadShell, CadSolid, CadVertex, CadWire};
+use crate::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadEdgeCurve, CadFace, CadGeometry, CadObject, CadShell, CadSolid, CadVertex, CadWire};
 use protocol::{DslValue, MergeMode};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
